@@ -1,0 +1,37 @@
+{% set menu_category = "scene_model" %}
+{% extends "documentation/fragment_common.tpl.html" %}
+{% from "documentation/type_link.tpl.html" import type_link %}
+{% block title %}{{ this.full_name|without_first(".") }}{% endblock %}
+{% block content %}
+    <h2>Message <code>{{ type_link(this.full_name) }}</code></h2>
+    <p>{{ this.documentation }}</p>
+    <table>
+        <colgroup>
+             <col span="1" style="width: 33%;">
+        </colgroup>
+        <tr><th>Type</th><th>Description</th></tr>
+        {% for field in this.fields %}
+            <tr>
+                <td>
+                    <p>
+                        {% if not field.union is sameas None %}
+                            Union <code>{{ field.union }}</code>:
+                        {% endif %}
+                        {% if field.repeated %}Array of {% endif %}
+                        <code>{{ type_link(field.type) }}</code>
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        <strong><code>{{ field.name }}</code></strong>
+                        {% if field.deprecated %} <em>(DEPRECATED)</em>{% endif %}
+                        {% if field.optional %} <em>(Optional)</em>{% endif %}
+                    </p>
+                    {% if field.documentation %}
+                        <p>{{ field.documentation }}</p>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

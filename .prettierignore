@@ -1,0 +1,22 @@
+# See https://stackoverflow.com/a/70715829 for reference.
+
+# Ignore everything recursively
+*
+
+# But not TS, JS, and CSS files
+!*.ts
+!*.js
+!*.css
+
+# Except templates and Webpack config files
+**/*.tpl.ts
+**/*.tpl.js
+**/*.config.js
+
+# Check subdirectories too
+!*/
+
+# But not third-party files and Bazel directories
+hrz/doc/js_vendor/*.js
+bzl/
+bazel-*/

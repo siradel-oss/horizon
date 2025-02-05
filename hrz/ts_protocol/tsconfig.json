@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+        "baseUrl": "../../bazel-bin/hrz/ts_protocol/node_modules",
+        "lib": ["ES2015", "DOM"],
+        "target": "ES5",
+        "strict": true
+    }
+}

@@ -1,0 +1,33 @@
+cc_library(
+    name = "hrz_http_cache",
+    srcs = [
+        "src/hrz_http_cache.cpp",
+    ],
+    hdrs = [
+        "include/hrz_http_cache.h",
+    ],
+    local_defines = [
+        "HRZ_LOG_PREFIX=HrzHttpCache",
+    ],
+    includes = [
+        "include",
+    ],
+    deps = [
+        "//hrz/fnd:hrz_fnd",
+        "//third_party:microui",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "tests",
+    srcs = [
+        "tests/http_cache.cpp",
+    ],
+    deps = [
+        ":hrz_http_cache",
+        "//third_party:gtest",
+        "//third_party:gtest_main",
+    ],
+    visibility = ["//visibility:public"],
+)

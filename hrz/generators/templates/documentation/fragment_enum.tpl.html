@@ -1,0 +1,31 @@
+{% set menu_category = "scene_model" %}
+{% extends "documentation/fragment_common.tpl.html" %}
+{% from "documentation/type_link.tpl.html" import type_link %}
+{% block title %}{{ this.full_name|without_first(".") }}{% endblock %}
+{% block content %}
+    <h2>Enumeration <code>{{ type_link(this.full_name) }}</code></h2>
+    {% if this.documentation %}
+        <p>{{ this.documentation }}</p>
+    {% endif %}
+    {% if this.expose_to_style %}
+        <p>Available in style scripts.</p>
+    {% endif %}
+    <table>
+        <colgroup>
+            <col span="1" style="width: 8%;" />
+        </colgroup>
+        <tr><th>#</th><th>Description</th></tr>
+        {% for value in this["values"] %}
+            <tr>
+                <td style="text-align: center;">{{ value.id }}</td>
+                <td>
+                    <p><strong><code>{{ value.name }}</code></strong>{% if value.deprecated %} <em>(DEPRECATED)</em>{% endif %}</p>
+                    {% if value.documentation %}
+                        <p>{{ value.documentation }}</p>
+                    {% endif %}
+                </td>
+            </tr>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

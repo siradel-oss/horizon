@@ -1,0 +1,43 @@
+load("//:version.bzl", "HRZ_VERSION")
+
+cc_library(
+    name = "wsi",
+    srcs = select({
+        "//:linux_wsi_x11_gl": ["wsi_x11.cpp"],
+        "//:linux_wsi_x11_gles": ["wsi_x11.cpp"],
+        "//:linux_wsi_headless_egl": ["wsi_headless_egl.cpp"],
+        "//:os_windows": ["wsi_win32.cpp"],
+        "//conditions:default": [],
+    }),
+    hdrs = [
+        "wsi.h",
+    ],
+    includes = ["."],
+    defines = [
+        "HRZ_VERSION=" + HRZ_VERSION + ""
+    ],
+    deps = [
+        "//hrz/branding:icons",
+        "//hrz/fnd:hrz_fnd",
+        "//hrz/core:hrz_core",
+        "//third_party/stb_image",
+    ] + select({
+        "//:use_egl": [
+            "//third_party/glad:egl_15",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "//:os_windows": ["User32.lib", "Gdi32.lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//:linux_wsi_x11_gl": [
+            "-lX11",
+        ],
+        "//:linux_wsi_x11_gles": [
+            "-lX11",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)

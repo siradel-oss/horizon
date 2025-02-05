@@ -1,0 +1,33 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("//hrz/proto:list_proto_files.bzl", "list_proto_files")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+
+copy_to_bin(
+    name = "protos_bin",
+    srcs = list_proto_files("", ".proto"),
+    visibility = ["//visibility:public"]
+)
+
+filegroup(
+    name = "protos",
+    srcs = list_proto_files("", ".proto"),
+    visibility = ["//visibility:public"]
+)
+
+exports_files(glob(["*.proto"]))
+
+hrz_genrule(
+    name = "generate_descriptor_set",
+    tools = [
+        "//third_party:protoc",
+        "//hrz/proto:protos",
+    ],
+    srcs = [
+        "//hrz/proto:protos",
+    ],
+    outs = [
+        "descriptor_set.pbf",
+    ],
+    cmd = "$(location //third_party:protoc) -Ihrz/proto $(SRCS) --descriptor_set_out=$@",
+    visibility = ["//visibility:public"],
+)

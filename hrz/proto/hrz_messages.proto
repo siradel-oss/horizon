@@ -1,0 +1,257 @@
+syntax = "proto3";
+package HrzProtocol;
+option cc_enable_arenas = true;
+option optimize_for = LITE_RUNTIME;
+
+import "hrz_types.proto";
+import "hrz_picking.proto";
+import "hrz_layers.proto";
+import "hrz_shape_editor.proto";
+import "hrz_viewer.proto";
+import "hrz_mapbox.proto";
+import "hrz_camera.proto";
+
+// End enums values with `_MESSAGE`, for namespacing and clarity reasons.
+enum MessageType {
+    // @label="Pick message"
+    // @params_field_name="pick"
+    PICK_MESSAGE        = 0;
+
+    // @label="Vector data request"
+    // @params_field_name="vector_data_request"
+    VECTOR_DATA_REQUEST_MESSAGE = 2;
+
+    // @label="Mouse hover info"
+    // @params_field_name="mouse_hover_info"
+    MOUSE_HOVER_INFO_MESSAGE  = 3;
+
+    // @label="Pick area message"
+    // @params_field_name="pick_area"
+    PICK_AREA_MESSAGE   = 4;
+
+    // @label="Gizmo update message"
+    // @params_field_name="gizmo_update"
+    GIZMO_UPDATE_MESSAGE = 5;
+
+    // @label="Shape editor update message"
+    // @params_field_name="shape_editor_update"
+    SHAPE_EDITOR_MESSAGE = 6;
+
+    // @label="Raster data fetch result message"
+    // @params_field_name="raster_data_fetch"
+    RASTER_DATA_FETCH_MESSAGE   = 7;
+
+    // @label="Frame capture message"
+    // @params_field_name="frame_capture"
+    FRAME_CAPTURE_MESSAGE = 8;
+
+    // @label="Viewer ready"
+    // @params_field_name="viewer_ready"
+    VIEWER_READY_MESSAGE = 9;
+
+    // @label="Viewer loading progress"
+    // @params_field_name="viewer_loading_progress"
+    VIEWER_LOADING_PROGRESS_MESSAGE = 10;
+
+    // @label="Monitoring data message"
+    // @params_field_name="monitoring_data"
+    MONITORING_DATA_MESSAGE = 11;
+
+    // @label="Asset request message"
+    // @params_field_name="asset_request"
+    ASSET_REQUEST_MESSAGE   = 12;
+
+    // @label="Mapbox translation message"
+    // @params_field_name="mapbox_translation"
+    MAPBOX_TRANSLATION_MESSAGE  = 13;
+
+    // @label="Attributions"
+    // @params_field_name="attributions"
+    ATTRIBUTIONS_MESSAGE = 14;
+
+    // @label="Camera notification"
+    // @params_field_name="camera_notification"
+    CAMERA_NOTIFICATION_MESSAGE = 15;
+}
+
+message PickResultMessage {
+    PickTicket              ticket          = 1;
+    PickResults             results         = 2;
+}
+
+message VectorDataRequestMessage {
+    uint32                  ticket                      = 1;
+
+    // ID of the vector data layer containing the source
+    // responsible for initiating the request.
+    uint32                  vector_data_layer_id        = 2;
+
+    // Index of the vector data source responsible for initiating
+    // the request.
+    uint32                  vector_data_source_index    = 3;
+
+    // The selection of features that must be included in
+    // the response.
+    //
+    // The kind of selection is determined by the `access`
+    // field of `ClientVectorDataProviderParams`.
+    oneof selection {
+        FeatureIds          feature_id_selection        = 100;
+        TileCoords          tile_selection              = 101;
+    }
+
+    // List of attributes whose values should be included in
+    // the response.
+    repeated uint32         attribute_ids               = 4;
+
+    // Whether or not the vector data source responsible for
+    // the request has geometry.
+    // If not, the response must not include geometry.
+    bool                    expects_geometry            = 5;
+}
+
+message VectorTilesObjectReference {
+    LayerHandle             layer           = 1;
+    FeatureId               feature_id      = 2;
+}
+
+message ThreeDTilesObjectReference {
+    LayerHandle             layer           = 1;
+    FeatureId               feature_id      = 3;
+}
+
+message TypedObjectReference {
+    oneof ref {
+        Void                        planet              = 1;
+        LayerHandle                 single_model        = 2;
+        VectorTilesObjectReference  vector_tiles        = 3;
+        ThreeDTilesObjectReference  three_d_tiles       = 4;
+        LayerHandle                 editable_shape      = 5;
+    }
+}
+
+message PickAreaResultMessage {
+    PickAreaTicket                  ticket              = 1;
+    repeated TypedObjectReference   refs                = 2;
+}
+
+message MouseHoverInfoMessage {
+    // Position is in logical pixels.
+    Vec2i                   screen_pos      = 1;
+    // The position is set if the mouse hovers the planet or a feature.
+    GeographicPosition      geo_pos         = 2;
+    TypedObjectReference    picked          = 3;
+}
+
+message GizmoUpdateMessage {
+    uint32                  id              = 1;
+    GeographicPosition      geo_pos         = 2;
+    Quat                    rotation        = 3;
+    bool                    action_end      = 4;
+}
+
+enum ShapeEditorUpdateType {
+    MODE_SWITCH             = 0;
+    SHAPE_SELECTION         = 1;
+    CONTROL_POINT_SELECTION = 2;
+    SHAPE_GEOMETRY_UPDATE   = 3;
+}
+
+message ShapeEditorMessage {
+    ShapeEditorUpdateType           type                    = 1;
+
+    oneof payload {
+        ShapeEditorMode             mode                    = 101;
+        ShapeSelection              shape                   = 102;
+        ControlPointSelection       control_point           = 103;
+    }
+}
+
+message RasterDataFetchMessage {
+    RasterDataFetchTicket           ticket                  = 1;
+    repeated PickLayerResult        results                 = 2;
+}
+
+message ViewerLoadingProgressMessage {
+    uint32                          completed_step_count    = 1;
+    uint32                          total_step_count        = 2;
+}
+
+message MonitoringDataMessage {
+    // The data is encoded as a series of byte sequences.
+    //
+    // Each byte sequence is an encoded `MonitoringMessage` protocol buffers message (as defined
+    // in the `hrz_monitoring_interface.proto` file), preceeded by its length as a 4 byte little
+    // endian unsigned integer.
+    bytes                           data                    = 1;
+}
+
+message AssetRequestMessage {
+    uint32                          ticket                  = 1;
+    string                          url                     = 2;
+    // The range of bytes needed.
+    // A range size of 0 represents an unrestricted size.
+    uint64                          range_start             = 3;
+    uint64                          range_size              = 4;
+}
+
+message MapboxTranslationMessage {
+    MapboxTranslationTicket         ticket                  = 1;
+    MapboxTranslationResult         result                  = 2;
+}
+
+message Attribution {
+    // The text might contain HTML tags, such as links.
+    string                          text                    = 1;
+
+    string                          logo_url                = 2;
+}
+
+message AttributionsMessage {
+    repeated Attribution            attributions            = 1;
+}
+
+message TypedMessage {
+    MessageType             type            = 1;
+
+    oneof payload {
+        PickResultMessage           pick                    = 102;
+        VectorDataRequestMessage    vector_data_request     = 103;
+        MouseHoverInfoMessage       mouse_hover_info        = 104;
+        PickAreaResultMessage       pick_area               = 105;
+        GizmoUpdateMessage          gizmo_update            = 106;
+        ShapeEditorMessage          shape_editor_update     = 107;
+        RasterDataFetchMessage      raster_data_fetch       = 108;
+        Image                       frame_capture           = 109;
+        Void                        viewer_ready            = 110;
+        ViewerLoadingProgressMessage viewer_loading_progress = 111;
+        MonitoringDataMessage       monitoring_data         = 112;
+        AssetRequestMessage         asset_request           = 113;
+        MapboxTranslationMessage    mapbox_translation      = 114;
+        AttributionsMessage         attributions            = 115;
+        CameraNotification          camera_notification     = 116;
+    }
+}
+
+message QueueSize {
+    uint32          message_count   = 1;
+}
+
+message DequeuedMessages {
+    repeated TypedMessage   messages        = 1;
+    QueueSize               queue_size      = 2;
+}
+
+message DequeueParams {
+    // 0: no limit (empty the queue)
+    uint32          max_message_count       = 1;
+}
+
+// @service_id=0xccb301da
+service MessageQueueService {
+    // @method_id=0x8393724a
+    rpc DequeueMessages(DequeueParams) returns (DequeuedMessages);
+
+    // @method_id=0xf40fd80d
+    rpc GetQueueSize(Void) returns (QueueSize);
+}

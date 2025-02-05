@@ -1,0 +1,47 @@
+import argparse
+import sys
+import subprocess
+import platform
+
+from pathlib import Path
+
+sys.path.append("")
+from hrz.proto.history.manifest import Manifest, read_manifest
+
+BZL_CONFIG = "--config=" + platform.system().lower()
+
+MANIFEST_PATH = "hrz/proto/history/versions_manifest.csv"
+MANIFEST: Manifest = None
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--manifest", help="Manifest path", default=MANIFEST_PATH)
+    parser.add_argument("-v", "--version", help="Model version as 8 hex digits (latest if not specified)", default="latest")
+    parser.add_argument("dump_bin_file", type=argparse.FileType("rb"))
+    parser.add_argument("output_text_file", type=argparse.FileType("w+"))
+
+    args = parser.parse_args(sys.argv[1:])
+    MANIFEST_PATH = args.manifest
+    MANIFEST = read_manifest(MANIFEST_PATH)
+
+    version = args.version
+    if version == "latest":
+        version = MANIFEST.last_entry().id
+
+    if not MANIFEST.is_id_in(version):
+        print("Version ID not in manifest")
+        sys.exit(1)
+
+    descriptor_path = Path(f"hrz/proto/history/{version}.pbf").absolute()
+
+    ret = subprocess.run(
+        ["bazel", "run", "//third_party:protoc", BZL_CONFIG, "--", "--descriptor_set_in=" + str(descriptor_path), "--decode=HrzProtocol.SceneDump"],
+        stdin=args.dump_bin_file,
+        stdout=args.output_text_file,
+        stderr=subprocess.PIPE)
+
+    if ret.returncode == 0:
+        print("OK")
+    else:
+        print(ret.stderr.decode("utf-8"))
+        sys.exit(ret.returncode)

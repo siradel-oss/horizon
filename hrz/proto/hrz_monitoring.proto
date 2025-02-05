@@ -1,0 +1,54 @@
+syntax = "proto3";
+package HrzProtocol;
+option cc_enable_arenas = true;
+option optimize_for = LITE_RUNTIME;
+
+import "hrz_types.proto";
+import "hrz_wrappers.proto";
+
+// @service_id=0xd7b6c613
+service MonitoringService {
+    // Sets the WebSockets server address to use when trying to connect to
+    // the monitoring application.
+    //
+    // @method_id=0x2ce15906
+    rpc SetMonitoringServerAddress(StringValue) returns (Void);
+
+    // Tries to connect to or disconnect from the monitoring application over WebSockets.
+    //
+    // @method_id=0x1f16dc51
+    rpc ConnectToMonitoringServer(BoolValue) returns (Void);
+
+    // Enables or disables the sending of monitoring messages through the message queue.
+    // When enabled, the messages will be sent regularly, containing all monitoring information
+    // collected since the previous message was sent.
+    // This is the only way of getting monitoring information outside of using the monitoring
+    // application or the developer menu of Horizon.
+    //
+    // @method_id=0x1c7a8655
+    rpc EnableMonitoringMessages(BoolValue) returns (Void);
+
+    // Enables or disables the internal profiling of the different threads executed by Horizon.
+    // The results are accessible using monitoring messages or the monitoring application.
+    //
+    // @method_id=0xbaca5bc3
+    rpc EnableProfiling(BoolValue) returns (Void);
+
+    // Enables or disables the internal collection of monitoring metrics.
+    // The results are accessible using monitoring messages or the monitoring application.
+    //
+    // @method_id=0x0b15644c
+    rpc EnableMetrics(BoolValue) returns (Void);
+
+    // Takes a snapshot of the current GPU memory used by Horizon.
+    // The snapshot is returned in a monitoring message or visible in the monitoring application.
+    //
+    // @method_id=0xa30e1979
+    rpc MakeGpuResourcesSnapshot(Void) returns (Void);
+
+    // Takes a snapshot of the current blob memory used by Horizon.
+    // The snapshot is returned in a monitoring message or visible in the monitoring application.
+    //
+    // @method_id=0x44efcad5
+    rpc MakeBlobAllocatorSnapshot(Void) returns (Void);
+}

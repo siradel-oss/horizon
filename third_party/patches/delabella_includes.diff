@@ -1,0 +1,12 @@
+diff -u delabella/delabella.h delabella-patched/delabella.h
+--- delabella.h
++++ delabella.h
+@@ -6,6 +6,8 @@
+ #ifndef DELABELLA_H
+ #define DELABELLA_H
+ 
++#include <cstddef>
++
+ template<typename T = double, typename I = int>
+ struct IDelaBella2
+ {

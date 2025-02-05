@@ -1,0 +1,15 @@
+diff --git util/sokol_imgui.h util/sokol_imgui.h
+index 8bedadf..30d2a70 100644
+--- util/sokol_imgui.h
++++ util/sokol_imgui.h
+@@ -2320,7 +2320,9 @@ SOKOL_API_IMPL bool simgui_handle_event(const sapp_event* ev) {
+             #endif
+             break;
+         case SAPP_EVENTTYPE_MOUSE_SCROLL:
+-            _simgui_add_mouse_wheel_event(io, ev->scroll_x, ev->scroll_y);
++            _simgui_add_mouse_wheel_event(io,
++               (ev->scroll_x > 0) ? 1.f : (ev->scroll_x < 0) ? -1.f : 0.f,
++               (ev->scroll_y > 0) ? 1.f : (ev->scroll_y < 0) ? -1.f : 0.f);
+             break;
+         case SAPP_EVENTTYPE_TOUCHES_BEGAN:
+             _simgui_add_mouse_button_event(io, 0, true);

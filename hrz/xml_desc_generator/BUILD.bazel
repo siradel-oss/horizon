@@ -1,0 +1,18 @@
+cc_binary(
+    name = "xml_desc_generator",
+    deps = [
+        "//third_party:libprotobuf",
+        "//third_party:libprotoc",
+    ],
+    srcs = [
+        "main.cpp",
+    ],
+    copts = [
+        "-I$(GENDIR)/hrz/xml_desc_generator",
+    ],
+    linkopts = select({
+        "//:os_linux": ["-pthread"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)

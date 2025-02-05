@@ -1,0 +1,18 @@
+diff --git a/src/microui.c b/src/microui.c
+index a8a3f74..152adcb 100644
+--- src/microui.c
++++ src/microui.c
+@@ -689,10 +689,10 @@ void mu_update_control(mu_Context *ctx, mu_Id id, mu_Rect rect, int opt) {
+   }
+
+   if (ctx->hover == id) {
+-    if (ctx->mouse_pressed) {
+-      mu_set_focus(ctx, id);
+-    } else if (!mouseover) {
++    if (!mouseover) {
+       ctx->hover = 0;
++    } else if (ctx->mouse_pressed) {
++      mu_set_focus(ctx, id);
+     }
+   }
+ }

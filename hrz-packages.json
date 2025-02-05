@@ -1,0 +1,232 @@
+{
+    "package_repository": "http://nexus-int.siradel.com:8081/repository/raw-releases/",
+    "packages": [
+        {
+            "name": "websocketpp",
+            "type": "github",
+            "repo": "zaphoyd/websocketpp",
+            "ref": "0.8.2",
+            "build_file": "//third_party:websocketpp.BUILD.bazel"
+        },
+        {
+            "name": "asio",
+            "type": "github",
+            "repo": "chriskohlhoff/asio",
+            "ref": "asio-1-21-0",
+            "build_file": "//third_party:asio.BUILD.bazel"
+        },
+        {
+            "name": "protobuf",
+            "ref": "v3.19.2",
+            "type": "github",
+            "repo": "protocolbuffers/protobuf"
+        },
+        {
+            "name": "libwebp",
+            "type": "github",
+            "repo": "webmproject/libwebp",
+            "ref": "v1.2.2",
+            "patches": [
+                "libwebp_vp8getcpuinfo_extern.diff",
+                "libwebp_custom_malloc.diff",
+                "libwebp_license.diff"
+            ],
+            "build_file": "//third_party:libwebp.BUILD.bazel"
+        },
+        {
+            "name": "harfbuzz",
+            "type": "github",
+            "repo": "harfbuzz/harfbuzz",
+            "ref": "10.0.1",
+            "build_file": "//third_party:harfbuzz.BUILD.bazel"
+        },
+        {
+            "name": "basisu",
+            "type": "github",
+            "repo": "BinomialLLC/basis_universal",
+            "ref": "1.16.4",
+            "build_file": "//third_party:basisu.BUILD.bazel"
+        },
+        {
+            "name": "draco",
+            "version": "1.5.7",
+            "type": "external",
+            "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu", "wasm32-unknown-emscripten"],
+            "script": "third_party/draco/build.py"
+        },
+        {
+            "name": "curl_boringssl",
+            "version": "8.8.0.bcr.1",
+            "type": "external",
+            "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu"],
+            "script": "third_party/curl_boringssl/build.py"
+        },
+        {
+            "name": "zlib",
+            "type": "github",
+            "repo": "madler/zlib",
+            "ref": "v1.3.1",
+            "build_file": "//third_party:zlib.BUILD.bazel"
+        },
+        {
+            "name": "stb",
+            "type": "github",
+            "repo": "nothings/stb",
+            "ref": "af1a5bc352164740c1cc1354942b1c6b72eacb8a",
+            "build_file": "//third_party:stb.BUILD.bazel"
+        },
+        {
+            "name": "earcut",
+            "type": "github",
+            "repo": "mapbox/earcut.hpp",
+            "ref": "v2.2.3",
+            "build_file": "//third_party:earcut.BUILD.bazel"
+        },
+        {
+            "name": "cdt",
+            "type": "github",
+            "repo": "artem-ogre/CDT",
+            "ref": "1.4.0",
+            "build_file": "//third_party:cdt.BUILD.bazel"
+        },
+        {
+            "name": "delabella",
+            "type": "github",
+            "repo": "msokalski/delabella",
+            "ref": "V2.0",
+            "strip_prefix": "delabella-2.0",
+            "patches": [
+                "delabella_includes.diff",
+                "delabella_no_exceptions.diff"
+            ],
+            "build_file": "//third_party:delabella.BUILD.bazel"
+        },
+        {
+            "name": "gsl",
+            "type": "github",
+            "repo": "gsl-lite/gsl-lite",
+            "ref": "v0.42.0",
+            "build_file": "//third_party:gsl.BUILD.bazel"
+        },
+        {
+            "name": "rapidjson",
+            "type": "github",
+            "repo": "Tencent/rapidjson",
+            "ref": "58c6938b73c8685d82905ed55ec5b59e8f163687",
+            "build_file": "//third_party:rapidjson.BUILD.bazel"
+        },
+        {
+            "name": "fmtlib",
+            "type": "github",
+            "repo": "fmtlib/fmt",
+            "ref": "11.0.2",
+            "build_file": "//third_party:fmtlib.BUILD.bazel"
+        },
+        {
+            "name": "pugixml",
+            "type": "github",
+            "repo": "zeux/pugixml",
+            "ref": "v1.14",
+            "build_file": "//third_party:pugixml.BUILD.bazel"
+        },
+        {
+            "name": "googletest",
+            "type": "github",
+            "repo": "google/googletest",
+            "ref": "v1.15.2"
+        },
+        {
+            "name": "microui",
+            "type": "github",
+            "repo": "rxi/microui",
+            "ref": "05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5",
+            "patches": [
+                "microui_text_color.patch",
+                "microui_unique_header_label.patch",
+                "microui_includes.patch",
+                "microui_fix_hover_focus_update.patch"
+            ],
+            "build_file": "//third_party:microui.BUILD.bazel"
+        },
+        {
+            "name": "com_google_absl",
+            "type": "github",
+            "repo": "abseil/abseil-cpp",
+            "ref": "20240722.0"
+        },
+        {
+            "name": "sokol",
+            "type": "github",
+            "repo": "floooh/sokol",
+            "ref": "c07c12b1eac7fe56ca28c81bf88fb039dbdb7375",
+            "patches": [
+                "sokol_imgui_soft_scroll.patch"
+            ],
+            "build_file": "//third_party:sokol.BUILD.bazel"
+        },
+        {
+            "name": "dear_imgui",
+            "type": "github",
+            "repo": "ocornut/imgui",
+            "ref": "f3373780668fba1f9bd64c208d05c20b781c9a39",
+            "build_file": "//third_party:dear_imgui.BUILD.bazel"
+        },
+        {
+            "name": "portable_file_dialogs",
+            "type": "github",
+            "repo": "samhocevar/portable-file-dialogs",
+            "ref": "67e7b0945aac80efa2ec5c72de98b47f7552735c",
+            "build_file": "//third_party:portable_file_dialogs.BUILD.bazel"
+        },
+        {
+            "name": "lz4",
+            "type": "github",
+            "repo": "lz4/lz4",
+            "ref": "v1.9.4",
+            "patches": [
+                "lz4_clang_tzcnt.diff"
+            ],
+            "build_file": "//third_party:lz4.BUILD.bazel"
+        },
+        {
+            "name": "emsdk",
+            "type": "github",
+            "repo": "emscripten-core/emsdk",
+            "ref": "3.1.74",
+            "strip_prefix": "emsdk-3.1.74/bazel"
+        },
+        {
+            "name": "glslang",
+            "version": "15.0.0",
+            "type": "external",
+            "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu"],
+            "script": "third_party/glslang/build.py"
+        },
+        {
+            "name": "pcg_basic",
+            "type": "github",
+            "repo": "imneme/pcg-c-basic",
+            "ref": "bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3",
+            "build_file": "//third_party:pcg_basic.BUILD.bazel"
+        },
+        {
+            "name": "clang-format",
+            "version": "17.0.6",
+            "type": "external",
+            "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu"],
+            "script": "third_party/clang-format/build.py"
+        },
+        {
+            "name": "brotli",
+            "type": "github",
+            "repo": "google/brotli",
+            "ref": "v1.1.0"
+        },
+        {
+            "name": "copybara",
+            "type": "external",
+            "version": "5f67ee28ed73150e50ba657afb40aa9795cb8fe6/hrz1",
+            "script": "third_party/copybara/build.py"
+        }
+    ]
+}

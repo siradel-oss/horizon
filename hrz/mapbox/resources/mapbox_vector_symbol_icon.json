@@ -1,0 +1,40 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://hrz.siradel.com/assets/sprites/sprites_mapbox/tree",
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "icon-color": "#00ff00",
+        "icon-opacity": 0.9,
+        "icon-translate": ["literal", [2, 2]],
+        "icon-translate-anchor": "viewport"
+      },
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-anchor": "bottom",
+        "icon-ignore-placement": false,
+        "icon-image": "tree",
+        "icon-keep-upright": true,
+        "icon-offset": ["literal", [8, 8]],
+        "icon-padding": 4,
+        "icon-pitch-alignment": "map",
+        "icon-rotate": 30.0,
+        "icon-rotation-alignment": "map",
+        "icon-size": 0.1,
+        "symbol-placement": "point"
+      }
+    }
+  ]
+}

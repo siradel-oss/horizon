@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="gsl::span&lt;*&gt;">
+		<DisplayString>{{ size={last_ - first_} }}</DisplayString>
+		<Expand>
+      <ArrayItems>
+        <Size>last_ - first_</Size>
+        <ValuePointer>first_</ValuePointer>
+      </ArrayItems>
+		</Expand>
+  </Type>
+
+	<Type Name="absl::InlinedVector&lt;*&gt;">
+		<AlternativeType Name="absl::lts_20240722::InlinedVector&lt;*&gt;" />
+		<Intrinsic Name="i_size" Expression="storage_.metadata_.value &gt;&gt; 1" />
+		<Intrinsic Name="i_is_allocated" Expression="(storage_.metadata_.value &amp; 1) == 1" />
+		<DisplayString>{{ size={i_size()} }}</DisplayString>
+		<DisplayString>Hello</DisplayString>
+		<Expand>
+			<IndexListItems Condition="i_is_allocated()">
+				<Size>i_size()</Size>
+				<ValueNode>storage_.data_.allocated.allocated_data[$i]</ValueNode>
+			</IndexListItems>
+			<IndexListItems Condition="!i_is_allocated()">
+				<Size>i_size()</Size>
+				<ValueNode>storage_.data_.inlined.inlined_data[$i]</ValueNode>
+			</IndexListItems>
+		</Expand>
+	</Type>
+
+	<Type Name="absl::lts_20240722::container_internal::map_slot_type&lt;*&gt;">
+    <DisplayString>[{value.first}] = {value.second}</DisplayString>
+    <Expand>
+      <Item Name="[key]" ExcludeView="simple">value.first</Item>
+      <Item Name="[value]" ExcludeView="simple">value.second</Item>
+    </Expand>
+  </Type>
+
+	<Type Name="absl::flat_hash_map&lt;*&gt;">
+		<AlternativeType Name="absl::lts_20240722::flat_hash_map&lt;*&gt;" />
+		<AlternativeType Name="absl::flat_hash_set&lt;*&gt;" />
+		<AlternativeType Name="absl::lts_20240722::flat_hash_set&lt;*&gt;" />
+		<AlternativeType Name="hrz::flat_hash_map&lt;*&gt;" />
+		<AlternativeType Name="hrz::flat_hash_set&lt;*&gt;" />
+		<DisplayString>{{ size={size_} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]" ExcludeView="simple">size_</Item>
+			<CustomListItems MaxItemsPerView="1000">
+				<Variable Name="iSlot" InitialValue="0" />
+				<Size>size_</Size>
+				<Loop>
+					<If Condition="ctrl_[iSlot] &gt;= 0">
+							<Item>slots_[iSlot]</Item>
+					</If>
+					<Exec>iSlot++</Exec>
+					<Break Condition="iSlot == capacity_" />
+				</Loop>
+			</CustomListItems>
+		</Expand>
+	</Type>
+</AutoVisualizer>

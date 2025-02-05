@@ -1,0 +1,13 @@
+diff --git a/src/microui.c b/src/microui.c
+index a8a3f74..2d720a7 100644
+--- src/microui.c
++++ src/microui.c
+@@ -23,7 +23,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include "microui.h"
++#include "microui/microui.h"
+
+ #define unused(x) ((void) (x))
+

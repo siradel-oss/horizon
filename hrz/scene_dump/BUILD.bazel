@@ -1,0 +1,67 @@
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "gen",
+    srcs = ["gen.py"],
+    data = [
+        "//hrz/proto/history:versions_manifest.csv",
+        "//hrz/scene_dump/templates:all",
+    ],
+    deps = [
+        "@bazel_tools//tools/python/runfiles",
+        "//hrz/proto/history:manifest",
+    ],
+)
+
+hrz_genrule(
+    name = "generate_migrations_list",
+    tools = [":gen"],
+    srcs = [
+        "//hrz/proto/history:versions_manifest.csv",
+    ],
+    outs = [
+        "include/hrz_migrations_list.h",
+    ],
+    cmd = "$(location gen) -m $(location //hrz/proto/history:versions_manifest.csv) gen-cpp-migrations-list $@",
+)
+
+cc_library(
+    name = "utils",
+    srcs = [
+        "src/scene_dump_utils.cpp",
+    ],
+    hdrs = [
+        "include/hrz_scene_dump_utils.h",
+    ],
+    includes = [
+        "include",
+    ],
+    deps = [
+        "//third_party:libprotobuf",
+        "//third_party:gsl",
+        "//third_party:lz4",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "migration",
+    srcs = [
+        "src/migration.cpp",
+        "src/migrations.cpp",
+
+        "include/hrz_migrations_list.h",
+        "include/dynamic_message.h",
+    ],
+    hdrs = [
+        "include/hrz_migration.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":utils",
+        "//hrz/proto/history:hrz_scene_model_version",
+        "//hrz/proto/history:hrz_descriptor_sets_list",
+    ],
+    visibility = ["//visibility:public"],
+)

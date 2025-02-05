@@ -1,0 +1,95 @@
+cc_library(
+    name = "hrz_core_platform",
+    srcs = [
+        "src/hrz_core_platform_detection.cpp",
+        # Header files cannot be in select otherwise they trigger a rebuild of
+        # downstream dependencies when the selected set changes, even though they
+        # are un srcs and thus shouldn't be in the public interface of the target.
+        "include/hrz_core_platform_windows.h",
+        "include/hrz_core_platform_linux_x11.h",
+    ] + select({
+        "//:windows_wgl_gl": [
+            "src/hrz_core_platform_windows.cpp",
+            "src/hrz_core_platform_windows_wgl.cpp",
+        ],
+        "//:windows_egl_gles": [
+            "src/hrz_core_platform_windows.cpp",
+            "src/hrz_core_platform_native_egl.cpp",
+        ],
+        "//:linux_wsi_x11_gl": [
+            "src/hrz_core_platform_linux_x11.cpp",
+            "src/hrz_core_platform_linux_glx.cpp",
+        ],
+        "//:linux_wsi_headless_egl" : [
+            "src/hrz_core_platform_headless_egl.cpp",
+        ],
+        "//:linux_wsi_x11_gles" : [
+            "src/hrz_core_platform_linux_x11.cpp",
+            "src/hrz_core_platform_native_egl.cpp",
+        ],
+        "//:os_web": [
+            "src/hrz_core_platform_emscripten.cpp",
+        ],
+    }),
+    hdrs = [
+        "include/hrz_core_platform.h",
+        "include/hrz_core_platform_events.h",
+        "include/hrz_core_platform_events_proto.h",
+        "include/hrz_core_platform_detection.h",
+    ],
+    includes = [
+        "include",
+    ],
+    deps = [
+        "//hrz/fnd:hrz_fnd",
+        "//hrz/common:hrz_common",
+    ],
+    implementation_deps = select({
+        "//:os_web": [
+            "//hrz/js_lib:hrz_js_lib",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//:use_egl": [
+            "//third_party/glad:egl_15",
+        ],
+        "//conditions:default": [],
+    }),
+    local_defines = [
+        "HRZ_LOG_PREFIX=HrzPlatform",
+    ] + select({
+        "//:os_windows": [
+            "NOMINMAX",
+            "WIN32",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "//:os_windows": [
+            "User32.lib",
+            "Gdi32.lib",
+            "Ws2_32.lib",
+            "Advapi32.lib",
+            "Wldap32.lib",
+        ],
+        "//:os_linux": [
+            "-lX11",
+            "-lXi",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "tests",
+    srcs = [
+        "tests/hrz_core_platform_detection_tests.cpp",
+    ],
+    deps = [
+        "//third_party:gtest",
+        "//third_party:gtest_main",
+        ":hrz_core_platform",
+    ],
+    visibility = ["//visibility:public"],
+)

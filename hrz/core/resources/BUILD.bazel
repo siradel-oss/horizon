@@ -1,0 +1,20 @@
+load("//tools/bazel/cc_resources:cc_resources.bzl", "cc_resources")
+
+cc_resources(
+    name = "resources",
+    header_name = "hrz_core_resources.h",
+    namespace = "hrz_res",
+    files = {
+        "//third_party/fonts:Allerta-Regular.ttf": "DefaultFont",
+        "devui_font_atlas.png": "DevUiFontAtlas",
+        "hrz_logo.rgba": "HrzLogo",
+    } | select({
+        "//:os_native": {
+            "//third_party:cacert.pem": "CaCertPem",
+        },
+        "//conditions:default": {},
+    }),
+    visibility = ["//hrz/core:__subpackages__"],
+)
+
+exports_files(["LICENSE-Allerta.txt"])

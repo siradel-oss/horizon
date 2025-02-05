@@ -1,0 +1,37 @@
+{
+  "version": 8,
+  "id": "test_fill_extrusion",
+  "center": [114.1833, 22.3067],
+  "zoom": 12,
+  "bearing": -3,
+  "pitch": 58,
+  "sources": {
+    "hk_tilejson": {
+      "type": "vector",
+      "url": "https://hrz.siradel.com/assets/mvt/HK/tiles.json"
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "OSM",
+      "source": "osm",
+      "type": "raster"
+    },
+    {
+      "id": "hk",
+      "type": "fill-extrusion",
+      "source": "hk_tilejson",
+      "source-layer": "HK_SAMPLE_3857",
+      "paint": {
+        "fill-extrusion-height": ["max", ["get", "ELEVATION"], 1],
+        "fill-extrusion-color": "#efefef"
+      }
+    }
+  ]
+}

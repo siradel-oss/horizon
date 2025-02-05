@@ -1,0 +1,60 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
+copy_file(
+    name = "copy_lz4_include",
+    src = "lib/lz4.h",
+    out = "lib/include/lz4.h",
+)
+
+copy_file(
+    name = "copy_lz4_src",
+    src = "lib/lz4.c",
+    out = "lib/src/lz4.c",
+)
+
+copy_file(
+    name = "copy_lz4hc_include",
+    src = "lib/lz4hc.h",
+    out = "lib/include/lz4hc.h",
+)
+
+copy_file(
+    name = "copy_lz4hc_src",
+    src = "lib/lz4hc.c",
+    out = "lib/src/lz4hc.c",
+)
+
+cc_library(
+    name = "lz4",
+    srcs = [
+        "lib/src/lz4.c",
+    ],
+    hdrs = [
+        "lib/include/lz4.h",
+    ],
+    includes = [
+        "lib/include",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "lz4hc",
+    srcs = [
+        "lib/src/lz4hc.c",
+        "lib/src/lz4.c",
+    ],
+    hdrs = [
+        "lib/include/lz4hc.h",
+        "lib/include/lz4.h",
+    ],
+    includes = [
+        "lib/include",
+    ],
+    textual_hdrs = [
+        "lib/src/lz4.c",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["LICENSE"])

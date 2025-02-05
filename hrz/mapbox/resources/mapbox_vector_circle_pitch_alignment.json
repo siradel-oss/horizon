@@ -1,0 +1,49 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "map_alignment",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-color": "#ff0000",
+        "circle-radius": 8,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2,
+        "circle-pitch-alignment": "map"
+      }
+    },
+    {
+      "id": "viewport_alignment",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-color": "#00ffff",
+        "circle-radius": 4,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2,
+        "circle-pitch-alignment": "viewport"
+      }
+    },
+    {
+      "id": "default_alignment",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-radius": 4,
+        "circle-opacity": 0.0,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1.5
+      }
+    }
+  ]
+}

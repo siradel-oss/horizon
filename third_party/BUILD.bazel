@@ -1,0 +1,228 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/bazel:utils.bzl", "target_alias")
+load("//tools/licenses:licenses.bzl", "merge_third_party_licenses_txt", "merge_third_party_licenses_md")
+
+# This can be used to disable a library on a given target.
+cc_library(
+    name = "empty",
+    srcs = [],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "protoc",
+    actual = "@protobuf//:protoc",
+)
+
+alias(
+    name = "libprotoc",
+    actual = "@protobuf//:protoc_lib",
+)
+
+alias(
+    name = "libprotobuf-lite",
+    actual = "@protobuf//:protobuf_lite",
+)
+
+alias(
+    name = "libprotobuf",
+    actual = "@protobuf//:protobuf",
+)
+
+target_alias(
+    name = "curl",
+    workspace = "curl_boringssl",
+    has_wasm = False,
+)
+
+target_alias(
+    name = "cacert.pem",
+    workspace = "curl_boringssl",
+    has_wasm = False,
+)
+
+target_alias(
+    name = "draco",
+    workspace = "draco",
+)
+
+alias(
+    name = "harfbuzz",
+    actual = "@harfbuzz//:harfbuzz",
+)
+
+alias(
+    name = "libwebp",
+    actual = "@libwebp//:libwebp",
+)
+
+alias(
+    name = "basisu",
+    actual = "@basisu//:basisu",
+)
+
+alias(
+    name = "zstd",
+    actual = "@basisu//:zstd",
+)
+
+alias(
+    name = "gsl",
+    actual = "@gsl//:gsl",
+)
+
+alias(
+    name = "earcut",
+    actual = "@earcut//:earcut",
+)
+
+alias(
+    name = "cdt",
+    actual = "@cdt//:cdt",
+)
+
+alias(
+    name = "delabella",
+    actual = "@delabella//:delabella",
+)
+
+alias(
+    name = "pugixml",
+    actual = "@pugixml//:pugixml",
+)
+
+alias(
+    name = "microui",
+    actual = "@microui//:microui",
+)
+
+alias(
+    name = "rapidjson",
+    actual = "@rapidjson//:rapidjson",
+)
+
+alias(
+    name = "lz4",
+    actual = "@lz4//:lz4",
+)
+
+alias(
+    name = "lz4hc",
+    actual = "@lz4//:lz4hc",
+)
+
+alias(
+    name = "zlib",
+    actual = "@zlib//:zlib",
+)
+
+alias(
+    name = "gtest_main",
+    actual = select({
+        "//:os_windows": "@googletest//:gtest_main",
+        "//:os_linux": "@googletest//:gtest_main",
+        "//:os_web": ":empty",
+    }),
+)
+
+alias(
+    name = "gtest",
+    actual = select({
+        "//:os_windows": "@googletest//:gtest",
+        "//:os_linux": "@googletest//:gtest",
+        "//:os_web": ":empty",
+    }),
+)
+
+alias(
+    name = "fmtlib",
+    actual = "@fmtlib//:fmtlib",
+)
+
+alias(
+    name = "asio",
+    actual = "@asio//:asio",
+)
+
+alias(
+    name = "websocketpp",
+    actual = "@websocketpp//:websocketpp",
+)
+
+alias(
+    name = "sokol",
+    actual = "@sokol//:sokol"
+)
+
+alias(
+    name = "dear_imgui",
+    actual = "@dear_imgui//:dear_imgui"
+)
+
+alias(
+    name = "portable_file_dialogs",
+    actual = "@portable_file_dialogs//:portable_file_dialogs"
+)
+
+alias(
+    name = "pcg_basic",
+    actual = "@pcg_basic//:pcg_basic"
+)
+
+alias(
+    name = "brotlidec",
+    actual = "@brotli//:brotlidec"
+)
+
+# @Todo Some day we might want to recompile dependencies to include the license file
+# in the generated prebuilt package.
+# Although it would make building those mandatory, even for users that are interested
+# in targets that don't include them (like libcurl or BoringSSL).
+LICENSES_DICT = {
+    "@com_google_absl//:LICENSE": "abseil",
+    "//third_party/fonts:LICENSE-Allerta.txt": "Allerta",
+    "@asio//:asio/LICENSE_1_0.txt": "Asio",
+    "@basisu//:LICENSE": "Basis Universal",
+    "licenses/BoringSSL.txt": "BoringSSL",
+    "@brotli//:LICENSE": "Brotli",
+    "@cdt//:LICENSE": "CDT",
+    "@dear_imgui//:LICENSE.txt": "Dear ImGui",
+    "@delabella//:LICENSE": "DelaBella",
+    "licenses/draco.txt": "Draco",
+    "@earcut//:LICENSE": "Earcut",
+    "licenses/emscripten.txt": "Emscripten",
+    "//third_party/etcpak:LICENSE.txt": "etcpak",
+    "@fmtlib//:LICENSE": "{fmt}",
+    "//third_party/glad:LICENSE.txt": "Glad",
+    "@gsl//:LICENSE": "gsl-lite",
+    "@harfbuzz//:COPYING": "HarfBuzz",
+    "licenses/libcurl.txt": "libcurl",
+    "@lz4//:LICENSE": "LZ4",
+    "@microui//:LICENSE": "microui",
+    "//third_party/msdf:LICENSE": "MSDFGen",
+    "@pcg_basic//:LICENSE.txt": "PCG",
+    "@protobuf//:LICENSE": "Protocol Buffers",
+    "@pugixml//:LICENSE.md": "pugixml",
+    "@rapidjson//:license.txt": "RapidJSON",
+    "licenses/ic_sdf.txt": "sdBox, sdStar, sdSegment",
+    "@sokol//:LICENSE": "sokol",
+    "@stb//:LICENSE": "stb",
+    "//third_party/tlsf:LICENSE": "tlsf",
+    "@libwebp//:COPYING": "WebP codec",
+    "@websocketpp//:COPYING": "websocketpp",
+    "@zlib//:LICENSE": "zlib",
+    "@basisu//:zstd/LICENSE": "Zstandard",
+}
+
+merge_third_party_licenses_txt(
+    name = "merge_third_party_licenses_txt",
+    merged_file = "LICENSE-THIRD-PARTY.txt",
+    licenses = LICENSES_DICT
+)
+
+merge_third_party_licenses_md(
+    name = "merge_third_party_licenses_md",
+    merged_file = "third_party_licenses.md",
+    licenses = LICENSES_DICT
+)

@@ -1,0 +1,120 @@
+SRCS = [
+    "src/instance.cpp",
+    "src/log.cpp",
+    "src/resource_context.cpp",
+    "src/render_context.cpp",
+    "src/renderer.cpp",
+    "src/resource_binder.cpp",
+    "src/render_graph.cpp",
+
+    "include/log.h",
+    "include/pool.h",
+    "include/arena.h",
+    "include/instance.h",
+    "include/intern_string.h",
+    "include/conv.h",
+]
+
+HDRS = [
+    "include/mycelium.h",
+    "include/mycelium_types.h",
+    "include/mycelium_log.h",
+    "include/mycelium_backend.h",
+    "include/mycelium_renderer.h",
+    "include/mycelium_render_graph.h",
+]
+
+DEPS = [
+    "//libs/lm",
+    "@com_google_absl//absl/container:flat_hash_set",
+    "@com_google_absl//absl/container:flat_hash_map",
+    "@com_google_absl//absl/container:node_hash_map",
+    "//third_party:gsl",
+    "//third_party:fmtlib",
+]
+
+LOCAL_DEFINES = [
+    "MY_LOG_PREFIX=Mycelium",
+] + select({
+    "//:release": ["DISABLE_UNKNOWN_SAMPLER_WARNINGS"],
+    "//conditions:default": [],
+})
+
+cc_library(
+    name = "mycelium_core_33",
+    includes = ["include"],
+    hdrs = HDRS,
+    srcs = SRCS,
+    local_defines = LOCAL_DEFINES + [
+        "MYCELIUM_CORE_33=1",
+        "MYCELIUM_GL_DESKTOP=1",
+        "MYCELIUM_USE_GLAD=1",
+        "MYCELIUM_GLSL_VERSION=\"330 core\"",
+    ],
+    deps = DEPS,
+    implementation_deps = [
+        "//third_party/glad:core_33",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "mycelium_es_30",
+    includes = ["include"],
+    hdrs = HDRS,
+    srcs = SRCS,
+    local_defines = LOCAL_DEFINES + [
+        "MYCELIUM_ES_30=1",
+        "MYCELIUM_GL_ES=1",
+        "MYCELIUM_USE_GLAD=1",
+        "MYCELIUM_GLSL_VERSION=\"300 es\"",
+    ],
+    deps = DEPS,
+    implementation_deps = [
+        "//third_party/glad:es_30",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "mycelium_webgl_2",
+    includes = ["include"],
+    hdrs = HDRS,
+    srcs = SRCS,
+    local_defines = LOCAL_DEFINES + [
+        "MYCELIUM_WEBGL_2=1",
+        "MYCELIUM_GL_ES=1",
+        "MYCELIUM_GLSL_VERSION=\"300 es\"",
+    ],
+    deps = DEPS,
+    implementation_deps = [
+        "//libs/mycelium/js",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "tests",
+    srcs = [
+        "tests/render_graph.cpp",
+    ],
+    deps = [
+        "mycelium_core_33",
+        "//third_party:gtest",
+        "//third_party:gtest_main",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "mycelium",
+    visibility = ["//visibility:public"],
+    actual = select({
+        "//:windows_wgl_gl": "//libs/mycelium:mycelium_core_33",
+        "//:windows_egl_gles": "//libs/mycelium:mycelium_es_30",
+        "//:linux_wsi_x11_gl": "//libs/mycelium:mycelium_core_33",
+        "//:linux_wsi_headless_egl" : "//libs/mycelium:mycelium_core_33",
+        "//:linux_wsi_x11_gles" : "//libs/mycelium:mycelium_es_30",
+        "//:os_web": "//libs/mycelium:mycelium_webgl_2",
+    }),
+)

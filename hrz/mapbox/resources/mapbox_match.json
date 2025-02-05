@@ -1,0 +1,49 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://hrz.siradel.com/assets/sprites/sprites_mapbox/tree",
+  "glyphs": "https://hrz.siradel.com/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://hrz.siradel.com/assets/fonts/Roboto/Roboto-Regular.ttf"
+    }
+  },
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-halo-color": "rgba(0, 0, 0, 1)",
+        "text-halo-width": 1
+      },
+      "layout": {
+        "text-allow-overlap": true,
+        "text-field": [
+          "match",
+          ["get", "x"],
+          [0, 1, 2],
+          "low",
+          [7, 8, 9],
+          "high",
+          "mid"
+        ],
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-justify": "center",
+        "text-pitch-alignment": "map",
+        "text-rotate": 20.0,
+        "text-rotation-alignment": "map",
+        "text-size": 16
+      }
+    }
+  ]
+}

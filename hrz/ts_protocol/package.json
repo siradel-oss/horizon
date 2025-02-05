@@ -1,0 +1,20 @@
+{
+    "name": "@siradel/horizon-protocol",
+    "dependencies": {
+        "protobufjs": "6.11.2",
+        "@types/long": "^4.0.1",
+        "long": "^4.0.0"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "browser": {
+        "http": false,
+        "https": false,
+        "net": false,
+        "path": false,
+        "stream": false,
+        "tls": false,
+        "fs": false,
+        "crypto": false
+    }
+}

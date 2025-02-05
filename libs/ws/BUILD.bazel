@@ -1,0 +1,59 @@
+cc_library(
+    name = "ws_common",
+    hdrs = [
+        "include/ws_common.h",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "ws_server",
+    srcs = select({
+        "//:os_native": ["src/ws_server_native.cpp"],
+        "//conditions:default": []
+    }),
+    hdrs = [
+        "include/ws_server.h",
+    ],
+    includes = ["include"],
+    deps = select({
+        "//:os_native": ["//third_party:websocketpp"],
+        "//conditions:default": []
+    }) + [
+        ":ws_common",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "ws_client",
+    srcs = select({
+        "//:os_native": ["src/ws_client_native.cpp"],
+        "//:os_web": ["src/ws_client_emscripten.cpp"],
+        "//conditions:default": []
+    }),
+    hdrs = [
+        "include/ws_client.h",
+    ],
+    includes = ["include"],
+    deps = select({
+        "//:os_native": ["//third_party:websocketpp"],
+        "//conditions:default": []
+    }) + [
+        ":ws_common",
+        "//third_party:gsl",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "ws_echo_server",
+    srcs = [
+        "src/ws_echo_server.cpp",
+    ],
+    deps = [
+        ":ws_server",
+    ],
+    visibility = ["//visibility:public"],
+)

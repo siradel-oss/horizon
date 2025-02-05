@@ -1,0 +1,16 @@
+cc_library(
+    name = "stb_image",
+    srcs = ["impl.cpp"],
+    deps = [
+        "@stb//:image",
+    ],
+    defines = [
+        "STBI_WINDOWS_UTF8",
+    ],
+    local_defines = [
+        "STBI_MALLOC=stbi_malloc",
+        "STBI_REALLOC=stbi_realloc",
+        "STBI_FREE=stbi_free",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,165 @@
+#pragma once
+
+#include "hrz_core_data_texture.h"
+#include "hrz_core_selection_storage.h"
+#include "model/hrz_core_model.h"
+#include "model/hrz_core_model_common.h"
+#include "model/hrz_core_model_descriptor.h"
+#include "model/hrz_core_model_gpu_resources.h"
+#include "model/hrz_core_model_renderable.h"
+#include "model/hrz_core_model_ubo_defs.h"
+
+#include <hrz_fnd_observed.h>
+
+namespace hrz::model
+{
+struct ModelPrototype;
+
+class ModelGeometry
+{
+public:
+    enum class Status
+    {
+        Loading,
+        Ready,
+        Error,
+    };
+
+    struct Primitive
+    {
+        // Addresses ModelGeometry::_streams
+        size_t first_stream = 0;
+        size_t stream_count = 0;
+
+        lm::dbbox3 bbox;
+        lm::dmat4 transform;
+
+        my::DrawBatchInfo batch;
+        my::ResourceHandle index_buffer;
+        VertexCompressionParamsUniformData position_compression;
+        VertexCompressionParamsUniformData normal_compression;
+    };
+
+private:
+    UsedResources<int> _used_vertex_buffers;
+    UsedResources<int> _used_index_buffers;
+    UsedResources<int> _used_draco_meshes;
+
+    enum InternalStatus
+    {
+        Uninitialized,
+        Initialized,
+        Built,
+        Error,
+    };
+
+    InternalStatus _status;
+
+    std::vector<Primitive> _primitives;
+    std::vector<my::VertexInputStream> _streams;
+    bool _has_normals;
+
+    uint32_t _batch_id_offset{};
+    lm::uvec2 _batch_picking_id;   // Identifies a physical object uniquely
+    lm::uvec3 _feature_picking_id; // Identifies a logical object uniquely
+
+    bool ready_to_build() const;
+
+    // Returns true if successful
+    bool build_primitive(
+        ModelPrototype* proto,
+        SharedResources* sr,
+        Render* render,
+        const ModelDescriptor::MeshInstance& desc_mesh,
+        const ModelDescriptor::Primitive& desc_prim);
+
+protected:
+    virtual void initialize(ModelPrototype*, gsl::span<const char* const> additional_streams = {});
+
+    virtual void build(ModelPrototype*, SharedResources*, Render*);
+
+    void set_status_to_error() { _status = InternalStatus::Error; }
+
+public:
+    ModelGeometry(
+        uint32_t batch_id_offset,
+        lm::uvec2 batch_picking_id,
+        lm::uvec3 feature_picking_id);
+    virtual ~ModelGeometry() = default;
+
+    virtual void destroy(ModelPrototype*);
+
+    Status status() const;
+
+    void work(ModelPrototype*);
+    RenderRequest work_gpu(ModelPrototype*, SharedResources*, Render*);
+
+    Primitive& get_primitive(size_t i) { return _primitives[i]; }
+
+    gsl::span<const my::VertexInputStream> get_streams(const Primitive&);
+    BSphere<double> compute_bsphere(const lm::dmat4& transform) const;
+
+    void fill_ubo_data(MeshGeometryUniformData*);
+
+    virtual void callback_additional_streams(
+        SharedResources*,
+        const std::function<void(const AdditionalVertexInputStream&)>& callback);
+    virtual void on_add_stream(size_t primitive_index, const my::VertexInputStream& stream);
+
+    virtual int select_shader_collection(size_t primitive_index) const { return 0; }
+};
+
+class BatchedModelGeometry : public ModelGeometry
+{
+    using FeatureIdsTextureResource = DataTexture<2048, my::TextureFormat::RG32UI, uint64_t>;
+    using FeatureColorsTextureResource = DataTexture<2048, my::TextureFormat::RGBA8, lm::ubvec4>;
+
+    std::vector<bool> _primitive_has_float_batch_ids;
+
+    FeatureIdsTextureResource _feature_ids_texture;
+
+    selection::SelectionStorageUint32TextureMultiIndex _selection_storage;
+
+    FeatureColorsTextureResource _colors_texture;
+    bool _has_transparent_feature_colors = false;
+
+    void initialize(ModelPrototype*, gsl::span<const char* const> additional_streams = {}) override;
+    void build(ModelPrototype*, SharedResources*, Render*) override;
+
+public:
+    BatchedModelGeometry(
+        ModelPrototype* proto,
+        uint32_t feature_picking_id,
+        lm::uvec2 batch_picking_id,
+        uint32_t batch_id_offset,
+        size_t batch_length,
+        gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
+
+    void destroy(ModelPrototype*) override;
+
+    void callback_additional_streams(
+        SharedResources*,
+        const std::function<void(const AdditionalVertexInputStream&)>& callback) override;
+    void on_add_stream(size_t primitive_index, const my::VertexInputStream& stream) override;
+
+    void set_selection(const hrz::flat_hash_set<vector_data::FeatureIdHash>& selected_objects);
+    void set_colors(gsl::span<const lm::ubvec4>);
+
+    void update_gpu_data(Render*);
+
+    int select_shader_collection(size_t primitive_index) const override
+    {
+        if (primitive_index < _primitive_has_float_batch_ids.size())
+        {
+            return _primitive_has_float_batch_ids[primitive_index] ? 1 : 0;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    void patch_render_data(Render*, SharedResources* sr, RenderablePrimitive::MeshRenderData*);
+};
+
+} // namespace hrz::model

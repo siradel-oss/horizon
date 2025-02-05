@@ -1,0 +1,13 @@
+diff --git a/src/dsp/dsp.h b/src/dsp/dsp.h
+index c4f57e4d..ee9868c4 100644
+--- src/dsp/dsp.h
++++ src/dsp/dsp.h
+@@ -261,7 +261,7 @@ typedef enum {
+ } CPUFeature;
+ // returns true if the CPU supports the feature.
+ typedef int (*VP8CPUInfo)(CPUFeature feature);
+-WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
++extern VP8CPUInfo VP8GetCPUInfo;
+ 
+ //------------------------------------------------------------------------------
+ // Init stub generator

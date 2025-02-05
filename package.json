@@ -1,0 +1,19 @@
+{
+    "name": "horizon",
+    "version": "DUMMY_VERSION",
+    "devDependencies": {
+        "protobufjs": "6.11.2",
+        "chalk": "^4.0.0",
+        "escodegen": "^2.0.0",
+        "espree": "^7.0.0",
+        "estraverse": "^5.1.0",
+        "glob": "^7.1.6",
+        "jsdoc": "^3.6.3",
+        "minimist": "^1.2.0",
+        "prettier": "2.6.2",
+        "semver": "^7.1.2",
+        "tmp": "^0.2.0",
+        "uglify-js": "^3.7.7",
+        "typescript": "5.4.5"
+    }
+}

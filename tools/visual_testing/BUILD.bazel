@@ -1,0 +1,58 @@
+load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
+
+cc_binary(
+    name = "viewer",
+    srcs = [
+        "viewer.cpp",
+    ],
+    includes = ["."],
+    deps = [
+        "//hrz/branding:icons",
+        "//libs/wsi:wsi",
+        "//hrz/cpp_api:hrz_cpp_api",
+        "//hrz/core:hrz_core",
+        "//hrz/fnd:hrz_fnd",
+        "//hrz/scene_dump:migration",
+        "//libs/argparser:argparser",
+        "//third_party/stb_image_write",
+        "//third_party:gsl",
+    ],
+    linkopts = select({
+        "//:os_linux": ["-pthread", "-lz"],
+        "//conditions:default": [],
+    }) + select({
+        "//:linux_wsi_x11_gl": [
+            "-lX11",
+        ],
+        "//:linux_wsi_headless_egl" : [],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "comparator",
+    srcs = [
+        "comparator.cpp",
+    ],
+    deps = [
+        "//third_party/stb_image",
+        "//third_party/stb_image_write",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar_aggregate(
+    name = "kit",
+    extension = "tar.gz",
+    dirs = {
+        "": [
+            ":comparator",
+            ":viewer",
+            "//hrz/core:hrz_core_shared_lib",
+            "//tools/scene_dump:migrate_dump",
+            "//third_party:LICENSE-THIRD-PARTY.txt",
+            "README.md",
+        ],
+    },
+)

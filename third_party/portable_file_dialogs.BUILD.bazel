@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "portable_file_dialogs",
+    srcs = glob([
+        "portable-file-dialogs.h",
+    ]),
+    hdrs = glob([
+        "portable-file-dialogs.h",
+    ]),
+    includes = ["."],
+)

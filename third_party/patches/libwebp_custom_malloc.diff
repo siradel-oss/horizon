@@ -1,0 +1,46 @@
+diff --git a/src/utils/utils.c b/src/utils/utils.c
+index a7c3a70f..306b698b 100644
+--- src/utils/utils.c
++++ src/utils/utils.c
+@@ -196,7 +196,7 @@ void* WebPSafeMalloc(uint64_t nmemb, size_t size) {
+   Increment(&num_malloc_calls);
+   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
+   assert(nmemb * size > 0);
+-  ptr = malloc((size_t)(nmemb * size));
++  ptr = webp_malloc((size_t)(nmemb * size));
+   AddMem(ptr, (size_t)(nmemb * size));
+   return ptr;
+ }
+@@ -206,7 +206,7 @@ void* WebPSafeCalloc(uint64_t nmemb, size_t size) {
+   Increment(&num_calloc_calls);
+   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
+   assert(nmemb * size > 0);
+-  ptr = calloc((size_t)nmemb, size);
++  ptr = webp_calloc((size_t)nmemb, size);
+   AddMem(ptr, (size_t)(nmemb * size));
+   return ptr;
+ }
+@@ -216,7 +216,7 @@ void WebPSafeFree(void* const ptr) {
+     Increment(&num_free_calls);
+     SubMem(ptr);
+   }
+-  free(ptr);
++  webp_free(ptr);
+ }
+ 
+ // Public API functions.
+diff --git a/src/utils/utils.h b/src/utils/utils.h
+index ef04f108..05b5131c 100644
+--- src/utils/utils.h
++++ src/utils/utils.h
+@@ -32,6 +32,10 @@ extern "C" {
+ //------------------------------------------------------------------------------
+ // Memory allocation
+ 
++extern void* webp_malloc(size_t);
++extern void* webp_calloc(size_t, size_t);
++extern void webp_free(void*);
++
+ // This is the maximum memory amount that libwebp will ever try to allocate.
+ #ifndef WEBP_MAX_ALLOCABLE_MEMORY
+ #if SIZE_MAX > (1ULL << 34)

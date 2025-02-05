@@ -1,0 +1,28 @@
+#!/bin/bash
+
+branch_name=$(git branch | grep ^* | sed -E 's/\* //g')
+
+if [ "$branch_name" = "master" ]
+  then
+  exit
+fi
+
+commit_msg_prefix=""
+
+if [[ $branch_name == us* ]]
+then
+  commit_msg_prefix=$(echo "$branch_name" | sed -E 's/us([0-9]+)(_.*)?/[HRZ-\1]/g')
+elif [[ $branch_name == bf* ]]
+then
+  commit_msg_prefix=$(echo "$branch_name" | sed -E 's/bf([0-9]+)(_.*)?/[BF HRZ-\1]/g')
+fi
+
+commit_msg=$(cat $1)
+
+if [[ "$commit_msg" = "$commit_msg_prefix"* ]] || \
+   [[ "$commit_msg" = "fixup! "* ]] || [[ "$commit_msg" = "amend! "* ]]
+then
+  exit
+fi
+
+echo "$commit_msg_prefix $commit_msg" > $1

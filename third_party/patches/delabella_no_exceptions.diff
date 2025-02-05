@@ -1,0 +1,21 @@
+diff -u delabella/delabella.cpp delabella-patched/delabella.cpp
+--- delabella.cpp
++++ delabella.cpp
+@@ -3825,6 +3825,7 @@
+ template <typename T, typename I>
+ IDelaBella2<T, I> *IDelaBella2<T, I>::Create()
+ {
++	/*
+ 	IDelaBella2<T, I> *ret = 0;
+ 	try
+ 	{
+@@ -3835,6 +3836,9 @@
+ 		ret = 0;
+ 	}
+ 	return ret;
++	*/
++
++	return new CDelaBella2<T, I>;
+ }
+ 
+ template <typename T, typename I>

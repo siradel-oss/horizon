@@ -1,0 +1,981 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("//tools/bazel/glsl:glsl_rules.bzl", "glsl_config", "glsl_program")
+load(":cc_shaders.bzl", "cc_shaders_collection")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+copy_file(
+    name = "copy",
+    src = "//hrz/common:include/hrz_common_shader_defines.h",
+    out = "glsl/defines.glsl",
+)
+
+glsl_config(
+    name = "config",
+    includes = [
+        "glsl",
+    ],
+    common_files = glob(["glsl/**/*.glsl"]) + ["glsl/defines.glsl"],
+)
+
+glsl_program(
+    name = "Gltf",
+    config = ":config",
+    defines = ["GLTF_VISUAL"],
+    vert = "glsl/gltf/gltf.vert",
+    frag = "glsl/gltf/gltf.frag",
+)
+
+glsl_program(
+    name = "Gltf_picking",
+    config = ":config",
+    defines = ["GLTF_PICKING", "GLTF_NON_VISUAL"],
+    vert = "glsl/gltf/gltf.vert",
+    frag = "glsl/gltf/gltf.frag",
+)
+
+glsl_program(
+    name = "Gltf_depth",
+    config = ":config",
+    defines = ["GLTF_DEPTH", "GLTF_NON_VISUAL"],
+    vert = "glsl/gltf/gltf.vert",
+    frag = "glsl/gltf/gltf.frag",
+)
+
+glsl_program(
+    name = "Gltf_selection",
+    config = ":config",
+    defines = ["GLTF_SELECTION", "GLTF_NON_VISUAL"],
+    vert = "glsl/gltf/gltf.vert",
+    frag = "glsl/gltf/gltf.frag",
+)
+
+glsl_program(
+    name = "GltfImpostorBaking",
+    config = ":config",
+    defines = ["GLTF_VISUAL", "GLTF_IMPOSTOR"],
+    vert = "glsl/gltf/gltf_impostor_baking.vert",
+    frag = "glsl/gltf/gltf_impostor_baking.frag",
+)
+
+glsl_program(
+    name = "GltfInstanced",
+    config = ":config",
+    defines = ["GLTF_INSTANCED", "GLTF_VISUAL"],
+    vert = "glsl/gltf/instanced_gltf.vert",
+    frag = "glsl/gltf/instanced_gltf.frag",
+)
+
+glsl_program(
+    name = "GltfInstanced_picking",
+    config = ":config",
+    defines = ["GLTF_INSTANCED", "GLTF_PICKING", "GLTF_NON_VISUAL"],
+    vert = "glsl/gltf/instanced_gltf.vert",
+    frag = "glsl/gltf/instanced_gltf.frag",
+)
+
+glsl_program(
+    name = "GltfInstanced_depth",
+    config = ":config",
+    defines = ["GLTF_INSTANCED", "GLTF_DEPTH", "GLTF_NON_VISUAL"],
+    vert = "glsl/gltf/instanced_gltf.vert",
+    frag = "glsl/gltf/instanced_gltf.frag",
+)
+
+glsl_program(
+    name = "GltfInstanced_selection",
+    config = ":config",
+    defines = ["GLTF_INSTANCED", "GLTF_SELECTION", "GLTF_NON_VISUAL"],
+    vert = "glsl/gltf/instanced_gltf.vert",
+    frag = "glsl/gltf/instanced_gltf.frag",
+)
+
+glsl_program(
+    name = "Planet",
+    config = ":config",
+    defines = ["PLANET_VISUAL", "PLANET_LOG_DEPTH", "PLANET_MAIN_VIEW"],
+    vert = "glsl/planet/planet.vert",
+    frag = "glsl/planet/planet.frag",
+)
+
+glsl_program(
+    name = "PlanetPrecomputeHeightLut",
+    config = ":config",
+    vert = "glsl/planet/full_screen.vert",
+    frag = "glsl/planet/precompute_height_lut.frag",
+)
+
+glsl_program(
+    name = "Planet_feedback",
+    config = ":config",
+    defines = ["PLANET_FEEDBACK", "PLANET_LOG_DEPTH", "PLANET_MAIN_VIEW"],
+    vert = "glsl/planet/planet.vert",
+    frag = "glsl/planet/planet.frag",
+)
+
+glsl_program(
+    name = "Planet_picking",
+    config = ":config",
+    defines = ["PLANET_PICKING", "PLANET_LOG_DEPTH", "PLANET_MAIN_VIEW"],
+    vert = "glsl/planet/planet.vert",
+    frag = "glsl/planet/planet.frag",
+)
+
+glsl_program(
+    name = "Planet_depth",
+    config = ":config",
+    defines = ["PLANET_AUX_VIEW"],
+    vert = "glsl/planet/planet.vert",
+    frag = "glsl/planet/planet.frag",
+)
+
+glsl_program(
+    name = "Planet_selection",
+    config = ":config",
+    defines = ["PLANET_SELECTION", "PLANET_LOG_DEPTH", "PLANET_MAIN_VIEW"],
+    vert = "glsl/planet/planet.vert",
+    frag = "glsl/planet/planet.frag",
+)
+
+glsl_program(
+    name = "DevUi",
+    config = ":config",
+    vert = "glsl/dev_ui/dev_ui.vert",
+    frag = "glsl/dev_ui/dev_ui.frag",
+)
+
+glsl_program(
+    name = "ExtrudedVectors",
+    config = ":config",
+    defines = ["EXTRUDED_VISUAL", "EXTRUDED_MAIN_VIEW", "EXTRUDED_LOG_DEPTH"],
+    vert = "glsl/extruded_vectors/extruded.vert",
+    frag = "glsl/extruded_vectors/extruded.frag",
+)
+
+glsl_program(
+    name = "ExtrudedVectors_picking",
+    config = ":config",
+    defines = ["EXTRUDED_PICKING", "EXTRUDED_MAIN_VIEW", "EXTRUDED_LOG_DEPTH"],
+    vert = "glsl/extruded_vectors/extruded.vert",
+    frag = "glsl/extruded_vectors/extruded.frag",
+)
+
+glsl_program(
+    name = "ExtrudedVectors_depth",
+    config = ":config",
+    defines = ["EXTRUDED_DEPTH", "EXTRUDED_AUX_VIEW"],
+    vert = "glsl/extruded_vectors/extruded.vert",
+    frag = "glsl/extruded_vectors/extruded.frag",
+)
+
+glsl_program(
+    name = "ExtrudedVectors_selection",
+    config = ":config",
+    defines = ["EXTRUDED_SELECTION", "EXTRUDED_MAIN_VIEW", "EXTRUDED_LOG_DEPTH"],
+    vert = "glsl/extruded_vectors/extruded.vert",
+    frag = "glsl/extruded_vectors/extruded.frag",
+)
+
+glsl_program(
+    name = "FlatPolygonsSolidColor",
+    config = ":config",
+    defines = ["FLAT_VISUAL", "FLAT_POLYGONS", "FLAT_POLYGONS_SOLID_COLOR"],
+    vert = "glsl/flat_vectors/flat_polygons.vert",
+    frag = "glsl/flat_vectors/flat_polygons.frag",
+)
+
+glsl_program(
+    name = "FlatPolygonsSolidColor_picking",
+    config = ":config",
+    defines = ["FLAT_PICKING", "FLAT_POLYGONS", "FLAT_POLYGONS_SOLID_COLOR"],
+    vert = "glsl/flat_vectors/flat_polygons.vert",
+    frag = "glsl/flat_vectors/flat_polygons.frag",
+)
+
+glsl_program(
+    name = "FlatPolygonsSolidColor_selection",
+    config = ":config",
+    defines = ["FLAT_SELECTION", "FLAT_POLYGONS", "FLAT_POLYGONS_SOLID_COLOR"],
+    vert = "glsl/flat_vectors/flat_polygons.vert",
+    frag = "glsl/flat_vectors/flat_polygons.frag",
+)
+
+glsl_program(
+    name = "FlatPolygonsPattern",
+    config = ":config",
+    defines = ["FLAT_VISUAL", "FLAT_POLYGONS", "FLAT_POLYGONS_PATTERN"],
+    vert = "glsl/flat_vectors/flat_polygons.vert",
+    frag = "glsl/flat_vectors/flat_polygons.frag",
+)
+
+glsl_program(
+    name = "FlatPolygonsPattern_picking",
+    config = ":config",
+    defines = ["FLAT_PICKING", "FLAT_POLYGONS", "FLAT_POLYGONS_PATTERN"],
+    vert = "glsl/flat_vectors/flat_polygons.vert",
+    frag = "glsl/flat_vectors/flat_polygons.frag",
+)
+
+glsl_program(
+    name = "FlatPolygonsPattern_selection",
+    config = ":config",
+    defines = ["FLAT_SELECTION", "FLAT_POLYGONS", "FLAT_POLYGONS_PATTERN"],
+    vert = "glsl/flat_vectors/flat_polygons.vert",
+    frag = "glsl/flat_vectors/flat_polygons.frag",
+)
+
+glsl_program(
+    name = "FlatPoints",
+    config = ":config",
+    defines = ["FLAT_VISUAL", "FLAT_POINTS"],
+    vert = "glsl/flat_vectors/flat_points.vert",
+    frag = "glsl/flat_vectors/flat_points.frag",
+)
+
+glsl_program(
+    name = "FlatPoints_picking",
+    config = ":config",
+    defines = ["FLAT_PICKING", "FLAT_POINTS"],
+    vert = "glsl/flat_vectors/flat_points.vert",
+    frag = "glsl/flat_vectors/flat_points.frag",
+)
+
+glsl_program(
+    name = "FlatPoints_selection",
+    config = ":config",
+    defines = ["FLAT_SELECTION", "FLAT_POINTS"],
+    vert = "glsl/flat_vectors/flat_points.vert",
+    frag = "glsl/flat_vectors/flat_points.frag",
+)
+
+glsl_program(
+    name = "FlatPolylinesSquare",
+    config = ":config",
+    defines = ["FLAT_VISUAL", "FLAT_POLYLINES", "FLAT_POLYLINES_SQUARE"],
+    vert = "glsl/flat_vectors/flat_polylines.vert",
+    frag = "glsl/flat_vectors/flat_polylines.frag",
+)
+
+glsl_program(
+    name = "FlatPolylinesSquare_picking",
+    config = ":config",
+    defines = ["FLAT_PICKING", "FLAT_POLYLINES", "FLAT_POLYLINES_SQUARE"],
+    vert = "glsl/flat_vectors/flat_polylines.vert",
+    frag = "glsl/flat_vectors/flat_polylines.frag",
+)
+
+glsl_program(
+    name = "FlatPolylinesSquare_selection",
+    config = ":config",
+    defines = ["FLAT_SELECTION", "FLAT_POLYLINES", "FLAT_POLYLINES_SQUARE"],
+    vert = "glsl/flat_vectors/flat_polylines.vert",
+    frag = "glsl/flat_vectors/flat_polylines.frag",
+)
+
+glsl_program(
+    name = "FlatPolylinesRound",
+    config = ":config",
+    defines = ["FLAT_VISUAL", "FLAT_POLYLINES", "FLAT_POLYLINES_ROUND"],
+    vert = "glsl/flat_vectors/flat_polylines.vert",
+    frag = "glsl/flat_vectors/flat_polylines.frag",
+)
+
+glsl_program(
+    name = "FlatPolylinesRound_picking",
+    config = ":config",
+    defines = ["FLAT_PICKING", "FLAT_POLYLINES", "FLAT_POLYLINES_ROUND"],
+    vert = "glsl/flat_vectors/flat_polylines.vert",
+    frag = "glsl/flat_vectors/flat_polylines.frag",
+)
+
+glsl_program(
+    name = "FlatPolylinesRound_selection",
+    config = ":config",
+    defines = ["FLAT_SELECTION", "FLAT_POLYLINES", "FLAT_POLYLINES_ROUND"],
+    vert = "glsl/flat_vectors/flat_polylines.vert",
+    frag = "glsl/flat_vectors/flat_polylines.frag",
+)
+
+glsl_program(
+    name = "FlatHeatmapQuad",
+    config = ":config",
+    defines = ["FLAT_VISUAL", "FLAT_HEATMAP_QUAD"],
+    vert = "glsl/flat_vectors/heatmap_quad.vert",
+    frag = "glsl/flat_vectors/heatmap_quad.frag",
+)
+
+glsl_program(
+    name = "HeatmapPoints",
+    config = ":config",
+    defines = ["HEATMAP_VISUAL"],
+    vert = "glsl/heatmap/points.vert",
+    frag = "glsl/heatmap/points.frag",
+)
+
+glsl_program(
+    name = "Cylinders",
+    config = ":config",
+    defines = ["CYLINDER_VISUAL", "CYLINDER_LOG_DEPTH"],
+    vert = "glsl/cylinders/cylinders.vert",
+    frag = "glsl/cylinders/cylinders.frag",
+)
+
+glsl_program(
+    name = "Cylinders_picking",
+    config = ":config",
+    defines = ["CYLINDER_PICKING", "CYLINDER_LOG_DEPTH"],
+    vert = "glsl/cylinders/cylinders.vert",
+    frag = "glsl/cylinders/cylinders.frag",
+)
+
+glsl_program(
+    name = "Cylinders_depth",
+    config = ":config",
+    defines = ["CYLINDER_DEPTH"],
+    vert = "glsl/cylinders/cylinders.vert",
+    frag = "glsl/cylinders/cylinders.frag",
+)
+
+glsl_program(
+    name = "Cylinders_selection",
+    config = ":config",
+    defines = ["CYLINDER_SELECTION", "CYLINDER_LOG_DEPTH"],
+    vert = "glsl/cylinders/cylinders.vert",
+    frag = "glsl/cylinders/cylinders.frag",
+)
+
+glsl_program(
+    name = "Impostor",
+    config = ":config",
+    defines = ["IMPOSTOR_VISUAL", "IMPOSTOR_LOG_DEPTH"],
+    vert = "glsl/impostors/impostor.vert",
+    frag = "glsl/impostors/impostor.frag",
+)
+
+glsl_program(
+    name = "Impostor_picking",
+    config = ":config",
+    defines = ["IMPOSTOR_PICKING", "IMPOSTOR_LOG_DEPTH"],
+    vert = "glsl/impostors/impostor.vert",
+    frag = "glsl/impostors/impostor.frag",
+)
+
+glsl_program(
+    name = "Impostor_selection",
+    config = ":config",
+    defines = ["IMPOSTOR_SELECTION", "IMPOSTOR_LOG_DEPTH"],
+    vert = "glsl/impostors/impostor.vert",
+    frag = "glsl/impostors/impostor.frag",
+)
+
+glsl_program(
+    name = "Symbol_placeholder",
+    config = ":config",
+    defines = ["SYMBOL_VISUAL", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/placeholder/placeholder.vert",
+    frag = "glsl/symbol/placeholder/placeholder.frag",
+)
+
+glsl_program(
+    name = "Symbol_placeholder_picking",
+    config = ":config",
+    defines = ["SYMBOL_PICKING", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/placeholder/placeholder.vert",
+    frag = "glsl/symbol/placeholder/placeholder.frag",
+)
+
+glsl_program(
+    name = "Symbol_placeholder_selection",
+    config = ":config",
+    defines = ["SYMBOL_SELECTION", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/placeholder/placeholder.vert",
+    frag = "glsl/symbol/placeholder/placeholder.frag",
+)
+
+glsl_program(
+    name = "Symbol_image",
+    config = ":config",
+    defines = ["SYMBOL_VISUAL", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/image/image.vert",
+    frag = "glsl/symbol/image/image.frag",
+)
+
+glsl_program(
+    name = "Symbol_image_picking",
+    config = ":config",
+    defines = ["SYMBOL_PICKING", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/image/image.vert",
+    frag = "glsl/symbol/image/image.frag",
+)
+
+glsl_program(
+    name = "Symbol_image_selection",
+    config = ":config",
+    defines = ["SYMBOL_SELECTION", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/image/image.vert",
+    frag = "glsl/symbol/image/image.frag",
+)
+
+glsl_program(
+    name = "Symbol_decorated_shape",
+    config = ":config",
+    defines = ["SYMBOL_VISUAL", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/decorated_shape/decorated_shape.vert",
+    frag = "glsl/symbol/decorated_shape/decorated_shape.frag",
+)
+
+glsl_program(
+    name = "Symbol_decorated_shape_picking",
+    config = ":config",
+    defines = ["SYMBOL_PICKING", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/decorated_shape/decorated_shape.vert",
+    frag = "glsl/symbol/decorated_shape/decorated_shape.frag",
+)
+
+glsl_program(
+    name = "Symbol_decorated_shape_selection",
+    config = ":config",
+    defines = ["SYMBOL_SELECTION", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/decorated_shape/decorated_shape.vert",
+    frag = "glsl/symbol/decorated_shape/decorated_shape.frag",
+)
+
+glsl_program(
+    name = "Symbol_text",
+    config = ":config",
+    defines = ["SYMBOL_VISUAL", "SYMBOL_TEXT_FILL", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/text/text.vert",
+    frag = "glsl/symbol/text/text.frag",
+)
+
+glsl_program(
+    name = "Symbol_text_outline",
+    config = ":config",
+    defines = ["SYMBOL_VISUAL", "SYMBOL_TEXT_OUTLINE", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/text/text.vert",
+    frag = "glsl/symbol/text/text.frag",
+)
+
+glsl_program(
+    name = "Symbol_text_picking",
+    config = ":config",
+    defines = ["SYMBOL_PICKING", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/text/text.vert",
+    frag = "glsl/symbol/text/text.frag",
+)
+
+glsl_program(
+    name = "Symbol_text_selection",
+    config = ":config",
+    defines = ["SYMBOL_SELECTION", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/text/text.vert",
+    frag = "glsl/symbol/text/text.frag",
+)
+
+glsl_program(
+    name = "Symbol_leader_line",
+    config = ":config",
+    defines = ["SYMBOL_VISUAL", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/leader_line/leader_line.vert",
+    frag = "glsl/symbol/leader_line/leader_line.frag",
+)
+
+glsl_program(
+    name = "Symbol_leader_line_picking",
+    config = ":config",
+    defines = ["SYMBOL_PICKING", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/leader_line/leader_line.vert",
+    frag = "glsl/symbol/leader_line/leader_line.frag",
+)
+
+glsl_program(
+    name = "Symbol_leader_line_selection",
+    config = ":config",
+    defines = ["SYMBOL_SELECTION", "SYMBOL_LOG_DEPTH"],
+    vert = "glsl/symbol/leader_line/leader_line.vert",
+    frag = "glsl/symbol/leader_line/leader_line.frag",
+)
+
+glsl_program(
+    name = "Three_d_tiles_box",
+    config = ":config",
+    vert = "glsl/three_d_tiles/boxes/box.vert",
+    frag = "glsl/three_d_tiles/boxes/box.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dm",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_VISUAL"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dmFloatBatchIds",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_VISUAL", "B3DM_FLOAT_BATCH_IDS"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dm_picking",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_NON_VISUAL", "GLTF_PICKING"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dmFloatBatchIds_picking",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_NON_VISUAL", "GLTF_PICKING", "B3DM_FLOAT_BATCH_IDS"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dm_depth",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_NON_VISUAL", "GLTF_DEPTH"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dmFloatBatchIds_depth",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_NON_VISUAL", "GLTF_DEPTH", "B3DM_FLOAT_BATCH_IDS"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dm_selection",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_NON_VISUAL", "B3DM_SELECTION"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "ThreeDTilesB3dmFloatBatchIds_selection",
+    config = ":config",
+    defines = ["GLTF_SINGLE", "GLTF_NON_VISUAL", "B3DM_SELECTION", "B3DM_FLOAT_BATCH_IDS"],
+    vert = "glsl/three_d_tiles/b3dm/b3dm.vert",
+    frag = "glsl/three_d_tiles/b3dm/b3dm.frag",
+)
+
+glsl_program(
+    name = "SkyViewPrecompute",
+    config = ":config",
+    vert = "glsl/sky/fullscreen.vert",
+    frag = "glsl/sky/sky_view_precompute.frag",
+)
+
+glsl_program(
+    name = "SkyTransmittancePrecompute",
+    config = ":config",
+    vert = "glsl/sky/fullscreen.vert",
+    frag = "glsl/sky/transmittance_precompute.frag",
+)
+
+glsl_program(
+    name = "SkyRenderBackgroundSkyView",
+    config = ":config",
+    defines = ["USE_SKY_VIEW"],
+    vert = "glsl/sky/sky_box.vert",
+    frag = "glsl/sky/sky_render_background.frag",
+)
+
+glsl_program(
+    name = "SkyRenderBackgroundSimple",
+    config = ":config",
+    vert = "glsl/sky/sky_box.vert",
+    frag = "glsl/sky/sky_render_background.frag",
+)
+
+glsl_program(
+    name = "SkyRenderWorldSkyView",
+    config = ":config",
+    defines = ["USE_SKY_VIEW"],
+    vert = "glsl/sky/sky_box.vert",
+    frag = "glsl/sky/sky_render_world.frag",
+)
+
+glsl_program(
+    name = "SkyRenderWorldFog",
+    config = ":config",
+    defines = ["USE_FOG"],
+    vert = "glsl/sky/sky_box.vert",
+    frag = "glsl/sky/sky_render_world.frag",
+)
+
+glsl_program(
+    name = "SkyAerialPrecompute",
+    config = ":config",
+    vert = "glsl/sky/fullscreen.vert",
+    frag = "glsl/sky/aerial_precompute.frag",
+)
+
+glsl_program(
+    name = "SkyEnvShInit",
+    config = ":config",
+    vert = "glsl/sky/fullscreen.vert",
+    frag = "glsl/sky/env_sh_init.frag",
+)
+
+glsl_program(
+    name = "SkyEnvShSubsample",
+    config = ":config",
+    vert = "glsl/sky/fullscreen.vert",
+    frag = "glsl/sky/env_sh_subsample.frag",
+)
+
+glsl_program(
+    name = "DepthReductionInitialCopy",
+    config = ":config",
+    vert = "glsl/depth_reduction/full_screen.vert",
+    frag = "glsl/depth_reduction/initial_copy.frag",
+)
+
+glsl_program(
+    name = "DepthReductionReduce",
+    config = ":config",
+    vert = "glsl/depth_reduction/full_screen.vert",
+    frag = "glsl/depth_reduction/reduce.frag",
+)
+
+glsl_program(
+    name = "HighlightApply",
+    config = ":config",
+    vert = "glsl/highlight/full_screen.vert",
+    frag = "glsl/highlight/outline.frag",
+)
+
+glsl_program(
+    name = "ViewshedWireframe",
+    config = ":config",
+    vert = "glsl/viewshed/wireframe.vert",
+    frag = "glsl/viewshed/wireframe.frag",
+)
+
+glsl_program(
+    name = "CameraDepthToHeight",
+    config = ":config",
+    defines = [],
+    vert = "glsl/camera_height/full_screen.vert",
+    frag = "glsl/camera_height/depth_to_height.frag",
+)
+
+glsl_program(
+    name = "ShapeEditorPolyline_stencil",
+    config = ":config",
+    defines = ["EDITOR_STENCIL"],
+    vert = "glsl/shape_editor/polyline_stencil.vert",
+    frag = "glsl/shape_editor/shape_stencil.frag",
+)
+
+glsl_program(
+    name = "ShapeEditorPolygon_stencil",
+    config = ":config",
+    defines = ["EDITOR_STENCIL"],
+    vert = "glsl/shape_editor/polygon_stencil.vert",
+    frag = "glsl/shape_editor/shape_stencil.frag",
+)
+
+glsl_program(
+    name = "ShapeEditorShape_visual",
+    config = ":config",
+    defines = ["EDITOR_VISUAL"],
+    vert = "glsl/shape_editor/full_screen.vert",
+    frag = "glsl/shape_editor/shape_stencil.frag",
+)
+
+glsl_program(
+    name = "ShapeEditorShape_picking",
+    config = ":config",
+    defines = ["EDITOR_PICKING"],
+    vert = "glsl/shape_editor/full_screen.vert",
+    frag = "glsl/shape_editor/shape_stencil.frag",
+)
+
+glsl_program(
+    name = "ShapeEditorControl_visual",
+    config = ":config",
+    defines = ["EDITOR_VISUAL"],
+    vert = "glsl/shape_editor/control.vert",
+    frag = "glsl/shape_editor/control.frag",
+)
+
+glsl_program(
+    name = "ShapeEditorControl_picking",
+    config = ":config",
+    defines = ["EDITOR_PICKING"],
+    vert = "glsl/shape_editor/control.vert",
+    frag = "glsl/shape_editor/control.frag",
+)
+
+glsl_program(
+    name = "PixelGrid",
+    config = ":config",
+    vert = "glsl/pixel_grid/full_screen.vert",
+    frag = "glsl/pixel_grid/pixel_grid.frag",
+)
+
+glsl_program(
+    name = "Gizmo_mesh",
+    config = ":config",
+    vert = "glsl/gizmo/gizmo_mesh.vert",
+    frag = "glsl/gizmo/gizmo_mesh.frag",
+)
+
+glsl_program(
+    name = "Gizmo_circle",
+    config = ":config",
+    vert = "glsl/gizmo/gizmo_circle.vert",
+    frag = "glsl/gizmo/gizmo_circle.frag",
+)
+
+glsl_program(
+    name = "Gizmo_line",
+    config = ":config",
+    vert = "glsl/gizmo/line.vert",
+    frag = "glsl/gizmo/line.frag",
+)
+
+glsl_program(
+    name = "Grid",
+    config = ":config",
+    vert = "glsl/grid/grid.vert",
+    frag = "glsl/grid/grid.frag",
+)
+
+glsl_program(
+    name = "UiPeelAccum",
+    config = ":config",
+    vert = "glsl/ui/full_screen.vert",
+    frag = "glsl/ui/peel_accum.frag",
+)
+
+glsl_program(
+    name = "UiApplyAccum",
+    config = ":config",
+    vert = "glsl/ui/full_screen.vert",
+    frag = "glsl/ui/apply_accum.frag",
+)
+
+glsl_program(
+    name = "Present",
+    config = ":config",
+    vert = "glsl/present/quad.vert",
+    frag = "glsl/present/blit.frag",
+)
+
+glsl_program(
+    name = "LoadingScreen",
+    config = ":config",
+    vert = "glsl/loading_screen/quad.vert",
+    frag = "glsl/loading_screen/quad.frag",
+)
+
+glsl_program(
+    name = "DebugDraw",
+    config = ":config",
+    vert = "glsl/debug_draw/debug_draw.vert",
+    frag = "glsl/debug_draw/debug_draw.frag",
+)
+
+glsl_program(
+    name = "DebugText",
+    config = ":config",
+    vert = "glsl/debug_draw/debug_text.vert",
+    frag = "glsl/debug_draw/debug_text.frag",
+)
+
+glsl_program(
+    name = "DebugTexture",
+    config = ":config",
+    vert = "glsl/debug_draw/debug_texture.vert",
+    frag = "glsl/debug_draw/debug_texture.frag",
+)
+
+glsl_program(
+    name = "MergeDepths",
+    config = ":config",
+    vert = "glsl/merge_depths/full_screen.vert",
+    frag = "glsl/merge_depths/merge.frag",
+)
+
+glsl_program(
+    name = "PointCloud_visual",
+    config = ":config",
+    defines = ["POINT_CLOUD_VISUAL", "POINT_CLOUD_MAIN_VIEW", "POINT_CLOUD_LOG_DEPTH"],
+    vert = "glsl/point_cloud/point_cloud.vert",
+    frag = "glsl/point_cloud/point_cloud.frag",
+)
+
+glsl_program(
+    name = "PointCloud_picking",
+    config = ":config",
+    defines = ["POINT_CLOUD_PICKING", "POINT_CLOUD_MAIN_VIEW", "POINT_CLOUD_LOG_DEPTH"],
+    vert = "glsl/point_cloud/point_cloud.vert",
+    frag = "glsl/point_cloud/point_cloud.frag",
+)
+
+glsl_program(
+    name = "PointCloud_selection",
+    config = ":config",
+    defines = ["POINT_CLOUD_SELECTION", "POINT_CLOUD_MAIN_VIEW", "POINT_CLOUD_LOG_DEPTH"],
+    vert = "glsl/point_cloud/point_cloud.vert",
+    frag = "glsl/point_cloud/point_cloud.frag",
+)
+
+cc_shaders_collection(
+    name = "hrz_core_shaders",
+    namespace = "hrz_shaders",
+    programs = [
+        ":Gltf",
+        ":Gltf_picking",
+        ":Gltf_depth",
+        ":Gltf_selection",
+        ":GltfImpostorBaking",
+        ":GltfInstanced",
+        ":GltfInstanced_picking",
+        ":GltfInstanced_depth",
+        ":GltfInstanced_selection",
+        ":DevUi",
+        ":Planet",
+        ":PlanetPrecomputeHeightLut",
+        ":Planet_feedback",
+        ":Planet_picking",
+        ":Planet_depth",
+        ":Planet_selection",
+        ":ExtrudedVectors",
+        ":ExtrudedVectors_picking",
+        ":ExtrudedVectors_depth",
+        ":ExtrudedVectors_selection",
+        ":FlatPolygonsSolidColor",
+        ":FlatPolygonsSolidColor_picking",
+        ":FlatPolygonsSolidColor_selection",
+        ":FlatPolygonsPattern",
+        ":FlatPolygonsPattern_picking",
+        ":FlatPolygonsPattern_selection",
+        ":FlatPolylinesSquare",
+        ":FlatPolylinesSquare_picking",
+        ":FlatPolylinesSquare_selection",
+        ":FlatPolylinesRound",
+        ":FlatPolylinesRound_picking",
+        ":FlatPolylinesRound_selection",
+        ":FlatHeatmapQuad",
+        ":HeatmapPoints",
+        ":Cylinders",
+        ":Cylinders_picking",
+        ":Cylinders_depth",
+        ":Cylinders_selection",
+        ":Symbol_placeholder",
+        ":Symbol_placeholder_picking",
+        ":Symbol_placeholder_selection",
+        ":Symbol_image",
+        ":Symbol_image_picking",
+        ":Symbol_image_selection",
+        ":Symbol_decorated_shape",
+        ":Symbol_decorated_shape_picking",
+        ":Symbol_decorated_shape_selection",
+        ":Symbol_text",
+        ":Symbol_text_outline",
+        ":Symbol_text_picking",
+        ":Symbol_text_selection",
+        ":Symbol_leader_line",
+        ":Symbol_leader_line_picking",
+        ":Symbol_leader_line_selection",
+        ":Three_d_tiles_box",
+        ":ThreeDTilesB3dm",
+        ":ThreeDTilesB3dm_depth",
+        ":ThreeDTilesB3dm_picking",
+        ":ThreeDTilesB3dm_selection",
+        ":ThreeDTilesB3dmFloatBatchIds",
+        ":ThreeDTilesB3dmFloatBatchIds_depth",
+        ":ThreeDTilesB3dmFloatBatchIds_picking",
+        ":ThreeDTilesB3dmFloatBatchIds_selection",
+        ":SkyViewPrecompute",
+        ":SkyTransmittancePrecompute",
+        ":SkyRenderBackgroundSimple",
+        ":SkyRenderBackgroundSkyView",
+        ":SkyRenderWorldSkyView",
+        ":SkyRenderWorldFog",
+        ":SkyAerialPrecompute",
+        ":SkyEnvShInit",
+        ":SkyEnvShSubsample",
+        ":DepthReductionInitialCopy",
+        ":DepthReductionReduce",
+        ":HighlightApply",
+        ":ViewshedWireframe",
+        ":Impostor",
+        ":Impostor_picking",
+        ":Impostor_selection",
+        ":FlatPoints",
+        ":FlatPoints_picking",
+        ":FlatPoints_selection",
+        ":CameraDepthToHeight",
+        ":ShapeEditorPolyline_stencil",
+        ":ShapeEditorPolygon_stencil",
+        ":ShapeEditorShape_visual",
+        ":ShapeEditorShape_picking",
+        ":ShapeEditorControl_visual",
+        ":ShapeEditorControl_picking",
+        ":PixelGrid",
+        ":Gizmo_mesh",
+        ":Gizmo_circle",
+        ":Gizmo_line",
+        ":Grid",
+        ":UiPeelAccum",
+        ":UiApplyAccum",
+        ":Present",
+        ":DebugDraw",
+        ":DebugText",
+        ":DebugTexture",
+        ":LoadingScreen",
+        ":MergeDepths",
+        ":PointCloud_visual",
+        ":PointCloud_picking",
+        ":PointCloud_selection",
+    ],
+)
+
+filegroup(
+    name = "shaders_srcs",
+    srcs = [":hrz_core_shaders"],
+    output_group = "srcs",
+)
+
+filegroup(
+    name = "shaders_hdrs",
+    srcs = [":hrz_core_shaders"],
+    output_group = "hdrs",
+)
+
+cc_library(
+    name = "shaders",
+    srcs = [
+        "src/hrz_shaders_decompressor.cpp",
+        "include/hrz_shaders_decompressor.h",
+        ":shaders_srcs"
+    ],
+    hdrs = [
+        ":shaders_hdrs",
+    ],
+    includes = ["include"],
+    deps = [
+        "//third_party:lz4",
+    ],
+    visibility = ["//hrz/core:__subpackages__"],
+)
+
+py_binary(
+    name = "generate_shader_source",
+    srcs = ["generate_shader_source.py"],
+    main = "generate_shader_source.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)

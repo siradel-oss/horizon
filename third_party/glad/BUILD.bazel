@@ -1,0 +1,56 @@
+cc_library(
+    name = "core_33",
+    includes = ["core_33/include"],
+    hdrs = [
+        "core_33/include/glad/glad.h",
+        "core_33/include/KHR/khrplatform.h",
+    ],
+    srcs = [
+        "core_33/src/glad.c",
+    ],
+    linkopts = select({
+        "//:os_windows": [
+            "opengl32.lib",
+        ],
+        "//:os_linux": [
+            "-lGL",
+            "-ldl",
+        ],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "es_30",
+    includes = ["es_30/include"],
+    hdrs = [
+        "es_30/include/glad/glad.h",
+        "es_30/include/KHR/khrplatform.h",
+    ],
+    srcs = [
+        "es_30/src/glad.c",
+    ],
+    linkopts = select({
+        "//:os_web": [
+            "-s", "USE_WEBGL2=1",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "egl_15",
+    includes = ["egl_15/include"],
+    hdrs = [
+        "egl_15/include/EGL/eglplatform.h",
+        "egl_15/include/glad/egl.h",
+        "egl_15/include/KHR/khrplatform.h",
+    ],
+    srcs = [
+        "egl_15/src/egl.c",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["LICENSE.txt"])

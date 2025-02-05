@@ -1,0 +1,16 @@
+filegroup(
+    name = "js_files",
+    srcs = [
+        "src/hrz_js_lib.js",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "hrz_js_lib",
+    hdrs = [
+        "include/hrz_js_lib.h",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,166 @@
+syntax = "proto3";
+package HrzJobsProtocol;
+option cc_enable_arenas = true;
+option optimize_for = LITE_RUNTIME;
+
+// Params and response types definitions must be included
+// in `hrz_common_job_params.h`.
+//
+// In order to maintain memory safety, do not store any
+// references or pointers in job parameters and responses.
+// They must be self-contained. The only exception is blobs,
+// because they are reference-counted, and do not contain
+// references themselves.
+//
+// It is necessary to specify whether params and response
+// types are structs or classes, because Visual Studio is
+// non-conformant and mangles them differently. It can
+// cause some link-time errors when a type is forward
+// declared in a library and defined in another.
+
+enum JobType {
+    reserved 9, 12, 19;
+
+    // Test job 1
+    //
+    // @params_type="struct hrz::test::TestJob1Params"
+    // @response_type="struct hrz::test::TestJob1Response"
+    TEST_JOB_1          = 0;
+
+    // Test job 2
+    //
+    // @params_type="struct hrz::test::TestJob2Params"
+    // @response_type="struct hrz::test::TestJob2Response"
+    TEST_JOB_2          = 1;
+
+    // @params_type="struct hrz::planet::FeedbackData"
+    // @response_type="struct hrz::planet::TileList"
+    PROCESS_FEEDBACK_TEXTURE = 3;
+
+    // @params_type="struct hrz::planet::RasterTileReprojParams"
+    // @response_type="struct hrz::planet::ReprojectedTiles"
+    REPROJECT_RASTER_TILE    = 4;
+
+    // @params_type="struct hrz::planet::MipmapGenerationParams"
+    // @response_type="struct hrz::planet::Mipmaps"
+    GENERATE_MIPMAPS    = 5;
+
+    // @params_type="struct hrz::planet::RasterTileCompositionParams"
+    // @response_type="class hrz::planet::RasterTileCompositionResponse"
+    COMPOSE_RASTER_TILE = 6;
+
+    // @params_type="struct hrz::vector_data::EncodedVectorTile"
+    // @response_type="struct hrz::vector_data::DecodedVectorTile"
+    DECODE_VECTOR_TILE  = 7;
+
+    // @params_type="struct hrz::vt::ExtrudedVectorData"
+    // @response_type="struct hrz::vt::ExtrudedVectorGeometry"
+    BAKE_EXTRUDED_VECTOR_GEOMETRY  = 8;
+
+    // @params_type="struct hrz::vt::ModelData"
+    // @response_type="struct hrz::vt::ModelGeometry"
+    BAKE_3D_MODEL_GEOMETRY = 10;
+
+    // @params_type="struct hrz::vt::FlatVectorData"
+    // @response_type="struct hrz::vt::FlatVectorGeometry"
+    BAKE_FLAT_VECTOR_GEOMETRY  = 11;
+
+    // @params_type="struct hrz::planet::CullPointsQueryParams"
+    // @response_type="struct hrz::planet::CulledPointsQuery"
+    CULL_POINTS_QUERY   = 13;
+
+    // @params_type="struct hrz::planet::SamplePointsQueryParams"
+    // @response_type="struct hrz::planet::SampledPointsQuery"
+    SAMPLE_POINTS_QUERY = 14;
+
+    // @params_type="struct hrz::planet::TilemapResourceParams"
+    // @response_type="struct hrz::planet::TilemapResourceResponse"
+    PARSE_TILEMAP_RESOURCE = 15;
+
+    // @params_type="struct hrz::style::FeaturesStylingData"
+    // @response_type="struct hrz::style::StylingResult"
+    STYLE_FEATURES = 16;
+
+    // @params_type="struct hrz::planet::PalettizeImageParams"
+    // @response_type="class hrz::BlobImage"
+    PALETTIZE_IMAGE = 17;
+
+    // @params_type="struct hrz::vt::CylinderVectorData"
+    // @response_type="struct hrz::vt::CylinderVectorGeometry"
+    BAKE_CYLINDER_VECTOR_GEOMETRY = 18;
+
+    // @params_type="struct hrz::three_d_tiles::EncodedThreeDTilesTileset"
+    // @response_type="struct hrz::three_d_tiles::ThreeDTilesTilesetDescriptor"
+    DECODE_THREE_D_TILES_TILESET = 20;
+
+    // @params_type="struct hrz::blobs::BlobHandle"
+    // @response_type="struct hrz::model::Mesh"
+    DECOMPRESS_DRACO_MESH = 21;
+
+    // @params_type="struct hrz::planet::WmtsResourceParams"
+    // @response_type="struct hrz::planet::WmtsResourceResponse"
+    PARSE_WMTS_RESOURCE = 23;
+
+    // @params_type="struct hrz::planet::WmsResourceParams"
+    // @response_type="struct hrz::planet::WmsResourceResponse"
+    PARSE_WMS_RESOURCE = 24;
+
+    // @params_type="struct hrz::planet::CesiumTerrainTileData"
+    // @response_type="class hrz::BlobImage"
+    RASTERIZE_CESIUM_TERRAIN_TILE = 25;
+
+    // Decode an image.
+    // The input data is the encoded image, as a blob.
+    // The image type is guessed from the data.
+    // For supported input formats, see https://github.com/nothings/stb/blob/master/stb_image.h
+    // 1, 2, 3 and 4 channels are supported.
+    // The output data is the decoded blob image, with one byte per channel per pixel.
+    //
+    // @params_type="struct hrz::BlobImageDecodingParams"
+    // @response_type="class hrz::BlobImage"
+    DECODE_BLOB_IMAGE = 26;
+
+    // @params_type="struct hrz::vector_data::UnsortedVectorData"
+    // @response_type="class hrz::vector_data::SortedVectorData"
+    SORT_VECTOR_DATA = 27;
+
+    // @params_type="struct hrz::three_d_tiles::EncodedBatchTable"
+    // @response_type="struct hrz::three_d_tiles::DecodedBatchTable"
+    DECODE_THREE_D_TILES_BATCH_TABLE = 28;
+
+    // @params_type="struct hrz::vector_data::RawClientVectorData"
+    // @response_type="struct hrz::vector_data::DecodedVectorTile"
+    MOVE_CLIENT_VECTOR_DATA_TO_BLOBS = 29;
+
+    // @params_type="struct hrz::BlobImageCompressionParams"
+    // @response_type="class hrz::BlobImage"
+    COMPRESS_BLOB_IMAGE = 30;
+
+    // @params_type="struct hrz::vt::HeatmapData"
+    // @response_type="struct hrz::vt::HeatmapGeometry"
+    BAKE_HEATMAP_GEOMETRY = 31;
+
+    // @params_type="struct hrz::vt::SymbolBakingData"
+    // @response_type="struct hrz::vt::BakedSymbols"
+    BAKE_SYMBOLS = 32;
+
+    // @params_type="struct hrz::blobs::BlobHandle"
+    // @response_type="struct hrz::vector_data::ParsedMvt"
+    PARSE_MVT = 34;
+
+    // @params_type="struct hrz::vt::SymbolCullingParams"
+    // @response_type="struct hrz::vt::SymbolCullingResponse"
+    CULL_SYMBOLS = 35;
+
+    // @params_type="struct hrz::vector_data::VectorTileGeometry"
+    // @response_type="struct hrz::vector_data::AabbTree"
+    BUILD_AABB_TREE = 36;
+
+    // @params_type="struct hrz::vector_data::VectorTileExtractionParams"
+    // @response_type="struct hrz::vector_data::DecodedVectorTile"
+    EXTRACT_VECTOR_TILE = 37;
+
+    // @params_type="struct hrz::DecompressBlobParams"
+    // @response_type="struct hrz::blobs::BlobHandle"
+    DECOMPRESS_BLOB = 38;
+}

@@ -1,0 +1,9 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "gsl",
+    hdrs = glob(["include/gsl/*"]),
+    includes = ["include"],
+)
+
+exports_files(["LICENSE"])

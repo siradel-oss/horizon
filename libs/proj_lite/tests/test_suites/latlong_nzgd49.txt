@@ -1,0 +1,13 @@
+# nzgd49 is only usable in the form we know about in proj_lite around
+# new zealand. So we test with a point in new zealand...
+
+= +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+< 172 -43 1e-7
+> +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+> +proj=longlat +datum=nzgd49 +no_defs
+
+= +proj=longlat +datum=nzgd49 +no_defs
+< 172 -43 1e-7
+> +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+> +proj=longlat +datum=nzgd49 +no_defs
+

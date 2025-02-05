@@ -1,0 +1,20 @@
+{
+    "version": 8,
+    "sources": {
+      "france_regions": {
+        "type": "geojson",
+        "data": "https://hrz.siradel.com/assets/geojson/france_regions.geojson"
+      }
+    },
+    "layers": [
+        {
+            "id": "france_regions",
+            "type": "fill",
+            "source": "france_regions",
+            "paint": {
+                "fill-color": "#ff0000"
+            }
+        }
+    ]
+  }
+

@@ -1,0 +1,27 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "etcpak",
+    hdrs = [
+        "ProcessDxtc.hpp",
+        "ProcessEtc.hpp",
+    ],
+    srcs = glob([
+        "*.cpp",
+        "*.hpp",
+    ]),
+    includes = [
+        ".",
+    ],
+    include_prefix = "etcpak",
+    local_defines = select({
+        "@//:os_native": ["__SSE4_1__"],
+        "//conditions:default": [],
+    }),
+    copts = select({
+        "@//:os_linux": ["-msse4.1"],
+        "//conditions:default": [],
+    }),
+)
+
+exports_files(["LICENSE.txt"])

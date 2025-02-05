@@ -1,0 +1,14 @@
+cc_library(
+    name = "argparser",
+    hdrs = [
+        "argparser.h",
+    ],
+    srcs = [
+        "argparser.cpp",
+    ],
+    deps = [
+        "//hrz/fnd:hrz_fnd",
+    ],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+)

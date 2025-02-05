@@ -1,0 +1,38 @@
+{
+  "version": 8,
+  "id": "test_parse_vector_source",
+  "sources": {
+    "hk_mvt": {
+      "type": "vector",
+      "tiles": ["https://hrz.siradel.com/assets/mvt/HK/{z}/{x}/{-y}.mvt"],
+      "minZoom": 0,
+      "maxZoom": 14
+    },
+    "hk_tilejson": {
+      "type": "vector",
+      "url": "https://hrz.siradel.com/assets/mvt/HK/tiles.json"
+    }
+  },
+  "layers": [
+    {
+      "id": "hk-1",
+      "type": "fill-extrusion",
+      "source": "hk_mvt",
+      "source-layer": "HK_SAMPLE_3857",
+      "minzoom": 1,
+      "maxzoom": 10
+    },
+    {
+      "id": "hk-2",
+      "type": "fill-extrusion",
+      "source": "hk_mvt",
+      "source-layer": "HK_SAMPLE_4326"
+    },
+    {
+      "id": "hk-3",
+      "type": "fill-extrusion",
+      "source": "hk_mvt",
+      "source-layer": "HK_SAMPLE_3857"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+= +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs
+< -370566 6066042 0.01
+> +proj=utm +zone=30 +datum=WGS84 +units=m +no_defs
+
+= +proj=utm +zone=30 +datum=WGS84 +units=m +no_defs
+< 597884 5329179 1e-7
+> +proj=longlat +datum=WGS84 +no_defs
+
+= +proj=utm +zone=30 +datum=WGS84 +units=m +no_defs
+< 597884 5329179 0.01
+> +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs
+> +proj=utm +zone=30 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=29 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=31 +datum=WGS84 +units=m +no_defs
+
+= +proj=longlat +datum=WGS84 +no_defs
+< -2.760315 48.502048 0.01
+> +proj=utm +zone=30 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=29 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=31 +datum=WGS84 +units=m +no_defs
+
+= +proj=longlat +datum=WGS84 +no_defs
+< -43.18176269531251 -22.919187818660454 0.01
+> +proj=utm +zone=23 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=23 +south +ellps=WGS72 +towgs84=0,0,1.9,0,0,0.814,-0.38 +units=m +no_defs
+
+= +proj=utm +zone=43 +ellps=WGS72 +towgs84=0,0,1.9,0,0,0.814,-0.38 +units=m +no_defs
+< 272128.61581050913 2097390.3747114036 0.01
+> +proj=utm +zone=42 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=43 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=41 +datum=WGS84 +units=m +no_defs
+
+= +proj=utm +zone=43 +ellps=WGS72 +towgs84=0,0,1.9,0,0,0.814,-0.38 +units=m +no_defs
+< 272128 2097390 0.5
+> +proj=utm +zone=42 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=43 +datum=WGS84 +units=m +no_defs
+> +proj=utm +zone=41 +datum=WGS84 +units=m +no_defs

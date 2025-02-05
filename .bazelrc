@@ -1,0 +1,39 @@
+# Sometimes cxxopt is applied to C-only targets. So we use per_file_copt
+# to filter only C++ source files. Not ideal...
+
+build:windows --cxxopt=/std:c++17
+build:windows --copt=/utf-8
+build:windows --per_file_copt=.*\.(cc|cpp)$@/D_CRT_USE_BUILTIN_OFFSETOF
+
+build:windows_clang --action_env="BAZEL_LLVM=C:\\Program Files\\LLVM\\"
+build:windows_clang --action_env=USE_CLANG_CL=1
+build:windows_clang --copt -Wno-unknown-warning-option
+build:windows_clang --copt -Wno-builtin-macro-redefined
+build:windows_clang --cxxopt=-std=c++17
+build:windows_clang --cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
+build:windows_clang --host_cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
+
+build:linux --cxxopt=-std=c++17
+
+build:wasm_common --per_file_copt=.*\.(cc|cpp)$@-std=c++17
+build:wasm_common --features=-wasm_warnings_as_errors
+build:wasm_common --per_file_copt=external/.*$@-Wno-everything
+
+build:wasm_windows --config=wasm_common
+build:wasm_windows --host_cxxopt=/std:c++17
+
+build:wasm_linux --config=wasm_common
+build:wasm_linux --host_cxxopt=-std=c++17
+
+startup --windows_enable_symlinks
+build --enable_runfiles
+run --enable_runfiles
+
+build --incompatible_enable_cc_toolchain_resolution
+build --experimental_cc_implementation_deps
+
+build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+build --@aspect_rules_ts//ts:default_to_tsc_transpiler
+fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
+

@@ -1,0 +1,137 @@
+{
+  "version": 8,
+  "center": [-1.67771, 48.11045],
+  "pitch": 20,
+  "zoom": 15,
+  "sources": {
+    "rennes-features": {
+      "type": "geojson",
+      "data": "data:;base64,eyJ0eXBlIjoiRmVhdHVyZUNvbGxlY3Rpb24iLCJmZWF0dXJlcyI6W3sidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjB9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6Wy0xLjY4LDQ4LjExMDM5NjE0ODE4Mzc4XSwidHlwZSI6IlBvaW50In0sImlkIjowfSx7InR5cGUiOiJGZWF0dXJlIiwicHJvcGVydGllcyI6eyJuIjoxfSwiZ2VvbWV0cnkiOnsiY29vcmRpbmF0ZXMiOlstMS42NzksNDguMTEwMzk4MjI3Mzk3NDRdLCJ0eXBlIjoiUG9pbnQifSwiaWQiOjF9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjJ9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6Wy0xLjY3OCw0OC4xMTA0MDAyNTQxMjgxNF0sInR5cGUiOiJQb2ludCJ9LCJpZCI6Mn0seyJ0eXBlIjoiRmVhdHVyZSIsInByb3BlcnRpZXMiOnsibiI6M30sImdlb21ldHJ5Ijp7ImNvb3JkaW5hdGVzIjpbLTEuNjc3LDQ4LjExMDQwMDI1NDEyODE0XSwidHlwZSI6IlBvaW50In0sImlkIjozfSx7InR5cGUiOiJGZWF0dXJlIiwicHJvcGVydGllcyI6eyJuIjo0fSwiZ2VvbWV0cnkiOnsiY29vcmRpbmF0ZXMiOlstMS42NzYsNDguMTEwNDAwMjU0MTI4MTRdLCJ0eXBlIjoiUG9pbnQifSwiaWQiOjR9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjV9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6Wy0xLjY3NSw0OC4xMTA0MDAyNTQxMjgxNF0sInR5cGUiOiJQb2ludCJ9LCJpZCI6NX0seyJ0eXBlIjoiRmVhdHVyZSIsInByb3BlcnRpZXMiOnsibiI6Nn0sImdlb21ldHJ5Ijp7ImNvb3JkaW5hdGVzIjpbLTEuNjc0LDQ4LjExMDQwMDI1NDEyODE0XSwidHlwZSI6IlBvaW50In0sImlkIjo2fSx7InR5cGUiOiJGZWF0dXJlIiwicHJvcGVydGllcyI6eyJuIjo3fSwiZ2VvbWV0cnkiOnsiY29vcmRpbmF0ZXMiOlstMS42NzMsNDguMTEwNDAwMjU0MTI4MTRdLCJ0eXBlIjoiUG9pbnQifSwiaWQiOjd9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjB9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6W1stMS42ODA0MDE2ODAwNjYwOTc1LDQ4LjEwOTUyMzM3MTY2NjU3XSxbLTEuNjc5NjQxODAxMjgwODM3NCw0OC4xMDk5Mzc5MzQ3NjE5NDVdXSwidHlwZSI6IkxpbmVTdHJpbmcifSwiaWQiOjh9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjF9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6W1stMS42NzkzOTE1OTcyOTA0NzU2LDQ4LjEwOTUyMzM3MTY2NjU3XSxbLTEuNjc4Njg3MzE5MzkyNTY1OCw0OC4xMDk5MjI0NjYwNDk5OTRdXSwidHlwZSI6IkxpbmVTdHJpbmcifSwiaWQiOjl9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjJ9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6W1stMS42Nzg0MTM5NDg0NzUzOTUsNDguMTA5NTIzMzcyMjE2ODRdLFstMS42Nzc3NTYwMDQ2NDkxNTQ0LDQ4LjEwOTkxOTM3Mjg1NzEyXV0sInR5cGUiOiJMaW5lU3RyaW5nIn0sImlkIjoxMH0seyJ0eXBlIjoiRmVhdHVyZSIsInByb3BlcnRpZXMiOnsibiI6M30sImdlb21ldHJ5Ijp7ImNvb3JkaW5hdGVzIjpbWy0xLjY3NzMxNTk2NzI5MTQzNDYsNDguMTA5NTIxNDA0OTU0NjJdLFstMS42NzY2OTA0NTczMTU5NDIyLDQ4LjEwOTkxMTIxODEyMjk5XV0sInR5cGUiOiJMaW5lU3RyaW5nIn0sImlkIjoxMX0seyJ0eXBlIjoiRmVhdHVyZSIsInByb3BlcnRpZXMiOnsibiI6MH0sImdlb21ldHJ5Ijp7ImNvb3JkaW5hdGVzIjpbW1stMS42ODAxNjQ2OTIyODI0NjAyLDQ4LjEwOTExMDU0ODU5NDg4NF0sWy0xLjY4MDE2NDY5MjI4MjQ2MDIsNDguMTA4NDQzMDYxMzk5ODk2XSxbLTEuNjc5MTIzNjczNzY1MDE5NSw0OC4xMDg0NDMwNjEzOTk4OTZdLFstMS42NzkxMjM2NzM3NjUwMTk1LDQ4LjEwOTExMDU0ODU5NDg4NF0sWy0xLjY4MDE2NDY5MjI4MjQ2MDIsNDguMTA5MTEwNTQ4NTk0ODg0XV1dLCJ0eXBlIjoiUG9seWdvbiJ9LCJpZCI6MTJ9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjF9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6W1tbLTEuNjc4MDk2NDQzNTczMDI1NSw0OC4xMDkxMTUxNTE5MjQ5NTRdLFstMS42NzgwOTY0NDM1NzMwMjU1LDQ4LjEwODQ2NjA3ODM0NDEyXSxbLTEuNjc3MDk2NzkwMDMwODE2NSw0OC4xMDg0NjYwNzgzNDQxMl0sWy0xLjY3NzA5Njc5MDAzMDgxNjUsNDguMTA5MTE1MTUxOTI0OTU0XSxbLTEuNjc4MDk2NDQzNTczMDI1NSw0OC4xMDkxMTUxNTE5MjQ5NTRdXV0sInR5cGUiOiJQb2x5Z29uIn0sImlkIjoxM30seyJ0eXBlIjoiRmVhdHVyZSIsInByb3BlcnRpZXMiOnsibiI6Mn0sImdlb21ldHJ5Ijp7ImNvb3JkaW5hdGVzIjpbW1stMS42NzU5OTY5MDQzODg5MSw0OC4xMDkxMjI0ODM5NzI5OF0sWy0xLjY3NTk5NjkwNDM4ODkxLDQ4LjEwODQ5NjQyNzQxNTM2XSxbLTEuNjc1MDE3OTMzMzMyNjQsNDguMTA4NDk2NDI3NDE1MzZdLFstMS42NzUwMTc5MzMzMzI2NCw0OC4xMDkxMjI0ODM5NzI5OF0sWy0xLjY3NTk5NjkwNDM4ODkxLDQ4LjEwOTEyMjQ4Mzk3Mjk4XV1dLCJ0eXBlIjoiUG9seWdvbiJ9LCJpZCI6MTR9LHsidHlwZSI6IkZlYXR1cmUiLCJwcm9wZXJ0aWVzIjp7Im4iOjN9LCJnZW9tZXRyeSI6eyJjb29yZGluYXRlcyI6W1tbLTEuNjc0MDAwNDc3MTIyMjM0NSw0OC4xMDkxMTA1MDEzNDU5MjRdLFstMS42NzQwMDA0NzcxMjIyMzQ1LDQ4LjEwODUwMjg1ODE4Mzg3XSxbLTEuNjczMDIxNTA2MDY1OTY0Niw0OC4xMDg1MDI4NTgxODM4N10sWy0xLjY3MzAyMTUwNjA2NTk2NDYsNDguMTA5MTEwNTAxMzQ1OTI0XSxbLTEuNjc0MDAwNDc3MTIyMjM0NSw0OC4xMDkxMTA1MDEzNDU5MjRdXV0sInR5cGUiOiJQb2x5Z29uIn0sImlkIjoxNX0seyJ0eXBlIjoiRmVhdHVyZSIsInByb3BlcnRpZXMiOnsibiI6NH0sImdlb21ldHJ5Ijp7ImNvb3JkaW5hdGVzIjpbWy0xLjY3NjMwMjc5OTc4MTA2OTYsNDguMTA5OTI5NTUzMzAwNDc1XSxbLTEuNjc1NzE1NTMzMDE2OTI2OSw0OC4xMDk1NDk1NTkyMTYxMzRdXSwidHlwZSI6IkxpbmVTdHJpbmcifSwiaWQiOjE2fSx7InR5cGUiOiJGZWF0dXJlIiwicHJvcGVydGllcyI6eyJuIjo1fSwiZ2VvbWV0cnkiOnsiY29vcmRpbmF0ZXMiOltbLTEuNjc1MzE1OTQ5NDQ1MzQ4NSw0OC4xMDk5NzQwMjA1MTAwNF0sWy0xLjY3NDYzNzg2ODIzMzM2MTQsNDguMTA5NTY5NzcxNzM4NTZdXSwidHlwZSI6IkxpbmVTdHJpbmcifSwiaWQiOjE3fSx7InR5cGUiOiJGZWF0dXJlIiwicHJvcGVydGllcyI6eyJuIjo2fSwiZ2VvbWV0cnkiOnsiY29vcmRpbmF0ZXMiOltbLTEuNjc0MzcwNTIwOTIxNTcwNSw0OC4xMDk5ODY1MDg3MDEyNF0sWy0xLjY3MzY1NjExMzkyOTQzOTUsNDguMTA5NTI5NzA3NDY2NzhdXSwidHlwZSI6IkxpbmVTdHJpbmcifSwiaWQiOjE4fSx7InR5cGUiOiJGZWF0dXJlIiwicHJvcGVydGllcyI6eyJuIjo3fSwiZ2VvbWV0cnkiOnsiY29vcmRpbmF0ZXMiOltbLTEuNjczMzcwNjAxMDY0MzM0Niw0OC4xMTAwMTgyMDY5OTQ5MV0sWy0xLjY3MjY2MjI0ODM3MDAxNjksNDguMTA5NTU3MzYzNTM4MjddXSwidHlwZSI6IkxpbmVTdHJpbmcifSwiaWQiOjE5fV19"
+    }
+  },
+  "sprite": "https://hrz.siradel.com/assets/sprites/sprites_mapbox/tree",
+  "glyphs": "https://hrz.siradel.com/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://hrz.siradel.com/assets/fonts/Roboto/Roboto-Regular.ttf"
+    }
+  },
+  "layers": [
+    {
+      "id": "auto_alignment_with_point_placement_icon",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "icon-color": "#ffffff",
+        "icon-opacity": 0.3
+      },
+      "layout": {
+        "icon-image": "tree",
+        "icon-size": 0.1,
+        "icon-rotation-alignment": "auto",
+        "symbol-placement": "point"
+      }
+    },
+    {
+      "id": "auto_alignment_with_line_placement_icon",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "icon-color": "#ffffff",
+        "icon-opacity": 0.3
+      },
+      "layout": {
+        "icon-image": "tree",
+        "icon-size": 0.1,
+        "icon-rotation-alignment": "auto",
+        "symbol-placement": "line"
+      }
+    },
+    {
+      "id": "map_alignment_icon",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "icon-color": "#ffffff",
+        "icon-opacity": 0.3
+      },
+      "layout": {
+        "icon-image": "tree",
+        "icon-size": 0.1,
+        "icon-rotation-alignment": "map"
+      }
+    },
+    {
+      "id": "viewport_alignment_icon",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "icon-color": "#ffffff",
+        "icon-opacity": 0.3
+      },
+      "layout": {
+        "icon-image": "tree",
+        "icon-size": 0.1,
+        "icon-rotation-alignment": "viewport"
+      }
+    },
+    {
+      "id": "auto_alignment_with_point_placement_text",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-opacity": 0.3
+      },
+      "layout": {
+        "text-field": "x",
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-rotation-alignment": "auto",
+        "symbol-placement": "point"
+      }
+    },
+    {
+      "id": "auto_alignment_with_line_placement_text",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-opacity": 0.3
+      },
+      "layout": {
+        "text-field": "x",
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-rotation-alignment": "auto",
+        "symbol-placement": "line"
+      }
+    },
+    {
+      "id": "map_alignment_text",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-opacity": 0.3
+      },
+      "layout": {
+        "text-field": "x",
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-rotation-alignment": "map"
+      }
+    },
+    {
+      "id": "viewport_alignment_text",
+      "type": "symbol",
+      "source": "rennes-features",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-opacity": 0.3
+      },
+      "layout": {
+        "text-field": "x",
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-rotation-alignment": "viewport"
+      }
+    }
+  ]
+}

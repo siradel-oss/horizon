@@ -1,0 +1,33 @@
+= +proj=latlong +datum=WGS84 +no_defs
+< 0 0 0 0.01
+> +proj=geocent +datum=WGS84 +no_defs
+> +proj=geocent +datum=carthage +no_defs
+
+= +proj=latlong +datum=WGS84 +no_defs
+< 0 0 10 0.01
+> +proj=geocent +datum=WGS84 +no_defs
+> +proj=geocent +datum=carthage +no_defs
+
+= +proj=geocent +datum=WGS84 +no_defs
+< 638000 0 0 1e-7
+> +proj=latlong +datum=WGS84 +no_defs
+> +proj=latlong +datum=carthage +no_defs
+
+= +proj=geocent +datum=WGS84 +no_defs
+< 638000 0 0 0.01
+> +proj=geocent +datum=WGS84 +no_defs
+> +proj=geocent +datum=carthage +no_defs
+
+= +proj=geocent +datum=WGS84 +pm=paris +no_defs
+< 638000 0 0 0.01
+> +proj=geocent +datum=WGS84 +pm=jakarta +no_defs
+> +proj=geocent +datum=carthage +pm=brussels +no_defs
+
+= +proj=latlong +datum=WGS84 +pm=brussels +no_defs
+< 0 0 10 0.01
+> +proj=geocent +datum=WGS84 +pm=jakarta +no_defs
+> +proj=geocent +datum=carthage +pm=paris +no_defs
+
+= +proj=geocent +datum=WGS84 +pm=42 +no_defs
+< 638000 0 0 0.01
+> +proj=latlong +datum=WGS84 +pm=0 +no_defs

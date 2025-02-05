@@ -1,0 +1,47 @@
+{
+  "version": 8,
+  "sources": {
+    "hk_tilejson": {
+      "type": "vector",
+      "url": "https://hrz.siradel.com/assets/mvt/HK/tiles.json"
+    },
+    "osm_roads": {
+      "type": "vector",
+      "url": "https://hrz.siradel.com/assets/mvt/fr_roads/tiles.json"
+    },
+    "grid": {
+      "type": "geojson",
+      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "fill-1",
+      "type": "fill",
+      "source": "hk_tilejson",
+      "source-layer": "HK_SAMPLE_3857"
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "osm_roads",
+      "source-layer": "osm_france_roads"
+    },
+    {
+      "id": "fill-2",
+      "type": "fill",
+      "source": "hk_tilejson",
+      "source-layer": "HK_SAMPLE_3857"
+    },
+    {
+      "id": "circle-1",
+      "type": "circle",
+      "source": "grid"
+    },
+    {
+      "id": "circle-2",
+      "type": "circle",
+      "source": "grid"
+    }
+  ]
+}

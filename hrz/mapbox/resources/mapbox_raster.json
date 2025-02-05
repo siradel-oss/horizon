@@ -1,0 +1,31 @@
+{
+  "version": 8,
+  "sources": {
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+      ],
+      "bounds": [-100, 0, 150, 62.5],
+      "maxzoom": 7,
+      "minzoom": 7,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "OSM",
+      "source": "osm",
+      "type": "raster",
+      "minzoom": 4,
+      "maxzoom": 14,
+      "paint": {
+        "raster-opacity": 0.75,
+        "raster-resampling": "nearest"
+      },
+      "layout": {
+        "visibility": "none"
+      }
+    }
+  ]
+}

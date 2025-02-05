@@ -1,0 +1,87 @@
+load("//hrz/proto:list_proto_files.bzl", "list_proto_files")
+load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
+load("//tools/bazel:utils.bzl", "make_dbg")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+
+filegroup(
+    name = "generated_hdrs",
+    srcs = list_proto_files("", ".pb.h"),
+)
+
+filegroup(
+    name = "generated_srcs",
+    srcs = list_proto_files("", ".pb.cc"),
+)
+
+hrz_genrule(
+    name = "generate_proto",
+    tools = [
+        "//third_party:protoc",
+        "//hrz/proto:protos",
+        "//hrz/cpp_protocol/protoc_plugin",
+    ],
+    srcs = [
+        "//hrz/proto:protos",
+    ],
+    outs =
+        list_proto_files("", ".pb.cc") +
+        list_proto_files("", ".pb.h"),
+    cmd = "$(location //third_party:protoc) -Ihrz/proto $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(@D) --hrz_out=$(@D)",
+)
+
+hrz_genrule(
+    name = "generate_templates",
+    tools = [
+        "//hrz/generators:generator",
+    ],
+    srcs = [
+        "//hrz:hrz_protocol.xml",
+        "//hrz/generators:cpp_protocol_tpl",
+    ],
+    outs = [
+        "hrz_services.h",
+        "hrz_protocol_all.h",
+        "hrz_protocol_path_builder.h",
+    ],
+    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_protocol $(@D)",
+)
+
+cc_library(
+    name = "hrz_cpp_protocol",
+    srcs = [
+        ":generated_srcs",
+        ":generated_hdrs",
+        "src/hrz_protocol_image_helper.cpp",
+    ],
+    hdrs = [
+        ":generate_templates",
+        "include/hrz_protocol_image_helper.h",
+    ],
+    deps = [
+        "//third_party:libprotobuf-lite",
+    ],
+    includes = [
+        ".",
+        "include",
+    ],
+    linkstatic = True,
+    visibility = ["//visibility:public"]
+)
+
+make_dbg(
+    name = "hrz_cpp_protocol_dbg",
+    cc_target = ":hrz_cpp_protocol",
+)
+
+pkg_tar_aggregate(
+    name = "pkg",
+    extension = "tar.gz",
+    dirs = {
+        "include": [
+            ":generated_hdrs",
+            ":generate_templates",
+        ],
+        "lib_release": [":hrz_cpp_protocol"],
+        "lib_debug": [":hrz_cpp_protocol_dbg"],
+    },
+)

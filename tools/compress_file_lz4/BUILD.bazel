@@ -1,0 +1,10 @@
+cc_binary(
+    name = "compress_file_lz4",
+    srcs = [
+        "compress_file.c",
+    ],
+    deps = [
+        "//third_party:lz4hc",
+    ],
+    visibility = ["//visibility:public"],
+)

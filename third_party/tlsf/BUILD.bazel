@@ -1,0 +1,15 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "tlsf",
+    srcs = [
+        "tlsf.c",
+    ],
+    hdrs = [
+        "tlsf.h",
+    ],
+    includes = ['.'],
+    include_prefix = "tlsf",
+)
+
+exports_files(["LICENSE"])

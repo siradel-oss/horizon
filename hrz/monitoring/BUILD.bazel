@@ -1,0 +1,70 @@
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+
+filegroup(
+    name = "proto",
+    srcs = ["proto/hrz_monitoring_interface.proto"],
+    visibility = ["//visibility:public"]
+)
+
+hrz_genrule(
+    name = "generate_proto",
+    tools = [
+        "//third_party:protoc",
+    ],
+    srcs = [
+        "proto/hrz_monitoring_interface.proto",
+    ],
+    outs = [
+        "proto/hrz_monitoring_interface.pb.cc",
+        "proto/hrz_monitoring_interface.pb.h",
+    ],
+    cmd = "$(location //third_party:protoc) -Ihrz/monitoring/proto hrz/monitoring/proto/hrz_monitoring_interface.proto --cpp_out=$(@D)/proto",
+)
+
+cc_library(
+    name = "hrz_monitoring_proto",
+    srcs = [
+        "proto/hrz_monitoring_interface.pb.cc",
+        "proto/hrz_monitoring_interface.pb.h",
+    ],
+    hdrs = [
+        "include/hrz_monitoring_protocol.h"
+    ],
+    deps = [
+        "//third_party:libprotobuf-lite"
+    ],
+    includes = [
+        "include",
+        "proto",
+    ],
+)
+
+cc_library(
+    name = "hrz_monitoring",
+    srcs = [
+        "src/hrz_monitoring.cpp",
+    ],
+    hdrs = [
+        "include/hrz_monitoring.h",
+    ],
+    deps = [
+        ":hrz_monitoring_proto",
+        "//hrz/fnd:hrz_fnd",
+        "//third_party:gsl",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "tests",
+    srcs = [
+        "tests/monitoring.cpp",
+    ],
+    deps = [
+        ":hrz_monitoring",
+        "//third_party:gtest",
+        "//third_party:gtest_main",
+    ],
+    visibility = ["//visibility:public"],
+)

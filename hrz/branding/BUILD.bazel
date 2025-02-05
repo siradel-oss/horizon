@@ -1,0 +1,27 @@
+load("//tools/bazel/cc_resources:cc_resources.bzl", "cc_resources")
+
+exports_files(
+    [
+        "favicon-16x16.png",
+        "favicon-32x32.png",
+        "favicon-96x96.png",
+        "favicon-128x128.png",
+        "favicon.ico",
+        "logo_text.svg",
+        "logo.svg",
+        "logo_white.svg",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_resources(
+    name = "icons",
+    header_name = "hrz_icons.h",
+    namespace = "hrz_icons",
+    files = {
+        "favicon-96x96.png": "Icon96",
+        "favicon-32x32.png": "Icon32",
+        "favicon-16x16.png": "Icon16",
+    },
+    visibility = ["//visibility:public"],
+)

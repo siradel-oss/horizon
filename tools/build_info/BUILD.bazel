@@ -1,0 +1,9 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "get_date",
+    srcs = ["get_date.py"],
+    main = "get_date.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)

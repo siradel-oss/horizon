@@ -1,0 +1,87 @@
+syntax = "proto3";
+package HrzProtocol;
+option cc_enable_arenas = true;
+option optimize_for = LITE_RUNTIME;
+
+import "hrz_types.proto";
+
+enum LayerType {
+    // @label="Invalid"
+    INVALID                             = 0;
+
+    // @label="Single 3D model"
+    SINGLE_MODEL                        = 1;
+
+    // @label="DTM raster"
+    DTM_RASTER                          = 2;
+
+    // @label="Imagery raster"
+    IMAGERY_RASTER                      = 3;
+
+    // @label="Vector data definition"
+    VECTOR_DATA                         = 4;
+
+    // @label="Vector tiles"
+    VECTOR_TILES                        = 5;
+
+    // @label="3D Tiles"
+    THREE_D_TILES                       = 6;
+
+    // @label="Clipping plane"
+    CLIPPING_PLANE                      = 7;
+
+    // @label="In-memory vector source"
+    IN_MEMORY_VECTOR_SOURCE             = 8;
+
+    // @label="Gizmo"
+    GIZMO                               = 9;
+
+    // @label="Editable shape"
+    EDITABLE_SHAPE                      = 10;
+}
+
+message LayerHandle {
+    uint64                  opaque      = 1;
+}
+
+message LayerCreateInfo {
+    LayerType               type        = 1;
+    // The internal name of the layer. It is not used by Horizon and is there as a convenience
+    // to easily identify layers for monitoring.
+    // If empty, a default name will be used based on the type of the layer.
+    string                  name        = 2;
+}
+
+message LayerRenameInfo {
+    LayerHandle             handle      = 1;
+    string                  name        = 2;
+}
+
+message Layer {
+    LayerHandle             handle      = 1;
+    LayerType               type        = 2;
+    string                  name        = 3;
+}
+
+message LayerArray {
+    repeated Layer          layers      = 1;
+}
+
+// @service_id=0x41c4255b
+service LayerService {
+    // @method_id=0x30ffe3a4
+    rpc CreateLayer(LayerCreateInfo) returns (LayerHandle);
+
+    // @method_id=0xf8cadac0
+    rpc DestroyLayer(LayerHandle) returns (Void);
+
+    // @method_id=0x044fb58c
+    rpc RenameLayer(LayerRenameInfo) returns (Void);
+
+    // @method_id=0xa48c16c5
+    rpc GetLayer(LayerHandle) returns (Layer);
+
+    // @method_id=0x9103b6f7
+    rpc GetAllLayers(Void) returns (LayerArray);
+}
+

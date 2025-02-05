@@ -1,0 +1,76 @@
+{
+    "version": 8,
+    "id": "test_heatmap",
+    "bearing": 0,
+    "pitch": 0,
+    "center": [
+        -142,
+        49
+    ],
+    "zoom": 1,
+    "sources": {
+        "earthquakes": {
+            "data": "https://hrz.siradel.com/assets/geojson/earthquakes.geojson",
+            "type": "geojson"
+        }
+    },
+    "layers": [
+        {
+            "id": "earthquakes-heat",
+            "type": "heatmap",
+            "source": "earthquakes",
+            "maxzoom": 9,
+            "paint": {
+                "heatmap-weight": [
+                    "interpolate",
+                    ["linear"],
+                    ["get", "mag"],
+                    0,
+                    0,
+                    6,
+                    1
+                ],
+                "heatmap-intensity": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    0,
+                    1,
+                    9,
+                    3
+                ],
+                "heatmap-color": [
+                    "step",
+                    ["heatmap-density"],
+                    "rgba(255,0,0,0)",
+                    0.25,
+                    "rgb(255,255,0)",
+                    0.5,
+                    "rgb(0,255,0)",
+                    0.75,
+                    "rgb(0,255,255)",
+                    1,
+                    "rgb(0,0,255)"
+                ],
+                "heatmap-radius": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    0,
+                    2,
+                    9,
+                    20
+                ],
+                "heatmap-opacity": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    7,
+                    1,
+                    9,
+                    0
+                ]
+            }
+        }
+    ]
+}

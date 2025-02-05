@@ -1,0 +1,9 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "http_server",
+    srcs = ["http_server.py"],
+    main = "http_server.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)

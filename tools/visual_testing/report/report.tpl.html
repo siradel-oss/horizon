@@ -1,0 +1,194 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Visual test report for commit {{ commit }} - Horizon</title>
+        <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,{{ 32|get_favicon_base64 }}">
+        <link rel="icon" type="image/png" sizes="96x96" href="data:image/png;base64,{{ 96|get_favicon_base64 }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,{{ 16|get_favicon_base64 }}">
+    </head>
+    <body>
+        <style>
+            body {
+                background-color: rgb(230, 231, 243);
+                font-family: "Rubik", Roboto, Verdana, Arial, sans-seri;
+            }
+            h1 {
+                text-align: center;
+            }
+            a {
+                text-decoration: none;
+            }
+            a[href]:hover {
+                text-decoration: underline;
+            }
+            .header-label {
+                display: inline-block;
+                width: 4em;
+                color: rgb(48, 48, 48);
+            }
+            .header-value {
+                display: inline-block;
+            }
+            #summary-list {
+                list-style: none;
+            }
+            .summary-label {
+                display: inline-block;
+                width: 6em;
+            }
+            .summary-value {
+                display: inline-block;
+            }
+            .back-to-top-link {
+                float: right;
+            }
+            a.back-to-top-link {
+                font-size: larger;
+                color: rgb(48, 48, 48);
+            }
+            .test-link-list li {
+                display: inline;
+            }
+            .test-link-list li:not(:last-child):after {
+                content: " ";
+                letter-spacing: 1em;
+            }
+            #result-list {
+                list-style: none;
+                margin-right: 2em;
+            }
+            #result-list li {
+                margin-top: 1em;
+                margin-bottom: 1em;
+            }
+            #result-list li ul {
+                padding: 0.5em;
+            }
+            #result-list li ul p {
+                margin: 0;
+            }
+            .success {
+                background-color: rgb(213, 255, 204);
+            }
+            .error {
+                background-color: rgb(255, 255, 219);
+            }
+            .failure {
+                background-color: rgb(255, 211, 211);
+            }
+            .test-details-label {
+                display: inline-block;
+                width: 6em;
+                color: rgb(48, 48, 48);
+            }
+            .test-details-value {
+                display: inline-block;
+            }
+            .test-details-name {
+                font-family: monospace, monospace;
+            }
+            .test-images {
+                padding: 2em;
+                padding-top: 0;
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                column-gap: 1em;
+            }
+            .test-images img {
+                max-width: 100%;
+                max-height: 100%;
+            }
+            .image-title {
+                margin-bottom: 0.3em;
+            }
+            .test-logs {
+                padding: 2em;
+            }
+        </style>
+        <a id="top"><h1>Horizon<br/>Visual test report</h1></a>
+        <div>
+            <p><span class="header-label">Branch</span><span class="header-value">{{ branch }}</span></p>
+            <p><span class="header-label">Commit</span><span class="header-value">{{ commit }}</span></p>
+            <p><span class="header-label">Date</span><span class="header-value" id="report-date">{{ date }}</span></p>
+        </div>
+        <div>
+            <h2>Results summary</h2>
+            <ul id="summary-list">
+                <li><span class="summary-label">Total tests</span><span class="summary-value">{{ totalTests }}</span></li>
+                <li><span class="summary-label">Successes</span><span class="summary-value">{{ passedTests }} ({{ (100 * passedTests / totalTests)|round|int }}%)</span></li>
+                <li><span class="summary-label">Failures</span><span class="summary-value">{{ failedTests }} ({{ (100 * failedTests / totalTests)|round|int }}%)</span></li>
+            </ul>
+        </div>
+        {% if results|has_failed_tests %}
+            <div>
+                <h2>Failed tests</h2>
+                <ul class="test-link-list">
+                    {% for test in results %}
+                        {% if not test.success %}
+                            <li><a href="#{{ test.name }}">{{ test.name }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% if results|has_tests_with_errors %}
+            <div>
+                <h2>Tests with errors</h2>
+                <ul class="test-link-list">
+                    {% for test in results %}
+                        {% if test.success and test.errorRatio and test.errorRatio > 0 %}
+                            <li><a href="#{{ test.name }}">{{ test.name }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <div>
+            <h2>Test results</h2>
+            <ul id="result-list">
+                {% for test in results %}
+                    <a id="{{ test.name }}">
+                        <li class="{{ test|test_to_css_class }}">
+                            <a class="back-to-top-link" href="#top" title="Back to top">▲</a>
+                            <ul>
+                                <p><span class="test-details-label">Name</span><span class="test-details-value test-details-name">{{ test.name }}</span></p>
+                                <p><span class="test-details-label">Result</span><span class="test-details-value">{% if test.success %}Success{% else %}Failure{% endif %}</span></p>
+                                <p><span class="test-details-label">Error ratio</span><span class="test-details-value">{{ test.errorRatio|format_error_ratio }}%</span></p>
+                                <p><span class="test-details-label">Error type</span><span class="test-details-value">{{ test.errorType|error_type_to_name }}</span></p>
+                            </ul>
+                            {% if test.errorRatio and test.errorRatio > 0 %}
+                                <div class="test-images">
+                                    <div>
+                                        <p class="image-title">Captured image</p>
+                                        <a href="{{ test.name }}_capture.png"><img src="{{ test.name }}_capture.png" /></a>
+                                    </div>
+                                    <div>
+                                        <p class="image-title">Difference</p>
+                                        <a href="{{ test.name }}_diff.png"><img src="{{ test.name }}_diff.png" /></a>
+                                    </div>
+                                    <div>
+                                        <p class="image-title">Expected image</p>
+                                        <a href="{{ test.name }}_expected.png"><img src="{{ test.name }}_expected.png" /></a>
+                                    </div>
+                                </div>
+                                {% if test.log %}
+                                <details class="test-logs">
+                                    <summary>Logs</summary>
+                                    <pre>{{ test.log }}</pre>
+                                </details>
+                                {% endif %}
+                            {% endif %}
+                        </li>
+                    </a>
+                {% endfor %}
+            </ul>
+        </div>
+        <script>
+            var dateElement = document.getElementById("report-date");
+            var date = new Date(dateElement.textContent);
+            dateElement.textContent = date.toString();
+        </script>
+    </body>
+</html>

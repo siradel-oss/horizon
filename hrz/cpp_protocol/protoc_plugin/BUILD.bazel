@@ -1,0 +1,15 @@
+cc_binary(
+    name = "protoc_plugin",
+    deps = [
+        "//third_party:libprotobuf",
+        "//third_party:libprotoc",
+    ],
+    srcs = [
+        "main.cpp",
+    ],
+    linkopts = select({
+        "//:os_linux": ["-pthread"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)

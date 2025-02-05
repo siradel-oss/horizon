@@ -1,0 +1,101 @@
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "compress_db",
+    srcs = ["db/compress_db.py"],
+    main = "db/compress_db.py",
+    python_version = "PY3",
+)
+
+hrz_genrule(
+    name = "crs_database.bin",
+    tools = ["compress_db"],
+    srcs = ["db/epsg_proj.sqlite"],
+    outs = ["db/crs_database.bin"],
+    cmd = "$(location compress_db) $< $@",
+)
+
+hrz_genrule(
+    name = "crs_db.c",
+    tools = ["//tools/bazel/cc_resources:make_resource_source"],
+    srcs = ["db/crs_database.bin"],
+    outs = ["src/crs_database_data.c"],
+    cmd = "$(location //tools/bazel/cc_resources:make_resource_source) crs_db_data $< c $@",
+)
+
+cc_library(
+    name = "proj_lite",
+    hdrs = [
+        "include/proj_lite.h",
+    ],
+    includes = [
+        "include",
+    ],
+    srcs = [
+        "src/database.c",
+        "src/parse_proj_string.c",
+        "src/transform.c",
+        "src/projection.c",
+        "src/string_span.c",
+        "src/result.c",
+        "src/projections/latlong.c",
+        "src/projections/merc.c",
+        "src/projections/tmerc.c",
+        "src/projections/utm.c",
+        "src/projections/lcc.c",
+        "src/projections/geocent.c",
+        "src/crs_database.c",
+        "src/crs_database_data.c",
+        "include/proj_lite_internal/constants.h",
+        "include/proj_lite_internal/common.h",
+        "include/proj_lite_internal/database.h",
+        "include/proj_lite_internal/projection.h",
+        "include/proj_lite_internal/string_span.h",
+        "include/proj_lite_internal/crs_database.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "tests",
+    srcs = [
+        "tests/generated.cpp",
+        "tests/crs.cpp",
+        "tests/common.h",
+        "tests/crs_common.h",
+    ] + glob(["tests/crs_generated/*.cpp"]),
+    deps = [
+        ":proj_lite",
+        "//third_party:gtest",
+        "//third_party:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "check_crs_support",
+    srcs = [
+        "tools/check_crs_support.cpp",
+    ],
+    deps = [
+        ":proj_lite",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "list_supported_crs",
+    srcs = ["tools/list_supported_crs.py"],
+    main = "tools/list_supported_crs.py",
+    python_version = "PY3",
+    data = [":check_crs_support"],
+)
+
+hrz_genrule(
+    name = "crs_database.csv",
+    tools = ["list_supported_crs", "check_crs_support"],
+    srcs = ["db/epsg_proj.sqlite"],
+    outs = ["db/crs_database.csv"],
+    cmd = "$(location list_supported_crs) $< $@ $(location check_crs_support)",
+    visibility = ["//visibility:public"],
+)

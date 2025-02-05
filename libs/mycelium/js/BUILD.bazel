@@ -1,0 +1,16 @@
+filegroup(
+    name = "js_files",
+    srcs = [
+        "src/mycelium_js_lib.js",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "js",
+    hdrs = [
+        "include/mycelium_js_lib.h",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)

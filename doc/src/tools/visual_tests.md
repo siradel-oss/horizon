@@ -1,0 +1,38 @@
+# Visual tests
+
+This document explains how visual tests are managed in Horizon.
+
+## General
+
+Horizon has automatic integration tests that use image comparison. They are run as part of the GitLab continuous integration process for every merge request as well as `master`. They are a way to limit the introduction of regressions in the code base.
+
+The file `tests/visual_tests/manifest.json` is called the _manifest_ and gives a description of every test that needs to be performed.
+
+A visual test needs three pieces of information to run properly:
+
+- A scene file, which can be either a [Horizon scene dump](scene_model_versioning.md) in Protobuf format, or a [Mapbox style](https://docs.mapbox.com/mapbox-gl-js/style-spec/) in JSON format,
+- A reference image that serves as the ground truth for the image comparison,
+- All the data required to load the scene.
+
+Scenes and reference images are stored in the Horizon repository in `tests/visual_tests/hrz_scenes` or `tests/visual_tests/mapbox_styles`, depending on the scene format. Both files of a test **MUST** be named after the unique test name set in the manifest with the following scheme: `<test_name>.hrz_scene.pbf` or `<test_name>.json` for the scene file, depending on the format, and `<test_name>.hrz_ref.png` for the reference image.
+
+All data required to load a scene must be stored on Horizon’s asset server, and can be accessed at `https://hrz.siradel.com/assets/`.
+
+**Important:** files on this server **MUST NOT** be deleted, updated or tampered with in any way as tests from other branches (`master`, maintenance branches, other merge requests) may still need them. Therefore any modification to a dataset needs a new upload leaving the older version unchanged.
+
+## Testing tool
+
+Tests are managed and run through a tool which can be launched by running `python tools/visual_testing/visual_tests.py`. It runs a CLI by default but a GUI is available by passing the `--gui` argument.
+
+Here are some command examples:
+
+- `python tools/visual_testing/visual_tests.py` runs all the tests and writes results in a sub-directory of the working directory.
+- `python tools/visual_testing/visual_tests.py subset test0 test1` runs a subset of tests and writes results in a sub-directory of the working directory.
+- `python tools/visual_testing/visual_tests.py exclude test0 test1` runs all tests except those specified and writes results in a sub-directory of the working directory.
+- `python tools/visual_testing/visual_tests.py --gui` runs the tool in GUI mode.
+
+Running the tests writes image captures as well as a JSON report that can be visualised in the tool when used in GUI mode.
+
+## Gitlab CI
+
+Tests are executed on both Linux and Windows.

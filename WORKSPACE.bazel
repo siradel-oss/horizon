@@ -1,0 +1,135 @@
+workspace(name = "horizon")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+#
+# Build dependencies
+#
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "bc283cdfcd526a52c3201279cda4bc298652efa898b10b4db0837dc51652756f",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz",
+    ],
+)
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+bazel_skylib_workspace()
+
+http_archive(
+    name = "platforms",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.10/platforms-0.0.10.tar.gz",
+        "https://github.com/bazelbuild/platforms/releases/download/0.0.10/platforms-0.0.10.tar.gz",
+    ],
+    sha256 = "218efe8ee736d26a3572663b374a253c012b716d8af0c07e842e82f238a0a7ee",
+)
+
+http_archive(
+    name = "rules_pkg",
+    urls = [
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.10.1/rules_pkg-0.10.1.tar.gz",
+    ],
+    sha256 = "d250924a2ecc5176808fc4c25d5cf5e9e79e6346d79d5ab1c493e289e722d1d0",
+)
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()
+
+http_archive(
+    name = "rules_python",
+    sha256 = "29a801171f7ca190c543406f9894abf2d483c206e14d6acbd695623662320097",
+    strip_prefix = "rules_python-0.18.1",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.18.1/rules_python-0.18.1.tar.gz",
+)
+load("@rules_python//python:repositories.bzl", "py_repositories")
+py_repositories()
+
+#
+# Node
+#
+
+http_archive(
+    name = "aspect_rules_ts",
+    sha256 = "f69a6452b129d39d9b05f3dff8b1057185bb195b4daf0cff419988de757c6c31",
+    strip_prefix = "rules_ts-2.4.2",
+    url = "https://github.com/aspect-build/rules_ts/releases/download/v2.4.2/rules_ts-v2.4.2.tar.gz",
+)
+
+load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
+rules_ts_dependencies(
+    ts_version_from = "//:package.json",
+)
+
+load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
+rules_js_dependencies()
+
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+bazel_features_deps()
+
+load("@rules_nodejs//nodejs:repositories.bzl",  "nodejs_register_toolchains")
+nodejs_register_toolchains(
+    name = "nodejs",
+    node_version = "18.13.0",
+)
+
+load("@aspect_rules_js//npm:repositories.bzl", "npm_translate_lock")
+npm_translate_lock(
+    name = "npm",
+    npmrc = "//:.npmrc",
+    pnpm_lock = "//:pnpm-lock.yaml",
+    data = [
+        "//:package.json",
+        "//hrz/ts_protocol:package.json",
+        "//hrz/ts_api:package.json",
+        "//:pnpm-workspace.yaml",
+    ],
+)
+
+load("@npm//:repositories.bzl", "npm_repositories")
+npm_repositories()
+
+#
+# Horizon dependencies
+#
+
+load("//tools/bazel:deps.bzl", "hrz_deps")
+hrz_deps()
+
+#
+# Emscripten
+#
+
+load("@emsdk//:deps.bzl", emsdk_deps = "deps")
+emsdk_deps()
+
+load("@emsdk//:emscripten_deps.bzl", emsdk_emscripten_deps = "emscripten_deps")
+emsdk_emscripten_deps(emscripten_version = "3.1.74")
+
+load("@emsdk//:toolchains.bzl", "register_emscripten_toolchains")
+register_emscripten_toolchains()
+
+#
+# GLSL toolchains
+#
+
+register_toolchains(
+    "//:glslc_core_windows_toolchain",
+    "//:glslc_core_linux_toolchain",
+    "//:glslc_es_windows_toolchain",
+    "//:glslc_es_linux_toolchain",
+)
+
+#
+# Horizon stuff
+#
+
+load("//hrz/proto/history:make_versions_list.bzl", "make_versions_list")
+make_versions_list(
+    name = "model_versions_list",
+    manifest = "//hrz/proto/history:versions_manifest.csv",
+    var_name = "MODEL_VERSIONS_LIST",
+)
+
+load("//tools/bazel:bazel_output_base.bzl", "bazel_output_base_util")
+bazel_output_base_util(name = "bazel_output_base_util")

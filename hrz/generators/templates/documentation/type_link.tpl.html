@@ -1,0 +1,3 @@
+{% macro type_link(full_name) %}
+    {% for element in full_name|type_path %}{% if element.path is sameas "" %}{{ element.text }}{% else %}.<a href="{{ element.path }}.html">{{element.text}}</a>{% endif %}{% endfor %}
+{% endmacro %}

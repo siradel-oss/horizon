@@ -1,0 +1,34 @@
+# https://www.mkdocs.org/user-guide/
+# https://squidfunk.github.io/mkdocs-material/reference/
+
+site_name: Horizon Developer's Guide
+docs_dir: src
+strict: true
+use_directory_urls: false
+theme:
+  name: material
+markdown_extensions:
+  - def_list
+  - sane_lists
+  - admonition
+  - tables
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+nav:
+  - development_environment.md
+  - development_workflow.md
+  - continuous_integration.md
+  - external_dependencies.md
+  - Guidelines:
+    - guidelines/development.md
+    - guidelines/writing.md
+    - guidelines/changelog.md
+  - Tools:
+    - tools/preprocessing.md
+    - tools/remote_monitoring.md
+    - tools/scene_model_versioning.md
+    - tools/visual_tests.md

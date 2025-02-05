@@ -1,0 +1,20 @@
+in vec2 i_vertex;
+in vec4 i_geometry;
+in vec4 i_color;
+in uvec4 i_uv;
+
+layout(std140) uniform Uniforms
+{
+    mat4 u_projection;
+};
+
+#define varying out
+#include "dev_ui/interface.glsl"
+
+void main()
+{
+    vec2 vertex = i_vertex * i_geometry.zw + i_geometry.xy;
+    gl_Position = u_projection * vec4(vertex, 0, 1);
+    v_uv = (i_vertex.xy * vec2(i_uv.zw) + vec2(i_uv.xy)) / 128.0;
+    v_color = i_color;
+}

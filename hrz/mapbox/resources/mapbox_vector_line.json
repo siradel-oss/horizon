@@ -1,0 +1,41 @@
+{
+  "version": 8,
+  "id": "test_fill",
+  "center": [2.32, 48.86],
+  "zoom": 12,
+  "bearing": -3,
+  "pitch": 58,
+  "sources": {
+    "osm_roads": {
+      "type": "vector",
+      "url": "https://hrz.siradel.com/assets/mvt/fr_roads/tiles.json"
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "OSM",
+      "source": "osm",
+      "type": "raster"
+    },
+    {
+      "id": "france_roads",
+      "type": "line",
+      "source": "osm_roads",
+      "source-layer": "osm_france_roads",
+      "paint": {
+        "line-color": "#ff0000",
+        "line-opacity": 0.8,
+        "line-width": 4
+      },
+      "layout": {
+        "line-cap": "round"
+      }
+    }
+  ]
+}

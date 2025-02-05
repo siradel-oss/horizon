@@ -1,0 +1,32 @@
+{
+    "incorrect": {
+        "width": 16,
+        "height": 32,
+        "x": 0,
+        "y": 16
+    },
+    "minimal": {
+        "width": 16,
+        "height": 32,
+        "x": 0,
+        "y": 16,
+        "pixelRatio": 1
+    },
+    "content": {
+        "width": 16,
+        "height": 32,
+        "x": 0,
+        "y": 16,
+        "pixelRatio": 1,
+        "content": [8, 9, 10, 11]
+    },
+    "stretch": {
+        "width": 16,
+        "height": 32,
+        "x": 0,
+        "y": 16,
+        "pixelRatio": 1,
+        "stretchX": [[10, 12]],
+        "stretchY": [[10, 12], [14, 16]]
+    }
+}

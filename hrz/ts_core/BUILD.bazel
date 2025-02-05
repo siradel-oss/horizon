@@ -1,0 +1,97 @@
+load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:npm.bzl", "package_json")
+load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_VERSION", "PACKAGE_JSON_HRZ_LICENSE")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+
+# I was forced to separate the Core web package into the ts_core folder because pnpm workspace rules expect
+# the main package to be called the same name as the folder it is in. Hence the alias at the end.
+
+package(default_visibility = ["//visibility:public"])
+
+npm_link_all_packages(name = "node_modules")
+
+structured_files_copy(
+    name = "ts_src_copies",
+    output_dir = "dist",
+    files = {
+        "": [
+            "src/index.ts",
+            "src/backend.ts",
+            "src/hrz_core.d.ts",
+        ],
+    },
+)
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        ":ts_src_copies",
+    ],
+    deps = [
+        ":node_modules/@siradel/horizon-api",
+        ":node_modules/@siradel/horizon-protocol",
+    ],
+    declaration = True,
+    root_dir = "dist",
+    out_dir = "dist",
+    tsconfig = {
+        "compilerOptions": {
+            "lib": ["ES2015", "ES2017.SharedMemory", "DOM"],
+            "target": "ES5",
+            "strict": True,
+        },
+    },
+)
+
+structured_files_copy(
+    name = "js_artifacts_copy",
+    output_dir = "dist",
+    files = {
+        "": [
+            "//hrz/core:hrz_core.js",
+            "//hrz/core:hrz_core.wasm",
+        ],
+    }
+)
+
+copy_file(
+    name = "hrz_core_npm_third_party_licenses",
+    src = "//third_party:LICENSE-THIRD-PARTY.txt",
+    out = "licenses/LICENSE-THIRD-PARTY.txt",
+)
+
+package_json(
+    name = "package_json",
+    base = ":package.json",
+    out = "dist-root/package.json",
+    version = PACKAGE_JSON_HRZ_VERSION,
+    license = PACKAGE_JSON_HRZ_LICENSE,
+)
+
+npm_package(
+    name = "npm_pkg",
+    srcs = [
+        ":hrz_core_npm_third_party_licenses",
+        ":ts_lib",
+        ":package_json",
+        ":js_artifacts_copy",
+    ],
+    include_srcs_patterns = [
+        "**/*.txt",
+        "**/*.wasm",
+        "**/*.json",
+        "**/*.js",
+        "**/*.d.ts",
+    ],
+    replace_prefixes = {
+        "dist-root/": "",
+    },
+)
+
+alias(
+    name = "ts_core",
+    actual = ":npm_pkg",
+)

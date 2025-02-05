@@ -1,0 +1,26 @@
+cc_binary(
+    name = "native_client",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        "//hrz/branding:icons",
+        "//hrz/cpp_api:hrz_cpp_api",
+        "//hrz/core:hrz_core",
+        "//hrz/scene_dump:migration",
+        "//libs/ws:ws_server",
+        "//libs/wsi:wsi",
+        "//libs/argparser:argparser",
+    ],
+    linkopts = select({
+        "//:os_linux": ["-pthread", "-lz"],
+        "//conditions:default": [],
+    }) + select({
+        "//:linux_wsi_x11_gl": [
+            "-lX11",
+        ],
+        "//:linux_wsi_headless_egl" : [],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,356 @@
+#pragma once
+
+#include "assets_loader/hrz_core_assets_loader.h"
+#include "hrz_core_attribution.h"
+#include "hrz_core_base_url.h"
+#include "hrz_core_model_ubo_defs.h"
+#include "hrz_core_render.h"
+#include "hrz_core_render_request.h"
+
+#include <hrz_common_blob_allocator.h>
+#include <hrz_common_monitoring_defs.h>
+#include <hrz_common_vector_data.h>
+#include <hrz_fnd_flat_hash_set.h>
+
+#include <gsl/gsl-lite.hpp>
+#include <lin_maths.h>
+
+/**
+ * In Horizon, a 3D model comes from a glTF file and is made of multiple parts:
+ *  - The model prototype is the in-memory representation of the 3D model.
+ *    It is responsible for loading the buffers and textures and other resources
+ *    when necessary.
+ *  - The model geometry is a representation of the 3D model independent of materials.
+ *    It contains all vertex data and sometimes some other things like feature colors
+ *    for the batched representation.
+ *    It is responsible for building and uploading those resources to the GPU.
+ *  - The model material is what is applied on the geometry, mainly textures, gradients, etc.
+ *    It contains the texture data and sometimes other things.
+ *    It is responsible for building and uploading those resources to the GPU.
+ *  - The baked model combines the geometry and material(s) to create a model that can
+ *    finally be drawn.
+ *  - Instance groups are used to instantiate a model on multiple points.
+ *
+ * All resources used by the geometries, materials, etc, are deduplicated by the prototype.
+ *
+ * There are multiple types of those resources:
+ *  - Single: displays the model once, at a given location.
+ *  - Instanced: instances the model multiple times, using an instance group.
+ *  - Impostor baking: like single, but specific to building impostors.
+ *  - Batched: used for 3D Tiles where feature IDs are associated per vertex.
+ */
+
+namespace hrz
+{
+struct ImageDecoder;
+struct JobScheduler;
+struct Render;
+
+namespace model
+{
+struct SharedResources;
+struct ModelPrototype;
+
+SharedResources* create_shared_resources_single(Render*);
+SharedResources* create_shared_resources_instanced(Render*);
+SharedResources* create_shared_resources_batched(Render*);
+void destroy_shared_resources(SharedResources*, Render*);
+
+enum class ModelPrototypeStatus
+{
+    Loading,
+    Ready,
+    Error,
+};
+
+ModelPrototype* create_from_gltf_url(
+    AssetsLoader*,
+    BaseUrl url,
+    const HttpHeaders&,
+    AttributionHandle additional_attribution,
+    assets_loader::Queue load_queue = assets_loader::Queue::MeshModels,
+    uint32_t loading_priority = 0,
+    monitoring::ResourceOwner resource_owner = {});
+
+ModelPrototype* create_from_gltf_blob(
+    BlobAllocator*,
+    AttributionRegistry*,
+    const blobs::BlobHandle& blob,
+    std::string_view uri,
+    BaseUrl base_url,
+    size_t data_offset,
+    const HttpHeaders&,
+    AttributionHandle additional_attribution,
+    assets_loader::Queue load_queue = assets_loader::Queue::MeshModels,
+    uint32_t loading_priority = 0,
+    monitoring::ResourceOwner resource_owner = {});
+
+void destroy(
+    ModelPrototype*,
+    AssetsLoader* al,
+    JobScheduler* js,
+    BlobAllocator*,
+    std::vector<my::ResourceHandle>& to_destroy);
+
+void work(
+    ModelPrototype*,
+    AssetsLoader*,
+    JobScheduler*,
+    BlobAllocator*,
+    ImageDecoder*,
+    AttributionRegistry*);
+
+void work_gpu(ModelPrototype*, BlobAllocator*, Render* render);
+ModelPrototypeStatus get_status(ModelPrototype*);
+
+// Returns true if the headers change could result in content negotiation differing from the
+// previous headers.
+bool update_http_headers(ModelPrototype*, const HttpHeaders&);
+
+bool is_working(ModelPrototype*);
+
+AttributionHandle get_attribution(ModelPrototype*);
+
+struct ModelGeometryH
+{
+    uint64_t o;
+};
+
+struct SingleModelGeometryH
+{
+    uint64_t o;
+
+    constexpr operator ModelGeometryH() const { return ModelGeometryH{o}; }
+};
+
+struct ImpostorBakingModelGeometryH
+{
+    uint64_t o;
+
+    constexpr operator ModelGeometryH() const { return ModelGeometryH{o}; }
+};
+
+struct InstancedModelGeometryH
+{
+    uint64_t o;
+
+    constexpr operator ModelGeometryH() const { return ModelGeometryH{o}; }
+};
+
+struct BatchedModelGeometryH
+{
+    uint64_t o;
+
+    constexpr operator ModelGeometryH() const { return ModelGeometryH{o}; }
+};
+
+SingleModelGeometryH create_single_model_geometry(
+    ModelPrototype*,
+    lm::uvec2 picking_id,
+    lm::uvec3 feature_picking_id);
+ImpostorBakingModelGeometryH create_impostor_baking_model_geometry(ModelPrototype*);
+InstancedModelGeometryH create_instanced_model_geometry(ModelPrototype*);
+BatchedModelGeometryH create_batched_model_geometry(
+    ModelPrototype*,
+    uint32_t layer_picking_id,
+    lm::uvec2 batch_picking_id,
+    uint32_t batch_id_offset,
+    size_t batch_length,
+    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
+void destroy(ModelPrototype*, ModelGeometryH);
+
+BSphere<double> compute_model_bsphere(ModelPrototype*, ModelGeometryH, const lm::dmat4& transform);
+
+void set_batched_selection(
+    ModelPrototype*,
+    BatchedModelGeometryH,
+    const hrz::flat_hash_set<vector_data::FeatureIdHash>& selected_objects);
+
+void set_batched_colors(ModelPrototype*, BatchedModelGeometryH, gsl::span<const lm::ubvec4>);
+
+struct ModelMaterialH
+{
+    uint64_t o;
+};
+
+ModelMaterialH create_model_material(ModelPrototype*, const hrz_proto::Material&);
+void destroy(ModelPrototype*, ModelMaterialH);
+void update_data_texture_palette(ModelPrototype*, ModelMaterialH, const hrz_proto::NumericPalette&);
+
+struct InstanceGroupData
+{
+    bool use_enu_orientation;
+
+    lm::dmat4 transform;
+    my::CullModifier cull_modifier;
+    gsl::span<const lm::vec3> positions;
+    gsl::span<const lm::usvec3> compressed_positions;
+    gsl::span<const lm::vec3> normals;
+    gsl::span<const lm::usvec4> compressed_normals;
+    gsl::span<const lm::vec3> scales;
+    gsl::span<const lm::ubvec4> colors;
+    gsl::span<const uint32_t> feature_picking_ids;
+    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes;
+    gsl::span<const uint32_t> batch_ids;
+
+    VertexCompressionParamsUniformData position_compression;
+    VertexCompressionParamsUniformData normal_compression;
+};
+
+struct InstanceGroupH
+{
+    uint64_t o;
+};
+
+enum class InstanceGroupStatus
+{
+    Loading,
+    Ready,
+    Error,
+};
+
+InstanceGroupH create_instance_group(
+    ModelPrototype*,
+    lm::uvec2 layer_picking_id,
+    lm::uvec2 group_picking_id,
+    uint32_t batch_id_offset,
+    const InstanceGroupData&);
+void destroy(ModelPrototype*, InstanceGroupH);
+
+void set_instance_group_colors(ModelPrototype*, InstanceGroupH, gsl::span<const lm::ubvec4>);
+void set_instance_group_selection(
+    ModelPrototype*,
+    InstanceGroupH,
+    const hrz::flat_hash_set<uint64_t>& selected_objects);
+
+InstanceGroupStatus get_instance_group_status(ModelPrototype*, InstanceGroupH);
+
+struct BakedModelH
+{
+    uint64_t o;
+};
+
+struct SingleBakedModelH
+{
+    uint64_t o;
+
+    constexpr operator BakedModelH() const { return BakedModelH{o}; }
+};
+
+struct ImpostorBakingBakedModelH
+{
+    uint64_t o;
+
+    constexpr operator BakedModelH() const { return BakedModelH{o}; }
+};
+
+struct InstancedBakedModelH
+{
+    uint64_t o;
+
+    constexpr operator BakedModelH() const { return BakedModelH{o}; }
+};
+
+struct BatchedBakedModelH
+{
+    uint64_t o;
+
+    constexpr operator BakedModelH() const { return BakedModelH{o}; }
+};
+
+SingleBakedModelH create_baked_model(
+    ModelPrototype*,
+    SingleModelGeometryH,
+    std::optional<ModelMaterialH> base_material,
+    std::optional<ModelMaterialH> overlay_material);
+
+ImpostorBakingBakedModelH create_baked_model(
+    ModelPrototype*,
+    ImpostorBakingModelGeometryH,
+    std::optional<ModelMaterialH>);
+
+InstancedBakedModelH create_baked_model(
+    ModelPrototype*,
+    InstancedModelGeometryH,
+    std::optional<ModelMaterialH>);
+
+BatchedBakedModelH create_baked_model(
+    ModelPrototype*,
+    BatchedModelGeometryH,
+    std::optional<ModelMaterialH> base_material,
+    std::optional<ModelMaterialH> overlay_material);
+
+void destroy(ModelPrototype*, BakedModelH);
+
+void work(ModelPrototype*, BakedModelH);
+RenderRequest work_gpu(ModelPrototype*, BakedModelH, SharedResources*, Render*);
+
+enum class BakedModelStatus
+{
+    Loading,
+    Displayable,
+    Ready,
+    ReadyWithErrors,
+    Error,
+};
+
+BakedModelStatus get_status(ModelPrototype*, BakedModelH);
+bool is_working(ModelPrototype*, BakedModelH);
+
+void work_gpu(ModelPrototype*, InstanceGroupH, Render*);
+
+struct DrawProperties
+{
+    lm::dmat4 transform;
+    render::LightingSettings lighting;
+    int clip_id;
+    lm::vec4 color;
+    uint32_t feature_color_blend_mode;
+    float feature_color_blend_strength;
+    bool overlay_material_enabled;
+    bool apply_feature_color_to_overlay;
+    float overlay_material_opacity;
+    bool draw_under_flat_overlays;
+};
+
+void draw(
+    ModelPrototype*,
+    SingleBakedModelH,
+    const DrawProperties&,
+    bool selected,
+    uint32_t scene_views,
+    SharedResources*,
+    Render*,
+    AttributionRegistry*);
+
+void draw(
+    ModelPrototype*,
+    ImpostorBakingBakedModelH,
+    const DrawProperties&,
+    const lm::mat4& proj,
+    const lm::mat4& view,
+    SharedResources*,
+    Render*,
+    AttributionRegistry*);
+
+void draw(
+    ModelPrototype*,
+    InstancedBakedModelH,
+    InstanceGroupH,
+    const DrawProperties&,
+    uint32_t scene_views,
+    SharedResources*,
+    Render*,
+    AttributionRegistry*);
+
+void draw(
+    ModelPrototype*,
+    BatchedBakedModelH,
+    const DrawProperties&,
+    uint32_t scene_views,
+    SharedResources*,
+    Render*,
+    AttributionRegistry*);
+
+} // namespace model
+} // namespace hrz

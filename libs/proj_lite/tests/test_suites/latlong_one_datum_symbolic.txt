@@ -1,0 +1,8 @@
+= +proj=longlat +ellps=clrk80 +no_defs
+< 10 60 1e-8
+> +proj=longlat +datum=nzgd49 +no_defs
+
+= +proj=longlat +datum=WGS84 +no_defs
+< 10 60 1e-8
+> +proj=longlat +ellps=intl +no_defs
+

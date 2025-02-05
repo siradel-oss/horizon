@@ -1,0 +1,16 @@
+diff --git a/cmake/draco_emscripten.cmake b/cmake/draco_emscripten.cmake
+index c9616ae..dbb8cfc 100644
+--- a/cmake/draco_emscripten.cmake
++++ b/cmake/draco_emscripten.cmake
+@@ -23,11 +23,6 @@ macro(draco_check_emscripten_environment)
+       FATAL_ERROR
+         "Python required for Emscripten builds, but cmake cannot find it.")
+   endif()
+-  if(NOT EXISTS "$ENV{EMSCRIPTEN}")
+-    message(
+-      FATAL_ERROR
+-        "The EMSCRIPTEN environment variable must be set. See README.md.")
+-  endif()
+ endmacro()
+
+ # Obtains the required Emscripten flags for Draco targets.

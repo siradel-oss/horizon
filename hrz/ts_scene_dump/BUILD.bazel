@@ -1,0 +1,67 @@
+load("//tools/bazel:npm.bzl", "package_json")
+load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_VERSION", "PACKAGE_JSON_HRZ_LICENSE")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:protobufjs/package_json.bzl", pbjs_bin = "bin")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["package.json"])
+npm_link_all_packages(name = "node_modules")
+
+structured_files_copy(
+    name = "src_copies",
+    output_dir = "dist",
+    files = {
+        "": ["src/index.ts"],
+    },
+)
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        ":src_copies",
+    ],
+    deps = [
+        ":node_modules/@siradel/horizon-protocol",
+        ":node_modules/@siradel/horizon-api",
+    ],
+    declaration = True,
+    root_dir = "dist",
+    out_dir = "dist",
+    tsconfig = {
+        "compilerOptions": {
+            "lib": ["ES2015", "DOM"],
+            "target": "ES5",
+            "strict": True,
+        },
+    },
+)
+
+package_json(
+    name = "package_json",
+    base = ":package.json",
+    out = "dist-root/package.json",
+    version = PACKAGE_JSON_HRZ_VERSION,
+    license = PACKAGE_JSON_HRZ_LICENSE,
+)
+
+npm_package(
+    name = "npm_pkg",
+    srcs = [
+        ":ts_lib",
+        ":package_json",
+    ],
+    include_srcs_patterns = [
+        "**/*.json",
+        "**/*.js",
+        "**/*.d.ts",
+    ],
+    replace_prefixes = {
+        "dist-root/": "",
+    },
+)
+
+alias(name = "ts_scene_dump", actual = ":npm_pkg")

@@ -1,0 +1,2095 @@
+
+÷
+hrz_wrappers.protoHrzProtocol"#
+DoubleValue
+value (Rvalue""
+
+FloatValue
+value (Rvalue""
+
+Int64Value
+value (Rvalue"#
+UInt64Value
+value (Rvalue""
+
+Int32Value
+value (Rvalue"#
+UInt32Value
+value (Rvalue"!
+	BoolValue
+value (Rvalue"#
+StringValue
+value (	Rvalue""
+
+BytesValue
+value (RvalueBHøbproto3
+¦‡
+hrz_types.protoHrzProtocol"
+Void"#
+Vec2i
+x (Rx
+y (Ry"$
+Vec2ui
+x (Rx
+y (Ry"#
+Vec2f
+x (Rx
+y (Ry"#
+Vec2d
+x (Rx
+y (Ry"1
+Vec3f
+x (Rx
+y (Ry
+z (Rz"1
+Vec3d
+x (Rx
+y (Ry
+z (Rz"§
+Mat4f
+m00 (Rm00
+m01 (Rm01
+m02 (Rm02
+m03 (Rm03
+m10 (Rm10
+m11 (Rm11
+m12 (Rm12
+m13 (Rm13
+m20	 (Rm20
+m21
+ (Rm21
+m22 (Rm22
+m23 (Rm23
+m30 (Rm30
+m31 (Rm31
+m32 (Rm32
+m33 (Rm33"1
+Vec3i
+x (Rx
+y (Ry
+z (Rz">
+Quat
+w (Rw
+x (Rx
+y (Ry
+z (Rz"Z
+Bbox
+x_min (RxMin
+y_min (RyMin
+x_max (RxMax
+y_max (RyMax"[
+Bboxd
+x_min (RxMin
+y_min (RyMin
+x_max (RxMax
+y_max (RyMax"[
+Bboxi
+x_min (RxMin
+y_min (RyMin
+x_max (RxMax
+y_max (RyMax"4
+Rangei
+offset (Roffset
+size (Rsize"†
+Bbox3d
+x_min (RxMin
+y_min (RyMin
+z_min (RzMin
+x_max (RxMax
+y_max (RyMax
+z_max (RzMax":
+
+TileCoords
+x (Rx
+y (Ry
+lod (Rlod"—
+CoordinatesFrame!
+up (2.HrzProtocol.AxisRup'
+front (2.HrzProtocol.AxisRfront7
+
+handedness (2.HrzProtocol.HandednessR
+handedness"{
+Image0
+format (2.HrzProtocol.ImageFormatRformat
+width (Rwidth
+height (Rheight
+data (Rdata"?
+Color
+r (Rr
+g (Rg
+b (Rb
+a (Ra"Ž
+
+ColorPoint
+value (Rvalue3
+first_color (2.HrzProtocol.ColorR
+firstColor5
+second_color (2.HrzProtocol.ColorRsecondColor"•
+NumericPalette:
+color_points (2.HrzProtocol.ColorPointRcolorPoints/
+	nan_color (2.HrzProtocol.ColorRnanColorB
+numeric_type (2.HrzProtocol.NumericPaletteTypeRnumericTypeR
+interpolation_mode (2#.HrzProtocol.ColorInterpolationModeRinterpolationMode"L
+
+LabelColor
+label (	Rlabel(
+color (2.HrzProtocol.ColorRcolor"x
+LabelPalette/
+labels (2.HrzProtocol.LabelColorRlabels7
+default_color (2.HrzProtocol.ColorRdefaultColor"³
+Palette,
+type (2.HrzProtocol.PaletteTypeRtype
+name (	Rname/
+labele (2.HrzProtocol.LabelPaletteRlabel5
+numericf (2.HrzProtocol.NumericPaletteRnumeric"Å
+	Transform*
+offset (2.HrzProtocol.Vec3fRoffset(
+scale (2.HrzProtocol.Vec3fRscale-
+rotation (2.HrzProtocol.QuatRrotation3
+frame (2.HrzProtocol.CoordinatesFrameRframe"j
+GeographicPosition
+latitude (Rlatitude
+	longitude (R	longitude
+altitude (Raltitude"k
+PixelPositionResult)
+pixel (2.HrzProtocol.Vec2uiRpixel#
+below_horizon (RbelowHorizonJ"f
+GeographicBounds
+west (Rwest
+south (Rsouth
+east (Reast
+north (Rnorth"ª
+GeographicVolumeBounds
+west (Rwest
+south (Rsouth
+east (Reast
+north (Rnorth
+
+min_height (R	minHeight
+
+max_height (R	maxHeight"®
+GeographicViewPolygon7
+center
+ (2.HrzProtocol.GeographicPositionRcenter4
+encompasses_north_pole (RencompassesNorthPole4
+encompasses_south_pole (RencompassesSouthPole1
+crosses_antimeridian (RcrossesAntimeridian7
+points	 (2.HrzProtocol.GeographicPositionRpointsJ	"6
+
+HttpHeader
+name (	Rname
+value (	Rvalue"C
+HttpHeaderList1
+headers (2.HrzProtocol.HttpHeaderRheaders"ï
+TiledImageRasterProviderParams
+url_pattern (	R
+urlPattern>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders;
+image_format (2.HrzProtocol.ImageFormatRimageFormatN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"Á
+BingProviderParams
+api_key (	RapiKey
+culture (	RcultureG
+imagery_type (2$.HrzProtocol.BingProviderImageryTypeRimageryTypeN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"Ç
+ArcGisProviderParams
+url (	Rurl
+	layer_ids (RlayerIds>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters	 (RpreserveQueryParametersN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy.
+source_image_format (	RsourceImageFormat#
+ignore_bounds (RignoreBounds7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"
+TmsProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParametersN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy;
+image_format (2.HrzProtocol.ImageFormatRimageFormat7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"Ú
+WmtsProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders)
+layer_identifier (	RlayerIdentifier)
+style_identifier (	RstyleIdentifier.
+source_image_format (	RsourceImageFormat;
+image_format (2.HrzProtocol.ImageFormatRimageFormatN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
+override_tile_cache_size	 (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"N
+WmsStyledLayer
+
+layer_name (	R	layerName
+
+style_name (	R	styleName"8
+WmsDimension
+name (	Rname
+value (	Rvalue"ë
+WmsProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders3
+layers (2.HrzProtocol.WmsStyledLayerRlayers9
+
+dimensions (2.HrzProtocol.WmsDimensionR
+dimensions=
+background_color (2.HrzProtocol.ColorRbackgroundColor!
+force_opaque (RforceOpaque.
+source_image_format (	RsourceImageFormat;
+image_format (2.HrzProtocol.ImageFormatRimageFormatN
+missing_tile_policy	 (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy,
+override_min_level
+ (RoverrideMinLevel
+	min_level (RminLevel,
+override_max_level (RoverrideMaxLevel
+	max_level (RmaxLevel7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"€
+SingleImageRasterProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders;
+image_format (2.HrzProtocol.ImageFormatRimageFormatN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy"¯
+#PalettizedImageRasterProviderParamsD
+provider_type (2.HrzProtocol.RasterProviderTypeRproviderType]
+tiled_image_providere (2+.HrzProtocol.TiledImageRasterProviderParamsRtiledImageProvider`
+single_image_providerf (2,.HrzProtocol.SingleImageRasterProviderParamsRsingleImageProviderA
+tms_providerj (2.HrzProtocol.TmsProviderParamsRtmsProviderD
+wmts_providerk (2.HrzProtocol.WmtsProviderParamsRwmtsProviderA
+wms_providerl (2.HrzProtocol.WmsProviderParamsRwmsProvider5
+palette (2.HrzProtocol.NumericPaletteRpalette"Ü
+CesiumTerrainProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParametersN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"”
+TileJsonProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParameters;
+image_format (2.HrzProtocol.ImageFormatRimageFormatN
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
+override_tile_cache_size (RoverrideTileCacheSize&
+tile_cache_size (RtileCacheSize"ª
+GlobalTilingSchemeParams
+	tile_size (RtileSize4
+level_zero_tile_count_x (RlevelZeroTileCountX4
+level_zero_tile_count_y (RlevelZeroTileCountY
+	min_level (RminLevel
+	max_level (RmaxLevelK
+border_tile_aspect (2.HrzProtocol.BorderTileAspectRborderTileAspect"ò
+LocalTilingSchemeParams(
+full_image_width (RfullImageWidth*
+full_image_height (RfullImageHeight
+	tile_size (RtileSize"
+has_min_level (RhasMinLevel
+	min_level (RminLevel"
+has_max_level (RhasMaxLevel
+	max_level (RmaxLevel2
+override_level_offset
+ (RoverrideLevelOffset!
+level_offset (RlevelOffsetK
+border_tile_aspect (2.HrzProtocol.BorderTileAspectRborderTileAspect>
+tiling_origin	 (2.HrzProtocol.TilingOriginRtilingOrigin"Ü
+TilingSchemeParams1
+type (2.HrzProtocol.TilingSchemeTypeRtypeJ
+global_tilinge (2%.HrzProtocol.GlobalTilingSchemeParamsRglobalTilingG
+local_tilingf (2$.HrzProtocol.LocalTilingSchemeParamsRlocalTiling"5
+NodataValue
+value (Rvalue
+nan (Rnan"*
+RasterBlending
+opacity (Ropacity" 
+RasterSamplingN
+alpha_channel_usage (2.HrzProtocol.AlphaChannelUsageRalphaChannelUsageD
+nodata_handling (2.HrzProtocol.NodataHandlingRnodataHandling;
+nodata_value (2.HrzProtocol.NodataValueRnodataValue;
+	filtering (2.HrzProtocol.TextureFilteringR	filtering"
+SpatialReferenceSystemG
+descriptor_type (2.HrzProtocol.SrsDescriptorTypeRdescriptorType
+
+descriptor (	R
+descriptor"ˆ
+RasterGeometryC
+
+projection (2#.HrzProtocol.SpatialReferenceSystemR
+projection?
+projection_bounds (2.HrzProtocol.BboxdRprojectionBoundsD
+tiling_scheme (2.HrzProtocol.TilingSchemeParamsRtilingScheme*
+bounds (2.HrzProtocol.BboxdRbounds"ÿ
+RasterParams7
+geometry (2.HrzProtocol.RasterGeometryRgeometryD
+display_bounds (2.HrzProtocol.GeographicBoundsRdisplayBounds7
+blending (2.HrzProtocol.RasterBlendingRblending7
+sampling (2.HrzProtocol.RasterSamplingRsampling"í
+RasterD
+provider_type (2.HrzProtocol.RasterProviderTypeRproviderType1
+params (2.HrzProtocol.RasterParamsRparams)
+loading_priority (RloadingPriority]
+tiled_image_providere (2+.HrzProtocol.TiledImageRasterProviderParamsRtiledImageProvider`
+single_image_providerf (2,.HrzProtocol.SingleImageRasterProviderParamsRsingleImageProviderD
+bing_providerg (2.HrzProtocol.BingProviderParamsRbingProviderl
+palettized_image_providerh (20.HrzProtocol.PalettizedImageRasterProviderParamsRpalettizedImageProviderJ
+arcgis_provideri (2!.HrzProtocol.ArcGisProviderParamsRarcgisProviderA
+tms_providerj (2.HrzProtocol.TmsProviderParamsRtmsProviderD
+wmts_providerk (2.HrzProtocol.WmtsProviderParamsRwmtsProviderA
+wms_providerl (2.HrzProtocol.WmsProviderParamsRwmsProvider`
+cesium_terrain_providerm (2(.HrzProtocol.CesiumTerrainProviderParamsRcesiumTerrainProviderP
+tilejson_providern (2#.HrzProtocol.TileJsonProviderParamsRtilejsonProvider"ñ
+AttributeValue%
+boolean_value (H RbooleanValue
+	int_value (H RintValue
+
+uint_value (H R	uintValue!
+float_value (H R
+floatValue#
+string_value (	H RstringValue!
+color_value (	H R
+colorValueB
+valueJ"Z
+FeatureAttributeValue
+id (Rid1
+value (2.HrzProtocol.AttributeValueRvalue"U
+	FeatureIdB
+
+attributes (2".HrzProtocol.FeatureAttributeValueR
+attributesJ"E
+
+FeatureIds7
+feature_ids (2.HrzProtocol.FeatureIdR
+featureIds"É
+VectorAttribute
+id (Rid.
+type (2.HrzProtocol.AttributeTypeRtype
+source_name (	R
+sourceName1
+is_source_feature_ids (RisSourceFeatureIds"
+is_feature_id (RisFeatureId"Ö
+TiledVectorDataProviderParams
+url_pattern (	R
+urlPattern>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders5
+format (2.HrzProtocol.VectorDataFormatRformat
+
+layer_name (	R	layerName"w
+ClientVectorDataProviderParams;
+access (2#.HrzProtocol.VectorDataSourceAccessRaccess
+timeout (Rtimeout"O
+ InMemoryVectorDataProviderParams+
+in_memory_layer_id (RinMemoryLayerId"Ï
+ TileJsonVectorDataProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParameters
+
+layer_name (	R	layerName"ó
+UntiledVectorDataProviderParams
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders5
+format (2.HrzProtocol.VectorDataFormatRformat
+clip_margin (R
+clipMargin&
+guess_max_level (RguessMaxLevel"Õ
+VectorDataSourceH
+provider_type (2#.HrzProtocol.VectorDataProviderTypeRproviderTypeZ
+tiled_data_providere (2*.HrzProtocol.TiledVectorDataProviderParamsRtiledDataProvider]
+client_data_providerf (2+.HrzProtocol.ClientVectorDataProviderParamsRclientDataProviderd
+in_memory_data_providerg (2-.HrzProtocol.InMemoryVectorDataProviderParamsRinMemoryDataProviderc
+tilejson_data_providerh (2-.HrzProtocol.TileJsonVectorDataProviderParamsRtilejsonDataProvider`
+untiled_data_provideri (2,.HrzProtocol.UntiledVectorDataProviderParamsRuntiledDataProvider!
+has_geometry (RhasGeometry<
+
+attributes (2.HrzProtocol.VectorAttributeR
+attributesJJJJJJ	J	
+J
+"[
+VectorClamping4
+method (2.HrzProtocol.VectorClampModeRmethod
+use_z (RuseZ"Ð
+ImpostorParams!
+use_impostor (RuseImpostor2
+
+atlas_size (2.HrzProtocol.Vec2uiR	atlasSize2
+
+image_size (2.HrzProtocol.Vec2uiR	imageSize3
+max_screen_size_pixels (RmaxScreenSizePixels"
+AltitudeVisibilityConstraintS
+relative_position (2&.HrzProtocol.RelativePositionQualifierRrelativePosition
+altitude (Raltitude"®
+BoundsVisibilityConstraintY
+relative_position (2,.HrzProtocol.RelativeBoundsPositionQualifierRrelativePosition5
+bounds (2.HrzProtocol.GeographicBoundsRbounds"ã
+LayerVisibilityConstraint>
+type (2*.HrzProtocol.LayerVisibilityConstraintTypeRtypeE
+altituded (2).HrzProtocol.AltitudeVisibilityConstraintRaltitude?
+boundse (2'.HrzProtocol.BoundsVisibilityConstraintRbounds"i
+LayerVisibilityConstraintListH
+constraints (2&.HrzProtocol.LayerVisibilityConstraintRconstraints"F
+IntProperty
+name (	Rname#
+default_value (RdefaultValue"H
+FloatProperty
+name (	Rname#
+default_value (RdefaultValue"\
+Vec2fProperty
+name (	Rname7
+default_value (2.HrzProtocol.Vec2fRdefaultValue"\
+Vec3fProperty
+name (	Rname7
+default_value (2.HrzProtocol.Vec3fRdefaultValue"\
+ColorProperty
+name (	Rname7
+default_value (2.HrzProtocol.ColorRdefaultValue"I
+StringProperty
+name (	Rname#
+default_value (	RdefaultValue*H
+Axis	
+POS_X 	
+NEG_X	
+POS_Y	
+NEG_Y	
+POS_Z	
+NEG_Z*!
+
+Handedness
+LEFT 	
+RIGHT*^
+ImageFormat
+SRGBA_8 	
+R_F32
+R_F32_SILICIUM
+SIGNED_FIXED_24_8
+SRGB_R_8*W
+ColorInterpolationMode
+PERCEPTUAL_OKLAB 
+SRGB
+
+LINEAR_RGB
+	THRESHOLD*7
+NumericPaletteType	
+INT64 
+
+UINT64
+
+DOUBLE*%
+PaletteType	
+LABEL 
+NUMERIC*B
+AltitudeMode
+RELATIVE_TO_ELLIPSOID 
+RELATIVE_TO_TERRAIN*A
+MissingTilePolicy
+USE_LOWER_RESOLUTION 
+USE_EMPTY_TILE*û
+RasterProviderType
+SINGLE_IMAGE_PROVIDER 
+TILED_IMAGE_PROVIDER
+BING_PROVIDER
+PALETTIZED_IMAGE_PROVIDER
+ARCGIS_PROVIDER
+TMS_PROVIDER
+WMTS_PROVIDER
+WMS_PROVIDER
+CESIUM_TERRAIN_PROVIDER
+TILEJSON_PROVIDER	*z
+BingProviderImageryType
+ROAD 
+
+AERIAL
+AERIAL_WITH_LABELS
+	ROAD_DARK
+ROAD_GRAYSCALE
+
+ROAD_LIGHT*6
+TilingSchemeType
+UNTILED 	
+LOCAL
+
+GLOBAL*/
+BorderTileAspect
+
+FULL_SIZED 
+CLIPPED*1
+TilingOrigin
+
+TOP_ORIGIN 
+BOTTOM_ORIGIN*V
+NodataHandling
+IGNORE_NODATA 
+DISCARD_NODATA_PIXELS
+SET_NODATA_TO_ZERO*i
+AlphaChannelUsage
+IGNORE_ALPHA_CHANNEL 
+USE_ALPHA_CHANNEL#
+USE_ALPHA_CHANNEL_PREMULTIPLIED*V
+	BlendMode
+BLEND_NORMAL 
+BLEND_MULTIPLY
+BLEND_SCREEN
+BLEND_OVERLAY*-
+TextureFiltering
+NEAREST 
+BILINEAR*E
+SrsDescriptorType
+PROJ4_STRING_DESCRIPTOR 
+SRID_DESCRIPTOR*U
+RasterGroup
+BOTTOM_RASTER_GROUP 
+MIDDLE_RASTER_GROUP
+TOP_RASTER_GROUP*
+AttributeType
+BOOLEAN_ATTRIBUTE 
+INT_ATTRIBUTE
+UINT_ATTRIBUTE
+FLOAT_ATTRIBUTE
+STRING_ATTRIBUTE
+COLOR_ATTRIBUTE*U
+VectorGeometryType
+POINT_GEOMETRY 
+POLYLINE_GEOMETRY
+POLYGON_GEOMETRY*d
+VectorDataFormat
+GEOJSON_VECTOR_DATA 
+MVT_VECTOR_DATA
+GEOBUF_VECTOR_DATA""*F
+VectorDataSourceAccess
+ACCESS_BY_TILE 
+ACCESS_BY_FEATURE_ID*Â
+VectorDataProviderType
+TILED_VECTOR_DATA_PROVIDER 
+CLIENT_VECTOR_DATA_PROVIDER"
+IN_MEMORY_VECTOR_DATA_PROVIDER!
+TILEJSON_VECTOR_DATA_PROVIDER 
+UNTILED_VECTOR_DATA_PROVIDER*>
+VectorClampMode
+NO_CLAMPING 
+
+ANCHOR
+
+PER_VERTEX*B
+TextAlignment
+CENTERED 
+LEFT_ALIGNED
+RIGHT_ALIGNED*9
+LayerVisibilityConstraintType
+
+BOUNDS 
+ALTITUDE*1
+RelativePositionQualifier	
+ABOVE 	
+BELOW*:
+RelativeBoundsPositionQualifier
+
+INSIDE 
+OUTSIDEBHøbproto3
+é
+hrz_layers.protoHrzProtocolhrz_types.proto"%
+LayerHandle
+opaque (Ropaque"Q
+LayerCreateInfo*
+type (2.HrzProtocol.LayerTypeRtype
+name (	Rname"W
+LayerRenameInfo0
+handle (2.HrzProtocol.LayerHandleRhandle
+name (	Rname"y
+Layer0
+handle (2.HrzProtocol.LayerHandleRhandle*
+type (2.HrzProtocol.LayerTypeRtype
+name (	Rname"8
+
+LayerArray*
+layers (2.HrzProtocol.LayerRlayers*Ô
+	LayerType
+INVALID 
+SINGLE_MODEL
+
+DTM_RASTER
+IMAGERY_RASTER
+VECTOR_DATA
+VECTOR_TILES
+THREE_D_TILES
+CLIPPING_PLANE
+IN_MEMORY_VECTOR_SOURCE	
+GIZMO	
+EDITABLE_SHAPE
+2È
+LayerServiceE
+CreateLayer.HrzProtocol.LayerCreateInfo.HrzProtocol.LayerHandle;
+DestroyLayer.HrzProtocol.LayerHandle.HrzProtocol.Void>
+RenameLayer.HrzProtocol.LayerRenameInfo.HrzProtocol.Void8
+GetLayer.HrzProtocol.LayerHandle.HrzProtocol.Layer:
+GetAllLayers.HrzProtocol.Void.HrzProtocol.LayerArrayBHøbproto3
+©
+hrz_picking.protoHrzProtocolhrz_types.protohrz_layers.proto"$
+
+PickTicket
+opaque (Ropaque"(
+PickAreaTicket
+opaque (Ropaque"=
+ImageryPickResult(
+color (2.HrzProtocol.ColorRcolor"-
+DtmPickResult
+	elevation (R	elevation"(
+ScalarPickResult
+value (Rvalue"–
+RasterPickResult+
+type (2.HrzProtocol.RasterTypeRtype;
+raster_position (2.HrzProtocol.Vec2dRrasterPosition9
+pixel_position (2.HrzProtocol.Vec2dRpixelPosition-
+nothinge (2.HrzProtocol.VoidH Rnothing:
+imageryf (2.HrzProtocol.ImageryPickResultH Rimagery.
+dtmg (2.HrzProtocol.DtmPickResultH Rdtm7
+scalarh (2.HrzProtocol.ScalarPickResultH RscalarB	
+payload"B
+HeatmapPickResult
+repr_id (RreprId
+value (Rvalue"»
+VectorPickResult5
+
+feature_id (2.HrzProtocol.FeatureIdR	featureId5
+wmerc_coords (2.HrzProtocol.Vec2fRwmercCoords
+ids (Rids0
+types (2.HrzProtocol.AttributeTypeRtypes3
+values (2.HrzProtocol.AttributeValueRvalues:
+heatmaps (2.HrzProtocol.HeatmapPickResultRheatmapsJ"Ð
+ThreeDTilesPickResult5
+
+feature_id	 (2.HrzProtocol.FeatureIdR	featureId.
+position (2.HrzProtocol.Vec3dRposition
+tile_url (	RtileUrl
+names (	Rnames0
+types (2.HrzProtocol.AttributeTypeRtypes3
+values (2.HrzProtocol.AttributeValueRvalues,
+data_texture_value (RdataTextureValueJJ"H
+SingleModelPickingResult,
+data_texture_value (RdataTextureValue"û
+PickLayerResult(
+layer (2.HrzProtocol.LayerRlayer7
+rastere (2.HrzProtocol.RasterPickResultH Rraster7
+vectorf (2.HrzProtocol.VectorPickResultH Rvector=
+modelg (2%.HrzProtocol.SingleModelPickingResultH RmodelF
+three_d_tileh (2".HrzProtocol.ThreeDTilesPickResultH R
+threeDTile:
+editable_shapei (2.HrzProtocol.VoidH ReditableShapeB	
+payload"‚
+PickResults;
+position (2.HrzProtocol.GeographicPositionRposition6
+results (2.HrzProtocol.PickLayerResultRresults*2
+
+RasterType
+IMAGERY 
+DTM
+
+PALETTIZEDBHøbproto3
+Ø
+hrz_input.protoHrzProtocol"¢
+EventC
+window_closed (2.HrzProtocol.Event.NoPayloadH RwindowClosedK
+window_resized (2".HrzProtocol.Event.WindowSizeEventH RwindowResizedA
+	character (2!.HrzProtocol.Event.CharacterEventH R	character=
+key_down (2 .HrzProtocol.Event.KeyboardEventH RkeyDown9
+key_up (2 .HrzProtocol.Event.KeyboardEventH RkeyUpB
+
+mouse_move (2!.HrzProtocol.Event.MouseMoveEventH R	mouseMoveE
+mouse_wheel (2".HrzProtocol.Event.MouseWheelEventH R
+mouseWheelQ
+mouse_button_down (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonDownM
+mouse_button_up	 (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonUp`
+mouse_button_double_click
+ (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonDoubleClick?
+mouse_leave (2.HrzProtocol.Event.NoPayloadH R
+mouseLeave@
+touch_start (2.HrzProtocol.Event.TouchEventH R
+touchStart<
+	touch_end (2.HrzProtocol.Event.TouchEventH RtouchEnd>
+
+touch_move (2.HrzProtocol.Event.TouchEventH R	touchMoveB
+touch_cancel (2.HrzProtocol.Event.TouchEventH RtouchCancel<
+CharacterEvent
+char (Rchar
+repeat (Rrepeat3
+KeyboardEvent"
+key (2.HrzProtocol.KeyRkeyL
+MouseMoveEvent
+x (Rx
+y (Ry
+dx (Rdx
+dy (RdyC
+MouseWheelEvent
+x (Rx
+y (Ry
+wheel (Rwheel`
+MouseButtonEvent
+x (Rx
+y (Ry0
+button (2.HrzProtocol.MouseButtonRbutton8
+
+TouchEvent
+x (Rx
+y (Ry
+id (Rid?
+WindowSizeEvent
+width (Rwidth
+height (Rheight
+	NoPayloadB
+kind*Ê
+Key
+
+K_NONE 
+K_ESCAPE
+K_F1
+K_F2
+K_F3
+K_F4
+K_F5
+K_F6
+K_F7
+K_F8	
+K_F9
+	
+K_F10	
+K_F11	
+K_F12
+K_0
+K_1
+K_2
+K_3
+K_4
+K_5
+K_6
+K_7
+K_8
+K_9
+K_A
+K_B
+K_C
+K_D
+K_E
+K_F
+K_G
+K_H
+K_I 
+K_J!
+K_K"
+K_L#
+K_M$
+K_N%
+K_O&
+K_P'
+K_Q(
+K_R)
+K_S*
+K_T+
+K_U,
+K_V-
+K_W.
+K_X/
+K_Y0
+K_Z1	
+K_TAB2
+
+K_CAPSLOCK3
+K_SHIFT4
+
+K_CTRL5	
+K_ALT6
+K_SPACE7
+K_BACKSPACE8
+K_ENTER9
+K_UP:
+
+K_DOWN;
+
+K_LEFT<
+K_RIGHT=
+K_INSERT>
+K_DELETE?
+
+K_HOME@	
+K_ENDA
+	K_PAGE_UPB
+K_PAGE_DOWNC*7
+MouseButton
+MB_LEFT 
+	MB_MIDDLE
+MB_RIGHTBHøbproto3
+“/
+hrz_viewer.protoHrzProtocolhrz_types.protohrz_picking.protohrz_wrappers.protohrz_layers.protohrz_input.proto"y
+FeatureReference.
+layer (2.HrzProtocol.LayerHandleRlayer5
+
+feature_id (2.HrzProtocol.FeatureIdR	featureId"N
+FeatureReferences9
+features (2.HrzProtocol.FeatureReferenceRfeatures"`
+
+KeyBinding"
+key (2.HrzProtocol.KeyRkey.
+action (2.HrzProtocol.KeyActionRaction"M
+KeyInteractionBindings3
+bindings (2.HrzProtocol.KeyBindingRbindings"Ê	
+ViewerOptions!
+worker_count (RworkerCount(
+log_filter_level (RlogFilterLevel
+
+user_agent (	R	userAgentA
+graphics_level (2.HrzProtocol.GraphicsLevelRgraphicsLevelf
+graphics_settings_overrides (2&.HrzProtocol.GraphicsSettingsOverridesRgraphicsSettingsOverrides!
+force_render (RforceRender9
+force_flat_overlay_render (RforceFlatOverlayRender4
+disable_events_capture (RdisableEventsCapture1
+internal_integration	 (RinternalIntegrationF
+key_bindings
+ (2#.HrzProtocol.KeyInteractionBindingsRkeyBindingsD
+raster_provider_tile_cache_size (RrasterProviderTileCacheSize1
+blob_memory_pool_size (RblobMemoryPoolSize/
+max_wasm_memory_size (RmaxWasmMemorySizeB
+use_system_allocator_for_blobs (RuseSystemAllocatorForBlobs1
+max_video_memory_size (RmaxVideoMemorySize3
+native_http_cache_size (RnativeHttpCacheSize0
+native_http_referrer (	RnativeHttpReferrer'
+disable_terrain (RdisableTerrain2
+disable_flat_overlays (RdisableFlatOverlays.
+show_loading_screen (RshowLoadingScreen8
+force_shader_compilation (RforceShaderCompilation,
+device_pixel_ratio (RdevicePixelRatioJJJJ"Ù
+GraphicsSettingsOverrides,
+shadows_enabled (H RshadowsEnabledˆ7
+shadows_cascade_count (HRshadowsCascadeCountˆ2
+atmosphere_enabled (HRatmosphereEnabledˆ;
+flat_overlay_resolution (HRflatOverlayResolutionˆ@
+flat_overlay_cascade_count (HRflatOverlayCascadeCountˆM
+!ui_elements_depth_peeling_enabled (HRuiElementsDepthPeelingEnabledˆ>
+imagery_merge_group_count (HRimageryMergeGroupCountˆ/
+raster_atlas_size (HRrasterAtlasSizeˆ[
+(raster_atlas_texture_compression_enabled	 (HR$rasterAtlasTextureCompressionEnabledˆB
+_shadows_enabledB
+_shadows_cascade_countB
+_atmosphere_enabledB
+_flat_overlay_resolutionB
+_flat_overlay_cascade_countB$
+"_ui_elements_depth_peeling_enabledB
+_imagery_merge_group_countB
+_raster_atlas_sizeB+
+)_raster_atlas_texture_compression_enabled"œ
+GraphicsSettings'
+shadows_enabled (RshadowsEnabled2
+shadows_cascade_count (RshadowsCascadeCount-
+atmosphere_enabled (RatmosphereEnabled6
+flat_overlay_resolution (RflatOverlayResolution;
+flat_overlay_cascade_count (RflatOverlayCascadeCountH
+!ui_elements_depth_peeling_enabled (RuiElementsDepthPeelingEnabled9
+imagery_merge_group_count (RimageryMergeGroupCount*
+raster_atlas_size (RrasterAtlasSizeV
+(raster_atlas_texture_compression_enabled	 (R$rasterAtlasTextureCompressionEnabled"¿
+ViewerConfiguration1
+blob_memory_pool_size (RblobMemoryPoolSize1
+max_video_memory_size (RmaxVideoMemorySize/
+max_wasm_memory_size (RmaxWasmMemorySizeE
+graphics_profile (2.HrzProtocol.GraphicsLevelRgraphicsProfileJ
+graphics_settings (2.HrzProtocol.GraphicsSettingsRgraphicsSettings"
+PickRequest+
+coords (2.HrzProtocol.Vec2uiRcoordsC
+included_rasters (2.HrzProtocol.LayerHandleRincludedRasters"f
+PickRequestResult 
+has_a_ticket (R
+hasATicket/
+ticket (2.HrzProtocol.PickTicketRticket"n
+PickAreaRequestResult 
+has_a_ticket (R
+hasATicket3
+ticket (2.HrzProtocol.PickAreaTicketRticket"”
+RasterDataFetchRequest;
+position (2.HrzProtocol.GeographicPositionRposition=
+raster_layers (2.HrzProtocol.LayerHandleRrasterLayers"/
+RasterDataFetchTicket
+opaque (Ropaque"u
+RasterDataFetchResult 
+has_a_ticket (R
+hasATicket:
+ticket (2".HrzProtocol.RasterDataFetchTicketRticket"³
+MouseHoverConfiguration)
+enable_highlight (RenableHighlight
+enable_info (R
+enableInfo*
+highlight_rate_ms (RhighlightRateMs 
+info_rate_ms (R
+infoRateMs":
+EventsStream*
+events (2.HrzProtocol.EventRevents*°
+ViewerInitStatus
+INIT_SUCCESS 
+FRAMEBUFFER_CREATION_ERROR'
+#RENDERING_API_MISSING_FEATURE_ERROR(
+$RENDERING_API_CONTEXT_CREATION_ERROR
+GRAPHICS_BACKEND_INIT_ERROR
+ALREADY_INITIALIZED%
+!BROWSER_FEATURES_NO_SHARED_MEMORY
+BROWSER_FEATURES_NO_ATOMICS
+NOT_ENOUGH_MEMORY*¾
+	KeyAction
+RESET_NORTH 
+TOGGLE_DEV_UI
+MOVE_DEV_UI
+DESELECT_ALL
+EDITOR_APPEND
+EDITOR_SELECT 
+EDITOR_DELETE_SELECTED_POINT
+TOGGLE_MONITORING
+MOD_KEY*l
+GraphicsLevel
+GraphicsLevelAuto 
+GraphicsLevelLow
+GraphicsLevelMedium
+GraphicsLevelHigh2•
+ViewerServiceG
+GetConfiguration.HrzProtocol.Void .HrzProtocol.ViewerConfiguration<
+ScheduleFrameCapture.HrzProtocol.Void.HrzProtocol.VoidF
+
+PickScreen.HrzProtocol.PickRequest.HrzProtocol.PickRequestResultH
+PickScreenArea.HrzProtocol.Bboxi".HrzProtocol.PickAreaRequestResultZ
+FetchRasterData#.HrzProtocol.RasterDataFetchRequest".HrzProtocol.RasterDataFetchResultN
+ConfigureMouseHover$.HrzProtocol.MouseHoverConfiguration.HrzProtocol.VoidJ
+SelectFeatures.HrzProtocol.FeatureReferences.HrzProtocol.UInt64ValueL
+DeselectFeatures.HrzProtocol.FeatureReferences.HrzProtocol.UInt64Value;
+DeselectAllFeatures.HrzProtocol.Void.HrzProtocol.Void6
+	IsWorking.HrzProtocol.Void.HrzProtocol.BoolValueG
+SetUserInteractionsEnabled.HrzProtocol.BoolValue.HrzProtocol.Void:
+
+SendEvents.HrzProtocol.EventsStream.HrzProtocol.Void8
+ToggleDevUi.HrzProtocol.Void.HrzProtocol.BoolValue9
+MoveDevUiToCursor.HrzProtocol.Void.HrzProtocol.Void6
+ClearHttpCache.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3
+“â
+hrz_scene_model.protoHrzProtocolhrz_types.protohrz_layers.proto"%
+SceneViewBitset
+bits (Rbits"b
+LightingSettings'
+enable_lighting (RenableLighting%
+enable_shadows (RenableShadows"¨
+PathRootH
+single_model_layer (2.HrzProtocol.LayerHandleH RsingleModelLayerD
+dtm_raster_layer (2.HrzProtocol.LayerHandleH RdtmRasterLayerL
+imagery_raster_layer (2.HrzProtocol.LayerHandleH RimageryRasterLayerF
+vector_data_layer (2.HrzProtocol.LayerHandleH RvectorDataLayerH
+vector_tiles_layer (2.HrzProtocol.LayerHandleH RvectorTilesLayerI
+three_d_tiles_layer (2.HrzProtocol.LayerHandleH RthreeDTilesLayerL
+clipping_plane_layer (2.HrzProtocol.LayerHandleH RclippingPlaneLayer\
+in_memory_vector_source_layer (2.HrzProtocol.LayerHandleH RinMemoryVectorSourceLayer;
+gizmo_layer	 (2.HrzProtocol.LayerHandleH R
+gizmoLayerL
+editable_shape_layer
+ (2.HrzProtocol.LayerHandleH ReditableShapeLayer:
+scene_settingsd (2.HrzProtocol.VoidH RsceneSettingsM
+scene_view_settingsg (2.HrzProtocol.SceneViewIndexH RsceneViewSettingsC
+camera_settingse (2.HrzProtocol.CameraIndexH RcameraSettingsR
+single_model_test_layerÈ (2.HrzProtocol.LayerHandleH RsingleModelTestLayerB
+kind"G
+Path)
+root (2.HrzProtocol.PathRootRroot
+parts (Rparts"P
+SceneModelSet%
+path (2.HrzProtocol.PathRpath
+payload (Rpayload")
+SceneModelGet
+payload (Rpayload",
+SceneModelArrayCount
+count (Rcount"4
+TemplatedUrl
+name (	Rname
+url (	Rurl"¿
+Material
+name (	Rname!
+variant_name (	RvariantName-
+urls (2.HrzProtocol.TemplatedUrlRurlsM
+data_texture_palette (2.HrzProtocol.NumericPaletteRdataTexturePalette"Š
+MaterialProperties#
+base_material (	RbaseMaterial)
+overlay_material (	RoverlayMaterial%
+enable_overlay (RenableOverlay'
+overlay_opacity (RoverlayOpacityB
+apply_feature_color_to_overlay (RapplyFeatureColorToOverlayO
+feature_color_blend_mode (2.HrzProtocol.BlendModeRfeatureColorBlendMode?
+feature_color_blend_strength (RfeatureColorBlendStrength"‰
+SingleModelLayer
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParameters4
+	transform (2.HrzProtocol.TransformR	transform?
+
+geographic (2.HrzProtocol.GeographicPositionR
+geographic
+visible (Rvisible(
+color (2.HrzProtocol.ColorRcolor3
+	materials (2.HrzProtocol.MaterialR	materialsP
+material_properties (2.HrzProtocol.MaterialPropertiesRmaterialProperties)
+loading_priority (RloadingPriority
+clip_id (RclipId=
+scene_views	 (2.HrzProtocol.SceneViewBitsetR
+sceneViewsa
+visibility_constraints
+ (2*.HrzProtocol.LayerVisibilityConstraintListRvisibilityConstraints9
+lighting (2.HrzProtocol.LightingSettingsRlightingJ"Î
+DtmRasterLayer+
+raster (2.HrzProtocol.RasterRraster
+slot (Rslot
+visible (Rvisiblea
+visibility_constraints (2*.HrzProtocol.LayerVisibilityConstraintListRvisibilityConstraints"Á
+ImageryRasterLayer+
+raster (2.HrzProtocol.RasterRraster.
+group (2.HrzProtocol.RasterGroupRgroup
+slot (Rslot
+visible (Rvisiblea
+visibility_constraints (2*.HrzProtocol.LayerVisibilityConstraintListRvisibilityConstraints=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViews"ð
+SingleModelTestLayer
+url (	Rurl4
+	transform (2.HrzProtocol.TransformR	transform5
+palette (2.HrzProtocol.NumericPaletteRpalette?
+
+geographic (2.HrzProtocol.GeographicPositionR
+geographic
+visible (Rvisible"ö
+VectorDataLayer
+id (Rid7
+sources (2.HrzProtocol.VectorDataSourceRsources
+	min_level (RminLevel
+	max_level (RmaxLevel5
+bounds (2.HrzProtocol.GeographicBoundsRbounds)
+loading_priority (RloadingPriority"Ø
+ExtrudedGeometryVectorRepr8
+	extrusion (2.HrzProtocol.FloatPropertyR	extrusion;
+upper_color (2.HrzProtocol.ColorPropertyR
+upperColor;
+lower_color
+ (2.HrzProtocol.ColorPropertyR
+lowerColor9
+
+roof_color (2.HrzProtocol.ColorPropertyR	roofColorC
+altitude_offset	 (2.HrzProtocol.FloatPropertyRaltitudeOffset 
+clip_to_tile (R
+clipToTile
+clip_id (RclipId9
+lighting (2.HrzProtocol.LightingSettingsRlightingJJJ"ë
+FlatOverlayVectorRepr9
+
+line_width (2.HrzProtocol.FloatPropertyR	lineWidth0
+color (2.HrzProtocol.ColorPropertyRcolor;
+disc_radius (2.HrzProtocol.FloatPropertyR
+discRadius;
+dash_period (2.HrzProtocol.FloatPropertyR
+dashPeriod;
+dash_length (2.HrzProtocol.FloatPropertyR
+dashLengthD
+line_empty_color (2.HrzProtocol.ColorPropertyRlineEmptyColorC
+animation_speed (2.HrzProtocol.FloatPropertyRanimationSpeed
+z_index (RzIndex 
+clip_to_tile (R
+clipToTile)
+polygons_outline (RpolygonsOutline2
+	dash_mode (2.HrzProtocol.DashModeRdashModeC
+dash_period_unit (2.HrzProtocol.DashSizeUnitRdashPeriodUnitC
+dash_length_unit (2.HrzProtocol.DashSizeUnitRdashLengthUnit
+
+round_tips (R	roundTips-
+side	 (2.HrzProtocol.PolylineSideRside,
+disc_outline_width (RdiscOutlineWidth@
+disc_outline_color (2.HrzProtocol.ColorRdiscOutlineColorD
+line_width_unit (2.HrzProtocol.InWorldSizeUnitRlineWidthUnitK
+animation_speed_unit (2.HrzProtocol.DashSizeUnitRanimationSpeedUnitJJJJJ
+JJJ"¾
+HeatmapVectorRepr;
+disc_radius (2.HrzProtocol.FloatPropertyR
+discRadius0
+value (2.HrzProtocol.FloatPropertyRvalueO
+disc_radius_size_unit (2.HrzProtocol.InWorldSizeUnitRdiscRadiusSizeUnitD
+numeric_palette (2.HrzProtocol.NumericPaletteRnumericPalette
+z_index (RzIndexJJ"ä
+CylinderVectorRepr0
+color (2.HrzProtocol.ColorPropertyRcolor2
+radius (2.HrzProtocol.FloatPropertyRradiusC
+altitude_offset (2.HrzProtocol.FloatPropertyRaltitudeOffset;
+dash_period (2.HrzProtocol.FloatPropertyR
+dashPeriod;
+dash_length (2.HrzProtocol.FloatPropertyR
+dashLength;
+empty_color (2.HrzProtocol.ColorPropertyR
+emptyColorC
+animation_speed (2.HrzProtocol.FloatPropertyRanimationSpeed
+clip_id (RclipId9
+lighting (2.HrzProtocol.LightingSettingsRlighting2
+	dash_mode (2.HrzProtocol.DashModeRdashModeC
+dash_period_unit (2.HrzProtocol.DashSizeUnitRdashPeriodUnitC
+dash_length_unit (2.HrzProtocol.DashSizeUnitRdashLengthUnitK
+animation_speed_unit (2.HrzProtocol.DashSizeUnitRanimationSpeedUnit0
+disable_face_culling (RdisableFaceCullingJJJJ"©
+ModelVectorRepr0
+color (2.HrzProtocol.ColorPropertyRcolor0
+scale (2.HrzProtocol.FloatPropertyRscale=
+world_offset (2.HrzProtocol.Vec3fPropertyRworldOffset6
+rotation (2.HrzProtocol.Vec3fPropertyRrotation
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParameters3
+frame (2.HrzProtocol.CoordinatesFrameRframeD
+impostor_params (2.HrzProtocol.ImpostorParamsRimpostorParams
+clip_id	 (RclipId9
+lighting (2.HrzProtocol.LightingSettingsRlightingO
+feature_color_blend_mode (2.HrzProtocol.BlendModeRfeatureColorBlendMode?
+feature_color_blend_strength (RfeatureColorBlendStrengthF
+rotation_order (2.HrzProtocol.EulerRotationOrderRrotationOrderJ"|
+PlaceholderSymbolElement.
+size (2.HrzProtocol.Vec2fPropertyRsize0
+color (2.HrzProtocol.ColorPropertyRcolor"¢
+LeaderLineSymbolElement0
+color (2.HrzProtocol.ColorPropertyRcolor?
+target_offset (2.HrzProtocol.Vec3fPropertyRtargetOffset
+width (Rwidth"Ë	
+AnchorSymbolElementC
+position_offset (2.HrzProtocol.Vec3fPropertyRpositionOffsetV
+position_offset_size_unit (2.HrzProtocol.SymbolSizeUnitRpositionOffsetSizeUnitk
+ position_offset_relative_scaling (2".HrzProtocol.SymbolRelativeScalingRpositionOffsetRelativeScalingJ
+x_axis_alignment (2 .HrzProtocol.SymbolAxisAlignmentRxAxisAlignmentJ
+y_axis_alignment (2 .HrzProtocol.SymbolAxisAlignmentRyAxisAlignment!
+keep_upright (RkeepUpright6
+rotation (2.HrzProtocol.Vec3fPropertyRrotationF
+rotation_order (2.HrzProtocol.EulerRotationOrderRrotationOrderG
+element_size_unit (2.HrzProtocol.SymbolSizeUnitRelementSizeUnite
+element_size_relative_scaling (2".HrzProtocol.SymbolRelativeScalingRelementSizeRelativeScalingG
+element_alignment (2.HrzProtocol.Vec2fPropertyRelementAlignment!
+reset_layout (RresetLayout-
+reference_distance
+ (RreferenceDistance,
+min_relative_scale (RminRelativeScale,
+max_relative_scale (RmaxRelativeScale9
+can_overlap_other_symbols (RcanOverlapOtherSymbols.
+hides_other_symbols (RhidesOtherSymbols
+is_optional (R
+isOptional0
+child	 (2.HrzProtocol.SymbolElementRchildJJ"†
+StackSymbolElement8
+	alignment (2.HrzProtocol.Vec2fPropertyR	alignment6
+children (2.HrzProtocol.SymbolElementRchildren"L
+StackExpandSymbolElement0
+child (2.HrzProtocol.SymbolElementRchild"‡
+ImageSprite
+name (	Rname&
+size (2.HrzProtocol.Vec2iRsize*
+offset (2.HrzProtocol.Vec2iRoffset,
+content (2.HrzProtocol.BboxiRcontent0
+	stretch_x (2.HrzProtocol.RangeiRstretchX0
+	stretch_y (2.HrzProtocol.RangeiRstretchY"‹
+ImageSymbolElement
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders0
+color (2.HrzProtocol.ColorPropertyRcolor2
+sprites (2.HrzProtocol.ImageSpriteRsprites;
+sprite_index (2.HrzProtocol.IntPropertyRspriteIndex<
+sprite_name	 (2.HrzProtocol.StringPropertyR
+spriteName@
+color_blend_mode (2.HrzProtocol.BlendModeRcolorBlendMode0
+color_blend_strength (RcolorBlendStrength0
+scale (2.HrzProtocol.FloatPropertyRscale2
+fit_axes
+ (2.HrzProtocol.BoxFitAxesRfitAxes.
+fit_mode (2.HrzProtocol.BoxFitRfitMode8
+	alignment (2.HrzProtocol.Vec2fPropertyR	alignment"È
+PaddingSymbolElement0
+child (2.HrzProtocol.SymbolElementRchild=
+left_padding (2.HrzProtocol.FloatPropertyRleftPadding?
+right_padding (2.HrzProtocol.FloatPropertyRrightPadding;
+top_padding (2.HrzProtocol.FloatPropertyR
+topPaddingA
+bottom_padding (2.HrzProtocol.FloatPropertyRbottomPadding"ª
+FlexSymbolElement6
+children (2.HrzProtocol.SymbolElementRchildren2
+	main_axis (2.HrzProtocol.FlexAxisRmainAxisR
+main_axis_alignment (2".HrzProtocol.FlexMainAxisAlignmentRmainAxisAlignmentU
+cross_axis_alignment (2#.HrzProtocol.FlexCrossAxisAlignmentRcrossAxisAlignment"‰
+FlexibleSymbolElement0
+child (2.HrzProtocol.SymbolElementRchild
+factor (Rfactor&
+fit (2.HrzProtocol.FlexFitRfit"y
+SizedBoxSymbolElement0
+child (2.HrzProtocol.SymbolElementRchild.
+size (2.HrzProtocol.Vec2fPropertyRsize"½
+ConstrainedBoxSymbolElement5
+min_size (2.HrzProtocol.Vec2fPropertyRminSize5
+max_size (2.HrzProtocol.Vec2fPropertyRmaxSize0
+child (2.HrzProtocol.SymbolElementRchild"€
+AlignSymbolElement8
+	alignment (2.HrzProtocol.Vec2fPropertyR	alignment0
+child (2.HrzProtocol.SymbolElementRchild"Š
+RotatedBoxSymbolElement=
+quarter_turns (2.HrzProtocol.IntPropertyRquarterTurns0
+child (2.HrzProtocol.SymbolElementRchild"C
+DecoratedRegularPolygon
+sides (Rsides
+star (Rstar" 
+DecoratedShapeSymbolElement.
+fit_mode (2.HrzProtocol.BoxFitRfitMode!
+aspect_ratio (RaspectRatio0
+	alignment (2.HrzProtocol.Vec2fR	alignment0
+color (2.HrzProtocol.ColorPropertyRcolor=
+border_color (2.HrzProtocol.ColorPropertyRborderColor;
+border_size (2.HrzProtocol.FloatPropertyR
+borderSize?
+border_radius (2.HrzProtocol.FloatPropertyRborderRadius>
+
+shape_type (2.HrzProtocol.DecoratedShapeTypeR	shapeTypeM
+regular_polygone (2$.HrzProtocol.DecoratedRegularPolygonRregularPolygon"‹
+AspectRatioSymbolElement=
+aspect_ratio (2.HrzProtocol.FloatPropertyRaspectRatio0
+child (2.HrzProtocol.SymbolElementRchild"«
+FittedBoxSymbolElement0
+child (2.HrzProtocol.SymbolElementRchild%
+fit (2.HrzProtocol.BoxFitRfit8
+	alignment (2.HrzProtocol.Vec2fPropertyR	alignment"ˆ
+TransformSymbolRotation5
+order (2.HrzProtocol.EulerRotationOrderRorder6
+rotation (2.HrzProtocol.Vec3fPropertyRrotation"½
+TransformSymbolComponent=
+type (2).HrzProtocol.TransformSymbolComponentTypeRtype<
+translation (2.HrzProtocol.Vec3fPropertyRtranslation@
+rotation (2$.HrzProtocol.TransformSymbolRotationRrotation4
+scaling (2.HrzProtocol.Vec3fPropertyRscaling,
+generic (2.HrzProtocol.Mat4fRgeneric"ÿ
+TransformSymbolElement0
+child (2.HrzProtocol.SymbolElementRchild2
+origin (2.HrzProtocol.Vec2fPropertyRorigin8
+	alignment (2.HrzProtocol.Vec2fPropertyR	alignmentE
+
+components (2%.HrzProtocol.TransformSymbolComponentR
+components"ß
+TextSymbolElement/
+text (2.HrzProtocol.StringPropertyRtext7
+	font_size (2.HrzProtocol.FloatPropertyRfontSize9
+
+text_color (2.HrzProtocol.ColorPropertyR	textColor#
+outline_width (RoutlineWidth?
+outline_color (2.HrzProtocol.ColorPropertyRoutlineColor8
+	alignment (2.HrzProtocol.TextAlignmentR	alignment!
+line_spacing (RlineSpacing
+font_url (	RfontUrlG
+font_http_headers	 (2.HrzProtocol.HttpHeaderListRfontHttpHeaders"ˆ
+OptionalSymbolElement=
+display_child (2.HrzProtocol.IntPropertyRdisplayChild0
+child (2.HrzProtocol.SymbolElementRchild"œ
+VariantSymbolElementL
+displayed_child_index (2.HrzProtocol.IntPropertyRdisplayedChildIndex6
+children (2.HrzProtocol.SymbolElementRchildren"Ý
+
+SymbolElement2
+type (2.HrzProtocol.SymbolElementTypeRtypeG
+placeholdere (2%.HrzProtocol.PlaceholderSymbolElementRplaceholder8
+anchorf (2 .HrzProtocol.AnchorSymbolElementRanchor5
+stackg (2.HrzProtocol.StackSymbolElementRstack5
+imageh (2.HrzProtocol.ImageSymbolElementRimage;
+paddingi (2!.HrzProtocol.PaddingSymbolElementRpadding2
+flexj (2.HrzProtocol.FlexSymbolElementRflex?
+	sized_boxk (2".HrzProtocol.SizedBoxSymbolElementRsizedBox>
+flexiblel (2".HrzProtocol.FlexibleSymbolElementRflexibleH
+stack_expandm (2%.HrzProtocol.StackExpandSymbolElementRstackExpand5
+alignn (2.HrzProtocol.AlignSymbolElementRalignQ
+constrained_boxo (2(.HrzProtocol.ConstrainedBoxSymbolElementRconstrainedBoxE
+rotated_boxp (2$.HrzProtocol.RotatedBoxSymbolElementR
+rotatedBoxQ
+decorated_shapeq (2(.HrzProtocol.DecoratedShapeSymbolElementRdecoratedShapeH
+aspect_ratior (2%.HrzProtocol.AspectRatioSymbolElementRaspectRatioB
+
+fitted_boxs (2#.HrzProtocol.FittedBoxSymbolElementR	fittedBoxA
+	transformt (2#.HrzProtocol.TransformSymbolElementR	transform2
+textu (2.HrzProtocol.TextSymbolElementRtext>
+optionalv (2".HrzProtocol.OptionalSymbolElementRoptional;
+variantw (2!.HrzProtocol.VariantSymbolElementRvariantE
+leader_linex (2$.HrzProtocol.LeaderLineSymbolElementR
+leaderLine"¢
+SymbolVectorRepr
+z_index (RzIndex6
+ignore_world_occlusions (RignoreWorldOcclusions=
+root_element (2.HrzProtocol.SymbolElementRrootElement"Â
+
+VectorRepr/
+type (2.HrzProtocol.VectorReprTypeRtype
+name (	Rname
+id (Rid=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViewsT
+extruded_geometrye (2'.HrzProtocol.ExtrudedGeometryVectorReprRextrudedGeometry2
+modelg (2.HrzProtocol.ModelVectorReprRmodel;
+cylinderi (2.HrzProtocol.CylinderVectorReprRcylinderV
+flat_overlay_geometryk (2".HrzProtocol.FlatOverlayVectorReprRflatOverlayGeometry8
+heatmapl (2.HrzProtocol.HeatmapVectorReprRheatmap5
+symbolm (2.HrzProtocol.SymbolVectorReprRsymbolJfgJhiJjk"g
+StylingAttributeRef-
+vector_data_attr_id (RvectorDataAttrId!
+styling_name (	RstylingName"‡
+VectorTilesSource/
+vector_data_layer_id (RvectorDataLayerId'
+override_levels (RoverrideLevels
+	min_level (RminLevel
+	max_level (RmaxLevel'
+override_bounds (RoverrideBounds5
+bounds (2.HrzProtocol.GeographicBoundsRbounds"R
+VectorTilesResolution3
+max_screen_space_error (RmaxScreenSpaceErrorJ"À
+VectorTilesStyleA
+representations (2.HrzProtocol.VectorReprRrepresentations%
+styling_script (	RstylingScript@
+
+attributes (2 .HrzProtocol.StylingAttributeRefR
+attributes0
+palettes (2.HrzProtocol.PaletteRpalettes5
+anchor_z_attribute_name (	RanchorZAttributeName=
+feature_type_attribute_name (	RfeatureTypeAttributeName=
+anchor_angle_attribute_name (	RanchorAngleAttributeName
+rng_seed (RrngSeed"Œ
+VectorTilesLayer6
+source (2.HrzProtocol.VectorTilesSourceRsource3
+style (2.HrzProtocol.VectorTilesStyleRstyle7
+clamping (2.HrzProtocol.VectorClampingRclampingB
+
+resolution (2".HrzProtocol.VectorTilesResolutionR
+resolution
+visible (Rvisible
+clip_id (RclipIda
+visibility_constraints (2*.HrzProtocol.LayerVisibilityConstraintListRvisibilityConstraints9
+lighting	 (2.HrzProtocol.LightingSettingsRlighting=
+scene_views
+ (2.HrzProtocol.SceneViewBitsetR
+sceneViews"—
+InMemoryVectorFeatureGeometry3
+type (2.HrzProtocol.VectorGeometryTypeRtype
+coords (Rcoords)
+linestring_sizes (RlinestringSizes"}
+InMemoryAttribute
+id (Rid.
+type (2.HrzProtocol.AttributeTypeRtype"
+is_feature_id (RisFeatureIdJ"ä
+InMemoryAttributeValue#
+boolean_value (RbooleanValue
+	int_value (RintValue
+
+uint_value (R	uintValue
+float_value (R
+floatValue!
+string_value (	RstringValue
+color_value (	R
+colorValueJ"Á
+InMemoryVectorFeatureF
+geometry (2*.HrzProtocol.InMemoryVectorFeatureGeometryRgeometryN
+attribute_values (2#.HrzProtocol.InMemoryAttributeValueRattributeValuesJJJ"ö
+InMemoryVectorSourceLayer
+id (RidC
+
+projection (2#.HrzProtocol.SpatialReferenceSystemR
+projection>
+features (2".HrzProtocol.InMemoryVectorFeatureRfeatures>
+
+attributes (2.HrzProtocol.InMemoryAttributeR
+attributesJ"ò
+ThreeDTileAttribute
+name (	Rname.
+type (2.HrzProtocol.AttributeTypeRtype>
+source (2&.HrzProtocol.ThreeDTileAttributeSourceRsource-
+vector_data_attr_id (RvectorDataAttrId"
+is_feature_id (RisFeatureIdJ"È	
+ThreeDTilesLayer
+url (	Rurl>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders:
+preserve_query_parameters (RpreserveQueryParameters4
+	transform (2.HrzProtocol.TransformR	transformP
+geographic_position (2.HrzProtocol.GeographicPositionRgeographicPosition:
+apply_geographic_position (RapplyGeographicPosition3
+max_screen_space_error (RmaxScreenSpaceError3
+refinement_hysteresis (RrefinementHysteresis/
+vector_data_layer_id (RvectorDataLayerId@
+
+attributes (2 .HrzProtocol.ThreeDTileAttributeR
+attributes0
+palettes (2.HrzProtocol.PaletteRpalettes
+rng_seed (RrngSeed%
+styling_script	 (	RstylingScript
+visible
+ (Rvisible3
+	materials (2.HrzProtocol.MaterialR	materialsP
+material_properties (2.HrzProtocol.MaterialPropertiesRmaterialProperties)
+loading_priority (RloadingPriority
+clip_id (RclipId=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViewsa
+visibility_constraints (2*.HrzProtocol.LayerVisibilityConstraintListRvisibilityConstraints9
+lighting (2.HrzProtocol.LightingSettingsRlighting7
+draw_under_flat_overlays (RdrawUnderFlatOverlaysJJJJ"Í
+ClippingPlaneLayer
+clip_id (RclipIdH
+origin_position (2.HrzProtocol.GeographicPositionRoriginPosition*
+normal (2.HrzProtocol.Vec3fRnormal7
+outline_color (2.HrzProtocol.ColorRoutlineColor)
+outline_distance (RoutlineDistance
+
+show_plane (R	showPlane%
+grid (2.HrzProtocol.GridRgrid"
+GizmoComponent3
+type (2.HrzProtocol.GizmoComponentTypeRtypeI
+reference_frame (2 .HrzProtocol.GizmoReferenceFrameRreferenceFrame"å
+
+GizmoLayer
+id (Rid
+size (Rsize4
+	size_unit (2.HrzProtocol.UiSizeUnitRsizeUnit!
+bbox_padding
+ (RbboxPadding;
+position (2.HrzProtocol.GeographicPositionRposition-
+rotation (2.HrzProtocol.QuatRrotation;
+
+components (2.HrzProtocol.GizmoComponentR
+components=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViews
+visible (Rvisible%
+grid	 (2.HrzProtocol.GridRgrid%
+line (2.HrzProtocol.LineRlineJJ"–
+EditableShapeGeometry:
+type (2&.HrzProtocol.EditableShapeGeometryTypeRtype
+coords (Rcoords)
+linestring_sizes (RlinestringSizes"“
+EditableShapeLayer>
+geometry (2".HrzProtocol.EditableShapeGeometryRgeometry5
+stroke_color (2.HrzProtocol.ColorRstrokeColor1
+
+fill_color (2.HrzProtocol.ColorR	fillColor!
+stroke_width (RstrokeWidthF
+selected_stroke_color	 (2.HrzProtocol.ColorRselectedStrokeColorB
+selected_fill_color
+ (2.HrzProtocol.ColorRselectedFillColor2
+selected_stroke_width (RselectedStrokeWidth,
+control_point_size (RcontrolPointSizeB
+control_point_color (2.HrzProtocol.ColorRcontrolPointColorS
+midpoint_control_point_color (2.HrzProtocol.ColorRmidpointControlPointColorS
+selected_control_point_color (2.HrzProtocol.ColorRselectedControlPointColor?
+show_midpoint_control_points (RshowMidpointControlPoints;
+always_show_control_points (RalwaysShowControlPoints
+z_index (RzIndex=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViews
+visible (Rvisibled
+model_update_frequency (2..HrzProtocol.EditableShapeModelUpdateFrequencyRmodelUpdateFrequency"…
+CameraSettings
+fovy (Rfovy2
+user_controls_inertia (RuserControlsInertia+
+movements_inertia (RmovementsInertia"Ç
+TerrainSettings7
+terrain_color (2.HrzProtocol.ColorRterrainColor'
+terrain_opacity (RterrainOpacity
+clip_id (RclipId9
+lighting (2.HrzProtocol.LightingSettingsRlighting"ó
+AmbientSettings+
+enable_atmosphere (RenableAtmosphere5
+atmosphere_attenuation (RatmosphereAttenuation9
+lighting (2.HrzProtocol.LightingSettingsRlighting(
+local_solar_time (RlocalSolarTime
+day_of_year (R	dayOfYear7
+ambient_color (2.HrzProtocol.ColorRambientColor!
+sun_strength (RsunStrength)
+ambient_strength (RambientStrength/
+	sky_color	 (2.HrzProtocol.ColorRskyColor?
+underground_color
+ (2.HrzProtocol.ColorRundergroundColor"Í
+HighlightSettings;
+selection_color (2.HrzProtocol.ColorRselectionColor6
+selection_outline_alpha (RselectionOutlineAlpha4
+selection_outline_size (RselectionOutlineSize:
+selection_occlusion_alpha (RselectionOcclusionAlphaQ
+mouse_hover_highlight_color (2.HrzProtocol.ColorRmouseHoverHighlightColor"n
+ViewportSettings-
+viewport (2.HrzProtocol.BboxRviewport+
+scissor (2.HrzProtocol.BboxRscissor"±
+ViewshedSettings'
+enable_viewshed (RenableViewshed)
+enable_wireframe (RenableWireframe;
+position (2.HrzProtocol.GeographicPositionRposition
+bearing (Rbearing
+tilt (Rtilt
+hfov (Rhfov!
+aspect_ratio (RaspectRatio
+start (Rstart!
+max_distance	 (RmaxDistance7
+visible_color
+ (2.HrzProtocol.ColorRvisibleColor5
+hidden_color (2.HrzProtocol.ColorRhiddenColor"—
+RasterSettings5
+compensate_inclination (RcompensateInclination
+mix_lods (RmixLods3
+max_screen_space_error (RmaxScreenSpaceError"¿
+SceneSettings8
+	main_view (2.HrzProtocol.SceneViewIndexRmainView?
+active_views (2.HrzProtocol.SceneViewBitsetRactiveViews3
+raster (2.HrzProtocol.RasterSettingsRraster"é
+SceneViewSettings0
+camera (2.HrzProtocol.CameraIndexRcamera6
+terrain (2.HrzProtocol.TerrainSettingsRterrain6
+ambient (2.HrzProtocol.AmbientSettingsRambient<
+	highlight (2.HrzProtocol.HighlightSettingsR	highlight9
+viewshed (2.HrzProtocol.ViewshedSettingsRviewshed9
+viewport (2.HrzProtocol.ViewportSettingsRviewport"Þ
+Grid
+extent (Rextent8
+extent_unit (2.HrzProtocol.UiSizeUnitR
+extentUnit
+	cell_size (RcellSize(
+color (2.HrzProtocol.ColorRcolor=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViews"×
+Line
+extent (Rextent8
+extent_unit (2.HrzProtocol.UiSizeUnitR
+extentUnit
+width (Rwidth(
+color (2.HrzProtocol.ColorRcolor=
+scene_views (2.HrzProtocol.SceneViewBitsetR
+sceneViews*4
+SceneViewIndex
+SCENE_VIEW_0 
+SCENE_VIEW_1*)
+CameraIndex
+CAMERA_0 
+CAMERA_1*Û
+VectorReprType
+NULL_VECTOR_REPR !
+EXTRUDED_GEOMETRY_VECTOR_REPR
+MODEL_VECTOR_REPR
+CYLINDER_VECTOR_REPR
+FLAT_OVERLAY_VECTOR_REPR
+HEATMAP_VECTOR_REPR
+SYMBOL_VECTOR_REPR	"""*@
+PolylineSide
+	SIDE_BOTH 
+SIDE_INSIDE
+SIDE_OUTSIDE*K
+InWorldSizeUnit
+IN_WORLD_SIZE_IN_METERS 
+IN_WORLD_SIZE_IN_PIXELS*Q
+DashMode
+DASH_DISABLED 
+DASH_ENABLED_FILLED
+DASH_ENABLED_GRADIENT*k
+DashSizeUnit
+DASH_SIZE_IN_METERS 
+DASH_SIZE_IN_PIXELS)
+%DASH_SIZE_RELATIVE_TO_POLYLINE_LENGTH*n
+EulerRotationOrder
+	EULER_ZYX 
+	EULER_ZXY
+	EULER_XYZ
+	EULER_XZY
+	EULER_YZX
+	EULER_YXZ*å
+SymbolElementType
+PLACEHOLDER_SYMBOL_ELEMENT 
+ANCHOR_SYMBOL_ELEMENT
+STACK_SYMBOL_ELEMENT
+IMAGE_SYMBOL_ELEMENT
+PADDING_SYMBOL_ELEMENT
+FLEX_SYMBOL_ELEMENT
+SIZED_BOX_SYMBOL_ELEMENT
+FLEXIBLE_SYMBOL_ELEMENT
+STACK_EXPAND_SYMBOL_ELEMENT
+ALIGN_SYMBOL_ELEMENT	"
+CONSTRAINED_BOX_SYMBOL_ELEMENT
+
+ROTATED_BOX_SYMBOL_ELEMENT"
+DECORATED_SHAPE_SYMBOL_ELEMENT
+ASPECT_RATIO_SYMBOL_ELEMENT
+FITTED_BOX_SYMBOL_ELEMENT
+TRANSFORM_SYMBOL_ELEMENT
+TEXT_SYMBOL_ELEMENT
+LEADER_LINE_SYMBOL_ELEMENT
+OPTIONAL_SYMBOL_ELEMENT
+VARIANT_SYMBOL_ELEMENT*F
+SymbolSizeUnit
+SYMBOL_SIZE_IN_PIXELS 
+SYMBOL_SIZE_IN_METERS*Ž
+SymbolRelativeScaling 
+SYMBOL_RELATIVE_SCALING_NONE (
+$SYMBOL_RELATIVE_SCALING_REF_DISTANCE)
+%SYMBOL_RELATIVE_SCALING_CAMERA_HEIGHT*J
+SymbolAxisAlignment
+AXIS_ALIGNMENT_SCREEN 
+AXIS_ALIGNMENT_WORLD*<
+FlexAxis
+FLEX_AXIS_HORIZONTAL 
+FLEX_AXIS_VERTICAL*È
+FlexMainAxisAlignment
+FLEX_MAIN_AXIS_START 
+FLEX_MAIN_AXIS_END
+FLEX_MAIN_AXIS_CENTER 
+FLEX_MAIN_AXIS_SPACE_BETWEEN
+FLEX_MAIN_AXIS_SPACE_AROUND
+FLEX_MAIN_AXIS_SPACE_EVENLY*…
+FlexCrossAxisAlignment
+FLEX_CROSS_AXIS_START 
+FLEX_CROSS_AXIS_END
+FLEX_CROSS_AXIS_CENTER
+FLEX_CROSS_AXIS_STRETCH*1
+FlexFit
+FLEX_FIT_LOOSE 
+FLEX_FIT_TIGHT*‘
+DecoratedShapeType
+DECORATED_SHAPE_CIRCLE #
+DECORATED_SHAPE_REGULAR_POLYGON
+DECORATED_SHAPE_RECTANGLE
+DECORATED_SHAPE_CAPSULE*Z
+BoxFit
+BOX_FIT_CONTAIN 
+BOX_FIT_FILL
+BOX_FIT_SCALE_DOWN
+BOX_FIT_COVER*k
+
+BoxFitAxes
+BOX_FIT_AXES_NONE 
+BOX_FIT_AXES_WIDTH
+BOX_FIT_AXES_HEIGHT
+BOX_FIT_AXES_BOTH*›
+TransformSymbolComponentType 
+TRANSFORM_SYMBOL_TRANSLATION 
+TRANSFORM_SYMBOL_ROTATION
+TRANSFORM_SYMBOL_SCALING
+TRANSFORM_SYMBOL_GENERIC*‰
+ThreeDTileAttributeSource
+BATCH_TABLE_SOURCE 
+VECTOR_DATA_LAYER_SOURCE
+BATCH_CLASS_ID_SOURCE
+BATCH_CLASS_NAME_SOURCE*@
+GizmoReferenceFrame
+WORLD_REFERENCE 
+OBJECT_REFERENCE*Z
+
+UiSizeUnit
+UI_SIZE_IN_METERS 
+UI_SIZE_IN_PIXELS
+UI_SIZE_RELATIVE_TO_SCREEN*þ
+GizmoComponentType
+GIZMO_ORIGIN 
+GIZMO_TRANSLATION_AXIS_X
+GIZMO_TRANSLATION_AXIS_Y
+GIZMO_TRANSLATION_AXIS_Z
+GIZMO_TRANSLATION_PLANE_X
+GIZMO_TRANSLATION_PLANE_Y
+GIZMO_TRANSLATION_PLANE_Z(
+$GIZMO_TRANSLATION_PLANE_CAMERA_PLANE
+GIZMO_ROTATION_RING_X
+GIZMO_ROTATION_RING_Y	
+GIZMO_ROTATION_RING_Z
+$
+ GIZMO_ROTATION_RING_CAMERA_PLANE*o
+EditableShapeGeometryType
+EDITABLE_LINE 
+EDITABLE_POLYLINE
+EDITABLE_POLYGON
+EDITABLE_POINT*p
+!EditableShapeModelUpdateFrequency
+DEFAULT_MODEL_UPDATES 
+DRAG_MODEL_UPDATES
+APPEND_MODEL_UPDATES2Ä
+SceneModelService4
+Get.HrzProtocol.Path.HrzProtocol.SceneModelGet4
+Set.HrzProtocol.SceneModelSet.HrzProtocol.VoidD
+Add.HrzProtocol.SceneModelSet!.HrzProtocol.SceneModelArrayCount>
+Remove.HrzProtocol.Path!.HrzProtocol.SceneModelArrayCount=
+Count.HrzProtocol.Path!.HrzProtocol.SceneModelArrayCountBHøbproto3
+ 
+hrz_shape_editor.protoHrzProtocolhrz_types.protohrz_layers.proto"@
+ShapeSelection.
+layer (2.HrzProtocol.LayerHandleRlayer")
+ControlPointIndex
+value (Rvalue"g
+ControlPointSelectionN
+control_point_index (2.HrzProtocol.ControlPointIndexRcontrolPointIndex"A
+ModeSelection0
+mode (2.HrzProtocol.ShapeEditorModeRmode"°
+ShapeInformation
+length (Rlength)
+polyline_lengths (RpolylineLengths%
+segment_counts (RsegmentCounts'
+segment_lengths (RsegmentLengths)
+segment_bearings (RsegmentBearings%
+segment_angles (RsegmentAngles
+area (Rarea#
+polygon_areas (RpolygonAreas*6
+ShapeEditorMode
+SELECTION_MODE 
+APPEND_MODE2Â
+ShapeEditorServiceB
+GetSelectedShape.HrzProtocol.Void.HrzProtocol.ShapeSelection=
+SelectShape.HrzProtocol.ShapeSelection.HrzProtocol.Void:
+LockShapeSelection.HrzProtocol.Void.HrzProtocol.Void<
+UnlockShapeSelection.HrzProtocol.Void.HrzProtocol.VoidP
+GetSelectedControlPoint.HrzProtocol.Void".HrzProtocol.ControlPointSelectionK
+SelectControlPoint".HrzProtocol.ControlPointSelection.HrzProtocol.Void?
+GetCurrentMode.HrzProtocol.Void.HrzProtocol.ModeSelection;
+
+SelectMode.HrzProtocol.ModeSelection.HrzProtocol.VoidN
+GetShapeInformation.HrzProtocol.LayerHandle.HrzProtocol.ShapeInformationB
+DeleteSelectedControlPoint.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3
+Õ'
+hrz_camera.protoHrzProtocolhrz_types.protohrz_scene_model.proto"‹
+PositionalViewpoint;
+position (2.HrzProtocol.GeographicPositionRposition7
+target (2.HrzProtocol.GeographicPositionRtarget"•
+AngularViewpoint7
+target (2.HrzProtocol.GeographicPositionRtarget
+bearing (Rbearing
+tilt (Rtilt
+distance (Rdistance"
+
+BoundsView5
+bounds (2.HrzProtocol.GeographicBoundsRbounds!
+min_altitude (RminAltitude!
+max_altitude (RmaxAltitude
+tilt (Rtilt"q
+Pose;
+position (2.HrzProtocol.GeographicPositionRposition
+bearing (Rbearing
+tilt (Rtilt"ê
+CameraAnimationOptions
+duration (RdurationE
+easing_function (2.HrzProtocol.EasingFunctionsReasingFunction'
+easing_exponent (ReasingExponentD
+trajectory_type (2.HrzProtocol.TrajectoryTypeRtrajectoryType"
+FixedTargetCameraTransitionL
+angular_viewpointe (2.HrzProtocol.AngularViewpointH RangularViewpointU
+positional_viewpointf (2 .HrzProtocol.PositionalViewpointH RpositionalViewpoint;
+camera_index (2.HrzProtocol.CameraIndexRcameraIndex!
+min_distance (RminDistance!
+max_distance (RmaxDistance
+min_tilt (RminTilt
+max_tilt (RmaxTiltK
+go_to_animation (2#.HrzProtocol.CameraAnimationOptionsRgoToAnimation>
+altitude_mode (2.HrzProtocol.AltitudeModeRaltitudeModeB
+view"¤
+FixedPositionCameraTransition-
+currente (2.HrzProtocol.VoidH RcurrentL
+angular_viewpointf (2.HrzProtocol.AngularViewpointH RangularViewpointU
+positional_viewpointg (2 .HrzProtocol.PositionalViewpointH RpositionalViewpoint'
+poseh (2.HrzProtocol.PoseH Rpose;
+camera_index (2.HrzProtocol.CameraIndexRcameraIndex
+min_tilt (RminTilt
+max_tilt (RmaxTiltK
+go_to_animation (2#.HrzProtocol.CameraAnimationOptionsRgoToAnimation>
+altitude_mode (2.HrzProtocol.AltitudeModeRaltitudeModeB
+view"·
+OrbitCameraTransition-
+currente (2.HrzProtocol.VoidH RcurrentL
+angular_viewpointf (2.HrzProtocol.AngularViewpointH RangularViewpointU
+positional_viewpointg (2 .HrzProtocol.PositionalViewpointH RpositionalViewpoint'
+poseh (2.HrzProtocol.PoseH Rpose1
+boundsi (2.HrzProtocol.BoundsViewH Rbounds;
+camera_index	 (2.HrzProtocol.CameraIndexRcameraIndex@
+limit_bounds (2.HrzProtocol.GeographicBoundsRlimitBounds!
+max_altitude (RmaxAltitude
+min_tilt (RminTilt
+max_tilt (RmaxTiltK
+go_to_animation (2#.HrzProtocol.CameraAnimationOptionsRgoToAnimation)
+is_interruptible (RisInterruptible>
+altitude_mode (2.HrzProtocol.AltitudeModeRaltitudeModeV
+correction_animation (2#.HrzProtocol.CameraAnimationOptionsRcorrectionAnimationB
+view"H
+CameraIndexReference0
+camera (2.HrzProtocol.CameraIndexRcamera"™
+CameraTranslate.
+frame (2.HrzProtocol.CameraFrameRframe$
+angle_factor_x (RangleFactorX$
+angle_factor_y (RangleFactorYJJ"<
+CameraRotate
+bearing (Rbearing
+tilt (Rtilt""
+
+CameraZoom
+ratio (Rratio"
+CameraMovement;
+camera_index (2.HrzProtocol.CameraIndexRcameraIndex@
+translatione (2.HrzProtocol.CameraTranslateH Rtranslation7
+rotationf (2.HrzProtocol.CameraRotateH Rrotation-
+zoomg (2.HrzProtocol.CameraZoomH RzoomB
+
+movementJJ"P
+SceneViewReference:
+
+scene_view (2.HrzProtocol.SceneViewIndexR	sceneView"Ž
+GeographicPositionInSceneView:
+
+scene_view (2.HrzProtocol.SceneViewIndexR	sceneView1
+pos (2.HrzProtocol.GeographicPositionRpos"Æ
+ResetNorthParams;
+camera_index (2.HrzProtocol.CameraIndexRcameraIndex
+
+reset_tilt (R	resetTiltP
+animation_options (2#.HrzProtocol.CameraAnimationOptionsRanimationOptionsJ*<
+EasingFunctions
+EASE_IN 
+EASE_OUT
+
+EASE_INOUT*1
+TrajectoryType
+INTERPOLATED 
+	BALLISTIC*E
+CameraFrame
+CAMERA_FRAME_CARDINAL 
+CAMERA_FRAME_TANGENTIAL2¤
+CameraServiceM
+SetFixedTarget(.HrzProtocol.FixedTargetCameraTransition.HrzProtocol.VoidQ
+SetFixedPosition*.HrzProtocol.FixedPositionCameraTransition.HrzProtocol.VoidA
+SetOrbit".HrzProtocol.OrbitCameraTransition.HrzProtocol.VoidE
+GetCameraPose!.HrzProtocol.CameraIndexReference.HrzProtocol.Pose]
+GetCameraAngularViewpoint!.HrzProtocol.CameraIndexReference.HrzProtocol.AngularViewpointc
+GetCameraPositionalViewpoint!.HrzProtocol.CameraIndexReference .HrzProtocol.PositionalViewpointR
+GetCameraViewBox.HrzProtocol.SceneViewReference.HrzProtocol.GeographicBounds[
+GetCameraViewPolygon.HrzProtocol.SceneViewReference".HrzProtocol.GeographicViewPolygonf
+LatLonAltToPixelCoords*.HrzProtocol.GeographicPositionInSceneView .HrzProtocol.PixelPositionResult6
+Move.HrzProtocol.CameraMovement.HrzProtocol.VoidI
+BeginContinuousMovement.HrzProtocol.CameraMovement.HrzProtocol.VoidG
+EndContinuousMovement.HrzProtocol.CameraMovement.HrzProtocol.Void>
+
+ResetNorth.HrzProtocol.ResetNorthParams.HrzProtocol.VoidBHøbproto3
+æ
+hrz_mapbox.protoHrzProtocolhrz_layers.protohrz_types.protohrz_camera.proto"î
+MapboxTranslationParams
+
+style_json (	R	styleJson>
+http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders6
+destroy_existing_layers (RdestroyExistingLayers:
+first_vector_data_layer_id (RfirstVectorDataLayerId0
+ignore_camera_params (RignoreCameraParamsN
+camera_animation (2#.HrzProtocol.CameraAnimationOptionsRcameraAnimation"1
+MapboxTranslationTicket
+opaque (Ropaque"Ó
+MapboxTranslationResult<
+status (2$.HrzProtocol.MapboxTranslationStatusRstatus>
+created_layers (2.HrzProtocol.LayerArrayRcreatedLayers:
+vector_data_layer_ids_used (RvectorDataLayerIdsUsed*—
+MapboxTranslationStatus
+MAPBOX_TRANSLATION_SUCCESS 
+MAPBOX_TRANSLATION_CANCELED
+MAPBOX_TRANSLATION_FAILURE
+MAPBOX_DOWNLOAD_FAILURE2m
+MapboxService\
+TranslateScene$.HrzProtocol.MapboxTranslationParams$.HrzProtocol.MapboxTranslationTicketBHøbproto3
+¯%
+hrz_messages.protoHrzProtocolhrz_types.protohrz_picking.protohrz_layers.protohrz_shape_editor.protohrz_viewer.protohrz_mapbox.proto"N
+TestMessage+
+tile (2.HrzProtocol.TileCoordsRtile
+text (	Rtext"x
+PickResultMessage/
+ticket (2.HrzProtocol.PickTicketRticket2
+results (2.HrzProtocol.PickResultsRresults"ˆ
+VectorDataRequestMessage
+ticket (Rticket/
+vector_data_layer_id (RvectorDataLayerId7
+vector_data_source_index (RvectorDataSourceIndexK
+feature_id_selectiond (2.HrzProtocol.FeatureIdsH RfeatureIdSelection@
+tile_selectione (2.HrzProtocol.TileCoordsH RtileSelection#
+attribute_ids (RattributeIds)
+expects_geometry (RexpectsGeometryB
+	selection"ƒ
+VectorTilesObjectReference.
+layer (2.HrzProtocol.LayerHandleRlayer5
+
+feature_id (2.HrzProtocol.FeatureIdR	featureId"ƒ
+ThreeDTilesObjectReference.
+layer (2.HrzProtocol.LayerHandleRlayer5
+
+feature_id (2.HrzProtocol.FeatureIdR	featureId"é
+TypedObjectReference+
+planet (2.HrzProtocol.VoidH Rplanet=
+single_model (2.HrzProtocol.LayerHandleH RsingleModelL
+vector_tiles (2'.HrzProtocol.VectorTilesObjectReferenceH RvectorTilesM
+three_d_tiles (2'.HrzProtocol.ThreeDTilesObjectReferenceH RthreeDTilesA
+editable_shape (2.HrzProtocol.LayerHandleH ReditableShapeB
+ref"ƒ
+PickAreaResultMessage3
+ticket (2.HrzProtocol.PickAreaTicketRticket5
+refs (2!.HrzProtocol.TypedObjectReferenceRrefs"¿
+MouseHoverInfoMessage1
+
+screen_pos (2.HrzProtocol.Vec2iR	screenPos8
+geo_pos (2.HrzProtocol.GeographicPositionRgeoPos9
+picked (2!.HrzProtocol.TypedObjectReferenceRpicked"¬
+GizmoUpdateMessage
+id (Rid8
+geo_pos (2.HrzProtocol.GeographicPositionRgeoPos-
+rotation (2.HrzProtocol.QuatRrotation
+
+action_end (R	actionEnd"‹
+ShapeEditorMessage6
+type (2".HrzProtocol.ShapeEditorUpdateTypeRtype2
+modee (2.HrzProtocol.ShapeEditorModeH Rmode3
+shapef (2.HrzProtocol.ShapeSelectionH RshapeI
+control_pointg (2".HrzProtocol.ControlPointSelectionH RcontrolPointB	
+payload"Œ
+RasterDataFetchMessage:
+ticket (2".HrzProtocol.RasterDataFetchTicketRticket6
+results (2.HrzProtocol.PickLayerResultRresults"z
+ViewerLoadingProgressMessage0
+completed_step_count (RcompletedStepCount(
+total_step_count (RtotalStepCount"+
+MonitoringDataMessage
+data (Rdata"
+AssetRequestMessage
+ticket (Rticket
+url (	Rurl
+range_start (R
+rangeStart
+
+range_size (R	rangeSize"–
+MapboxTranslationMessage<
+ticket (2$.HrzProtocol.MapboxTranslationTicketRticket<
+result (2$.HrzProtocol.MapboxTranslationResultRresult"Í
+TypedMessage,
+type (2.HrzProtocol.MessageTypeRtype.
+teste (2.HrzProtocol.TestMessageH Rtest4
+pickf (2.HrzProtocol.PickResultMessageH RpickW
+vector_data_requestg (2%.HrzProtocol.VectorDataRequestMessageH RvectorDataRequestN
+mouse_hover_infoh (2".HrzProtocol.MouseHoverInfoMessageH RmouseHoverInfoA
+	pick_areai (2".HrzProtocol.PickAreaResultMessageH RpickAreaD
+gizmo_updatej (2.HrzProtocol.GizmoUpdateMessageH RgizmoUpdateQ
+shape_editor_updatek (2.HrzProtocol.ShapeEditorMessageH RshapeEditorUpdateQ
+raster_data_fetchl (2#.HrzProtocol.RasterDataFetchMessageH RrasterDataFetch9
+frame_capturem (2.HrzProtocol.ImageH RframeCapture6
+viewer_readyn (2.HrzProtocol.VoidH RviewerReadyc
+viewer_loading_progresso (2).HrzProtocol.ViewerLoadingProgressMessageH RviewerLoadingProgressM
+monitoring_datap (2".HrzProtocol.MonitoringDataMessageH RmonitoringDataG
+asset_requestq (2 .HrzProtocol.AssetRequestMessageH RassetRequestV
+mapbox_translationr (2%.HrzProtocol.MapboxTranslationMessageH RmapboxTranslationB	
+payload"0
+	QueueSize#
+message_count (RmessageCount"€
+DequeuedMessages5
+messages (2.HrzProtocol.TypedMessageRmessages5
+
+queue_size (2.HrzProtocol.QueueSizeR	queueSize";
+DequeueParams*
+max_message_count (RmaxMessageCount*Œ
+MessageType
+TEST_MESSAGE 
+PICK_MESSAGE
+VECTOR_DATA_REQUEST_MESSAGE
+MOUSE_HOVER_INFO_MESSAGE
+PICK_AREA_MESSAGE
+GIZMO_UPDATE_MESSAGE
+SHAPE_EDITOR_MESSAGE
+RASTER_DATA_FETCH_MESSAGE
+FRAME_CAPTURE_MESSAGE
+VIEWER_READY_MESSAGE	#
+VIEWER_LOADING_PROGRESS_MESSAGE
+
+MONITORING_DATA_MESSAGE
+ASSET_REQUEST_MESSAGE
+MAPBOX_TRANSLATION_MESSAGE*u
+ShapeEditorUpdateType
+MODE_SWITCH 
+SHAPE_SELECTION
+CONTROL_POINT_SELECTION
+SHAPE_GEOMETRY_UPDATE2ž
+MessageQueueServiceL
+DequeueMessages.HrzProtocol.DequeueParams.HrzProtocol.DequeuedMessages9
+GetQueueSize.HrzProtocol.Void.HrzProtocol.QueueSizeBHøbproto3
+à
+hrz_client_data.protoHrzProtocolhrz_types.proto"
+ClientFeatureGeometry3
+type (2.HrzProtocol.VectorGeometryTypeRtype
+coords (Rcoords)
+linestring_sizes (RlinestringSizes"—
+ClientFeature>
+geometry (2".HrzProtocol.ClientFeatureGeometryRgeometryF
+attribute_values (2.HrzProtocol.AttributeValueRattributeValues"k
+VectorDataRequestResponse
+ticket (Rticket6
+features (2.HrzProtocol.ClientFeatureRfeatures"¼
+VectorDataInvalidation/
+vector_data_layer_id (RvectorDataLayerId7
+vector_data_source_index (RvectorDataSourceIndex:
+tile_coordse (2.HrzProtocol.TileCoordsH R
+tileCoords:
+feature_idsf (2.HrzProtocol.FeatureIdsH R
+featureIds3
+
+everythingg (2.HrzProtocol.VoidH R
+everythingB
+	selection"B
+AssetRequestResponse
+ticket (Rticket
+data (Rdata2ý
+ClientDataServiceN
+ProvideVectorData&.HrzProtocol.VectorDataRequestResponse.HrzProtocol.VoidN
+InvalidateVectorData#.HrzProtocol.VectorDataInvalidation.HrzProtocol.VoidH
+ProvideAssetData!.HrzProtocol.AssetRequestResponse.HrzProtocol.VoidBHøbproto3
+þ
+hrz_scene_dump.protoHrzProtocolhrz_scene_model.protohrz_camera.protohrz_layers.proto"†
+SceneViewSettingsDump1
+index (2.HrzProtocol.SceneViewIndexRindex:
+settings (2.HrzProtocol.SceneViewSettingsRsettings"}
+CameraSettingsDump.
+index (2.HrzProtocol.CameraIndexRindex7
+settings (2.HrzProtocol.CameraSettingsRsettings"y
+
+CameraDump.
+index (2.HrzProtocol.CameraIndexRindex;
+	viewpoint (2.HrzProtocol.AngularViewpointR	viewpoint"`
+ViewpointDump
+name (	Rname;
+	viewpoint (2.HrzProtocol.AngularViewpointR	viewpoint"ã
+	LayerDump
+name (	RnameB
+single_modele (2.HrzProtocol.SingleModelLayerH RsingleModel<
+
+dtm_rasterf (2.HrzProtocol.DtmRasterLayerH R	dtmRasterH
+imagery_rasterg (2.HrzProtocol.ImageryRasterLayerH RimageryRaster?
+vector_datah (2.HrzProtocol.VectorDataLayerH R
+vectorDataB
+vector_tilesi (2.HrzProtocol.VectorTilesLayerH RvectorTilesC
+three_d_tilesj (2.HrzProtocol.ThreeDTilesLayerH RthreeDTilesH
+clipping_planek (2.HrzProtocol.ClippingPlaneLayerH RclippingPlane_
+in_memory_vector_sourcel (2&.HrzProtocol.InMemoryVectorSourceLayerH RinMemoryVectorSource/
+gizmom (2.HrzProtocol.GizmoLayerH RgizmoH
+editable_shapen (2.HrzProtocol.EditableShapeLayerH ReditableShapeB
+kind"¹
+	SceneDump
+name (	Rname
+version (RversionA
+scene_settings (2.HrzProtocol.SceneSettingsRsceneSettingsR
+scene_view_settings (2".HrzProtocol.SceneViewSettingsDumpRsceneViewSettingsH
+camera_settings (2.HrzProtocol.CameraSettingsDumpRcameraSettings.
+layers (2.HrzProtocol.LayerDumpRlayers1
+cameras (2.HrzProtocol.CameraDumpRcameras:
+
+viewpoints (2.HrzProtocol.ViewpointDumpR
+viewpoints"7
+SceneDumpRequest
+
+scene_name (	R	sceneNameJ"±
+SceneLoadRequest*
+dump (2.HrzProtocol.SceneDumpRdumpN
+camera_animation (2#.HrzProtocol.CameraAnimationOptionsRcameraAnimation!
+clear_layers (RclearLayers2š
+SceneDumpServiceB
+	DumpScene.HrzProtocol.SceneDumpRequest.HrzProtocol.SceneDumpB
+LoadDump.HrzProtocol.SceneLoadRequest.HrzProtocol.LayerArrayBHøbproto3
+Æ
+hrz_monitoring.protoHrzProtocolhrz_types.protohrz_wrappers.proto2ì
+MonitoringServiceI
+SetMonitoringServerAddress.HrzProtocol.StringValue.HrzProtocol.VoidF
+ConnectToMonitoringServer.HrzProtocol.BoolValue.HrzProtocol.VoidE
+EnableMonitoringMessages.HrzProtocol.BoolValue.HrzProtocol.Void<
+EnableProfiling.HrzProtocol.BoolValue.HrzProtocol.Void:
+EnableMetrics.HrzProtocol.BoolValue.HrzProtocol.Void@
+MakeGpuResourcesSnapshot.HrzProtocol.Void.HrzProtocol.VoidA
+MakeBlobAllocatorSnapshot.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3

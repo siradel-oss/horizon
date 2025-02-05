@@ -1,0 +1,61 @@
+diff --git a/src/microui.c b/src/microui.c
+index a8a3f74..f532435 100644
+--- src/microui.c
++++ src/microui.c
+@@ -923,10 +926,10 @@ int mu_number_ex(mu_Context *ctx, mu_Real *value, mu_Real step,
+ }
+
+
+-static int header(mu_Context *ctx, const char *label, int istreenode, int opt) {
++static int header(mu_Context *ctx, const char* unique_label, const char *label, int istreenode, int opt) {
+   mu_Rect r;
+   int active, expanded;
+-  mu_Id id = mu_get_id(ctx, label, strlen(label));
++  mu_Id id = mu_get_id(ctx, unique_label, strlen(unique_label));
+   int idx = mu_pool_get(ctx, ctx->treenode_pool, MU_TREENODEPOOL_SIZE, id);
+   int width = -1;
+   mu_layout_row(ctx, 1, &width, 0);
+@@ -964,13 +967,13 @@ static int header(mu_Context *ctx, const char *label, int istreenode, int opt) {
+ }
+
+
+-int mu_header_ex(mu_Context *ctx, const char *label, int opt) {
+-  return header(ctx, label, 0, opt);
++int mu_header_ex(mu_Context *ctx, const char* unique_label, const char *label, int opt) {
++  return header(ctx, unique_label, label, 0, opt);
+ }
+
+
+-int mu_begin_treenode_ex(mu_Context *ctx, const char *label, int opt) {
+-  int res = header(ctx, label, 1, opt);
++int mu_begin_treenode_ex(mu_Context *ctx, const char* unique_label, const char *label, int opt) {
++  int res = header(ctx, unique_label, label, 1, opt);
+   if (res & MU_RES_ACTIVE) {
+     get_layout(ctx)->indent += ctx->style->indent;
+     push(ctx->id_stack, ctx->last_id);
+diff --git a/src/microui.h b/src/microui.h
+index 78a1a34..aa353c1 100644
+--- src/microui.h
++++ src/microui.h
+@@ -269,7 +269,7 @@ void mu_update_control(mu_Context *ctx, mu_Id id, mu_Rect rect, int opt);
+ #define mu_textbox(ctx, buf, bufsz)       mu_textbox_ex(ctx, buf, bufsz, 0)
+ #define mu_slider(ctx, value, lo, hi)     mu_slider_ex(ctx, value, lo, hi, 0, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
+ #define mu_number(ctx, value, step)       mu_number_ex(ctx, value, step, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER)
+-#define mu_header(ctx, label)             mu_header_ex(ctx, label, 0)
+-#define mu_begin_treenode(ctx, label)     mu_begin_treenode_ex(ctx, label, 0)
++#define mu_header(ctx, label)             mu_header_ex(ctx, label, label, 0)
++#define mu_begin_treenode(ctx, label)     mu_begin_treenode_ex(ctx, label, label, 0)
+ #define mu_begin_window(ctx, title, rect) mu_begin_window_ex(ctx, title, rect, 0)
+ #define mu_begin_panel(ctx, name)         mu_begin_panel_ex(ctx, name, 0)
+@@ -282,8 +283,8 @@ int mu_textbox_raw(mu_Context *ctx, char *buf, int bufsz, mu_Id id, mu_Rect r, i
+ int mu_textbox_ex(mu_Context *ctx, char *buf, int bufsz, int opt);
+ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const char *fmt, int opt);
+ int mu_number_ex(mu_Context *ctx, mu_Real *value, mu_Real step, const char *fmt, int opt);
+-int mu_header_ex(mu_Context *ctx, const char *label, int opt);
+-int mu_begin_treenode_ex(mu_Context *ctx, const char *label, int opt);
++int mu_header_ex(mu_Context *ctx, const char *unique_label, const char* label, int opt);
++int mu_begin_treenode_ex(mu_Context *ctx, const char *unique_label, const char* label, int opt);
+ void mu_end_treenode(mu_Context *ctx);
+ int mu_begin_window_ex(mu_Context *ctx, const char *title, mu_Rect rect, int opt);
+ void mu_end_window(mu_Context *ctx);
+

@@ -1,0 +1,19 @@
+{
+    "name": "@siradel/horizon-api",
+    "dependencies": {
+        "@siradel/horizon-protocol": "workspace:*",
+        "@types/long": "^4.0.1"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "browser": {
+        "http": false,
+        "https": false,
+        "net": false,
+        "path": false,
+        "stream": false,
+        "tls": false,
+        "fs": false,
+        "crypto": false
+    }
+}

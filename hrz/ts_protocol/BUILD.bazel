@@ -1,0 +1,103 @@
+load("//tools/bazel:npm.bzl", "package_json")
+load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_VERSION", "PACKAGE_JSON_HRZ_LICENSE")
+load("//third_party:protobufjs_cli_deps.bzl", "PROTOBUFJS_CLI_DEPS")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:protobufjs/package_json.bzl", pbjs_bin = "bin")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["package.json"])
+npm_link_all_packages(name = "node_modules")
+
+pbjs_bin.pbjs(
+    name = "generate_js",
+    srcs = PROTOBUFJS_CLI_DEPS + [
+        "//hrz/proto:protos",
+    ],
+    outs = [
+        "dist/hrz_protocol.js",
+    ],
+    copy_srcs_to_bin = False,
+    chdir = "../../../",
+    args = [
+        "-t", "static-module", "$(locations //hrz/proto:protos)", "-o", "$@",
+    ],
+)
+
+pbjs_bin.pbts(
+    name = "generate_ts",
+    srcs = PROTOBUFJS_CLI_DEPS + [
+        "dist/hrz_protocol.js",
+    ],
+    outs = [
+        "dist/hrz_protocol.d.ts",
+    ],
+    chdir = "../../../",
+    args = [
+        "$(location dist/hrz_protocol.js)", "-o", "$@",
+    ],
+)
+
+structured_files_copy(
+    name = "src_copies",
+    output_dir = "dist",
+    files = {
+        "": [
+            "src/index.ts",
+            "src/helper.ts",
+        ],
+    },
+)
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        ":src_copies",
+        ":generate_ts",
+    ],
+    deps = [
+        ":node_modules/protobufjs",
+        ":node_modules/@types/long",
+        ":node_modules/long",
+    ],
+    declaration = True,
+    root_dir = "dist",
+    out_dir = "dist",
+    tsconfig = {
+        "compilerOptions": {
+            "lib": ["ES2015", "DOM"],
+            "target": "ES5",
+            "strict": True,
+        },
+    },
+)
+
+package_json(
+    name = "package_json",
+    base = ":package.json",
+    out = "dist-root/package.json",
+    version = PACKAGE_JSON_HRZ_VERSION,
+    license = PACKAGE_JSON_HRZ_LICENSE,
+)
+
+npm_package(
+    name = "npm_pkg",
+    srcs = [
+        "dist/hrz_protocol.js",
+        ":ts_lib",
+        ":package_json",
+    ],
+    include_srcs_patterns = [
+        "**/*.json",
+        "**/*.js",
+        "**/*.d.ts",
+    ],
+    replace_prefixes = {
+        "dist-root/": "",
+    },
+)
+
+alias(name = "ts_protocol", actual = ":npm_pkg")

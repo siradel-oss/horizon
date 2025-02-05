@@ -1,0 +1,19 @@
+{
+    "name": "@siradel/horizon-scene-dump",
+    "dependencies": {
+        "@siradel/horizon-api": "workspace:*",
+        "@siradel/horizon-protocol": "workspace:*"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "browser": {
+        "http": false,
+        "https": false,
+        "net": false,
+        "path": false,
+        "stream": false,
+        "tls": false,
+        "fs": false,
+        "crypto": false
+    }
+}
