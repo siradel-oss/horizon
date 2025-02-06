@@ -1,0 +1,11 @@
+{
+    "dependencies": {
+        "@siradel/horizon-core": "workspace:*",
+        "@siradel/horizon-api": "workspace:*",
+        "@siradel/horizon-protocol": "workspace:*"
+    },
+    "devDependencies": {
+        "webpack": "5.92.1",
+        "webpack-cli": "5.1.4"
+    }
+}

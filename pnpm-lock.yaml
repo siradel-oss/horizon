@@ -79,6 +79,25 @@ importers:
         specifier: 5.1.4
         version: 5.1.4(webpack@5.92.1)
 
+  apps/web_example:
+    dependencies:
+      '@siradel/horizon-api':
+        specifier: workspace:*
+        version: link:../../hrz/ts_api
+      '@siradel/horizon-core':
+        specifier: workspace:*
+        version: link:../../hrz/ts_core
+      '@siradel/horizon-protocol':
+        specifier: workspace:*
+        version: link:../../hrz/ts_protocol
+    devDependencies:
+      webpack:
+        specifier: 5.92.1
+        version: 5.92.1(uglify-js@3.19.3)(webpack-cli@5.1.4)
+      webpack-cli:
+        specifier: 5.1.4
+        version: 5.1.4(webpack@5.92.1)
+
   hrz/doc:
     dependencies:
       '@siradel/horizon-api':

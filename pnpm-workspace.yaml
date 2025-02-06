@@ -1,4 +1,6 @@
 packages:
+  - "apps/web_client"
+  - "apps/web_example"
   - "hrz/ts_protocol"
   - "hrz/ts_api"
   - "hrz/ts_core"
@@ -7,9 +9,8 @@ packages:
   - "hrz/doc"
   - "hrz/doc/common"
   - "hrz/doc/gallery"
-  - "apps/web_client"
-  - "tools/web_memory_tester"
   - "tests/repro/do_stuff_at_init"
   - "tests/repro/iframe_textdecoder"
   - "tests/repro/new_repr"
   - "tests/repro/recreate_instance"
+  - "tools/web_memory_tester"

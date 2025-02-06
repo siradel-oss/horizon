@@ -1,0 +1,73 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//apps/web_example:webpack-cli/package_json.bzl", webpack_bin = "bin")
+load("//tools/http_server:http_server.bzl", "http_server")
+load("//tools/bazel:pkg.bzl", "structured_files_copy")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["package.json"])
+npm_link_all_packages(name = "node_modules")
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        "src/main.ts",
+    ],
+    deps = [
+        ":node_modules/@siradel/horizon-core",
+        ":node_modules/@siradel/horizon-api",
+        ":node_modules/@siradel/horizon-protocol",
+    ],
+    root_dir = "src",
+    out_dir = "dist",
+    tsconfig = {
+        "compilerOptions": {
+            "lib": ["ES2020", "DOM"],
+            "target": "ES2020",
+            "experimentalDecorators": True,
+            "moduleResolution": "Bundler",
+        },
+    },
+)
+
+webpack_bin.webpack_cli(
+    name = "bundle",
+    outs = [
+        "bundle.js"
+    ],
+    args = [
+        "./$(RULEDIR)/dist/main.js",
+        "--config", "$(location webpack.config.js)",
+        "-o", "$(RULEDIR)",
+    ],
+    chdir = "../../../",
+    srcs = [
+        "ts_lib",
+        "webpack.config.js",
+    ],
+)
+
+structured_files_copy(
+    name = "server_files",
+    output_dir = "www",
+    files = {
+        "": [
+            "static/index.html",
+            "bundle.js",
+        ],
+        "wasm": [
+            "//hrz/core:hrz_core.wasm",
+            "//hrz/core:hrz_core.js",
+        ],
+    },
+)
+
+http_server(
+    name = "server",
+    port = 8080,
+    dir = package_name() + "/www",
+    data = [
+        ":server_files",
+    ],
+)
