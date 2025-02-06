@@ -379,7 +379,7 @@ hrz_cc_shared(
     linkopts = select({
         "//:os_web": [
             # https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#3131---012623
-            "-sEXPORTED_FUNCTIONS=\"['_malloc','_free','_main']\"",
+            "-sEXPORTED_FUNCTIONS=\"['_malloc','_free','_main','UTF8ToString','stringToUTF8','lengthBytesUTF8']\"",
         ],
         "//conditions:default": [],
     }),

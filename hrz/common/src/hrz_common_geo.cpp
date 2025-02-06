@@ -360,13 +360,13 @@ void hrz::normalize_longitude(GeoPosition2& a_sph, GeoPosition2& b_sph, GeoPosit
         c_sph.lon = a_sph.lon;
     }
 
-    // Set all longitudes between -PI and lm::PI.
+    // Set all longitudes between -PI and PI.
     normalize_longitude(a_sph);
     normalize_longitude(b_sph);
     normalize_longitude(c_sph);
 
     // Then we modulate the points longitudes to that they are
-    // never more than lm::PI radians away from each other.
+    // never more than PI radians away from each other.
     while (a_sph.lon - b_sph.lon > lm::PI)
     {
         b_sph.lon += lm::PI * 2;

@@ -210,8 +210,8 @@ var LibraryHorizon = {
 
         if (allHeaders.length > 0) {
             var serializedHeaders = JSON.stringify(headersArray);
-            var headersLength = lengthBytesUTF8(serializedHeaders);
-            request.headers = _malloc(headersLength + 1);
+            var headersLength = lengthBytesUTF8(serializedHeaders) + 1;
+            request.headers = _malloc(headersLength);
             stringToUTF8(serializedHeaders, request.headers, headersLength);
         } else {
             request.headers = 0;
