@@ -20,8 +20,8 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 nav:
   - development_environment.md
+  - project_structure.md
   - development_workflow.md
-  - continuous_integration.md
   - external_dependencies.md
   - Guidelines:
     - guidelines/development.md

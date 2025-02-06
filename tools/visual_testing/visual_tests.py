@@ -220,6 +220,7 @@ class Test:
         if self.input_must_be_copied():
             dst_path = get_input_path(self.name, self.type)
             print(f"Copying {self.input_path} to {dst_path}...")
+            Path(dst_path).absolute().parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(self.input_path, dst_path)
             self.input_path = str(dst_path)
 
@@ -1708,6 +1709,7 @@ if __name__ == "__main__":
 
     MANIFEST_PATH = args.manifest
     MANIFEST = read_manifest(MANIFEST_PATH)
+    TEST_DATA_DIR = Path(MANIFEST_PATH).parent.absolute()
 
     print("Root:", ROOT)
     print("Test data:", TEST_DATA_DIR)

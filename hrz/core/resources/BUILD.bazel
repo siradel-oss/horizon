@@ -8,12 +8,7 @@ cc_resources(
         "//third_party/fonts:Allerta-Regular.ttf": "DefaultFont",
         "devui_font_atlas.png": "DevUiFontAtlas",
         "hrz_logo.rgba": "HrzLogo",
-    } | select({
-        "//:os_native": {
-            "//third_party:cacert.pem": "CaCertPem",
-        },
-        "//conditions:default": {},
-    }),
+    },
     visibility = ["//hrz/core:__subpackages__"],
 )
 

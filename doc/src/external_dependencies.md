@@ -4,7 +4,7 @@
 
 Some external dependencies are automatically managed.
 
-Most of them are defined in the `hrz-packages.json` file, and from this is generated the `hrz-packages.lock.json` and `bazel/deps.bzl` files which respectively store the references to the artifacts, and describe how to fetch those artifacts to Bazel. Those dependencies are managed by the `scripts/update_deps.py` script.
+Most of them are defined in the `hrz-packages.json` file, and from this is generated the `hrz-packages.lock.json` and `bazel/deps.bzl` files which respectively store the references to the artifacts, and describe how to fetch those artifacts to Bazel. Those dependencies are managed by the `tools/dependencies/update_deps.py` script.
 
 npm dependencies are defined in the `package.json` file.
 
@@ -12,9 +12,9 @@ npm dependencies are defined in the `package.json` file.
 
 Some dependencies need to be prebuilt (mainly those of type `external`, see below). Those dependencies must have their prebuilt packages available in the source tree, however they are not distributed by default. For internal developers, those prebuilt packages are mirrored on our artifact server. For external developers, those dependencies must be built manually.
 
-In both cases, these dependencies can be built or fetched with the `scripts/fetch_or_build_prebuilt_deps.py` script. Just run this script, specifying a target platform if you are not building them for your current platform. This will try to download the package from the artifacts server, or to build it from source. You can optionally specify which dependencies to build if you do not wish to build them all. Use the name defined in `hrz-package.json`, that is, the name without the platform suffix.
+In both cases, these dependencies can be built or fetched with the `tools/dependencies/fetch_or_build_prebuilt_deps.py` script. Just run this script, specifying a target platform if you are not building them for your current platform. This will try to download the package from the artifacts server, or to build it from source. You can optionally specify which dependencies to build if you do not wish to build them all. Use the name defined in `hrz-package.json`, that is, the name without the platform suffix.
 
-The same requirements apply for building them than described below in the "building external dependencies". For instance, building WASM dependencies must be done in an environment where the Emscripten SDK is available. The only difference is that you are not using the `update_deps.py` script.
+The same requirements apply for building them than described below in the "building external dependencies" section. For instance, building WASM dependencies must be done in an environment where the Emscripten SDK is available. The only difference is that you are not using the `update_deps.py` script.
 
 ## The `hrz-packages.json` file
 
@@ -22,7 +22,7 @@ This file stores the authoritative information for all auto-managed dependencies
 
 ### Type `github`
 
-This dependency type downloads an archive from a GitHub repository and hosts it on the Nexus. The repository is specified as the `repo` field with the `user/repository` format. The version is specified in the `ref` field that can be either a tag name or a commit hash. This type of dependency completely ignores platforms. Additionally a `build_file` field can point to a file to act as the `BUILD.bazel` file for this dependency, if it is not provided.
+This dependency type downloads an archive from a GitHub repository and mirrors it on the Nexus. The repository is specified as the `repo` field with the `user/repository` format. The version is specified in the `ref` field that can be either a tag name or a commit hash. This type of dependency completely ignores platforms. Additionally a `build_file` field can point to a file to act as the `BUILD.bazel` file for this dependency, if it is not provided.
 
 ### Type `external`
 
@@ -56,13 +56,6 @@ Some of these targets might require you running the update script in a particula
             "ref": "v2.0.0"
         },
         {
-            "name": "nuget_bin",
-            "type": "file",
-            "url": "https://dist.nuget.org/win-x86-commandline/v5.11.0/nuget.exe",
-            "filename": "nuget.exe",
-            "is_executable": true
-        },
-        {
             "name": "clang-format",
             "version": "17.0.6",
             "type": "external",
@@ -79,7 +72,7 @@ Some external dependencies might require additional setup in your environment to
 
 - CMake
 - A C++ compiler (same as the project)
-- emsdk
+- emsdk (same version as the project)
 - Ninja
 
 Generally the build scripts will error out with an appropriate error message, more or less cryptic, to let you know what is missing.
@@ -100,16 +93,16 @@ When you want to build a dependency:
 - Then, in the same environment where you'll build the dependency:
   - Windows: `%EMSDK%\emsdk_env.bat`
   - Linux: `source $EMSDK/emsdk_env.sh`
-- Execute `scripts/update_deps.py` script as described below.
+- Execute `tools/dependencies/update_deps.py` script as described below.
 
 ## Updating the dependencies
 
-Dependencies are updated using the `scripts/update_deps.py` script. It must be executed from the root of the Horizon repository after the `hrz-packages.json` has been edited. Note that you may have to do the following operations even when the packages have not changed, namely when a package is not available on the Nexus for a platform.
+Dependencies are updated using the `tools/dependencies/update_deps.py` script. It must be executed from the root of the Horizon repository after the `hrz-packages.json` has been edited. Note that you may have to do the following operations even when the packages have not changed, namely when a package is not available on the Nexus for a platform.
 
 ### Updating all dependencies for a given platform
 
 ```
-python3 scripts/update_deps.py -u <nexus_user> -p <nexus_pass> <target_triple> all
+python3 tools/dependencies/update_deps.py -u <nexus_user> -p <nexus_pass> -t <target_triple> all
 ```
 
 This will create the packages for all packages of the specified platform, upload them to the Nexus, update the lock file, and update the Bazel dependencies file.
@@ -119,10 +112,10 @@ Because making the packages may not be deterministic, this method is only advise
 ### Updating or adding specific dependencies for a given platform
 
 ```
-python3 scripts/update_deps.py -u <nexus_user> -p <nexus_pass> <target_triple> <dep1> <dep2> ...
+python3 tools/dependencies/update_deps.py -u <nexus_user> -p <nexus_pass> -t <target_triple> <dep1> <dep2> ...
 
 Example:
-python3 scripts/update_deps.py -u <nexus_user> -p <nexus_pass> wasm32-unknown-emscripten protobuf harfbuzz
+python3 tools/dependencies/update_deps.py -u <nexus_user> -p <nexus_pass> -t wasm32-unknown-emscripten protobuf harfbuzz
 ```
 
 This will create the packages for the specified packages of the specified platform, upload them to the Nexus, update the lock file, and update the Bazel dependencies file.
@@ -132,13 +125,13 @@ This will create the packages for the specified packages of the specified platfo
 Remove the entries from the `hrz-packages.json` file, then:
 
 ```
-python3 scripts/update_deps.py
+python3 tools/dependencies/update_deps.py
 ```
 
 ### Regenerating Bazel's dependencies file
 
 ```
-python3 scripts/update_deps.py
+python3 tools/dependencies/update_deps.py
 ```
 
 ## npm dependencies
@@ -163,7 +156,7 @@ Anytime a `package.json` file is modified, `pnpm install --lockfile-only` must b
 
 All subproject must be listed in the `pnpm-workspaces.yaml` file, and when this file is edited, the lockfile must also be updated with `pnpm install --lockfile-only`.
 
-Subprojects that are published as npm packages or that are internal dependencies must define an `npm_package` target that has the same name as the folder they are in (or use an alias). For example the target of the npm package for `//hrz/ts_protocol` must be named `ts_protocol`. See the existing subprojects for examples. The top-level BUILD.bazel file must list those packages using `npm_link_package` so that they can be used as dependencies using their public name. In dependant `package.json` files, the version must be `workspace:*` so that pNpm fetches them internally. For example:
+Subprojects that are published as npm packages or that are internal dependencies must define an `npm_package` target that has the same name as the folder they are in (or use an alias). For example the target of the npm package for `//hrz/ts_protocol` must be named `ts_protocol`. See the existing subprojects for examples. The top-level BUILD.bazel file must list those packages using `npm_link_package` so that they can be used as dependencies using their public name. In dependant `package.json` files, the version must be `workspace:*` so that pnpm fetches them internally. For example:
 
 ```python
 # in /BUILD.bazel
@@ -181,4 +174,4 @@ npm_link_package(
 }
 ```
 
-More information about pNpm and rules_js: https://docs.aspect.build/rulesets/aspect_rules_js/docs/pnpm.
+More information about pnpm and rules_js: https://docs.aspect.build/rulesets/aspect_rules_js/docs/pnpm.

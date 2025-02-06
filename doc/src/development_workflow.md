@@ -4,7 +4,7 @@
 
 - Once an issue is well defined, it is switch to the "To Do" state.
 - Someone choses an issue in the "To Do" state, switches it to "In progress" and assigns themselves to it.
-- All subsequent developments must be done on branch named `usXXXX_short_name` for user stories, or `bfXXXX_short_name` where XXXX is the JIRA numerical ID of the issue, and `short_name` is a short descriptive name, written in snake case.
+- All subsequent developments must be done on branch named `usXXXX_short_name` for user stories, or `bfXXXX_short_name` for bugs, where XXXX is the JIRA numerical ID of the issue, and `short_name` is a short descriptive name, written in snake case.
 - Create a partial changelog file in `changelogs/unreleased` with a unique name (for instance your branch name).
 - Update your changelog file as you go to log all important changes, especially deprecated and removed features, upgrade notes, and integration notes.
     - Each section must start with a line like `# Section name`. The section names are given in the `changelogs/unreleased/CHANGELOG_TEMPLATE.md.tpl` file.
@@ -21,9 +21,10 @@
 
 ## Merge request process
 
-- The merge request title must start with the full JIRA ID of the issue in brackets: `[HRZ-XX]`.
-- For a merge request to be accepted, all comments must be closed and two reviewers must approve it.
-- Each comment has to be closed by the person who opened it to validate the changes that were made.
+- The merge request title must start with the full JIRA ID of the issue in brackets: `[HRZ-XXXX]`.
+- For a merge request to be accepted, all comments must be closed and one or two reviewers must approve it (depending on current staffing).
+- Each comment has to be closed *by the person who opened it* to validate the changes that were made.
+    - Trivial changes like typos can be closed by the submitter instead.
 
 ## Version numbers
 
@@ -96,23 +97,23 @@ There are no rule for what should increment the major or patch number, but gener
 - Push.
 - Merge the release branch into its target branch.
 - Mark the version as released on Jira.
-- Send an email announcing the release to [`gm.horizonReleaseNote@siradel.com`](mailto:gm.horizonReleaseNote@siradel.com).
+- Send an email announcing the release to [`gm.horizonReleaseNote@siradel.com`](mailto:gm.horizonReleaseNote@siradel.com) & ['gm.software_engineering@siradel.com'](mailto:gm.software_engineering@siradel.com).
 - Pat your colleagues and yourself on the back.
 
 ## Maintenance process
 
 If a previously released version needs to be patched, and eventually have patch releases, follow this process:
 
-- Create a branch starting at the revision of the release, which is identified by a tag of the form `vx.y.z`. The maintenance branch’s name derives from the version number: it starts with `maintenance_` followed by the original version number, minus the components that will change during the life of the maintenance branch.
+- Create a branch starting at the revision of the release, which is identified by a tag of the form `va.b.c`. The maintenance branch’s name derives from the version number: it starts with `maintenance_` followed by the original version number, minus the components that will change during the life of the maintenance branch.
     - For example, if the previously released version is `0.7.0`, and you want to create a branch from which `0.7.1`, `0.7.2`, and so on, will be released, name the branch `maintenance_0.7`.
-    - `git branch maintenance_0.x v0.x.0`
+    - `git branch maintenance_a.b va.b.c`
 - Update the version number to the new snapshot.
     - For example, if the previously released version is `0.7.0` and the next one will be `0.7.1`, set the version to `0.7.1-SNAPSHOT`.
-    - `python3 tools/build_info/set_version.py 0.x.y-SNAPSHOT`
+    - `python3 tools/build_info/set_version.py a.b.d-SNAPSHOT`
 - Commit:
-    - `git commit -am "Set version to 0.x.y-SNAPSHOT"`
+    - `git commit -am "Set version to a.b.c-SNAPSHOT"`
 - Push the branch (you might need to temporarily remove branch protection):
-    - `git push origin maintenance_0.x `
+    - `git push origin maintenance_a.b`
 - Publish the maintenance branch to the open-source repository on the release tag (see below, but doing this manually is probably simpler).
     - Because a pipeline might have been triggered when you pushed the branch to the private repo, and before you could publish the branch, this first pipeline might fail at the open-source publish step. If so, that's OK, you can just re-run it later.
 - The new maintenance branch is automatically protected against unreviewed changes in GitLab.

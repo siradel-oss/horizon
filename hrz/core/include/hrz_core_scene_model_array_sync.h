@@ -14,7 +14,7 @@ namespace hrz::scene_model
 // all those updates by fetching new values from the authoritative array in the
 // scene model that is now in a new state.
 //
-// To configure ArraySync for your usecase, see the Traits documentation below,
+// To configure ArraySync for your use case, see the Traits documentation below,
 // which is used as template parameter of ArraySync.
 //
 // To use this utility, all update notifications must be sent to the ArraySync

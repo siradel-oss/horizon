@@ -46,7 +46,7 @@ cc_library(
     ],
     implementation_deps = select({
         "//:os_web": [
-            "//hrz/js_lib:hrz_js_lib",
+            "//hrz/core/js:hrz_js_lib",
         ],
         "//conditions:default": [],
     }) + select({

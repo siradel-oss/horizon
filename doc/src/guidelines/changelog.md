@@ -17,7 +17,7 @@ The possible changelog sections are:
 * **Removed**: Things that have been removed in this update.
 * **Fixed**: Anomalous behaviours that have been rectified.
 * **Upgrade notes**: Actions necessary by integrators to keep their application working.
-* **Integration nodes**: Information or guidelines to help integrators integrate Horizon optimally.
+* **Integration notes**: Information or guidelines to help integrators integrate Horizon optimally.
 
 ---
 
@@ -41,8 +41,8 @@ In the "Changed" section, where forming such a sentence can be tricky, bullet po
     * Changed the default resolution of vector tiles from 3 to 5.
     * Flat polylines are now anti-aliased.
 
-!!! failure ""
-    * Made flat polylines anti-aliased. *(This is correct and follows guidelines, but is not a great formulation)*
+!!! failure "Formulation is not great"
+    * Made flat polylines anti-aliased.
 
 ---
 
@@ -53,24 +53,24 @@ Under such a bullet point, in a sub-list, more information can be given in any f
         * Its update frequency can be configured.
         * This system is more efficient than the selection system.
 
-!!! failure ""
+!!! failure "Should be grouped"
     * Added a system to highlight features on mouse hover. Its update frequency can be configured.
     * This system is more efficient than the selection system.
 
 ---
 
-When multiple bullet points refer to the same system or usecase, they can be reorganized under a common category. This category should be written in **bold** and be very short.
+When multiple bullet points refer to the same system or use case, they can be reorganized under a common category. This category should be written in **bold** and be very short.
 
 !!! success ""
     * **Mouse hover interactions**
         * Added a system to highlight features on mouse hover.
         * Added a configuration option for the update rate of mouse hover information callback.
 
-!!! failure ""
+!!! failure "Should be grouped"
     * Added a system to highlight features on mouse hover.
     * Added a configuration option for the update rate of mouse hover information callback.
 
-!!! failure ""
+!!! failure "Title is too long"
     * **The mouse hover highlighting & info system**
         * Added a system to highlight features on mouse hover.
         * Added a configuration option for the update rate of mouse hover information callback.
@@ -96,7 +96,7 @@ In upgrade and integration notes, the meaning of the terms `must`, `should`, and
     * The `url` field of `VectorDataSource` **must** be renamed to `urlPattern`.
         * This means that the system won't work anymore if it's not done.
     * The new `opacity` field of rasters **should** be set to 1.
-        * This means that the best default value to match the behaviour of the previous version is 1, however the integrator may choose to use a different value if it is more appropriate for their usecase.
+        * This means that the best default value to match the behaviour of the previous version is 1, however the integrator may choose to use a different value if it is more appropriate for their use case.
 
 ---
 

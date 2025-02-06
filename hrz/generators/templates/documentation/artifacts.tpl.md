@@ -11,19 +11,19 @@ Those are the core components of Horizon and are all required to run the engine.
 
 ### Protocol
 
-* [NPM (TypeScript): `@siradel/horizon-protocol` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-protocol/-/horizon-protocol-{{ version + npm_qualifier_string }}.tgz)
+* [npm (TypeScript): `@siradel/horizon-protocol` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-protocol/-/horizon-protocol-{{ version + npm_qualifier_string }}.tgz)
 * [Linux native package (C++)]({{ raw_nexus_url }}/cpp-protocol-linux-{{ version }}.tar.gz)
 * [Windows native package (C++)]({{ raw_nexus_url }}/cpp-protocol-windows-{{ version }}.tar.gz)
 
 ### API
 
-* [NPM (TypeScript): `@siradel/horizon-api` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-api/-/horizon-api-{{ version + npm_qualifier_string }}.tgz)
+* [npm (TypeScript): `@siradel/horizon-api` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-api/-/horizon-api-{{ version + npm_qualifier_string }}.tgz)
 * [Linux native package (C++)]({{ raw_nexus_url }}/cpp-api-linux-{{ version }}.tar.gz)
 * [Windows native package (C++)]({{ raw_nexus_url }}/cpp-api-windows-{{ version }}.tar.gz)
 
 ### Core
 
-* [NPM (TypeScript): `@siradel/horizon-core` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-core/-/horizon-core-{{ version + npm_qualifier_string }}.tgz)
+* [npm (TypeScript): `@siradel/horizon-core` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-core/-/horizon-core-{{ version + npm_qualifier_string }}.tgz)
 * [Linux native package (C++)]({{ raw_nexus_url }}/core-linux-{{ version }}.tar.gz)
 * [Windows native package (C++)]({{ raw_nexus_url }}/core-windows-{{ version }}.tar.gz)
 
@@ -33,7 +33,7 @@ Those are the core components of Horizon and are all required to run the engine.
 
 This is a TypeScript library to save and load Horizon scene dumps to and from JSON, base64 or binary data.
 
-* [NPM (TypeScript): `@siradel/horizon-scene-dump` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-scene-dump/-/horizon-scene-dump-{{ version + npm_qualifier_string }}.tgz)
+* [npm (TypeScript): `@siradel/horizon-scene-dump` version `{{ version + npm_qualifier_string }}`]({{ npm_nexus_url }}/@siradel/horizon-scene-dump/-/horizon-scene-dump-{{ version + npm_qualifier_string }}.tgz)
 
 ### Monitoring application
 

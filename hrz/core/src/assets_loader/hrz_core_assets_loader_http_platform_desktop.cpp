@@ -178,13 +178,6 @@ public:
         // @Todo(HRZ-337): multiplexing requires HTTP2.
         // curl_multi_setopt(p->multi_handle, CURLMOPT_PIPELINING, CURLPIPE_MULTIPLEX);
 
-        gsl::span<const std::byte> cacert_data = hrz_res::get_data(hrz_res::Resources::CaCertPem);
-        curl_blob cacert_blob;
-        cacert_blob.data = (void*)cacert_data.data();
-        cacert_blob.len = cacert_data.size();
-        cacert_blob.flags =
-            CURL_BLOB_NOCOPY; // No need to copy because the cacert should be in rodata.
-
         for (size_t i = 0; i < MAX_AVAILABLE_HANDLES; ++i)
         {
             _slots.emplace_back();
@@ -193,7 +186,6 @@ public:
             CURL* handle = curl_easy_init();
             curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, _header_callback);
             curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, _write_callback);
-            curl_easy_setopt(handle, CURLOPT_CAINFO_BLOB, &cacert_blob);
             curl_easy_setopt(handle, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NATIVE_CA);
             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 1);
             curl_easy_setopt(handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);

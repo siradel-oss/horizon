@@ -15,9 +15,9 @@ This documents explains the various mechanisms and tools that can be used to mak
 
 ### Scene dump formats
 
-- JSON: most user-friendly, however cannot be migrated because it doesn't use field numbers. It can still be imported through the web client, but all you can do is cross your fingers that it will work.
-- Binary: not human readable, not copy-paste-able, but can be migrated, and more compact that JSON. Can be decoded into Protocol Buffer's text format using the `tools/scene_dump/encode_dump.py` and `tools/scene_dump/decode_dump.py` utilities.
-- Base64: Same as binary, but encoded as base64. Mainly useful for copy-pasting.
+- **JSON**: most user-friendly, however cannot be migrated because it doesn't use field numbers. It can still be imported through the web client, but all you can do is cross your fingers that it will work.
+- **Binary**: not human readable, not copy-paste-able, but can be migrated, and more compact that JSON. Can be decoded into Protocol Buffer's text format using the `tools/scene_dump/encode_dump.py` and `tools/scene_dump/decode_dump.py` utilities.
+- **Base64**: Same as binary, but encoded as base64. Mainly useful for copy-pasting.
 
 Whenever possible, try to use the binary format.
 
@@ -63,7 +63,7 @@ Migrations from one version to the next happen as follow:
     1. Run the `tools/scene_model/new_version.py` tool.
     2. In the migration library (`//hrz/scene_dump:migration`) create a new migration function with the prototype given by the previous tool. This can be in any file linked to the library.
     3. Write the necessary migration code.
-4. Run the `check-integrity` tool to check that everything is fine.
+4. Run the `tools/scene_model/check_integrity.py` tool to check that everything is fine.
 
 ### Merging/rebasing
 
@@ -81,7 +81,7 @@ In order to maintain strict ordering of the versions, merging and rebasing requi
     2. Delete the descriptor set file corresponding to your version (`C.pbf`) from `//hrz/proto/history`.
     3. Create a new version we'll call D.
     4. Edit the `A_to_C` migration so that it is now `B_to_D` (both prototype and migration code).
-    5. Set the version of your scenes that have version C to A (the last common version with B) using the `tools/scene_dump/set_dump_version.py` tool.
+    5. Set the version of your scenes that have version C to A (the last common version with B) using the `tools/scene_dump/set_dump_version.py` tool. This will allow migration `A_to_B` to run.
     6. Run the `tools/scene_dump/migrate_dump.py` tool to migrate them from A to B, then from B to D.
     7. If the scenes are still broken, tough luck! You have to re-create them.
 
@@ -90,6 +90,10 @@ In order to maintain strict ordering of the versions, merging and rebasing requi
 This can be useful for creating template scenes for instance. However editing binary is not super easy. Instead you can use the `tools/scene_dump/decode_dump.py` to turn it into a text format, edit it, and `tools/scene_dump/encode_dump.py` to do the reverse.
 
 Note that if you're not using the latest version, you must specify it with the `-v` flag. In order to know the version of a binary dump, use the `tools/scene_dump/get_dump_version.py` tool.
+
+### Editing a scene dump interactively
+
+When you want to delete entire sections, rename layers, etc., you can use the `tools/scene_dump/edit_dump.py` script, which is an interactive tool to do those tasks. This can be useful to create template scenes from full scenes, or rename layers to prepare a scene to be used in the gallery. It is less granular, but easier, than the workflow described above.
 
 ### Migrating all static scenes
 
@@ -101,13 +105,14 @@ This is mostly to avoid merge conflicts.
 
 Those tools should be called from the root of the repository.
 
-- `tools/scene_model/new_version.py <description>`
-    - Create a new version with the given description. The description should describe in a few words what broke compatibility and required a migration.
-
+* `tools/scene_model/new_version.py <description>`
+    * Create a new version with the given description. The description should describe in a few words what broke compatibility and required a migration.
 * `tools/scene_model/update_latest_version.py`
     * Overwrites the last descriptor set with the current one. Use this only when you know they are compatible.
 * `tools/scene_model/check_integrity.py`
     * Checks that the versions manifest file is in a correct state, and that the latest descriptor set is up to date.
+* `tools/scene_model/get_latest_version.py`
+    * Returns the 8-hex-digit of the latest version.
 * `tools/scene_dump/get_dump_version.py <bin dump file>`
     * Returns the 8-hex-digit version of the given scene dump.
 * `tools/scene_dump/set_dump_version.py [-v version] <bin dump file>`
@@ -118,5 +123,3 @@ Those tools should be called from the root of the repository.
     * Encode textual scene dump into its binary form. If the version is not specified, uses latest.
 * `tools/scene_dump/migrate_dump.py <bin dump file>`
     * Migrates the given scene dump to the latest version.
-* `tools/scene_model/get_latest_version.py`
-    * Returns the 8-hex-digit of the latest version.

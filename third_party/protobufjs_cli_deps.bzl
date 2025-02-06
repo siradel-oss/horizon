@@ -1,5 +1,5 @@
 # protobufjs lists those under "cliDependencies" instead of "dependencies" so
-# NPM doesn't fetch them until execution, which is not allowed with Bazel...
+# npm doesn't fetch them until execution, which is not allowed with Bazel...
 PROTOBUFJS_CLI_DEPS = [
     "//:node_modules/semver",
     "//:node_modules/chalk",

@@ -5,18 +5,16 @@
 ### Windows
 
 - [Enable developer mode](https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development).
-- Visual Studio (with C++ build tools 2022 preferably, and .NETCore 5.0)
+- Visual Studio 2022 (only Build Tools are necessary)
     - (Optional) Install *only* the English language pack when installing the build tools. This reduces spam during building.
       If you do this, please also set the `VSLANG` environment variable to 1033.
-- Bazel
-    - Use Bazelisk to manage Bazel versions (https://docs.bazel.build/versions/master/install-bazelisk.html)
-- Python > 3.8
+- Bazel via [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html)
+- Python >= 3.8
     - Run the installer as administrator
     - Select "Add python.exe to PATH"
     - Select "Customize installation"
-    - In "Advanced options", select "Intall Python 3.x for all users"
-- pNpm 8.x (not 9!) (necessary for managing NPM dependencies)
-- Install PIP packages (you might also need to install them from an administrator command prompt if you're getting errors when building)
+    - In "Advanced options", select "Install Python 3.x for all users"
+- Install the following Python packages with pip. (You might also need to install them from an administrator command prompt if you're getting errors when building.)
     - jinja2
     - markdown (if you have *ImportError: No module named 'pkg_resources'* try *pip install --upgrade setuptools*)
     - pygments
@@ -27,42 +25,39 @@
     - lark-parser (optional)
     - imgui\[sdl2] (optional)
     - pysdl2-dll (optional)
+- pnpm 8.x (not 9 or above!) (optional, necessary for managing npm dependencies)
 - fd-find (use `cargo install fd-find` or download at https://github.com/sharkdp/fd/releases)
-- CMake > 3.1 (optional, for external dependencies)
-- LLVM > 12 (optional, for `compile_commands.json` generation)
+- CMake >= 3.1 (optional, for external dependencies)
+- LLVM >= 12 (optional, for `compile_commands.json` generation)
     - The 2022 Visual Studio build tools only support clang >= 16.0.0.
 - emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
 - JDK >= 17 (optional, for external dependencies & publishing the repository)
 
 #### Certificate issues
 
-Because of a TLS certificate mess caused by the proxy used at Siradel adding a random certificate and by Bazel using pinned certificates in its bundled Java distribution, all downloads performed during build might fail. The simplest way of fixing this issue is to install a custom Java distribution (for instance [AdoptOpenJDK](https://adoptopenjdk.net/)) and then telling Java to use it and to use Windows's certificates instead by adding the following to `%USERPROFILE%\.bazelrc`.
+Self-signed certificates in your certificate chain, typically added by corporate proxies, might cause issues with Bazel. Though this issue should not happen currently, here are the steps to fix it in case it ever reappears.
+
+Add the following line to your `.bazelrc` file (`%USERPROFILE%\.bazelrc`):
 
 ```
-startup --server_javabase=<path to you Java install> # For example C:\Program Files\Java\jre1.8.0_271
 startup --host_jvm_args="-Djavax.net.ssl.trustStoreType=Windows-ROOT"
 ```
 
-Note that in recent versions of Bazel (>= 5.4.0), we're supposed to be able to use the `Windows-ROOT` trust store type, but it doesn't work. So that's why we have to install a version of Java where this works.
+If the issue still occurs, install a recent version of the JDK and add to your `.bazelrc` file the following:
 
-#### LLVM install directory
-
-If using LLVM version 16.0.0 or higher, there should be a directory in `C:\Program Files\LLVM\lib\clang\` (or wherever it was installed) named after the major version of LLVM. But the version of Bazel we use looks for a directory named after the the *full* version of LLVM instead (this is a bug that has been fixed with version 6.4.0).
-
-A workaround is to create a symlink to that directory. As an example, if LLVM 16.0.4 is used, the command `mklink /D "C:\Program Files\LLVM\lib\clang\16.0.4" "C:\Program Files\LLVM\lib\clang\16"` will create the correct link (note that administrator rights should be required to run the command).
-
-The full version of LLVM can be queried using `clang --version`.
+```
+startup --server_javabase=<path to you Java install> # For example C:\Program Files\Java\jre1.8.0_271
+```
 
 ### Linux
 
-- Some C++ compiler
-- Bazel
-    - Use Bazelisk to manage Bazel versions (https://docs.bazel.build/versions/master/install-bazelisk.html)
+- A C++ compiler that supports C++17
+- Bazel via [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html)
 - OpenGL headers (package `libgl1-mesa-dev` on Ubuntu)
 - The X11 Input extension library, libXi (package `libxi-dev` on Ubuntu)
 - The X cursor management library (package `libxcursor-dev` on Ubuntu)
-- pNpm 8.x (not 9!) (necessary for managing NPM dependencies)
-- Python > 3.8
+- pnpm 8.x (not 9 or above!) (optional, necessary for managing npm dependencies)
+- Python >= 3.8, along with the following packages:
     - jinja2
     - markdown
     - pygments
@@ -74,7 +69,7 @@ The full version of LLVM can be queried using `clang --version`.
     - imgui\[sdl2] (optional)
     - pysdl2-dll (optional)
 - fd-find (use `cargo install fd-find` or download at https://github.com/sharkdp/fd/releases)
-- CMake > 3.1 (optional, for external dependencies)
+- CMake >= 3.1 (optional, for external dependencies)
 - emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
 - JDK >= 17 (optional, for external dependencies & publishing the repository)
 
@@ -84,15 +79,15 @@ The full version of LLVM can be queried using `clang --version`.
 
 Using Bazel inside a Linux VM on a Windows host leads to similar certificate issues. The VM probably doesn't have the needed certificate to download content from the web, so the first step is to export that certificate from Windows and give it to the Linux VM:
 
-On Windows:
-* Open a command prompt and run the command: `certmgr`; a window should open.
-* In the left menu, unfold "Autorités de certification racines de confiance" (or "Trusted Root Certification Authorities" based on your locale) and click on the "Certificats" folder.
-* On the right part of the window look for the line with "ISINFRA ROOT CA" in both columns and right-click on it.
-* Hover the "Toutes les tâches" entry and click "Exporter..." in the list that opens.
-* Click "Suivant", on the second page select the "X.509 encodé en base 64 (*.cer)" option, and click "Suivant" again.
-* Select a directory to export the certificate to and name it `isinfra_root_ca.cer`. Click "Suivant" then "Terminer" to export the certificate.
+* Open a command prompt and run the command: `certmgr.msc`; a window should open.
+* In the left menu, unfold "Trusted Root Certification Authorities" and click on the "Certificates" folder.
+* On the right part of the window look for the line with your problematic certificate (for example "ISINFRA ROOT CA") and right-click on it.
+* Hover the "All tasks" entry and click "Export..." in the list that opens.
+* Click "Next", on the second page select the "Base-64 encoded X.509 (.CER)" option, and click "Next" again.
+* Select a directory to export the certificate to and name it `isinfra_root_ca.cer`. Click "Next" then "Finish" to export the certificate.
 
 Now that the certificate has been retrieved it needs to be passed to the Linux VM. When using a Docker container, the following command can copy the certificate to a running container:
+
 * `docker cp isinfra_root_ca.cer container_id:/home/isinfra_root_ca.crt`
 
 You can find your running container's ID with `docker ps`.
@@ -100,12 +95,12 @@ Note that we give the certificate a `.crt` extension on Linux, which is required
 
 Now the Linux VM should add this certificate to its list of known certificates.
 
-On Linux:
 * Navigate to the directory containing your copied certificate.
 * Copy it here: `cp isinfra_root_ca.crt /usr/local/share/ca-certificates/isinfra_root_ca.crt`. **Make sure its extension is `.crt`!**
 * Update the certificates storage with `update-ca-certificates`.
 
 The output should look something like this:
+
 ```
 Updating certificates in /etc/ssl/certs...
 1 added, 0 removed; done.
@@ -114,7 +109,6 @@ Updating certificates in /etc/ssl/certs...
 Now your certificate should be properly set up, you can try it with `ping google.com` or by downloading something with `curl`.
 Chances are that Bazel will still not be able to download anything though, because it manages its own certificates using a Java VM. One way to fix it is to do the following:
 
-On Linux:
 * Install the tools needed to manage Java certificates with `apt install ca-certificates-java`.
 * Using the newly installed `keytool`, import the certificate to the Java certificates store: `keytool -importcert -v -noprompt -file isinfra_root_ca.crt -keystore /etc/ssl/certs/java/cacerts -storepass changeit`.
 * Add the following content to your `.bazelrc` file in your `$HOME` directory:
@@ -136,26 +130,32 @@ The same concept of seeding can be applied to your local development environment
 
 ## Initializing the development environment
 
-- Clone the git repository (http://gitlab.siradel.local/horizon/Horizon.git)
+- Clone the git repository
+    - `git@vsi-git-001.siradel.local:horizon/Horizon.git`
+    - `git@github.com:siradel-oss/Horizon.git`
 - Run `tools/git/setup.(sh, bat)`
     - On Linux you may also need to `chmod +x` this file and the ones in `tools/git/hooks` before executing this script.
 - Fetch or build prebuilt dependencies
-    - `python3 scripts/fetch_or_build_prebuilt_deps.py`
+    - `python3 tools/dependencies/fetch_or_build_prebuilt_deps.py`
     - You may need to do this in an `emsdk` environment to build WASM dependencies.
         - You can optionally specify which dependencies to build if not all, and the target platform.
     - See the [external dependencies documentation](external_dependencies.md) for more information.
     - This script might need to be re-run periodically, when dependencies are updated. The build process will error out with an appropriate message when this is necessary.
-- (Windows only) Set the `BAZEL_SH` environment variable to point to "Git for Windows" `sh.exe`.
+
+Additionally, on Windows:
+
+- Set the `BAZEL_SH` environment variable to point to "Git for Windows" `sh.exe`.
     - An alternative option is to use MSYS2, install `pacman -S zip unzip patch diffutils git`, then set `BAZEL_SH` to `usr\bin\bash.exe` inside of the MSYS2 installation directory.
-- (Windows only) Set the `BAZEL_VC` environment variable to point to your MSVC build tools (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC`).
-- (Windows only, optional) Set the `BAZEL_LLVM` environment variable to point to your LLVM installation (`C:\Program Files\LLVM`).
+- Set the `BAZEL_VC` environment variable to point to your MSVC build tools (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC`).
+- (Optional) Set the `BAZEL_LLVM` environment variable to point to your LLVM installation (`C:\Program Files\LLVM`).
+
 - To build anything, use `bazel build <target> <options> --config=<config>`
 - To run anything, use `bazel run <target> <option> --config=<config>`
 
 Possible configs are:
 
 - `windows` to build the native Windows version on Windows.
-- `windows_clang` to build clangd's compile_commands.json file on Windows. (Not tested for building.)
+- `windows_clang` to build clangd's compile_commands.json file on Windows. (See below, not tested for building.)
 - `linux` to build the native Linux version on Linux.
 - `wasm_windows` to build the web version on Windows.
 - `wasm_linux` to build the web version on Linux.
@@ -195,7 +195,7 @@ cmake <path\to\CMakeLists.txt> -G "Visual Studio 16 2019" -A x64
 
 #### Visual Studio Code & other `clangd`-based editors
 
-One can enable autocompletion in VSCode using the `clangd` extension. It is necessary to have LLVM installed obviously. This is done by generating a `compile_commands.json` file and placing it at the root of the project.
+One can enable autocompletion in VSCode using the `clangd` extension, or in any other editor that supports `clangd` as an LSP (Neovim, helix, etc.). It is necessary to have LLVM installed. This is done by generating a `compile_commands.json` file and placing it at the root of the project.
 
 To generate the file, execute:
 
@@ -221,13 +221,13 @@ There are several bazel targets available the most important ones are:
 - `//apps/web_client:server` builds the Horizon web client, then serves it at `http://localhost:8080`.
 - `//hrz/doc:server` builds the Horizon documentation, then serves it at `http://localhost:8081`.
 
-*Note: the option `-c opt` can be used to build in release mode.*
+The `-c opt` option can be used to build in release mode, and `-c dbg` for debug mode. Not adding any `-c` flag builds in `fastbuild` version: faster than debug at runtime, and faster build time than the optimized version.
 
-Full command example: `bazel run //apps/native_client --config=windows`.
+Full command example: `bazel run //apps/native_client --config=windows -c opt`.
 
 ### Command line arguments
 
-The client can be given command line argument referenced in the documentation. You must tell Bazel that the arguments you provide aren't Bazel arguments. For that, follow the following pattern: `bazel run //apps/native_client BZL_ARGS -- HRZ_ARGS`
+The client can be given command line argument referenced in the documentation. You must tell Bazel that the arguments you provide aren't Bazel arguments. For that, follow the following pattern: `bazel run //apps/native_client BZL_ARGS -- HRZ_ARGS`. When using file paths, please use absolute paths.
 
 Example: `bazel run //apps/native_client -c opt --config=linux -- --disable-dev-ui true`
 
@@ -236,23 +236,48 @@ Example: `bazel run //apps/native_client -c opt --config=linux -- --disable-dev-
 Bazel can cache build artifacts in order to speedup subsequent builds, even in the case of full rebuilds. This can be achieved by using one of two options.
 
 - For remote caching (useful when access to said server is fast and cheap), use `--remote_cache`. Horizon's cache server is `lfrn1mmp03.siradel.local:8090`.
-- For local caching (useful when working remotely), use `--disk_cache` with a folder created for this purpose (use a disk that is fast enough, but also has a lot of free space).
+- For local caching (useful when working remotely), use `--disk_cache` with a folder created for this purpose (use a disk that is fast enough, but also has a lot of free space). Flush this folder regularly as there is no limit to its size.
 
 In order to save your configuration across branches, put these settings in a `.bazelrc` file located at:
+
 - `$HOME/.bazelrc` on Linux & co.
 - `%USERPROFILE%\.bazelrc` on Windows.
 
 Example of config file:
 
 ```
-# Use this when working remotely
 build --disk_cache=D:/bazel_cache
 
-# Uncomment this when there is a covid vaccine
-# build --remote_cache=http://lfrn1mmp03.siradel.local:8090/
+# or...
+
+build --remote_cache=http://lfrn1mmp03.siradel.local:8090/
 ```
 
 ## Debugging
+
+### VS Code
+
+Add a debug configuration of type `cppvsdbg` (on Windows) pointing to the binary built with `-c dbg` (for example `bazel-bin/apps/native_client/native_client.exe`).
+
+Additionally, a natvis file can be used to visualize custom types.
+
+```json
+{
+    "name": "//apps/native_client",
+    "type": "cppvsdbg",
+    "request": "launch",
+    "program": "${workspaceRoot}/bazel-bin/apps/native_client/native_client.exe",
+    "args": [
+        "--scene-dump", "C:\\Users\\me\\my_scenes\\awesome_stuff.hrz_scene.pbf",
+        "--worker-count", "1",
+    ],
+    "stopAtEntry": false,
+    "cwd": "${workspaceRoot}",
+    "environment": [],
+    "console": "integratedTerminal",
+    "visualizerFile": "${workspaceRoot}/tools/natvis/absl.natvis"
+}
+```
 
 ### Web Assembly
 

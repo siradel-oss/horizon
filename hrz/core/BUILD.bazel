@@ -333,7 +333,7 @@ cc_library(
             "//hrz/http_cache:hrz_http_cache",
         ],
         "//:os_web": [
-            "//hrz/js_lib:hrz_js_lib",
+            "//hrz/core/js:hrz_js_lib",
         ],
     }),
     local_defines = [
@@ -373,7 +373,7 @@ hrz_cc_shared(
         ":hrz_core_lib",
     ],
     js_libs = [
-        "//hrz/js_lib:js_files",
+        "//hrz/core/js:js_files",
         "//libs/mycelium/js:js_files",
     ],
     linkopts = select({

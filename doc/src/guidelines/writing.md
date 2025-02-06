@@ -56,7 +56,7 @@ Refer to existing API types and services by surrounding them with `[[` and `]]`,
 
 !!! success ""
     * `[[ImageFormat]]`
-    * `A [Bing provider](HrzProtocol.BingProviderRasterParams.md) can be configured to (...)`
+    * `A [Bing provider](HrzProtocol.BingProviderRasterParams.html) can be configured to (...)`
 
 !!! failure ""
     `[ImageFormat](HrzProtocol.ImageFormat.html)`

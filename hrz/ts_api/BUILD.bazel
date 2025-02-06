@@ -5,7 +5,7 @@ load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_VERSION", "PACKAGE_JSON_HRZ_LICE
 load("//:version.bzl", "HRZ_VERSION")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@aspect_rules_js//npm:defs.bzl", "npm_package", "npm_link_package")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 
 package(default_visibility = ["//visibility:public"])
 
