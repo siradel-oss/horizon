@@ -78,13 +78,15 @@ Horizon is a real-time 3D engine for visualizing map data on a globe. It is cros
     * Provide dynamic analysis capabilities with viewsheds and clipping.
     * Edit vector data directly in the 3D view using the shape editor.
 
-<p align="center">
-    <a href="public/gizmos_clipping.webm"><img src="public/gizmos_clipping.png" height="200px" /></a>
-    <a href="public/selection.webm"><img src="public/selection.png" height="200px" /></a>
-    <a href="public/shape_editor.webm"><img src="public/shape_editor.png" height="200px" /></a>
-    <a href="public/viewshed.webm"><img src="public/viewshed.png" height="200px" /></a>
-    <a href="public/multiview.webm"><img src="public/multiview.png" height="200px" /></a>
-</p>
+https://github.com/user-attachments/assets/db0b947b-f6f1-445e-887b-b5308192cfc0
+
+https://github.com/user-attachments/assets/39a1ef82-3c57-471e-aa76-3c37b606fb35
+
+https://github.com/user-attachments/assets/ec4c80ca-5b09-4aea-a989-b5920cea8aa2
+
+https://github.com/user-attachments/assets/63f93fa4-ed4d-48de-b193-0a28132d0f2c
+
+https://github.com/user-attachments/assets/bd0368d8-a6f2-4377-91f4-2cc167ada30f
 
 ## Getting started
 
