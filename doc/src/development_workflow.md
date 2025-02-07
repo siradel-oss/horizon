@@ -87,6 +87,7 @@ There are no rule for what should increment the major or patch number, but gener
     - First publish the `release_a.b.c` branch at the point where it diverged from `master` or `maintenance_a.b`. (See the "Publishing a branch to the open-source repository" section below.)
     - Then execute the `ci/oss_publish/publish.py` script:
         - `python ci/oss_publish/publish.py release_a.b.c --tag va.b.c`
+        - See the [Publishing a branch to the open-source repository](#publishing-a-branch-to-the-open-source-repository) section for a guide on how to authenticate.
     - If somehow this fails (for example if the release branch was already published), you can create the tag manually.
     - The tag should point to the public version of the release commit.
     - Once the tag has been published, the public `release_a.b.c` can be deleted, but you can also keep it if you want.
@@ -128,6 +129,13 @@ If a previously released version needs to be patched, and eventually have patch 
 - Never ever merge the `master` branch in the maintenance branch, or vice-versa! Their commit subtrees should eternally remain separate.
 
 ## Publishing a branch to the open-source repository
+
+To publish code on the open-source repository using the `ci/oss_publish/publish.py` script, you must either:
+
+- Have write access to the repository (using an SSH key linked to your GitHub account, itself linked to the organization & repository). In which case you have nothing more to do. The commits will be marked as committed by you (author is unchanged in iterative mode).
+- Or authenticate as the "Copysira" GitHub App. For this you need the GitHub App ID & the private key (as a PEM file). Ask your teammates how to obtain those. Then use the `--ghapp_id` and `--ghapp_pk_pem` options of the `publish.py` script to use them.
+
+Once you have write access, to publish the branch:
 
 - The three elements you need are:
     - The name of the branch you want to publish (we'll call it `my_branch`)
