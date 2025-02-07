@@ -1,7 +1,7 @@
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="hrz/branding/logo_text_dark.svg">
         <source media="(prefers-color-scheme: light)" srcset="hrz/branding/logo_text.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="hrz/branding/logo_text_dark.svg">
         <img alt="Horizon logo" src="hrz/branding/logo_text.svg" height="80px" />
     </picture>
 </p>
