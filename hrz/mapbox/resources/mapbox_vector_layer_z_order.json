@@ -3,15 +3,15 @@
   "sources": {
     "hk_tilejson": {
       "type": "vector",
-      "url": "https://hrz.siradel.com/assets/mvt/HK/tiles.json"
+      "url": "https://redacted.localhost/assets/mvt/HK/tiles.json"
     },
     "osm_roads": {
       "type": "vector",
-      "url": "https://hrz.siradel.com/assets/mvt/fr_roads/tiles.json"
+      "url": "https://redacted.localhost/assets/mvt/fr_roads/tiles.json"
     },
     "grid": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     }
   },
   "layers": [

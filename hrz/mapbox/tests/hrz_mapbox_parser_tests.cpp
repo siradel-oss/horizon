@@ -315,7 +315,7 @@ TEST(MapboxTranslation, parse_raster_minimal)
     const auto& layer = scene_dump.layers(0);
 
     RasterSourceConfig raster_source_minimal_config;
-    raster_source_minimal_config.tiles = "https://hrz.siradel.com/osm/{z}/{x}/{y}.png";
+    raster_source_minimal_config.tiles = "https://redacted.localhost/osm/{z}/{x}/{y}.png";
     raster_source_minimal_config.test_output(layer);
 
     RasterLayerConfig raster_layer_minimal_config;
@@ -340,7 +340,7 @@ TEST(MapboxTranslation, parse_raster)
     raster_source.bounds.set_north(62.5);
     raster_source.maxzoom = 7;
     raster_source.minzoom = 7;
-    raster_source.tiles = "https://hrz.siradel.com/osm/{z}/{x}/{y}.png";
+    raster_source.tiles = "https://redacted.localhost/osm/{z}/{x}/{y}.png";
     raster_source.tile_size = 256;
     raster_source.test_output(layer);
 
@@ -367,7 +367,7 @@ TEST(MapboxTranslation, parse_raster_shared_source)
         const auto& layer = scene_dump.layers(i);
 
         RasterSourceConfig raster_source_config;
-        raster_source_config.tiles = "https://hrz.siradel.com/osm/{z}/{x}/{y}.png";
+        raster_source_config.tiles = "https://redacted.localhost/osm/{z}/{x}/{y}.png";
         raster_source_config.test_output(layer);
 
         RasterLayerConfig raster_layer_config;
@@ -387,7 +387,7 @@ TEST(MapboxTranslation, parse_raster_unused_source)
     const auto& layer = scene_dump.layers(0);
 
     RasterSourceConfig raster_source_config;
-    raster_source_config.tiles = "https://hrz.siradel.com/osm/{z}/{x}/{y}.png";
+    raster_source_config.tiles = "https://redacted.localhost/osm/{z}/{x}/{y}.png";
     raster_source_config.test_output(layer);
 
     RasterLayerConfig raster_layer_config;
@@ -407,7 +407,7 @@ TEST(MapboxTranslation, parse_raster_multiple_tile_urls)
     const auto& layer = scene_dump.layers(0);
 
     RasterSourceConfig raster_source_config;
-    raster_source_config.tiles = "https://hrz.siradel.com/osm/{z}/{x}/{y}.png";
+    raster_source_config.tiles = "https://redacted.localhost/osm/{z}/{x}/{y}.png";
     raster_source_config.test_output(layer);
 
     RasterLayerConfig raster_layer_config;
@@ -467,7 +467,7 @@ TEST(MapboxTranslation, parse_geojson)
             const auto& provider = source.untiled_data_provider();
             EXPECT_STREQ(
                 provider.url().c_str(),
-                "https://hrz.siradel.com/assets/geojson/france_regions.geojson");
+                "https://redacted.localhost/assets/geojson/france_regions.geojson");
             EXPECT_EQ(provider.format(), hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA);
             EXPECT_EQ(provider.min_level(), 2);
             EXPECT_EQ(provider.max_level(), 10);
@@ -507,7 +507,7 @@ TEST(MapboxTranslation, parse_geojson_no_maxzoom)
             const auto& provider = source.untiled_data_provider();
             EXPECT_STREQ(
                 provider.url().c_str(),
-                "https://hrz.siradel.com/assets/geojson/france_regions.geojson");
+                "https://redacted.localhost/assets/geojson/france_regions.geojson");
             EXPECT_EQ(provider.format(), hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA);
             EXPECT_EQ(provider.min_level(), 0);
             EXPECT_EQ(provider.max_level(), 22);
@@ -598,7 +598,7 @@ TEST(MapboxTranslation, parse_vector_source)
                 src.provider_type(), hrz_proto::VectorDataProviderType::TILED_VECTOR_DATA_PROVIDER);
             EXPECT_STREQ(
                 src.tiled_data_provider().url_pattern().c_str(),
-                "https://hrz.siradel.com/assets/mvt/HK/{z}/{x}/{-y}.mvt");
+                "https://redacted.localhost/assets/mvt/HK/{z}/{x}/{-y}.mvt");
             EXPECT_STREQ(src.tiled_data_provider().layer_name().c_str(), "HK_SAMPLE_3857");
             EXPECT_EQ(
                 src.tiled_data_provider().format(), hrz_proto::VectorDataFormat::MVT_VECTOR_DATA);
@@ -658,7 +658,7 @@ TEST(MapboxTranslation, parse_vector_bounds)
                 src.provider_type(), hrz_proto::VectorDataProviderType::TILED_VECTOR_DATA_PROVIDER);
             EXPECT_STREQ(
                 src.tiled_data_provider().url_pattern().c_str(),
-                "https://hrz.siradel.com/assets/mvt/HK/{z}/{x}/{-y}.mvt");
+                "https://redacted.localhost/assets/mvt/HK/{z}/{x}/{-y}.mvt");
             EXPECT_STREQ(src.tiled_data_provider().layer_name().c_str(), "HK_SAMPLE_3857");
             EXPECT_EQ(
                 src.tiled_data_provider().format(), hrz_proto::VectorDataFormat::MVT_VECTOR_DATA);
@@ -921,7 +921,7 @@ TEST(MapboxTranslation, parse_vector_fill_extrusion_layer)
             EXPECT_EQ(vdl.sources(0).has_tilejson_data_provider(), true);
             EXPECT_STREQ(
                 vdl.sources(0).tilejson_data_provider().url().c_str(),
-                "https://hrz.siradel.com/assets/mvt/HK/tiles.json");
+                "https://redacted.localhost/assets/mvt/HK/tiles.json");
             EXPECT_STREQ(
                 vdl.sources(0).tilejson_data_provider().layer_name().c_str(), "HK_SAMPLE_3857");
 
@@ -1006,7 +1006,7 @@ TEST(MapboxTranslation, parse_vector_fill_layer)
             EXPECT_EQ(vdl.sources(0).has_tilejson_data_provider(), true);
             EXPECT_STREQ(
                 vdl.sources(0).tilejson_data_provider().url().c_str(),
-                "https://hrz.siradel.com/assets/mvt/HK/tiles.json");
+                "https://redacted.localhost/assets/mvt/HK/tiles.json");
             EXPECT_STREQ(
                 vdl.sources(0).tilejson_data_provider().layer_name().c_str(), "HK_SAMPLE_3857");
         }
@@ -1625,7 +1625,7 @@ TEST(MapboxTranslation, parse_vector_symbol_icon)
 
             EXPECT_STREQ(
                 image.url().c_str(),
-                "https://hrz.siradel.com/assets/sprites/sprites_mapbox/tree.png");
+                "https://redacted.localhost/assets/sprites/sprites_mapbox/tree.png");
             EXPECT_FLOAT_EQ(image.scale().default_value(), 0.1);
         }
     };
@@ -1721,7 +1721,7 @@ TEST(MapboxTranslation, parse_vector_symbol_text)
             EXPECT_STREQ(text.text().default_value().c_str(), "sample\ntext");
             EXPECT_STREQ(
                 text.font_url().c_str(),
-                "https://hrz.siradel.com/assets/fonts/Roboto/Roboto-Regular.ttf");
+                "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf");
             EXPECT_FLOAT_EQ(text.font_size().default_value(), 16.0);
             EXPECT_FLOAT_EQ(text.outline_width().default_value(), 1.0);
             EXPECT_EQ(
@@ -2288,7 +2288,7 @@ TEST(MapboxTranslation, parse_vector_heatmap_interpolate)
             const auto& provider = source.untiled_data_provider();
             EXPECT_STREQ(
                 provider.url().c_str(),
-                "https://hrz.siradel.com/assets/geojson/earthquakes.geojson");
+                "https://redacted.localhost/assets/geojson/earthquakes.geojson");
             EXPECT_EQ(provider.format(), hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA);
 
             const auto& attribute = source.attributes(0);
@@ -2412,7 +2412,7 @@ TEST(MapboxTranslation, parse_vector_heatmap_step)
             const auto& provider = source.untiled_data_provider();
             EXPECT_STREQ(
                 provider.url().c_str(),
-                "https://hrz.siradel.com/assets/geojson/earthquakes.geojson");
+                "https://redacted.localhost/assets/geojson/earthquakes.geojson");
             EXPECT_EQ(provider.format(), hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA);
 
             const auto& attribute = source.attributes(0);

@@ -138,8 +138,8 @@ class ExternalManifestEntry(ManifestEntry):
         return package_name, lockfile.LocalArchiveLockEntry(bazel_archive_label, build_file = bazel_build_file_label, mirror_url = mirror_url, mirror_digest=dgst)
 
 class Manifest:
-    def __init__(self, package_repository: str):
-        self.package_repository = package_repository
+    def __init__(self, mirror_repository: str):
+        self.mirror_repository = mirror_repository
         self.entries: list[ManifestEntry] = []
 
     def add(self, entry: ManifestEntry):
@@ -152,14 +152,14 @@ class Manifest:
         return names
 
     def build_package(self, name: str, platform: Platform) -> tuple[str, lockfile.LockEntry]:
-        url = self.package_repository + f"horizon/third_party/{name}/"
+        url = self.mirror_repository + f"horizon/3rd_party/{name}/"
         for entry in self.entries:
             if entry.name == name and entry.supports_platform(platform):
                 return entry.build_package(url, platform)
         raise ValueError(f"Package {name} not found in manifest")
 
 def parse(data: any) -> Manifest:
-    man = Manifest(data["package_repository"])
+    man = Manifest(data["mirror_repository"])
 
     for entry in data["packages"]:
         type = entry["type"]

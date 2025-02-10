@@ -133,7 +133,7 @@ The same concept of seeding can be applied to your local development environment
 ## Initializing the development environment
 
 - Clone the git repository
-    - `git@vsi-git-001.siradel.local:horizon/Horizon.git`
+    - `git@redacted.localhost:horizon/Horizon.git`
     - `git@github.com:siradel-oss/Horizon.git`
 - Run `tools/git/setup.(sh, bat)`
     - On Linux you may also need to `chmod +x` this file and the ones in `tools/git/hooks` before executing this script.
@@ -150,17 +150,6 @@ Additionally, on Windows:
     - An alternative option is to use MSYS2, install `pacman -S zip unzip patch diffutils git`, then set `BAZEL_SH` to `usr\bin\bash.exe` inside of the MSYS2 installation directory.
 - Set the `BAZEL_VC` environment variable to point to your MSVC build tools (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC`).
 - (Optional) Set the `BAZEL_LLVM` environment variable to point to your LLVM installation (`C:\Program Files\LLVM`).
-
-- To build anything, use `bazel build <target> <options> --config=<config>`
-- To run anything, use `bazel run <target> <option> --config=<config>`
-
-Possible configs are:
-
-- `windows` to build the native Windows version on Windows.
-- `windows_clang` to build clangd's compile_commands.json file on Windows. (See below, not tested for building.)
-- `linux` to build the native Linux version on Linux.
-- `wasm_windows` to build the web version on Windows.
-- `wasm_linux` to build the web version on Linux.
 
 ### Editor integration
 
@@ -215,11 +204,23 @@ python tools\ide_integration\generate_compilation_database.py windows -- --//:gl
 
 There are issues when using `clangd` >= 17.0.0, as some macros defined in the compilation commands seem to be ignored.
 
-## Bazel targets
+## Building and running
+
+- To build anything, use `bazel build <target> <options> --config=<config>`
+- To run anything, use `bazel run <target> <option> --config=<config>`
+
+Possible configs are:
+
+- `windows` to build the native Windows version on Windows.
+- `windows_clang` to build clangd's compile_commands.json file on Windows. (See below, not tested for building.)
+- `linux` to build the native Linux version on Linux.
+- `wasm_windows` to build the web version on Windows.
+- `wasm_linux` to build the web version on Linux.
 
 There are several bazel targets available the most important ones are:
 
 - `//apps/native_client` builds the Horizon desktop client.
+- `//apps/web_example:server` builds a very simple Horizon integration in a web page, then serves it at `http://localhost:8080`.
 - `//apps/web_client:server` builds the Horizon web client, then serves it at `http://localhost:8080`.
 - `//hrz/doc:server` builds the Horizon documentation, then serves it at `http://localhost:8081`.
 
@@ -237,7 +238,7 @@ Example: `bazel run //apps/native_client -c opt --config=linux -- --disable-dev-
 
 Bazel can cache build artifacts in order to speedup subsequent builds, even in the case of full rebuilds. This can be achieved by using one of two options.
 
-- For remote caching (useful when access to said server is fast and cheap), use `--remote_cache`. Horizon's cache server is `lfrn1mmp03.siradel.local:8090`.
+- For remote caching (useful when access to said server is fast and cheap), use `--remote_cache`. Horizon's cache server is `redacted.localhost`.
 - For local caching (useful when working remotely), use `--disk_cache` with a folder created for this purpose (use a disk that is fast enough, but also has a lot of free space). Flush this folder regularly as there is no limit to its size.
 
 In order to save your configuration across branches, put these settings in a `.bazelrc` file located at:
@@ -252,7 +253,7 @@ build --disk_cache=D:/bazel_cache
 
 # or...
 
-build --remote_cache=http://lfrn1mmp03.siradel.local:8090/
+build --remote_cache=http://redacted.localhost/
 ```
 
 ## Debugging

@@ -3,7 +3,7 @@ Title: Artifacts
 Category: General
 ---
 
-Everything we make can be found on the [Nexus](http://nexus-int.siradel.com:8081/).
+Everything we make can be found on the [Nexus](http://redacted.localhost/).
 
 ## Horizon
 

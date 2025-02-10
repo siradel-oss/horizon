@@ -40,7 +40,7 @@ Some of these targets might require you running the update script in a particula
 
 ```json
 {
-    "package_repository": "http://nexus-int.siradel.com:8081/repository/raw-releases/",
+    "mirror_repository": "http://redacted.localhost/repository/raw-releases/",
     "packages": [
         {
             "name": "remotery",

@@ -21,7 +21,7 @@ tippecanoe -z[max level] -e [dest dir] -pC --drop-densest-as-needed --extend-zoo
 
 We have a big pmtiles file with all the OSM data, but it's too big!
 
-In order to extract it into smaller datasets, we have a tool, http://vsi-git-001.siradel.local/horizon/tools/extract-mvt, composed of 3 scripts.
+In order to extract it into smaller datasets, we have a tool, http://redacted.localhost/horizon/tools/extract-mvt, composed of 3 scripts.
 
 - dl_osm.py, downloads a subset of the tiles pyramid.
 - cull.py, filters the tiles to keep only some layers, features, and attributes.
@@ -31,7 +31,7 @@ Note that none of this is production-ready, generic, or configurable. So good lu
 
 ### DTM from tiff raster
 
-Use `gdal2tiles` from http://gitlab.siradel.local/tpetillon/gdal2tiles and `texture_converter` from http://gitlab.siradel.local/siliciumserver/TextureConverter.
+Use `gdal2tiles` from http://redacted.localhost/tpetillon/gdal2tiles and `texture_converter` from http://redacted.localhost/siliciumserver/TextureConverter.
 
 ```
 gdal2tiles.py -f tiff -z [minzoom]-[maxzoom] -r cubic [input file] [output folder]
@@ -42,12 +42,12 @@ For the tiling step, the `-z` parameter can be omitted to let the tool decide on
 
 ### Using the raster tiler
 
-[Documentation](http://lfrn1ubuntu10:18213/api-docs)
+[Documentation](http://redacted.localhost/api-docs)
 
 #### Upload file
 
 ```
-scp <file> connect@lfrn1ubuntu10:/shared_data/depot/<file>
+scp <file> connect@redacted.localhost:/shared_data/depot/<file>
 ```
 
 Password: `iopCroco2019*`.
@@ -55,7 +55,7 @@ Password: `iopCroco2019*`.
 #### Submit computation
 
 ```
-POST http://lfrn1ubuntu10:18213/rasters-tiler/compute
+POST http://redacted.localhost/rasters-tiler/compute
 ```
 
 ```json
@@ -71,17 +71,17 @@ POST http://lfrn1ubuntu10:18213/rasters-tiler/compute
 #### Get status
 
 ```
-GET http://lfrn1ubuntu10:18213/rasters-tiler/{id}/status
+GET http://redacted.localhost/rasters-tiler/{id}/status
 ```
 
 #### Download result
 
 ```
-scp -r connect@lfrn1ubuntu10:/shared_data/rasters-tiler/results/{id} result
+scp -r connect@redacted.localhost:/shared_data/rasters-tiler/results/{id} result
 ```
 
 #### Delete computation
 
 ```
-DELETE http://lfrn1ubuntu10:18213/rasters-tiler/{id}
+DELETE http://redacted.localhost/rasters-tiler/{id}
 ```

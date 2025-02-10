@@ -1,10 +1,10 @@
 {
   "version": 8,
-  "sprite": "https://hrz.siradel.com/assets/sprites/sprites_mapbox/stretch_tests/sprite",
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests/sprite",
   "sources": {
     "grid": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     }
   },
   "layers": [
@@ -18,7 +18,7 @@
       },
       "layout": {
         "icon-offset": ["literal", [8, 8]],
-        "icon-image": "https://hrz.siradel.com/assets/sprites/sprites_mapbox/tree.png"
+        "icon-image": "https://redacted.localhost/assets/sprites/sprites_mapbox/tree.png"
       }
     }
   ]

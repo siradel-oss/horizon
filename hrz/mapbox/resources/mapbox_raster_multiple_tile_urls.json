@@ -4,8 +4,8 @@
     "osm": {
       "type": "raster",
       "tiles": [
-        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png",
-        "https://hrz.siradel.com/osm/2/{z}/{x}/{y}.png"
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png",
+        "https://redacted.localhost/osm/2/{z}/{x}/{y}.png"
       ]
     }
   },

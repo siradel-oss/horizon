@@ -3,27 +3,27 @@
   "sources": {
     "line": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     },
     "fill": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     },
     "circle": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     },
     "fill-extrusion": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     },
     "fill+circle": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     },
     "fill-extrusion+circle": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     }
   },
   "layers": [

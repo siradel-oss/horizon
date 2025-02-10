@@ -98,7 +98,7 @@ There are no rule for what should increment the major or patch number, but gener
 - Push.
 - Merge the release branch into its target branch.
 - Mark the version as released on Jira.
-- Send an email announcing the release to [`gm.horizonReleaseNote@siradel.com`](mailto:gm.horizonReleaseNote@siradel.com) & ['gm.software_engineering@siradel.com'](mailto:gm.software_engineering@siradel.com).
+- Send an email announcing the release to [`redacted@siradel.com`](mailto:redacted@siradel.com) & ['redacted@siradel.com'](mailto:redacted@siradel.com).
 - Pat your colleagues and yourself on the back.
 
 ## Maintenance process

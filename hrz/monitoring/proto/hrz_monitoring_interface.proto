@@ -71,7 +71,7 @@ message MetricLabel {
     // It could be something like "URL".
     string  name     = 1;
     // The value of the label, which should help identify the metric.
-    // It could be something like "www.siradel.com".
+    // It could be something like "redacted.localhost".
     string  value    = 2;
 }
 
@@ -219,7 +219,7 @@ message BlobSnapshot {
     // The timestamp (in us) when the snapshot was taken.
     int64           timestamp               = 1;
     // Matches the `use_system_allocator_for_blobs` Horizon viewer option.
-    // https://hrz.siradel.com/deployments/doc/master/HrzProtocol.ViewerOptions.html
+    // https://redacted.localhost/deployments/doc/master/HrzProtocol.ViewerOptions.html
     bool            malloc_passthrough      = 2;
     // The total size (in bytes) available for use by the blob allocator.
     uint64          capacity                = 3;

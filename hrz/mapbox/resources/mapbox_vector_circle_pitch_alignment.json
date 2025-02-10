@@ -6,7 +6,7 @@
   "sources": {
     "grid": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     }
   },
   "layers": [

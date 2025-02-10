@@ -24,7 +24,7 @@ ret = subprocess.run(
 if ret.returncode != 0:
     raise RuntimeError("Couldn't build migration executable")
 
-ENDPOINT = "https://hrz.siradel.com/scenes"
+ENDPOINT = "https://redacted.localhost/scenes"
 
 def migrate(id, name, namespace):
     print(f"Migrating scene \"{name}\"")

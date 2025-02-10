@@ -1892,7 +1892,7 @@ TEST_F(FeatureStyling, fork_in_if)
     EXPECT_TRUE(seen[9]);
 }
 
-// From https://jira.siradel.com/browse/HRZ-508
+// From https://redacted.localhost/browse/HRZ-508
 TEST_F(FeatureStyling, emit_in_nested_if)
 {
     static const char* script =

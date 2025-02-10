@@ -8,12 +8,12 @@
   "sources": {
     "osm_roads": {
       "type": "vector",
-      "url": "https://hrz.siradel.com/assets/mvt/fr_roads/tiles.json"
+      "url": "https://redacted.localhost/assets/mvt/fr_roads/tiles.json"
     },
     "osm": {
       "type": "raster",
       "tiles": [
-        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png"
       ]
     }
   },

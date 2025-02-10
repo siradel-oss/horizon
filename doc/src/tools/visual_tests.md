@@ -20,7 +20,7 @@ A visual test needs three pieces of information to run properly:
 Scenes and reference images are stored in `<test_folder>/hrz_scenes` or `<test_folder>/mapbox_styles`, depending on the scene format. Both files of a test **MUST** be named after the unique test name set in the manifest with the following scheme: `<test_name>.hrz_scene.pbf` or `<test_name>.json` for the scene file, depending on the format, and `<test_name>.hrz_ref.png` for the reference image.
 
 !!! important "Internal tests data"
-    For internal tests, all data required to load a scene must be stored on Horizon’s asset server, and can be accessed at `https://hrz.siradel.com/assets/`.
+    For internal tests, all data required to load a scene must be stored on Horizon’s asset server, and can be accessed at `https://redacted.localhost/assets/`.
 
     Files on this server **MUST NOT** be deleted, updated or tampered with in any way as tests from other branches (`master`, maintenance branches, other merge requests) may still need them. Therefore any modification to a dataset needs a new upload leaving the older version unchanged.
 

@@ -4,13 +4,13 @@
   "sources": {
     "hk_mvt": {
       "type": "vector",
-      "tiles": ["https://hrz.siradel.com/assets/mvt/HK/{z}/{x}/{-y}.mvt"],
+      "tiles": ["https://redacted.localhost/assets/mvt/HK/{z}/{x}/{-y}.mvt"],
       "minzoom": 0,
       "maxzoom": 14
     },
     "hk_tilejson": {
       "type": "vector",
-      "url": "https://hrz.siradel.com/assets/mvt/HK/tiles.json"
+      "url": "https://redacted.localhost/assets/mvt/HK/tiles.json"
     }
   },
   "layers": [

@@ -3,7 +3,7 @@
     "sources": {
       "france_regions": {
         "type": "geojson",
-        "data": "https://hrz.siradel.com/assets/geojson/france_regions.geojson"
+        "data": "https://redacted.localhost/assets/geojson/france_regions.geojson"
       }
     },
     "layers": [

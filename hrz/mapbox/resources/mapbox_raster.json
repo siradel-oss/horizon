@@ -4,7 +4,7 @@
     "osm": {
       "type": "raster",
       "tiles": [
-        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png"
       ],
       "bounds": [-100, 0, 150, 62.5],
       "maxzoom": 7,

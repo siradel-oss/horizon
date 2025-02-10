@@ -4,13 +4,13 @@
     "osm": {
       "type": "raster",
       "tiles": [
-        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png"
       ]
     },
     "unused": {
       "type": "raster",
       "tiles": [
-        "https://hrz.siradel.com/osm/{z}/{x}/{y}.png"
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png"
       ]
     }
   },

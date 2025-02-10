@@ -10,7 +10,7 @@
     "zoom": 1,
     "sources": {
         "earthquakes": {
-            "data": "https://hrz.siradel.com/assets/geojson/earthquakes.geojson",
+            "data": "https://redacted.localhost/assets/geojson/earthquakes.geojson",
             "type": "geojson"
         }
     },

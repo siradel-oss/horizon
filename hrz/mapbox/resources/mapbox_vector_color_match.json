@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "hrz:fonts": {
-      "Roboto Regular": "https://hrz.siradel.com/assets/fonts/Roboto/Roboto-Regular.ttf"
+      "Roboto Regular": "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf"
     },
     "maputnik:renderer": "mbgljs"
   },
@@ -12,11 +12,11 @@
   "sources": {
     "grid": {
       "type": "geojson",
-      "data": "https://hrz.siradel.com/assets/geojson/grid_10x10.geojson"
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
     }
   },
-  "sprite": "https://hrz.siradel.com/assets/sprites/sprites_mapbox/stretch_tests",
-  "glyphs": "https://hrz.siradel.com/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests",
+  "glyphs": "https://redacted.localhost/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "points",

@@ -6,7 +6,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/chriskohlhoff/asio/archive/asio-1-21-0.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/asio/5d2d2dcb_asio-1-21-0.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/asio/5d2d2dcb_asio-1-21-0.tar.gz"
     ]
   },
   "basisu": {
@@ -16,7 +16,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/BinomialLLC/basis_universal/archive/1.16.4.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/basisu/e5740fd6_1.16.4.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/basisu/e5740fd6_1.16.4.tar.gz"
     ]
   },
   "brotli": {
@@ -25,7 +25,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/google/brotli/archive/v1.1.0.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/brotli/e720a6ca_v1.1.0.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/brotli/e720a6ca_v1.1.0.tar.gz"
     ]
   },
   "cdt": {
@@ -35,21 +35,21 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/artem-ogre/CDT/archive/1.4.0.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/cdt/cb5a95a3_1.4.0.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/cdt/cb5a95a3_1.4.0.tar.gz"
     ]
   },
   "clang-format_linux": {
     "build_file": "//third_party/clang-format:clang-format_linux.BUILD.bazel",
     "label": "//third_party/clang-format:prebuilt_linux.MTcuMC42.tar.gz",
     "mirror_digest": "08ee5b3614d87ed66f5cdc4b8037c9bb43c53442c82179d34a5894dd71ee5016",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/clang-format/08ee5b36_clang-format-linux-17.0.6.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/clang-format/08ee5b36_clang-format-linux-17.0.6.tar.gz",
     "type": "local_archive"
   },
   "clang-format_windows": {
     "build_file": "//third_party/clang-format:clang-format_windows.BUILD.bazel",
     "label": "//third_party/clang-format:prebuilt_windows.MTcuMC42.tar.gz",
     "mirror_digest": "ecadd056bc4941819206218dd5f46baf511f564d9c2680f8e9939f2aab6f256f",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/clang-format/ecadd056_clang-format-windows-17.0.6.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/clang-format/ecadd056_clang-format-windows-17.0.6.tar.gz",
     "type": "local_archive"
   },
   "com_google_absl": {
@@ -58,28 +58,28 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/abseil/abseil-cpp/archive/20240722.0.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/com_google_absl/f50e5ac3_20240722.0.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/com_google_absl/f50e5ac3_20240722.0.tar.gz"
     ]
   },
   "copybara": {
     "build_file": "//third_party/copybara:copybara.BUILD.bazel",
     "label": "//third_party/copybara:prebuilt_NWY2N2VlMjhlZDczMTUwZTUwYmE2NTdhZmI0MGFhOTc5NWNiOGZlNi9ocnox.tar.gz",
     "mirror_digest": "2ecf94b4c75cd31aaaefac1b437c50b784c7b64ce2badd1f26b8185ded1b0482",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/copybara/2ecf94b4_copybara-5f67ee28ed73150e50ba657afb40aa9795cb8fe6/hrz1.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/copybara/2ecf94b4_copybara-5f67ee28ed73150e50ba657afb40aa9795cb8fe6/hrz1.tar.gz",
     "type": "local_archive"
   },
   "curl_boringssl_linux": {
     "build_file": "//third_party/curl_boringssl:curl_boringssl_linux.BUILD.bazel",
     "label": "//third_party/curl_boringssl:prebuilt_linux.OC44LjAuYmNyLjE=.tar.gz",
     "mirror_digest": "ffa521cb845df9511d30b470a352f8b5d54d531f4db777627e8364acbe6b3713",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/curl_boringssl/ffa521cb_curl_boringssl-linux-8.8.0.bcr.1.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/ffa521cb_curl_boringssl-linux-8.8.0.bcr.1.tar.gz",
     "type": "local_archive"
   },
   "curl_boringssl_windows": {
     "build_file": "//third_party/curl_boringssl:curl_boringssl_windows.BUILD.bazel",
     "label": "//third_party/curl_boringssl:prebuilt_windows.OC44LjAuYmNyLjE=.tar.gz",
     "mirror_digest": "5adab8b999524a5a8196302e98e81ad13be79ffdc887a59649194d7025ce04cc",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/curl_boringssl/5adab8b9_curl_boringssl-windows-8.8.0.bcr.1.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/5adab8b9_curl_boringssl-windows-8.8.0.bcr.1.tar.gz",
     "type": "local_archive"
   },
   "dear_imgui": {
@@ -89,7 +89,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/ocornut/imgui/archive/f3373780668fba1f9bd64c208d05c20b781c9a39.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/dear_imgui/7667cdf7_f3373780668fba1f9bd64c208d05c20b781c9a39.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/dear_imgui/7667cdf7_f3373780668fba1f9bd64c208d05c20b781c9a39.tar.gz"
     ]
   },
   "delabella": {
@@ -103,28 +103,28 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/msokalski/delabella/archive/V2.0.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/delabella/2f3a2b34_V2.0.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/delabella/2f3a2b34_V2.0.tar.gz"
     ]
   },
   "draco_linux": {
     "build_file": "//third_party/draco:draco_linux.BUILD.bazel",
     "label": "//third_party/draco:prebuilt_linux.MS41Ljc=.tar.gz",
     "mirror_digest": "550d0f550ffb007e121d74fc21766ee83531d207be00f0f81048be27a5d53520",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/draco/550d0f55_draco-linux-1.5.7.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/550d0f55_draco-linux-1.5.7.tar.gz",
     "type": "local_archive"
   },
   "draco_wasm": {
     "build_file": "//third_party/draco:draco_wasm.BUILD.bazel",
     "label": "//third_party/draco:prebuilt_wasm.MS41Ljc=.tar.gz",
     "mirror_digest": "439a33744bb314c05eee09908ab872474fdf383ababf254e6f0f776014138615",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/draco/439a3374_draco-wasm-1.5.7.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/439a3374_draco-wasm-1.5.7.tar.gz",
     "type": "local_archive"
   },
   "draco_windows": {
     "build_file": "//third_party/draco:draco_windows.BUILD.bazel",
     "label": "//third_party/draco:prebuilt_windows.MS41Ljc=.tar.gz",
     "mirror_digest": "449d23d80752210fa700e614a53dc007908130784f89f4295326b41f1b658bd9",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/draco/449d23d8_draco-windows-1.5.7.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/449d23d8_draco-windows-1.5.7.tar.gz",
     "type": "local_archive"
   },
   "earcut": {
@@ -134,7 +134,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/mapbox/earcut.hpp/archive/v2.2.3.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/earcut/f382616d_v2.2.3.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/earcut/f382616d_v2.2.3.tar.gz"
     ]
   },
   "emsdk": {
@@ -143,7 +143,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/emscripten-core/emsdk/archive/3.1.74.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/emsdk/4f4ba50b_3.1.74.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/emsdk/4f4ba50b_3.1.74.tar.gz"
     ]
   },
   "fmtlib": {
@@ -153,21 +153,21 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/fmtlib/fmt/archive/11.0.2.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/fmtlib/6cb1e6d3_11.0.2.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/fmtlib/6cb1e6d3_11.0.2.tar.gz"
     ]
   },
   "glslang_linux": {
     "build_file": "//third_party/glslang:glslang_linux.BUILD.bazel",
     "label": "//third_party/glslang:prebuilt_linux.MTUuMC4w.tar.gz",
     "mirror_digest": "346440102915efb8a5d77cf0461ea5901684e787f7ddab854824f0fd7bf7e86b",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/glslang/34644010_glslang-linux-15.0.0.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/glslang/34644010_glslang-linux-15.0.0.tar.gz",
     "type": "local_archive"
   },
   "glslang_windows": {
     "build_file": "//third_party/glslang:glslang_windows.BUILD.bazel",
     "label": "//third_party/glslang:prebuilt_windows.MTUuMC4w.tar.gz",
     "mirror_digest": "81f7b2cebceaa22da794e862e684489329a758cd26cc41483c17bfb0edecf4d2",
-    "mirror_url": "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/glslang/81f7b2ce_glslang-windows-15.0.0.tar.gz",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/glslang/81f7b2ce_glslang-windows-15.0.0.tar.gz",
     "type": "local_archive"
   },
   "googletest": {
@@ -176,7 +176,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/google/googletest/archive/v1.15.2.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/googletest/7b42b4d6_v1.15.2.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/googletest/7b42b4d6_v1.15.2.tar.gz"
     ]
   },
   "gsl": {
@@ -186,7 +186,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/gsl-lite/gsl-lite/archive/v0.42.0.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/gsl/54a1b6f9_v0.42.0.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/gsl/54a1b6f9_v0.42.0.tar.gz"
     ]
   },
   "harfbuzz": {
@@ -196,7 +196,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/harfbuzz/harfbuzz/archive/10.0.1.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/harfbuzz/e7358ea8_10.0.1.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/harfbuzz/e7358ea8_10.0.1.tar.gz"
     ]
   },
   "libwebp": {
@@ -211,7 +211,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/webmproject/libwebp/archive/v1.2.2.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/libwebp/51e9297a_v1.2.2.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/libwebp/51e9297a_v1.2.2.tar.gz"
     ]
   },
   "lz4": {
@@ -224,7 +224,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/lz4/lz4/archive/v1.9.4.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/lz4/0b0e3aa0_v1.9.4.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/lz4/0b0e3aa0_v1.9.4.tar.gz"
     ]
   },
   "microui": {
@@ -240,7 +240,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/rxi/microui/archive/05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/microui/edafc975_05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/microui/edafc975_05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5.tar.gz"
     ]
   },
   "pcg_basic": {
@@ -250,7 +250,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/imneme/pcg-c-basic/archive/bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/pcg_basic/7b601dd0_bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/pcg_basic/7b601dd0_bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3.tar.gz"
     ]
   },
   "portable_file_dialogs": {
@@ -260,7 +260,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/samhocevar/portable-file-dialogs/archive/67e7b0945aac80efa2ec5c72de98b47f7552735c.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/portable_file_dialogs/91b7b7ea_67e7b0945aac80efa2ec5c72de98b47f7552735c.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/portable_file_dialogs/91b7b7ea_67e7b0945aac80efa2ec5c72de98b47f7552735c.tar.gz"
     ]
   },
   "protobuf": {
@@ -269,7 +269,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/protocolbuffers/protobuf/archive/v3.19.2.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/protobuf/4dd35e78_v3.19.2.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/protobuf/4dd35e78_v3.19.2.tar.gz"
     ]
   },
   "pugixml": {
@@ -279,7 +279,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/zeux/pugixml/archive/v1.14.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/pugixml/610f9837_v1.14.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/pugixml/610f9837_v1.14.tar.gz"
     ]
   },
   "rapidjson": {
@@ -289,7 +289,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/Tencent/rapidjson/archive/58c6938b73c8685d82905ed55ec5b59e8f163687.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/rapidjson/c2f93c9f_58c6938b73c8685d82905ed55ec5b59e8f163687.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/rapidjson/c2f93c9f_58c6938b73c8685d82905ed55ec5b59e8f163687.tar.gz"
     ]
   },
   "sokol": {
@@ -302,7 +302,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/floooh/sokol/archive/c07c12b1eac7fe56ca28c81bf88fb039dbdb7375.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/sokol/21bfd8e5_c07c12b1eac7fe56ca28c81bf88fb039dbdb7375.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/sokol/21bfd8e5_c07c12b1eac7fe56ca28c81bf88fb039dbdb7375.tar.gz"
     ]
   },
   "stb": {
@@ -312,7 +312,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/nothings/stb/archive/af1a5bc352164740c1cc1354942b1c6b72eacb8a.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/stb/936b4e50_af1a5bc352164740c1cc1354942b1c6b72eacb8a.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/stb/936b4e50_af1a5bc352164740c1cc1354942b1c6b72eacb8a.tar.gz"
     ]
   },
   "websocketpp": {
@@ -322,7 +322,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/zaphoyd/websocketpp/archive/0.8.2.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/websocketpp/6ce889d8_0.8.2.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/websocketpp/6ce889d8_0.8.2.tar.gz"
     ]
   },
   "zlib": {
@@ -332,7 +332,7 @@
     "type": "http_archive",
     "urls": [
       "https://github.com/madler/zlib/archive/v1.3.1.tar.gz",
-      "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon/3rd_party/zlib/17e88863_v1.3.1.tar.gz"
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/zlib/17e88863_v1.3.1.tar.gz"
     ]
   }
 }

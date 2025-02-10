@@ -405,11 +405,11 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
             npm_qualifier_string = npm_qualifier_file.read()
             values["npm_qualifier_string"] = "." + npm_qualifier_string
 
-        values["npm_nexus_url"] = "http://nexus-int.siradel.com:8081/repository/npm-snapshots"
-        values["raw_nexus_url"] = "http://nexus-int.siradel.com:8081/repository/raw-snapshots/horizon"
+        values["npm_nexus_url"] = "http://redacted.localhost/repository/npm-snapshots"
+        values["raw_nexus_url"] = "http://redacted.localhost/repository/raw-snapshots/horizon"
     else:
-        values["npm_nexus_url"] = "http://nexus-int.siradel.com:8081/repository/npm-releases"
-        values["raw_nexus_url"] = "http://nexus-int.siradel.com:8081/repository/raw-releases/horizon"
+        values["npm_nexus_url"] = "http://redacted.localhost/repository/npm-releases"
+        values["raw_nexus_url"] = "http://redacted.localhost/repository/raw-releases/horizon"
 
     tpl = tpl_env.get_template("documentation/artifacts.tpl.md")
     output_template(values, tpl, output_dir, "artifacts.md")

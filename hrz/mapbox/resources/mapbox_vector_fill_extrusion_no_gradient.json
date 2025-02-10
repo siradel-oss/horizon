@@ -8,7 +8,7 @@
   "sources": {
     "hk_tilejson": {
       "type": "vector",
-      "url": "https://hrz.siradel.com/assets/mvt/HK/tiles.json"
+      "url": "https://redacted.localhost/assets/mvt/HK/tiles.json"
     }
   },
   "layers": [
