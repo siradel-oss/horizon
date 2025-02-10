@@ -171,14 +171,22 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
     auto url = json::get_str(source, "url");
     if (url.has_value())
     {
-        // Rely on the TileJSON provider.
-        // @Todo: "Explicit source options take precedence over TileJSON"
-        // (https://github.com/mapbox/mapbox-gl-js/blob/d7aeb4b764d6bbaa98b03d9e8abf1a5d673189ff/src/source/load_tilejson.js#L22).
-        // This is OK for bounds only.
-        raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::TILEJSON_PROVIDER);
-        auto* tilejson_provider = raster->mutable_provider()->mutable_tilejson();
+        if (hrz::str::starts_with(url.value(), "pmtiles://"))
+        {
+            raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::PMTILES_PROVIDER);
+            auto* pmtiles_provider = raster->mutable_provider()->mutable_pmtiles();
+            pmtiles_provider->set_url(std::string(std::string_view(url.value()).substr(10)));
+        }
+        else
+        {
+            // Rely on the TileJSON provider.
+            // @Todo: "Explicit source options take precedence over TileJSON"
+            // (https://github.com/mapbox/mapbox-gl-js/blob/d7aeb4b764d6bbaa98b03d9e8abf1a5d673189ff/src/source/load_tilejson.js#L22).
+            raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::TILEJSON_PROVIDER);
+            auto* tilejson_provider = raster->mutable_provider()->mutable_tilejson();
 
-        tilejson_provider->set_url(url.value());
+            tilejson_provider->set_url(url.value());
+        }
     }
     else
     {
@@ -241,12 +249,23 @@ bool parse_vector_source(ParseContext* ctx, const char* source_name, const rapid
 
     if (url.has_value())
     {
-        // Rely on the TileJSON provider.
-        vector_data_source->set_provider_type(
-            hrz_proto::VectorDataProviderType::TILEJSON_VECTOR_DATA_PROVIDER);
-        auto* tilejson_provider = vector_data_source->mutable_tilejson_data_provider();
+        if (hrz::str::starts_with(url.value(), "pmtiles://"))
+        {
+            vector_data_source->set_provider_type(
+                hrz_proto::VectorDataProviderType::PMTILES_VECTOR_DATA_PROVIDER);
+            auto* pmtiles_provider = vector_data_source->mutable_pmtiles_data_provider();
 
-        tilejson_provider->set_url(url.value());
+            pmtiles_provider->set_url(std::string(std::string_view(url.value()).substr(10)));
+        }
+        else
+        {
+            // Rely on the TileJSON provider.
+            vector_data_source->set_provider_type(
+                hrz_proto::VectorDataProviderType::TILEJSON_VECTOR_DATA_PROVIDER);
+            auto* tilejson_provider = vector_data_source->mutable_tilejson_data_provider();
+
+            tilejson_provider->set_url(url.value());
+        }
     }
     else
     {
@@ -1908,7 +1927,7 @@ bool create_symbol_repr(
     // https://docs.mapbox.com/style-spec/reference/layers/#layout-symbol-text-rotation-alignment
     Value text_rotation_alignment(Value::from("auto"));
     // https://docs.mapbox.com/style-spec/reference/layers/#layout-symbol-text-size
-    Property::Generic text_size(Value::from(0.0));
+    Property::Generic text_size(Value::from(16.0));
     // https://docs.mapbox.com/style-spec/reference/layers/#paint-symbol-text-translate
     Property::Generic text_translate({});
     // https://docs.mapbox.com/style-spec/reference/layers/#paint-symbol-text-translate-anchor
@@ -2279,6 +2298,12 @@ bool parse_vector_layer(
             == hrz_proto::VectorDataProviderType::TILEJSON_VECTOR_DATA_PROVIDER)
         {
             source->mutable_tilejson_data_provider()->set_layer_name(source_layer_name);
+        }
+        else if (
+            source->provider_type()
+            == hrz_proto::VectorDataProviderType::PMTILES_VECTOR_DATA_PROVIDER)
+        {
+            source->mutable_pmtiles_data_provider()->set_layer_name(source_layer_name);
         }
         else if (
             source->provider_type()
