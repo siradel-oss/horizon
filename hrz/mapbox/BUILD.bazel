@@ -13,25 +13,23 @@ cc_library(
         "include/hrz_mapbox_common.h",
         "include/hrz_mapbox_expression.h",
     ],
-    deps = [
-        "//hrz/fnd:hrz_fnd",
-        "//hrz/common:hrz_common",
-        "//hrz/cpp_protocol:hrz_cpp_protocol",
-        "//hrz/proto/history:hrz_scene_model_version",
-        "//third_party:rapidjson",
-        "//libs/lm:lm",
-    ],
     includes = ["include"],
     local_defines = [
         "HRZ_LOG_PREFIX=HrzMapbox",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/common:hrz_common",
+        "//hrz/cpp_protocol:hrz_cpp_protocol",
+        "//hrz/fnd:hrz_fnd",
+        "//hrz/proto/history:hrz_scene_model_version",
+        "//libs/lm",
+        "//third_party:rapidjson",
+    ],
 )
 
 cc_resources(
     name = "tests_resources",
-    header_name = "hrz_mapbox_tests_resources.h",
-    namespace = "mapbox",
     files = {
         "resources/mapbox_background.json": "Background",
         "resources/mapbox_camera_40_30_20_10_3.json": "Camera_40_30_20_10_3",
@@ -73,19 +71,21 @@ cc_resources(
         "resources/mapbox_vector_layer_clamping.json": "VectorLayerClamping",
         "resources/sprite.json": "Sprite",
     },
+    header_name = "hrz_mapbox_tests_resources.h",
+    namespace = "mapbox",
 )
 
 cc_binary(
     name = "tests",
     srcs = [
-        "tests/hrz_mapbox_parser_tests.cpp",
         "tests/hrz_mapbox_expression_tests.cpp",
+        "tests/hrz_mapbox_parser_tests.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         ":hrz_mapbox",
         ":tests_resources",
         "//third_party:gtest",
         "//third_party:gtest_main",
     ],
-    visibility = ["//visibility:public"],
 )

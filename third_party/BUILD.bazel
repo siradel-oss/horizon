@@ -1,7 +1,7 @@
-package(default_visibility = ["//visibility:public"])
-
 load("//tools/bazel:utils.bzl", "target_alias")
-load("//tools/licenses:licenses.bzl", "merge_third_party_licenses_txt", "merge_third_party_licenses_md")
+load("//tools/licenses:licenses.bzl", "merge_third_party_licenses_md", "merge_third_party_licenses_txt")
+
+package(default_visibility = ["//visibility:public"])
 
 # This can be used to disable a library on a given target.
 cc_library(
@@ -32,14 +32,14 @@ alias(
 
 target_alias(
     name = "curl",
-    workspace = "curl_boringssl",
     has_wasm = False,
+    workspace = "curl_boringssl",
 )
 
 target_alias(
     name = "cacert.pem",
-    workspace = "curl_boringssl",
     has_wasm = False,
+    workspace = "curl_boringssl",
 )
 
 target_alias(
@@ -152,27 +152,36 @@ alias(
 
 alias(
     name = "sokol",
-    actual = "@sokol//:sokol"
+    actual = "@sokol//:sokol",
 )
 
 alias(
     name = "dear_imgui",
-    actual = "@dear_imgui//:dear_imgui"
+    actual = "@dear_imgui//:dear_imgui",
 )
 
 alias(
     name = "portable_file_dialogs",
-    actual = "@portable_file_dialogs//:portable_file_dialogs"
+    actual = "@portable_file_dialogs//:portable_file_dialogs",
 )
 
 alias(
     name = "pcg_basic",
-    actual = "@pcg_basic//:pcg_basic"
+    actual = "@pcg_basic//:pcg_basic",
 )
 
 alias(
     name = "brotlidec",
-    actual = "@brotli//:brotlidec"
+    actual = "@brotli//:brotlidec",
+)
+
+alias(
+    name = "buildifier",
+    actual = select({
+        "//:os_windows": "@buildifier_windows//file:downloaded",
+        "//:os_linux": "@buildifier_linux//file:downloaded",
+        "//:os_web": ":empty",
+    }),
 )
 
 # @Todo Some day we might want to recompile dependencies to include the license file
@@ -217,12 +226,12 @@ LICENSES_DICT = {
 
 merge_third_party_licenses_txt(
     name = "merge_third_party_licenses_txt",
+    licenses = LICENSES_DICT,
     merged_file = "LICENSE-THIRD-PARTY.txt",
-    licenses = LICENSES_DICT
 )
 
 merge_third_party_licenses_md(
     name = "merge_third_party_licenses_md",
+    licenses = LICENSES_DICT,
     merged_file = "third_party_licenses.md",
-    licenses = LICENSES_DICT
 )

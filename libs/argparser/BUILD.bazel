@@ -1,14 +1,14 @@
 cc_library(
     name = "argparser",
-    hdrs = [
-        "argparser.h",
-    ],
     srcs = [
         "argparser.cpp",
     ],
-    deps = [
-        "//hrz/fnd:hrz_fnd",
+    hdrs = [
+        "argparser.h",
     ],
     includes = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/fnd:hrz_fnd",
+    ],
 )

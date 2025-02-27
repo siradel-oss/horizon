@@ -3,8 +3,8 @@ cc_binary(
     srcs = [
         "compress_file.c",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//third_party:lz4hc",
     ],
-    visibility = ["//visibility:public"],
 )

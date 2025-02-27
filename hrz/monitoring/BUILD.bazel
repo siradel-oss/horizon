@@ -3,14 +3,11 @@ load("//tools/bazel:genrule.bzl", "hrz_genrule")
 filegroup(
     name = "proto",
     srcs = ["proto/hrz_monitoring_interface.proto"],
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )
 
 hrz_genrule(
     name = "generate_proto",
-    tools = [
-        "//third_party:protoc",
-    ],
     srcs = [
         "proto/hrz_monitoring_interface.proto",
     ],
@@ -19,6 +16,9 @@ hrz_genrule(
         "proto/hrz_monitoring_interface.pb.h",
     ],
     cmd = "$(location //third_party:protoc) -Ihrz/monitoring/proto hrz/monitoring/proto/hrz_monitoring_interface.proto --cpp_out=$(@D)/proto",
+    tools = [
+        "//third_party:protoc",
+    ],
 )
 
 cc_library(
@@ -28,14 +28,14 @@ cc_library(
         "proto/hrz_monitoring_interface.pb.h",
     ],
     hdrs = [
-        "include/hrz_monitoring_protocol.h"
-    ],
-    deps = [
-        "//third_party:libprotobuf-lite"
+        "include/hrz_monitoring_protocol.h",
     ],
     includes = [
         "include",
         "proto",
+    ],
+    deps = [
+        "//third_party:libprotobuf-lite",
     ],
 )
 
@@ -47,13 +47,13 @@ cc_library(
     hdrs = [
         "include/hrz_monitoring.h",
     ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
     deps = [
         ":hrz_monitoring_proto",
         "//hrz/fnd:hrz_fnd",
         "//third_party:gsl",
     ],
-    includes = ["include"],
-    visibility = ["//visibility:public"],
 )
 
 cc_binary(
@@ -61,10 +61,10 @@ cc_binary(
     srcs = [
         "tests/monitoring.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         ":hrz_monitoring",
         "//third_party:gtest",
         "//third_party:gtest_main",
     ],
-    visibility = ["//visibility:public"],
 )

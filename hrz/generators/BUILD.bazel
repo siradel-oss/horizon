@@ -7,17 +7,17 @@ py_binary(
         "launch.py",
         "protocol_parser.py",
     ],
-    main = "launch.py",
-    python_version = "PY3",
     data = [
-        ":ts_api_tpl",
-        ":documentation_tpl",
-        ":cpp_protocol_tpl",
         ":cpp_api_tpl",
         ":cpp_core_tpl",
+        ":cpp_protocol_tpl",
+        ":documentation_tpl",
         ":job_declarations_tpl",
+        ":ts_api_tpl",
         ":web_ui_info",
     ],
+    main = "launch.py",
+    python_version = "PY3",
     visibility = ["//visibility:public"],
 )
 
@@ -32,17 +32,17 @@ filegroup(
 filegroup(
     name = "documentation_tpl",
     srcs = [
+        "templates/documentation/artifacts.tpl.md",
+        "templates/documentation/crs_database.tpl.md",
         "templates/documentation/fragment_common.tpl.html",
+        "templates/documentation/fragment_doc.tpl.html",
         "templates/documentation/fragment_enum.tpl.html",
         "templates/documentation/fragment_message.tpl.html",
         "templates/documentation/fragment_service.tpl.html",
-        "templates/documentation/crs_database.tpl.md",
-        "templates/documentation/artifacts.tpl.md",
-        "templates/documentation/fragment_doc.tpl.html",
-        "templates/documentation/searchIndex.tpl.js",
-        "templates/documentation/type_link.tpl.html",
         "templates/documentation/reference.tpl.md",
+        "templates/documentation/searchIndex.tpl.js",
         "templates/documentation/style_enums.tpl.md",
+        "templates/documentation/type_link.tpl.html",
     ],
     visibility = ["//visibility:public"],
 )
@@ -50,9 +50,9 @@ filegroup(
 filegroup(
     name = "cpp_protocol_tpl",
     srcs = [
+        "templates/cpp_protocol/path_builder.tpl.h",
         "templates/cpp_protocol/protocol_all.tpl.h",
         "templates/cpp_protocol/services.tpl.h",
-        "templates/cpp_protocol/path_builder.tpl.h",
     ],
     visibility = ["//visibility:public"],
 )
@@ -60,14 +60,14 @@ filegroup(
 filegroup(
     name = "cpp_core_tpl",
     srcs = [
-        "templates/cpp_core/dispatcher.tpl.cpp",
-        "templates/cpp_core/dispatcher.tpl.h",
-        "templates/cpp_core/scene_path.tpl.h",
-        "templates/cpp_core/scene_path.tpl.cpp",
-        "templates/cpp_core/scene_model_accessor.tpl.cpp",
-        "templates/cpp_core/scene_model_accessor.tpl.h",
         "templates/cpp_core/client_messages.tpl.cpp",
         "templates/cpp_core/client_messages.tpl.h",
+        "templates/cpp_core/dispatcher.tpl.cpp",
+        "templates/cpp_core/dispatcher.tpl.h",
+        "templates/cpp_core/scene_model_accessor.tpl.cpp",
+        "templates/cpp_core/scene_model_accessor.tpl.h",
+        "templates/cpp_core/scene_path.tpl.cpp",
+        "templates/cpp_core/scene_path.tpl.h",
         "templates/cpp_core/style_enums.tpl.cpp",
     ],
     visibility = ["//visibility:public"],
@@ -87,9 +87,9 @@ filegroup(
     srcs = [
         "templates/jobs/declarations.tpl.cpp",
         "templates/jobs/declarations.tpl.h",
+        "templates/jobs/enum_names.tpl.h",
         "templates/jobs/tickets.tpl.cpp",
         "templates/jobs/tickets.tpl.h",
-        "templates/jobs/enum_names.tpl.h",
     ],
     visibility = ["//visibility:public"],
 )

@@ -8,8 +8,8 @@ cc_library(
     hdrs = [
         "tlsf.h",
     ],
-    includes = ['.'],
     include_prefix = "tlsf",
+    includes = ["."],
 )
 
 exports_files(["LICENSE"])

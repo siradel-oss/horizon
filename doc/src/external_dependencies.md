@@ -24,6 +24,10 @@ This file stores the authoritative information for all auto-managed dependencies
 
 This dependency type downloads an archive from a GitHub repository and mirrors it on the Nexus. The repository is specified as the `repo` field with the `user/repository` format. The version is specified in the `ref` field that can be either a tag name or a commit hash. This type of dependency completely ignores platforms. Additionally a `build_file` field can point to a file to act as the `BUILD.bazel` file for this dependency, if it is not provided.
 
+### Type `http_file`
+
+This dependency type downloads a single file from an HTTP address and mirrors it on the Nexus. The address is given in the `url` field. Additionally the `executable` boolean attribute can be used to indicate that this file should be executable.
+
 ### Type `external`
 
 External dependencies execute an external Python script to fetch the dependency and write it to a predefined folder. The contents of this folder is then packaged and used as any other dependency. The script receives as arguments:
@@ -61,6 +65,13 @@ Some of these targets might require you running the update script in a particula
             "type": "external",
             "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu"],
             "script": "scripts/build_clang_format.py"
+        },
+        {
+            "name": "buildifier",
+            "type": "http_file",
+            "url": "https://github.com/bazelbuild/buildtools/releases/download/v8.0.3/buildifier-windows-amd64.exe",
+            "executable": true,
+            "platforms": ["x86_64-pc-windows-msvc"]
         }
     ]
 }

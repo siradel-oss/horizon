@@ -26,13 +26,15 @@ parser.add_argument("-s", "--staged", action='store_true', help="only operate on
 parser.add_argument("-c", "--clang-format", action='store_true', help="run Clang-Format (format C/C++ files)")
 parser.add_argument("-p", "--prettier", action='store_true', help="run Prettier (format TypeScript/JavaScript/CSS files)")
 parser.add_argument("-l", "--line-endings", action='store_true', help="fix line endings")
+parser.add_argument("-b", "--buildifier", action='store_true', help="run Buildifier (format Bazel files)")
 args = parser.parse_args()
 
 mode = "staged" if args.staged else "all"
 
-run_all = not args.clang_format and not args.prettier and not args.line_endings
+run_all = not args.clang_format and not args.prettier and not args.line_endings and not args.buildifier
 run_clang_format = run_all or args.clang_format
 run_prettier = run_all or args.prettier
+run_buildifier = run_all or args.buildifier
 fix_line_endings = run_all or args.line_endings
 
 fd = "fd"
@@ -126,6 +128,12 @@ if run_prettier:
     else:
         prettier_cmd += [os.getcwd()]
     run_command(prettier_cmd, "Prettier")
+
+if run_buildifier:
+    # Run Buildifier for Bazel files
+    print("Running Buildifier...")
+    buildifier_cmd = ["bazel", "run", "//third_party:buildifier", "--", "-lint", "fix", "-r", os.getcwd()]
+    run_command(buildifier_cmd, "Buildifier")
 
 if fix_line_endings:
     # Fix line endings for all text files

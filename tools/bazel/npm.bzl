@@ -33,11 +33,11 @@ package_json = rule(
         "base": attr.label(allow_single_file = True, mandatory = True),
         "out": attr.output(mandatory = True),
         "_build_date": attr.label(
-            default = Label('//:build_date.txt'),
+            default = Label("//:build_date.txt"),
             allow_single_file = True,
         ),
         "_version_script": attr.label(
-            default = Label('//tools/bazel:qualify_package_json_version'),
+            default = Label("//tools/bazel:qualify_package_json_version"),
             executable = True,
             cfg = "exec",
         ),

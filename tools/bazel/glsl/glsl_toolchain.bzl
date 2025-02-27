@@ -6,7 +6,7 @@ def _glsl_toolchain_impl(ctx):
             check_version = ctx.attr.check_version,
             profile = ctx.attr.profile,
             validator = ctx.executable.validator,
-        )
+        ),
     )
     return [toolchain_info]
 

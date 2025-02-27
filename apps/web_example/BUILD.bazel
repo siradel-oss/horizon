@@ -1,12 +1,13 @@
-load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//apps/web_example:webpack-cli/package_json.bzl", webpack_bin = "bin")
-load("//tools/http_server:http_server.bzl", "http_server")
 load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/http_server:http_server.bzl", "http_server")
 
 package(default_visibility = ["//visibility:public"])
 
 exports_files(["package.json"])
+
 npm_link_all_packages(name = "node_modules")
 
 ts_project(
@@ -14,43 +15,47 @@ ts_project(
     srcs = [
         "src/main.ts",
     ],
-    deps = [
-        ":node_modules/@siradel/horizon-core",
-        ":node_modules/@siradel/horizon-api",
-        ":node_modules/@siradel/horizon-protocol",
-    ],
-    root_dir = "src",
     out_dir = "dist",
+    root_dir = "src",
     tsconfig = {
         "compilerOptions": {
-            "lib": ["ES2020", "DOM"],
+            "lib": [
+                "ES2020",
+                "DOM",
+            ],
             "target": "ES2020",
             "experimentalDecorators": True,
             "moduleResolution": "Bundler",
         },
     },
+    deps = [
+        ":node_modules/@siradel/horizon-api",
+        ":node_modules/@siradel/horizon-core",
+        ":node_modules/@siradel/horizon-protocol",
+    ],
 )
 
 webpack_bin.webpack_cli(
     name = "bundle",
-    outs = [
-        "bundle.js"
-    ],
-    args = [
-        "./$(RULEDIR)/dist/main.js",
-        "--config", "$(location webpack.config.js)",
-        "-o", "$(RULEDIR)",
-    ],
-    chdir = "../../../",
     srcs = [
         "ts_lib",
         "webpack.config.js",
     ],
+    outs = [
+        "bundle.js",
+    ],
+    args = [
+        "./$(RULEDIR)/dist/main.js",
+        "--config",
+        "$(location webpack.config.js)",
+        "-o",
+        "$(RULEDIR)",
+    ],
+    chdir = "../../../",
 )
 
 structured_files_copy(
     name = "server_files",
-    output_dir = "www",
     files = {
         "": [
             "static/index.html",
@@ -61,13 +66,14 @@ structured_files_copy(
             "//hrz/core:hrz_core.js",
         ],
     },
+    output_dir = "www",
 )
 
 http_server(
     name = "server",
-    port = 8080,
-    dir = package_name() + "/www",
     data = [
         ":server_files",
     ],
+    dir = package_name() + "/www",
+    port = 8080,
 )

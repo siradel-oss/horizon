@@ -1,10 +1,9 @@
-load("//tools/bazel:pkg.bzl", "structured_files_copy")
-load("//tools/bazel:npm.bzl", "package_json")
-load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_VERSION", "PACKAGE_JSON_HRZ_LICENSE")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
+load("//tools/bazel:pkg.bzl", "structured_files_copy")
 
 # I was forced to separate the Core web package into the ts_core folder because pnpm workspace rules expect
 # the main package to be called the same name as the folder it is in. Hence the alias at the end.
@@ -15,7 +14,6 @@ npm_link_all_packages(name = "node_modules")
 
 structured_files_copy(
     name = "ts_src_copies",
-    output_dir = "dist",
     files = {
         "": [
             "src/index.ts",
@@ -23,6 +21,7 @@ structured_files_copy(
             "src/hrz_core.d.ts",
         ],
     },
+    output_dir = "dist",
 )
 
 ts_project(
@@ -30,31 +29,35 @@ ts_project(
     srcs = [
         ":ts_src_copies",
     ],
-    deps = [
-        ":node_modules/@siradel/horizon-api",
-        ":node_modules/@siradel/horizon-protocol",
-    ],
     declaration = True,
-    root_dir = "dist",
     out_dir = "dist",
+    root_dir = "dist",
     tsconfig = {
         "compilerOptions": {
-            "lib": ["ES2015", "ES2017.SharedMemory", "DOM"],
+            "lib": [
+                "ES2015",
+                "ES2017.SharedMemory",
+                "DOM",
+            ],
             "target": "ES5",
             "strict": True,
         },
     },
+    deps = [
+        ":node_modules/@siradel/horizon-api",
+        ":node_modules/@siradel/horizon-protocol",
+    ],
 )
 
 structured_files_copy(
     name = "js_artifacts_copy",
-    output_dir = "dist",
     files = {
         "": [
             "//hrz/core:hrz_core.js",
             "//hrz/core:hrz_core.wasm",
         ],
-    }
+    },
+    output_dir = "dist",
 )
 
 copy_file(
@@ -65,19 +68,19 @@ copy_file(
 
 package_json(
     name = "package_json",
-    base = ":package.json",
     out = "dist-root/package.json",
-    version = PACKAGE_JSON_HRZ_VERSION,
+    base = ":package.json",
     license = PACKAGE_JSON_HRZ_LICENSE,
+    version = PACKAGE_JSON_HRZ_VERSION,
 )
 
 npm_package(
     name = "npm_pkg",
     srcs = [
         ":hrz_core_npm_third_party_licenses",
-        ":ts_lib",
-        ":package_json",
         ":js_artifacts_copy",
+        ":package_json",
+        ":ts_lib",
     ],
     include_srcs_patterns = [
         "**/*.txt",

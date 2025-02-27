@@ -1,8 +1,8 @@
 cc_library(
     name = "stb_truetype",
     srcs = ["impl.cpp"],
+    visibility = ["//visibility:public"],
     deps = [
         "@stb//:truetype",
     ],
-    visibility = ["//visibility:public"],
 )

@@ -5,7 +5,7 @@ py_binary(
     srcs = ["merge_third_party_licenses_txt.py"],
     main = "merge_third_party_licenses_txt.py",
     python_version = "PY3",
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )
 
 py_binary(
@@ -13,5 +13,5 @@ py_binary(
     srcs = ["merge_third_party_licenses_md.py"],
     main = "merge_third_party_licenses_md.py",
     python_version = "PY3",
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )

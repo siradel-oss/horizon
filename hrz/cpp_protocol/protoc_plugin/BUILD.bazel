@@ -1,9 +1,5 @@
 cc_binary(
     name = "protoc_plugin",
-    deps = [
-        "//third_party:libprotobuf",
-        "//third_party:libprotoc",
-    ],
     srcs = [
         "main.cpp",
     ],
@@ -12,4 +8,8 @@ cc_binary(
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
+    deps = [
+        "//third_party:libprotobuf",
+        "//third_party:libprotoc",
+    ],
 )

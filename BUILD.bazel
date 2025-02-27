@@ -1,13 +1,13 @@
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_database")
-load("//tools/ide_integration:cmake.bzl", "cmakelists")
-load("//tools/bazel/glsl:glsl_toolchain.bzl", "glsl_toolchain")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@npm//:prettier/package_json.bzl", prettier_bin = "bin")
-load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("//tools/bazel/glsl:glsl_toolchain.bzl", "glsl_toolchain")
+load("//tools/ide_integration:cmake.bzl", "cmakelists")
+load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_database")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -51,14 +51,14 @@ config_setting(
     name = "debug",
     values = {
         "compilation_mode": "dbg",
-    }
+    },
 )
 
 config_setting(
     name = "fast",
     values = {
         "compilation_mode": "fastbuild",
-    }
+    },
 )
 
 config_setting(
@@ -104,14 +104,20 @@ config_setting(
 
 string_flag(
     name = "linux_wsi",
-    values = ["x11", "headless_egl"],
-    build_setting_default = "x11"
+    build_setting_default = "x11",
+    values = [
+        "x11",
+        "headless_egl",
+    ],
 )
 
 string_flag(
     name = "gl_api",
-    values = ["gl", "gles"],
-    build_setting_default = "gl"
+    build_setting_default = "gl",
+    values = [
+        "gl",
+        "gles",
+    ],
 )
 
 config_setting(
@@ -213,7 +219,11 @@ config_setting(
 # GLSL toolchains
 #
 
-GLSL_EXEC_OS = ["windows", "linux"]
+GLSL_EXEC_OS = [
+    "windows",
+    "linux",
+]
+
 GLSL_TARGETS = {
     "core": {
         "check_version": "330",
@@ -221,7 +231,7 @@ GLSL_TARGETS = {
         "cpu": "x86_64",
     },
     "es": {
-        "check_version": "310", # glslangValidator only wants version >= 310 for validation
+        "check_version": "310",  # glslangValidator only wants version >= 310 for validation
         "profile": "es",
         "cpu": "wasm32",
     },
@@ -233,7 +243,9 @@ GLSL_TARGETS = {
         check_version = GLSL_TARGETS[target]["check_version"],
         profile = GLSL_TARGETS[target]["profile"],
         validator = "@glslang_{}//:glslangValidator".format(os),
-    ) for os in GLSL_EXEC_OS for target in GLSL_TARGETS
+    )
+    for os in GLSL_EXEC_OS
+    for target in GLSL_TARGETS
 ]
 
 [
@@ -248,7 +260,9 @@ GLSL_TARGETS = {
         ],
         toolchain = ":glslc_{}_{}".format(target, os),
         toolchain_type = "//tools/bazel/glsl:toolchain_type",
-    ) for os in GLSL_EXEC_OS for target in GLSL_TARGETS
+    )
+    for os in GLSL_EXEC_OS
+    for target in GLSL_TARGETS
 ]
 
 #
@@ -257,11 +271,11 @@ GLSL_TARGETS = {
 
 hrz_genrule(
     name = "build_date",
-    tools = ["//tools/build_info:get_date"],
     srcs = [],
     outs = ["build_date.txt"],
     cmd = "$(location //tools/build_info:get_date) $@",
     tags = ["no-cache"],
+    tools = ["//tools/build_info:get_date"],
 )
 
 #
@@ -270,6 +284,7 @@ hrz_genrule(
 
 compilation_database(
     name = "compilation_database_windows",
+    output_base = OUTPUT_BASE,
     targets = [
         "//apps/native_client",
         "//tools/monitoring_client",
@@ -292,7 +307,6 @@ compilation_database(
         "//tools/visual_testing:comparator",
         "//hrz/http_cache:tests",
     ],
-    output_base = OUTPUT_BASE,
 )
 
 cmakelists(
@@ -319,7 +333,7 @@ cmakelists(
         "//tools/visual_testing:comparator",
     ] + select({
         "//:os_windows": [
-            "//hrz/core:hrz_core.dll"
+            "//hrz/core:hrz_core.dll",
         ],
         "//conditions:default": [],
     }),
@@ -328,16 +342,18 @@ cmakelists(
 prettier_bin.prettier_binary(
     name = "prettier",
     args = [
-        "--config", "$(location .prettierrc.json)",
-        "--ignore-path", "$(location .prettierignore)",
+        "--config",
+        "$(location .prettierrc.json)",
+        "--ignore-path",
+        "$(location .prettierignore)",
         "--ignore-unknown",
         "--write",
+    ],
+    data = [
+        ".prettierignore",
+        ".prettierrc.json",
     ],
     env = {
         "BAZEL_BINDIR": "$(BINDIR)",
     },
-    data = [
-        ".prettierrc.json",
-        ".prettierignore",
-    ],
 )

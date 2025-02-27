@@ -227,6 +227,20 @@
             "type": "external",
             "version": "5f67ee28ed73150e50ba657afb40aa9795cb8fe6/hrz1",
             "script": "third_party/copybara/build.py"
+        },
+        {
+            "name": "buildifier",
+            "type": "http_file",
+            "url": "https://github.com/bazelbuild/buildtools/releases/download/v8.0.3/buildifier-windows-amd64.exe",
+            "executable": true,
+            "platforms": ["x86_64-pc-windows-msvc"]
+        },
+        {
+            "name": "buildifier",
+            "type": "http_file",
+            "url": "https://github.com/bazelbuild/buildtools/releases/download/v8.0.3/buildifier-linux-amd64",
+            "executable": true,
+            "platforms": ["x86_64-pc-linux-gnu"]
         }
     ]
 }

@@ -30,12 +30,12 @@ https://github.com/google/kythe/blob/master/tools/cpp/generate_compilation_datab
 #   - Combine the contents of defs.bzl and aspects.bzl.
 #   - Add fix for implementation_deps not working (_combine_with_deps)
 
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 load(
     "@bazel_tools//tools/build_defs/cc:action_names.bzl",
     "CPP_COMPILE_ACTION_NAME",
     "C_COMPILE_ACTION_NAME",
 )
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 CompilationAspectInfo = provider(fields = ["compilation_db"])
 
@@ -91,9 +91,8 @@ def _combine_with_deps(direct, deps, attr_name):
     """Returns a list from a depset containing direct and all transitive compilation_context.attr_name values from deps"""
     return depset(
         direct,
-        transitive = [getattr(dep[CcInfo].compilation_context, attr_name, depset()) for dep in deps]
+        transitive = [getattr(dep[CcInfo].compilation_context, attr_name, depset()) for dep in deps],
     ).to_list()
-
 
 # Function copied from https://gist.github.com/oquenchil/7e2c2bd761aa1341b458cc25608da50c
 # TODO: Directly use create_compile_variables and get_memory_inefficient_command_line.

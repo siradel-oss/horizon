@@ -1,6 +1,6 @@
 load("@model_versions_list//:list.bzl", "MODEL_VERSIONS_LIST")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
-load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 
 py_library(
     name = "manifest",
@@ -16,8 +16,8 @@ py_binary(
         "//hrz/proto/history/templates:all",
     ],
     deps = [
-        "@bazel_tools//tools/python/runfiles",
         ":manifest",
+        "@bazel_tools//tools/python/runfiles",
     ],
 )
 
@@ -30,9 +30,6 @@ exports_files(
 [
     hrz_genrule(
         name = "compress_descriptor_set_" + id,
-        tools = [
-            "//tools/compress_file_lz4",
-        ],
         srcs = [
             "%s.pbf" % id,
         ],
@@ -40,6 +37,9 @@ exports_files(
             "%s.pbf.lz4" % id,
         ],
         cmd = "$(location //tools/compress_file_lz4) $(SRCS) $@",
+        tools = [
+            "//tools/compress_file_lz4",
+        ],
     )
     for id in MODEL_VERSIONS_LIST
 ]
@@ -51,7 +51,6 @@ filegroup(
 
 hrz_genrule(
     name = "generate_model_version",
-    tools = [":gen"],
     srcs = [
         "versions_manifest.csv",
     ],
@@ -59,36 +58,37 @@ hrz_genrule(
         "hrz_scene_model_version.h",
     ],
     cmd = "$(location :gen) -m $(location :versions_manifest.csv) gen-cpp-model-version $@",
+    tools = [":gen"],
 )
 
 cc_library(
     name = "hrz_scene_model_version",
     hdrs = ["hrz_scene_model_version.h"],
     includes = ["."],
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )
 
 hrz_genrule(
     name = "generate_descriptor_sets_list",
-    tools = [":gen"],
     srcs = [
         "versions_manifest.csv",
         ":all_compressed_descriptor_sets",
     ],
     outs = [
-        "hrz_descriptor_sets_list.h",
         "hrz_descriptor_sets_list.cpp",
+        "hrz_descriptor_sets_list.h",
     ],
     cmd = "$(location :gen) -m $(location :versions_manifest.csv) gen-cpp-descriptor-sets-list $(location hrz_descriptor_sets_list.h) $(location hrz_descriptor_sets_list.cpp) $(locations :all_compressed_descriptor_sets)",
+    tools = [":gen"],
 )
 
 cc_library(
     name = "hrz_descriptor_sets_list",
     srcs = ["hrz_descriptor_sets_list.cpp"],
     hdrs = ["hrz_descriptor_sets_list.h"],
+    includes = ["."],
+    visibility = ["//visibility:public"],
     deps = [
         "//third_party:gsl",
     ],
-    includes = ["."],
-    visibility = ["//visibility:public"]
 )

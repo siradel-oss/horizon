@@ -17,12 +17,12 @@ exports_files(
 
 cc_resources(
     name = "icons",
-    header_name = "hrz_icons.h",
-    namespace = "hrz_icons",
     files = {
         "favicon-96x96.png": "Icon96",
         "favicon-32x32.png": "Icon32",
         "favicon-16x16.png": "Icon16",
     },
+    header_name = "hrz_icons.h",
+    namespace = "hrz_icons",
     visibility = ["//visibility:public"],
 )

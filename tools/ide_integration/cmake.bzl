@@ -50,14 +50,14 @@ def _bazel_label_to_cmake_target_name(target):
 # To pass values with spaces, escaping these characters (like this: `\ `) is necessary.
 # This function converts between the two syntaxes.
 def _remove_define_quotes_and_escape(str):
-    if '=' in str:
+    if "=" in str:
         parts = str.split("=", 1)
         if '"' in parts[0]:
             return str
         if len(parts[1]) < 2:
             return str
         if parts[1][0] == '"' and parts[1][-1] == '"':
-            return parts[0] + '=' + parts[1][1:-1].replace(" ", "\\ ")
+            return parts[0] + "=" + parts[1][1:-1].replace(" ", "\\ ")
     return str
 
 def _cmakelists_txt(cmake_commands):
@@ -196,7 +196,7 @@ def _cmakelists_aspect_impl(target, ctx):
                 command = "target_include_directories",
                 name = target_name,
                 prps = depset(include_prps),
-                srcs = depset([path])
+                srcs = depset([path]),
             ),
         )
 
@@ -450,9 +450,9 @@ def _cmakelists_impl(ctx):
     cmake_commands = depset(transitive = cmake_commands)
 
     content = "cmake_minimum_required(VERSION 3.1)\n" + \
-        "project(__PROJ_NAME__)\n" + \
-        "set(CMAKE_CXX_STANDARD 17)\n\n" + \
-        "#__GLOBAL_OPTIONS__\n\n"
+              "project(__PROJ_NAME__)\n" + \
+              "set(CMAKE_CXX_STANDARD 17)\n\n" + \
+              "#__GLOBAL_OPTIONS__\n\n"
     content += _cmakelists_txt(cmake_commands.to_list())
     content = content.replace("__EXEC_ROOT__", ctx.attr.exec_root)
 
@@ -499,5 +499,5 @@ _cmakelists = rule(
 def cmakelists(**kwargs):
     _cmakelists(
         filename = kwargs.pop("filename", "CMakeLists.txt"),
-        **kwargs,
+        **kwargs
     )

@@ -46,6 +46,35 @@ class HttpArchiveLockEntry(LockEntry):
         text += ")\n"
         return text
 
+class HttpFileLockEntry(LockEntry):
+    tag: str = "http_file"
+
+    def __init__(self, urls: list[str], digest: str, executable: bool):
+        self.urls = urls
+        self.digest = digest
+        self.executable = executable
+
+    def from_dict(data: dict) -> "HttpFileLockEntry":
+        return HttpFileLockEntry(
+            urls = data["urls"],
+            digest = data["digest"],
+            executable = data.get("executable", False),
+        )
+
+    def as_bazel_rule(self, name: str) -> str:
+        text = f"""http_file(
+    name = "{name}",
+    urls = [\n"""
+        text += "".join([f'        "{u}",\n' for u in self.urls])
+        text += f"    ],\n"
+        text += f'    sha256 = "{self.digest}",\n'
+
+        if self.executable:
+            text += '    executable = True,\n'
+
+        text += ")\n"
+        return text
+
 class LocalArchiveLockEntry(LockEntry):
     tag: str = "local_archive"
 
@@ -96,7 +125,7 @@ class Lockfile:
             f.write(bytes(json.dumps(self.serialize(), sort_keys=True, indent=2) + "\n", encoding="utf8"))
 
 def parse(data: any) -> Lockfile:
-    classes = [HttpArchiveLockEntry, LocalArchiveLockEntry]
+    classes = [HttpArchiveLockEntry, HttpFileLockEntry, LocalArchiveLockEntry]
     class_lookup = {cls.tag: cls for cls in classes}
     lock = Lockfile()
     for name, prps in data.items():

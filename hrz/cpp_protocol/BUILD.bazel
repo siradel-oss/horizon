@@ -1,7 +1,7 @@
 load("//hrz/proto:list_proto_files.bzl", "list_proto_files")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 filegroup(
     name = "generated_hdrs",
@@ -15,11 +15,6 @@ filegroup(
 
 hrz_genrule(
     name = "generate_proto",
-    tools = [
-        "//third_party:protoc",
-        "//hrz/proto:protos",
-        "//hrz/cpp_protocol/protoc_plugin",
-    ],
     srcs = [
         "//hrz/proto:protos",
     ],
@@ -27,45 +22,50 @@ hrz_genrule(
         list_proto_files("", ".pb.cc") +
         list_proto_files("", ".pb.h"),
     cmd = "$(location //third_party:protoc) -Ihrz/proto $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(@D) --hrz_out=$(@D)",
+    tools = [
+        "//hrz/cpp_protocol/protoc_plugin",
+        "//hrz/proto:protos",
+        "//third_party:protoc",
+    ],
 )
 
 hrz_genrule(
     name = "generate_templates",
-    tools = [
-        "//hrz/generators:generator",
-    ],
     srcs = [
         "//hrz:hrz_protocol.xml",
         "//hrz/generators:cpp_protocol_tpl",
     ],
     outs = [
-        "hrz_services.h",
         "hrz_protocol_all.h",
         "hrz_protocol_path_builder.h",
+        "hrz_services.h",
     ],
     cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_protocol $(@D)",
+    tools = [
+        "//hrz/generators:generator",
+    ],
 )
 
 cc_library(
     name = "hrz_cpp_protocol",
     srcs = [
-        ":generated_srcs",
-        ":generated_hdrs",
         "src/hrz_protocol_image_helper.cpp",
+        ":generated_hdrs",
+        ":generated_srcs",
     ],
     hdrs = [
-        ":generate_templates",
         "include/hrz_protocol_image_helper.h",
-    ],
-    deps = [
-        "//third_party:libprotobuf-lite",
+        ":generate_templates",
     ],
     includes = [
         ".",
         "include",
     ],
     linkstatic = True,
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party:libprotobuf-lite",
+    ],
 )
 
 make_dbg(
@@ -75,7 +75,6 @@ make_dbg(
 
 pkg_tar_aggregate(
     name = "pkg",
-    extension = "tar.gz",
     dirs = {
         "include": [
             ":generated_hdrs",
@@ -84,4 +83,5 @@ pkg_tar_aggregate(
         "lib_release": [":hrz_cpp_protocol"],
         "lib_debug": [":hrz_cpp_protocol_dbg"],
     },
+    extension = "tar.gz",
 )

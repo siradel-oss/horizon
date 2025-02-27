@@ -44,7 +44,7 @@ dbg_transition = transition(
 
 def _make_dbg_impl(ctx):
     return [
-        DefaultInfo(files = depset(ctx.files.cc_target))
+        DefaultInfo(files = depset(ctx.files.cc_target)),
     ]
 
 make_dbg = rule(

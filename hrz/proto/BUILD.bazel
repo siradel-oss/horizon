@@ -5,23 +5,19 @@ load("//tools/bazel:genrule.bzl", "hrz_genrule")
 copy_to_bin(
     name = "protos_bin",
     srcs = list_proto_files("", ".proto"),
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "protos",
     srcs = list_proto_files("", ".proto"),
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )
 
 exports_files(glob(["*.proto"]))
 
 hrz_genrule(
     name = "generate_descriptor_set",
-    tools = [
-        "//third_party:protoc",
-        "//hrz/proto:protos",
-    ],
     srcs = [
         "//hrz/proto:protos",
     ],
@@ -29,5 +25,9 @@ hrz_genrule(
         "descriptor_set.pbf",
     ],
     cmd = "$(location //third_party:protoc) -Ihrz/proto $(SRCS) --descriptor_set_out=$@",
+    tools = [
+        "//hrz/proto:protos",
+        "//third_party:protoc",
+    ],
     visibility = ["//visibility:public"],
 )

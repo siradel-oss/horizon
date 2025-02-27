@@ -6,17 +6,17 @@ cc_library(
     hdrs = [
         "include/hrz_http_cache.h",
     ],
-    local_defines = [
-        "HRZ_LOG_PREFIX=HrzHttpCache",
-    ],
     includes = [
         "include",
     ],
+    local_defines = [
+        "HRZ_LOG_PREFIX=HrzHttpCache",
+    ],
+    visibility = ["//visibility:public"],
     deps = [
         "//hrz/fnd:hrz_fnd",
         "//third_party:microui",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_binary(
@@ -24,10 +24,10 @@ cc_binary(
     srcs = [
         "tests/http_cache.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         ":hrz_http_cache",
         "//third_party:gtest",
         "//third_party:gtest_main",
     ],
-    visibility = ["//visibility:public"],
 )

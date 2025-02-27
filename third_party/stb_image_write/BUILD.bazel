@@ -1,8 +1,8 @@
 cc_library(
     name = "stb_image_write",
     srcs = ["impl.cpp"],
+    visibility = ["//visibility:public"],
     deps = [
         "@stb//:image_write",
     ],
-    visibility = ["//visibility:public"],
 )

@@ -30,8 +30,8 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
         additional_linkopts += [
             "-lembind",
             "-sALLOW_MEMORY_GROWTH=1",
-            "-sINITIAL_MEMORY=134217728", # 128 MiB
-            "-sMAXIMUM_MEMORY=4294967296", # 4096 MiB
+            "-sINITIAL_MEMORY=134217728",  # 128 MiB
+            "-sMAXIMUM_MEMORY=4294967296",  # 4096 MiB
             "-sPTHREAD_POOL_SIZE=Module.workerCount",
             "-sPTHREAD_POOL_SIZE_STRICT=0",
             "-sEXIT_RUNTIME=1",
@@ -46,7 +46,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
         "-sMODULARIZE=1",
         "-sEXPORT_NAME=" + module_name,
         "-sUSE_WEBGL2=1",
-        "-sTEXTDECODER=0", # @Workaround(010-Chromium-Emscripten-TextDecoder)
+        "-sTEXTDECODER=0",  # @Workaround(010-Chromium-Emscripten-TextDecoder)
         "-mbulk-memory",
     ]
 
@@ -54,10 +54,10 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
         additional_linkopts.append("-lwebsocket.js")
 
     for js_lib in js_libs:
-        additional_linkopts += [ "--js-library", "$(location " + js_lib + ")" ]
+        additional_linkopts += ["--js-library", "$(location " + js_lib + ")"]
 
     for data_file in data:
-        additional_linkopts += [ "--embed-file", "$(location " + data_file + ")@$(location " + data_file + ")" ]
+        additional_linkopts += ["--embed-file", "$(location " + data_file + ")@$(location " + data_file + ")"]
 
     native.cc_binary(
         name = name + "_cc",
@@ -69,7 +69,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
         # This target won't build successfully on its own because of missing emscripten
         # headers etc. Therefore, we hide it from wildcards.
         tags = ["manual"],
-        **kwargs,
+        **kwargs
     )
 
     wasm_cc_binary(
@@ -100,7 +100,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
         srcs = [
             name + ".wasm",
             name + ".js",
-        ]
+        ],
     )
 
 def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:private"], **kwargs):
@@ -109,7 +109,7 @@ def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:privat
         linkshared = True,
         srcs = srcs + hdrs,
         visibility = visibility,
-        **kwargs,
+        **kwargs
     )
 
     native.filegroup(
@@ -136,7 +136,7 @@ def _cc_shared_linux(name, **kwargs):
     native.cc_library(
         name = name + "_linux",
         linkstatic = False,
-        **kwargs,
+        **kwargs
     )
 
 def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = False, js_libs = [], alwayslink = True, visibility = ["//visibility:private"], **kwargs):

@@ -14,6 +14,7 @@ _PROTO_FILES = [
     "hrz_monitoring",
     "hrz_mapbox",
 ]
+
 def list_proto_files(prefix, suffix):
     files = []
     for base_name in _PROTO_FILES:

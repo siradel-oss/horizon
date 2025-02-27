@@ -6,7 +6,6 @@ SRCS = [
     "src/renderer.cpp",
     "src/resource_binder.cpp",
     "src/render_graph.cpp",
-
     "include/log.h",
     "include/pool.h",
     "include/arena.h",
@@ -42,55 +41,55 @@ LOCAL_DEFINES = [
 
 cc_library(
     name = "mycelium_core_33",
-    includes = ["include"],
-    hdrs = HDRS,
     srcs = SRCS,
+    hdrs = HDRS,
+    implementation_deps = [
+        "//third_party/glad:core_33",
+    ],
+    includes = ["include"],
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_CORE_33=1",
         "MYCELIUM_GL_DESKTOP=1",
         "MYCELIUM_USE_GLAD=1",
         "MYCELIUM_GLSL_VERSION=\"330 core\"",
     ],
-    deps = DEPS,
-    implementation_deps = [
-        "//third_party/glad:core_33",
-    ],
     visibility = ["//visibility:public"],
+    deps = DEPS,
 )
 
 cc_library(
     name = "mycelium_es_30",
-    includes = ["include"],
-    hdrs = HDRS,
     srcs = SRCS,
+    hdrs = HDRS,
+    implementation_deps = [
+        "//third_party/glad:es_30",
+    ],
+    includes = ["include"],
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_ES_30=1",
         "MYCELIUM_GL_ES=1",
         "MYCELIUM_USE_GLAD=1",
         "MYCELIUM_GLSL_VERSION=\"300 es\"",
     ],
-    deps = DEPS,
-    implementation_deps = [
-        "//third_party/glad:es_30",
-    ],
     visibility = ["//visibility:public"],
+    deps = DEPS,
 )
 
 cc_library(
     name = "mycelium_webgl_2",
-    includes = ["include"],
-    hdrs = HDRS,
     srcs = SRCS,
+    hdrs = HDRS,
+    implementation_deps = [
+        "//libs/mycelium/js",
+    ],
+    includes = ["include"],
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_WEBGL_2=1",
         "MYCELIUM_GL_ES=1",
         "MYCELIUM_GLSL_VERSION=\"300 es\"",
     ],
-    deps = DEPS,
-    implementation_deps = [
-        "//libs/mycelium/js",
-    ],
     visibility = ["//visibility:public"],
+    deps = DEPS,
 )
 
 cc_binary(
@@ -98,23 +97,23 @@ cc_binary(
     srcs = [
         "tests/render_graph.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "mycelium_core_33",
         "//third_party:gtest",
         "//third_party:gtest_main",
     ],
-    visibility = ["//visibility:public"],
 )
 
 alias(
     name = "mycelium",
-    visibility = ["//visibility:public"],
     actual = select({
         "//:windows_wgl_gl": "//libs/mycelium:mycelium_core_33",
         "//:windows_egl_gles": "//libs/mycelium:mycelium_es_30",
         "//:linux_wsi_x11_gl": "//libs/mycelium:mycelium_core_33",
-        "//:linux_wsi_headless_egl" : "//libs/mycelium:mycelium_core_33",
-        "//:linux_wsi_x11_gles" : "//libs/mycelium:mycelium_es_30",
+        "//:linux_wsi_headless_egl": "//libs/mycelium:mycelium_core_33",
+        "//:linux_wsi_x11_gles": "//libs/mycelium:mycelium_es_30",
         "//:os_web": "//libs/mycelium:mycelium_webgl_2",
     }),
+    visibility = ["//visibility:public"],
 )

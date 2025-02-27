@@ -2,13 +2,13 @@ load("//tools/bazel/cc_resources:cc_resources.bzl", "cc_resources")
 
 cc_resources(
     name = "resources",
-    header_name = "hrz_core_resources.h",
-    namespace = "hrz_res",
     files = {
         "//third_party/fonts:Allerta-Regular.ttf": "DefaultFont",
         "devui_font_atlas.png": "DevUiFontAtlas",
         "hrz_logo.rgba": "HrzLogo",
     },
+    header_name = "hrz_core_resources.h",
+    namespace = "hrz_res",
     visibility = ["//hrz/core:__subpackages__"],
 )
 

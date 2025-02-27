@@ -3,7 +3,7 @@ GlslInfo = provider(
         "check_version",
         "profile",
         "validator",
-    ]
+    ],
 )
 
 GlslConfigInfo = provider(

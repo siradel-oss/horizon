@@ -37,5 +37,5 @@ run_binary = rule(
         "data": attr.label_list(),
         "_windows_constraint": attr.label(default = "@platforms//os:windows"),
     },
-    executable= True,
+    executable = True,
 )

@@ -1,13 +1,12 @@
-
 cc_binary(
     name = "get_dump_version",
     srcs = [
         "src/get_dump_version.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//hrz/scene_dump:utils",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_binary(
@@ -15,10 +14,10 @@ cc_binary(
     srcs = [
         "src/set_dump_version.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//hrz/scene_dump:utils",
     ],
-    visibility = ["//visibility:public"],
 )
 
 cc_binary(
@@ -26,12 +25,11 @@ cc_binary(
     srcs = [
         "src/migrate_dump.cpp",
     ],
-    deps = [
-        "//hrz/scene_dump:utils",
-        "//hrz/scene_dump:migration",
-
-    ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/scene_dump:migration",
+        "//hrz/scene_dump:utils",
+    ],
 )
 
 cc_binary(
@@ -39,11 +37,11 @@ cc_binary(
     srcs = [
         "src/edit_dump.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
-        "//hrz/scene_dump:utils",
-        "//hrz/scene_dump:migration",
         "//hrz/cpp_protocol:hrz_cpp_protocol",
+        "//hrz/scene_dump:migration",
+        "//hrz/scene_dump:utils",
         "//third_party:fmtlib",
     ],
-    visibility = ["//visibility:public"],
 )

@@ -1,5 +1,5 @@
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 """
 dirs has this structure:
@@ -8,6 +8,7 @@ dirs has this structure:
     ...
 }
 """
+
 def pkg_tar_aggregate(name, extension = "tar.gz", dirs = {}, visibility = ["//visibility:public"]):
     deps = []
     for d in dirs:
@@ -46,8 +47,12 @@ def _structured_files_copy_impl(ctx):
                     executable = "cmd.exe",
                     arguments = [
                         "/c",
-                        "echo", "F", "|",
-                        "@xcopy", "/y", "/q",
+                        "echo",
+                        "F",
+                        "|",
+                        "@xcopy",
+                        "/y",
+                        "/q",
                         f.path.replace("/", "\\"),
                         copied_file.path.replace("/", "\\"),
                         ">NUL",
@@ -91,6 +96,7 @@ files has this structure:
     ...
 }
 """
+
 def structured_files_copy(name, files, output_dir):
     # We transform "files" into a structure like
     # {

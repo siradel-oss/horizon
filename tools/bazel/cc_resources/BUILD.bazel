@@ -11,14 +11,14 @@ py_binary(
 py_binary(
     name = "make_collection",
     srcs = ["make_collection.py"],
+    data = [
+        "collection.tpl.cpp",
+        "collection.tpl.h",
+    ],
     main = "make_collection.py",
     python_version = "PY3",
-    data = [
-        "collection.tpl.h",
-        "collection.tpl.cpp",
-    ],
+    visibility = ["//visibility:public"],
     deps = [
         "@bazel_tools//tools/python/runfiles",
     ],
-    visibility = ["//visibility:public"],
 )

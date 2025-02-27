@@ -81,5 +81,5 @@ def cc_resources(name, namespace, header_name, files, **kwargs):
         hdrs = [":" + name + "_gen_hdrs"],
         includes = ["."],
         deps = ["//third_party:gsl"],
-        **kwargs,
+        **kwargs
     )

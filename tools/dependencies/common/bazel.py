@@ -8,8 +8,7 @@ BAZEL_DEPS_HEADER = """
 #          SEE doc/src/external_dependencies.md FOR MORE INFO              #
 ############################################################################
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load("//tools/bazel:local_archive.bzl", "local_archive")
 
 def hrz_deps():

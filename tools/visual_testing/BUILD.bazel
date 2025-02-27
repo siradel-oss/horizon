@@ -6,28 +6,31 @@ cc_binary(
         "viewer.cpp",
     ],
     includes = ["."],
-    deps = [
-        "//hrz/branding:icons",
-        "//libs/wsi:wsi",
-        "//hrz/cpp_api:hrz_cpp_api",
-        "//hrz/core:hrz_core",
-        "//hrz/fnd:hrz_fnd",
-        "//hrz/scene_dump:migration",
-        "//libs/argparser:argparser",
-        "//third_party/stb_image_write",
-        "//third_party:gsl",
-    ],
     linkopts = select({
-        "//:os_linux": ["-pthread", "-lz"],
+        "//:os_linux": [
+            "-pthread",
+            "-lz",
+        ],
         "//conditions:default": [],
     }) + select({
         "//:linux_wsi_x11_gl": [
             "-lX11",
         ],
-        "//:linux_wsi_headless_egl" : [],
+        "//:linux_wsi_headless_egl": [],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/branding:icons",
+        "//hrz/core:hrz_core",
+        "//hrz/cpp_api:hrz_cpp_api",
+        "//hrz/fnd:hrz_fnd",
+        "//hrz/scene_dump:migration",
+        "//libs/argparser",
+        "//libs/wsi",
+        "//third_party:gsl",
+        "//third_party/stb_image_write",
+    ],
 )
 
 cc_binary(
@@ -35,16 +38,15 @@ cc_binary(
     srcs = [
         "comparator.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//third_party/stb_image",
         "//third_party/stb_image_write",
     ],
-    visibility = ["//visibility:public"],
 )
 
 pkg_tar_aggregate(
     name = "kit",
-    extension = "tar.gz",
     dirs = {
         "": [
             ":comparator",
@@ -55,4 +57,5 @@ pkg_tar_aggregate(
             "README.md",
         ],
     },
+    extension = "tar.gz",
 )

@@ -1,6 +1,6 @@
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 filegroup(
     name = "generated_hdrs",
@@ -14,16 +14,16 @@ filegroup(
 
 hrz_genrule(
     name = "generate_templates",
-    tools = ["//hrz/generators:generator"],
     srcs = [
         "//hrz:hrz_protocol.xml",
-        "//hrz/generators:cpp_api_tpl"
+        "//hrz/generators:cpp_api_tpl",
     ],
     outs = [
         "hrz_api.cpp",
         "hrz_api.h",
     ],
     cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_api $(@D)",
+    tools = ["//hrz/generators:generator"],
 )
 
 cc_library(
@@ -36,12 +36,12 @@ cc_library(
     ],
     includes = ["."],
     linkstatic = True,
+    visibility = ["//visibility:public"],
     deps = [
         "//hrz/cpp_protocol:hrz_cpp_protocol",
         "//hrz/fnd:hrz_fnd",
         "//third_party:gsl",
     ],
-    visibility = ["//visibility:public"],
 )
 
 make_dbg(
@@ -51,10 +51,10 @@ make_dbg(
 
 pkg_tar_aggregate(
     name = "pkg",
-    extension = "tar.gz",
     dirs = {
         "include": [":generated_hdrs"],
         "lib_release": [":hrz_cpp_api"],
         "lib_debug": [":hrz_cpp_api_dbg"],
     },
+    extension = "tar.gz",
 )

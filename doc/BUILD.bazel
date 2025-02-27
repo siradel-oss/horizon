@@ -1,5 +1,5 @@
-load("@rules_python//python:defs.bzl", "py_binary")
 load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 py_binary(
     name = "run_mkdocs",
@@ -14,18 +14,20 @@ DATA = ["mkdocs.yml"] + glob(["src/**/*"])
 
 run_binary(
     name = "build",
-    tool = ":run_mkdocs",
     srcs = DATA,
     args = [
         "build",
         "--clean",
-        "--config-file", "$(location mkdocs.yml)",
+        "--config-file",
+        "$(location mkdocs.yml)",
         # Go up doc/ because paths are relative to mkdocs.yml
-        "--site-dir", "../$@",
+        "--site-dir",
+        "../$@",
     ],
     out_dirs = [
         "site",
     ],
+    tool = ":run_mkdocs",
     visibility = ["//visibility:public"],
 )
 
@@ -34,7 +36,7 @@ py_binary(
     srcs = [
         "serve.py",
     ],
-    main = "serve.py",
     data = DATA,
+    main = "serve.py",
     python_version = "PY3",
 )

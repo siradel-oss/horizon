@@ -35,20 +35,22 @@ class ManifestEntry:
         raise NotImplementedError("ManifestEntry.build_package() is not implemented")
 
 class HttpArchiveManifestEntry(ManifestEntry):
-    def __init__(self, name: str, url: str, prefix: str = None, patches: list[str] = None, build_file: str = None):
-        super().__init__(name)
+    def __init__(self, name: str, url: str, prefix: str = None, patches: list[str] = None, build_file: str = None, platforms: list[Platform] = None):
+        super().__init__(name, platforms)
         self.url = url
         self.prefix = prefix
         self.patches = patches
         self.build_file = build_file
 
     def from_dict(data: any) -> "HttpArchiveManifestEntry":
+        platforms = parse_platforms(data) if "platforms" in data else None
         return HttpArchiveManifestEntry(
             name = data["name"],
             url = data["url"],
             prefix = data.get("strip_prefix", None),
             patches = data.get("patches", None),
             build_file = data.get("build_file", None),
+            platforms = platforms,
         )
 
     def build_package(self, dst_dir_url: str, platform: Platform) -> tuple[str, lockfile.LockEntry]:
@@ -57,7 +59,8 @@ class HttpArchiveManifestEntry(ManifestEntry):
         tmp = create_temp_file()
         dgst = download_file_with_digest(self.url, tmp.path)
         new_url = upload_file_with_digest(tmp.path, dgst, dst_dir_url, filename)
-        return self.name, lockfile.HttpArchiveLockEntry([self.url, new_url], dgst, prefix=self.prefix, patches=self.patches, build_file=self.build_file)
+        package_name = f"{self.name}_{PLATFORM_NAME[platform]}" if self.is_platform_dependent() else self.name
+        return package_name, lockfile.HttpArchiveLockEntry([self.url, new_url], dgst, prefix=self.prefix, patches=self.patches, build_file=self.build_file)
 
 class GithubManifestEntry(HttpArchiveManifestEntry):
     def __init__(self, name: str, repo: str, ref: str, prefix: str = None, patches: list[str] = None, build_file: str = None):
@@ -83,6 +86,30 @@ class GithubManifestEntry(HttpArchiveManifestEntry):
             patches = data.get("patches", None),
             build_file = data.get("build_file", None),
         )
+
+class HttpFileManifestEntry(ManifestEntry):
+    def __init__(self, name: str, url: str, executable: bool, platforms: list[Platform]):
+        super().__init__(name, platforms)
+        self.url = url
+        self.executable = executable
+
+    def from_dict(data: any) -> "HttpFileManifestEntry":
+        platforms = parse_platforms(data) if "platforms" in data else None
+        return HttpFileManifestEntry(
+            name = data["name"],
+            url = data["url"],
+            executable = data.get("executable", False),
+            platforms = platforms,
+        )
+
+    def build_package(self, dst_dir_url: str, platform: Platform) -> tuple[str, lockfile.LockEntry]:
+        filename = Path(urllib.parse.urlparse(self.url).path).name
+        print(f"Mirror file {self.url}")
+        tmp = create_temp_file()
+        dgst = download_file_with_digest(self.url, tmp.path)
+        new_url = upload_file_with_digest(tmp.path, dgst, dst_dir_url, filename)
+        package_name = f"{self.name}_{PLATFORM_NAME[platform]}" if self.is_platform_dependent() else self.name
+        return package_name, lockfile.HttpFileLockEntry([self.url, new_url], dgst, executable=self.executable)
 
 class ExternalManifestEntry(ManifestEntry):
     def __init__(self, name: str, script: str, version: str, platforms: list[Platform]):
@@ -167,6 +194,8 @@ def parse(data: any) -> Manifest:
             man.add(GithubManifestEntry.from_dict(entry))
         elif type == "external":
             man.add(ExternalManifestEntry.from_dict(entry))
+        elif type == "http_file":
+            man.add(HttpFileManifestEntry.from_dict(entry))
 
     return man
 

@@ -1,4 +1,7 @@
 exports_files(
-    glob(["*.txt", "*.ttf"]),
+    glob([
+        "*.txt",
+        "*.ttf",
+    ]),
     visibility = ["//visibility:public"],
 )

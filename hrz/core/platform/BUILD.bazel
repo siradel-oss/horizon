@@ -13,17 +13,17 @@ cc_library(
             "src/hrz_core_platform_windows_wgl.cpp",
         ],
         "//:windows_egl_gles": [
-            "src/hrz_core_platform_windows.cpp",
             "src/hrz_core_platform_native_egl.cpp",
+            "src/hrz_core_platform_windows.cpp",
         ],
         "//:linux_wsi_x11_gl": [
-            "src/hrz_core_platform_linux_x11.cpp",
             "src/hrz_core_platform_linux_glx.cpp",
+            "src/hrz_core_platform_linux_x11.cpp",
         ],
-        "//:linux_wsi_headless_egl" : [
+        "//:linux_wsi_headless_egl": [
             "src/hrz_core_platform_headless_egl.cpp",
         ],
-        "//:linux_wsi_x11_gles" : [
+        "//:linux_wsi_x11_gles": [
             "src/hrz_core_platform_linux_x11.cpp",
             "src/hrz_core_platform_native_egl.cpp",
         ],
@@ -33,16 +33,9 @@ cc_library(
     }),
     hdrs = [
         "include/hrz_core_platform.h",
+        "include/hrz_core_platform_detection.h",
         "include/hrz_core_platform_events.h",
         "include/hrz_core_platform_events_proto.h",
-        "include/hrz_core_platform_detection.h",
-    ],
-    includes = [
-        "include",
-    ],
-    deps = [
-        "//hrz/fnd:hrz_fnd",
-        "//hrz/common:hrz_common",
     ],
     implementation_deps = select({
         "//:os_web": [
@@ -55,15 +48,9 @@ cc_library(
         ],
         "//conditions:default": [],
     }),
-    local_defines = [
-        "HRZ_LOG_PREFIX=HrzPlatform",
-    ] + select({
-        "//:os_windows": [
-            "NOMINMAX",
-            "WIN32",
-        ],
-        "//conditions:default": [],
-    }),
+    includes = [
+        "include",
+    ],
     linkopts = select({
         "//:os_windows": [
             "User32.lib",
@@ -78,7 +65,20 @@ cc_library(
         ],
         "//conditions:default": [],
     }),
+    local_defines = [
+        "HRZ_LOG_PREFIX=HrzPlatform",
+    ] + select({
+        "//:os_windows": [
+            "NOMINMAX",
+            "WIN32",
+        ],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/common:hrz_common",
+        "//hrz/fnd:hrz_fnd",
+    ],
 )
 
 cc_binary(
@@ -86,10 +86,10 @@ cc_binary(
     srcs = [
         "tests/hrz_core_platform_detection_tests.cpp",
     ],
+    visibility = ["//visibility:public"],
     deps = [
+        ":hrz_core_platform",
         "//third_party:gtest",
         "//third_party:gtest_main",
-        ":hrz_core_platform",
     ],
-    visibility = ["//visibility:public"],
 )
