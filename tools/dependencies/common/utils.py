@@ -35,8 +35,8 @@ def create_temp_dir():
     path = tempfile.mkdtemp()
     return TempDir(path)
 
-def download_file(url, dst):
-    with requests.get(url, stream=True) as r:
+def download_file(url, dst, verify=True):
+    with requests.get(url, stream=True, verify=verify) as r:
         r.raise_for_status()
         with open(dst, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024 * 1024):

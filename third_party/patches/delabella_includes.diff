@@ -10,3 +10,9 @@ diff -u delabella/delabella.h delabella-patched/delabella.h
  template<typename T = double, typename I = int>
  struct IDelaBella2
  {
+diff -u delabella/delabella.cpp delabella-patched/delabella.cpp
+--- delabella.cpp
++++ delabella.cpp
+@@ -26,1 +26,2 @@
+ #include <string.h>
++#include <time.h>

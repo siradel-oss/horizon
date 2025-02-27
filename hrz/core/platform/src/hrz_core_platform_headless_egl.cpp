@@ -47,6 +47,11 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
 {
     assert(ctx);
 
+    if (!gladLoaderLoadEGL(nullptr) || !gladLoaderLoadEGL(ctx->display))
+    {
+        return hrz_proto::ViewerInitStatus::RENDERING_API_CONTEXT_CREATION_ERROR;
+    }
+
     EGLint config_id;
     if (eglQuerySurface(ctx->display, ctx->surface, EGL_CONFIG_ID, &config_id) != EGL_TRUE)
     {
@@ -60,6 +65,7 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
     {
         return hrz_proto::ViewerInitStatus::RENDERING_API_CONTEXT_CREATION_ERROR;
     }
+
     if (num_configs == 0)
     {
         return hrz_proto::ViewerInitStatus::RENDERING_API_CONTEXT_CREATION_ERROR;

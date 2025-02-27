@@ -19,7 +19,10 @@ cc_library(
         ".",
     ],
     local_defines = select({
-        "@//:os_native": ["__SSE4_1__"],
+        "@//:os_native": [
+            "__SSE4_1__",
+            "NOMINMAX",
+        ],
         "//conditions:default": [],
     }),
 )

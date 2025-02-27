@@ -15,12 +15,16 @@ if len(sys.argv) < 4:
     sys.exit(1)
 
 install_dir = Path(sys.argv[3])
-version = sys.argv[1]
+version = sys.argv[1].split("/")[0]
 
 MODULE_URL = f"https://raw.githubusercontent.com/bazelbuild/bazel-central-registry/refs/heads/main/modules/curl/{version}"
 
 if platform.system().lower() != sys.argv[2]:
     raise RuntimeError("Invalid platform")
+
+print("Downloading cacert.pem")
+CACERT_URL = "https://curl.se/ca/cacert.pem"
+download_file(CACERT_URL, install_dir / "cacert.pem", verify=False)
 
 print("Downloading curl bzlmod manifest")
 SOURCE_URL = MODULE_URL + "/source.json"
@@ -102,25 +106,30 @@ patch_file.path.write_bytes(patch.encode())
 if not run_command(["git", "apply", patch_file.path], directory=source_dir):
     raise RuntimeError(f"Failed to apply zlib patch")
 
-lib_ext = ".a"
-lib_prefix = "lib"
+build_args = []
+lib_ext = ""
+lib_prefix = ""
 if platform.system() == "Windows":
     lib_ext = ".lib"
     lib_prefix = ""
+else:
+    lib_ext = ".a"
+    lib_prefix = "lib"
+    build_args = ["--force_pic"]
 
 for cfg in ["opt", "dbg"]:
     lib_dir = install_dir / "lib" / cfg
     lib_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Building boringssl, {cfg}")
-    if not run_command(["bazel", "--batch", "build", "@boringssl//:crypto", "-c", cfg], directory=source_dir):
+    if not run_command(["bazel", "--batch", "build", "@boringssl//:crypto", "-c", cfg] + build_args, directory=source_dir):
         raise RuntimeError("Failed to build curl")
 
-    if not run_command(["bazel", "--batch", "build", "@boringssl//:ssl", "-c", cfg], directory=source_dir):
+    if not run_command(["bazel", "--batch", "build", "@boringssl//:ssl", "-c", cfg] + build_args, directory=source_dir):
         raise RuntimeError("Failed to build curl")
 
     print(f"Building curl, {cfg}")
-    if not run_command(["bazel", "--batch", "build", "//:curl", "-c", cfg], directory=source_dir):
+    if not run_command(["bazel", "--batch", "build", "//:curl", "-c", cfg] + build_args, directory=source_dir):
         raise RuntimeError("Failed to build curl")
 
     shutil.copy(source_dir / f"bazel-bin/{lib_prefix}curl{lib_ext}", lib_dir)
@@ -134,9 +143,5 @@ dst_include_dir.mkdir(parents=True, exist_ok=True)
 src_include_dir = source_dir / "include/curl"
 for f in src_include_dir.glob("*.h"):
     shutil.copy(f, dst_include_dir)
-
-print("Downloading cacert.pem")
-CACERT_URL = "https://curl.se/ca/cacert.pem"
-download_file(CACERT_URL, install_dir / "cacert.pem")
 
 print("Cleanup")

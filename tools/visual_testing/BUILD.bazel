@@ -9,7 +9,7 @@ cc_binary(
     linkopts = select({
         "//:os_linux": [
             "-pthread",
-            "-lz",
+            "-Wl,-rpath,'$$ORIGIN'",
         ],
         "//conditions:default": [],
     }) + select({
@@ -40,7 +40,7 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party/stb_image",
+        "//third_party/stb_image:stb_image_default_malloc",
         "//third_party/stb_image_write",
     ],
 )

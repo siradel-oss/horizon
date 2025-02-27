@@ -88,16 +88,16 @@
   },
   "curl_boringssl_linux": {
     "build_file": "//third_party/curl_boringssl:curl_boringssl_linux.BUILD.bazel",
-    "label": "//third_party/curl_boringssl:prebuilt_linux.OC44LjAuYmNyLjE=.tar.gz",
-    "mirror_digest": "ffa521cb845df9511d30b470a352f8b5d54d531f4db777627e8364acbe6b3713",
-    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/ffa521cb_curl_boringssl-linux-8.8.0.bcr.1.tar.gz",
+    "label": "//third_party/curl_boringssl:prebuilt_linux.OC44LjAuYmNyLjEvaHJ6LjE=.tar.gz",
+    "mirror_digest": "69e412434817f98d3fe9e94d0b1ad9c49b921d2746285d8b8578ad1acc1a1d09",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/69e41243_curl_boringssl-linux-8.8.0.bcr.1/hrz.1.tar.gz",
     "type": "local_archive"
   },
   "curl_boringssl_windows": {
     "build_file": "//third_party/curl_boringssl:curl_boringssl_windows.BUILD.bazel",
-    "label": "//third_party/curl_boringssl:prebuilt_windows.OC44LjAuYmNyLjE=.tar.gz",
-    "mirror_digest": "5adab8b999524a5a8196302e98e81ad13be79ffdc887a59649194d7025ce04cc",
-    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/5adab8b9_curl_boringssl-windows-8.8.0.bcr.1.tar.gz",
+    "label": "//third_party/curl_boringssl:prebuilt_windows.OC44LjAuYmNyLjEvaHJ6LjE=.tar.gz",
+    "mirror_digest": "0f67418d0a56a0d84a9c36b822bcef355848b48a6c6d82e785821a47223d5c7f",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/0f67418d_curl_boringssl-windows-8.8.0.bcr.1/hrz.1.tar.gz",
     "type": "local_archive"
   },
   "dear_imgui": {
@@ -126,23 +126,23 @@
   },
   "draco_linux": {
     "build_file": "//third_party/draco:draco_linux.BUILD.bazel",
-    "label": "//third_party/draco:prebuilt_linux.MS41Ljc=.tar.gz",
-    "mirror_digest": "550d0f550ffb007e121d74fc21766ee83531d207be00f0f81048be27a5d53520",
-    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/550d0f55_draco-linux-1.5.7.tar.gz",
+    "label": "//third_party/draco:prebuilt_linux.MS41LjcvaHJ6LjE=.tar.gz",
+    "mirror_digest": "b5f90f49f5aa8a0ba146591e3f024cb5301dee0603c9385f470683b21956d442",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/b5f90f49_draco-linux-1.5.7/hrz.1.tar.gz",
     "type": "local_archive"
   },
   "draco_wasm": {
     "build_file": "//third_party/draco:draco_wasm.BUILD.bazel",
-    "label": "//third_party/draco:prebuilt_wasm.MS41Ljc=.tar.gz",
-    "mirror_digest": "439a33744bb314c05eee09908ab872474fdf383ababf254e6f0f776014138615",
-    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/439a3374_draco-wasm-1.5.7.tar.gz",
+    "label": "//third_party/draco:prebuilt_wasm.MS41LjcvaHJ6LjE=.tar.gz",
+    "mirror_digest": "25cadf45924ca5da70763c75755f7995a5916707a9a14e4806ecedc40b135318",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/25cadf45_draco-wasm-1.5.7/hrz.1.tar.gz",
     "type": "local_archive"
   },
   "draco_windows": {
     "build_file": "//third_party/draco:draco_windows.BUILD.bazel",
-    "label": "//third_party/draco:prebuilt_windows.MS41Ljc=.tar.gz",
-    "mirror_digest": "449d23d80752210fa700e614a53dc007908130784f89f4295326b41f1b658bd9",
-    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/449d23d8_draco-windows-1.5.7.tar.gz",
+    "label": "//third_party/draco:prebuilt_windows.MS41LjcvaHJ6LjE=.tar.gz",
+    "mirror_digest": "9ef839ec995762d93b75fc6f532bd7270bfe5585fd5e4ff2e159c7216b49c1d4",
+    "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/9ef839ec_draco-windows-1.5.7/hrz.1.tar.gz",
     "type": "local_archive"
   },
   "earcut": {

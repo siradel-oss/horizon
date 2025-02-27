@@ -3233,7 +3233,7 @@ class MapboxServiceImpl : public hrz_proto::IMapboxService
 
 } // namespace
 
-extern "C" unsigned int hrz_init(
+unsigned int hrz_core_init(
     void* wsi_instance,
     void* wsi_window,
     const char* args_data,
@@ -3353,7 +3353,7 @@ extern "C" unsigned int hrz_init(
     return (unsigned int)hrz_proto::ViewerInitStatus::INIT_SUCCESS;
 }
 
-extern "C" uint32_t hrz_frame(void)
+uint32_t hrz_core_frame(void)
 {
     HRZ_SCOPED_SAMPLE_ROOT("hrz frame");
     hrz::set_frame_time();
@@ -3364,7 +3364,7 @@ extern "C" uint32_t hrz_frame(void)
     return should_continue;
 }
 
-extern "C" void hrz_cleanup(void)
+void hrz_core_cleanup(void)
 {
     core.reset(nullptr);
     hrz::profiling::destroy_thread_profiler(g_profiler);

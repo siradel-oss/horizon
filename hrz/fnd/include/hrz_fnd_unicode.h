@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <stdint.h>
 #include <string_view>
 
 namespace hrz::unicode

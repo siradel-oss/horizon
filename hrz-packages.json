@@ -49,14 +49,14 @@
         },
         {
             "name": "draco",
-            "version": "1.5.7",
+            "version": "1.5.7/hrz.1",
             "type": "external",
             "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu", "wasm32-unknown-emscripten"],
             "script": "third_party/draco/build.py"
         },
         {
             "name": "curl_boringssl",
-            "version": "8.8.0.bcr.1",
+            "version": "8.8.0.bcr.1/hrz.1",
             "type": "external",
             "platforms": ["x86_64-pc-windows-msvc", "x86_64-pc-linux-gnu"],
             "script": "third_party/curl_boringssl/build.py"

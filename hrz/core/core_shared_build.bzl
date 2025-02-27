@@ -132,16 +132,35 @@ def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:privat
         includes = kwargs.get("includes", []),
     )
 
-def _cc_shared_linux(name, **kwargs):
+def _cc_shared_linux(name, srcs, visibility, hdrs = [], linkopts = [], **kwargs):
+    native.cc_binary(
+        name = name + ".so",
+        srcs = srcs + hdrs,
+        linkstatic = True,
+        linkshared = True,
+        linkopts = linkopts + [
+            "-Wl,--exclude-libs,ALL",
+        ],
+        visibility = visibility,
+        **kwargs
+    )
+
+    native.cc_import(
+        name = name + "_lib_linux",
+        shared_library = ":" + name + ".so",
+    )
+
     native.cc_library(
         name = name + "_linux",
-        linkstatic = False,
-        **kwargs
+        hdrs = hdrs,
+        visibility = visibility,
+        deps = [":" + name + "_lib_linux"],
+        includes = kwargs.get("includes", []),
     )
 
 def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = False, js_libs = [], alwayslink = True, visibility = ["//visibility:private"], **kwargs):
     _cc_shared_windows(name = name, srcs = srcs, hdrs = hdrs, visibility = visibility, **kwargs)
-    _cc_shared_linux(name = name, srcs = srcs, hdrs = hdrs, alwayslink = alwayslink, visibility = visibility, **kwargs)
+    _cc_shared_linux(name = name, srcs = srcs, hdrs = hdrs, visibility = visibility, **kwargs)
 
     _em_cc_binary(
         name = name,
@@ -177,7 +196,7 @@ def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = F
         name = name + "_shared_lib",
         actual = select({
             "//:os_windows": name + ".dll",
-            "//:os_linux": name + "_linux",
+            "//:os_linux": name + ".so",
             "//:os_web": name + "_wasm",
         }),
         visibility = visibility,

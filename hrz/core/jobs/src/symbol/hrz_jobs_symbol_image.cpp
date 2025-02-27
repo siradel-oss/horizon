@@ -139,7 +139,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
 
     if (instance_count == 0)
     {
-        return {{}};
+        return {{hrz::vt::BakedSymbols::ElementInstances{}}};
     }
 
     // Sort such that all instances that share the same geometry index are consecutive.

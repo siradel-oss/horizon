@@ -103,6 +103,7 @@ def _cmakelists_aspect_impl(target, ctx):
     target_name = _bazel_label_to_cmake_target_name(target)
 
     srcs = _sources(ctx)
+    is_cpp = _is_cpp_target(srcs)
 
     files = []
     uses_generated_files = False
@@ -120,6 +121,7 @@ def _cmakelists_aspect_impl(target, ctx):
                 header_only = False
 
     cmake_commands = []
+    shared_library = False
 
     if ctx.rule.kind == "cc_binary":
         shared_library = hasattr(ctx.rule.attr, "linkshared") and ctx.rule.attr.linkshared
@@ -136,7 +138,7 @@ def _cmakelists_aspect_impl(target, ctx):
             ),
         )
 
-        if _is_cpp_target(srcs):
+        if is_cpp:
             cmake_commands.append(
                 struct(
                     command = "set_target_properties",
@@ -271,7 +273,7 @@ def _cmakelists_aspect_impl(target, ctx):
         for dep in ctx.rule.attr.deps:
             deps.append(_bazel_label_to_cmake_target_name(dep))
 
-        prps = ["INTERFACE" if header_only else "PUBLIC"]
+        prps = ["INTERFACE" if header_only else "PRIVATE" if shared_library else "PUBLIC"]
 
         cmake_commands.append(
             struct(
@@ -320,7 +322,7 @@ def _cmakelists_aspect_impl(target, ctx):
         )
 
     if hasattr(ctx.rule.attr, "defines") and ctx.rule.attr.defines:
-        prps = ["INTERFACE" if header_only else "PUBLIC"]
+        prps = ["INTERFACE" if header_only else "PRIVATE" if shared_library else "PUBLIC"]
 
         defines = []
         for define in ctx.rule.attr.defines:
@@ -351,13 +353,23 @@ def _cmakelists_aspect_impl(target, ctx):
             ),
         )
 
+    compile_opts = ctx.fragments.cpp.copts
+    if is_cpp:
+        compile_opts += ctx.fragments.cpp.cxxopts
+
     if hasattr(ctx.rule.attr, "copts") and ctx.rule.attr.copts:
+        compile_opts += ctx.rule.attr.copts
+
+    if is_cpp and hasattr(ctx.rule.attr, "cxxopts") and ctx.rule.attr.cxxopts:
+        compile_opts += ctx.rule.attr.cxxopts
+
+    if len(compile_opts) > 0:
         prps = ["INTERFACE" if header_only else "PRIVATE"]
 
         compile_definitions = []
         compile_options = []
 
-        for copt in ctx.rule.attr.copts:
+        for copt in compile_opts:
             if copt.startswith("-D"):
                 compile_definitions.append(_remove_define_quotes_and_escape(copt[2:]))
             else:
@@ -383,19 +395,39 @@ def _cmakelists_aspect_impl(target, ctx):
                 ),
             )
 
+    linkopts = ctx.fragments.cpp.linkopts
     if hasattr(ctx.rule.attr, "linkopts") and ctx.rule.attr.linkopts:
-        prps = ["INTERFACE" if header_only else "PUBLIC"]
+        linkopts += ctx.rule.attr.linkopts
 
-        linkopts = []
-        for linkopt in ctx.rule.attr.linkopts:
-            linkopts.append(linkopt)
+    if len(linkopts) > 0:
+        prps = ["INTERFACE" if header_only else "PRIVATE" if shared_library else "PUBLIC"]
+
+        libs = []
+        opts = []
+
+        for opt in linkopts:
+            if opt.startswith("-l"):
+                libs.append(opt[2:])
+            elif opt.endswith(".lib"):
+                libs.append(opt)
+            else:
+                opts.append(opt)
+
+        cmake_commands.append(
+            struct(
+                command = "target_link_options",
+                name = target_name,
+                prps = depset(prps),
+                srcs = depset(opts),
+            ),
+        )
 
         cmake_commands.append(
             struct(
                 command = "target_link_libraries",
                 name = target_name,
                 prps = depset(prps),
-                srcs = depset(linkopts),
+                srcs = depset(libs),
             ),
         )
 

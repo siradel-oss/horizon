@@ -6,7 +6,7 @@ cc_binary(
     linkopts = select({
         "//:os_linux": [
             "-pthread",
-            "-lz",
+            "-Wl,-rpath,'$$ORIGIN'",
         ],
         "//conditions:default": [],
     }) + select({

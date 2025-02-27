@@ -75,7 +75,7 @@ cc_binary(
         "//third_party:portable_file_dialogs",
         "//third_party:rapidjson",
         "//third_party:sokol",
-        "//third_party/stb_image",
+        "//third_party/stb_image:stb_image_default_malloc",
         "//tools/monitoring_client/resources",
     ],
 )

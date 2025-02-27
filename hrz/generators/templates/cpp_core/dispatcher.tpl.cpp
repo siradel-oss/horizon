@@ -23,7 +23,7 @@ namespace hrz
 
 static google::protobuf::Arena arena;
 
-extern "C" void hrz_rpc(
+void hrz_core_rpc(
     uint32_t        service,
     uint32_t        method,
     const char*     data_in,
@@ -74,7 +74,7 @@ extern "C" void hrz_rpc(
     arena.Reset();
 }
 
-extern "C" void hrz_free_rpc(char* data)
+void hrz_core_free_rpc(char* data)
 {
     if (data)
     {

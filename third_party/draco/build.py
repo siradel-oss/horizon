@@ -14,7 +14,7 @@ if len(sys.argv) < 4:
     sys.exit(1)
 
 install_dir = Path(sys.argv[3])
-version = sys.argv[1]
+version = sys.argv[1].split("/")[0]
 target_platform = sys.argv[2]
 
 ARCHIVE_URL = f"https://github.com/google/draco/archive/refs/tags/{version}.tar.gz"
@@ -55,6 +55,8 @@ if target_platform == "wasm":
 
     if platform.system() == "Windows":
         extra_config_args += ["-G", "Ninja"]
+else:
+    extra_config_args.append("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
 
 def copy_file(from_path: Path, to_path: Path):
     if not shutil.copy(from_path, to_path):

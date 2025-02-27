@@ -36,21 +36,6 @@ userdata::Userdata _userdata;
 int _server_port = 8500;
 bool _save_userdata = true;
 
-void* stbi_malloc(size_t size)
-{
-    return malloc(size);
-}
-
-void* stbi_realloc(void* ptr, size_t new_size)
-{
-    return realloc(ptr, new_size);
-}
-
-void stbi_free(void* ptr)
-{
-    free(ptr);
-}
-
 void init(void)
 {
     std::locale::global(std::locale("en_US.UTF-8"));

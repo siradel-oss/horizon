@@ -3,6 +3,7 @@
 
 build:windows --cxxopt=/std:c++17
 build:windows --copt=/utf-8
+build:windows --copt=/bigobj
 build:windows --per_file_copt=.*\.(cc|cpp)$@/D_CRT_USE_BUILTIN_OFFSETOF
 
 build:windows_clang --action_env="BAZEL_LLVM=C:\\Program Files\\LLVM\\"
@@ -14,6 +15,9 @@ build:windows_clang --cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
 build:windows_clang --host_cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
 
 build:linux --cxxopt=-std=c++17
+build:linux --copt=-fvisibility=hidden
+build:linux --linkopt=-fvisibility=hidden
+build:linux --copt=-fPIC
 
 build:wasm_common --per_file_copt=.*\.(cc|cpp)$@-std=c++17
 build:wasm_common --features=-wasm_warnings_as_errors

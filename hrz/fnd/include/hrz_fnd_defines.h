@@ -22,6 +22,8 @@
 #    else
 #        define HRZ_API __declspec(dllimport)
 #    endif
+#elif HRZ_LINUX
+#    define HRZ_API __attribute__((visibility("default")))
 #else
 #    define HRZ_API
 #endif

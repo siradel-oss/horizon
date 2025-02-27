@@ -8,7 +8,6 @@
 extern "C"
 {
 #endif
-
     unsigned int HRZ_API hrz_init(
         void* wsi_instance,
         void* wsi_window,

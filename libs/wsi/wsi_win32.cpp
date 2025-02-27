@@ -14,21 +14,6 @@
 #    define HRZ_VERSION_STR2(X) HRZ_VERSION_STR3(X)
 #    define HRZ_VERSION_STR HRZ_VERSION_STR2(HRZ_VERSION)
 
-void* stbi_malloc(size_t size)
-{
-    return malloc(size);
-}
-
-void* stbi_realloc(void* ptr, size_t new_size)
-{
-    return realloc(ptr, new_size);
-}
-
-void stbi_free(void* ptr)
-{
-    free(ptr);
-}
-
 namespace
 {
 const char* class_name = "Horizon window";

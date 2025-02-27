@@ -34,9 +34,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//hrz/branding:icons",
-        "//hrz/core:hrz_core",
         "//hrz/fnd:hrz_fnd",
-        "//third_party/stb_image",
+        "//third_party/stb_image:stb_image_default_malloc",
     ] + select({
         "//:use_egl": [
             "//third_party/glad:egl_15",
