@@ -61,9 +61,15 @@ structured_files_copy(
 )
 
 copy_file(
-    name = "hrz_core_npm_third_party_licenses",
+    name = "third_party_licenses",
     src = "//third_party:LICENSE-THIRD-PARTY.txt",
-    out = "licenses/LICENSE-THIRD-PARTY.txt",
+    out = "dist-root/LICENSE-THIRD-PARTY.txt",
+)
+
+copy_file(
+    name = "license",
+    src = "//:LICENSE",
+    out = "dist-root/LICENSE",
 )
 
 package_json(
@@ -77,12 +83,14 @@ package_json(
 npm_package(
     name = "npm_pkg",
     srcs = [
-        ":hrz_core_npm_third_party_licenses",
         ":js_artifacts_copy",
+        ":license",
         ":package_json",
+        ":third_party_licenses",
         ":ts_lib",
     ],
     include_srcs_patterns = [
+        "**/LICENSE",
         "**/*.txt",
         "**/*.wasm",
         "**/*.json",

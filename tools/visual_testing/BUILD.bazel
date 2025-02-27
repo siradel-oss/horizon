@@ -54,6 +54,7 @@ pkg_tar_aggregate(
             "//hrz/core:hrz_core_shared_lib",
             "//tools/scene_dump:migrate_dump",
             "//third_party:LICENSE-THIRD-PARTY.txt",
+            "//:LICENSE",
             "README.md",
         ],
     },

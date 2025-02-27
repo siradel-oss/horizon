@@ -6,7 +6,7 @@ load("//:version.bzl", "HRZ_VERSION")
 # npm considers them to be different one to another.
 PACKAGE_JSON_HRZ_VERSION = "HRZ_VERSION(" + HRZ_VERSION + ")"
 
-PACKAGE_JSON_HRZ_LICENSE = "Copyright (c) 2018 Siradel"
+PACKAGE_JSON_HRZ_LICENSE = "Copyright (c) 2018 Siradel @Todo(1198)"
 
 def _package_json_impl(ctx):
     # Append date to package.json version for snapshot builds.

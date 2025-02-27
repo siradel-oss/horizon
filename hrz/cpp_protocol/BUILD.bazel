@@ -82,6 +82,9 @@ pkg_tar_aggregate(
         ],
         "lib_release": [":hrz_cpp_protocol"],
         "lib_debug": [":hrz_cpp_protocol_dbg"],
+        "": [
+            "//:LICENSE",
+        ],
     },
     extension = "tar.gz",
 )

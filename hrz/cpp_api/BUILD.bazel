@@ -55,6 +55,9 @@ pkg_tar_aggregate(
         "include": [":generated_hdrs"],
         "lib_release": [":hrz_cpp_api"],
         "lib_debug": [":hrz_cpp_api_dbg"],
+        "": [
+            "//:LICENSE",
+        ],
     },
     extension = "tar.gz",
 )

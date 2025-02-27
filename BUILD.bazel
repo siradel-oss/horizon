@@ -11,6 +11,8 @@ load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_da
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files(["LICENSE"])
+
 npm_link_all_packages(name = "node_modules")
 
 npm_link_package(

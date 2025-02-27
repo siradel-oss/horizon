@@ -436,7 +436,10 @@ pkg_tar_aggregate(
         "lib_debug": [":hrz_core_import_lib_dbg"],
         "bin_release": [":hrz_core_shared_lib"],
         "bin_debug": [":hrz_core_shared_lib_dbg"],
-        "licenses": ["//third_party:LICENSE-THIRD-PARTY.txt"],
+        "": [
+            "//:LICENSE",
+            "//third_party:LICENSE-THIRD-PARTY.txt",
+        ],
     },
     extension = "tar.gz",
 )
