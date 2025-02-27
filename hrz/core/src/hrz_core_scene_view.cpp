@@ -2352,6 +2352,10 @@ struct SceneView
     hrz_proto::SceneViewIndex view_index;
     my::Renderer::ViewId main_view_id;
 
+    // We cache these info so that retrieving them is very quick.
+    // It's cheap to compute every frame anyway.
+    hrz_proto::ViewScaleAltitude view_scale_altitude;
+
     bool highlight_settings_updated = false;
     bool viewport_settings_updated = false;
     bool terrain_settings_updated = false;
@@ -2807,6 +2811,25 @@ RenderRequest work(
 
     camera_height::update(view->camera_height_system, cam_view_info);
 
+    double latest_camera_height =
+        camera_height::get_last_downloaded_height(view->camera_height_system);
+    double pixel_size_at_perceived_distance =
+        render::compute_logical_pixel_size_in_meters(cam_view_info)
+        * frame_uniforms_data.camera_height_to_perceived_distance * latest_camera_height;
+
+    view->view_scale_altitude.set_altitude_absolute(camera_pos_geo.alt);
+    view->view_scale_altitude.set_altitude_relative_to_terrain(latest_camera_height);
+    if (!std::isnan(pixel_size_at_perceived_distance)
+        && pixel_size_at_perceived_distance > std::numeric_limits<double>::epsilon())
+    {
+        view->view_scale_altitude.set_one_meter_size_in_pixels(
+            1.0 / pixel_size_at_perceived_distance);
+    }
+    else
+    {
+        view->view_scale_altitude.set_one_meter_size_in_pixels(0.0);
+    }
+
     render_request |= sky::update(view->sky, cam_view_info, model);
 
     lm::dvec3 ecef_sun_direction = sky::get_ecef_sun_direction(view->sky);
@@ -2932,6 +2955,11 @@ RenderRequest work(
 double get_camera_height(SceneView* view)
 {
     return camera_height::get_last_downloaded_height(view->camera_height_system);
+}
+
+const hrz_proto::ViewScaleAltitude& get_view_scale_altitude(SceneView* view)
+{
+    return view->view_scale_altitude;
 }
 
 void set_highlight_enabled(SceneView* view, bool enabled)

@@ -1889,7 +1889,7 @@ SKY_STATIC2Ä
 SelectMode.HrzProtocol.ModeSelection.HrzProtocol.VoidN
 GetShapeInformation.HrzProtocol.LayerHandle.HrzProtocol.ShapeInformationB
 DeleteSelectedControlPoint.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3
-Ö3
+ó5
 hrz_camera.protoHrzProtocolhrz_types.protohrz_scene_model.proto"‹
 PositionalViewpoint;
 position (2.HrzProtocol.GeographicPositionRposition7
@@ -1996,7 +1996,11 @@ scene_view (2.HrzProtocol.SceneViewIndexR	sceneView1
 camera_index (2.HrzProtocol.CameraIndexRcameraIndex
 
 reset_tilt (R	resetTiltP
-animation_options (2#.HrzProtocol.CameraAnimationOptionsRanimationOptionsJ*<
+animation_options (2#.HrzProtocol.CameraAnimationOptionsRanimationOptionsJ"¹
+ViewScaleAltitude6
+one_meter_size_in_pixels (RoneMeterSizeInPixels+
+altitude_absolute (RaltitudeAbsolute?
+altitude_relative_to_terrain (RaltitudeRelativeToTerrain*<
 EasingFunctions
 EASE_IN 
 EASE_OUT
@@ -2015,7 +2019,8 @@ $CameraContinuousMovementInterruption)
 CameraMovementType
 CAMERA_TRANSLATION 
 CAMERA_ROTATION
-CAMERA_ZOOM2ß	
+CAMERA_ZOOM2À
+
 CameraServiceM
 SetFixedTarget(.HrzProtocol.FixedTargetCameraTransition.HrzProtocol.VoidQ
 SetFixedPosition*.HrzProtocol.FixedPositionCameraTransition.HrzProtocol.VoidA
@@ -2024,7 +2029,8 @@ $CameraContinuousMovementInterruption)
 GetCameraAngularViewpoint!.HrzProtocol.CameraIndexReference.HrzProtocol.AngularViewpointc
 GetCameraPositionalViewpoint!.HrzProtocol.CameraIndexReference .HrzProtocol.PositionalViewpointU
 GetSceneViewViewBox.HrzProtocol.SceneViewReference.HrzProtocol.GeographicBounds^
-GetSceneViewViewPolygon.HrzProtocol.SceneViewReference".HrzProtocol.GeographicViewPolygonT
+GetSceneViewViewPolygon.HrzProtocol.SceneViewReference".HrzProtocol.GeographicViewPolygon_
+GetSceneViewScaleAndAltitude.HrzProtocol.SceneViewReference.HrzProtocol.ViewScaleAltitudeT
 GetCameraViewBox!.HrzProtocol.CameraIndexReference.HrzProtocol.GeographicBounds]
 GetCameraViewPolygon!.HrzProtocol.CameraIndexReference".HrzProtocol.GeographicViewPolygonf
 LatLonAltToPixelCoords*.HrzProtocol.GeographicPositionInSceneView .HrzProtocol.PixelPositionResult6

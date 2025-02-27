@@ -133,6 +133,7 @@ PlanetGeometry* get_planet_geometry(SceneView*);
 VectorFlatOverlaySystem* get_vector_flat_overlay(SceneView*);
 PickingSystem* get_picking_system(SceneView*);
 double get_camera_height(SceneView*);
+const hrz_proto::ViewScaleAltitude& get_view_scale_altitude(SceneView*);
 
 } // namespace scene
 } // namespace hrz

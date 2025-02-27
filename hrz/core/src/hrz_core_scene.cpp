@@ -334,6 +334,22 @@ struct Scene : public hrz_proto::ICameraService
         }
     }
 
+    void get_scene_view_scale_and_altitude(
+        const ::hrz_proto::SceneViewReference& input,
+        ::hrz_proto::ViewScaleAltitude& output) override
+    {
+        auto it = views.find(input.scene_view());
+        if (it != views.end())
+        {
+            output = scene::get_view_scale_altitude(it->second.view);
+        }
+        else
+        {
+            LOG_INVALID_SCENE_VIEW_INDEX(input.scene_view());
+            output = hrz_proto::ViewScaleAltitude{};
+        }
+    }
+
     std::optional<ViewportInfo> compute_viewport_info_for_all_views(hrz_proto::CameraIndex camera)
     {
         std::optional<ViewportInfo> viewport_info;

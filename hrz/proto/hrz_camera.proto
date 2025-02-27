@@ -267,6 +267,20 @@ message ResetNorthParams {
     CameraAnimationOptions animation_options = 3;
 }
 
+message ViewScaleAltitude {
+    // Approximate size of one meter in logical pixels.
+    // This takes into account the terrain, and guesses that the
+    // focal point of the view is more or less at its center.
+    // Zero if currently unknown.
+    double one_meter_size_in_pixels     = 1;
+
+    // Altitude in meters of the camera relative to the WGS84 ellipsoid.
+    double altitude_absolute            = 2;
+
+    // Altitude in meters of the camera relative to the terrain.
+    double altitude_relative_to_terrain = 3;
+}
+
 // @service_id=0x3b1436d9
 service CameraService {
     // Moves the camera to a new position and set its mode to fixed target.
@@ -312,6 +326,13 @@ service CameraService {
     // @method_id=0x110e3a15
     rpc GetSceneViewViewPolygon(SceneViewReference)
         returns (GeographicViewPolygon);
+
+    // Retrieves the latest scale and altitude of a specific scene view.
+    // See the returned messages's documentation for more information.
+    //
+    // @method_id=0x36db9edd
+    rpc GetSceneViewScaleAndAltitude(SceneViewReference)
+        returns (ViewScaleAltitude);
 
     // Retrieves view box on the WGS84 ellipsoid for a given camera.
     // The viewports of all associated scene views are merged.

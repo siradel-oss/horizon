@@ -2903,6 +2903,14 @@ public:
         hrz::scene::get_camera_service(core->scene())->get_camera_view_polygon(input, output);
     }
 
+    void get_scene_view_scale_and_altitude(
+        const ::hrz_proto::SceneViewReference& input,
+        ::hrz_proto::ViewScaleAltitude& output) override
+    {
+        hrz::scene::get_camera_service(core->scene())
+            ->get_scene_view_scale_and_altitude(input, output);
+    }
+
     void lat_lon_alt_to_pixel_coords(
         const ::hrz_proto::GeographicPositionInSceneView& input,
         ::hrz_proto::PixelPositionResult& output) override
