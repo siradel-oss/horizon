@@ -1,52 +1,46 @@
 syntax = "proto3";
 package HrzProtocol;
-option cc_enable_arenas = true;
-option optimize_for = LITE_RUNTIME;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
 
 import "hrz_types.proto";
 import "hrz_layers.proto";
 
-message ShapeSelection {
-    LayerHandle             layer               = 1;
-}
+message ShapeSelection { LayerHandle layer = 1; }
 
-message ControlPointIndex {
-    uint32                  value               = 1;
-}
+message ControlPointIndex { uint32 value = 1; }
 
-message ControlPointSelection {
-    ControlPointIndex       control_point_index = 1;
-}
+message ControlPointSelection { ControlPointIndex control_point_index = 1; }
 
 enum ShapeEditorMode {
-    SELECTION_MODE                              = 0;
-    APPEND_MODE                                 = 1;
+    SELECTION_MODE = 0;
+    APPEND_MODE    = 1;
 }
 
-message ModeSelection {
-    ShapeEditorMode         mode                = 1;
-}
+message ModeSelection { ShapeEditorMode mode = 1; }
 
 message ShapeInformation {
     // Length for polyline, perimeter for polygon.
     // Note: Lengths do not take the DTM into account.
-    double                  length              = 1;
-    repeated double         polyline_lengths    = 2;
+    double          length           = 1;
+    repeated double polyline_lengths = 2;
     // Number of segments of each polyline.
-    repeated uint32         segment_counts      = 3;
-    repeated double         segment_lengths     = 4;
+    repeated uint32 segment_counts   = 3;
+    repeated double segment_lengths  = 4;
     // Bearing in radians, 0 points to the North, +pi/2 points to the East.
-    repeated double         segment_bearings    = 5;
+    repeated double segment_bearings = 5;
     // Angle in radians between two successive segments of the same polyline.
     // 0 is no rotation, +pi/2 is a right angle left turn.
-    repeated double         segment_angles      = 6;
+    repeated double segment_angles   = 6;
     // Total area of the (multi-)polygon.
     // Note: Areas do not take the DTM into account.
-    // Note: The value is meaningless if the polygon is degenerate or crosses the antimeridian.
-    double                  area                = 7;
+    // Note: The value is meaningless if the polygon is degenerate or crosses
+    // the antimeridian.
+    double          area             = 7;
     // First polygon is outer, the following ones are inners.
-    // The list can be empty if the polygon is degenerate or crosses the antimeridian.
-    repeated double         polygon_areas       = 8;
+    // The list can be empty if the polygon is degenerate or crosses the
+    // antimeridian.
+    repeated double polygon_areas    = 8;
 }
 
 // @service_id=0x8b075bd4
@@ -86,14 +80,16 @@ service ShapeEditorService {
     // @method_id=0xab715e8a
     rpc GetCurrentMode(Void) returns (ModeSelection);
 
-    // Each selection mode can be bound to a key. See `HrzProtocol.KeyInteractionBindings`.
+    // Each selection mode can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
     // @method_id=0xd659c2cc
     rpc SelectMode(ModeSelection) returns (Void);
 
     // @method_id=0xd7096384
     rpc GetShapeInformation(LayerHandle) returns (ShapeInformation);
 
-    // This action can be bound to a key. See `HrzProtocol.KeyInteractionBindings`.
+    // This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
     // @method_id=0x5ad43e37
     rpc DeleteSelectedControlPoint(Void) returns (Void);
 }

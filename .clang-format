@@ -143,3 +143,8 @@ StatementMacros:
 TabWidth:        4
 UseTab:          Never
 ...
+---
+Language: Proto
+IndentWidth: 4
+AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
+AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments

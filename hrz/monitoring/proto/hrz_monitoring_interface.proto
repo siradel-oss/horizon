@@ -1,82 +1,87 @@
 // hrz_monitoring_interface.proto
 // --------------------
-// Defines the protocol messages used by Horizon to communicate its monitoring data.
+// Defines the protocol messages used by Horizon to communicate its monitoring
+// data.
 
 syntax = "proto3";
 package HrzMonitoringProtocol;
-option cc_enable_arenas = true;
-option optimize_for = LITE_RUNTIME;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
 
 // Used for unit tests only. Don't use otherwise.
 message SampleTest {
-    string              name                    = 1;
-    uint64              entry                   = 2;
-    uint64              exit                    = 3;
-    uint32              recursion_max           = 4;
-    uint32              aggregation_count       = 5;
-    uint64              aggregation_time_total  = 6;
+    string          name                   = 1;
+    uint64          entry                  = 2;
+    uint64          exit                   = 3;
+    uint32          recursion_max          = 4;
+    uint32          aggregation_count      = 5;
+    uint64          aggregation_time_total = 6;
 
-    repeated Sample     children                = 7;
+    repeated Sample children               = 7;
 }
 
-// Sent to the Horizon client by the monitoring application when it refuses the connection.
-// The connection is immediatly shut down once the message is sent.
-message ServerDenial {
-    string  message = 1;
-}
+// Sent to the Horizon client by the monitoring application when it refuses the
+// connection. The connection is immediatly shut down once the message is sent.
+message ServerDenial { string message = 1; }
 
-// The first message to send by the Horizon client to the monitoring application once the connection has been established.
+// The first message to send by the Horizon client to the monitoring application
+// once the connection has been established.
 message ClientHello {
     // Horizon version used by the client.
-    string  client_version  = 1;
+    string client_version = 1;
     // String identifying a unique Horizon instance.
-    // It is used by the monitoring application to check if its saved data should be cleared when a new connection is established.
-    string  session_id      = 2;
+    // It is used by the monitoring application to check if its saved data
+    // should be cleared when a new connection is established.
+    string session_id     = 2;
 }
 
 // Represents the timed execution of a specific segment of code.
 message Sample {
     // The name used to identify the code segment.
-    string              name                    = 1;
+    string          name                   = 1;
     // The timestamp (in us) of when the thread entered the code segment.
-    int64               entry                   = 2;
+    int64           entry                  = 2;
     // The timestamp (in us) of when the thread exited the code segment.
-    int64               exit                    = 3;
+    int64           exit                   = 3;
 
     // The amount of times the segment of code was called from itself.
     // Used to merge multiple messages into one.
-    uint32              recursion_max           = 4;
+    uint32          recursion_max          = 4;
 
     // The amount of times the segment of code was consecutively called.
     // Used to merge multiple messages into one.
-    uint32              aggregation_count       = 5;
-    // Represents the total amount of time spent executing the code segment when `aggregation_count` is more than one.
-    uint64              aggregation_time_total  = 6;
+    uint32          aggregation_count      = 5;
+    // Represents the total amount of time spent executing the code segment when
+    // `aggregation_count` is more than one.
+    uint64          aggregation_time_total = 6;
 
     // The name of the source file where the code segment is located.
-    string              source_file             = 8;
+    string          source_file            = 8;
     // The line where the code segment is located in its source file.
-    uint32              source_line             = 9;
+    uint32          source_line            = 9;
 
     // The identifier of the thread that entered the code segment.
-    uint32              thread_id               = 10;
+    uint32          thread_id              = 10;
 
     // The samples that were called during the execution of the code segment.
-    repeated Sample     children                = 7;
+    repeated Sample children               = 7;
 }
 
-// Represents some metadata used to describe a metric with more information than just its name.
+// Represents some metadata used to describe a metric with more information than
+// just its name.
 message MetricLabel {
     // The name of the label, which should describe the meaning of the label.
     // It could be something like "URL".
-    string  name     = 1;
+    string name  = 1;
     // The value of the label, which should help identify the metric.
     // It could be something like "redacted.localhost".
-    string  value    = 2;
+    string value = 2;
 }
 
 // Represents a histogram with a fixed set of buckets.
-// Each bucket holds an amount of elements (represented on the vertical axis) contained between two value: the previous bucket's value (or -∞ if there is no previous bucket) and that bucket's value.
+// Each bucket holds an amount of elements (represented on the vertical axis)
+// contained between two value: the previous bucket's value (or -∞ if there is
+// no previous bucket) and that bucket's value.
 // -- Example:
 //
 //   ^
@@ -94,180 +99,186 @@ message MetricLabel {
 message Histogram {
     // The number of elements contained in each bucket.
     // Should hold the same amount of fields as `bucket_values`.
-    repeated int64          bucket_counts   = 1;
+    repeated int64  bucket_counts = 1;
 
     // The upper bound of each bucket.
-    // The upper bound of the last bucket should represent the positive infinity.
-    // Should hold the same amount of values as `bucket_counts`.
-    repeated double         bucket_values   = 2;
+    // The upper bound of the last bucket should represent the positive
+    // infinity. Should hold the same amount of values as `bucket_counts`.
+    repeated double bucket_values = 2;
 
     // The total amount of elements contained in the buckets.
-    int64                   total_count     = 3;
+    int64           total_count   = 3;
 }
 
 // Represents the attribution of a new value to a metric.
 message MetricUpdate {
     // The timestamp (in us) when the metric was assigned its value.
-    int64                   timestamp       = 1;
+    int64 timestamp = 1;
 
     // The value that was assigned to the metric.
     oneof kind {
-        double              gauge           = 101;
-        int64               counter         = 102;
-        Histogram           histogram       = 103;
+        double    gauge     = 101;
+        int64     counter   = 102;
+        Histogram histogram = 103;
     }
 }
 
 // Represents the evolution of a (set of) value(s) over time.
 message Metric {
     // The name of the metric.
-    string                  name            = 1;
+    string                name    = 1;
     // A set of labels used to help describe the meaning of the metric.
     // The monitoring application will keep a maximum of 4 labels per metric.
-    repeated MetricLabel    labels          = 2;
+    repeated MetricLabel  labels  = 2;
 
-    // A set of numeric values and timestamps representing the evolution of the metric over time.
-    repeated MetricUpdate   updates         = 3;
+    // A set of numeric values and timestamps representing the evolution of the
+    // metric over time.
+    repeated MetricUpdate updates = 3;
 }
 
 // Represents a set of resources that live in GPU memory.
-// Resources are batched into buckets to help reduce the amount of data associated to a GPU snapshot.
+// Resources are batched into buckets to help reduce the amount of data
+// associated to a GPU snapshot.
 message GpuResourcesBucket {
-    // Represents additional information to help describe the contents of the resource.
+    // Represents additional information to help describe the contents of the
+    // resource.
     message Metadata {
         // The name which describes the meaning of that piece of metadata.
-        string  name     = 1;
+        string name  = 1;
         // The value of the piece of metadata.
-        string  value    = 2;
+        string value = 2;
     }
 
     // Represents an individual resource in GPU memory.
     message Resource {
         // The size (in bytes) occupied by the resource.
-        uint64                  size        = 1;
+        uint64            size     = 1;
         // A set of metadata to describe the contents of the resource.
-        repeated Metadata       metadata    = 2;
+        repeated Metadata metadata = 2;
     }
 
     // The layer responsible for the creation of the resources.
-    string              layer           = 1;
+    string            layer     = 1;
     // The Horizon system responsible for the creation of resources.
-    string              system          = 2;
+    string            system    = 2;
     // The type of resource contained in this bucket.
-    string              type            = 3;
+    string            type      = 3;
 
     // The individual resources contained in this bucket.
-    repeated Resource   resources       = 4;
+    repeated Resource resources = 4;
 }
 
 // Represents the state of GPU memory used by Horizon at a set point in time.
 message GpuResourcesSnapshot {
     // The timestamp (in us) when the snapshot was taken.
-    int64                          timestamp    = 1;
+    int64                       timestamp = 1;
     // The set of GPU resources used by Horizon at the time of the snapshot.
-    repeated GpuResourcesBucket    buckets      = 2;
+    repeated GpuResourcesBucket buckets   = 2;
 }
 
 // Represents a contents of a frame of Horizon execution.
 message Frame {
     // The timestamp (in us) when Horizon started working for this frame.
-    int64   timestamp_begin         = 1;
+    int64 timestamp_begin        = 1;
     // The timestamp (in us) when Horizon finished working for this frame.
     // Note that the work on profiling isn't included in that time.
-    int64   timestamp_end           = 2;
+    int64 timestamp_end          = 2;
 
     // Indicates whether a visual render occurred during this frame.
-    bool    visual_render           = 3;
+    bool  visual_render          = 3;
     // Indicates whether a picking render occurred during this frame.
-    bool    picking_render          = 4;
+    bool  picking_render         = 4;
     // Indicates whether a planet feedback render occurred during this frame.
-    bool    planet_feedback_render  = 5;
+    bool  planet_feedback_render = 5;
 }
 
 // Represents a segment of CPU memory shared across threads in Horizon.
 message Blob {
-    // Represents additional information to help describe the contents of the blob.
+    // Represents additional information to help describe the contents of the
+    // blob.
     message Metadata {
         // The name which describes the meaning of that piece of metadata.
-        string  name     = 1;
+        string name  = 1;
         // The value of the piece of metadata.
-        string  value    = 2;
+        string value = 2;
     }
 
     // The numeric value identifying the blob in Horizon.
-    uint64                  id          = 1;
+    uint64            id        = 1;
     // The size of the memory segment.
-    uint64                  size        = 2;
+    uint64            size      = 2;
     // A set of metadata to describe the contents of the memory.
-    repeated Metadata       metadata    = 3;
+    repeated Metadata metadata  = 3;
     // The offset (in bytes) of the segment in the allocator's memory.
-    // When the `malloc_passthrough` field of the `BlobSnapshot` message is set to true, that field should be ignored.
-    uint64                  offset      = 4;
+    // When the `malloc_passthrough` field of the `BlobSnapshot` message is set
+    // to true, that field should be ignored.
+    uint64            offset    = 4;
     // The amount of references to that blob in Horizon.
-    uint64                  use_count   = 5;
+    uint64            use_count = 5;
     // The name of the system responsible for the blob's allocation.
-    // This is a reference to one of the entries of the `systems` repeated field in `BlobSnapshot`.
-    uint64                  system      = 6;
+    // This is a reference to one of the entries of the `systems` repeated field
+    // in `BlobSnapshot`.
+    uint64            system    = 6;
     // The name of the layer responsible for the blob's allocation.
-    // This is a reference to one of the entries of the `layers` repeated field in `BlobSnapshot`.
-    uint64                  layer       = 7;
+    // This is a reference to one of the entries of the `layers` repeated field
+    // in `BlobSnapshot`.
+    uint64            layer     = 7;
 }
 
-// Represents the state of Horizon's blob allocator memory at a set point in time.
-// The blob allocator is used to allocate segments of memory that can be shared across threads.
+// Represents the state of Horizon's blob allocator memory at a set point in
+// time. The blob allocator is used to allocate segments of memory that can be
+// shared across threads.
 message BlobSnapshot {
     // The timestamp (in us) when the snapshot was taken.
-    int64           timestamp               = 1;
+    int64           timestamp             = 1;
     // Matches the `use_system_allocator_for_blobs` Horizon viewer option.
     // https://redacted.localhost/deployments/doc/master/HrzProtocol.ViewerOptions.html
-    bool            malloc_passthrough      = 2;
+    bool            malloc_passthrough    = 2;
     // The total size (in bytes) available for use by the blob allocator.
-    uint64          capacity                = 3;
+    uint64          capacity              = 3;
 
     // The set of blobs that have been allocated and that contain data.
-    repeated Blob   allocated_blobs         = 4;
-    // The set of blobs that have been allocated and that don't contain any data.
-    repeated Blob   allocated_empty_blobs   = 5;
-    // The set of blobs thar have been unallocated and that will eventually be reused.
-    repeated Blob   unallocated_blobs       = 6;
+    repeated Blob   allocated_blobs       = 4;
+    // The set of blobs that have been allocated and that don't contain any
+    // data.
+    repeated Blob   allocated_empty_blobs = 5;
+    // The set of blobs thar have been unallocated and that will eventually be
+    // reused.
+    repeated Blob   unallocated_blobs     = 6;
     // The systems referenced by the blobs in this snapshot.
-    repeated string systems                 = 7;
+    repeated string systems               = 7;
     // The layers referenced by the blobs in this snapshot.
-    repeated string layers                  = 8;
+    repeated string layers                = 8;
 }
 
 // Represents a thread profiled by Horizon.
 message Thread {
     // The name given to the thread by Horizon.
-    string  name    = 1;
+    string name = 1;
     // The unique identifier of the thread.
-    uint32  id      = 2;
+    uint32 id   = 2;
 }
 
 // Holds all of the threads profiled by Horizon.
-message Threads {
-    repeated Thread threads = 1;
-}
+message Threads { repeated Thread threads = 1; }
 
 // Represents a single monitoring message.
 // This is the message type that is output by Horizon.
 message MonitoringMessage {
     oneof kind {
-        Sample                  sample              = 1;
-        ClientHello             client_hello        = 2;
-        Metric                  metric              = 3;
-        GpuResourcesSnapshot    gpu_resources       = 4;
-        Frame                   frame               = 5;
-        BlobSnapshot            blobs               = 7;
-        Threads                 threads             = 8;
+        Sample               sample        = 1;
+        ClientHello          client_hello  = 2;
+        Metric               metric        = 3;
+        GpuResourcesSnapshot gpu_resources = 4;
+        Frame                frame         = 5;
+        BlobSnapshot         blobs         = 7;
+        Threads              threads       = 8;
 
-        ServerDenial            server_denial       = 6;
+        ServerDenial         server_denial = 6;
 
-        SampleTest              sample_test         = 100;
+        SampleTest           sample_test   = 100;
     }
 }
 
 // Represents a batch of monitoring messages.
-message MonitoringMessages {
-    repeated MonitoringMessage messages = 1;
-}
+message MonitoringMessages { repeated MonitoringMessage messages = 1; }

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package HrzProtocol;
-option cc_enable_arenas = true;
-option optimize_for = LITE_RUNTIME;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
 
 import "hrz_types.proto";
 import "hrz_picking.proto";
@@ -10,81 +10,76 @@ import "hrz_layers.proto";
 import "hrz_input.proto";
 
 enum ViewerInitStatus {
-    INIT_SUCCESS                            = 0;
-    FRAMEBUFFER_CREATION_ERROR              = 1;
-    RENDERING_API_MISSING_FEATURE_ERROR     = 2;
-    RENDERING_API_CONTEXT_CREATION_ERROR    = 3;
-    GRAPHICS_BACKEND_INIT_ERROR             = 4;
-    ALREADY_INITIALIZED                     = 5;
-    BROWSER_FEATURES_NO_SHARED_MEMORY       = 6;
-    BROWSER_FEATURES_NO_ATOMICS             = 7;
-    NOT_ENOUGH_MEMORY                       = 8;
+    INIT_SUCCESS                         = 0;
+    FRAMEBUFFER_CREATION_ERROR           = 1;
+    RENDERING_API_MISSING_FEATURE_ERROR  = 2;
+    RENDERING_API_CONTEXT_CREATION_ERROR = 3;
+    GRAPHICS_BACKEND_INIT_ERROR          = 4;
+    ALREADY_INITIALIZED                  = 5;
+    BROWSER_FEATURES_NO_SHARED_MEMORY    = 6;
+    BROWSER_FEATURES_NO_ATOMICS          = 7;
+    NOT_ENOUGH_MEMORY                    = 8;
 }
 
 message FeatureReference {
-    LayerHandle                     layer               = 1;
-    FeatureId                       feature_id          = 2;
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 2;
 }
 
-message FeatureReferences {
-    repeated FeatureReference       features            = 1;
-}
+message FeatureReferences { repeated FeatureReference features = 1; }
 
-enum KeyAction
-{
+enum KeyAction {
     // Resets bearing and tilt. See `CameraService::ResetNorth`.
-    RESET_NORTH                             = 0;
+    RESET_NORTH                  = 0;
     // See `ViewerService::ToggleDevUi`
-    TOGGLE_DEV_UI                           = 1;
+    TOGGLE_DEV_UI                = 1;
     // See `ViewerService::MoveDevUiToCursor`
-    MOVE_DEV_UI                             = 2;
+    MOVE_DEV_UI                  = 2;
     // See `ViewerService::DeselectAll`
-    DESELECT_ALL                            = 3;
+    DESELECT_ALL                 = 3;
     // See `ShapeEditorService::SelectMode`.
-    EDITOR_APPEND                           = 4;
+    EDITOR_APPEND                = 4;
     // See `ShapeEditorService::SelectMode`.
-    EDITOR_SELECT                           = 5;
+    EDITOR_SELECT                = 5;
     // See `ShapeEditorService::DeleteSelectedControlPoint`.
-    EDITOR_DELETE_SELECTED_POINT            = 6;
+    EDITOR_DELETE_SELECTED_POINT = 6;
     // If not connected, tries to connect to the monitoring app.
     // Otherwise, disconnects from it.
     // Also enables / disables profiling and metrics collection.
-    TOGGLE_MONITORING                       = 7;
-    // Defines the modifier key used to activate alternative modes to some user interactions. For
-    // instance it is used to activate the fixed position rotation mode, when rotating the camera
-    // with the middle mouse button.
-    // It can also change left-click + drag from panning to rotating.
-    MOD_KEY                                 = 8;
+    TOGGLE_MONITORING            = 7;
+    // Defines the modifier key used to activate alternative modes to some user
+    // interactions. For instance it is used to activate the fixed position
+    // rotation mode, when rotating the camera with the middle mouse button. It
+    // can also change left-click + drag from panning to rotating.
+    MOD_KEY                      = 8;
 }
 
-message KeyBinding
-{
-    Key                             key                 = 1;
-    KeyAction                       action              = 2;
+message KeyBinding {
+    Key       key    = 1;
+    KeyAction action = 2;
 }
 
-message KeyInteractionBindings
-{
-    // A key can only be tied to a single action. Any key duplication results in the last binding set for that key being used.
-    repeated KeyBinding             bindings            = 1;
+message KeyInteractionBindings {
+    // A key can only be tied to a single action. Any key duplication results in
+    // the last binding set for that key being used.
+    repeated KeyBinding bindings = 1;
 }
 
-enum GraphicsLevel
-{
+enum GraphicsLevel {
     // Lets the engine guess the best level for the current platform.
     // @label="Auto"
-    GraphicsLevelAuto        = 0;
+    GraphicsLevelAuto   = 0;
 
     // Best performance.
     // @label="Low"
-    GraphicsLevelLow         = 1;
+    GraphicsLevelLow    = 1;
 
     // @label="Medium"
-    GraphicsLevelMedium      = 2;
+    GraphicsLevelMedium = 2;
 
     // Best quality.
     // @label="High"
-    GraphicsLevelHigh        = 3;
+    GraphicsLevelHigh   = 3;
 };
 
 message ViewerOptions {
@@ -92,235 +87,230 @@ message ViewerOptions {
 
     // Maximum number of workers created.
     // Default: defined based on hardware capacities.
-    uint32                          worker_count        = 1;
+    uint32                    worker_count                    = 1;
 
     // Run actors on the main thread, this helps with debugging.
     // Default: false
-    bool                            run_actors_on_main_thread = 29;
+    bool                      run_actors_on_main_thread       = 29;
 
-    // Logging system verbosity. The higher the value the more messages will be filtered-out.
-    // Horizon has four severity levels. A value of 0 keeps all log messages while a maximum
-    // value of 3 only keeps error messages.
+    // Logging system verbosity. The higher the value the more messages will be
+    // filtered-out. Horizon has four severity levels. A value of 0 keeps all
+    // log messages while a maximum value of 3 only keeps error messages.
     // Default: 0
-    uint32                          log_filter_level    = 3;
+    uint32                    log_filter_level                = 3;
 
     // [DESKTOP ONLY] User-agent given to cURL.
     // Default: "Horizon/VERSION_NUMBER"
-    string                          user_agent          = 5;
+    string                    user_agent                      = 5;
 
     // Sets the graphics level for the application.
     // Default: Auto
-    GraphicsLevel                   graphics_level      = 17;
+    GraphicsLevel             graphics_level                  = 17;
 
     // Overrides the graphics settings dictated by the graphics level.
     // Default: no setting is overriden.
-    GraphicsSettingsOverrides       graphics_settings_overrides = 25;
+    GraphicsSettingsOverrides graphics_settings_overrides     = 25;
 
     // Redraw every frame explicitly, even when nothing has changed.
     // Default: false
-    bool                            force_render        = 7;
+    bool                      force_render                    = 7;
 
     // Redraw the flat overlays every frame, even when nothing has changed.
     // This also causes the scene to be drawn every frame, like `force_render`.
     // Default: false
-    bool                            force_flat_overlay_render   = 26;
+    bool                      force_flat_overlay_render       = 26;
 
     // Disables system events captured by the engine. When this is true, use the
-    // ViewerService.SendEvents method to send events to the engine. Otherwise nothing
-    // will be active.
-    // Default: false
-    bool                            disable_events_capture      = 8;
+    // ViewerService.SendEvents method to send events to the engine. Otherwise
+    // nothing will be active. Default: false
+    bool                      disable_events_capture          = 8;
 
     // For internal use only, please ignore.
     // Enables some basic interactions from the engine itself.
     // Default: false
-    bool                            internal_integration        = 9;
+    bool                      internal_integration            = 9;
 
     // Let the user specify keys that map to specific actions.
-    KeyInteractionBindings          key_bindings        = 10;
+    KeyInteractionBindings    key_bindings                    = 10;
 
     // Default tile cache size for raster providers, in number of tiles.
     // A typical value for desktop environments is 150.
-    // A typical value for web environments is 0, as the browser's cache is present.
-    // The value can be overridden for each provider individually, if desired.
-    // Default: 0
-    uint32                          raster_provider_tile_cache_size = 11;
+    // A typical value for web environments is 0, as the browser's cache is
+    // present. The value can be overridden for each provider individually, if
+    // desired. Default: 0
+    uint32                    raster_provider_tile_cache_size = 11;
 
     // How much memory is used by the internal blob allocator, in bytes.
     // If the system allocator is used for blobs, a value of 0 means
     // that no limit is explicitly set.
     // Default: 300 MiB
-    uint64                          blob_memory_pool_size = 12;
+    uint64                    blob_memory_pool_size           = 12;
 
     // [WEB ONLY] How much memory is allocated for the WASM VM at
     // maximum, in bytes. Up to 4 GiB, as WASM is a 32-bit architecture.
     // Default: 800 MiB
-    uint64                          max_wasm_memory_size = 13;
+    uint64                    max_wasm_memory_size            = 13;
 
-    // Pass all blob allocations and deallocations to the system memory allocator.
-    // Only set this option to true on systems with virtual memory, i.e. not
-    // on the web.
-    bool                            use_system_allocator_for_blobs = 14;
+    // Pass all blob allocations and deallocations to the system memory
+    // allocator. Only set this option to true on systems with virtual memory,
+    // i.e. not on the web.
+    bool                      use_system_allocator_for_blobs  = 14;
 
     // How much data can be uploaded to the GPU memory at maximum,
     // in bytes. A value of 0 means that no limit is explicitly set.
     // Default: 0
-    uint32                          max_video_memory_size = 22;
+    uint32                    max_video_memory_size           = 22;
 
     // [DESKTOP ONLY] Size in bytes of the HTTP cache.
     // Settings this value below 1MB disables caching.
     // This options only affects the native version as the web version uses the
     // browser's cache.
-    uint32                          native_http_cache_size = 18;
+    uint32                    native_http_cache_size          = 18;
 
-    // [DESKTOP ONLY] Value of the `Referer` header of HTTP requests made by the native version.
-    string                          native_http_referrer = 24;
+    // [DESKTOP ONLY] Value of the `Referer` header of HTTP requests made by the
+    // native version.
+    string                    native_http_referrer            = 24;
 
-    // Disables all systems related to the terrain, including imagery and DTM rasters, and editable
-    // shapes.
-    // Default: false
-    bool                            disable_terrain = 19;
+    // Disables all systems related to the terrain, including imagery and DTM
+    // rasters, and editable shapes. Default: false
+    bool                      disable_terrain                 = 19;
 
-    // Disables flat overlay representations, whether they are drawn over the terrain or 3D Tiles.
-    // Default: false
-    bool                            disable_flat_overlays = 28;
+    // Disables flat overlay representations, whether they are drawn over the
+    // terrain or 3D Tiles. Default: false
+    bool                      disable_flat_overlays           = 28;
 
     // Shows a loading screen while shaders are being created.
     // Default: false
-    bool                            show_loading_screen = 20;
+    bool                      show_loading_screen             = 20;
 
-    // Forces to compile and link all the shaders before the first frame. It results in longer
-    // loading times but has the benefit of avoiding stuttering due to shader compilation when using
-    // the engine afterwards.
-    // Enabling this on desktop may be a good idea. Yet, tests have shown heterogenous results in
-    // browsers. Chrome looks to be a good candidate for activating this option while Firefox on the
-    // other hand isn't.
-    // Default: false
-    bool                            force_shader_compilation = 21;
+    // Forces to compile and link all the shaders before the first frame. It
+    // results in longer loading times but has the benefit of avoiding
+    // stuttering due to shader compilation when using the engine afterwards.
+    // Enabling this on desktop may be a good idea. Yet, tests have shown
+    // heterogenous results in browsers. Chrome looks to be a good candidate for
+    // activating this option while Firefox on the other hand isn't. Default:
+    // false
+    bool                      force_shader_compilation        = 21;
 
     // Web only.
     // Ratio from physical device pixels to logical pixels.
-    // Web pages are build with an idealised pixel size, that is roughly constant
-    // from one device to another, in order to lessen the differences between
-    // devices and their screens.
-    // Traditionally, desktop screens have a pixel density of about 96 pixel per
-    // inch (2.54 cm), i.e. 96 DPI. (The actual logical pixel size varies from
-    // device to device, and is also affected by other parameters such as the page
-    // zoom level.) These screens have one actual, device pixel for each logical
-    // pixel.
-    // Some devices have better screen densities (high DPI values, with smaller
-    // pixels) and can fit more than one device (i.e. screen) pixel in one logical
-    // pixel.
+    // Web pages are build with an idealised pixel size, that is roughly
+    // constant from one device to another, in order to lessen the differences
+    // between devices and their screens. Traditionally, desktop screens have a
+    // pixel density of about 96 pixel per inch (2.54 cm), i.e. 96 DPI. (The
+    // actual logical pixel size varies from device to device, and is also
+    // affected by other parameters such as the page zoom level.) These screens
+    // have one actual, device pixel for each logical pixel. Some devices have
+    // better screen densities (high DPI values, with smaller pixels) and can
+    // fit more than one device (i.e. screen) pixel in one logical pixel.
     // However higher values of the ratio require drawing more pixels, which
     // can affect performance negatively. Hence this setting can be used to
-    // artificially lower the ratio and get some performance back on devices with
-    // high DPI but low-power GPUs, like tablets and mobile phones.
-    float                           device_pixel_ratio = 27;
+    // artificially lower the ratio and get some performance back on devices
+    // with high DPI but low-power GPUs, like tablets and mobile phones.
+    float                     device_pixel_ratio              = 27;
 }
 
 message GraphicsSettingsOverrides {
     // Whether the rendering of shadows can be enabled or not.
-    optional bool                   shadows_enabled = 1;
+    optional bool   shadows_enabled                          = 1;
 
     // The amount of textures used for the rendering of shadows.
-    optional uint32                 shadows_cascade_count = 2;
+    optional uint32 shadows_cascade_count                    = 2;
 
     // Whether the rendering of the atmosphere can be enabled or not.
-    optional bool                   atmosphere_enabled = 3;
+    optional bool   atmosphere_enabled                       = 3;
 
     // The size of the textures used for the rendering of flat overlays.
-    optional uint32                 flat_overlay_resolution = 4;
+    optional uint32 flat_overlay_resolution                  = 4;
 
     // The amount of textures used for the rendering of flat overlays.
-    optional uint32                 flat_overlay_cascade_count = 5;
+    optional uint32 flat_overlay_cascade_count               = 5;
 
     // Whether transparent UI elements are drawn with increased accuracy.
-    optional bool                   ui_elements_depth_peeling_enabled = 6;
+    optional bool   ui_elements_depth_peeling_enabled        = 6;
 
     // The amount of merge groups used for imagery rasters.
-    optional uint32                 imagery_merge_group_count = 7;
+    optional uint32 imagery_merge_group_count                = 7;
 
     // The size of the textures used for imagery raster atlases.
-    optional uint32                 raster_atlas_size = 8;
+    optional uint32 raster_atlas_size                        = 8;
 
     // Whether raster atlas textures can be compressed.
-    optional bool                   raster_atlas_texture_compression_enabled = 9;
+    optional bool   raster_atlas_texture_compression_enabled = 9;
 }
 
 // See [[GraphicsSettingsOverrides]] for information about the different fields.
 message GraphicsSettings {
-    bool                    shadows_enabled = 1;
-    uint32                  shadows_cascade_count = 2;
+    bool   shadows_enabled                          = 1;
+    uint32 shadows_cascade_count                    = 2;
 
-    bool                    atmosphere_enabled = 3;
+    bool   atmosphere_enabled                       = 3;
 
-    uint32                  flat_overlay_resolution = 4;
-    uint32                  flat_overlay_cascade_count = 5;
+    uint32 flat_overlay_resolution                  = 4;
+    uint32 flat_overlay_cascade_count               = 5;
 
-    bool                    ui_elements_depth_peeling_enabled = 6;
+    bool   ui_elements_depth_peeling_enabled        = 6;
 
-    uint32                  imagery_merge_group_count = 7;
+    uint32 imagery_merge_group_count                = 7;
 
-    uint32                  raster_atlas_size = 8;
-    bool                    raster_atlas_texture_compression_enabled = 9;
+    uint32 raster_atlas_size                        = 8;
+    bool   raster_atlas_texture_compression_enabled = 9;
 }
 
 message ViewerConfiguration {
-    // The memory settings used by the engine, inferred from the values passed in the viewer
-    // options. 0 indicates an unconstrained memory.
-    uint64                  blob_memory_pool_size = 1;
-    uint64                  max_video_memory_size = 2;
-    uint32                  max_wasm_memory_size = 3;
+    // The memory settings used by the engine, inferred from the values passed
+    // in the viewer options. 0 indicates an unconstrained memory.
+    uint64           blob_memory_pool_size = 1;
+    uint64           max_video_memory_size = 2;
+    uint32           max_wasm_memory_size  = 3;
 
-    // The `GraphicsLevel` that was specified in the viewer options, or computed by the engine
-    // if it was set to `Auto`.
-    GraphicsLevel           graphics_profile = 4;
+    // The `GraphicsLevel` that was specified in the viewer options, or computed
+    // by the engine if it was set to `Auto`.
+    GraphicsLevel    graphics_profile      = 4;
 
-    // The graphics settings used by the engine. They are the defaults used by the associated
-    // graphics profile, overriden by the values specified in the viewer options.
-    GraphicsSettings        graphics_settings = 5;
+    // The graphics settings used by the engine. They are the defaults used by
+    // the associated graphics profile, overriden by the values specified in the
+    // viewer options.
+    GraphicsSettings graphics_settings     = 5;
 }
 
 message PickRequest {
-    // Coordinates have their origin in the top-left corner. Y goes down. In logical pixels.
-    Vec2ui                  coords              = 1;
-    repeated LayerHandle    included_rasters    = 2;
+    // Coordinates have their origin in the top-left corner. Y goes down. In
+    // logical pixels.
+    Vec2ui               coords           = 1;
+    repeated LayerHandle included_rasters = 2;
 }
 
 message PickRequestResult {
-    bool                            has_a_ticket        = 1;
-    PickTicket                      ticket              = 2;
+    bool       has_a_ticket = 1;
+    PickTicket ticket       = 2;
 }
 
 message PickAreaRequestResult {
-    bool                            has_a_ticket        = 1;
-    PickAreaTicket                  ticket              = 2;
+    bool           has_a_ticket = 1;
+    PickAreaTicket ticket       = 2;
 }
 
 message RasterDataFetchRequest {
-    GeographicPosition              position            = 1;
-    repeated LayerHandle            raster_layers       = 2;
+    GeographicPosition   position      = 1;
+    repeated LayerHandle raster_layers = 2;
 }
 
-message RasterDataFetchTicket {
-    int64                           opaque              = 1;
-}
+message RasterDataFetchTicket { int64 opaque = 1; }
 
 message RasterDataFetchResult {
-    bool                            has_a_ticket        = 1;
-    RasterDataFetchTicket           ticket              = 2;
+    bool                  has_a_ticket = 1;
+    RasterDataFetchTicket ticket       = 2;
 }
 
 message MouseHoverConfiguration {
-    bool                            enable_highlight    = 1;
-    bool                            enable_info         = 2;
-    float                           highlight_rate_ms   = 3;
-    float                           info_rate_ms        = 4;
+    bool  enable_highlight  = 1;
+    bool  enable_info       = 2;
+    float highlight_rate_ms = 3;
+    float info_rate_ms      = 4;
 }
 
-message EventsStream {
-    repeated Event                  events              = 1;
-}
+message EventsStream { repeated Event events = 1; }
 
 // @service_id=0xf50c09c6
 service ViewerService {
@@ -356,8 +346,8 @@ service ViewerService {
     // @method_id=0xfa3d108c
     rpc PickScreenArea(Bboxi) returns (PickAreaRequestResult);
 
-    // Fetches data from the tiles of the given raster layers at the highest LOD level.
-    // The data will be returned via the message queue once loaded.
+    // Fetches data from the tiles of the given raster layers at the highest LOD
+    // level. The data will be returned via the message queue once loaded.
     //
     // @method_id=0xc7103b53
     rpc FetchRasterData(RasterDataFetchRequest) returns (RasterDataFetchResult);
@@ -376,14 +366,15 @@ service ViewerService {
     // @method_id=0x7d24b615
     rpc SelectFeatures(FeatureReferences) returns (UInt64Value);
 
-    // Deselects features from the scene. Returns the number of features now selected
-    // in the scene.
+    // Deselects features from the scene. Returns the number of features now
+    // selected in the scene.
     //
     // @method_id=0x4c8b12db
     rpc DeselectFeatures(FeatureReferences) returns (UInt64Value);
 
     // Deselects everything from the scene.
-    // This action can be bound to a key. See `HrzProtocol.KeyInteractionBindings`.
+    // This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
     //
     // @method_id=0x52ae4a5f
     rpc DeselectAllFeatures(Void) returns (Void);
@@ -393,10 +384,11 @@ service ViewerService {
     // @method_id=0xbd516a4e
     rpc IsWorking(Void) returns (BoolValue);
 
-    // Enables or disables the capture of system events related to user interactions.
-    // Events like the resizing or closure of the window will still be handled by the engine.
-    // If the events capture has been disabled in the viewer options at initialization,
-    // this method has no effect, and user interactions are permanently disabled.
+    // Enables or disables the capture of system events related to user
+    // interactions. Events like the resizing or closure of the window will
+    // still be handled by the engine. If the events capture has been disabled
+    // in the viewer options at initialization, this method has no effect, and
+    // user interactions are permanently disabled.
     //
     // @method_id=0xe361474e
     rpc SetUserInteractionsEnabled(BoolValue) returns (Void);
@@ -407,14 +399,16 @@ service ViewerService {
     // @method_id=0x03d05241
     rpc SendEvents(EventsStream) returns (Void);
 
-    // Toggles the developement UI. Returns `true` if the UI is now open, `false` otherwise.
-    // This action can be bound to a key. See `HrzProtocol.KeyInteractionBindings`.
+    // Toggles the developement UI. Returns `true` if the UI is now open,
+    // `false` otherwise. This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
     //
     // @method_id=0xa75bfe3c
     rpc ToggleDevUi(Void) returns (BoolValue);
 
     // Moves the developement UI to the cursor position.
-    // This action can be bound to a key. See `HrzProtocol.KeyInteractionBindings`.
+    // This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
     //
     // @method_id=0xb32b6286
     rpc MoveDevUiToCursor(Void) returns (Void);

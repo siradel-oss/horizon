@@ -1,50 +1,50 @@
 syntax = "proto3";
 package HrzProtocol;
-option cc_enable_arenas = true;
-option optimize_for = LITE_RUNTIME;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
 
 import "hrz_types.proto";
 
 message ClientFeatureGeometry {
-    VectorGeometryType              type                = 1;
-    repeated double                 coords              = 2;
-    repeated uint32                 linestring_sizes    = 3;
+    VectorGeometryType type             = 1;
+    repeated double    coords           = 2;
+    repeated uint32    linestring_sizes = 3;
 }
 
 message ClientFeature {
-    ClientFeatureGeometry           geometry            = 1;
-    repeated AttributeValue         attribute_values    = 2;
+    ClientFeatureGeometry   geometry         = 1;
+    repeated AttributeValue attribute_values = 2;
 }
 
 message VectorDataRequestResponse {
-    uint32                          ticket      = 1;
-    repeated ClientFeature          features    = 2;
-    string                          attribution = 3;
+    uint32                 ticket      = 1;
+    repeated ClientFeature features    = 2;
+    string                 attribution = 3;
 }
 
 //
 message VectorDataInvalidation {
-    uint32              vector_data_layer_id        = 1;
+    uint32 vector_data_layer_id     = 1;
 
     // The index of the data source in the vector data layer whose data
     // should be invalidated.
-    uint32              vector_data_source_index    = 2;
+    uint32 vector_data_source_index = 2;
 
-    oneof selection {
+    oneof  selection {
         // Invalidates the vector data associated to the corresponding
         // tile.
-        TileCoords      tile_coords                 = 101;
+        TileCoords tile_coords = 101;
         // Invalidates the vector data associated to these feature ids.
-        FeatureIds      feature_ids                 = 102;
+        FeatureIds feature_ids = 102;
         // Invalidates all the vector data defined in the data source.
-        Void            everything                  = 103;
+        Void       everything  = 103;
     }
 }
 
 message AssetRequestResponse {
-    uint32                  ticket          = 1;
-    bytes                   data            = 2;
-    string                  mime_type       = 3;
+    uint32 ticket    = 1;
+    bytes  data      = 2;
+    string mime_type = 3;
 }
 
 // @service_id=0x49a40811

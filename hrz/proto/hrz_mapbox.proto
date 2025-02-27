@@ -1,60 +1,60 @@
 syntax = "proto3";
 package HrzProtocol;
-option cc_enable_arenas = true;
-option optimize_for = LITE_RUNTIME;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
 
 import "hrz_layers.proto";
 import "hrz_types.proto";
 import "hrz_camera.proto";
 
 message MapboxTranslationParams {
-    string                  style_json                  = 1;
-    // The headers to use when requesting external resources such as the sprite index document.
-    HttpHeaderList          http_headers                = 2;
-    // If true, clears all layers of the current scene before translating the scene, and cancels
-    // any pending translation.
-    bool                    destroy_existing_layers     = 3;
+    string                 style_json                 = 1;
+    // The headers to use when requesting external resources such as the sprite
+    // index document.
+    HttpHeaderList         http_headers               = 2;
+    // If true, clears all layers of the current scene before translating the
+    // scene, and cancels any pending translation.
+    bool                   destroy_existing_layers    = 3;
     // The group in which translated raster layers will be placed.
-    RasterGroup             raster_group                = 11;
+    RasterGroup            raster_group               = 11;
     // The lowest raster slot that can be used for the translated layers.
     // All of the created layers will use consecutive slots.
     // Use to avoid collisions with any pre-existing layer.
-    uint32                  first_raster_slot           = 12;
-    // The minimum vector data layer ID that can be used for the translated layers.
-    // All of the created layers will use consecutive IDs.
+    uint32                 first_raster_slot          = 12;
+    // The minimum vector data layer ID that can be used for the translated
+    // layers. All of the created layers will use consecutive IDs. Use to avoid
+    // collisions with any pre-existing layer.
+    uint32                 first_vector_data_layer_id = 4;
+    // The minimum flat overlay z-index that can be used for the translated
+    // layers. All of the created flat overlays will use consecutive z-indices.
     // Use to avoid collisions with any pre-existing layer.
-    uint32                  first_vector_data_layer_id  = 4;
-    // The minimum flat overlay z-index that can be used for the translated layers.
-    // All of the created flat overlays will use consecutive z-indices.
-    // Use to avoid collisions with any pre-existing layer.
-    uint32                  first_flat_overlay_z_index  = 9;
+    uint32                 first_flat_overlay_z_index = 9;
     // The minimum symbol z-index that can be used for the translated layers.
     // All of the created symbols will use consecutive z-indices.
     // Use to avoid collisions with any pre-existing layer.
-    uint32                  first_symbol_z_index        = 10;
+    uint32                 first_symbol_z_index       = 10;
     // If true, the camera settings (such as its position) will not be changed.
-    bool                    ignore_camera_params        = 5;
+    bool                   ignore_camera_params       = 5;
     // If true, the ambient settings will not be changed.
-    bool                    ignore_ambient_params       = 7;
+    bool                   ignore_ambient_params      = 7;
     // If true, the terrain settings will not be changed.
-    bool                    ignore_terrain_params       = 8;
+    bool                   ignore_terrain_params      = 8;
     // The animation to use when going to the initial viewpoint.
-    CameraAnimationOptions  camera_animation            = 6;
+    CameraAnimationOptions camera_animation           = 6;
 }
 
-message MapboxTranslationTicket {
-    uint64                  opaque          = 1;
-}
+message MapboxTranslationTicket { uint64 opaque = 1; }
 
 enum MapboxTranslationStatus {
     // The layers have been created.
     MAPBOX_TRANSLATION_SUCCESS  = 0;
-    // Canceled the translation because `MapboxService.TranslateScene` has been called
-    // with `destroyExistingLayers` set to true.
+    // Canceled the translation because `MapboxService.TranslateScene` has been
+    // called with `destroyExistingLayers` set to true.
     MAPBOX_TRANSLATION_CANCELED = 1;
     // Failed to translate the given input.
     MAPBOX_TRANSLATION_FAILURE  = 2;
-    // Failed to download a required resource, such as the sprite index document.
+    // Failed to download a required resource, such as the sprite index
+    // document.
     MAPBOX_DOWNLOAD_FAILURE     = 3;
 }
 
@@ -66,25 +66,30 @@ message MapboxTranslationResult {
     uint32                  raster_slots_used           = 6;
     // How many IDs have been used when creating the new vector data layers.
     uint32                  vector_data_layer_ids_used  = 3;
-    // How many z-indices have been used when creating the new flat overlay representations.
+    // How many z-indices have been used when creating the new flat overlay
+    // representations.
     uint32                  flat_overlay_z_indices_used = 4;
-    // How many z-indices have been used when creating the new symbol representations.
+    // How many z-indices have been used when creating the new symbol
+    // representations.
     uint32                  symbol_z_indices_used       = 5;
 }
 
 // @service_id=0xfc9c5c03
 service MapboxService {
-    // Translates Mapbox layers into Horizon layers and adds them to the current scene.
+    // Translates Mapbox layers into Horizon layers and adds them to the current
+    // scene.
     //
-    // If there are resources that need to be downloaded (such as the sprite index JSON document),
-    // the scene will be modified once they have been. A message will be sent to the message queue
-    // once the operation has been completed, indicating whether it was a success or not.
+    // If there are resources that need to be downloaded (such as the sprite
+    // index JSON document), the scene will be modified once they have been. A
+    // message will be sent to the message queue once the operation has been
+    // completed, indicating whether it was a success or not.
     //
-    // Note that the translation process is a best-effort work. Therefore, the final result may have
-    // small differences with the same scene rendered in a Mapbox viewer. Furthermore, not all
-    // Mapbox features are supported. Check out the documentation for further information.
+    // Note that the translation process is a best-effort work. Therefore, the
+    // final result may have small differences with the same scene rendered in a
+    // Mapbox viewer. Furthermore, not all Mapbox features are supported. Check
+    // out the documentation for further information.
     //
     // @method_id=0xcc830913
-    rpc TranslateScene(MapboxTranslationParams) returns (MapboxTranslationTicket);
+    rpc TranslateScene(MapboxTranslationParams)
+        returns (MapboxTranslationTicket);
 }
-

@@ -16,7 +16,7 @@ def run_command(cmd, name):
     ret = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if ret.returncode != 0:
         print("ERROR: %s failed" % name)
-        print("Command:", " ".join(cmd))
+        print("Command:", " ".join([str(x) for x in cmd]))
         print("stdout:\n", ret.stdout.decode("utf-8"))
         print("stderr:\n", ret.stderr.decode("utf-8"))
         sys.exit(1)
@@ -75,7 +75,7 @@ if output != "false":
 
 all_extensions = ["txt", "bazel", "cpp", "h", "c", "cc", "hpp", "inl", "proto", "bzl", "py", "js", "json", "md", "Config", "tpl", "css", "ts", "html", "cs", "bat", "sh", "tpl", "frag", "vert", "glsl", "patch", "csv", "php", "yaml", "yml"]
 all_files_names = [".gitlab-ci.yml", "Dockerfile"]
-cpp_extensions = ["cpp", "h", "c", "cc", "hpp", "inl"]
+cpp_extensions = ["cpp", "h", "c", "cc", "hpp", "inl", "proto"]
 
 all_files = []
 cpp_files = []
