@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "baseUrl": "../../../bazel-bin/hrz/doc/common/node_modules",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "lib": ["ES2020", "DOM"],
+        "target": "ES2020"
+    }
+}
+

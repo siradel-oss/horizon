@@ -1,0 +1,9 @@
+{
+    "name": "@siradel/horizon-doc-common",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "dependencies": {
+        "@siradel/horizon-protocol": "workspace:*",
+        "@types/long": "^4.0.1"
+    }
+}

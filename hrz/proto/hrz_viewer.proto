@@ -217,7 +217,9 @@ message GraphicsSettingsOverrides {
     // The amount of textures used for the rendering of shadows.
     optional uint32 shadows_cascade_count                    = 2;
 
-    // Whether the rendering of the atmosphere can be enabled or not.
+    // Whether the rendering of the simulated atmosphere can be enabled or not.
+    // This controls the simulated sun, sky, and ambient lighting in the
+    // scene view ambient settings.
     optional bool   atmosphere_enabled                       = 3;
 
     // The size of the textures used for the rendering of flat overlays.

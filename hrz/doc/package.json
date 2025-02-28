@@ -1,0 +1,19 @@
+{
+    "dependencies": {
+        "@siradel/horizon-core": "workspace:*",
+        "@siradel/horizon-api": "workspace:*",
+        "@siradel/horizon-protocol": "workspace:*",
+        "@siradel/horizon-doc-common": "workspace:*",
+        "@siradel/horizon-monitoring-protocol": "workspace:*",
+        "vue": "2.6.12",
+        "fuse.js": "^7.0.0",
+        "lit": "^3.1.4",
+        "protobufjs": "6.11.2",
+        "alpinejs": "3.14.8"
+    },
+    "devDependencies": {
+        "sass": "1.27.0",
+        "webpack": "5.72.0",
+        "webpack-cli": "4.9.2"
+    }
+}

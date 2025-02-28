@@ -1,0 +1,51 @@
+import { HrzDemos } from "@siradel/horizon-doc-common";
+
+export interface Demo {
+    id: string;
+    def: HrzDemos.Definition;
+    component: any;
+}
+
+export let all: Demo[] = [];
+export let byId: { [id: string]: Demo } = {};
+
+function registerDemo(name: string, comp: any): Demo {
+    let demo: Demo = {
+        id: name,
+        def: HrzDemos.DEFINITIONS[name],
+        component: comp,
+    };
+
+    if (byId.hasOwnProperty(demo.id)) {
+        throw new Error(`Duplicate demo id: ${demo.id}`);
+    }
+    all.push(demo);
+    byId[demo.id] = demo;
+
+    return demo;
+}
+
+// The demo definitions must be defined in //hrz/doc/common/src/galleryDemos.ts
+// This is because they must be visible from the documentation for the demo cards
+// to be displayed correctly.
+
+import Minimap from "@/demo/Minimap.vue";
+registerDemo("minimap", Minimap);
+
+import HeatmapBusCoverage from "./demo/HeatmapBusCoverage.vue";
+registerDemo("heatmapBusCoverage", HeatmapBusCoverage);
+
+import HeatmapEarthquakes from "./demo/HeatmapEarthquakes.vue";
+registerDemo("heatmapEarthquakes", HeatmapEarthquakes);
+
+import LoadingIndicator from "./demo/LoadingIndicator.vue";
+registerDemo("loadingIndicator", LoadingIndicator);
+
+import MapScale from "./demo/MapScale.vue";
+registerDemo("mapScale", MapScale);
+
+import Mapbox from "./demo/Mapbox.vue";
+registerDemo("mapbox", Mapbox);
+
+import Ambiance from "./demo/Ambiance.vue";
+registerDemo("ambiance", Ambiance);

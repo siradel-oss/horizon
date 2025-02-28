@@ -1,0 +1,70 @@
+{
+  "version": 8,
+  "name": "Empty Style",
+  "sources": {
+    "basemap": {
+      "type": "vector",
+      "url": "pmtiles://assets/demo/hrz-basemap-z0-z6.pmtiles"
+    }
+  },
+  "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
+  "glyphs": "https://nothing.localhost/fonts/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "layout": {"visibility": "visible"},
+      "paint": {"background-color": "rgba(141, 186, 255, 1)"}
+    },
+    {
+      "id": "earth",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "earth",
+      "paint": {"fill-color": "rgba(255, 255, 255, 1)"}
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "basemap",
+      "source-layer": "water",
+      "layout": {"visibility": "visible"},
+      "paint": {"fill-color": "rgba(141, 186, 255, 1)", "fill-antialias": false}
+    },
+    {
+      "id": "boundaries-2",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "boundaries",
+      "filter": [">=", ["get", "pmap:min_admin_level"], 3],
+      "layout": {"visibility": "visible"},
+      "paint": {"line-color": "rgba(211, 211, 211, 1)", "line-width": 1}
+    },
+    {
+      "id": "boundaries-1",
+      "type": "line",
+      "source": "basemap",
+      "source-layer": "boundaries",
+      "filter": ["<=", ["get", "pmap:min_admin_level"], 2],
+      "paint": {"line-color": "rgba(175, 175, 175, 1)", "line-width": 2}
+    },
+    {
+      "id": "place_1",
+      "type": "symbol",
+      "source": "basemap",
+      "source-layer": "places",
+      "filter": ["==", ["get", "place"], "country"],
+      "layout": {
+        "text-field": ["to-string", ["get", "name:en"]],
+        "symbol-placement": "point",
+        "text-font": ["Noto Sans Regular"]
+      },
+      "paint": {
+        "text-color": "rgba(78, 78, 78, 1)",
+        "text-halo-color": "rgba(255, 255, 255, 1)",
+        "text-halo-width": 2
+      }
+    }
+  ],
+  "id": "otnsob8"
+}

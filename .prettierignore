@@ -7,6 +7,7 @@
 !*.ts
 !*.js
 !*.css
+!*.vue
 
 # Except templates and Webpack config files
 **/*.tpl.ts
@@ -17,6 +18,5 @@
 !*/
 
 # But not third-party files and Bazel directories
-hrz/doc/js_vendor/*.js
 bzl/
 bazel-*/

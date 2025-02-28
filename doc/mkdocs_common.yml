@@ -2,7 +2,7 @@
 # https://squidfunk.github.io/mkdocs-material/reference/
 
 site_name: Horizon Developer's Guide
-docs_dir: src
+docs_dir: src_filtered
 strict: true
 use_directory_urls: false
 theme:
@@ -22,6 +22,7 @@ nav:
   - development_environment.md
   - project_structure.md
   - development_workflow.md
+  - open_source.md
   - external_dependencies.md
   - Guidelines:
     - guidelines/development.md

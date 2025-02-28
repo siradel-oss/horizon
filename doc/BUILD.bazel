@@ -1,5 +1,8 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 py_binary(
     name = "run_mkdocs",
@@ -10,33 +13,65 @@ py_binary(
     python_version = "PY3",
 )
 
-DATA = ["mkdocs.yml"] + glob(["src/**/*"])
+hrz_genrule(
+    name = "make_opensource_mkdocs",
+    srcs = ["mkdocs_common.yml"],
+    outs = ["mkdocs_opensource.yml"],
+    cmd = "$(location //tools:redact) $< $@",
+    tools = ["//tools:redact"],
+)
+
+copy_file(
+    name = "copy_mkdocs_private",
+    src = "mkdocs_common.yml",
+    out = "mkdocs_private.yml",
+)
+
+# We make sure both possible config files are in the bazel-bin directory so
+# that the mkdocs invocation is easy.
+alias(
+    name = "mkdocs.yml",
+    actual = select({
+        "//:is_opensource": ":make_opensource_mkdocs",
+        "//conditions:default": ":copy_mkdocs_private",
+    }),
+)
+
+# Mkdocs reads all files in the source directory, so to exclude files we must
+# copy them to a directory while excluding some.
+# Technically there is an exclude_docs option, however we would need some kind
+# of ONLY-INTERNAL redact system, and I don't really want to do that.
+copy_to_directory(
+    name = "copy_to_bin",
+    srcs = select({
+        "//:is_opensource": glob(
+            ["src/**/*"],
+            exclude = ["src/internal/**/*"],
+        ),
+        "//conditions:default": glob(["src/**/*"]),
+    }),
+    out = "src_filtered",
+    root_paths = [package_name() + "/src"],
+)
 
 run_binary(
     name = "build",
-    srcs = DATA,
+    srcs = [
+        ":copy_to_bin",
+        ":mkdocs.yml",
+    ],
     args = [
         "build",
         "--clean",
         "--config-file",
-        "$(location mkdocs.yml)",
-        # Go up doc/ because paths are relative to mkdocs.yml
+        "$(location :mkdocs.yml)",
+        # Go up bazel-out/<arch>/bin/doc because paths are relative to the config file
         "--site-dir",
-        "../$@",
+        "../../../../$@",
     ],
     out_dirs = [
         "site",
     ],
     tool = ":run_mkdocs",
     visibility = ["//visibility:public"],
-)
-
-py_binary(
-    name = "server",
-    srcs = [
-        "serve.py",
-    ],
-    data = DATA,
-    main = "serve.py",
-    python_version = "PY3",
 )

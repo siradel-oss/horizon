@@ -1,0 +1,223 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//hrz/doc/gallery:tailwindcss/package_json.bzl", tailwindcss_bin = "bin")
+load("@npm//hrz/doc/gallery:vite/package_json.bzl", vite_bin = "bin")
+load("@npm//hrz/doc/gallery:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("//tools/bazel:untar.bzl", "untar")
+load("//tools/http_server:http_server.bzl", "http_server")
+
+exports_files(["package.json"])
+
+npm_link_all_packages(name = "node_modules")
+
+DIST_SCENES_PREFIX = "dist_scenes"
+
+SCENES = [
+    "heatmap_bus_coverage",
+    "heatmap_earthquakes",
+]
+
+TEMPLATES = [
+    "hrz_basemap_dark_nonames",
+    "ign_bd_ortho",
+    "initial_viewpoint_france",
+    "plan_ign",
+    "rennes_buildings",
+]
+
+ALL_SCENES = [
+    "{}".format(scene)
+    for scene in SCENES
+] + [
+    "template/{}".format(scene)
+    for scene in TEMPLATES
+]
+
+[
+    hrz_genrule(
+        name = "migrate_scene_{}".format(index),
+        srcs = [
+            "scene/{}.hrz_scene.pbf".format(scene),
+        ],
+        outs = [
+            "{}/scene/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene),
+        ],
+        cmd = "$(location //tools/scene_dump:migrate_dump) $< $@",
+        tools = [
+            "//tools/scene_dump:migrate_dump",
+        ],
+    )
+    for index, scene in enumerate(ALL_SCENES)
+]
+
+filegroup(
+    name = "scenes",
+    srcs = [
+        "{}/scene/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene)
+        for scene in SCENES
+    ],
+)
+
+filegroup(
+    name = "templates",
+    srcs = [
+        "{}/scene/template/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene)
+        for scene in TEMPLATES
+    ],
+)
+
+COMMON_DATA = glob(["src/**/*"]) + [
+    ":tsconfig.json",
+    ":node_modules",
+]
+
+vue_tsc_bin.vue_tsc(
+    name = "type_check",
+    srcs = COMMON_DATA,
+    outs = [
+        "dist/tsmarker.d.ts",
+    ],
+    args = [
+        "--emitDeclarationOnly",
+        "-d",
+        "--strict",
+        "--outFile",
+        "dist/tsmarker.d.ts",
+        "-p",
+        "tsconfig.json",
+    ],
+    chdir = package_name(),
+)
+
+vite_bin.vite(
+    name = "lib",
+    srcs = COMMON_DATA + [
+        ":type_check",
+        ":vite.config.ts",
+    ],
+    outs = [
+        "dist/gallery.bundle.js",
+    ],
+    args = [
+        "build",
+        "--outDir",
+        "dist",
+    ],
+    chdir = package_name(),
+)
+
+tailwindcss_bin.tailwindcss(
+    name = "style",
+    srcs = glob(["src/**/*"]) + [
+        "index.html",
+        "tailwind.config.js",
+        # This forces the style to be built after the JS bundle,
+        # otherwise vite nukes the dist folder on Windows, and if
+        # style.css was built before the js bundle, it's erased.
+        ":lib",
+    ],
+    outs = [
+        "dist/style.css",
+    ],
+    args = [
+        "-i",
+        "$(location src/style.css)",
+        "-o",
+        "$@",
+        "-c",
+        "$(location tailwind.config.js)",
+        "-m",
+    ],
+    chdir = "../../../",
+)
+
+pkg_files(
+    name = "pkg_source",
+    srcs = glob(["src/demo/**/*"]),
+    prefix = "source",
+)
+
+pkg_files(
+    name = "pkg_demo_assets",
+    srcs = glob(["demo_assets/**/*"]),
+    prefix = "assets/demo",
+)
+
+pkg_files(
+    name = "pkg_thumbnails",
+    srcs = glob(["thumbnails/**/*"]),
+    prefix = "assets/thumbnails",
+)
+
+pkg_files(
+    name = "pkg_root",
+    srcs = ["index.html"],
+)
+
+pkg_files(
+    name = "pkg_assets",
+    srcs = [
+        ":lib",
+        ":style",
+        "//hrz/branding:favicon.ico",
+        "//hrz/branding:favicon-16x16.png",
+        "//hrz/branding:favicon-32x32.png",
+        "//hrz/branding:favicon-96x96.png",
+        "//hrz/core:hrz_core.js",
+        "//hrz/core:hrz_core.wasm",
+    ],
+    prefix = "assets",
+)
+
+pkg_files(
+    name = "pkg_scenes",
+    srcs = [
+        ":scenes",
+    ],
+    prefix = "scene",
+)
+
+pkg_files(
+    name = "pkg_templates",
+    srcs = [
+        ":templates",
+    ],
+    prefix = "scene/template",
+)
+
+pkg_filegroup(
+    name = "pkg_all",
+    srcs = [
+        ":pkg_assets",
+        ":pkg_demo_assets",
+        ":pkg_root",
+        ":pkg_scenes",
+        ":pkg_source",
+        ":pkg_templates",
+        ":pkg_thumbnails",
+    ],
+    visibility = ["//hrz/doc:__subpackages__"],
+)
+
+pkg_tar(
+    name = "pkg",
+    srcs = [":pkg_all"],
+    extension = "tar.gz",
+)
+
+untar(
+    name = "copy_pkg_to_www",
+    output_dir = "www",
+    tar = ":pkg",
+)
+
+http_server(
+    name = "server",
+    data = [
+        ":copy_pkg_to_www",
+    ],
+    dir = package_name() + "/www",
+    port = 8083,
+)

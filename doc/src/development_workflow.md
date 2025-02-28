@@ -87,11 +87,11 @@ There are no rule for what should increment the major or patch number, but gener
     - First publish the `release_a.b.c` branch at the point where it diverged from `master` or `maintenance_a.b`. (See the "Publishing a branch to the open-source repository" section below.)
     - Then execute the `ci/oss_publish/publish.py` script:
         - `python ci/oss_publish/publish.py release_a.b.c --tag va.b.c`
-        - See the [Publishing a branch to the open-source repository](#publishing-a-branch-to-the-open-source-repository) section for a guide on how to authenticate.
+        - See the [Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository) section for a guide on how to authenticate.
     - If somehow this fails (for example if the release branch was already published), you can create the tag manually.
     - The tag should point to the public version of the release commit.
     - Once the tag has been published, the public `release_a.b.c` can be deleted, but you can also keep it if you want.
-    - Finally, [create the release on the open-source repository](#publishing-a-release-to-the-open-source-repository).
+    - Finally, [create the release on the open-source repository](open_source.md#publishing-a-release-to-the-open-source-repository).
 - Back on your local clone, set the version number to the next snapshot:
     - `python3 tools/build_info/set_version.py d.e.f-SNAPSHOT`
 - Commit:
@@ -147,11 +147,3 @@ Once you have write access, to publish the branch:
 - Otherwise, try synchronizing `my_base` with the `ci/oss_publish/publish.py` script, then retry the step above.
 - Otherwise, try manually looking for the closest commit corresponding to `the_commit` on the public version of `my_base` and if found, create `my_branch` there. This is because some commits might not be mirrored to the public repository, for instance when they only contain modifications to files that are not public.
 - If all this fails, you are on your own.
-
-## Publishing a release to the open-source repository
-
-**After all artifacts have been published to the private repository, and the version tag has been created on the public repository**, it is possible to publish the artifacts as a GitHub release on the public repository. To do so, execute the `ci/oss_publish/create_release.py` script with the version name and and GitHub App private key. The artifacts to publish are listed in the `ci/oss_publish/artifacts.json` file.
-
-## Adding the license to source files
-
-Merge requests check for the presence of a license header in all source files (unless explicitly excluded). This is done by executing the `ci/oss_publish/license.py` script. Please read the accompanying README file for instructions on how to select or exclude files.

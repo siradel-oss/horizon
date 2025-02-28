@@ -1,5 +1,4 @@
 import sys
-import tarfile
 import markdown
 from os import path
 from pathlib import Path
@@ -393,23 +392,79 @@ def doc_crs_database_md_generator(protocol, tpl_env, output_dir, extra):
 
 @generator("doc_artifacts_md")
 def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
+    version = extra[1]
+    npm_version = version
+
+    is_opensource = extra[2] == "opensource"
+    is_snapshot = "SNAPSHOT" in version
+
     values = {}
-    values["version"] = extra[1]
-    values["npm_qualifier_string"] = ""
 
-    if ("SNAPSHOT" in values["version"]):
+    if is_snapshot:
         # npm snapshot package names have an extra qualifier appended to them (the date of the build).
-        # See `scripts\qualify_package_json_version.py`.
-        npm_qualifier_file_path = extra[0]
-        with io.open(npm_qualifier_file_path, 'r') as npm_qualifier_file:
-            npm_qualifier_string = npm_qualifier_file.read()
-            values["npm_qualifier_string"] = "." + npm_qualifier_string
+        # See `tools/bazel/qualify_package_json_version.py`.
+        npm_qualifier = Path(extra[0]).read_text().strip()
+        npm_version += "." + npm_qualifier
 
-        values["npm_nexus_url"] = "http://redacted.localhost/repository/npm-snapshots"
-        values["raw_nexus_url"] = "http://redacted.localhost/repository/raw-snapshots/horizon"
+    if not is_opensource:
+        npm_base = ""
+        raw_base = ""
+        if is_snapshot:
+            npm_base = "http://redacted.localhost/repository/npm-snapshots/"
+            raw_base = "http://redacted.localhost/repository/raw-snapshots/horizon/"
+        else:
+            npm_base = "http://redacted.localhost/repository/npm-releases/"
+            raw_base = "http://redacted.localhost/repository/raw-releases/horizon/"
+
+        values["core_windows"] = f"{raw_base}core-windows-{version}.tar.gz"
+        values["api_windows"] = f"{raw_base}cpp-api-windows-{version}.tar.gz"
+        values["protocol_windows"] = f"{raw_base}cpp-protocol-windows-{version}.tar.gz"
+
+        values["core_linux"] = f"{raw_base}core-linux-{version}.tar.gz"
+        values["api_linux"] = f"{raw_base}cpp-api-linux-{version}.tar.gz"
+        values["protocol_linux"] = f"{raw_base}cpp-protocol-linux-{version}.tar.gz"
+
+        values["core_npm"] = f"{npm_base}@siradel/horizon-core/-/horizon-core-{npm_version}.tgz"
+        values["api_npm"] = f"{npm_base}@siradel/horizon-api/-/horizon-api-{npm_version}.tgz"
+        values["protocol_npm"] = f"{npm_base}@siradel/horizon-protocol/-/horizon-protocol-{npm_version}.tgz"
+
+        values["scene_dump_npm"] = f"{npm_base}@siradel/horizon-scene-dump/-/horizon-scene-dump-{npm_version}.tgz"
+        values["monitoring_protocol_npm"] = f"{npm_base}@siradel/horizon-monitoring-protocol/-/horizon-monitoring-protocol-{npm_version}.tgz"
+
+        values["monitoring_app_windows"] = f"{raw_base}monitoring-app-windows-{version}.exe"
+        values["monitoring_app_linux"] = f"{raw_base}monitoring-app-linux-{version}"
+
+        values["testing_kit_linux_x11"] = f"{raw_base}testing-kit-linux-x11-{version}.tar.gz"
+        values["testing_kit_linux_headless"] = f"{raw_base}testing-kit-linux-headless-{version}.tar.gz"
+        values["testing_kit_windows"] = f"{raw_base}testing-kit-windows-{version}.tar.gz"
+
+        values["documentation"] = f"{raw_base}api-doc-{version}.tar.gz"
     else:
-        values["npm_nexus_url"] = "http://redacted.localhost/repository/npm-releases"
-        values["raw_nexus_url"] = "http://redacted.localhost/repository/raw-releases/horizon"
+        base = f"https://github.com/siradel-oss/Horizon/releases/download/v{version}/"
+
+        values["core_windows"] = f"{base}horizon-core-{version}-cpp-windows.tar.gz"
+        values["api_windows"] = f"{base}horizon-api-{version}-cpp-windows.tar.gz"
+        values["protocol_windows"] = f"{base}horizon-protocol-{version}-cpp-windows.tar.gz"
+
+        values["core_linux"] = f"{base}horizon-core-{version}-cpp-linux.tar.gz"
+        values["api_linux"] = f"{base}horizon-api-{version}-cpp-linux.tar.gz"
+        values["protocol_linux"] = f"{base}horizon-protocol-{version}-cpp-linux.tar.gz"
+
+        values["core_npm"] = f"{base}horizon-core-{version}-ts-npm.tgz"
+        values["api_npm"] = f"{base}horizon-api-{version}-ts-npm.tgz"
+        values["protocol_npm"] = f"{base}horizon-protocol-{version}-ts-npm.tgz"
+
+        values["scene_dump_npm"] = f"{base}horizon-scene-dump-{version}-ts-npm.tgz"
+        values["monitoring_protocol_npm"] = f"{base}horizon-monitoring-protocol-{version}-ts-npm.tgz"
+
+        values["monitoring_app_windows"] = f"{base}horizon-monitoring-app-{version}-windows.exe"
+        values["monitoring_app_linux"] = f"{base}horizon-monitoring-app-{version}-linux"
+
+        values["testing_kit_linux_x11"] = f"{base}horizon-testing-kit-{version}-linux-x11.tar.gz"
+        values["testing_kit_linux_headless"] = f"{base}horizon-testing-kit-{version}-linux-headless.tar.gz"
+        values["testing_kit_windows"] = f"{base}horizon-testing-kit-{version}-windows.tar.gz"
+
+        values["documentation"] = f"{base}horizon-documentation-{version}.tar.gz"
 
     tpl = tpl_env.get_template("documentation/artifacts.tpl.md")
     output_template(values, tpl, output_dir, "artifacts.md")

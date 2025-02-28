@@ -1,7 +1,7 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
 load("@bazel_skylib//lib:selects.bzl", "selects")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:prettier/package_json.bzl", prettier_bin = "bin")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
@@ -213,6 +213,19 @@ config_setting(
     name = "compiler_clang-cl",
     flag_values = {
         "@bazel_tools//tools/cpp:compiler": "clang-cl",
+    },
+    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "opensource",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "is_opensource",
+    flag_values = {
+        "//:opensource": "True",
     },
     visibility = ["//visibility:public"],
 )

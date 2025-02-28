@@ -1,0 +1,223 @@
+:root {
+    --hover-opacity: 0.85;
+    --active-opacity: 0.7;
+    --form-border-color: hsla(var(--fg-color), 0.32);
+    --form-background-color: hsla(var(--fg-color), 0.05);
+}
+
+.form-new {
+    label {
+        text-align: left;
+    }
+
+    input, button, textarea, select, fieldset, legend {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-color: transparent;
+        border: none;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        color: hsl(var(--text-color));
+    }
+
+    input, select, textarea {
+        border: 1px solid var(--form-border-color);
+        background-color: var(--form-background-color);
+        border-radius: 0.25em;
+        margin: 0.2em 0;
+    }
+
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+        display: block;
+        padding: 0.4em;
+        color: hsl(var(--text-color));
+    }
+
+    button {
+        padding: 0.4em 1em;
+        background-color: hsl(var(--primary-color));
+        border-radius: 0.25em;
+        cursor: pointer;
+        color: hsl(var(--bg-color));
+
+        &:hover {
+            background-color: hsla(var(--primary-color), var(--hover-opacity));
+        }
+
+        &:active {
+            background-color: hsla(var(--primary-color), var(--active-opacity));
+        }
+
+        &:disabled, &[disabled] {
+            background-color: var(--form-background-color);
+            color: var(--form-border-color);
+            cursor: default;
+        }
+    }
+
+    .flex-list-v {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+    }
+
+    .flex-list-v button {
+        display: block;
+        width: 100%;
+    }
+
+    input[type="range"],
+    input[type="color"],
+    input[type="number"],
+    input[type="text"],
+    select {
+        width: 100%;
+        box-sizing: border-box;
+        display: block;
+    }
+
+    input[type="radio"],
+    input[type="checkbox"] {
+        height: 1.25em;
+        width: 1.25em;
+        vertical-align: middle;
+    }
+
+    input[type="radio"] {
+        border-radius: 50%;
+    }
+
+    input[type="radio"]:checked {
+        background-image: radial-gradient(hsl(var(--primary-color)) 40%, transparent calc(40% + 1px));
+    }
+
+    input[type="checkbox"]:checked {
+        background: url("check.svg") no-repeat center center / 75%, hsl(var(--primary-color));
+        border-color: hsl(var(--primary-color));
+    }
+
+    input[type="range"] {
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 1em;
+            height: 1em;
+            margin: 0.1em;
+            border: none;
+            border-radius: 0.25em;
+            background: hsl(var(--primary-color));
+            cursor: pointer;
+        }
+
+        &::-moz-range-thumb {
+            -moz-appearance: none;
+            width: 1em;
+            height: 1em;
+            margin: 0.1em;
+            border: none;
+            border-radius: 0.25em;
+            background: hsl(var(--primary-color));
+            cursor: pointer;
+        }
+
+        &:disabled, &[disabled] {
+            &::-webkit-slider-thumb {
+                background-color: var(--form-border-color);
+                cursor: default;
+            }
+
+            &::-moz-range-thumb {
+                background-color: var(--form-border-color);
+                cursor: default;
+            }
+        }
+    }
+
+    input[type="number"],
+    input[type="text"] {
+        height: 2em;
+        padding: 0.4em;
+        border-color: var(--form-border-color);
+    }
+
+    select {
+        height: 2em;
+        padding: 0 0.4em;
+        border-color: var(--form-border-color);
+        color: hsl(var(--text-color));
+        background: url("arrow_down.svg") no-repeat center right 0.3em / auto 80% var(--form-background-color);
+    }
+
+    select option {
+        height: 2em;
+        padding: 0 0.4em;
+        color: hsl(var(--text-color));
+        background: hsl(var(--bg-color));
+    }
+
+    .restart-row {
+        grid-column-start: 1;
+    }
+}
+
+.columns-6 {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+.columns-5 {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+
+.columns-4 {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.columns-3 {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.columns-2 {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: 1fr 1fr;
+}
+
+button.fullscreen-button {
+    height: 2em;
+    padding: 0.4em 1em;
+    background-color: #3e5aff;
+    border-radius: 0.25em;
+    cursor: pointer;
+    border: none;
+    box-shadow: rgba(0, 0, 0, 0.4) 0px 1px 4px;
+
+    &:hover {
+        opacity: var(--hover-opacity);
+    }
+
+    &:active {
+        opacity: var(--active-opacity);
+    }
+
+    img {
+        background: transparent;
+    }
+}
+
+table.no-border {
+    border: none;
+    tr, td, th {
+        border: none;
+    }
+}

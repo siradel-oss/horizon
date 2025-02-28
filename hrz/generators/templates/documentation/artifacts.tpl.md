@@ -9,21 +9,21 @@ Those are the core components of Horizon and are all required to run the engine.
 
 ### Protocol
 
-* [npm (TypeScript): `@siradel/horizon-protocol`]({{ npm_nexus_url }}/@siradel/horizon-protocol/-/horizon-protocol-{{ version + npm_qualifier_string }}.tgz)
-* [Linux native package (C++)]({{ raw_nexus_url }}/cpp-protocol-linux-{{ version }}.tar.gz)
-* [Windows native package (C++)]({{ raw_nexus_url }}/cpp-protocol-windows-{{ version }}.tar.gz)
+* [npm (TypeScript): `@siradel/horizon-protocol`]({{ protocol_npm }})
+* [Linux native package (C++)]({{ protocol_linux }})
+* [Windows native package (C++)]({{ protocol_windows }})
 
 ### API
 
-* [npm (TypeScript): `@siradel/horizon-api`]({{ npm_nexus_url }}/@siradel/horizon-api/-/horizon-api-{{ version + npm_qualifier_string }}.tgz)
-* [Linux native package (C++)]({{ raw_nexus_url }}/cpp-api-linux-{{ version }}.tar.gz)
-* [Windows native package (C++)]({{ raw_nexus_url }}/cpp-api-windows-{{ version }}.tar.gz)
+* [npm (TypeScript): `@siradel/horizon-api`]({{ api_npm }})
+* [Linux native package (C++)]({{ api_linux }})
+* [Windows native package (C++)]({{ api_windows }})
 
 ### Core
 
-* [npm (TypeScript): `@siradel/horizon-core`]({{ npm_nexus_url }}/@siradel/horizon-core/-/horizon-core-{{ version + npm_qualifier_string }}.tgz)
-* [Linux native package (C++)]({{ raw_nexus_url }}/core-linux-{{ version }}.tar.gz)
-* [Windows native package (C++)]({{ raw_nexus_url }}/core-windows-{{ version }}.tar.gz)
+* [npm (TypeScript): `@siradel/horizon-core`]({{ core_npm }})
+* [Linux native package (C++)]({{ core_linux }})
+* [Windows native package (C++)]({{ core_windows }})
 
 ## Other
 
@@ -31,28 +31,28 @@ Those are the core components of Horizon and are all required to run the engine.
 
 This is a TypeScript library to save and load Horizon scene dumps to and from JSON, base64 or binary data.
 
-* [npm (TypeScript): `@siradel/horizon-scene-dump`]({{ npm_nexus_url }}/@siradel/horizon-scene-dump/-/horizon-scene-dump-{{ version + npm_qualifier_string }}.tgz)
+* [npm (TypeScript): `@siradel/horizon-scene-dump`]({{ scene_dump_npm }})
 
 ### Monitoring protocol
 
 Use this to deserialize monitoring messages. See [Monitoring the engine](monitoring.html).
 
-* [npm (TypeScript): `@siradel/horizon-monitoring-protocol`]({{ npm_nexus_url }}/@siradel/horizon-protocol/-/horizon-monitoring-protocol-{{ version + npm_qualifier_string }}.tgz)
+* [npm (TypeScript): `@siradel/horizon-monitoring-protocol`]({{ monitoring_protocol_npm }})
 
 ### Monitoring client
 
 This application connects to and monitors a Horizon client using WebSocket.
 
-* [Linux executable]({{ raw_nexus_url }}/monitoring-client-linux-{{ version }})
-* [Windows executable]({{ raw_nexus_url }}/monitoring-client-windows-{{ version }}.exe)
+* [Linux executable]({{ monitoring_app_linux }})
+* [Windows executable]({{ monitoring_app_windows }})
 
 ### Testing kit
 
 This archive contains tools to run visual tests inside of Horizon. It contains a viewer that opens a scene dump and takes a screenshot of the loaded scene, an image comparator, and a scene dump migration tool. See the documentation in the archive.
 
-* [Linux (X11)]({{ raw_nexus_url }}/testing-kit-linux-x11-{{ version }}.tar.gz)
-* [Linux (headless)]({{ raw_nexus_url }}/testing-kit-linux-headless-{{ version }}.tar.gz)
-* [Windows]({{ raw_nexus_url }}/testing-kit-windows-{{ version }}.tar.gz)
+* [Linux (X11)]({{ testing_kit_linux_x11 }})
+* [Linux (headless)]({{ testing_kit_linux_headless }})
+* [Windows]({{ testing_kit_windows }})
 
 ### Protocol Buffers definitions
 
@@ -65,4 +65,4 @@ The Horizon protocol & monitoring protocol `.proto` files are available directly
 
 Your are reading it right now, but you may want a local copy.
 
-* [Documentation package]({{ raw_nexus_url }}/api-doc-{{ version }}.tar.gz)
+* [Documentation package]({{ documentation }})

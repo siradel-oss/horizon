@@ -14,7 +14,7 @@ Horizon is a real-time 3D engine for visualizing map data on a globe. It is cros
 * [Contributing](#contributing)
 * [License](#license)
 
-*This repository is an extract of our internal version. Some components are missing, notably test data and the documentation. We do plan on open-sourcing the documentation.*
+*This repository is an extract of our internal version. Some components are missing, notably test data and some parts of the documentation. We do plan on open-sourcing the full documentation progressively.*
 
 ## Features
 
@@ -90,9 +90,23 @@ https://github.com/user-attachments/assets/bd0368d8-a6f2-4377-91f4-2cc167ada30f
 
 ## Getting started
 
-Prebuilt artifacts for C++ and TypeScript (through npm packages) are available on the "Releases" page on GitHub, but you can also [build them yourself](#building). Some integration examples are given in the [apps folder](apps/).
+The documentation and prebuilt artifacts for C++ and TypeScript (through npm packages) are available on the "Releases" page on GitHub, but you can also [build them yourself](#building). Some integration examples are given in the [apps folder](apps/).
+
+The documentation provides a [guide on how to get started](hrz/doc/doc/getting_started.md).
 
 *The full documentation will be provided at a later date.*
+
+To use the prebuilt packages in an npm project, add the packages to your `package.json` as follows, using the URLs given on the "Releases" page:
+
+```json
+{
+  "dependencies": {
+    "@siradel/horizon-protocol": "<url to the .tgz file>",
+    "@siradel/horizon-api": "<url to the .tgz file>",
+    "@siradel/horizon-core": "<url to the .tgz file>"
+  }
+}
+```
 
 ## Building
 

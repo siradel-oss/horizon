@@ -1,0 +1,416 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//hrz/doc:sass/package_json.bzl", sass_bin = "bin")
+load("@npm//hrz/doc:webpack-cli/package_json.bzl", webpack_bin = "bin")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//:version.bzl", "HRZ_VERSION")
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:untar.bzl", "untar")
+load("//tools/http_server:http_server.bzl", "http_server")
+load(":make_doc.bzl", "make_doc")
+
+exports_files(["package.json"])
+
+npm_link_all_packages(name = "node_modules")
+
+# A lot of this complication is due to the separation between open-source and internal
+# builds of the library. Once we don't have this anymore, this can all be simplified again.
+filegroup(
+    name = "src_example",
+    srcs = select({
+        "//:is_opensource": [],
+        "//conditions:default": glob(["src/example/**/*.ts"]),
+    }),
+)
+
+filegroup(
+    name = "src_ui",
+    srcs = glob(["src/ui/**/*.ts"]),
+)
+
+filegroup(
+    name = "src_root",
+    srcs = ["src/common.ts"] + select({
+        "//:is_opensource": [],
+        "//conditions:default": ["src/layers.ts"],
+    }),
+)
+
+structured_files_copy(
+    name = "copy_srcs_opensource",
+    files = {
+        "": ["src/common.ts"],
+        "ui": [":src_ui"],
+    },
+    output_dir = "src_opensource",
+)
+
+structured_files_copy(
+    name = "copy_srcs_internal",
+    files = {
+        "": [
+            "src/common.ts",
+            "src/layers.ts",
+        ],
+        "example": [":src_example"],
+        "ui": [":src_ui"],
+    },
+    output_dir = "src_internal",
+)
+
+ts_project(
+    name = "lib_opensource",
+    srcs = [":copy_srcs_opensource"],
+    out_dir = "dist",
+    root_dir = "src_opensource",
+    tsconfig = {
+        "compilerOptions": {
+            "lib": [
+                "ES2020",
+                "DOM",
+            ],
+            "target": "ES2020",
+            "moduleResolution": "Node",
+            "experimentalDecorators": True,
+            "emitDecoratorMetadata": True,
+        },
+    },
+    deps = [
+        ":node_modules",
+    ],
+)
+
+ts_project(
+    name = "lib_internal",
+    srcs = [":copy_srcs_internal"],
+    out_dir = "dist",
+    root_dir = "src_internal",
+    tsconfig = {
+        "compilerOptions": {
+            "lib": [
+                "ES2020",
+                "DOM",
+            ],
+            "target": "ES2020",
+            "moduleResolution": "Node",
+            "experimentalDecorators": True,
+            "emitDecoratorMetadata": True,
+        },
+    },
+    deps = [
+        ":node_modules",
+    ],
+)
+
+EXAMPLE_TS_FILES = [
+]
+
+webpack_bin.webpack_cli(
+    name = "bundle_internal",
+    srcs = [
+        "webpack.config.js",
+        ":lib_internal",
+        ":node_modules",
+    ],
+    outs = [
+        "js_internal/shared.bundle.js",
+        "js_internal/ui.bundle.js",
+    ] + ["js_internal/example.{}.bundle.js".format(f) for f in EXAMPLE_TS_FILES],
+    args = [
+        "--mode",
+        "production",
+        "--config",
+        "webpack.config.js",
+        "-o",
+        ".",
+    ],
+    chdir = package_name(),
+    env = {
+        "EXAMPLES": "|".join(EXAMPLE_TS_FILES),
+        "VARIANT": "internal",
+    },
+)
+
+webpack_bin.webpack_cli(
+    name = "bundle_opensource",
+    srcs = [
+        "webpack.config.js",
+        ":lib_opensource",
+        ":node_modules",
+    ],
+    outs = [
+        "js_opensource/shared.bundle.js",
+        "js_opensource/ui.bundle.js",
+    ],
+    args = [
+        "--mode",
+        "production",
+        "--config",
+        "webpack.config.js",
+        "-o",
+        ".",
+    ],
+    chdir = package_name(),
+    env = {
+        "EXAMPLES": "",
+        "VARIANT": "opensource",
+    },
+)
+
+hrz_genrule(
+    name = "generate_crs_database_md",
+    srcs = [
+        "//hrz:hrz_protocol.xml",
+        "//hrz/generators:documentation_tpl",
+        "//libs/proj_lite:crs_database.csv",
+    ],
+    outs = [
+        "crs_database.md",
+    ],
+    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) doc_crs_database_md $(@D) $(location //libs/proj_lite:crs_database.csv)",
+    tools = ["//hrz/generators:generator"],
+)
+
+IS_OPENSOURCE_STR = select({
+    "//:is_opensource": "opensource",
+    "//conditions:default": "internal",
+})
+
+hrz_genrule(
+    name = "generate_artifacts_md",
+    srcs = [
+        "//:build_date.txt",
+        "//hrz:hrz_protocol.xml",
+        "//hrz/generators:documentation_tpl",
+    ],
+    outs = [
+        "artifacts.md",
+    ],
+    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) doc_artifacts_md $(@D) $(location //:build_date.txt) " + HRZ_VERSION + " " + IS_OPENSOURCE_STR,
+    tools = ["//hrz/generators:generator"],
+)
+
+hrz_genrule(
+    name = "generate_changelog_md",
+    srcs = [
+        "//changelogs:all_released",
+    ],
+    outs = [
+        "changelog.md",
+    ],
+    cmd = "$(location //changelogs:changelog) generate $(@) $(locations //changelogs:all_released)",
+    tools = ["//changelogs:changelog"],
+)
+
+hrz_genrule(
+    name = "generate_reference_md",
+    srcs = [
+        "//:build_date.txt",
+        "//hrz:hrz_protocol.xml",
+        "//hrz/generators:documentation_tpl",
+    ],
+    outs = [
+        "reference.md",
+    ],
+    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) doc_reference_md $(@D)",
+    tools = ["//hrz/generators:generator"],
+)
+
+hrz_genrule(
+    name = "generate_reference_list",
+    srcs = [
+        "//hrz:hrz_protocol.xml",
+        "//hrz/generators:documentation_tpl",
+    ],
+    outs = [
+        "reference_list.json",
+    ],
+    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) doc_reference_files_list_json $(@D) $@",
+    tools = ["//hrz/generators:generator"],
+)
+
+hrz_genrule(
+    name = "generate_style_enums_md",
+    srcs = [
+        "//hrz:hrz_protocol.xml",
+        "//hrz/generators:documentation_tpl",
+    ],
+    outs = [
+        "style_enums.md",
+    ],
+    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) style_enums_md $(@D)",
+    tools = ["//hrz/generators:generator"],
+)
+
+sass_bin.sass(
+    name = "style",
+    srcs = [
+        "css/form.scss",
+    ],
+    outs = [
+        "css/form.css",
+    ],
+    args = [
+        "$(execpath css/form.scss)",
+        "$@",
+    ],
+    chdir = "../../../",
+)
+
+REF_PAGES_TMP_FOLDER = "ref_pages"
+
+make_doc(
+    name = "doc",
+    embedded_files = glob(["src/**/*.ts"]),
+    pages = [
+        # The order of the files in the list is significant: it determines the order
+        # of the entries in the documentation page menu.
+        # General section
+        "doc/index.md",
+        ":changelog.md",
+        ":artifacts.md",
+        ":reference.md",
+        "doc/getting_started.md",
+        "doc/platform.md",
+        "doc/graphics_configuration.md",
+        "doc/custom_backend.md",
+        "doc/using_api.md",
+        "doc/scene_model.md",
+        "doc/message_queue.md",
+        "doc/events_handling.md",
+        "doc/attributions.md",
+        "doc/ambient_settings.md",
+        "doc/numeric_palettes.md",
+        "doc/blend_modes.md",
+        "doc/monitoring.md",
+        "doc/mapbox_scenes.md",
+    ] + select({
+        "//:is_opensource": [],
+        "//conditions:default": [
+        ],
+    }) + [
+        # glTF extensions section
+        "doc/SIRADEL_templated_image_url.md",
+        "doc/SIRADEL_data_texture.md",
+        # 3D Tiles extensions section
+        "doc/SIRADEL_range_request.md",
+        # Resources section
+        ":crs_database.md",
+        "//third_party:third_party_licenses.md",
+    ],
+    ref_pages_tmp_folder = "ref_pages",
+    search_index_js = "searchIndex.js",
+)
+
+filegroup(
+    name = "doc_pages",
+    srcs = [":doc"],
+    output_group = "doc_pages",
+)
+
+filegroup(
+    name = "ref_pages",
+    srcs = [":doc"],
+    output_group = "ref_pages",
+)
+
+pkg_files(
+    name = "pkg_ref_pages",
+    srcs = [":ref_pages"],
+    strip_prefix = REF_PAGES_TMP_FOLDER,
+)
+
+pkg_files(
+    name = "pkg_doc_pages",
+    srcs = [
+        ":doc_pages",
+    ],
+)
+
+pkg_files(
+    name = "pkg_static_assets",
+    srcs = glob([
+        "img/*",
+    ]) + [
+        "css/code.css",
+        "css/form.css",
+        "css/style.css",
+        ":searchIndex.js",
+        "//hrz/branding:favicon-16x16.png",
+        "//hrz/branding:favicon-32x32.png",
+        "//hrz/branding:favicon-96x96.png",
+        "//hrz/core:hrz_core.js",
+        "//hrz/core:hrz_core.wasm",
+        "//third_party/fonts:MaterialIcons-Regular.ttf",
+        "//third_party/fonts:Roboto-Regular.ttf",
+        "//third_party/fonts:RobotoMono-Regular.ttf",
+        "//third_party/fonts:Rubik-Regular.ttf",
+    ],
+    prefix = "static",
+)
+
+pkg_files(
+    name = "pkg_images",
+    srcs = select({
+        "//:is_opensource": glob(["doc/img/*"]),
+        "//conditions:default": glob([
+            "doc/img/*",
+            "doc_internal/img/*",
+        ]),
+    }),
+    prefix = "img",
+)
+
+pkg_files(
+    name = "pkg_js",
+    srcs = select({
+        "//:is_opensource": [":bundle_opensource"],
+        "//conditions:default": [":bundle_internal"],
+    }),
+    prefix = "js",
+)
+
+pkg_filegroup(
+    name = "pkg_gallery",
+    srcs = ["//hrz/doc/gallery:pkg_all"],
+    prefix = "gallery",
+)
+
+pkg_files(
+    name = "pkg_dev_guide",
+    srcs = ["//doc:build"],
+    prefix = "dev_guide",
+    strip_prefix = "site",
+)
+
+pkg_tar(
+    name = "pkg",
+    srcs = [
+        ":pkg_dev_guide",
+        ":pkg_doc_pages",
+        ":pkg_gallery",
+        ":pkg_images",
+        ":pkg_js",
+        ":pkg_ref_pages",
+        ":pkg_static_assets",
+        "//hrz/branding:favicon.ico",
+    ],
+    extension = "tar.gz",
+)
+
+untar(
+    name = "copy_pkg_to_www",
+    output_dir = "www",
+    tar = ":pkg",
+)
+
+http_server(
+    name = "server",
+    data = [
+        ":copy_pkg_to_www",
+    ],
+    dir = package_name() + "/www",
+    port = 8081,
+)
