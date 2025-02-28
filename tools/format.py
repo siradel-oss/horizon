@@ -75,7 +75,7 @@ output = subprocess.check_output(["git", "config", "--get", "core.autocrlf"]).de
 if output != "false":
     print("\033[93mWARNING: git config core.autocrlf should be false\033[0m")
 
-all_extensions = ["txt", "bazel", "cpp", "h", "c", "cc", "hpp", "inl", "proto", "bzl", "py", "js", "json", "md", "Config", "tpl", "css", "ts", "html", "cs", "bat", "sh", "tpl", "frag", "vert", "glsl", "patch", "csv", "php", "yaml", "yml"]
+all_extensions = ["txt", "bazel", "cpp", "h", "c", "cc", "hpp", "inl", "proto", "bzl", "py", "js", "json", "md", "Config", "tpl", "css", "ts", "html", "cs", "bat", "sh", "tpl", "frag", "vert", "glsl", "patch", "csv", "php", "yaml", "yml", "vue"]
 all_files_names = [".gitlab-ci.yml", "Dockerfile"]
 cpp_extensions = ["cpp", "h", "c", "cc", "hpp", "inl", "proto"]
 

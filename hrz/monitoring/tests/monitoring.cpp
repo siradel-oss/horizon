@@ -27,7 +27,7 @@ TEST(MessageBuffer, parsing)
     google::protobuf::io::ArrayOutputStream array_ostream(ground_truth_data, BUFFER_SIZE);
     google::protobuf::io::CodedOutputStream coded_ostream(&array_ostream);
 
-    auto sample = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::SampleTest>(&arena);
+    auto sample = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Sample>(&arena);
     sample->set_entry(20);
     sample->set_exit(60);
 
@@ -41,7 +41,7 @@ TEST(MessageBuffer, parsing)
 
     auto message1 =
         google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::MonitoringMessage>(&arena);
-    message1->set_allocated_sample_test(sample);
+    message1->set_allocated_sample(sample);
 
     auto metric = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Metric>(&arena);
 
@@ -94,18 +94,18 @@ TEST(MessageBuffer, parsing)
 
     EXPECT_EQ(parsed_messages.size(), 3);
 
-    EXPECT_EQ(parsed_messages[0].kind_case(), hrz_monitoring_proto::MonitoringMessage::kSampleTest);
+    EXPECT_EQ(parsed_messages[0].kind_case(), hrz_monitoring_proto::MonitoringMessage::kSample);
 
-    EXPECT_EQ(parsed_messages[0].sample_test().children_size(), 2);
-    EXPECT_EQ(parsed_messages[0].sample_test().entry(), 20);
-    EXPECT_EQ(parsed_messages[0].sample_test().exit(), 60);
-    EXPECT_EQ(parsed_messages[0].sample_test().aggregation_count(), 0);
-    EXPECT_EQ(parsed_messages[0].sample_test().recursion_max(), 0);
+    EXPECT_EQ(parsed_messages[0].sample().children_size(), 2);
+    EXPECT_EQ(parsed_messages[0].sample().entry(), 20);
+    EXPECT_EQ(parsed_messages[0].sample().exit(), 60);
+    EXPECT_EQ(parsed_messages[0].sample().aggregation_count(), 0);
+    EXPECT_EQ(parsed_messages[0].sample().recursion_max(), 0);
 
-    EXPECT_EQ(parsed_messages[0].sample_test().children(0).entry(), 20);
-    EXPECT_EQ(parsed_messages[0].sample_test().children(0).exit(), 40);
-    EXPECT_EQ(parsed_messages[0].sample_test().children(1).entry(), 40);
-    EXPECT_EQ(parsed_messages[0].sample_test().children(1).exit(), 60);
+    EXPECT_EQ(parsed_messages[0].sample().children(0).entry(), 20);
+    EXPECT_EQ(parsed_messages[0].sample().children(0).exit(), 40);
+    EXPECT_EQ(parsed_messages[0].sample().children(1).entry(), 40);
+    EXPECT_EQ(parsed_messages[0].sample().children(1).exit(), 60);
 
     EXPECT_EQ(parsed_messages[1].kind_case(), hrz_monitoring_proto::MonitoringMessage::kMetric);
 
@@ -148,7 +148,7 @@ TEST(MessageBuffer, serializing)
     auto messages =
         google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::MonitoringMessages>(&arena);
 
-    auto sample = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::SampleTest>(&arena);
+    auto sample = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Sample>(&arena);
     sample->set_entry(20);
     sample->set_exit(60);
 
@@ -161,7 +161,7 @@ TEST(MessageBuffer, serializing)
     child2->set_exit(60);
 
     auto message1 = messages->add_messages();
-    message1->set_allocated_sample_test(sample);
+    message1->set_allocated_sample(sample);
 
     auto metric = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Metric>(&arena);
     ;
@@ -197,12 +197,12 @@ TEST(MessageBuffer, reset)
         hrz_monitoring_proto::MonitoringMessages messages;
 
         auto* message = messages.add_messages();
-        auto* sample = message->mutable_sample_test();
+        auto* sample = message->mutable_sample();
         sample->set_entry(20);
         sample->set_exit(60);
 
         message = messages.add_messages();
-        sample = message->mutable_sample_test();
+        sample = message->mutable_sample();
         sample->set_entry(80);
         sample->set_exit(90);
 
@@ -217,7 +217,7 @@ TEST(MessageBuffer, reset)
         hrz_monitoring_proto::MonitoringMessages messages;
 
         auto* message = messages.add_messages();
-        auto* sample = message->mutable_sample_test();
+        auto* sample = message->mutable_sample();
         sample->set_entry(20);
         sample->set_exit(60);
 
@@ -236,7 +236,7 @@ TEST(MessageBuffer, append)
         hrz_monitoring_proto::MonitoringMessages messages;
 
         auto* message = messages.add_messages();
-        auto* sample = message->mutable_sample_test();
+        auto* sample = message->mutable_sample();
         sample->set_entry(10);
         sample->set_exit(11);
 
@@ -247,7 +247,7 @@ TEST(MessageBuffer, append)
         hrz_monitoring_proto::MonitoringMessages messages;
 
         auto* message = messages.add_messages();
-        auto* sample = message->mutable_sample_test();
+        auto* sample = message->mutable_sample();
         sample->set_entry(12);
         sample->set_exit(13);
 
@@ -268,13 +268,13 @@ TEST(MessageBuffer, append)
         {
             if (parsed == 0)
             {
-                EXPECT_EQ(msg->sample_test().entry(), 10);
-                EXPECT_EQ(msg->sample_test().exit(), 11);
+                EXPECT_EQ(msg->sample().entry(), 10);
+                EXPECT_EQ(msg->sample().exit(), 11);
             }
             else if (parsed == 1)
             {
-                EXPECT_EQ(msg->sample_test().entry(), 12);
-                EXPECT_EQ(msg->sample_test().exit(), 13);
+                EXPECT_EQ(msg->sample().entry(), 12);
+                EXPECT_EQ(msg->sample().exit(), 13);
             }
             parsed++;
         });

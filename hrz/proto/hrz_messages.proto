@@ -182,7 +182,14 @@ message MonitoringDataMessage {
     //
     // Each byte sequence is an encoded `MonitoringMessage` protocol buffers
     // message (as defined in the `hrz_monitoring_interface.proto` file),
-    // preceeded by its length as a 4 byte little endian unsigned integer.
+    // preceded by its version and length as two 4 byte little endian unsigned
+    // integers. The version should be 1.
+    //
+    // Repeated:
+    //
+    // - version = 1 (uint32, little endian)
+    // - payload_size (uint32, little endian)
+    // - payload (bytes of size payload_size)
     bytes data = 1;
 }
 

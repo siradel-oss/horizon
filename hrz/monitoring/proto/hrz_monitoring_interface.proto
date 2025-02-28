@@ -8,18 +8,6 @@ package HrzMonitoringProtocol;
 option  cc_enable_arenas = true;
 option  optimize_for     = LITE_RUNTIME;
 
-// Used for unit tests only. Don't use otherwise.
-message SampleTest {
-    string          name                   = 1;
-    uint64          entry                  = 2;
-    uint64          exit                   = 3;
-    uint32          recursion_max          = 4;
-    uint32          aggregation_count      = 5;
-    uint64          aggregation_time_total = 6;
-
-    repeated Sample children               = 7;
-}
-
 // Sent to the Horizon client by the monitoring application when it refuses the
 // connection. The connection is immediatly shut down once the message is sent.
 message ServerDenial { string message = 1; }
@@ -265,6 +253,8 @@ message Threads { repeated Thread threads = 1; }
 // Represents a single monitoring message.
 // This is the message type that is output by Horizon.
 message MonitoringMessage {
+    reserved 100;
+
     oneof kind {
         Sample               sample        = 1;
         ClientHello          client_hello  = 2;
@@ -275,8 +265,6 @@ message MonitoringMessage {
         Threads              threads       = 8;
 
         ServerDenial         server_denial = 6;
-
-        SampleTest           sample_test   = 100;
     }
 }
 
