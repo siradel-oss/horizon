@@ -19,6 +19,10 @@ Once you have write access, to publish the branch:
 - Otherwise, try manually looking for the closest commit corresponding to `the_commit` on the public version of `my_base` and if found, create `my_branch` there. This is because some commits might not be mirrored to the public repository, for instance when they only contain modifications to files that are not public.
 - If all this fails, you are on your own.
 
+### Troubleshooting
+
+We have sometimes noticed issues when pushing changes from Copybara to the public repository in the form of errors 55 in Curl. This seems to be related to the size of commits to push. Manually executing the `publish.py` script from another machine has fixed the issue, but there seem to exist other (untested) options, such as adjusting the `http.postBuffer` git option.
+
 ## Selecting files to publish
 
 In the `ci/oss_publish/files.json` file, the `include` and `exclude` arrays contain the patterns for publication. We begin with all the files
