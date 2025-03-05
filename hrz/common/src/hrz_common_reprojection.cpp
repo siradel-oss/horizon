@@ -1,7 +1,7 @@
 #include "hrz_common_reprojection.h"
 
-#include <hrz_common_proj.h>
-#include <hrz_common_proto_maths.h>
+#include "hrz_common_planet.h"
+#include "hrz_common_proj.h"
 
 namespace hrz
 {
@@ -51,16 +51,16 @@ int32_t compute_level_offset(const hrz_proto::TilingSchemeParams& tiling_scheme)
 }
 
 ImageTilingInfo compute_image_tiling_info(
-    const hrz_proto::RasterGeometry& raster_params,
+    const hrz::planet::TiledRasterGeometry& raster_params,
     const pl_Crs* image_projection_crs)
 {
     ImageTilingInfo info;
 
-    if (raster_params.tiling_scheme().type() == hrz_proto::GLOBAL)
+    if (raster_params.tiling_scheme.type() == hrz_proto::GLOBAL)
     {
-        auto& tiling_scheme = raster_params.tiling_scheme().global_tiling();
+        auto& tiling_scheme = raster_params.tiling_scheme.global_tiling();
 
-        info.domain_bounds = to_lm(raster_params.projection_bounds());
+        info.domain_bounds = raster_params.projection_bounds;
         if (info.domain_bounds.min == lm::dvec2(0) && info.domain_bounds.max == lm::dvec2(0))
         {
             // Use pre-defined bounds for EPSG:4326 and EPSG:3857.
@@ -86,7 +86,7 @@ ImageTilingInfo compute_image_tiling_info(
 
         // Having more than one tile at level 0 on any axis is equivalent
         // to offsetting the levels.
-        info.lod_offset = compute_level_offset(raster_params.tiling_scheme());
+        info.lod_offset = compute_level_offset(raster_params.tiling_scheme);
 
         info.domain_pixel_size = {
             info.level_zero_tile_count_x * ((uint64_t)1 << info.max_lod)
@@ -100,11 +100,11 @@ ImageTilingInfo compute_image_tiling_info(
             tiling_scheme.border_tile_aspect() == hrz_proto::BorderTileAspect::FULL_SIZED;
         info.tiling_origin = hrz_proto::TilingOrigin::TOP_ORIGIN;
     }
-    else if (raster_params.tiling_scheme().type() == hrz_proto::LOCAL)
+    else if (raster_params.tiling_scheme.type() == hrz_proto::LOCAL)
     {
-        auto& tiling_scheme = raster_params.tiling_scheme().local_tiling();
+        auto& tiling_scheme = raster_params.tiling_scheme.local_tiling();
 
-        info.lod_offset = compute_level_offset(raster_params.tiling_scheme());
+        info.lod_offset = compute_level_offset(raster_params.tiling_scheme);
         info.min_lod = tiling_scheme.min_level();
         info.max_lod = tiling_scheme.max_level();
         info.provider_tile_pixel_size = tiling_scheme.tile_size();
@@ -112,8 +112,8 @@ ImageTilingInfo compute_image_tiling_info(
         info.level_zero_tile_count_y = 1;
 
         info.domain_bounds = lm::dbbox2(
-            {raster_params.projection_bounds().x_min(), raster_params.projection_bounds().y_min()},
-            {raster_params.projection_bounds().x_max(), raster_params.projection_bounds().y_max()});
+            {raster_params.projection_bounds.min.x, raster_params.projection_bounds.min.y},
+            {raster_params.projection_bounds.max.x, raster_params.projection_bounds.max.y});
 
         info.domain_bounds_size = lm::size(info.domain_bounds);
 
@@ -131,7 +131,7 @@ ImageTilingInfo compute_image_tiling_info(
         assert(false && "Unhandled case");
     }
 
-    lm::dbbox2 image_bounds = to_lm(raster_params.bounds());
+    lm::dbbox2 image_bounds = raster_params.bounds;
     if (image_bounds.min == lm::dvec2(0) && image_bounds.max == lm::dvec2(0))
     {
         image_bounds = info.domain_bounds;
@@ -160,16 +160,13 @@ ImageTilingInfo compute_image_tiling_info(
     info.max_available_mipmap_level = std::min(
         info.max_mipmap_level, info.max_mipmap_level + info.lod_offset - (int)info.min_lod);
 
-    if (raster_params.bounds().x_min() == 0 && raster_params.bounds().y_min() == 0
-        && raster_params.bounds().x_max() == 0 && raster_params.bounds().y_max() == 0)
+    if (raster_params.bounds.min == lm::dvec2(0) && raster_params.bounds.max == lm::dvec2(0))
     {
         info.raster_bounds = info.domain_bounds;
     }
     else
     {
-        info.raster_bounds = lm::dbbox2(
-            {raster_params.bounds().x_min(), raster_params.bounds().y_min()},
-            {raster_params.bounds().x_max(), raster_params.bounds().y_max()});
+        info.raster_bounds = raster_params.bounds;
     }
 
     return info;

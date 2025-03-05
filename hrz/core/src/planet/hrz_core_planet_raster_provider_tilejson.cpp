@@ -72,7 +72,7 @@ public:
         }
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == InternalStatus::Ready);
 
@@ -148,13 +148,13 @@ private:
 
         auto& tilejson = tilejson_opt.value();
 
-        auto projection = geometry.mutable_projection();
-        projection->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-        projection->set_descriptor(hrz_proj::wmerc_proj_str);
+        geometry.projection.set_descriptor_type(
+            hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
+        geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
 
         // The spec says "The global-mercator (aka Spherical Mercator) profile is assumed".
-        geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
-        auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+        geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
+        auto tiling = geometry.tiling_scheme.mutable_global_tiling();
         tiling->set_tile_size(256);
         tiling->set_level_zero_tile_count_x(1);
         tiling->set_level_zero_tile_count_y(1);
@@ -174,10 +174,7 @@ private:
         web_mercator_bounds.max.y =
             std::min(web_mercator_bounds.max.y, hrz::MERCATOR_MAX_LAT_METERS);
 
-        geometry.mutable_bounds()->set_x_min(web_mercator_bounds.min.x);
-        geometry.mutable_bounds()->set_y_min(web_mercator_bounds.min.y);
-        geometry.mutable_bounds()->set_x_max(web_mercator_bounds.max.x);
-        geometry.mutable_bounds()->set_y_max(web_mercator_bounds.max.y);
+        geometry.bounds = web_mercator_bounds;
 
         AttributionHandle attribution_handles[] = {
             attribution::register_attribution(attributions, {additional_attribution, ""}),
@@ -339,7 +336,7 @@ private:
     assets_loader::Ticket descriptor_download_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     uint64_t raster_id;
 };

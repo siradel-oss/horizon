@@ -213,7 +213,7 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
         projection->set_descriptor_type(hrz_proto::SrsDescriptorType::SRID_DESCRIPTOR);
         projection->set_descriptor("EPSG:3857");
 
-        auto* tiling_scheme = geometry->mutable_tiling_scheme();
+        auto* tiling_scheme = tiled_provider->mutable_tiling_scheme();
         tiling_scheme->set_type(hrz_proto::GLOBAL);
         tiling_scheme->mutable_global_tiling()->set_min_level(min_zoom);
         tiling_scheme->mutable_global_tiling()->set_max_level(max_zoom);

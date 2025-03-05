@@ -417,9 +417,9 @@ std::unique_ptr<SamplingFunction> make_sampling_function(
     }
     else if (image_format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM)
     {
-        return std::unique_ptr<SamplingFunction>(new DtmSamplingFunction(
+        return std::make_unique<DtmSamplingFunction>(
             fetch_mapzen_terrarium_pixel, alpha_channel_usage, std::move(nodata_function),
-            filtering));
+            filtering);
     }
     else
     {

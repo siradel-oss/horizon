@@ -6010,10 +6010,10 @@ private:
 
                     const auto& geometry = load_pmtiles_task_data.pmtiles->get_geometry();
 
-                    data_source.min_lod = geometry.tiling_scheme().global_tiling().min_level();
-                    data_source.max_lod = geometry.tiling_scheme().global_tiling().max_level();
+                    data_source.min_lod = geometry.tiling_scheme.global_tiling().min_level();
+                    data_source.max_lod = geometry.tiling_scheme.global_tiling().max_level();
 
-                    data_source.bounds = hrz::web_mercator_bounds_to_geo(to_lm(geometry.bounds()));
+                    data_source.bounds = hrz::web_mercator_bounds_to_geo(geometry.bounds);
 
                     auto new_attribution = attribution::register_attribution(
                         attributions, {load_pmtiles_task_data.pmtiles->get_attribution(), ""});

@@ -356,7 +356,7 @@ public:
         return fetcher->get_tile_image((TileFetcher::LockTicket)lock_ticket);
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == InternalStatus::Ready);
 
@@ -598,12 +598,12 @@ private:
         {
             // This is a web Mercator global tiling scheme.
 
-            auto projection = geometry.mutable_projection();
-            projection->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            projection->set_descriptor(hrz_proj::wmerc_proj_str);
+            geometry.projection.set_descriptor_type(
+                hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
+            geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
 
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
+            auto tiling = geometry.tiling_scheme.mutable_global_tiling();
             tiling->set_tile_size(tile_size);
             tiling->set_level_zero_tile_count_x(1);
             tiling->set_level_zero_tile_count_y(1);
@@ -616,12 +616,12 @@ private:
         {
             // This is a lat-long global tiling scheme.
 
-            auto projection = geometry.mutable_projection();
-            projection->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            projection->set_descriptor(hrz_proj::lonlat_deg_proj_str);
+            geometry.projection.set_descriptor_type(
+                hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
+            geometry.projection.set_descriptor(hrz_proj::lonlat_deg_proj_str);
 
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
+            auto tiling = geometry.tiling_scheme.mutable_global_tiling();
             tiling->set_tile_size(tile_size);
             tiling->set_level_zero_tile_count_x(2);
             tiling->set_level_zero_tile_count_y(1);
@@ -659,12 +659,12 @@ private:
 
             uint64_t full_image_size = tile_size * tile_count_at_max_lod;
 
-            auto projection = geometry.mutable_projection();
-            projection->set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
-            projection->set_descriptor(srid_descriptor);
+            geometry.projection.set_descriptor_type(
+                HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
+            geometry.projection.set_descriptor(srid_descriptor);
 
-            geometry.mutable_tiling_scheme()->set_type(HrzProtocol::TilingSchemeType::LOCAL);
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_local_tiling();
+            geometry.tiling_scheme.set_type(HrzProtocol::TilingSchemeType::LOCAL);
+            auto tiling = geometry.tiling_scheme.mutable_local_tiling();
             tiling->set_full_image_width(full_image_size);
             tiling->set_full_image_height(full_image_size);
             tiling->set_tile_size(tile_size);
@@ -677,34 +677,26 @@ private:
             tiling->set_border_tile_aspect(hrz_proto::BorderTileAspect::FULL_SIZED);
             tiling->set_tiling_origin(hrz_proto::TilingOrigin::TOP_ORIGIN);
 
-            auto projection_bounds = geometry.mutable_projection_bounds();
-            projection_bounds->set_x_min(origin.x);
-            projection_bounds->set_y_min(bounds_max.y);
-            projection_bounds->set_x_max(bounds_max.x);
-            projection_bounds->set_y_max(origin.y);
+            geometry.projection_bounds.min.x = origin.x;
+            geometry.projection_bounds.min.y = bounds_max.y;
+            geometry.projection_bounds.max.x = bounds_max.x;
+            geometry.projection_bounds.max.y = origin.y;
         }
 
-        auto bounds = geometry.mutable_bounds();
         if (ignore_extent)
         {
-            bounds->set_x_min(0);
-            bounds->set_y_min(0);
-            bounds->set_x_max(0);
-            bounds->set_y_max(0);
+            geometry.bounds = lm::dbbox2{};
         }
         else if (full_extent.has_value())
         {
-            bounds->set_x_min(full_extent->min.x);
-            bounds->set_y_min(full_extent->min.y);
-            bounds->set_x_max(full_extent->max.x);
-            bounds->set_y_max(full_extent->max.y);
+            geometry.bounds = full_extent.value();
         }
         else
         {
-            bounds->set_x_min(origin.x);
-            bounds->set_y_min(bounds_max.y);
-            bounds->set_x_max(bounds_max.x);
-            bounds->set_y_max(origin.y);
+            geometry.bounds.min.x = origin.x;
+            geometry.bounds.min.y = bounds_max.y;
+            geometry.bounds.max.x = bounds_max.x;
+            geometry.bounds.max.y = origin.y;
         }
 
         auto url_generator = std::make_unique<::TileUrlGenerator>(
@@ -907,11 +899,8 @@ private:
             srid = 3857;
         }
 
-        {
-            auto* projection = geometry.mutable_projection();
-            projection->set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
-            projection->set_descriptor(fmt::format("EPSG:{}", srid));
-        }
+        geometry.projection.set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
+        geometry.projection.set_descriptor(fmt::format("EPSG:{}", srid));
 
         std::optional<Extent> full_extent = std::nullopt;
         if (doc.HasMember("fullExtent"))
@@ -958,24 +947,16 @@ private:
             extent = reproject_extent(extent, srid);
         }
 
-        auto* projection = geometry.mutable_projection();
-        projection->set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
-        projection->set_descriptor(fmt::format("EPSG:{}", srid));
+        geometry.projection.set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
+        geometry.projection.set_descriptor(fmt::format("EPSG:{}", srid));
 
-        auto* mutable_bounds = geometry.mutable_bounds();
         if (!ignore_extent)
         {
-            mutable_bounds->set_x_min(extent.bounds.min.x);
-            mutable_bounds->set_y_min(extent.bounds.min.y);
-            mutable_bounds->set_x_max(extent.bounds.max.x);
-            mutable_bounds->set_y_max(extent.bounds.max.y);
+            geometry.bounds = extent.bounds;
         }
         else
         {
-            mutable_bounds->set_x_min(0);
-            mutable_bounds->set_y_min(0);
-            mutable_bounds->set_x_max(0);
-            mutable_bounds->set_y_max(0);
+            geometry.bounds = lm::dbbox2{};
         }
 
         int max_image_width = hrz::json::get_int_or(doc, "maxImageWidth", 256);
@@ -987,8 +968,8 @@ private:
         }
         uint32_t tile_size = (uint32_t)std::min(256, std::min(max_image_width, max_image_height));
 
-        geometry.mutable_tiling_scheme()->set_type(HrzProtocol::TilingSchemeType::GLOBAL);
-        auto* tiling_scheme = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+        geometry.tiling_scheme.set_type(HrzProtocol::TilingSchemeType::GLOBAL);
+        auto* tiling_scheme = geometry.tiling_scheme.mutable_global_tiling();
         tiling_scheme->set_tile_size(tile_size);
         tiling_scheme->set_border_tile_aspect(HrzProtocol::BorderTileAspect::FULL_SIZED);
 
@@ -1248,7 +1229,7 @@ private:
     assets_loader::Ticket download_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     uint64_t raster_id;
 };

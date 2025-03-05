@@ -137,7 +137,7 @@ public:
         return fetcher->get_tile_image((TileFetcher::LockTicket)lock_ticket);
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == InternalStatus::Ready);
 
@@ -246,7 +246,7 @@ public:
                                 std::move(response.url_patterns),
                                 std::move(response.matrix_identifiers)),
                             headers),
-                        response.geometry.tiling_scheme().local_tiling().min_level(),
+                        response.geometry.tiling_scheme.local_tiling().min_level(),
                         missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                         std::make_unique<ImageTileDecoder>(image_format, raster_id),
                         std::make_unique<SimpleTileAttributionPolicy>(attribution),
@@ -377,7 +377,7 @@ private:
     hrz_jobs::ParseWmtsResourceTicket parsing_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     uint64_t raster_id;
 };

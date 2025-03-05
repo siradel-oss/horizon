@@ -1117,16 +1117,16 @@ public:
                                         : std::string_view{};
     }
 
-    hrz_proto::RasterGeometry get_geometry() const override
+    hrz::planet::TiledRasterGeometry get_geometry() const override
     {
-        hrz_proto::RasterGeometry geometry;
+        hrz::planet::TiledRasterGeometry geometry;
 
-        auto projection = geometry.mutable_projection();
-        projection->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-        projection->set_descriptor(hrz_proj::wmerc_proj_str);
+        auto& projection = geometry.projection;
+        projection.set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
+        projection.set_descriptor(hrz_proj::wmerc_proj_str);
 
-        geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
-        auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+        geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
+        auto tiling = geometry.tiling_scheme.mutable_global_tiling();
         tiling->set_tile_size(256); // @Todo Not sure how to handle this
         tiling->set_level_zero_tile_count_x(1);
         tiling->set_level_zero_tile_count_y(1);
@@ -1144,10 +1144,7 @@ public:
         web_mercator_bounds.max.y =
             std::min(web_mercator_bounds.max.y, hrz::MERCATOR_MAX_LAT_METERS);
 
-        geometry.mutable_bounds()->set_x_min(web_mercator_bounds.min.x);
-        geometry.mutable_bounds()->set_y_min(web_mercator_bounds.min.y);
-        geometry.mutable_bounds()->set_x_max(web_mercator_bounds.max.x);
-        geometry.mutable_bounds()->set_y_max(web_mercator_bounds.max.y);
+        geometry.bounds = web_mercator_bounds;
 
         return geometry;
     }

@@ -76,7 +76,7 @@ hrz::JobResult run(
 
     auto check_srs = [&]()
     {
-        if (!hrz::convert_crs(srs.c_str(), response.geometry.mutable_projection()))
+        if (!hrz::convert_crs(srs.c_str(), &response.geometry.projection))
         {
             // Gdal2tiles writes the SRS in WKT, and this is not supported.
             // It has to be manually changed to a PROJ.4 string.
@@ -169,7 +169,7 @@ hrz::JobResult run(
     // Let's wait until the need arises.
     //     -tpetillon, 2020-06-12
 
-    auto* tiling_scheme = response.geometry.mutable_tiling_scheme();
+    auto* tiling_scheme = &response.geometry.tiling_scheme;
 
     if (profile == Profile::Mercator)
     {
@@ -238,11 +238,7 @@ hrz::JobResult run(
         return hrz::JobResult::FAILURE;
     }
 
-    auto* response_bounds = response.geometry.mutable_bounds();
-    response_bounds->set_x_min(bounds.min.x);
-    response_bounds->set_y_min(bounds.min.y);
-    response_bounds->set_x_max(bounds.max.x);
-    response_bounds->set_y_max(bounds.max.y);
+    response.geometry.bounds = bounds;
 
     // It is possible to create tilesets with the XYZ tiling scheme using gdal2tiles.
     // However, their tilemapresource.xml is strictly identical to those of TMS tilesets.

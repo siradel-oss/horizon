@@ -104,18 +104,10 @@ lm::dbbox2 transform_and_intersect_bbox(
     return lm::intersection(bbox, transformed_bbox.value());
 }
 
-void set_proto_bbox(hrz_proto::Bboxd* proto_bbox, const lm::dbbox2& bbox)
-{
-    proto_bbox->set_x_min(bbox.min.x);
-    proto_bbox->set_y_min(bbox.min.y);
-    proto_bbox->set_x_max(bbox.max.x);
-    proto_bbox->set_y_max(bbox.max.y);
-}
-
 struct GetTileMethod
 {
     hrz::planet::WmtsGetTileMethod method;
-    const std::string_view url;
+    std::string_view url;
 };
 
 // Only RESTful and KVP methods, combined with GET requests, are currently supported.
@@ -701,12 +693,12 @@ hrz::JobResult run(
 
             if (is_global_web_mercator(matrix_set))
             {
-                geometry.mutable_projection()->set_descriptor(hrz_proj::wmerc_proj_str);
-                geometry.mutable_projection()->set_descriptor_type(
+                geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
+                geometry.projection.set_descriptor_type(
                     hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-                geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
+                geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
 
-                auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+                auto tiling = geometry.tiling_scheme.mutable_global_tiling();
                 tiling->set_tile_size(256);
                 tiling->set_level_zero_tile_count_x(1);
                 tiling->set_level_zero_tile_count_y(1);
@@ -716,14 +708,14 @@ hrz::JobResult run(
             }
             else
             {
-                geometry.mutable_projection()->set_descriptor(matrix_set.crs_string);
-                geometry.mutable_projection()->set_descriptor_type(
+                geometry.projection.set_descriptor(matrix_set.crs_string);
+                geometry.projection.set_descriptor_type(
                     hrz_proto::SrsDescriptorType::SRID_DESCRIPTOR);
-                geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::LOCAL);
+                geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::LOCAL);
 
                 uint32_t max_level = matrix_set.matrix_identifiers.size() - 1;
 
-                auto tiling = geometry.mutable_tiling_scheme()->mutable_local_tiling();
+                auto tiling = geometry.tiling_scheme.mutable_local_tiling();
                 tiling->set_full_image_width(
                     matrix_set.level_zero_tile_count.x * ((uint64_t)1 << max_level)
                     * matrix_set.tile_size);
@@ -745,7 +737,7 @@ hrz::JobResult run(
                 tiling->set_border_tile_aspect(hrz_proto::BorderTileAspect::FULL_SIZED);
                 tiling->set_tiling_origin(hrz_proto::TilingOrigin::TOP_ORIGIN);
 
-                set_proto_bbox(geometry.mutable_projection_bounds(), matrix_set.projection_bounds);
+                geometry.projection_bounds = matrix_set.projection_bounds;
             }
 
             lm::dbbox2 bounds = matrix_set.bounds;
@@ -761,7 +753,7 @@ hrz::JobResult run(
                     bounds, layer_wgs84_bbox.value(), matrix_set.crs_string);
             }
 
-            set_proto_bbox(geometry.mutable_bounds(), bounds);
+            geometry.bounds = bounds;
 
             // A TileMatrixSetLink can define a TileMatrixSetLimits structure, that tells for each
             // TileMatrix the range in X and Y coordinates of the tiles that can be requested.

@@ -8,6 +8,12 @@ struct pl_Crs;
 
 namespace hrz
 {
+
+namespace planet
+{
+struct TiledRasterGeometry;
+}
+
 // This structure's role is to unify the cases of global and local
 // tiling schemes. They are both considered as instances of images
 // placed somewhere inside a domain. The domain is tiled, and the
@@ -36,7 +42,7 @@ struct ImageTilingInfo
 int32_t compute_level_offset(const hrz_proto::TilingSchemeParams& tiling_scheme);
 
 ImageTilingInfo compute_image_tiling_info(
-    const hrz_proto::RasterGeometry& raster_params,
+    const hrz::planet::TiledRasterGeometry& raster_params,
     const pl_Crs* image_projection_crs);
 
 // Computes the position in pixels in the raster from the position in the raster's projection.

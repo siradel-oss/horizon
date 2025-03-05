@@ -979,12 +979,12 @@ hrz::JobResult run(
 
         if (srs == "EPSG:3857")
         {
-            geometry.mutable_projection()->set_descriptor(proj_str);
-            geometry.mutable_projection()->set_descriptor_type(
+            geometry.projection.set_descriptor(proj_str);
+            geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
 
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+            auto tiling = geometry.tiling_scheme.mutable_global_tiling();
             tiling->set_tile_size(256);
             tiling->set_level_zero_tile_count_x(1);
             tiling->set_level_zero_tile_count_y(1);
@@ -994,12 +994,12 @@ hrz::JobResult run(
         }
         else if (srs == "EPSG:4326" || srs == "CRS:84")
         {
-            geometry.mutable_projection()->set_descriptor(proj_str);
-            geometry.mutable_projection()->set_descriptor_type(
+            geometry.projection.set_descriptor(proj_str);
+            geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
 
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+            auto tiling = geometry.tiling_scheme.mutable_global_tiling();
             tiling->set_tile_size(256);
             tiling->set_level_zero_tile_count_x(2);
             tiling->set_level_zero_tile_count_y(1);
@@ -1009,12 +1009,12 @@ hrz::JobResult run(
         }
         else
         {
-            geometry.mutable_projection()->set_descriptor(proj_str);
-            geometry.mutable_projection()->set_descriptor_type(
+            geometry.projection.set_descriptor(proj_str);
+            geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::LOCAL);
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::LOCAL);
 
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_local_tiling();
+            auto tiling = geometry.tiling_scheme.mutable_local_tiling();
             tiling->set_full_image_width(min_scale_full_image_size.x);
             tiling->set_full_image_height(min_scale_full_image_size.y);
             tiling->set_tile_size(tile_size);
@@ -1027,14 +1027,6 @@ hrz::JobResult run(
             tiling->set_tiling_origin(hrz_proto::TilingOrigin::TOP_ORIGIN);
         }
 
-        auto set_proto_bbox = [](hrz_proto::Bboxd* proto_bbox, const lm::dbbox2& bbox)
-        {
-            proto_bbox->set_x_min(bbox.min.x);
-            proto_bbox->set_y_min(bbox.min.y);
-            proto_bbox->set_x_max(bbox.max.x);
-            proto_bbox->set_y_max(bbox.max.y);
-        };
-
         if (swap_axes)
         {
             std::swap(bounds.min.x, bounds.min.y);
@@ -1043,15 +1035,15 @@ hrz::JobResult run(
 
         assert(
             lm::is_valid(bounds)
-            || geometry.tiling_scheme().type() == hrz_proto::TilingSchemeType::GLOBAL);
+            || geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::GLOBAL);
         if (lm::is_valid(bounds))
         {
-            set_proto_bbox(geometry.mutable_bounds(), bounds);
+            geometry.bounds = bounds;
         }
 
-        if (geometry.tiling_scheme().type() == hrz_proto::TilingSchemeType::LOCAL)
+        if (geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::LOCAL)
         {
-            set_proto_bbox(geometry.mutable_projection_bounds(), bounds);
+            geometry.projection_bounds = bounds;
         }
     }
 

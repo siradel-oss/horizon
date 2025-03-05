@@ -1940,4 +1940,28 @@ bool migration_2c75ee8f_to_db6a65c4(const DynamicMessage& src, DynamicMessage* d
 
     return true;
 }
+
+// Move the tiling_scheme field from RasterGeometry to TiledImageRasterProviderParams
+bool migration_db6a65c4_to_b232d003(const DynamicMessage& src, DynamicMessage* dst)
+{
+    auto migrate_layer = [](const DynamicMessage& src, DynamicMessage* dst) -> bool
+    {
+        auto src_provider = src.get_message("raster").get_message("provider");
+        auto dst_provider = dst->get_message("raster").get_message("provider");
+
+        return walk_fields_of_type(
+            "HrzProtocol.TiledImageRasterProviderParams", src_provider, &dst_provider,
+            [](const DynamicMessage& src, DynamicMessage* dst) -> bool
+            {
+                dst->copy_message(
+                    "tiling_scheme", src.get_message("geometry").get_message("tiling_scheme"));
+                return true;
+            });
+    };
+
+    if (!visit_layers_of_type("imagery_raster", src, dst, migrate_layer)) return false;
+    if (!visit_layers_of_type("dtm_raster", src, dst, migrate_layer)) return false;
+    return true;
+}
+
 } // namespace hrz::migration

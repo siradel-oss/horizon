@@ -122,7 +122,7 @@ public:
         return fetcher->get_tile_image((TileFetcher::LockTicket)lock_ticket);
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == InternalStatus::Ready);
 
@@ -357,7 +357,7 @@ private:
     hrz_jobs::ParseTilemapResourceTicket parsing_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     uint64_t raster_id;
 };

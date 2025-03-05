@@ -215,7 +215,7 @@ void hrz::planet::ElevationQuery::_start_culling(
     JobScheduler* js,
     uint64_t raster_ids_hash,
     gsl::span<const Raster*> rasters,
-    gsl::span<const hrz_proto::RasterGeometry> raster_geometries,
+    gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
     Ticket ticket)
 {
     Batch* batch = _batchs.get_object(ticket);
@@ -283,7 +283,7 @@ void hrz::planet::ElevationQuery::_start_sampling(
     JobScheduler* js,
     BlobAllocator* ba,
     gsl::span<const Raster*> rasters,
-    gsl::span<const hrz_proto::RasterGeometry> raster_geometries,
+    gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
     Ticket ticket,
     Batch* batch)
 {
@@ -296,7 +296,7 @@ void hrz::planet::ElevationQuery::_start_sampling(
     {
         SamplePointsQueryParams::Raster job_raster;
         job_raster.image_format = rasters[i]->provider->get_image_format();
-        job_raster.geometry.CopyFrom(raster_geometries[i]);
+        job_raster.geometry = raster_geometries[i];
         job_raster.nodata.CopyFrom(rasters[i]->provider->get_nodata());
         job_raster.sampling.CopyFrom(rasters[i]->sampling);
         job_raster.blending.CopyFrom(rasters[i]->blending);
@@ -417,7 +417,7 @@ void hrz::planet::ElevationQuery::work(
 
     // We want to lazy-initialize those two arrays because we won't need them
     // 99% of the time.
-    std::vector<hrz_proto::RasterGeometry> raster_geometries_lazy(0);
+    std::vector<hrz::planet::TiledRasterGeometry> raster_geometries_lazy(0);
     std::vector<const Raster*> rasters_lazy(0);
     uint64_t raster_ids_hash_lazy = 0;
     bool all_rasters_ready_lazy;
@@ -454,7 +454,7 @@ void hrz::planet::ElevationQuery::work(
         }
     };
 
-    auto get_raster_geometries = [&]() -> const std::vector<hrz_proto::RasterGeometry>&
+    auto get_raster_geometries = [&]() -> const std::vector<hrz::planet::TiledRasterGeometry>&
     {
         if (!initialized_rasters_data)
         {

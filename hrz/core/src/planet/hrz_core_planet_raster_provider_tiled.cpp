@@ -11,12 +11,12 @@ namespace hrz::planet
 {
 namespace
 {
-unsigned int level_zero_tile_count_y(const hrz_proto::RasterGeometry& geometry)
+unsigned int level_zero_tile_count_y(const hrz_proto::TilingSchemeParams& tiling_scheme)
 {
-    switch (geometry.tiling_scheme().type())
+    switch (tiling_scheme.type())
     {
         case hrz_proto::TilingSchemeType::GLOBAL:
-            return geometry.tiling_scheme().global_tiling().level_zero_tile_count_y();
+            return tiling_scheme.global_tiling().level_zero_tile_count_y();
         case hrz_proto::TilingSchemeType::LOCAL: return 1;
         default: assert(false && "Unhandled case"); return 1;
     }
@@ -31,7 +31,7 @@ bool is_provider_model_complete(const hrz_proto::TiledImageRasterProviderParams&
 
     if (!check_crs(geometry.projection())) return false;
 
-    if (!is_tiling_scheme_model_complete(geometry.tiling_scheme())) return false;
+    if (!is_tiling_scheme_model_complete(model.tiling_scheme())) return false;
 
     return true;
 }
@@ -58,9 +58,9 @@ public:
             std::make_unique<UrlTileRequester>(
                 std::make_unique<PatternTileUrlGenerator>(
                     params.url_pattern(),
-                    level_zero_tile_count_y(params.geometry())),
+                    level_zero_tile_count_y(params.tiling_scheme())),
                 assets_loader::from_proto(params.http_headers())),
-            get_min_lod(params.geometry()),
+            get_min_lod(params.tiling_scheme()),
             missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
             std::make_unique<ImageTileDecoder>(image_format, raster_id),
             std::make_unique<SimpleTileAttributionPolicy>(params.attribution()),
@@ -70,7 +70,9 @@ public:
                 provider_request_tally_metric_name(
                     hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER),
                 params.url_pattern().c_str()}),
-        geometry(params.geometry())
+        geometry(TiledRasterGeometry::from_geometry_and_tiling_scheme(
+            params.geometry(),
+            params.tiling_scheme()))
     {
     }
 
@@ -95,7 +97,7 @@ public:
         return fetcher.get_tile_image((TileFetcher::LockTicket)lock_ticket);
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override { return geometry; }
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override { return geometry; }
 
     const hrz_proto::RasterNodata& get_nodata() const override { return nodata; }
 
@@ -194,7 +196,7 @@ private:
     hrz_proto::MissingTilePolicy missing_tile_policy;
 
     TileFetcher fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 };
 
 std::unique_ptr<RasterProvider> create_tiled_image_provider(

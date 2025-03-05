@@ -5,6 +5,7 @@
 #include "hrz_common_blob_array_view.h"
 #include "hrz_common_blob_image.h"
 #include "hrz_common_palette.h"
+#include "hrz_common_proto_maths.h"
 #include "hrz_common_tile_coords.h"
 
 #include <hrz_fnd_inlined_vector.h>
@@ -17,6 +18,28 @@
 
 namespace hrz::planet
 {
+
+// This mirrors the hrz_proto::RasterGeometry message, but adds the tiling scheme.
+struct TiledRasterGeometry
+{
+    static TiledRasterGeometry from_geometry_and_tiling_scheme(
+        const hrz_proto::RasterGeometry& geometry,
+        const hrz_proto::TilingSchemeParams& tiling_scheme)
+    {
+        TiledRasterGeometry result;
+        result.projection = geometry.projection();
+        result.projection_bounds = to_lm(geometry.projection_bounds());
+        result.bounds = to_lm(geometry.bounds());
+        result.tiling_scheme = tiling_scheme;
+        return result;
+    }
+
+    hrz_proto::SpatialReferenceSystem projection;
+    lm::dbbox2 projection_bounds;
+    lm::dbbox2 bounds;
+    hrz_proto::TilingSchemeParams tiling_scheme;
+};
+
 struct FeedbackData
 {
     hrz::BlobImage image;
@@ -31,7 +54,7 @@ struct TileList
 struct RasterTileReprojParams
 {
     hrz::TileCoords tile_coords;
-    hrz_proto::RasterGeometry raster_geometry;
+    hrz::planet::TiledRasterGeometry raster_geometry;
     // In Web Mercator (EPSG:3857)
     lm::dbbox2 raster_display_bounds;
     uint32_t quad_size;
@@ -117,7 +140,7 @@ struct SamplePointsQueryParams
     struct Raster
     {
         hrz_proto::ImageFormat image_format;
-        hrz_proto::RasterGeometry geometry;
+        hrz::planet::TiledRasterGeometry geometry;
         // In Web Mercator (EPSG:3857)
         lm::dbbox2 display_bounds;
         hrz_proto::RasterNodata nodata;
@@ -160,7 +183,7 @@ struct CullPointsQueryParams
 {
     struct Raster
     {
-        hrz_proto::RasterGeometry geometry;
+        hrz::planet::TiledRasterGeometry geometry;
         // In Web Mercator (EPSG:3857)
         lm::dbbox2 display_bounds;
     };
@@ -188,7 +211,7 @@ struct TilemapResourceParams
 struct TilemapResourceResponse
 {
     std::vector<std::string> url_patterns;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
     std::string attribution_title;
     std::string attribution_logo;
 };
@@ -213,7 +236,7 @@ struct WmtsResourceResponse
     WmtsGetTileMethod get_tile_method;
     std::vector<std::string> url_patterns;
     std::vector<std::string> matrix_identifiers;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 };
 
 struct WmsResourceParams
@@ -247,7 +270,7 @@ struct WmsResourceParams
 struct WmsResourceResponse
 {
     std::string url_template;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     struct Attribution
     {

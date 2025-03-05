@@ -84,12 +84,12 @@ void compute_tiled_mercator_reprojection(
 
     // The following code makes these assumptions.
     assert(MERCATOR_TILE_SIZE == ATLAS_TILE_SIZE - 2 * ATLAS_TILE_BORDER_SIZE);
-    assert(raster_geometry.tiling_scheme().has_global_tiling());
-    assert(raster_geometry.tiling_scheme().global_tiling().tile_size() == MERCATOR_TILE_SIZE);
-    assert(raster_geometry.tiling_scheme().global_tiling().level_zero_tile_count_x() == 1);
-    assert(raster_geometry.tiling_scheme().global_tiling().level_zero_tile_count_y() == 1);
+    assert(raster_geometry.tiling_scheme.has_global_tiling());
+    assert(raster_geometry.tiling_scheme.global_tiling().tile_size() == MERCATOR_TILE_SIZE);
+    assert(raster_geometry.tiling_scheme.global_tiling().level_zero_tile_count_x() == 1);
+    assert(raster_geometry.tiling_scheme.global_tiling().level_zero_tile_count_y() == 1);
     assert(
-        raster_geometry.tiling_scheme().global_tiling().border_tile_aspect()
+        raster_geometry.tiling_scheme.global_tiling().border_tile_aspect()
         == hrz_proto::BorderTileAspect::FULL_SIZED);
 
     // Don't know why it happens but it does...
@@ -99,10 +99,8 @@ void compute_tiled_mercator_reprojection(
         return;
     }
 
-    const auto raster_min_lod =
-        (uint8_t)raster_geometry.tiling_scheme().global_tiling().min_level();
-    const auto raster_max_lod =
-        (uint8_t)raster_geometry.tiling_scheme().global_tiling().max_level();
+    const auto raster_min_lod = (uint8_t)raster_geometry.tiling_scheme.global_tiling().min_level();
+    const auto raster_max_lod = (uint8_t)raster_geometry.tiling_scheme.global_tiling().max_level();
 
     if (raster_min_lod > raster_max_lod) return;
 
@@ -135,17 +133,14 @@ void compute_tiled_mercator_reprojection(
 
     std::optional<lm::dbbox2> raster_bounds = std::nullopt;
     {
-        const auto geometry_bounds = hrz::to_lm(params.raster_geometry.bounds());
+        const auto& geometry_bounds = params.raster_geometry.bounds;
         const bool geometry_bounds_set =
-            !(geometry_bounds.min.x == 0 && geometry_bounds.min.y == 0 && geometry_bounds.max.x == 0
-              && geometry_bounds.max.y == 0);
+            !(geometry_bounds.min == lm::dvec2(0) && geometry_bounds.max == lm::dvec2(0));
 
         const auto& display_bounds = params.raster_display_bounds;
         const bool display_bounds_set =
-            !(geometry_bounds.min.x == -hrz::HALF_MERCATOR_RANGE
-              && geometry_bounds.min.y == -hrz::HALF_MERCATOR_RANGE
-              && geometry_bounds.max.x == hrz::HALF_MERCATOR_RANGE
-              && geometry_bounds.max.y == hrz::HALF_MERCATOR_RANGE);
+            !(geometry_bounds.min == lm::dvec2(-hrz::HALF_MERCATOR_RANGE)
+              && geometry_bounds.max == lm::dvec2(hrz::HALF_MERCATOR_RANGE));
 
         if (geometry_bounds_set && display_bounds_set)
         {
@@ -1156,19 +1151,19 @@ void compute_tiled_image_reprojection(
 
     const auto& raster_geometry = params.raster_geometry;
 
-    if (raster_geometry.tiling_scheme().type() == hrz_proto::GLOBAL)
+    if (raster_geometry.tiling_scheme.type() == hrz_proto::GLOBAL)
     {
-        assert(raster_geometry.tiling_scheme().has_global_tiling());
-        assert(raster_geometry.tiling_scheme().global_tiling().tile_size() > 0);
-        assert(raster_geometry.tiling_scheme().global_tiling().level_zero_tile_count_x() > 0);
-        assert(raster_geometry.tiling_scheme().global_tiling().level_zero_tile_count_y() > 0);
+        assert(raster_geometry.tiling_scheme.has_global_tiling());
+        assert(raster_geometry.tiling_scheme.global_tiling().tile_size() > 0);
+        assert(raster_geometry.tiling_scheme.global_tiling().level_zero_tile_count_x() > 0);
+        assert(raster_geometry.tiling_scheme.global_tiling().level_zero_tile_count_y() > 0);
     }
-    else if (raster_geometry.tiling_scheme().type() == hrz_proto::LOCAL)
+    else if (raster_geometry.tiling_scheme.type() == hrz_proto::LOCAL)
     {
-        assert(raster_geometry.tiling_scheme().has_local_tiling());
-        assert(raster_geometry.tiling_scheme().local_tiling().full_image_width() > 0);
-        assert(raster_geometry.tiling_scheme().local_tiling().full_image_height() > 0);
-        assert(raster_geometry.tiling_scheme().local_tiling().tile_size() > 0);
+        assert(raster_geometry.tiling_scheme.has_local_tiling());
+        assert(raster_geometry.tiling_scheme.local_tiling().full_image_width() > 0);
+        assert(raster_geometry.tiling_scheme.local_tiling().full_image_height() > 0);
+        assert(raster_geometry.tiling_scheme.local_tiling().tile_size() > 0);
     }
     else
     {
@@ -1210,16 +1205,16 @@ hrz::JobResult run(
     pl_Crs web_mercator_crs = hrz_proj::wmerc;
 
     pl_Crs param_crs;
-    bool convert_success = hrz::convert_crs(raster_geometry.projection(), &param_crs);
+    bool convert_success = hrz::convert_crs(raster_geometry.projection, &param_crs);
     if (!convert_success) return hrz::JobResult::FAILURE;
 
-    const auto tiling_scheme_type = raster_geometry.tiling_scheme().type();
+    const auto tiling_scheme_type = raster_geometry.tiling_scheme.type();
     if (tiling_scheme_type == hrz_proto::TilingSchemeType::GLOBAL
         && pl_are_crs_equal(&param_crs, &web_mercator_crs)
-        && raster_geometry.tiling_scheme().global_tiling().tile_size() == MERCATOR_TILE_SIZE
-        && raster_geometry.tiling_scheme().global_tiling().level_zero_tile_count_x() == 1
-        && raster_geometry.tiling_scheme().global_tiling().level_zero_tile_count_y() == 1
-        && raster_geometry.tiling_scheme().global_tiling().border_tile_aspect()
+        && raster_geometry.tiling_scheme.global_tiling().tile_size() == MERCATOR_TILE_SIZE
+        && raster_geometry.tiling_scheme.global_tiling().level_zero_tile_count_x() == 1
+        && raster_geometry.tiling_scheme.global_tiling().level_zero_tile_count_y() == 1
+        && raster_geometry.tiling_scheme.global_tiling().border_tile_aspect()
             == hrz_proto::BorderTileAspect::FULL_SIZED)
     {
         // This is Horizon's native projection and tiling scheme.

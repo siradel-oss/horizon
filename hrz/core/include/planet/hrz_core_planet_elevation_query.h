@@ -13,9 +13,7 @@
 #include <hrz_fnd_variant.h>
 
 #include <deque>
-#include <mutex>
 #include <optional>
-#include <queue>
 
 namespace hrz
 {
@@ -212,7 +210,7 @@ private:
         JobScheduler* js,
         uint64_t raster_ids_hash,
         gsl::span<const Raster*> rasters,
-        gsl::span<const hrz_proto::RasterGeometry> raster_geometries,
+        gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
         Ticket ticket);
 
     void _start_waiting_for_tiles(
@@ -227,7 +225,7 @@ private:
         JobScheduler* js,
         BlobAllocator* ba,
         gsl::span<const Raster*> rasters,
-        gsl::span<const hrz_proto::RasterGeometry> raster_geometries,
+        gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
         Ticket ticket,
         Batch* batch);
 

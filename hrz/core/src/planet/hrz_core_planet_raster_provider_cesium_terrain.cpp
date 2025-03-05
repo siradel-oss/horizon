@@ -211,7 +211,7 @@ public:
         }
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == InternalStatus::Ready);
 
@@ -410,12 +410,12 @@ private:
         auto projection = hrz::json::get_str_or(doc, "projection", "EPSG:4326");
         if (std::strcmp(projection, "EPSG:4326") == 0)
         {
-            auto projection = geometry.mutable_projection();
-            projection->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            projection->set_descriptor(hrz_proj::lonlat_deg_proj_str);
+            geometry.projection.set_descriptor_type(
+                hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
+            geometry.projection.set_descriptor(hrz_proj::lonlat_deg_proj_str);
 
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
+            auto tiling = geometry.tiling_scheme.mutable_global_tiling();
             tiling->set_tile_size(256);
             tiling->set_level_zero_tile_count_x(2);
             tiling->set_level_zero_tile_count_y(1);
@@ -441,19 +441,19 @@ private:
                 }
             }
 
-            geometry.mutable_bounds()->set_x_min(lm::degrees(bounds.west));
-            geometry.mutable_bounds()->set_y_min(lm::degrees(bounds.south));
-            geometry.mutable_bounds()->set_x_max(lm::degrees(bounds.east));
-            geometry.mutable_bounds()->set_y_max(lm::degrees(bounds.north));
+            geometry.bounds.min.x = lm::degrees(bounds.west);
+            geometry.bounds.min.y = lm::degrees(bounds.south);
+            geometry.bounds.max.x = lm::degrees(bounds.east);
+            geometry.bounds.max.y = lm::degrees(bounds.north);
         }
         else if (std::strcmp(projection, "EPSG:3857") == 0)
         {
-            auto projection = geometry.mutable_projection();
-            projection->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            projection->set_descriptor(hrz_proj::wmerc_proj_str);
+            geometry.projection.set_descriptor_type(
+                hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
+            geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
 
-            geometry.mutable_tiling_scheme()->set_type(hrz_proto::TilingSchemeType::GLOBAL);
-            auto tiling = geometry.mutable_tiling_scheme()->mutable_global_tiling();
+            geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
+            auto tiling = geometry.tiling_scheme.mutable_global_tiling();
             tiling->set_tile_size(256);
             tiling->set_level_zero_tile_count_x(1);
             tiling->set_level_zero_tile_count_y(1);
@@ -479,10 +479,7 @@ private:
                 }
             }
 
-            geometry.mutable_bounds()->set_x_min(bounds.min.x);
-            geometry.mutable_bounds()->set_y_min(bounds.min.y);
-            geometry.mutable_bounds()->set_x_max(bounds.max.x);
-            geometry.mutable_bounds()->set_y_max(bounds.max.y);
+            geometry.bounds = bounds;
         }
         else
         {
@@ -655,7 +652,7 @@ private:
     assets_loader::Ticket descriptor_download_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
     bool use_tms_tile_coords;
     std::string tile_format;
 

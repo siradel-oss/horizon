@@ -424,31 +424,33 @@ enum BingProviderImageryType {
 message TiledImageRasterProviderParams {
     reserved 1;
 
-    RasterGeometry    geometry                 = 10;
+    RasterGeometry     geometry                 = 10;
+
+    TilingSchemeParams tiling_scheme            = 12;
 
     // oneof
     // Tile URL with parameters: {x}, {y} (0 is north), {-y} (0 is south),
     // {z} (level of detail, 0 is lowest), {quadkey} (see
     // https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system),
     // {char-char} subdomains.
-    string            url_pattern              = 2;
+    string             url_pattern              = 2;
 
-    HttpHeaderList    http_headers             = 5;
+    HttpHeaderList     http_headers             = 5;
 
-    string            attribution              = 9;
+    string             attribution              = 9;
 
     // The image format inside Horizon. For instance RGBA_U8 for imagery and
     // R_I32 for DTM.
-    ImageFormat       image_format             = 4;
+    ImageFormat        image_format             = 4;
 
-    RasterNodata      nodata                   = 11;
+    RasterNodata       nodata                   = 11;
 
-    MissingTilePolicy missing_tile_policy      = 6;
+    MissingTilePolicy  missing_tile_policy      = 6;
 
     // Override global setting for tile cache size.
-    bool              override_tile_cache_size = 8;
+    bool               override_tile_cache_size = 8;
     // Tile cache size when the global setting is overridden.
-    uint32            tile_cache_size          = 7;
+    uint32             tile_cache_size          = 7;
 }
 
 message BingProviderParams {
@@ -847,6 +849,8 @@ message SpatialReferenceSystem {
 }
 
 message RasterGeometry {
+    reserved 3;
+
     SpatialReferenceSystem projection        = 1;
 
     // Bounds of the projection domain, in its own coordinates.
@@ -854,15 +858,13 @@ message RasterGeometry {
     // web Mercator (EPSG:3857) or WGS84 (EPSG:4326).
     Bboxd                  projection_bounds = 2;
 
-    TilingSchemeParams     tiling_scheme     = 3;
-
     // Bounds of the raster in its projection system.
     // Default bounds cover the entire planet.
     Bboxd                  bounds            = 4;
 }
 
 message Raster {
-    reserved 1, 2, 3, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111;
+    reserved 1 to 3, 101 to 111;
 
     RasterProvider   provider         = 8;
     RasterSampling   sampling         = 5;

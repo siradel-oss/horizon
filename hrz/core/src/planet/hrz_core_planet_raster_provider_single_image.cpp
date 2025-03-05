@@ -28,8 +28,6 @@ bool is_provider_model_complete(const hrz_proto::SingleImageRasterProviderParams
 
     if (!check_crs(geometry.projection())) return false;
 
-    if (!is_tiling_scheme_model_complete(geometry.tiling_scheme())) return false;
-
     return true;
 }
 
@@ -52,7 +50,7 @@ public:
         nodata(params.nodata()),
         image_status(ImageStatus::NotStarted),
         load_ticket(0),
-        geometry(params.geometry()),
+        geometry(TiledRasterGeometry::from_geometry_and_tiling_scheme(params.geometry(), {})),
         al_queue(queue),
         raster_id(raster_id)
     {
@@ -112,7 +110,7 @@ public:
             {std::get<AttributionHandle>(attribution)}};
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(image_status == ImageStatus::Loaded);
 
@@ -276,10 +274,9 @@ public:
                     // that that has been set through the API, of type UNTILED, is replaced by
                     // a local tiling scheme.
 
-                    geometry.mutable_tiling_scheme()->set_type(
-                        HrzProtocol::TilingSchemeType::LOCAL);
+                    geometry.tiling_scheme.set_type(HrzProtocol::TilingSchemeType::LOCAL);
 
-                    auto local_tiling = geometry.mutable_tiling_scheme()->mutable_local_tiling();
+                    auto local_tiling = geometry.tiling_scheme.mutable_local_tiling();
                     local_tiling->set_full_image_width(image_width);
                     local_tiling->set_full_image_height(image_height);
                     local_tiling->set_tile_size(hrz::UNTILED_TILE_SIZE);
@@ -292,10 +289,7 @@ public:
                     local_tiling->set_border_tile_aspect(hrz_proto::BorderTileAspect::CLIPPED);
                     local_tiling->set_tiling_origin(hrz_proto::TilingOrigin::TOP_ORIGIN);
 
-                    geometry.mutable_projection_bounds()->set_x_min(geometry.bounds().x_min());
-                    geometry.mutable_projection_bounds()->set_y_min(geometry.bounds().y_min());
-                    geometry.mutable_projection_bounds()->set_x_max(geometry.bounds().x_max());
-                    geometry.mutable_projection_bounds()->set_y_max(geometry.bounds().y_max());
+                    geometry.projection_bounds = geometry.bounds;
 
                     image_status = ImageStatus::Loaded;
                 }
@@ -420,7 +414,7 @@ private:
     unsigned int image_width;
     unsigned int image_height;
     uint8_t max_level;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     hrz::flat_hash_map<TileCoords, BlobImage> tiles;
 

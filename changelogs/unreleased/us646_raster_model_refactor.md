@@ -2,6 +2,7 @@
 
 * **Rasters**
     * The `geometry` field is now a member of the relevant raster providers parameters ([[TiledImageRasterProviderParams]] and [[SingleImageRasterProviderParams]]) instead of being a member of `RasterParams`. For all other providers the geometry parameters are determined from the source data and the values of [[RasterGeometry]] were already ignored.
+    * The `tiling_scheme` field has been removed from `RasterGeometry` and added to the only provider that uses it: [[TiledImageRasterProviderParams]].
     * The `sampling`, `blending`, and `display_bounds` fields of `RasterParams` have been moved to [[Raster]].
     * The `RasterParams` structure has been removed.
     * The nodata value is now specified in the `nodata` field of each raster provider parameter structure, instead of being part of [[RasterSampling]]. The value is now inside a [[RasterNodata]] structure, that allows explicitly enabling or disabling the nodata value.

@@ -50,7 +50,7 @@ void get_tile(
 
 hrz::JobResult cull(
     uint32_t raster_index,
-    const hrz_proto::RasterGeometry& raster_geometry,
+    const hrz::planet::TiledRasterGeometry& raster_geometry,
     const lm::dbbox2& raster_display_bounds,
     hrz::ArrayView<const lm::dvec2> points_2d,
     hrz::planet::CulledPointsQuery& culled,
@@ -58,7 +58,7 @@ hrz::JobResult cull(
 {
     pl_Crs from = hrz_proj::wmerc;
     pl_Crs to;
-    bool ok = hrz::convert_crs(raster_geometry.projection(), &to);
+    bool ok = hrz::convert_crs(raster_geometry.projection, &to);
     (void)ok; // Prevent "unused variable" warning when assertions are disabled.
     assert(ok);
 
@@ -275,7 +275,7 @@ hrz::JobResult sample(
         // Transform all points to local coordinate system
         pl_Crs from = hrz_proj::wmerc;
         pl_Crs to;
-        bool ok = hrz::convert_crs(raster.geometry.projection(), &to);
+        bool ok = hrz::convert_crs(raster.geometry.projection, &to);
         assert(ok);
         (void)ok; // Prevent "unused variable" warning when assertions are disabled.
 

@@ -85,16 +85,16 @@ async function addDtmLayer(api: HrzApi.AsyncApi) {
                             descriptorType: HrzProtocol.SrsDescriptorType.SRID_DESCRIPTOR,
                             descriptor: "EPSG:3857",
                         },
-                        tilingScheme: {
-                            type: HrzProtocol.TilingSchemeType.GLOBAL,
-                            globalTiling: {
-                                tileSize: 256,
-                                levelZeroTileCountX: 1,
-                                levelZeroTileCountY: 1,
-                                minLevel: 0,
-                                maxLevel: 15,
-                                borderTileAspect: HrzProtocol.BorderTileAspect.FULL_SIZED,
-                            },
+                    },
+                    tilingScheme: {
+                        type: HrzProtocol.TilingSchemeType.GLOBAL,
+                        globalTiling: {
+                            tileSize: 256,
+                            levelZeroTileCountX: 1,
+                            levelZeroTileCountY: 1,
+                            minLevel: 0,
+                            maxLevel: 15,
+                            borderTileAspect: HrzProtocol.BorderTileAspect.FULL_SIZED,
                         },
                     },
                 },

@@ -104,7 +104,7 @@ class PmTilesRasterProvider : public RasterProvider
     size_t _tile_cache_capacity;
     std::unique_ptr<PmTiles> _pmtiles;
     std::unique_ptr<TileFetcher> _fetcher;
-    hrz_proto::RasterGeometry _geometry;
+    hrz::planet::TiledRasterGeometry _geometry;
 
 public:
     PmTilesRasterProvider(
@@ -239,7 +239,7 @@ public:
 
                     _fetcher = std::make_unique<TileFetcher>(
                         std::make_unique<PmTilesRequester>(_url, std::move(_pmtiles)),
-                        _geometry.tiling_scheme().global_tiling().min_level(),
+                        _geometry.tiling_scheme.global_tiling().min_level(),
                         _missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                         std::make_unique<ImageTileDecoder>(_image_format, _raster_id),
                         std::make_unique<SimpleTileAttributionPolicy>(attributions_handle),
@@ -278,7 +278,7 @@ public:
         }
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override { return _geometry; }
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override { return _geometry; }
 
     const hrz_proto::RasterNodata& get_nodata() const override { return _nodata; }
 

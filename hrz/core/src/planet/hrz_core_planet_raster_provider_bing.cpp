@@ -131,7 +131,7 @@ public:
         return fetcher->get_tile_image((TileFetcher::LockTicket)lock_ticket);
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == Status::Ready);
 
@@ -384,15 +384,13 @@ private:
                          tileset_info.url_pattern.c_str()}));
 
                     {
-                        auto projection = geometry.mutable_projection();
-                        projection->set_descriptor_type(
+                        geometry.projection.set_descriptor_type(
                             hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-                        projection->set_descriptor(hrz_proj::wmerc_proj_str);
+                        geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
 
-                        auto tiling_scheme = geometry.mutable_tiling_scheme();
-                        tiling_scheme->set_type(hrz_proto::TilingSchemeType::GLOBAL);
+                        geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
 
-                        auto global_tiling = tiling_scheme->mutable_global_tiling();
+                        auto global_tiling = geometry.tiling_scheme.mutable_global_tiling();
                         global_tiling->set_tile_size(256);
                         global_tiling->set_level_zero_tile_count_x(1);
                         global_tiling->set_level_zero_tile_count_y(1);
@@ -432,7 +430,7 @@ private:
     assets_loader::Ticket setup_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     uint64_t raster_id;
 };

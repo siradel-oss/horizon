@@ -5,6 +5,7 @@
 #include "hrz_core_scene_path.h"
 
 #include <hrz_common_blob_image.h>
+#include <hrz_common_planet.h>
 #include <hrz_common_tile_coords.h>
 #include <hrz_fnd_inlined_vector.h>
 
@@ -20,16 +21,16 @@ struct JobScheduler;
 
 namespace planet
 {
-static uint32_t get_min_lod(const hrz_proto::RasterGeometry& geometry)
+static uint32_t get_min_lod(const hrz_proto::TilingSchemeParams& tiling_scheme)
 {
-    const auto& tiling = geometry.tiling_scheme();
-
-    switch (tiling.type())
+    switch (tiling_scheme.type())
     {
         case hrz_proto::TilingSchemeType::UNTILED: return 0;
-        case hrz_proto::TilingSchemeType::GLOBAL: return tiling.global_tiling().min_level();
+        case hrz_proto::TilingSchemeType::GLOBAL: return tiling_scheme.global_tiling().min_level();
         case hrz_proto::TilingSchemeType::LOCAL:
-            return tiling.local_tiling().has_min_level() ? tiling.local_tiling().min_level() : 0;
+            return tiling_scheme.local_tiling().has_min_level()
+                ? tiling_scheme.local_tiling().min_level()
+                : 0;
         default: return 0;
     }
 }
@@ -182,7 +183,7 @@ struct RasterProvider
     // For example single image rasters are mipmapped and tiled after they
     // are loaded, and are treated as tiled rasters from the point of view
     // of the rest of the system.
-    virtual const hrz_proto::RasterGeometry& get_geometry() const = 0;
+    virtual const hrz::planet::TiledRasterGeometry& get_geometry() const = 0;
 
     virtual const hrz_proto::RasterNodata& get_nodata() const = 0;
 

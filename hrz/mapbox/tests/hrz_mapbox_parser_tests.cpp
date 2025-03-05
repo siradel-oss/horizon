@@ -200,13 +200,7 @@ struct RasterSourceConfig
         // There is no way of enforcing a local or global tiling scheme in Mapbox (?)
         EXPECT_EQ(
             hrz_proto::GLOBAL,
-            layer.imagery_raster()
-                .raster()
-                .provider()
-                .tiled_image()
-                .geometry()
-                .tiling_scheme()
-                .type());
+            layer.imagery_raster().raster().provider().tiled_image().tiling_scheme().type());
 
         EXPECT_EQ(
             maxzoom,
@@ -214,7 +208,6 @@ struct RasterSourceConfig
                 .raster()
                 .provider()
                 .tiled_image()
-                .geometry()
                 .tiling_scheme()
                 .global_tiling()
                 .max_level());
@@ -224,7 +217,6 @@ struct RasterSourceConfig
                 .raster()
                 .provider()
                 .tiled_image()
-                .geometry()
                 .tiling_scheme()
                 .global_tiling()
                 .min_level());
@@ -234,7 +226,6 @@ struct RasterSourceConfig
                 .raster()
                 .provider()
                 .tiled_image()
-                .geometry()
                 .tiling_scheme()
                 .global_tiling()
                 .tile_size());

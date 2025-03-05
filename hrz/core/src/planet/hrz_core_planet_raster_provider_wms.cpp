@@ -20,7 +20,9 @@ namespace
 {
 struct UrlGenerator : public hrz::TileUrlGenerator
 {
-    UrlGenerator(const std::string& url_template_, const hrz_proto::RasterGeometry& geometry) :
+    UrlGenerator(
+        const std::string& url_template_,
+        const hrz::planet::TiledRasterGeometry& geometry) :
         url_template(url_template_), geometry(geometry)
     {
         static constexpr std::string_view kValidArgs[] = {"west", "south", "east", "north"};
@@ -31,8 +33,8 @@ struct UrlGenerator : public hrz::TileUrlGenerator
     {
         double west, south, east, north;
 
-        if (geometry.tiling_scheme().type() == hrz_proto::TilingSchemeType::GLOBAL
-            && geometry.projection().descriptor() == hrz_proj::wmerc_proj_str)
+        if (geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::GLOBAL
+            && geometry.projection.descriptor() == hrz_proj::wmerc_proj_str)
         {
             uint64_t tile_count = (uint64_t)1 << z;
             double tile_size = hrz::MERCATOR_RANGE / tile_count;
@@ -42,8 +44,8 @@ struct UrlGenerator : public hrz::TileUrlGenerator
             north = south + tile_size;
         }
         else if (
-            geometry.tiling_scheme().type() == hrz_proto::TilingSchemeType::GLOBAL
-            && geometry.projection().descriptor() == hrz_proj::lonlat_deg_proj_str)
+            geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::GLOBAL
+            && geometry.projection.descriptor() == hrz_proj::lonlat_deg_proj_str)
         {
             uint64_t tile_count = (uint64_t)1 << z;
             double tile_size = 180.0 / tile_count;
@@ -52,10 +54,10 @@ struct UrlGenerator : public hrz::TileUrlGenerator
             east = west + tile_size;
             north = south + tile_size;
         }
-        else if (geometry.tiling_scheme().type() == hrz_proto::TilingSchemeType::LOCAL)
+        else if (geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::LOCAL)
         {
-            const auto& tiling = geometry.tiling_scheme().local_tiling();
-            const auto& bounds = geometry.projection_bounds();
+            const auto& tiling = geometry.tiling_scheme.local_tiling();
+            const auto& bounds = geometry.projection_bounds;
 
             uint64_t tile_pixel_size = tiling.tile_size();
             uint64_t level_multiplier = 1 << (tiling.max_level() - z);
@@ -63,15 +65,15 @@ struct UrlGenerator : public hrz::TileUrlGenerator
             lm::ulvec2 tile_max_level_pixel_origin = {
                 x * tile_pixel_size * level_multiplier, y * tile_pixel_size * level_multiplier};
 
-            double projection_width = bounds.x_max() - bounds.x_min();
+            double projection_width = bounds.max.x - bounds.min.x;
             double pixel_size = projection_width / tiling.full_image_width();
 
-            west = tile_max_level_pixel_origin.x * pixel_size + bounds.x_min();
-            south = bounds.y_max()
+            west = tile_max_level_pixel_origin.x * pixel_size + bounds.min.x;
+            south = bounds.max.y
                 - (tile_max_level_pixel_origin.y + tile_max_level_pixel_size) * pixel_size;
             east = (tile_max_level_pixel_origin.x + tile_max_level_pixel_size) * pixel_size
-                + bounds.x_min();
-            north = bounds.y_max() - tile_max_level_pixel_origin.y * pixel_size;
+                + bounds.min.x;
+            north = bounds.max.y - tile_max_level_pixel_origin.y * pixel_size;
         }
         else
         {
@@ -86,7 +88,7 @@ struct UrlGenerator : public hrz::TileUrlGenerator
 
 private:
     std::string url_template;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 };
 } // namespace
 
@@ -185,7 +187,7 @@ public:
         return fetcher->get_tile_image((TileFetcher::LockTicket)lock_ticket);
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == InternalStatus::Ready);
 
@@ -380,7 +382,7 @@ public:
                             std::make_unique<UrlGenerator>(
                                 response.url_template, response.geometry),
                             headers),
-                        geometry.tiling_scheme().local_tiling().min_level(),
+                        geometry.tiling_scheme.local_tiling().min_level(),
                         missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                         std::make_unique<ImageTileDecoder>(image_format, raster_id),
                         std::make_unique<SimpleTileAttributionPolicy>(attribution),
@@ -529,7 +531,7 @@ private:
     hrz_jobs::ParseWmsResourceTicket parsing_ticket;
 
     std::optional<TileFetcher> fetcher;
-    hrz_proto::RasterGeometry geometry;
+    hrz::planet::TiledRasterGeometry geometry;
 
     uint64_t raster_id;
 };

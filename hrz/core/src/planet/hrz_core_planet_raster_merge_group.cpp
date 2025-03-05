@@ -310,7 +310,7 @@ hrz_jobs::ReprojectRasterTileTicket RasterMergeGroup::create_reprojection_job(
     RasterTileReprojParams tile_reproj_params;
     tile_reproj_params.tile_coords = tile_coords;
     tile_reproj_params.quad_size = quad_size;
-    tile_reproj_params.raster_geometry.CopyFrom(raster->provider->get_geometry());
+    tile_reproj_params.raster_geometry = raster->provider->get_geometry();
     tile_reproj_params.raster_display_bounds = raster->display_bounds;
 
     return hrz_jobs::add_job_reproject_raster_tile(
@@ -1398,7 +1398,7 @@ void RasterMergeGroup::work(
                     auto geometry = raster->provider->get_geometry();
 
                     pl_Crs crs;
-                    bool convert_success = hrz::convert_crs(geometry.projection(), &crs);
+                    bool convert_success = hrz::convert_crs(geometry.projection, &crs);
                     if (!convert_success)
                     {
                         HRZ_LOG_WARNING("Couldn't convert raster projection string to pl_Crs.");
@@ -1622,7 +1622,7 @@ void RasterMergeGroup::pick(
         auto geometry = raster->provider->get_geometry();
 
         pl_Crs crs;
-        bool convert_success = hrz::convert_crs(geometry.projection(), &crs);
+        bool convert_success = hrz::convert_crs(geometry.projection, &crs);
         if (!convert_success)
         {
             HRZ_LOG_WARNING("Couldn't convert raster projection string to pl_Crs.");
@@ -1711,7 +1711,7 @@ void RasterMergeGroup::schedule_raster_data_fetch(
         auto geometry = raster->provider->get_geometry();
 
         pl_Crs crs;
-        bool convert_success = hrz::convert_crs(geometry.projection(), &crs);
+        bool convert_success = hrz::convert_crs(geometry.projection, &crs);
         if (!convert_success)
         {
             HRZ_LOG_WARNING("Couldn't convert raster projection string to pl_Crs.");

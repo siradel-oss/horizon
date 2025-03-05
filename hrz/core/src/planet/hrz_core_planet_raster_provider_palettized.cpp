@@ -144,7 +144,7 @@ public:
         }
     }
 
-    const hrz_proto::RasterGeometry& get_geometry() const override
+    const hrz::planet::TiledRasterGeometry& get_geometry() const override
     {
         assert(status == Status::Ready);
 

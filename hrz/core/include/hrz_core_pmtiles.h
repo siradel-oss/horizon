@@ -2,6 +2,7 @@
 
 #include "assets_loader/hrz_core_assets_loader.h"
 
+#include <hrz_common_planet.h>
 #include <hrz_common_tile_coords.h>
 #include <hrz_fnd_class.h>
 
@@ -55,7 +56,7 @@ public:
     virtual bool is_success(QueryHandle) const = 0;
 
     virtual std::string_view get_attribution() const = 0;
-    virtual hrz_proto::RasterGeometry get_geometry() const = 0;
+    virtual hrz::planet::TiledRasterGeometry get_geometry() const = 0;
 
     static std::unique_ptr<PmTiles> create(
         std::string_view url,
