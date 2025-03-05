@@ -65,6 +65,11 @@ struct FontInfo
 
 struct Font
 {
+    // We have no choice but to use a BlobData instead of a BlobHandle, because
+    // stbtt_fontinfo refers directly to the ttf data, so it needs to be pinned in memory.
+    // I guess we could just use a std::unique_ptr<std::byte[]>, which would avoid having
+    // a pinned blob forever.
+    // @Todo Investigate font memory being pinned.
     FontHandle font_handle;
     std::variant<gsl::span<const std::byte>, blobs::BlobData> raw_data;
     stbtt_fontinfo stbtt_font;
@@ -150,8 +155,8 @@ FontRasterizer* create();
 
 void destroy(FontRasterizer*);
 
-std::optional<FontHandle> add_font(FontRasterizer*, gsl::span<const std::byte>);
-std::optional<FontHandle> add_font(FontRasterizer*, blobs::BlobHandle);
+std::optional<FontHandle> add_font(FontRasterizer*, BlobAllocator* ba, gsl::span<const std::byte>);
+std::optional<FontHandle> add_font(FontRasterizer*, BlobAllocator* ba, blobs::BlobHandle);
 
 void remove_font(FontRasterizer*, FontHandle);
 

@@ -1194,10 +1194,11 @@ message TextSymbolElement {
     // value set by the font. Use a value of 1 for the default line spacing,
     // values greater than 1 for taller spacing. Must be greater or equal to 0.
     FloatProperty         line_spacing       = 12;
-    // A URL to a TrueType font file. This defines the appearance of the
-    // characters. Make sure the font contains the characters that are present
-    // in the feature property values. If no URL is provided, the default font
-    // will be used. (It only contains the most common Latin characters.)
+    // A URL to a TrueType, WOFF, or WOFF2 font file. This defines the
+    // appearance of the characters. Make sure the font contains the characters
+    // that are present in the feature property values. If no URL is provided,
+    // the default font will be used. (It only contains the most common Latin
+    // characters.)
     string                font_url           = 8;
     HttpHeaderList        font_http_headers  = 9;
 }

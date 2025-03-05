@@ -1,6 +1,7 @@
 #include "hrz_common_font_rasterizer.h"
 
 #include <hrz_common_profiling.h>
+#include <hrz_common_woff.h>
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_gen_object_pool.h>
 #include <hrz_fnd_log.h>
@@ -95,8 +96,10 @@ Font& Font::operator=(Font&& other) noexcept
 
 namespace
 {
+
 std::optional<ParsedFont> parse_font(
-    const std::variant<gsl::span<const std::byte>, blobs::BlobHandle>& raw_data)
+    BlobAllocator* ba,
+    std::variant<gsl::span<const std::byte>, blobs::BlobHandle>& raw_data)
 {
     HRZ_SCOPED_SAMPLE("parse font");
 
@@ -116,6 +119,22 @@ std::optional<ParsedFont> parse_font(
         parsed_font.raw_data = {std::get<gsl::span<const std::byte>>(raw_data)};
         font_data = std::get<gsl::span<const std::byte>>(parsed_font.raw_data).data();
         font_data_size = std::get<gsl::span<const std::byte>>(parsed_font.raw_data).size();
+    }
+
+    if (hrz::is_woff_or_woff2(gsl::span{font_data, font_data_size}))
+    {
+        auto blob_opt = hrz::woff_or_woff2_to_ttf(ba, gsl::span{font_data, font_data_size});
+        if (!blob_opt.has_value())
+        {
+            HRZ_LOG_ERROR("Could not convert WOFF/2 to TTF");
+            return std::nullopt;
+        }
+
+        auto blob = blob_opt.value();
+        raw_data = blob;
+        parsed_font.raw_data = blob.get_data();
+        font_data = std::get<blobs::BlobData>(parsed_font.raw_data).data();
+        font_data_size = std::get<blobs::BlobData>(parsed_font.raw_data).size();
     }
 
     int font_count = stbtt_GetNumberOfFonts((const unsigned char*)font_data);
@@ -344,11 +363,15 @@ void destroy(FontRasterizer* rasterizer)
     delete rasterizer;
 }
 
-std::optional<FontHandle> add_font(FontRasterizer* rasterizer, gsl::span<const std::byte> raw_data)
+std::optional<FontHandle> add_font(
+    FontRasterizer* rasterizer,
+    BlobAllocator* ba,
+    gsl::span<const std::byte> raw_data_in)
 {
     assert(rasterizer);
 
-    auto parsed_font_opt = parse_font({raw_data});
+    std::variant<gsl::span<const std::byte>, blobs::BlobHandle> raw_data = raw_data_in;
+    auto parsed_font_opt = parse_font(ba, raw_data);
     if (!parsed_font_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not parse font");
@@ -358,7 +381,7 @@ std::optional<FontHandle> add_font(FontRasterizer* rasterizer, gsl::span<const s
     auto handle = rasterizer->fonts.alloc();
     auto font = rasterizer->fonts.get_object(handle);
 
-    font->raw_data = {raw_data};
+    font->raw_data = std::move(raw_data);
     font->info = read_font_info(parsed_font_opt.value());
     font->glyphs = &font->glyph_map_0;
     font->has_new_glyphs = false;
@@ -366,11 +389,15 @@ std::optional<FontHandle> add_font(FontRasterizer* rasterizer, gsl::span<const s
     return handle;
 }
 
-std::optional<FontHandle> add_font(FontRasterizer* rasterizer, blobs::BlobHandle blob)
+std::optional<FontHandle> add_font(
+    FontRasterizer* rasterizer,
+    BlobAllocator* ba,
+    blobs::BlobHandle blob_in)
 {
     assert(rasterizer);
 
-    auto parsed_font_opt = parse_font({blob});
+    std::variant<gsl::span<const std::byte>, blobs::BlobHandle> raw_data = blob_in;
+    auto parsed_font_opt = parse_font(ba, raw_data);
     if (!parsed_font_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not parse font");
@@ -380,7 +407,7 @@ std::optional<FontHandle> add_font(FontRasterizer* rasterizer, blobs::BlobHandle
     auto handle = rasterizer->fonts.alloc();
     auto font = rasterizer->fonts.get_object(handle);
 
-    font->raw_data = {std::move(blob)};
+    font->raw_data = std::move(raw_data);
     font->info = read_font_info(parsed_font_opt.value());
     font->glyphs = &font->glyph_map_0;
     font->has_new_glyphs = false;
@@ -431,7 +458,9 @@ Font get_font(FontRasterizer* rasterizer, FontHandle handle)
     // in place and parse the font each time it is used to bake texts.
     // Fortunately parsing a font only involves reading its header and lasts only
     // for a few microseconds.
-    auto parsed_font = parse_font(font->raw_data);
+    // We give nullptr as blob allocator, because this shouldn't allocate new memory.
+    // If it does, it will assert and we will detect and fix it.
+    auto parsed_font = parse_font(nullptr, font->raw_data);
 
     return {
         handle, std::move(parsed_font->raw_data), parsed_font->stbtt_font, parsed_font->hb_font,

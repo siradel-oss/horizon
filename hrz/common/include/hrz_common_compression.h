@@ -14,6 +14,10 @@ bool decompress_gzip(
     gsl::span<const std::byte> compressed,
     const std::function<void(gsl::span<const std::byte>)>& callback);
 
+bool decompress_zlib_uncompress(
+    gsl::span<const std::byte> compressed,
+    gsl::span<std::byte>* decompressed);
+
 bool decompress_zstd(
     gsl::span<const std::byte> compressed,
     const std::function<void(gsl::span<const std::byte>)>& callback);

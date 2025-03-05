@@ -353,6 +353,16 @@ def hrz_deps():
         strip_prefix = "websocketpp-0.8.2",
     )
     http_archive(
+        name = "woff2",
+        urls = [
+            "https://github.com/google/woff2/archive/0f4d304faa1c62994536dc73510305c7357da8d4.tar.gz",
+            "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/woff2/5bca353b_0f4d304faa1c62994536dc73510305c7357da8d4.tar.gz",
+        ],
+        sha256 = "5bca353b359f7ea4a0c0171d5249368e154a2246d59265c4dd1aeda7db309286",
+        build_file = "//third_party:woff2.BUILD.bazel",
+        strip_prefix = "woff2-0f4d304faa1c62994536dc73510305c7357da8d4",
+    )
+    http_archive(
         name = "zlib",
         urls = [
             "https://github.com/madler/zlib/archive/v1.3.1.tar.gz",

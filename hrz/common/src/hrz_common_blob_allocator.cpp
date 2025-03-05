@@ -2982,6 +2982,8 @@ BlobData& BlobData::operator=(BlobData&& other) noexcept
 {
     if (&other != this)
     {
+        release();
+
         assert(allocator == nullptr && blob_id == NO_BLOB);
 
         allocator = std::exchange(other.allocator, nullptr);

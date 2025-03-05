@@ -99,6 +99,27 @@ inline uint64_t next_power_of_two(uint64_t x)
     return x + 1;
 }
 
+inline uint32_t previous_power_of_two(uint32_t x)
+{
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return x - (x >> 1);
+}
+
+inline uint64_t previous_power_of_two(uint64_t x)
+{
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    x |= x >> 32;
+    return x - (x >> 1);
+}
+
 inline double round_to_power_of_two(double x)
 {
     return std::pow(2.0, std::round(std::log2(x)));
@@ -126,19 +147,27 @@ inline T align_up_any(T x, T align)
     }
 }
 
+// https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
+constexpr uint32_t count_set_bits(uint32_t v)
+{
+    v = v - ((v >> 1) & 0x55555555);
+    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+}
+
+constexpr uint64_t count_set_bits(uint64_t v)
+{
+    v = v - ((v >> 1) & 0x55555555'55555555);
+    v = (v & 0x33333333'33333333) + ((v >> 2) & 0x33333333'33333333);
+    return ((v + (v >> 4) & 0xF0F0F0F'0F0F0F0F) * 0x1010101'01010101) >> 56;
+}
+
 // Rounded down
 // AKA position of the highest set bit
 inline uint32_t log2(uint32_t x)
 {
     if (x == 0) return UINT32_MAX;
-
-    uint32_t power = 0;
-    while (x >>= 1)
-    {
-        ++power;
-    }
-
-    return power;
+    return count_set_bits(previous_power_of_two(x) - 1);
 }
 
 // Rounded down
@@ -146,14 +175,7 @@ inline uint32_t log2(uint32_t x)
 inline uint32_t log2(uint64_t x)
 {
     if (x == 0) return UINT32_MAX;
-
-    uint32_t power = 0;
-    while (x >>= 1)
-    {
-        ++power;
-    }
-
-    return power;
+    return count_set_bits(previous_power_of_two(x) - 1);
 }
 
 #ifdef __EMSCRIPTEN__
@@ -176,14 +198,6 @@ template<typename T>
 inline bool flt_near(T a, T b, T eps)
 {
     return std::abs(a - b) <= eps;
-}
-
-// https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-constexpr uint32_t count_set_bits(uint32_t v)
-{
-    v = v - ((v >> 1) & 0x55555555);
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
 }
 
 static double horizontal_to_vertical_fov(double hfov_rad, double aspect_ratio)

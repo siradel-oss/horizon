@@ -176,6 +176,11 @@ alias(
 )
 
 alias(
+    name = "woff2_dec",
+    actual = "@woff2//:dec",
+)
+
+alias(
     name = "buildifier",
     actual = select({
         "//:os_windows": "@buildifier_windows//file:downloaded",
@@ -220,6 +225,7 @@ LICENSES_DICT = {
     "//third_party/tlsf:LICENSE": "tlsf",
     "@libwebp//:COPYING": "WebP codec",
     "@websocketpp//:COPYING": "websocketpp",
+    "@woff2//:LICENSE": "woff2",
     "@zlib//:LICENSE": "zlib",
     "@basisu//:zstd/LICENSE": "Zstandard",
 }

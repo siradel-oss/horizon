@@ -54,6 +54,23 @@ bool hrz::decompress_gzip(
     return true;
 }
 
+bool hrz::decompress_zlib_uncompress(
+    gsl::span<const std::byte> compressed,
+    gsl::span<std::byte>* decompressed)
+{
+    uLongf decompressed_len = decompressed->size_bytes();
+    int status = uncompress(
+        (Bytef*)decompressed->data(), &decompressed_len, (const Bytef*)compressed.data(),
+        compressed.size_bytes());
+    if (status != Z_OK)
+    {
+        HRZ_LOG_ERROR("Couldn't decompress zlib stream: {}", zError(status));
+        return false;
+    }
+    *decompressed = gsl::span<std::byte>(decompressed->data(), decompressed_len);
+    return true;
+}
+
 bool hrz::decompress_brotli(
     gsl::span<const std::byte> compressed,
     const std::function<void(gsl::span<const std::byte>)>& callback)

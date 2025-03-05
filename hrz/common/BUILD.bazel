@@ -29,6 +29,7 @@ cc_library(
         "src/hrz_common_style.cpp",
         "src/hrz_common_three_d_tiles.cpp",
         "src/hrz_common_vector_data.cpp",
+        "src/hrz_common_woff.cpp",
     ],
     hdrs = [
         "include/hrz_common_attributes.h",
@@ -82,6 +83,7 @@ cc_library(
         "include/hrz_common_vector_data.h",
         "include/hrz_common_vector_tiles.h",
         "include/hrz_common_vertex_utils.h",
+        "include/hrz_common_woff.h",
     ],
     includes = ["include"],
     local_defines = [
@@ -102,6 +104,7 @@ cc_library(
         "//third_party:harfbuzz",
         "//third_party:microui",
         "//third_party:pcg_basic",
+        "//third_party:woff2_dec",
         "//third_party:zlib",
         "//third_party:zstd",
         "//third_party/msdf",

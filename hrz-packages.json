@@ -241,6 +241,13 @@
             "url": "https://github.com/bazelbuild/buildtools/releases/download/v8.0.3/buildifier-linux-amd64",
             "executable": true,
             "platforms": ["x86_64-pc-linux-gnu"]
+        },
+        {
+            "name": "woff2",
+            "type": "github",
+            "repo": "google/woff2",
+            "ref": "0f4d304faa1c62994536dc73510305c7357da8d4",
+            "build_file": "//third_party:woff2.BUILD.bazel"
         }
     ]
 }

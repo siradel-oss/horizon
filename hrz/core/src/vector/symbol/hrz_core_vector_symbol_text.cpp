@@ -833,7 +833,7 @@ void TextElementSystem::work(ReprSystem::WorkCtx& ctx)
             {
                 // No URL has been provided, using the default font.
                 auto rasterizer_handle_opt = font_rasterizer::add_font(
-                    ctx.fr, hrz_res::get_data(hrz_res::Resources::DefaultFont));
+                    ctx.fr, ctx.ba, hrz_res::get_data(hrz_res::Resources::DefaultFont));
                 if (rasterizer_handle_opt.has_value())
                 {
                     font->rasterizer_handle = rasterizer_handle_opt.value();
@@ -854,7 +854,7 @@ void TextElementSystem::work(ReprSystem::WorkCtx& ctx)
                     == assets_loader::RequestStatus::Loaded)
                 {
                     auto rasterizer_handle_opt = font_rasterizer::add_font(
-                        ctx.fr, assets_loader::get_blob(ctx.al, ctx.ba, font->load_ticket));
+                        ctx.fr, ctx.ba, assets_loader::get_blob(ctx.al, ctx.ba, font->load_ticket));
                     if (rasterizer_handle_opt.has_value())
                     {
                         font->rasterizer_handle = rasterizer_handle_opt.value();

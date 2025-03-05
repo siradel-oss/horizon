@@ -343,6 +343,16 @@
       "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/websocketpp/6ce889d8_0.8.2.tar.gz"
     ]
   },
+  "woff2": {
+    "build_file": "//third_party:woff2.BUILD.bazel",
+    "digest": "5bca353b359f7ea4a0c0171d5249368e154a2246d59265c4dd1aeda7db309286",
+    "prefix": "woff2-0f4d304faa1c62994536dc73510305c7357da8d4",
+    "type": "http_archive",
+    "urls": [
+      "https://github.com/google/woff2/archive/0f4d304faa1c62994536dc73510305c7357da8d4.tar.gz",
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/woff2/5bca353b_0f4d304faa1c62994536dc73510305c7357da8d4.tar.gz"
+    ]
+  },
   "zlib": {
     "build_file": "//third_party:zlib.BUILD.bazel",
     "digest": "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c",
