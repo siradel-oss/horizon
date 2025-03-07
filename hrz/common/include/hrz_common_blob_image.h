@@ -28,13 +28,12 @@ struct BlobImageDecodingParams
 
 class BlobImage
 {
-    my::TextureLayout _layout;
+    my::TextureLayout _layout{};
     std::optional<hrz_proto::ImageFormat> _image_format;
     blobs::BlobHandle _blob;
 
 public:
     BlobImage() = default;
-    ~BlobImage() = default;
 
     BlobImage(
         my::TextureFormat format,
@@ -104,35 +103,6 @@ public:
                 "Invalid blob size: expected {}, got {}", size_in_bytes(), _blob.data_size());
             assert(false);
         }
-    }
-
-    BlobImage(const BlobImage& other) = default;
-
-    BlobImage(BlobImage&& other) noexcept :
-        _layout(other._layout), _image_format(other._image_format), _blob(std::move(other._blob))
-    {
-    }
-
-    BlobImage& operator=(const BlobImage& other)
-    {
-        if (&other != this)
-        {
-            _layout = other._layout;
-            _image_format = other._image_format;
-            _blob = other._blob;
-        }
-        return *this;
-    }
-
-    BlobImage& operator=(BlobImage&& other) noexcept
-    {
-        if (&other != this)
-        {
-            _layout = other._layout;
-            _image_format = other._image_format;
-            _blob = std::move(other._blob);
-        }
-        return *this;
     }
 
     bool valid() const { return _blob.is_valid(); }
@@ -218,7 +188,7 @@ public:
                 }
 
                 auto offset = (size_t)(x + y * _layout.width) * pixel_size;
-                std::memcpy(&pixel_data, raw_data.data() + offset, sizeof(T));
+                std::memcpy(&pixel_data, data_ptr + offset, sizeof(T));
             }
         }
 
@@ -280,6 +250,7 @@ struct BlobImageCompressionParams
 {
     // Takes the ownership of the image.
     BlobImage image;
-    my::TextureFormat output_format;
+    my::TextureFormat output_format{};
 };
+
 } // namespace hrz

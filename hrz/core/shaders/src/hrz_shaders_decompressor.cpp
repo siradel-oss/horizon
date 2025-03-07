@@ -25,7 +25,7 @@ std::pair<std::unique_ptr<char[]>, size_t> decompress(const char* input, size_t 
             LZ4_decompress_safe(input, output_buffer.data(), (int)input_size, (int)capacity);
         if (result >= 0)
         {
-            std::unique_ptr<char[]> output(new char[result]);
+            auto output = std::make_unique<char[]>(result);
             memcpy(output.get(), output_buffer.data(), result);
             return {std::move(output), (size_t)result};
         }

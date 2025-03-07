@@ -15,8 +15,8 @@ namespace hrz::camera
 // https://stackoverflow.com/questions/53408962/try-to-understand-compiler-error-message-default-member-initializer-required-be
 namespace
 {
-static constexpr double kMinHeightAboveTerrain = std::numeric_limits<double>::lowest();
-static constexpr double kTerrainCollisionInertia = 0.0;
+constexpr double kMinHeightAboveTerrain = std::numeric_limits<double>::lowest();
+constexpr double kTerrainCollisionInertia = 0.0;
 
 struct Config
 {
@@ -636,13 +636,6 @@ public:
     {
         std::visit([e](auto& state) { state.config.energy_half_time = e; }, _state);
         CameraManipulator::update_energy_half_time(e);
-    }
-
-    void update_terrain_settings(double min_height_above_terrain, double terrain_collision_inertia)
-        override
-    {
-        CameraManipulator::update_terrain_settings(
-            min_height_above_terrain, terrain_collision_inertia);
     }
 
     void dev_ui(mu_Context* ctx) const override { mu_text(ctx, "Fixed position manipulator"); }

@@ -2041,21 +2041,24 @@ void fill_frame_uniform_data(const SkySystem* sky, FrameUniformData* ubo)
 
     auto& matrices = ubo->env_sh;
 
-#define COMPUTE_MATRIX(INDEX, COMPONENT)                                               \
-    matrices[INDEX] = Mt                                                               \
-        * lm::mat4(lm::vec4(                                                           \
-                       c1 * L[8].COMPONENT, c1 * L[4].COMPONENT, c1 * L[7].COMPONENT,  \
-                       c2 * L[3].COMPONENT),                                           \
-                   lm::vec4(                                                           \
-                       c1 * L[4].COMPONENT, -c1 * L[8].COMPONENT, c1 * L[5].COMPONENT, \
-                       c2 * L[1].COMPONENT),                                           \
-                   lm::vec4(                                                           \
-                       c1 * L[7].COMPONENT, c1 * L[5].COMPONENT, c3 * L[6].COMPONENT,  \
-                       c2 * L[2].COMPONENT),                                           \
-                   lm::vec4(                                                           \
-                       c2 * L[3].COMPONENT, c2 * L[1].COMPONENT, c2 * L[2].COMPONENT,  \
-                       c4 * L[0].COMPONENT - c5 * L[6].COMPONENT))                     \
-        * M;
+#define COMPUTE_MATRIX(INDEX, COMPONENT)                                                   \
+    do                                                                                     \
+    {                                                                                      \
+        matrices[INDEX] = Mt                                                               \
+            * lm::mat4(lm::vec4(                                                           \
+                           c1 * L[8].COMPONENT, c1 * L[4].COMPONENT, c1 * L[7].COMPONENT,  \
+                           c2 * L[3].COMPONENT),                                           \
+                       lm::vec4(                                                           \
+                           c1 * L[4].COMPONENT, -c1 * L[8].COMPONENT, c1 * L[5].COMPONENT, \
+                           c2 * L[1].COMPONENT),                                           \
+                       lm::vec4(                                                           \
+                           c1 * L[7].COMPONENT, c1 * L[5].COMPONENT, c3 * L[6].COMPONENT,  \
+                           c2 * L[2].COMPONENT),                                           \
+                       lm::vec4(                                                           \
+                           c2 * L[3].COMPONENT, c2 * L[1].COMPONENT, c2 * L[2].COMPONENT,  \
+                           c4 * L[0].COMPONENT - c5 * L[6].COMPONENT))                     \
+            * M;                                                                           \
+    } while (0)
 
     COMPUTE_MATRIX(0, r);
     COMPUTE_MATRIX(1, g);

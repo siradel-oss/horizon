@@ -514,8 +514,6 @@ class Generator : public google::protobuf::compiler::CodeGenerator
         printer.Print("</protocol>\n");
         return true;
     }
-
-    mutable google::protobuf::io::ZeroCopyOutputStream* stream = nullptr;
 };
 
 int main(int argc, char* argv[])

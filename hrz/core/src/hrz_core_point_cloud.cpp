@@ -36,7 +36,7 @@ enum
     SamplerFeatureColors,
 };
 
-static const std::string PointCloud_visual_transparent_name =
+const std::string PointCloud_visual_transparent_name =
     std::string(hrz_shaders::PointCloud_visual_name) + "_transparent";
 
 class PointCloudImpl : public PointCloud

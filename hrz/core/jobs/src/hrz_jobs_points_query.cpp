@@ -17,15 +17,16 @@
 
 #include <optional>
 
-// The higher this number is, the finer the point query is, but the higher the
-// number of requested tiles also becomes. We may need to make this
-// configurable.
-#define MAX_RASTER_TILE_PER_BATCH 4
-
 using namespace hrz;
 
 namespace
 {
+
+// The higher this number is, the finer the point query is, but the higher the
+// number of requested tiles also becomes. We may need to make this
+// configurable.
+constexpr size_t kMaxRasterTilePerBatch = 4;
+
 void get_tile(
     const hrz::ImageTilingInfo& info,
     const lm::dvec2& domain_pos,
@@ -106,7 +107,7 @@ hrz::JobResult cull(
     }
 
     hrz::flat_hash_set<TileCoords> tiles_swap;
-    while (tiles.size() > MAX_RASTER_TILE_PER_BATCH && tiles.begin()->lod > tiling_info.min_lod)
+    while (tiles.size() > kMaxRasterTilePerBatch && tiles.begin()->lod > tiling_info.min_lod)
     {
         for (const TileCoords& tile : tiles)
         {

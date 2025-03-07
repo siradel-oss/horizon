@@ -13,7 +13,7 @@
         {                   \
             return false;   \
         }                   \
-    } while (0);
+    } while (0)
 
 namespace
 {

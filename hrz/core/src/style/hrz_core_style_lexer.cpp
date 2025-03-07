@@ -99,11 +99,14 @@ struct LexerImpl : public Lexer
         static std::string_view keyword_uniform("uniform");
         static std::string_view keyword_prp("prp");
 
-#define ACCEPT_KEYWORD(KW)   \
-    token->kind = Token::KW; \
-    token->span = kw;        \
-    token->line = _line;     \
-    return err;
+#define ACCEPT_KEYWORD(KW)       \
+    do                           \
+    {                            \
+        token->kind = Token::KW; \
+        token->span = kw;        \
+        token->line = _line;     \
+        return err;              \
+    } while (0)
 
         switch (kw[0])
         {

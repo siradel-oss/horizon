@@ -12,11 +12,11 @@ namespace hrz::camera
 namespace
 {
 // If not stiff enough, can fill a bit slugish.
-static constexpr double kDragTerrainCollisionTimeFactor = 0.5;
+constexpr double kDragTerrainCollisionTimeFactor = 0.5;
 
 // If too stiff, correcting over the delayed height above terrain can
 // result in undesirably large rotations.
-static constexpr double kRotationTerrainCollisionTimeFactor = 2.0;
+constexpr double kRotationTerrainCollisionTimeFactor = 2.0;
 
 double add_or_replace_if_opposite(double a, double b)
 {
@@ -768,7 +768,7 @@ public:
     {
         if (!_target.has_value()) return _pose;
 
-        auto& target = _target.value();
+        const auto& target = _target.value();
 
         if (height_above_terrain < _min_height_above_terrain)
         {

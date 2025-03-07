@@ -898,7 +898,7 @@ void generate_polylines_geometry(
     // Write the total length of the polyline to the created instances
     auto polyline_instances_data_opt = polyline_data.data();
     if (!polyline_instances_data_opt.has_value()) return;
-    auto& polyline_instances_data = polyline_instances_data_opt.value();
+    const auto& polyline_instances_data = polyline_instances_data_opt.value();
 
     for (size_t index = first_instance_index; index < polyline_instances_data.size(); index++)
     {

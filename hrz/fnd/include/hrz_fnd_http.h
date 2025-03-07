@@ -55,8 +55,7 @@ public:
 
     HttpHeaders& operator=(const HttpHeaders&);
 
-    HttpHeaders(HttpHeaders&&) = default;
-    HttpHeaders& operator=(HttpHeaders&&) = default;
+    HRZ_DEFAULT_MOVE(HttpHeaders);
 
     void swap(HttpHeaders& other);
 

@@ -53,7 +53,7 @@ class Arena
     template<typename T>
     inline static T* align_ptr_up(T* ptr, size_t align)
     {
-        return (T*)align_up_po2((uintptr_t)ptr, (uintptr_t)align);
+        return (T*)align_up_po2((uintptr_t)ptr, align);
     }
 
 public:

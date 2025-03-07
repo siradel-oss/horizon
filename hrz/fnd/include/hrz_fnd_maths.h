@@ -150,16 +150,16 @@ inline T align_up_any(T x, T align)
 // https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
 constexpr uint32_t count_set_bits(uint32_t v)
 {
-    v = v - ((v >> 1) & 0x55555555);
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+    v = v - ((v >> 1) & 0x5555'5555);
+    v = (v & 0x3333'3333) + ((v >> 2) & 0x3333'3333);
+    return ((v + (v >> 4) & 0x0F0F'0F0F) * 0x0101'0101) >> 24;
 }
 
 constexpr uint64_t count_set_bits(uint64_t v)
 {
-    v = v - ((v >> 1) & 0x55555555'55555555);
-    v = (v & 0x33333333'33333333) + ((v >> 2) & 0x33333333'33333333);
-    return ((v + (v >> 4) & 0xF0F0F0F'0F0F0F0F) * 0x1010101'01010101) >> 56;
+    v = v - ((v >> 1) & 0x5555'5555'5555'5555);
+    v = (v & 0x3333'3333'3333'3333) + ((v >> 2) & 0x3333'3333'3333'3333);
+    return ((v + (v >> 4) & 0x0F0F'0F0F'0F0F'0F0F) * 0x0101'0101'0101'0101) >> 56;
 }
 
 // Rounded down

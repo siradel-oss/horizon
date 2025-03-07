@@ -1275,7 +1275,7 @@ struct VectorDataLoader
             case hrz_proto::VectorDataProviderType::PMTILES_VECTOR_DATA_PROVIDER:
                 return "PMTiles vector data";
             default: assert(false && "Unhandled case");
-        };
+        }
         return "";
     }
 
@@ -3541,7 +3541,7 @@ private:
             break;
             case TaskType::LoadVectorDataUrlPackage:
             {
-                auto& task_data = task.load_vector_data_url_package();
+                const auto& task_data = task.load_vector_data_url_package();
                 hrz_jobs::cancel_job(js, task_data.parse_ticket);
             }
             break;
@@ -5083,7 +5083,7 @@ private:
             const auto& layer_model = task_data.layer_model.value();
             const auto& data_source = layer_model.data_sources.at(task_data.data_source);
 
-            auto decode_data = [&](TileCoords tile_coords, const std::string& layer_name,
+            auto decode_data = [&](TileCoords tile_coords, std::string_view layer_name,
                                    AttributionHandle attribution,
                                    const vector_data::VectorDataPackage& package)
             {
@@ -5143,7 +5143,7 @@ private:
                 else
                 {
                     set_task_status(task_ref, task, TaskStatus::Blocked);
-                };
+                }
             };
 
             if (hrz_jobs::is_job_valid(js, task_data.decode_ticket))
@@ -5231,7 +5231,7 @@ private:
                 else
                 {
                     set_task_status(task_ref, task, TaskStatus::Blocked);
-                };
+                }
             }
             else
             {

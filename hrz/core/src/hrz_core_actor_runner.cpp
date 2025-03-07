@@ -74,8 +74,7 @@ bool run_actors(
 
     for (auto it = runner->actors.begin(); it != runner->actors.end();)
     {
-        auto& actor = *it;
-        auto status = actor->work_async(blob_allocator, job_scheduler);
+        auto status = (*it)->work_async(blob_allocator, job_scheduler);
 
         if (status == ActorStatus::RELEASED)
         {

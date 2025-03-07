@@ -15,7 +15,6 @@
 
 #include <array>
 #include <memory>
-#include <optional>
 #include <type_traits>
 
 namespace hrz::sampling
@@ -32,7 +31,7 @@ struct subpixel_coord_type<float>
 template<typename T>
 struct subpixel_coord_type
 {
-    using type = typename std::make_unsigned<T>::type;
+    using type = std::make_unsigned_t<T>;
 };
 
 template<typename>

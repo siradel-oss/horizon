@@ -529,25 +529,9 @@ private:
 
     ObjectPool pool;
 
-    struct RefBase
+    class RefBase
     {
     public:
-        virtual ~RefBase() = default;
-
-        RefBase& operator=(const RefBase& ref)
-        {
-            pool = ref.pool;
-            handle = ref.handle;
-            return *this;
-        }
-
-        RefBase& operator=(RefBase&& ref) noexcept
-        {
-            std::swap(pool, ref.pool);
-            std::swap(handle, ref.handle);
-            return *this;
-        }
-
         T& operator*() { return value(); }
 
         const T& operator*() const { return value(); }
@@ -603,60 +587,29 @@ private:
         };
 
     protected:
-        RefBase() : pool(nullptr), handle(ObjectPool::NULL_HANDLE) {}
+        RefBase() = default;
 
         RefBase(SharedObjectPool* pool, Handle handle) : pool(pool), handle(handle) {}
 
-        RefBase(const RefBase& ref) : pool(ref.pool), handle(ref.handle) {}
-
-        RefBase(RefBase&& ref) noexcept :
-            pool(std::exchange(ref.pool, nullptr)),
-            handle(std::exchange(ref.handle, ObjectPool::NULL_HANDLE))
-        {
-        }
-
-        SharedObjectPool* pool;
-        Handle handle;
+        SharedObjectPool* pool = nullptr;
+        Handle handle = ObjectPool::NULL_HANDLE;
     };
 
 public:
-    struct WeakRef final : public RefBase
+    class WeakRef final : public RefBase
     {
     public:
         friend class SharedObjectPool;
         using RefBase::RefBase;
-
-        WeakRef() : RefBase() {}
-
-        ~WeakRef() override = default;
-
-        WeakRef(const WeakRef& ref) : RefBase(ref.pool, ref.handle) {}
-
-        WeakRef(WeakRef&& ref) noexcept : RefBase(std::move(ref)) {}
-
-        WeakRef& operator=(const WeakRef& ref)
-        {
-            RefBase::operator=(ref);
-            return *this;
-        }
-
-        WeakRef& operator=(WeakRef&& ref) noexcept
-        {
-            RefBase::operator=(std::move(ref));
-            return *this;
-        }
 
         // Return true if the object this reference refers to is still alive.
         bool is_valid() const
         {
             return this->has_value() && this->pool->pool.get_object(this->handle) != nullptr;
         }
-
-    private:
-        WeakRef(SharedObjectPool* pool, Handle handle) : RefBase(pool, handle) {}
     };
 
-    struct Ref final : public RefBase
+    class Ref final : public RefBase
     {
     public:
         friend class SharedObjectPool;
@@ -671,27 +624,43 @@ public:
             this->retain_value_from_weak_ref();
         }
 
-        Ref(Ref&& ref) noexcept : RefBase(std::move(ref)) {}
+        Ref(Ref&& ref) noexcept :
+            RefBase(
+                std::exchange(ref.pool, nullptr),
+                std::exchange(ref.handle, ObjectPool::NULL_HANDLE))
+        {
+        }
 
-        virtual ~Ref() { this->release_value(); }
+        ~Ref() { this->release_value(); }
 
         Ref& operator=(const Ref& ref)
         {
-            this->release_value();
-            RefBase::operator=(ref);
-            this->retain_value();
+            if (this != &ref)
+            {
+                this->release_value();
+                this->pool = ref.pool;
+                this->handle = ref.handle;
+                this->retain_value();
+            }
             return *this;
         }
 
         Ref& operator=(Ref&& ref) noexcept
         {
-            RefBase::operator=(std::move(ref));
+            if (this != &ref)
+            {
+                this->release_value();
+                this->pool = std::exchange(ref.pool, nullptr);
+                this->handle = std::exchange(ref.handle, ObjectPool::NULL_HANDLE);
+            }
             return *this;
         }
 
         Ref& operator=(WeakRef&& ref) noexcept
         {
-            RefBase::operator=(std::move(ref));
+            this->release_value();
+            this->pool = ref.pool;
+            this->handle = ref.handle;
             this->retain_value_from_weak_ref();
             return *this;
         }

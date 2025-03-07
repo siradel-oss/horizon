@@ -113,7 +113,7 @@ static void MurmurHash3_x64_128(const void* key, const int len, const uint32_t s
             k1 = ROTL64(k1, 31);
             k1 *= c2;
             h1 ^= k1;
-    };
+    }
 
     //----------
     // finalization

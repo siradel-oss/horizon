@@ -24,13 +24,8 @@
 
 #include <array>
 #include <cassert>
-#include <deque>
-#include <queue>
-#include <vector>
 
-namespace hrz
-{
-namespace vt
+namespace hrz::vt
 {
 // The delay between the first time a tile's content was needed and the time
 // it's actually loaded. This prevents loading tiles that are only requested for
@@ -729,7 +724,7 @@ struct VectorTilesActor : public Actor
 
         if ((what & DestroyRepr_Displayed) && repr.displayed.has_value())
         {
-            auto& current_repr = repr.displayed.value();
+            const auto& current_repr = repr.displayed.value();
 
             if (!destroy_now && repr.displayed->last_used_in_visibility_set.has_value()
                 && repr.displayed->last_used_in_visibility_set.value()
@@ -1667,7 +1662,7 @@ struct VectorTilesActor : public Actor
                && _reprs_in_queued_visibility_sets.front().last_used_in_visibility_set.value_or(0)
                    <= _last_destroyed_visibility_set_id)
         {
-            auto& repr = _reprs_in_queued_visibility_sets.front().repr;
+            const auto& repr = _reprs_in_queued_visibility_sets.front().repr;
             _repr_channels[repr.type].send(repr::messages::RemoveTile{repr.id});
 
             _reprs_in_queued_visibility_sets.pop_front();
@@ -1892,7 +1887,7 @@ struct VectorTilesActor : public Actor
         // Schedule styling jobs
         //
 
-        for (auto& it : _tiles_by_coords)
+        for (const auto& it : _tiles_by_coords)
         {
             TileNode* node = _tile_node_pool.get_object(it.second);
             assert(node);
@@ -1937,7 +1932,7 @@ struct VectorTilesActor : public Actor
         }
 
         bool must_clamp = false;
-        for (auto& repr : _reprs_configs)
+        for (const auto& repr : _reprs_configs)
         {
             if (_reprs_using_z_coordinates.contains(repr.type))
             {
@@ -2377,7 +2372,7 @@ struct VectorTilesActor : public Actor
             _channel.send(from_actor::TileCoords{tile_id, node->coords});
             _channel.send(from_actor::TileFeatureIds{tile_id, content.feature_ids.feature_ids});
 
-            for (auto& attributes : content.attributes.attributes)
+            for (const auto& attributes : content.attributes.attributes)
             {
                 _channel.send(from_actor::TileAttributes{tile_id, attributes});
             }
@@ -2507,7 +2502,7 @@ struct VectorTilesActor : public Actor
         {
             bool ready = true;
 
-            for (auto& repr_slot : content.reprs)
+            for (const auto& repr_slot : content.reprs)
             {
                 if (repr_slot.baking.has_value())
                 {
@@ -2703,7 +2698,7 @@ struct VectorTilesActor : public Actor
 
         if (!_planet_elevation_version_has_changed) return;
 
-        for (auto& it : _tiles_by_coords)
+        for (const auto& it : _tiles_by_coords)
         {
             TileId tile_id = it.second;
             TileNode* node = _tile_node_pool.get_object(tile_id);
@@ -2743,13 +2738,13 @@ struct VectorTilesActor : public Actor
 
         if (!(_selected_features_changed || _appearance_changed)) return render_request;
 
-        for (auto& it : _tiles_by_coords)
+        for (const auto& it : _tiles_by_coords)
         {
             TileId tile_id = it.second;
-            TileNode* node = _tile_node_pool.get_object(tile_id);
+            const TileNode* node = _tile_node_pool.get_object(tile_id);
             if (!node->content.has_value()) continue;
 
-            TileContent& content = node->content.value();
+            const TileContent& content = node->content.value();
 
             if (content.display_status == TileContent::DisplayStatus::Displayable)
             {
@@ -3008,7 +3003,7 @@ struct VectorTilesActor : public Actor
 
         if (node.content.has_value())
         {
-            TileContent& content = node.content.value();
+            const TileContent& content = node.content.value();
 
             if ((content.geometry.status == TileContent::Geometry::Status::Clamping
                  || content.geometry.status == TileContent::Geometry::Status::Ready)
@@ -3047,7 +3042,7 @@ struct VectorTilesActor : public Actor
         bool this_is_drawable = false;
         if (node.content.has_value())
         {
-            TileContent& content = node.content.value();
+            const TileContent& content = node.content.value();
 
             if (content.display_status == TileContent::DisplayStatus::Displayable
                 || content.display_status == TileContent::DisplayStatus::Error)
@@ -3225,5 +3220,4 @@ VectorTilesActorChannel spawn_vector_tiles_actor(
 
     return std::move(to_actor_channel);
 }
-} // namespace vt
-} // namespace hrz
+} // namespace hrz::vt

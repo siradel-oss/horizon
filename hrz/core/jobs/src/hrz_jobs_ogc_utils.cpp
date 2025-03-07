@@ -107,8 +107,6 @@ std::optional<std::string_view> find_image_format(
     }
 }
 
-#define FLIPPED_SRIDS_COUNT 1791
-
 // SRIDs for which the axes are flipped. Obtained by querying Spatialite with:
 //     SELECT srid
 //     FROM "spatial_ref_sys_all"
@@ -118,7 +116,7 @@ std::optional<std::string_view> find_image_format(
 // Thanks to https://gis.stackexchange.com/a/219302
 //
 // This array must be sorted for the binary search.
-constexpr uint16_t flipped_epsg_srids[FLIPPED_SRIDS_COUNT] = {
+static constexpr uint16_t kFlippedEpsgSrids[] = {
     2036,  2044,  2045,  2081,  2082,  2083,  2085,  2086,  2091,  2092,  2093,  2096,  2097,
     2098,  2105,  2106,  2107,  2108,  2109,  2110,  2111,  2112,  2113,  2114,  2115,  2116,
     2117,  2118,  2119,  2120,  2121,  2122,  2123,  2124,  2125,  2126,  2127,  2128,  2129,
@@ -264,6 +262,6 @@ bool crs_has_flipped_axes(std::string_view authority, unsigned int srid)
     if (srid > std::numeric_limits<uint16_t>::max()) return false;
 
     return std::binary_search(
-        &flipped_epsg_srids[0], &flipped_epsg_srids[FLIPPED_SRIDS_COUNT], (uint16_t)srid);
+        std::begin(kFlippedEpsgSrids), std::end(kFlippedEpsgSrids), (uint16_t)srid);
 }
 } // namespace hrz::ogc

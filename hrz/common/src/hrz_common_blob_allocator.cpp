@@ -1418,7 +1418,7 @@ AllocationTicket allocate_blob(BlobAllocator* allocator, size_t size, bool block
 {
     assert(allocator);
 
-    std::unique_lock<std::shared_mutex> lock(allocator->mutex);
+    std::unique_lock lock(allocator->mutex);
 
     auto id = allocator->blob_pool.alloc();
     allocator->blobs.erase(id);

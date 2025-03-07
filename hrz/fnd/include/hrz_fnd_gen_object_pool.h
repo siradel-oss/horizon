@@ -1,23 +1,24 @@
 #pragma once
 
+#include "hrz_fnd_class.h"
 #include "hrz_fnd_defines.h"
 #include "hrz_fnd_gen_index_pool.h"
 
 #include <gsl/gsl-lite.hpp>
 
-#if HRZ_DEBUG
-#    include <type_traits>
-#endif
-
 #include <stdlib.h>
 
 // This checks that all allocated objects have been released when the stored
-// objects don't have a trivial destructor. This check only hapens in debug
+// objects don't have a trivial destructor. This check only happens in debug
 // builds.
 // For now this is disabled because I don't have the time to fix all instances
 // of leaked resources but one day we should re-enable it and fix everything.
 //      -slerouzic, 2021-12-08
 #define HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK 0
+
+#if HRZ_DEBUG && HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK
+#    include <type_traits>
+#endif
 
 namespace hrz
 {
@@ -53,11 +54,39 @@ private:
     {
         std::byte* actual_ptr; // Memory allocation location
         T* view;               // Aligned version of the previous pointer
+
+        constexpr Chunk(std::byte* actual_ptr, T* view) : actual_ptr{actual_ptr}, view{view} {}
+
+        HRZ_DELETE_COPY(Chunk);
+
+        Chunk(Chunk&& other) :
+            actual_ptr{std::exchange(other.actual_ptr, nullptr)},
+            view{std::exchange(other.view, nullptr)}
+        {
+        }
+
+        Chunk& operator=(Chunk&& other)
+        {
+            if (&other != this)
+            {
+                actual_ptr = std::exchange(other.actual_ptr, nullptr);
+                view = std::exchange(other.view, nullptr);
+            }
+            return *this;
+        }
+
+        ~Chunk()
+        {
+            if (actual_ptr)
+            {
+                free(actual_ptr);
+            }
+        }
     };
 
     IndexPool _index_pool;
     std::vector<Chunk> _chunks;
-#if HRZ_DEBUG
+#if HRZ_DEBUG && HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK
     int64_t _allocated = 0;
 #endif
 
@@ -83,20 +112,18 @@ private:
 
         if (chunk_index == _chunks.size())
         {
-            Chunk chunk;
-            chunk.actual_ptr = (std::byte*)malloc(sizeof(T) * ChunkSize + alignof(T) - 1);
+            auto* actual_ptr = (std::byte*)malloc(sizeof(T) * ChunkSize + alignof(T) - 1);
 
             // Alignment
-            uintptr_t ptr_i = (uintptr_t)chunk.actual_ptr + alignof(T) - 1;
+            uintptr_t ptr_i = (uintptr_t)actual_ptr + alignof(T) - 1;
             ptr_i = (ptr_i / alignof(T)) * alignof(T);
 
             assert(ptr_i % alignof(T) == 0);
 
-            chunk.view = (T*)ptr_i;
-            _chunks.push_back(chunk);
+            _chunks.emplace_back(Chunk{actual_ptr, (T*)ptr_i});
         }
 
-#if HRZ_DEBUG
+#if HRZ_DEBUG && HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK
         _allocated += 1;
 #endif
 
@@ -106,26 +133,38 @@ private:
 public:
     GenObjectPool() = default;
 
-    GenObjectPool(const GenObjectPool&) = delete;
-    GenObjectPool(GenObjectPool&&) = default;
+    HRZ_DELETE_COPY(GenObjectPool);
 
-    GenObjectPool& operator=(const GenObjectPool&) = delete;
-    GenObjectPool& operator=(GenObjectPool&&) = default;
+#if HRZ_DEBUG && HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK
+    GenObjectPool(GenObjectPool&& other) :
+        _index_pool{std::move(other._index_pool)},
+        _chunks{std::move(other._chunks)},
+        _allocated{std::exchange(other._allocated, 0)}
+    {
+    }
+
+    GenObjectPool& operator=(GenObjectPool&& other)
+    {
+        if (&other != this)
+        {
+            _index_pool = std::move(other._index_pool);
+            _chunks = std::move(other._chunks);
+            _allocated = std::exchange(other._allocated, 0);
+        }
+        return *this;
+    }
 
     ~GenObjectPool()
     {
-        for (const Chunk& chunk : _chunks)
-        {
-            free(chunk.actual_ptr);
-        }
-
-#if HRZ_DEBUG && HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK
         if (!std::is_trivially_destructible_v<T>)
         {
             assert(_allocated == 0);
         }
-#endif
     }
+#else
+    HRZ_DEFAULT_MOVE(GenObjectPool);
+    ~GenObjectPool() = default;
+#endif
 
     inline bool is_valid(Handle h) const { return _index_pool.is_valid(h); }
 
@@ -170,7 +209,7 @@ public:
         _index_pool.release(h);
         std::destroy_at(obj);
 
-#if HRZ_DEBUG
+#if HRZ_DEBUG && HRZ_FND_GEN_OBJECT_POOL_CHECK_LEAK
         _allocated -= 1;
 #endif
     }

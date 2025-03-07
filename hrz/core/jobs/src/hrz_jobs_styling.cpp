@@ -26,7 +26,7 @@
             HRZ_LOG_ERROR(MSG); \
             return false;       \
         }                       \
-    } while (0);
+    } while (0)
 
 #define CHECK_ERR(...)      \
     do                      \
@@ -35,7 +35,7 @@
         {                   \
             return false;   \
         }                   \
-    } while (0);
+    } while (0)
 
 namespace
 {

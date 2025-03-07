@@ -633,7 +633,7 @@ RenderRequest work(
                     system->reprs_to_initialize.insert(id);
                 }
             }
-        };
+        }
 
         // If there is still some unused data that was not recycled, then we can delete it.
         for (auto id : unused_repr_data_ids)

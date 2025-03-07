@@ -11,18 +11,6 @@
 namespace hrz::str
 {
 
-template<typename T>
-static inline void append(std::string& str, T&& data)
-{
-    str.append((const char*)&data, sizeof(T));
-}
-
-template<typename T>
-static inline void append(std::string* str, T&& data)
-{
-    append<T>(*str, std::forward<T>(data));
-}
-
 // Strings are considered to be UTF-8.
 // The `_s` variants don't allocate memory, so are more lighweight, but the
 // caller is in charge of handling the lifetime of the strings correctly.

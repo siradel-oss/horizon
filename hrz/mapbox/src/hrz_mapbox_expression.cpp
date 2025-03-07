@@ -1789,62 +1789,81 @@ void generate_sub_expression_script(
     NodeIndex current,
     std::string& script)
 {
-#define GENERATE_SUB_EXPR_FOR_CHILD(CHILD)                                                       \
-    assert((CHILD) < nodes.size() && node.children.size() > CHILD && node.children[CHILD] != 0); \
-    generate_sub_expression_script(nodes, node.children[(CHILD)], script)
+#define GENERATE_SUB_EXPR_FOR_CHILD(CHILD)                                                        \
+    do                                                                                            \
+    {                                                                                             \
+        assert(                                                                                   \
+            (CHILD) < nodes.size() && node.children.size() > CHILD && node.children[CHILD] != 0); \
+        generate_sub_expression_script(nodes, node.children[(CHILD)], script);                    \
+    } while (0)
 
 #define GENERATE_SINGLE_FUNCTION_CALL(FUNCTION_NAME, OPERAND_COUNT) \
-    script += FUNCTION_NAME "(";                                    \
-    for (uint32_t i = 0; i < OPERAND_COUNT - 1; ++i)                \
+    do                                                              \
     {                                                               \
-        GENERATE_SUB_EXPR_FOR_CHILD(i);                             \
-        script += ", ";                                             \
-    }                                                               \
-    GENERATE_SUB_EXPR_FOR_CHILD(OPERAND_COUNT - 1);                 \
-    script += ")";
+        script += FUNCTION_NAME "(";                                \
+        for (uint32_t i = 0; i < OPERAND_COUNT - 1; ++i)            \
+        {                                                           \
+            GENERATE_SUB_EXPR_FOR_CHILD(i);                         \
+            script += ", ";                                         \
+        }                                                           \
+        GENERATE_SUB_EXPR_FOR_CHILD(OPERAND_COUNT - 1);             \
+        script += ")";                                              \
+    } while (0)
 
     // Chains calls to a function that takes two operands until there are no more children left.
     // Examples:
     //  "min(a, min(b, c))"
     //  "max(a, max(b, max(c, d)))"
-#define GENERATE_CHAINED_FUNCTION_CALLS(FUNCTION_NAME)      \
-    for (uint32_t i = 0; i < node.children.size() - 1; ++i) \
-    {                                                       \
-        script += FUNCTION_NAME "(";                        \
-        GENERATE_SUB_EXPR_FOR_CHILD(i);                     \
-        script += ", ";                                     \
-    }                                                       \
-    GENERATE_SUB_EXPR_FOR_CHILD(node.children.size() - 1);  \
-    for (uint32_t i = 0; i < node.children.size() - 1; ++i) \
-    {                                                       \
-        script += ")";                                      \
-    }
+#define GENERATE_CHAINED_FUNCTION_CALLS(FUNCTION_NAME)          \
+    do                                                          \
+    {                                                           \
+        for (uint32_t i = 0; i < node.children.size() - 1; ++i) \
+        {                                                       \
+            script += FUNCTION_NAME "(";                        \
+            GENERATE_SUB_EXPR_FOR_CHILD(i);                     \
+            script += ", ";                                     \
+        }                                                       \
+        GENERATE_SUB_EXPR_FOR_CHILD(node.children.size() - 1);  \
+        for (uint32_t i = 0; i < node.children.size() - 1; ++i) \
+        {                                                       \
+            script += ")";                                      \
+        }                                                       \
+    } while (0)
 
 #define GENERATE_UNARY_OPERATOR(OPERATOR) \
-    script += "(" OPERATOR;               \
-    GENERATE_SUB_EXPR_FOR_CHILD(0);       \
-    script += ")";
+    do                                    \
+    {                                     \
+        script += "(" OPERATOR;           \
+        GENERATE_SUB_EXPR_FOR_CHILD(0);   \
+        script += ")";                    \
+    } while (0)
 
 #define GENERATE_BINARY_OPERATOR(OPERATOR) \
-    script += "(";                         \
-    GENERATE_SUB_EXPR_FOR_CHILD(0);        \
-    script += " " OPERATOR " ";            \
-    GENERATE_SUB_EXPR_FOR_CHILD(1);        \
-    script += ")";
+    do                                     \
+    {                                      \
+        script += "(";                     \
+        GENERATE_SUB_EXPR_FOR_CHILD(0);    \
+        script += " " OPERATOR " ";        \
+        GENERATE_SUB_EXPR_FOR_CHILD(1);    \
+        script += ")";                     \
+    } while (0)
 
     // Chains binary operators until there are no more children left.
     // Examples:
     //  "a and b and c"
     //  "a or b or c or d or e"
-#define GENERATE_CHAINED_BINARY_OPERATOR(OPERATOR)      \
-    script += "(";                                      \
-    GENERATE_SUB_EXPR_FOR_CHILD(0);                     \
-    for (uint32_t i = 1; i < node.children.size(); ++i) \
-    {                                                   \
-        script += " " OPERATOR " ";                     \
-        GENERATE_SUB_EXPR_FOR_CHILD(i);                 \
-    }                                                   \
-    script += ")";
+#define GENERATE_CHAINED_BINARY_OPERATOR(OPERATOR)          \
+    do                                                      \
+    {                                                       \
+        script += "(";                                      \
+        GENERATE_SUB_EXPR_FOR_CHILD(0);                     \
+        for (uint32_t i = 1; i < node.children.size(); ++i) \
+        {                                                   \
+            script += " " OPERATOR " ";                     \
+            GENERATE_SUB_EXPR_FOR_CHILD(i);                 \
+        }                                                   \
+        script += ")";                                      \
+    } while (0)
 
     assert(current != 0 && current < nodes.size());
 

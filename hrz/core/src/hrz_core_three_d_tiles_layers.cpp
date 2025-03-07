@@ -4996,7 +4996,7 @@ struct ThreeDTilesSystem
                 if (tile.subtiles_left_to_load == 0)
                 {
                     bool has_subtile_error = false;
-                    for (auto& subtile : tile.subtiles)
+                    for (const auto& subtile : tile.subtiles)
                     {
                         has_subtile_error |=
                             subtile.load_status == ThreeDTile::Subtile::LoadStatus::ERROR;

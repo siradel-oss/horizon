@@ -37,40 +37,39 @@ namespace
 using namespace hrz;
 using namespace assets_loader;
 
-static const unsigned int MAX_HOST_CONNECTIONS = 4;
+constexpr unsigned int kMaxHostConnections = 4;
+constexpr size_t kL1CacheLineSize = 64;
 
-#define L1_CACHE_LINE_SIZE 64
-
-struct alignas(L1_CACHE_LINE_SIZE) RequestSlot
+struct alignas(kL1CacheLineSize) RequestSlot
 {
-    HttpRequestStatus status;
-    HttpTicket ticket;
+    HttpRequestStatus status{};
+    HttpTicket ticket{};
     std::vector<std::byte> data;
     std::unique_ptr<char[]> error_buffer;
-    CURL* handle;
+    CURL* handle{};
     std::string url;
-    uint64_t range_start;
-    uint64_t range_size;
+    uint64_t range_start{};
+    uint64_t range_size{};
     std::string content_type;
     hrz::Arena request_headers_arena;
-    curl_slist* request_headers;
+    curl_slist* request_headers{};
     hrz::HttpHeaders response_headers;
-    int response_code;
+    int response_code{};
 
     RequestSlot() : request_headers_arena(1024 * 1024) {}
 };
 
 static_assert(
-    sizeof(RequestSlot) % L1_CACHE_LINE_SIZE == 0,
+    sizeof(RequestSlot) % kL1CacheLineSize == 0,
     "RequestSlot size must be a multiple of 64 bytes");
 static_assert(
-    alignof(RequestSlot) == L1_CACHE_LINE_SIZE,
+    alignof(RequestSlot) == kL1CacheLineSize,
     "RequestSlot size must be aligned on 64 bytes");
 
 size_t _header_callback(char* raw_header, size_t size, size_t nitems, void* userdata)
 {
     assert(userdata);
-    RequestSlot* req = (RequestSlot*)userdata;
+    auto* req = (RequestSlot*)userdata;
 
     std::string_view header(raw_header, size * nitems);
     header = hrz::str::trim_s(header);
@@ -89,7 +88,7 @@ size_t _header_callback(char* raw_header, size_t size, size_t nitems, void* user
 size_t _write_callback(char* ptr, size_t size, size_t nmemb, void* userdata)
 {
     assert(userdata);
-    RequestSlot* req = (RequestSlot*)userdata;
+    auto* req = (RequestSlot*)userdata;
 
     // Returning 0 aborts the download operation
     if (req->status == HttpRequestStatus::Canceled) return 0;
@@ -162,8 +161,8 @@ class DesktopHttpLoader : public IHttpLoader
     std::thread _thread;
     std::atomic_bool _running;
 
-    hrz::ThreadProfiler* _profiler;
-    hrz::ThreadMetricsRegistry* _metrics;
+    hrz::ThreadProfiler* _profiler{};
+    hrz::ThreadMetricsRegistry* _metrics{};
 
 public:
     DesktopHttpLoader(const char* user_agent, const char* http_referrer)
@@ -174,7 +173,7 @@ public:
         //   Enable SSL on SSL-enabled systems, does nothing elsewhere.
         curl_global_init(CURL_GLOBAL_WIN32 | CURL_GLOBAL_SSL);
         _multi_handle = curl_multi_init();
-        curl_multi_setopt(_multi_handle, CURLMOPT_MAX_HOST_CONNECTIONS, MAX_HOST_CONNECTIONS);
+        curl_multi_setopt(_multi_handle, CURLMOPT_MAX_HOST_CONNECTIONS, kMaxHostConnections);
         // @Todo(HRZ-337): multiplexing requires HTTP2.
         // curl_multi_setopt(p->multi_handle, CURLMOPT_PIPELINING, CURLPIPE_MULTIPLEX);
 
@@ -207,6 +206,8 @@ public:
         _running.store(true);
         _thread = std::thread(&DesktopHttpLoader::work_thread, this);
     }
+
+    HRZ_DELETE_COPY_MOVE(DesktopHttpLoader);
 
     ~DesktopHttpLoader() override = default;
 
@@ -463,7 +464,7 @@ public:
             }
             else
             {
-                int decoded_len;
+                int decoded_len{};
                 char* decoded_payload = curl_easy_unescape(
                     req->handle, result.encoded_payload.data(), result.encoded_payload.size(),
                     &decoded_len);
@@ -543,8 +544,8 @@ public:
             }
 
             // Advance curl work
-            CURLMcode ret_code;
-            int running_requests;
+            CURLMcode ret_code{};
+            int running_requests = 0;
             while ((ret_code = curl_multi_perform(_multi_handle, &running_requests))
                    == CURLM_CALL_MULTI_PERFORM)
                 ;
@@ -555,16 +556,16 @@ public:
             }
 
             // Retrieve as much data as possible.
-            int messages_left;
-            CURLMsg* m;
+            int messages_left = 0;
+            CURLMsg* m{};
             while ((m = curl_multi_info_read(_multi_handle, &messages_left)))
             {
                 HRZ_SCOPED_SAMPLE("assets loader desktop retrieve data");
 
                 if (m->msg != CURLMSG_DONE) continue;
 
-                RequestSlot* req;
-                long response_code;
+                RequestSlot* req{};
+                long response_code = 0;
 
                 curl_easy_getinfo(m->easy_handle, CURLINFO_RESPONSE_CODE, &response_code);
                 curl_easy_getinfo(m->easy_handle, CURLINFO_PRIVATE, &req);
@@ -595,7 +596,7 @@ public:
 
                 if (new_status == HttpRequestStatus::Loaded)
                 {
-                    const char* content_type;
+                    const char* content_type{};
                     curl_easy_getinfo(m->easy_handle, CURLINFO_CONTENT_TYPE, &content_type);
 
                     if (content_type != nullptr)
