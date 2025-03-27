@@ -223,6 +223,7 @@ There are several bazel targets available the most important ones are:
 - `//apps/web_example:server` builds a very simple Horizon integration in a web page, then serves it at `http://localhost:8080`.
 - `//apps/web_client:server` builds the Horizon web client, then serves it at `http://localhost:8080`.
 - `//hrz/doc:server` builds the Horizon documentation, then serves it at `http://localhost:8081`.
+    - Add the `--//:opensource=True` flag when using the open-source version.
 
 The `-c opt` option can be used to build in release mode, and `-c dbg` for debug mode. Not adding any `-c` flag builds in `fastbuild` version: faster than debug at runtime, and faster build time than the optimized version.
 

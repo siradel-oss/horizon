@@ -15,13 +15,23 @@ npm_link_all_packages(name = "node_modules")
 DIST_SCENES_PREFIX = "dist_scenes"
 
 SCENES = [
+    "cassini_single_image_raster",
+    "dinan_dtm_lod1",
     "heatmap_bus_coverage",
     "heatmap_earthquakes",
+    "ign_scan_1000_wms",
+    "osm_rennes_tiled_raster",
+    "osm_rennes_tilejson",
+    "osm_rennes_tms",
+    "paris_pmtiles",
+    "san_francisco_data_raster",
+    "world_street_map_arcgis",
 ]
 
 TEMPLATES = [
     "hrz_basemap_dark_nonames",
     "ign_bd_ortho",
+    "ign_routes",
     "initial_viewpoint_france",
     "plan_ign",
     "rennes_buildings",
@@ -143,6 +153,8 @@ pkg_files(
     name = "pkg_demo_assets",
     srcs = glob(["demo_assets/**/*"]),
     prefix = "assets/demo",
+    # Adding this preserves the directory structure
+    strip_prefix = "demo_assets",
 )
 
 pkg_files(

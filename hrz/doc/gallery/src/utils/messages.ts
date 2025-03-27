@@ -39,6 +39,26 @@ export class MessageHandler {
         });
     }
 
+    awaitRasterDataFetchResult(
+        ticket: HrzProtocol.IRasterDataFetchTicket,
+        handleFn: (result: HrzProtocol.IPickLayerResult[]) => void
+    ) {
+        let refTicket = JSON.stringify(ticket);
+        this.watch((msg) => {
+            if (
+                msg.type == HrzProtocol.MessageType.RASTER_DATA_FETCH_MESSAGE &&
+                msg.rasterDataFetch
+            ) {
+                let ticket = JSON.stringify(msg.rasterDataFetch.ticket);
+                if (ticket == refTicket) {
+                    handleFn(msg.rasterDataFetch.results || []);
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
     watch(handleFn: (msg: HrzProtocol.ITypedMessage) => boolean) {
         this.watchers.push(handleFn);
     }

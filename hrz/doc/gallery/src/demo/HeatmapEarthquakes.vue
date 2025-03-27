@@ -6,6 +6,7 @@ import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 import { applyScene, applySceneTemplate, getLayerByName } from "@/utils/scenes";
 import FullscreenSource from "@/component/FullscreenSource.vue";
+import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
 
 let styleSource = ref<string>("");
 let accumulationMode = ref<HrzProtocol.HeatmapAccumulationMode>(
@@ -42,6 +43,13 @@ async function onHorizonReady(api_: HrzApi.AsyncApi) {
 
     applySceneTemplate(api, "hrz_basemap_dark_nonames");
 }
+
+async function retrieveVectorTilesLayerData(): Promise<any> {
+    if (!layer) {
+        return {};
+    }
+    return (await HrzApi.VectorTilesLayerPathBuilder.create(layer).get(api)).toJSON();
+}
 </script>
 <template>
     <SplitView>
@@ -71,7 +79,13 @@ async function onHorizonReady(api_: HrzApi.AsyncApi) {
             <div class="typography-normal">
                 <p>Below is the styling script used for this map.</p>
                 <pre>{{ styleSource }}</pre>
-                <FullscreenSource file="source/HeatmapEarthquakes.vue" />
+                <p>
+                    <FullscreenSource file="source/HeatmapEarthquakes.vue" />
+                    <FullscreenSceneModel
+                        text="View heatmap layer data"
+                        :retrieveData="retrieveVectorTilesLayerData"
+                    />
+                </p>
             </div>
         </template>
         <template #right>

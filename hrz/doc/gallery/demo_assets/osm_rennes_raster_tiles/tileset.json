@@ -1,0 +1,10 @@
+{
+    "tilejson": "3.0.0",
+    "tiles": [
+        "{z}/{x}/{y}.webp"
+    ],
+    "attribution": "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap contributors</a>",
+    "bounds": [-1.7897413, 48.0450375, -1.5521621, 48.2162091],
+    "maxzoom": 13,
+    "minzoom": 1
+}

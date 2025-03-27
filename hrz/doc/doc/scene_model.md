@@ -24,6 +24,19 @@ SingleModelLayer
       └── rotation
 ```
 
+```ts
+// Create a layer
+let handle = api.LayerService.createLayer({
+    type: HrzProtocol.LayerType.SINGLE_MODEL,
+});
+
+// Use the scene model API using the newly created layer's handle
+HrzApi.SingleModelLayerPathBuilder.create(handle).set(api, /* layer model */);
+
+// Destroy a layer
+api.LayerService.destroyLayer(handle);
+```
+
 ## Scene view settings
 
 The scene model is provided with a root node, called [[SceneViewSettings]], that is used to configure general aspects of a scene view. It uses the scene view index as parameter. This is shown in the example below (read the following sections for more details on the use of paths).
@@ -95,10 +108,8 @@ When the user reaches the field they want to work with, they can retrieve or mut
 // path points to SingleModelLayer.transform.offset
 const offset = pathBuilder.clone().get(api);
 offset.x += 2;
-path.set(api, offset);
+pathBuilder.set(api, offset);
 ```
-
-Because path builders are used to create paths, and the methods used to manipulate values are directly on the builders and return promises, paths are not used directly when interacting with Horizon through its API.
 
 Fields that are repeated (arrays) act differently from other fields:
 
@@ -126,6 +137,31 @@ pathBuilder.clone().addMyArraySync(api, obj1);
 pathBuilder.clone().myArray(1).getSync(api);
 ```
 
+!!! note "Batching updates"
+    When possible, group mutating accesses to the scene model so as to minimize the number of API calls to Horizon.
+
+```ts
+// Don't
+layerPath.clone().position().lat().set(api, 45);
+layerPath.clone().position().lon().set(api, -1);
+
+// Do
+layerPath.clone().position().set(api, { lat: 45, lon: -1 });
+```
+
+!!! note "Access granularity"
+    It is recommended, especially when mutating the scene model, to only touch the smallest possible part of the model. This is because Horizon doesn't compare the old and new state to check what has changed, but relies on the information of what part of the model has been touched by scene model update calls. Hence there might be optimisations implemented to minimize the work the engine has to do after a state change depending on what part of the model was modified.
+
+```ts
+// Don't
+let model = layerPath.clone().get(api);
+model.color.a = 0.5;
+layerPath.clone().set(api, model); // Bad! Might reload the model.
+
+// Do
+layerPath.clone().color().a().set(api, 0.5); // Good, the engine knows only the color changed.
+```
+
 ## Dumping and loading a scene
 
 A utility library called `horizon-scene-dump` is provided to dump an entire scene to JSON, or reload a scene from a dump. It is only available for TypeScript. The provided methods are `loadScene(Obj|Json|Bin|Base64)(Sync|Async)` and `dumpScene(Obj|Json|Bin|Base64)(Sync|Async)`.
@@ -140,5 +176,5 @@ let dump = await dumpSceneObjAsync(api, "My scene name", /* viewpoints = */ []);
 // It will also delete all existing layers from the instance.
 let loadedInfo = await loadSceneObjAsync(api, dump,
   /* cameraAnimationOptions = */ {},
-  /* clearScene */ = true);
+  /* clearScene = */ true);
 ```

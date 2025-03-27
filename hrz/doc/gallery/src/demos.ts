@@ -49,3 +49,36 @@ registerDemo("mapbox", Mapbox);
 
 import Ambiance from "./demo/Ambiance.vue";
 registerDemo("ambiance", Ambiance);
+
+import SingleImageRaster from "./demo/SingleImageRaster.vue";
+registerDemo("singleImageRaster", SingleImageRaster);
+
+import TiledImageRaster from "./demo/TiledImageRaster.vue";
+registerDemo("tiledImageRaster", TiledImageRaster);
+
+import TmsRaster from "./demo/TmsRaster.vue";
+registerDemo("tmsRaster", TmsRaster);
+
+import TileJsonRaster from "./demo/TileJsonRaster.vue";
+registerDemo("tileJsonRaster", TileJsonRaster);
+
+import WmtsRaster from "./demo/WmtsRaster.vue";
+registerDemo("wmtsRaster", WmtsRaster);
+
+import WmsRaster from "./demo/WmsRaster.vue";
+registerDemo("wmsRaster", WmsRaster);
+
+import ArcGisRaster from "./demo/ArcGisRaster.vue";
+registerDemo("arcGisRaster", ArcGisRaster);
+
+import PmTilesRaster from "./demo/PmTilesRaster.vue";
+registerDemo("pmTilesRaster", PmTilesRaster);
+
+import PalettizedRaster from "./demo/PalettizedRaster.vue";
+registerDemo("palettizedRaster", PalettizedRaster);
+
+import DtmLod1 from "./demo/DtmLod1.vue";
+registerDemo("dtmLod1", DtmLod1);
+
+import TerrainSettings from "./demo/TerrainSettings.vue";
+registerDemo("terrainSettings", TerrainSettings);

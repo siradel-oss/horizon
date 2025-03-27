@@ -1,18 +1,32 @@
 <script lang="ts" setup>
+import { debounce } from "@/utils/utils";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
-const model = defineModel<HrzProtocol.IColor | null>();
+const emits = defineEmits(["update:modelValue", "change"]);
 
 interface Props {
     alpha: boolean;
+    modelValue: HrzProtocol.IColor;
+    modelModifiers: any;
 }
 
-const props = withDefaults(defineProps<Props>(), { alpha: false });
+const props = withDefaults(defineProps<Props>(), {
+    alpha: false,
+    modelModifiers: null,
+});
+
+const model = ref(props.modelValue);
+const isLazy = !!props.modelModifiers?.lazy;
+const isDebounce = !!props.modelModifiers?.debounce;
+
+watch(props.modelValue, (value) => {
+    model.value = value;
+});
 
 const htmlColor = computed({
     get() {
-        const r = Math.round((model.value?.r || 0) * 255)
+        const r = Math.round((model.value.r || 0) * 255)
             .toString(16)
             .padStart(2, "0");
         const g = Math.round((model.value?.g || 0) * 255)
@@ -27,20 +41,49 @@ const htmlColor = computed({
         const r = parseInt(value.slice(1, 3), 16) / 255;
         const g = parseInt(value.slice(3, 5), 16) / 255;
         const b = parseInt(value.slice(5, 7), 16) / 255;
-        model.value = { r, g, b, a: model.value?.a || 1 };
+        model.value = { r, g, b, a: model.value.a };
     },
 });
+
+const notifyUpdate = debounce(
+    (value: HrzProtocol.IColor, isInputEvent: boolean) => {
+        if (!isLazy && !isInputEvent) {
+            emits("update:modelValue", value);
+        }
+    },
+    isDebounce ? 300 : 0
+);
+
+function onColorChange(event: InputEvent, isInputEvent: boolean) {
+    const target = event.target as HTMLInputElement;
+    htmlColor.value = target.value;
+    notifyUpdate(model.value);
+}
+
+function onAlphaChange(event: InputEvent, isInputEvent: boolean) {
+    const target = event.target as HTMLInputElement;
+    model.value = { ...model.value, a: parseFloat(target.value) };
+    notifyUpdate(model.value);
+}
 </script>
 <template>
     <div class="flex flex-row space-x-4">
-        <input type="color" v-model="htmlColor" class="flex-1" />
+        <input
+            type="color"
+            :value="htmlColor"
+            @input="event => onColorChange(event as InputEvent, true)"
+            @change="event => onColorChange(event as InputEvent, false)"
+            class="flex-1"
+        />
         <input
             type="range"
             min="0"
             max="1"
             step="any"
             v-if="model && props.alpha"
-            v-model="model.a"
+            :value="model.a"
+            @input="event => onAlphaChange(event as InputEvent, true)"
+            @change="event => onAlphaChange(event as InputEvent, false)"
             class="flex-1"
         />
     </div>

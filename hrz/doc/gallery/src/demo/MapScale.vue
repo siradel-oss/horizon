@@ -134,7 +134,7 @@ function onHorizonReady(api: HrzApi.AsyncApi) {
                     terrain or to the sea level, of the camera for the given scene view. For
                     instance, the current altitude is {{ altitudeFormatted }}.
                 </p>
-                <FullscreenSource file="source/MapScale.vue" />
+                <p><FullscreenSource file="source/MapScale.vue" /></p>
             </div>
         </template>
         <template #right>

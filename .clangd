@@ -1,0 +1,37 @@
+---
+# This is only provided for people who use clangd as part of
+# their development environment, but it has nothing to do with
+# coding standards or CI.
+# If you want to add or remove a diagnostic, please discuss it first.
+CompileFlags:
+    Add:
+        - "-Wall"
+Diagnostics:
+    ClangTidy:
+        Add:
+            - "clang-analyzer-*"
+            - "cppcoreguidelines-*"
+            - "hicpp-*"
+            - "misc-*"
+            - "performance-*"
+            - "google-explicit-constructor"
+        Remove:
+            - "*-avoid-magic-numbers"
+            - "*-union-access"
+            - "*-braces-around-statements"
+            - "*-avoid-c-arrays"
+            - "*-cstyle-cast"
+            - "*-constant-array-index"
+            - "*-deprecated-headers"
+            - "*-pointer-arithmetic"
+            - "*-avoid-do-while"
+            - "*-named-parameter"
+            - "*-array-to-pointer-decay"
+            - "*-no-array-decay"
+            - "*-owning-memory"
+            - "*-signed-bitwise"
+            - "*-noexcept-move"
+            - "*-macro-usage"
+            - "*-non-private-member-variables-in-classes"
+        # This is important to enable the misc-const-correctness check
+        FastCheckFilter: None

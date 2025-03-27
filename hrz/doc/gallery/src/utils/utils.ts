@@ -10,3 +10,17 @@ export function deepAssign(from: any, to: any) {
         }
     }
 }
+
+export function debounce(callback: (...args: any) => void, waitMs: number): (...args: any) => void {
+    if (waitMs > 0) {
+        let timeoutId: number | undefined = undefined;
+        return (...args: any) => {
+            window.clearTimeout(timeoutId);
+            timeoutId = window.setTimeout(() => {
+                callback(...args);
+            }, waitMs);
+        };
+    } else {
+        return callback;
+    }
+}

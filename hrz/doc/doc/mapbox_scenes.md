@@ -50,8 +50,6 @@ It should look like this:
 
 [See the "Symbol" example below](#example) for a complete style using this property.
 
----
-
 ## Supported properties
 
 ### [Root properties](https://docs.mapbox.com/mapbox-gl-js/style-spec/root/)
@@ -61,13 +59,9 @@ Supported properties are: `version`, `name`, `center`, `bearing`, `pitch`, `zoom
 !!! note "Zoom property"
     The zoom property corresponds to a zoom level. Horizon, being three dimensional, can only approximate the initial position of the camera to try to match the initial Mapbox view.
 
----
-
 ### [Source properties](https://docs.mapbox.com/mapbox-gl-js/style-spec/sources/)
 
 Supported `type` values are: `raster`, `vector` and `geojson`.
-
----
 
 #### **`raster` source**
 
@@ -78,8 +72,6 @@ Supported properties are: `bounds`, `maxzoom`, `minzoom`, `tiles`, `tileSize` an
 !!! important "TileJSON & PMTiles sources"
     For these sources, the `minzoom` and `maxzoom` parameters are ignored.
 
----
-
 #### **`vector` source**
 
 Supported properties are: `bounds`, `maxzoom`, `minzoom`, `tiles` and `url`.
@@ -89,15 +81,11 @@ Supported properties are: `bounds`, `maxzoom`, `minzoom`, `tiles` and `url`.
 !!! important "TileJSON & PMTiles sources"
     For these sources, the geometry parameters (`bounds`, `minzoom`, and `maxzoom`) are ignored.
 
----
-
 #### **`geojson` source**
 
 _GeoJSON sources are converted into an untiled vector data provider._
 
 The only supported property is `data`. `data` doesn't accept inline GeoJSON and can only refer to an external GeoJSON document.
-
----
 
 ### [Layer properties](https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/)
 
@@ -105,15 +93,11 @@ Supported layer properties are: `id`, `type`, `source`, `source-layer`, `minzoom
 
 The supported values for the `type` property are: `background`, `fill`, `line`, `raster`, `circle`, `fill-extrusion`, `heatmap`, and `symbol`.
 
----
-
 #### **`background` layer**
 
 Their `background-color` `paint` property is assigned to the scene views' [[TerrainSettings]]. If there are multiple `background` layers, the color of the last one is used, as it is supposed to be rendered above the others. If the layer's `visibility` `layout` property is set to `"none"`, then the layer is ignored.
 
 Expressions are not supported for properties of this layer yet.
-
----
 
 #### **`fill` layer**
 
@@ -124,8 +108,6 @@ _This layer is converted into a flat overlay vector representation._
     - `fill-antialias`: Horizon flat polygons are never anti-aliased. This property is read to know whether outlines should be drawn. Outlines are never drawn when this property is `false`.
     - `fill-pattern`: This property isn't supported but it is read to know whether polygon outlines should be drawn. Outlines are never drawn when this property is present in the Mapbox style.
 
----
-
 #### **`line` layer**
 
 _This layer is converted into a flat overlay vector representation._
@@ -134,8 +116,6 @@ _This layer is converted into a flat overlay vector representation._
 - Partially supported `paint` properties:
     - `line-cap`: The "square" line ending falls back to "butt". "round" is supported.
 
----
-
 #### **`raster` layer**
 
 _This layer is converted into an imagery raster layer._
@@ -143,15 +123,11 @@ _This layer is converted into an imagery raster layer._
 - Supported `paint` properties: `raster-opacity`, `raster-resampling`.
 - Supported `layout` property: `visibility`.
 
----
-
 #### **`circle` layer**
 
 _This layer is converted into a symbol vector representation._
 
 - Supported `paint` properties: `circle-color`, `circle-opacity`, `circle-pitch-alignment`, `circle-radius`, `circle-stroke-color`, `circle-stroke-opacity`, `circle-stroke-width`, `circle-translate`, `circle-translate-anchor`.
-
----
 
 #### **`fill-extrusion` layer**
 
@@ -159,15 +135,11 @@ _This layer is converted into an extruded geometry vector representation._
 
 - Supported `paint` properties: `fill-extrusion-color`, `fill-extrusion-opacity`, `fill-extrusion-vertical-gradient`, `fill-extrusion-height`.
 
----
-
 #### **`heatmap` layer**
 
 _This layer is converted into a heatmap vector representation._
 
 - Supported `paint` properties: `heatmap-weight`, `heatmap-intensity`, `heatmap-color`, `heatmap-radius`, `heatmap-opacity`.
-
----
 
 #### **`symbol` layer**
 
@@ -190,13 +162,9 @@ _This layer is converted into a symbol vector representation._
 !!! note "Symbol sort keys"
     The `symbol-sort-key` property support only applies to symbols that go through the culling process (which is symbols that have their `*-allow-overlap` property set to `false`). Symbols that are allowed to overlap other symbols are drawn in the "natural 3D" order: the ones closer to the camera will appear above the ones that are further away.
 
----
-
 ### [Expressions](https://docs.mapbox.com/style-spec/reference/expressions/)
 
 The translation tool supports some of the functionalities of the Mapbox expression language. Per category, the supported operators are:
-
----
 
 #### **Lookup**
 
@@ -205,20 +173,14 @@ The translation tool supports some of the functionalities of the Mapbox expressi
     - Support is limited to exact comparisons, and the presence of a substring within other strings is not checked.
     - The types of the values used in this operator should be inferrable and homogeneous. Trying to compare against values of different types will log an error, but will still compare against the other values of the same type.
 
----
-
 #### **Conditionals**
 
 - `!`, `!=`, `<`, `<=`, `==`, `>`, `>=`, `all`, `any`
 - `case`, `match`
 
----
-
 #### **Math**
 
 Supported operators : `min`, `max`, `+`, `-`, `*`, `/`, `%`, `abs`. Their variadic forms are supported.
-
----
 
 #### **Interpolation**
 
@@ -227,8 +189,6 @@ Supported operators : `min`, `max`, `+`, `-`, `*`, `/`, `%`, `abs`. Their variad
 - `interpolate-hcl`, `interpolate-lab`: Same limitations as `interpolate` apply. Colours are interpolated in the Oklab colour space.
 
 - `step`: Only supported for colours. Using the zoom level as input is not supported.
-
----
 
 #### **Types**
 

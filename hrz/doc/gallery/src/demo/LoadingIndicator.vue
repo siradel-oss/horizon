@@ -46,7 +46,7 @@ function onHorizonReady(api: HrzApi.AsyncApi) {
                     flickering, as transient states when the engine is not doing any work can happen
                     between loading stages.
                 </p>
-                <FullscreenSource file="source/LoadingIndicator.vue" />
+                <p><FullscreenSource file="source/LoadingIndicator.vue" /></p>
             </div>
         </template>
         <template #right>

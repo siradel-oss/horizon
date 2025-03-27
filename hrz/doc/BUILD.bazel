@@ -245,7 +245,7 @@ hrz_genrule(
 )
 
 sass_bin.sass(
-    name = "style",
+    name = "form",
     srcs = [
         "css/form.scss",
     ],
@@ -254,6 +254,21 @@ sass_bin.sass(
     ],
     args = [
         "$(execpath css/form.scss)",
+        "$@",
+    ],
+    chdir = "../../../",
+)
+
+sass_bin.sass(
+    name = "style",
+    srcs = [
+        "css/style.scss",
+    ],
+    outs = [
+        "css/style.css",
+    ],
+    args = [
+        "$(execpath css/style.scss)",
         "$@",
     ],
     chdir = "../../../",
@@ -286,6 +301,14 @@ make_doc(
         "doc/blend_modes.md",
         "doc/monitoring.md",
         "doc/mapbox_scenes.md",
+        # Rasters section
+        "doc/raster_providers.md",
+        "doc/tiled_raster_provider.md",
+        "doc/raster_image_formats.md",
+        "doc/palettized_image_raster.md",
+        "doc/dtm_raster.md",
+        "doc/multiple_rasters.md",
+        "doc/terrain_settings.md",
     ] + select({
         "//:is_opensource": [],
         "//conditions:default": [
@@ -346,7 +369,6 @@ pkg_files(
         "//third_party/fonts:MaterialIcons-Regular.ttf",
         "//third_party/fonts:Roboto-Regular.ttf",
         "//third_party/fonts:RobotoMono-Regular.ttf",
-        "//third_party/fonts:Rubik-Regular.ttf",
     ],
     prefix = "static",
 )

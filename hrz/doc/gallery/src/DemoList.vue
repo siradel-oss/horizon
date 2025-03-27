@@ -85,7 +85,7 @@ function clearSelectedTags() {
                 </FilterChip>
             </div>
             <div class="py-4 flex flex-row flex-wrap justify-start items-start gap-4">
-                <DemoCard v-for="d in demos" :demo="d" />
+                <DemoCard v-for="d in demos" :key="d.id" :demo="d" />
             </div>
         </div>
     </div>

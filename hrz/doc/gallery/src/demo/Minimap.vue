@@ -130,7 +130,7 @@ async function onHorizonReady(api: HrzApi.AsyncApi) {
                         height="180"
                     ></canvas>
                 </div>
-                <FullscreenSource file="source/Minimap.vue" />
+                <p><FullscreenSource file="source/Minimap.vue" /></p>
             </div>
         </template>
         <template #right>

@@ -6,8 +6,7 @@
     <h2>Service <code>{{ type_link(this.full_name) }}</code></h2>
     <p>{{ this.documentation }}</p>
     {% for method in this.methods %}
-        <hr />
-        <h4 id="method-{{ method.name }}"><code>{{ type_link(method.output) }} {{ method.name }}({{ type_link(method.input) }})</code></h4>
+        <h5 id="method-{{ method.name }}"><code>{{ type_link(method.output) }} {{ method.name }}({{ type_link(method.input) }})</code></h5>
         {% if method.deprecated %}<p><em>(DEPRECATED)</em></p>{% endif %}
         <p>{{ method.documentation }}</p>
     {% endfor %}

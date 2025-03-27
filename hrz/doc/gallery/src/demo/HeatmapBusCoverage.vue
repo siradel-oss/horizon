@@ -12,6 +12,7 @@ import {
 import { ref, watch } from "vue";
 import FullscreenSource from "@/component/FullscreenSource.vue";
 import { MessageHandler } from "@/utils/messages";
+import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
 
 let popup = ref<HTMLElement | null>(null);
 let heatmapOpacity = ref<number>(0);
@@ -104,6 +105,10 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler_: MessageHandler
     acceptableRange.value = repr.discRadius?.defaultValue || 0;
     heatmapOpacity.value = 0.4;
 }
+
+async function retrieveVectorTilesLayerData(): Promise<any> {
+    return (await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer).get(api)).toJSON();
+}
 </script>
 <template>
     <SplitView>
@@ -149,7 +154,13 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler_: MessageHandler
                         v-model.number.lazy="acceptableRange"
                     />
                 </div>
-                <FullscreenSource file="source/HeatmapBusCoverage.vue" />
+                <p>
+                    <FullscreenSource file="source/HeatmapBusCoverage.vue" />
+                    <FullscreenSceneModel
+                        text="View heatmap layer data"
+                        :retrieveData="retrieveVectorTilesLayerData"
+                    />
+                </p>
             </div>
         </template>
         <template #right>

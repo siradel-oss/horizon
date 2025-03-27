@@ -116,14 +116,15 @@ The project structure is described in the [technical documentation](doc/src/proj
 
 |  | Bazel target |
 |-----------|----------|
-| C++ viewer package | `//hrz/core:pkg_native` |
-| C++ protocol library package | `//hrz/cpp_protocol:pkg` |
-| C++ API library package | `//hrz/cpp_api:pkg` |
-| npm TypeScript viewer package | `//hrz/ts_core:npm_pkg` |
-| npm TypeScript protocol package | `//hrz/ts_protocol:npm_pkg` |
-| npm TypeScript API package | `//hrz/ts_api:npm_pkg` |
-| C++ integration | `//apps/native_client` |
-| Web TypeScript integration example | `//apps/web_example:server` |
+| C++ viewer package | `build //hrz/core:pkg_native` |
+| C++ protocol library package | `build //hrz/cpp_protocol:pkg` |
+| C++ API library package | `build //hrz/cpp_api:pkg` |
+| npm TypeScript viewer package | `build //hrz/ts_core:npm_pkg` |
+| npm TypeScript protocol package | `build //hrz/ts_protocol:npm_pkg` |
+| npm TypeScript API package | `build //hrz/ts_api:npm_pkg` |
+| C++ integration | `run //apps/native_client` |
+| Web TypeScript integration example | `run //apps/web_example:server` |
+| Documentation | `run //hrz/doc:server`<br />or `build //hrz/doc:pkg`<br/>with `--//:opensource:True` |
 
 ## Contributing
 

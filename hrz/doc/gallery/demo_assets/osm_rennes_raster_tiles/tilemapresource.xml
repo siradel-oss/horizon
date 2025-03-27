@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<TileMap version="1.0.0" tilemapservice="https://redacted.localhost/assets/tms/tilemapservice.xml">
+    <Attribution>
+        <Title><![CDATA[© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>]]></Title>
+    </Attribution>
+    <SRS>OSGEO:41001</SRS>
+    <BoundingBox minx="-1.7897413" miny="48.0450375" maxx="-1.5521621" maxy="48.2162091"/>
+    <Origin x="-180" y="-90"/>
+    <TileFormat width="256" height="256" mime-type="image/webp" extension="webp"/>
+    <TileSets profile="global-mercator">
+        <TileSet href="1-tms/" units-per-pixel="78271.516" order="1"/>
+        <TileSet href="2-tms/" units-per-pixel="39135.758" order="2"/>
+        <TileSet href="3-tms/" units-per-pixel="19567.879" order="3"/>
+        <TileSet href="4-tms/" units-per-pixel="9783.9395" order="4"/>
+        <TileSet href="5-tms/" units-per-pixel="4891.96980937500030" order="5"/>
+        <TileSet href="6-tms/" units-per-pixel="2445.98490468750015" order="6"/>
+        <TileSet href="7-tms/" units-per-pixel="1222.99245234375007" order="7"/>
+        <TileSet href="8-tms/" units-per-pixel="611.49622617187504" order="8"/>
+        <TileSet href="9-tms/" units-per-pixel="305.74811308593752" order="9"/>
+        <TileSet href="10-tms/" units-per-pixel="152.874056542968" order="10"/>
+        <TileSet href="11-tms/" units-per-pixel="76.437028271484" order="11"/>
+        <TileSet href="12-tms/" units-per-pixel="38.218514135742" order="12"/>
+        <TileSet href="13-tms/" units-per-pixel="19.109257067871" order="13"/>
+    </TileSets>
+</TileMap>

@@ -1722,11 +1722,11 @@ message CameraSettings {
 }
 
 message TerrainSettings {
-    // The terrain color is applied below the raster.
+    // The terrain color applied below the raster.
     // Alpha is ignored.
     Color            terrain_color                    = 5;
 
-    // The terrain opacity is applied to the terrain with the rasters applied.
+    // The terrain opacity is applied to both the terrain and the rasters.
     float            terrain_opacity                  = 1;
 
     int32            clip_id                          = 2;
@@ -1941,7 +1941,7 @@ message ViewshedSettings {
 
 message RasterSettings {
     // Set to true to increase the raster LODs on inclined polygons.
-    // This makes the display a sharper, but might be a bit noisier.
+    // This makes the display sharper, but might be a bit noisier.
     bool  compensate_inclination = 1;
 
     // Set to true to smooth the raster LOD transitions when moving the camera.

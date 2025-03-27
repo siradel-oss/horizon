@@ -81,8 +81,10 @@ async function onHorizonReady(api: HrzApi.AsyncApi, msgHandler: MessageHandler) 
                     details about the subset of Mapbox features that are supported, and the detailed
                     documentation for the API.
                 </p>
-                <FullscreenSource file="source/Mapbox.vue" />
-                <FullscreenSource :file="scenePath" text="View Mapbox file" />
+                <p>
+                    <FullscreenSource file="source/Mapbox.vue" />
+                    <FullscreenSource :file="scenePath" text="View Mapbox file" />
+                </p>
             </div>
         </template>
         <template #right>

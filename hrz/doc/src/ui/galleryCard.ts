@@ -9,8 +9,19 @@ export class GalleryCardElement extends LitElement {
 
     connectedCallback(): void {
         super.connectedCallback();
-        this.addEventListener("click", () => {
-            window.location.href = `gallery/index.html?demo=${this.demo}`;
+
+        const url = `gallery/index.html?demo=${this.demo}`;
+
+        this.addEventListener("click", (e) => {
+            e.preventDefault();
+            window.open(url, "_self");
+        });
+
+        this.addEventListener("mousedown", (e) => {
+            if (e.button === 1) {
+                e.preventDefault();
+                window.open(url, "_blank");
+            }
         });
     }
 
