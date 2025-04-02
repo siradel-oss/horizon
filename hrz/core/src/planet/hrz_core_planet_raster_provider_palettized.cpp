@@ -32,13 +32,13 @@ bool is_scalar_image_format(hrz_proto::ImageFormat format)
 }
 } // namespace
 
-bool is_provider_model_complete(const hrz_proto::PalettizedImageRasterProviderParams& model)
+bool is_provider_model_complete(const hrz_proto::PalettizedRasterProviderParams& model)
 {
     return model.has_provider() && is_provider_model_complete(model.provider())
         && is_scalar_image_format(get_image_format(model.provider()));
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::PalettizedImageRasterProviderParams&)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::PalettizedRasterProviderParams&)
 {
     return hrz_proto::ImageFormat::SRGBA_8;
 }
@@ -86,7 +86,7 @@ class PalettizedRasterProvider : public RasterProvider
 
 public:
     PalettizedRasterProvider(
-        const hrz_proto::PalettizedImageRasterProviderParams& params,
+        const hrz_proto::PalettizedRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -102,7 +102,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::PALETTIZED_IMAGE_PROVIDER;
+        return hrz_proto::RasterProviderType::PALETTIZED_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override
@@ -432,9 +432,9 @@ public:
         {
             return UpdateAction::RecreateProvider;
         }
-        else if (path.is_palettized_image())
+        else if (path.is_palettized())
         {
-            auto palettized_image_provider_path = path.clone().palettized_image();
+            auto palettized_image_provider_path = path.clone().palettized();
 
             if (palettized_image_provider_path.leaf())
             {
@@ -442,7 +442,7 @@ public:
             }
             else if (palettized_image_provider_path.is_palette())
             {
-                palette = hrz::palette::from_proto(provider_model.palettized_image().palette());
+                palette = hrz::palette::from_proto(provider_model.palettized().palette());
 
                 return UpdateAction::RestartTiles;
             }
@@ -450,7 +450,7 @@ public:
                 palettized_image_provider_path.is_nodata_color()
                 || palettized_image_provider_path.is_nodata())
             {
-                nodata_color = hrz::to_lm(provider_model.palettized_image().nodata_color());
+                nodata_color = hrz::to_lm(provider_model.palettized().nodata_color());
 
                 return UpdateAction::RestartTiles;
             }
@@ -458,7 +458,7 @@ public:
             {
                 return child_raster_provider->notify_model_update(
                     palettized_image_provider_path.clone().provider(),
-                    provider_model.palettized_image().provider());
+                    provider_model.palettized().provider());
             }
             else
             {
@@ -515,8 +515,8 @@ public:
     }
 };
 
-std::unique_ptr<RasterProvider> create_palettized_image_provider(
-    const hrz_proto::PalettizedImageRasterProviderParams& params,
+std::unique_ptr<RasterProvider> create_palettized_provider(
+    const hrz_proto::PalettizedRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)

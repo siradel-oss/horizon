@@ -6,7 +6,7 @@ Title: Tiled raster provider
 
 Many rasters are not stored as a single image file, because they would be too large to be exploitable. Instead they are tiled into many smaller images. They are multiple ways to tile a raster. The two main types are global and local tilings. Global tiling are built from the top (low zoom tiles) down to the bottom (high zoom tiles): each tile at zoom level _n_ is seen as a division of a tile at level _n - 1_. Conversely, local tiling are built from the bottom, up: low-zoom tiles are made by grouping higher-zoom tiles. The two systems are more or less equivalent, but because they take different parameters, depending on the circumstances one can be more convenient than the other.
 
-In Horizon, such rasters can be displayed using a [tiled raster provider](HrzProtocol.TiledImageRasterProviderParams.html).
+In Horizon, such rasters can be displayed using a [tiled raster provider](HrzProtocol.TiledRasterProviderParams.html).
 
 The bounds of the projection domain define where the grid of tiles is laid out (expressed in its coordinate system). The bounds of the raster define where the tiles containing data exist.
 

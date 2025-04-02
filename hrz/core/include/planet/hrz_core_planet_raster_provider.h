@@ -39,21 +39,23 @@ static const char* provider_request_tally_metric_name(hrz_proto::RasterProviderT
 {
     switch (type)
     {
-        case hrz_proto::RasterProviderType::SINGLE_IMAGE_PROVIDER:
-            return "Single image (requests tally)";
-        case hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER:
-            return "Tiled image (requests tally)";
-        case hrz_proto::RasterProviderType::BING_PROVIDER: return "Bing (requests tally)";
-        case hrz_proto::RasterProviderType::PALETTIZED_IMAGE_PROVIDER:
-            return "Palettized image (requests tally)";
-        case hrz_proto::RasterProviderType::ARCGIS_PROVIDER: return "ArcGIS (requests tally)";
-        case hrz_proto::RasterProviderType::TMS_PROVIDER: return "TMS (requests tally)";
-        case hrz_proto::RasterProviderType::WMTS_PROVIDER: return "WMTS (requests tally)";
-        case hrz_proto::RasterProviderType::WMS_PROVIDER: return "WMS (requests tally)";
-        case hrz_proto::RasterProviderType::TILEJSON_PROVIDER: return "TileJSON (requests tally)";
-        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_PROVIDER:
+        case hrz_proto::RasterProviderType::UNTILED_RASTER_PROVIDER:
+            return "Untiled (requests tally)";
+        case hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER: return "Tiled (requests tally)";
+        case hrz_proto::RasterProviderType::BING_RASTER_PROVIDER: return "Bing (requests tally)";
+        case hrz_proto::RasterProviderType::PALETTIZED_RASTER_PROVIDER:
+            return "Palettized (requests tally)";
+        case hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER:
+            return "ArcGIS (requests tally)";
+        case hrz_proto::RasterProviderType::TMS_RASTER_PROVIDER: return "TMS (requests tally)";
+        case hrz_proto::RasterProviderType::WMTS_RASTER_PROVIDER: return "WMTS (requests tally)";
+        case hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER: return "WMS (requests tally)";
+        case hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER:
+            return "TileJSON (requests tally)";
+        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER:
             return "Cesium terrain (requests tally)";
-        case hrz_proto::RasterProviderType::PMTILES_PROVIDER: return "PMTiles (requests tally)";
+        case hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER:
+            return "PMTiles (requests tally)";
         default: assert(false && "Unhandled case");
     }
 
@@ -204,66 +206,66 @@ struct RasterProvider
 };
 
 std::unique_ptr<RasterProvider> create_bing_provider(
-    const hrz_proto::BingProviderParams&,
+    const hrz_proto::BingRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_arcgis_provider(
-    const hrz_proto::ArcGisProviderParams& params,
+    const hrz_proto::ArcGisRasterProviderParams& params,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
-std::unique_ptr<RasterProvider> create_single_image_provider(
-    const hrz_proto::SingleImageRasterProviderParams&,
+std::unique_ptr<RasterProvider> create_untiled_provider(
+    const hrz_proto::UntiledRasterProviderParams&,
     assets_loader::Queue,
     uint64_t raster_id);
 
-std::unique_ptr<RasterProvider> create_tiled_image_provider(
-    const hrz_proto::TiledImageRasterProviderParams&,
+std::unique_ptr<RasterProvider> create_tiled_provider(
+    const hrz_proto::TiledRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_tms_provider(
-    const hrz_proto::TmsProviderParams&,
+    const hrz_proto::TmsRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_wmts_provider(
-    const hrz_proto::WmtsProviderParams&,
+    const hrz_proto::WmtsRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_wms_provider(
-    const hrz_proto::WmsProviderParams&,
+    const hrz_proto::WmsRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_tilejson_provider(
-    const hrz_proto::TileJsonProviderParams&,
+    const hrz_proto::TileJsonRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_pmtiles_provider(
-    const hrz_proto::PmTilesProviderParams&,
+    const hrz_proto::PmTilesRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
 std::unique_ptr<RasterProvider> create_cesium_terrain_provider(
-    const hrz_proto::CesiumTerrainProviderParams&,
+    const hrz_proto::CesiumTerrainRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
-std::unique_ptr<RasterProvider> create_palettized_image_provider(
-    const hrz_proto::PalettizedImageRasterProviderParams&,
+std::unique_ptr<RasterProvider> create_palettized_provider(
+    const hrz_proto::PalettizedRasterProviderParams&,
     assets_loader::Queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
@@ -274,32 +276,32 @@ std::unique_ptr<RasterProvider> create_provider(
     uint32_t default_tile_cache_size,
     uint64_t raster_id);
 
-bool is_provider_model_complete(const hrz_proto::ArcGisProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::BingProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::TiledImageRasterProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::TmsProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::WmtsProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::WmsProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::TileJsonProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::PmTilesProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::CesiumTerrainProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::SingleImageRasterProviderParams& params);
-bool is_provider_model_complete(const hrz_proto::PalettizedImageRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::ArcGisRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::BingRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::TiledRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::TmsRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::WmtsRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::WmsRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::TileJsonRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::PmTilesRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::CesiumTerrainRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::UntiledRasterProviderParams& params);
+bool is_provider_model_complete(const hrz_proto::PalettizedRasterProviderParams& params);
 bool is_provider_model_complete(const hrz_proto::RasterProvider&);
 
 bool is_tiling_scheme_model_complete(const hrz_proto::TilingSchemeParams&);
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::ArcGisProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::BingProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::TiledImageRasterProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::TmsProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::WmtsProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::WmsProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::TileJsonProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::PmTilesProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::CesiumTerrainProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::SingleImageRasterProviderParams&);
-hrz_proto::ImageFormat get_image_format(const hrz_proto::PalettizedImageRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::ArcGisRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::BingRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::TiledRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::TmsRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::WmtsRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::WmsRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::TileJsonRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::PmTilesRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::CesiumTerrainRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::UntiledRasterProviderParams&);
+hrz_proto::ImageFormat get_image_format(const hrz_proto::PalettizedRasterProviderParams&);
 hrz_proto::ImageFormat get_image_format(const hrz_proto::RasterProvider&);
 } // namespace planet
 } // namespace hrz

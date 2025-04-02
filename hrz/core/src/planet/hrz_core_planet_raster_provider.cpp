@@ -15,39 +15,38 @@ std::unique_ptr<RasterProvider> create_provider(
 {
     switch (provider_model.type())
     {
-        case hrz_proto::RasterProviderType::SINGLE_IMAGE_PROVIDER:
-            return hrz::planet::create_single_image_provider(
-                provider_model.single_image(), queue, raster_id);
-        case hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER:
-            return hrz::planet::create_tiled_image_provider(
-                provider_model.tiled_image(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::TMS_PROVIDER:
+        case hrz_proto::RasterProviderType::UNTILED_RASTER_PROVIDER:
+            return hrz::planet::create_untiled_provider(provider_model.untiled(), queue, raster_id);
+        case hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER:
+            return hrz::planet::create_tiled_provider(
+                provider_model.tiled(), queue, default_tile_cache_size, raster_id);
+        case hrz_proto::RasterProviderType::TMS_RASTER_PROVIDER:
             return hrz::planet::create_tms_provider(
                 provider_model.tms(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::BING_PROVIDER:
+        case hrz_proto::RasterProviderType::BING_RASTER_PROVIDER:
             return hrz::planet::create_bing_provider(
                 provider_model.bing(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::ARCGIS_PROVIDER:
+        case hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER:
             return hrz::planet::create_arcgis_provider(
                 provider_model.arcgis(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::WMTS_PROVIDER:
+        case hrz_proto::RasterProviderType::WMTS_RASTER_PROVIDER:
             return hrz::planet::create_wmts_provider(
                 provider_model.wmts(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::WMS_PROVIDER:
+        case hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER:
             return hrz::planet::create_wms_provider(
                 provider_model.wms(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::TILEJSON_PROVIDER:
+        case hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER:
             return hrz::planet::create_tilejson_provider(
                 provider_model.tilejson(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::PMTILES_PROVIDER:
+        case hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER:
             return hrz::planet::create_pmtiles_provider(
                 provider_model.pmtiles(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_PROVIDER:
+        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER:
             return hrz::planet::create_cesium_terrain_provider(
                 provider_model.cesium_terrain(), queue, default_tile_cache_size, raster_id);
-        case hrz_proto::RasterProviderType::PALETTIZED_IMAGE_PROVIDER:
-            return hrz::planet::create_palettized_image_provider(
-                provider_model.palettized_image(), queue, default_tile_cache_size, raster_id);
+        case hrz_proto::RasterProviderType::PALETTIZED_RASTER_PROVIDER:
+            return hrz::planet::create_palettized_provider(
+                provider_model.palettized(), queue, default_tile_cache_size, raster_id);
         default: assert(false && "Unhandled case"); return nullptr;
     }
 }
@@ -56,35 +55,34 @@ bool is_provider_model_complete(const hrz_proto::RasterProvider& provider_model)
 {
     switch (provider_model.type())
     {
-        case hrz_proto::RasterProviderType::SINGLE_IMAGE_PROVIDER:
-            return provider_model.has_single_image()
-                && is_provider_model_complete(provider_model.single_image());
-        case hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER:
-            return provider_model.has_tiled_image()
-                && is_provider_model_complete(provider_model.tiled_image());
-        case hrz_proto::RasterProviderType::TMS_PROVIDER:
+        case hrz_proto::RasterProviderType::UNTILED_RASTER_PROVIDER:
+            return provider_model.has_untiled()
+                && is_provider_model_complete(provider_model.untiled());
+        case hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER:
+            return provider_model.has_tiled() && is_provider_model_complete(provider_model.tiled());
+        case hrz_proto::RasterProviderType::TMS_RASTER_PROVIDER:
             return provider_model.has_tms() && is_provider_model_complete(provider_model.tms());
-        case hrz_proto::RasterProviderType::BING_PROVIDER:
+        case hrz_proto::RasterProviderType::BING_RASTER_PROVIDER:
             return provider_model.has_bing() && is_provider_model_complete(provider_model.bing());
-        case hrz_proto::RasterProviderType::ARCGIS_PROVIDER:
+        case hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER:
             return provider_model.has_arcgis()
                 && is_provider_model_complete(provider_model.arcgis());
-        case hrz_proto::RasterProviderType::WMTS_PROVIDER:
+        case hrz_proto::RasterProviderType::WMTS_RASTER_PROVIDER:
             return provider_model.has_wmts() && is_provider_model_complete(provider_model.wmts());
-        case hrz_proto::RasterProviderType::WMS_PROVIDER:
+        case hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER:
             return provider_model.has_wms() && is_provider_model_complete(provider_model.wms());
-        case hrz_proto::RasterProviderType::TILEJSON_PROVIDER:
+        case hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER:
             return provider_model.has_tilejson()
                 && is_provider_model_complete(provider_model.tilejson());
-        case hrz_proto::RasterProviderType::PMTILES_PROVIDER:
+        case hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER:
             return provider_model.has_pmtiles()
                 && is_provider_model_complete(provider_model.pmtiles());
-        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_PROVIDER:
+        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER:
             return provider_model.has_cesium_terrain()
                 && is_provider_model_complete(provider_model.cesium_terrain());
-        case hrz_proto::RasterProviderType::PALETTIZED_IMAGE_PROVIDER:
-            return provider_model.has_palettized_image()
-                && is_provider_model_complete(provider_model.palettized_image());
+        case hrz_proto::RasterProviderType::PALETTIZED_RASTER_PROVIDER:
+            return provider_model.has_palettized()
+                && is_provider_model_complete(provider_model.palettized());
         default: assert(false && "Unhandled case"); return false;
     }
 }
@@ -105,28 +103,28 @@ hrz_proto::ImageFormat get_image_format(const hrz_proto::RasterProvider& provide
 {
     switch (provider_model.type())
     {
-        case hrz_proto::RasterProviderType::SINGLE_IMAGE_PROVIDER:
-            return get_image_format(provider_model.single_image());
-        case hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER:
-            return get_image_format(provider_model.tiled_image());
-        case hrz_proto::RasterProviderType::TMS_PROVIDER:
+        case hrz_proto::RasterProviderType::UNTILED_RASTER_PROVIDER:
+            return get_image_format(provider_model.untiled());
+        case hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER:
+            return get_image_format(provider_model.tiled());
+        case hrz_proto::RasterProviderType::TMS_RASTER_PROVIDER:
             return get_image_format(provider_model.tms());
-        case hrz_proto::RasterProviderType::BING_PROVIDER:
+        case hrz_proto::RasterProviderType::BING_RASTER_PROVIDER:
             return get_image_format(provider_model.bing());
-        case hrz_proto::RasterProviderType::ARCGIS_PROVIDER:
+        case hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER:
             return get_image_format(provider_model.arcgis());
-        case hrz_proto::RasterProviderType::WMTS_PROVIDER:
+        case hrz_proto::RasterProviderType::WMTS_RASTER_PROVIDER:
             return get_image_format(provider_model.wmts());
-        case hrz_proto::RasterProviderType::WMS_PROVIDER:
+        case hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER:
             return get_image_format(provider_model.wms());
-        case hrz_proto::RasterProviderType::TILEJSON_PROVIDER:
+        case hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER:
             return get_image_format(provider_model.tilejson());
-        case hrz_proto::RasterProviderType::PMTILES_PROVIDER:
+        case hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER:
             return get_image_format(provider_model.pmtiles());
-        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_PROVIDER:
+        case hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER:
             return get_image_format(provider_model.cesium_terrain());
-        case hrz_proto::RasterProviderType::PALETTIZED_IMAGE_PROVIDER:
-            return get_image_format(provider_model.palettized_image());
+        case hrz_proto::RasterProviderType::PALETTIZED_RASTER_PROVIDER:
+            return get_image_format(provider_model.palettized());
         default: assert(false && "Unhandled case"); return hrz_proto::ImageFormat::SRGBA_8;
     }
 }

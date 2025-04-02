@@ -40,10 +40,10 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["customization"],
         thumbnailFile: "ambiance.webp",
     },
-    singleImageRaster: {
+    untiledRaster: {
         title: "Untiled raster",
         tags: ["raster"],
-        thumbnailFile: "single_image_raster.webp",
+        thumbnailFile: "untiled_raster.webp",
     },
     tiledImageRaster: {
         title: "Tiled raster",

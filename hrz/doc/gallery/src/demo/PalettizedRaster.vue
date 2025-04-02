@@ -45,10 +45,10 @@ watch(layer, async function (newLayer) {
     useBilinearInterpolation.value =
         rasterData.sampling?.filtering === HrzProtocol.TextureFiltering.BILINEAR;
     colorInterpolationMode.value =
-        rasterData.provider?.palettizedImage?.palette?.interpolationMode ||
+        rasterData.provider?.palettized?.palette?.interpolationMode ||
         HrzProtocol.ColorInterpolationMode.PERCEPTUAL_OKLAB;
 
-    let colorPoints = rasterData.provider?.palettizedImage?.palette?.colorPoints;
+    let colorPoints = rasterData.provider?.palettized?.palette?.colorPoints;
     if (colorPoints) {
         colorPoints.sort((a, b) => (a.value || 0) - (b.value || 0));
 
@@ -83,7 +83,7 @@ watch(colorInterpolationMode, async function (colorInterpolationMode) {
         await HrzApi.ImageryRasterLayerPathBuilder.create(layer.value)
             .raster()
             .provider()
-            .palettizedImage()
+            .palettized()
             .palette()
             .interpolationMode()
             .set(api, colorInterpolationMode);
@@ -98,7 +98,7 @@ watch([colors, paletteMode], async function () {
     let paletteData = await HrzApi.ImageryRasterLayerPathBuilder.create(layer.value)
         .raster()
         .provider()
-        .palettizedImage()
+        .palettized()
         .palette()
         .get(api);
 
@@ -119,7 +119,7 @@ watch([colors, paletteMode], async function () {
     await HrzApi.ImageryRasterLayerPathBuilder.create(layer.value)
         .raster()
         .provider()
-        .palettizedImage()
+        .palettized()
         .palette()
         .set(api, paletteData);
 });
@@ -138,7 +138,7 @@ async function retrievePaletteModel(): Promise<any> {
     let paletteData = await HrzApi.ImageryRasterLayerPathBuilder.create(layer.value)
         .raster()
         .provider()
-        .palettizedImage()
+        .palettized()
         .palette()
         .get(api);
     paletteData.colorPoints?.sort((a, b) => (a.value || 0) - (b.value || 0));

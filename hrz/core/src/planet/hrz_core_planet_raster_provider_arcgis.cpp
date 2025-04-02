@@ -283,12 +283,12 @@ bool format_supports_transparency(std::string_view format)
 
 namespace hrz::planet
 {
-bool is_provider_model_complete(const hrz_proto::ArcGisProviderParams& params)
+bool is_provider_model_complete(const hrz_proto::ArcGisRasterProviderParams& params)
 {
     return !params.url().empty();
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::ArcGisProviderParams&)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::ArcGisRasterProviderParams&)
 {
     return hrz_proto::ImageFormat::SRGBA_8;
 }
@@ -297,7 +297,7 @@ class ArcGisProvider : public RasterProvider
 {
 public:
     ArcGisProvider(
-        const hrz_proto::ArcGisProviderParams& params,
+        const hrz_proto::ArcGisRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -320,7 +320,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::ARCGIS_PROVIDER;
+        return hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override { return hrz_proto::SRGBA_8; }
@@ -1065,7 +1065,7 @@ private:
                 raster_id,
                 TileFetcher::MetricInfo{
                     provider_request_tally_metric_name(
-                        hrz_proto::RasterProviderType::ARCGIS_PROVIDER),
+                        hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER),
                     url.c_str()});
             return true;
         }
@@ -1235,7 +1235,7 @@ private:
 };
 
 std::unique_ptr<RasterProvider> create_arcgis_provider(
-    const hrz_proto::ArcGisProviderParams& params,
+    const hrz_proto::ArcGisRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)

@@ -193,21 +193,21 @@ struct RasterSourceConfig
         EXPECT_FLOAT_EQ(bounds.north(), layer.imagery_raster().raster().display_bounds().north());
 
         EXPECT_EQ(
-            hrz_proto::TILED_IMAGE_PROVIDER, layer.imagery_raster().raster().provider().type());
+            hrz_proto::TILED_RASTER_PROVIDER, layer.imagery_raster().raster().provider().type());
         EXPECT_STREQ(
-            tiles, layer.imagery_raster().raster().provider().tiled_image().url_pattern().c_str());
+            tiles, layer.imagery_raster().raster().provider().tiled().url_pattern().c_str());
 
         // There is no way of enforcing a local or global tiling scheme in Mapbox (?)
         EXPECT_EQ(
             hrz_proto::GLOBAL,
-            layer.imagery_raster().raster().provider().tiled_image().tiling_scheme().type());
+            layer.imagery_raster().raster().provider().tiled().tiling_scheme().type());
 
         EXPECT_EQ(
             maxzoom,
             layer.imagery_raster()
                 .raster()
                 .provider()
-                .tiled_image()
+                .tiled()
                 .tiling_scheme()
                 .global_tiling()
                 .max_level());
@@ -216,7 +216,7 @@ struct RasterSourceConfig
             layer.imagery_raster()
                 .raster()
                 .provider()
-                .tiled_image()
+                .tiled()
                 .tiling_scheme()
                 .global_tiling()
                 .min_level());
@@ -225,7 +225,7 @@ struct RasterSourceConfig
             layer.imagery_raster()
                 .raster()
                 .provider()
-                .tiled_image()
+                .tiled()
                 .tiling_scheme()
                 .global_tiling()
                 .tile_size());

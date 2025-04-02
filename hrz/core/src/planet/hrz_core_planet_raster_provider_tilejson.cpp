@@ -16,14 +16,14 @@
 
 namespace hrz::planet
 {
-bool is_provider_model_complete(const hrz_proto::TileJsonProviderParams& params)
+bool is_provider_model_complete(const hrz_proto::TileJsonRasterProviderParams& params)
 {
     if (params.url().empty()) return false;
 
     return true;
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::TileJsonProviderParams& params)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::TileJsonRasterProviderParams& params)
 {
     return params.image_format();
 }
@@ -32,7 +32,7 @@ class TileJsonProvider : public RasterProvider
 {
 public:
     TileJsonProvider(
-        const hrz_proto::TileJsonProviderParams& params,
+        const hrz_proto::TileJsonRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -54,7 +54,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::TILEJSON_PROVIDER;
+        return hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override { return image_format; }
@@ -193,7 +193,7 @@ private:
             raster_id,
             TileFetcher::MetricInfo{
                 provider_request_tally_metric_name(
-                    hrz_proto::RasterProviderType::TILEJSON_PROVIDER),
+                    hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER),
                 url.c_str()});
 
         return true;
@@ -342,7 +342,7 @@ private:
 };
 
 std::unique_ptr<RasterProvider> create_tilejson_provider(
-    const hrz_proto::TileJsonProviderParams& params,
+    const hrz_proto::TileJsonRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)

@@ -173,7 +173,8 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
     {
         if (hrz::str::starts_with(url.value(), "pmtiles://"))
         {
-            raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::PMTILES_PROVIDER);
+            raster->mutable_provider()->set_type(
+                hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER);
             auto* pmtiles_provider = raster->mutable_provider()->mutable_pmtiles();
             pmtiles_provider->set_url(std::string(std::string_view(url.value()).substr(10)));
         }
@@ -182,7 +183,8 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
             // Rely on the TileJSON provider.
             // @Todo: "Explicit source options take precedence over TileJSON"
             // (https://github.com/mapbox/mapbox-gl-js/blob/d7aeb4b764d6bbaa98b03d9e8abf1a5d673189ff/src/source/load_tilejson.js#L22).
-            raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::TILEJSON_PROVIDER);
+            raster->mutable_provider()->set_type(
+                hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER);
             auto* tilejson_provider = raster->mutable_provider()->mutable_tilejson();
 
             tilejson_provider->set_url(url.value());
@@ -191,8 +193,8 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
     else
     {
         // Manually fill a tiled provider.
-        raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER);
-        auto* tiled_provider = raster->mutable_provider()->mutable_tiled_image();
+        raster->mutable_provider()->set_type(hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER);
+        auto* tiled_provider = raster->mutable_provider()->mutable_tiled();
 
         // Mapbox sets a default zoom level of 22. The TileJSON spec requires the zoom levels to
         // be in [0, 30].

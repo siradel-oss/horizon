@@ -37,7 +37,7 @@ Most rasters have accompanying descriptors that indicate how their data is proje
 
 The projection can be defined either as a [proj-string](https://proj.org/en/9.4/usage/quickstart.html) or as an SRID, such as `EPSG:3857`. See the [list of supported SRIDs](crs_database.html).
 
-Additionally, when the chosen projection is not `EPSG:4326` (WGS84 lat-long) or `EPSG:3857` (Web mercator) and the chosen tiling scheme is global (when using a provider requiring a tiling scheme, such as [the tiled provider](HrzProtocol.TiledImageRasterProviderParams.html)), the bounds of the projection domain must be provided. These bounds can be retrieved from the [epsg.io](https://epsg.io) website. For example, the valid bounds of RGF93 v1/Lambert-93 ([`EPSG:2154`](https://epsg.io/2154)) are `xmin=-378305.81, ymin=6005281.2, xmax=1320649.57 ymax=7235612.72`.
+Additionally, when the chosen projection is not `EPSG:4326` (WGS84 lat-long) or `EPSG:3857` (Web mercator) and the chosen tiling scheme is global (when using a provider requiring a tiling scheme, such as [the tiled provider](HrzProtocol.TiledRasterProviderParams.html)), the bounds of the projection domain must be provided. These bounds can be retrieved from the [epsg.io](https://epsg.io) website. For example, the valid bounds of RGF93 v1/Lambert-93 ([`EPSG:2154`](https://epsg.io/2154)) are `xmin=-378305.81, ymin=6005281.2, xmax=1320649.57 ymax=7235612.72`.
 
 ## Raster data providers
 
@@ -45,7 +45,7 @@ Additionally, when the chosen projection is not `EPSG:4326` (WGS84 lat-long) or 
 
 [ArcGIS Map Service](https://developers.arcgis.com/rest/services-reference/enterprise/map-service.htm) is a specification for serving raster maps requested with bounds or, when they are pre-cached, through tiled raster coordinates over the Web.
 
-Through the [ArcGIS raster provider](HrzProtocol.ArcGisProviderParams.html), it is possible to select which layers are displayed by giving their IDs, which are shown on the ArcGIS Map Service’s web page. If no IDs are given, all the layers are displayed.
+Through the [ArcGIS raster provider](HrzProtocol.ArcGisRasterProviderParams.html), it is possible to select which layers are displayed by giving their IDs, which are shown on the ArcGIS Map Service’s web page. If no IDs are given, all the layers are displayed.
 
 The same layer can be available under multiple image formats, such as JPEG or PNG. By default the format is selected by finding the best compromise between quality and weight. If the user wishes to use a specific file format, they can specify it explicitly in the configuration.
 
@@ -56,14 +56,14 @@ The same layer can be available under multiple image formats, such as JPEG or PN
 
 ### Bing
 
-Bing imagery rasters have [a dedicated provider](HrzProtocol.BingProviderParams.html). It allows selecting between multiple [map variants](HrzProtocol.BingProviderImageryType.html) in several languages. See the [official documentation](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/culture-parameter) for more details.
+Bing imagery rasters have [a dedicated provider](HrzProtocol.BingRasterProviderParams.html). It allows selecting between multiple [map variants](HrzProtocol.BingProviderImageryType.html) in several languages. See the [official documentation](https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/culture-parameter) for more details.
 
 A Bing API key must be provided.
 
 
 ### Cesium terrain
 
-Horizon can also load terrain tiles that follow the format specification for Cesium. They can be retrieved by the [dedicated raster provider](HrzProtocol.CesiumTerrainProviderParams.html). The parameter URL must point to the tileset directory, which contains the `layer.json` descriptor file. Both types of terrain tiles are supported (`heightmap` and `quantized-mesh`, in version 1.0).
+Horizon can also load terrain tiles that follow the format specification for Cesium. They can be retrieved by the [dedicated raster provider](HrzProtocol.CesiumTerrainRasterProviderParams.html). The parameter URL must point to the tileset directory, which contains the `layer.json` descriptor file. Both types of terrain tiles are supported (`heightmap` and `quantized-mesh`, in version 1.0).
 
 Cesium terrain tiles do not have explicit nodata values, but areas without actual data have a value of `0`. Horizon treats `0` as nodata. This can be used to combine a Cesium terrain tile layer with other DEM rasters.
 
@@ -71,19 +71,19 @@ Cesium terrain tiles do not have explicit nodata values, but areas without actua
 
 > [PMTiles](https://github.com/protomaps/PMTiles) is a single-file archive format for tiled data. A PMTiles archive can be hosted on a commodity storage platform such as S3, and enables low-cost, zero-maintenance map applications that are "serverless"—free of a custom tile backend or third party provider.
 
-Horizon supports version 3 through the [PMTiles raster provider](HrzProtocol.PmTilesProviderParams.html).
+Horizon supports version 3 through the [PMTiles raster provider](HrzProtocol.PmTilesRasterProviderParams.html).
 
 <gallery-card demo="pmTilesRaster"></gallery-card>
 
 <gallery-card demo="dtmLod1"></gallery-card>
 
-### Single image
+### Untiled image
 
-Not all rasters are tiled, some are stored as a single image, and they too can be displayed. They are entirely loaded in memory, then displayed on the planet according to their projection and bounds, set in the [[SingleImageRasterProviderParams]].
+Not all rasters are tiled, some are stored as a single image, and they too can be displayed. They are entirely loaded in memory, then displayed on the planet according to their projection and bounds, set in the [[UntiledRasterProviderParams]].
 
-Do not load too large single image rasters, as you may run out of memory.
+Do not load too large untiled rasters, as you may run out of memory.
 
-<gallery-card demo="singleImageRaster"></gallery-card>
+<gallery-card demo="untiledRaster"></gallery-card>
 
 ### Tiled image
 
@@ -97,7 +97,7 @@ See the [dedicated documentation page](tiled_raster_provider.html).
 
 The entry point to a TileJSON service is a URL pointing to a JSON document describing the layer data on the server.
 
-Horizon can display TileJSON raster layers by using a [dedicated raster provider](HrzProtocol.TileJsonProviderParams.html). The parameters that are specific to this provider are:
+Horizon can display TileJSON raster layers by using a [dedicated raster provider](HrzProtocol.TileJsonRasterProviderParams.html). The parameters that are specific to this provider are:
 
 * The URL to the TileJSON document,
 * An image file format.
@@ -115,7 +115,7 @@ Horizon can display TileJSON raster layers by using a [dedicated raster provider
 * The TileMapService resource,
 * The TileMap resource.
 
-Only the last one describes a raster dataset, and is the one used by Horizon in the [TMS raster provider](HrzProtocol.TmsProviderParams.html). It is usually named `tilemapresource.xml`. That file describes where the tiles can be fetched, and how their grid is laid out and projected.
+Only the last one describes a raster dataset, and is the one used by Horizon in the [TMS raster provider](HrzProtocol.TmsRasterProviderParams.html). It is usually named `tilemapresource.xml`. That file describes where the tiles can be fetched, and how their grid is laid out and projected.
 
 !!! note ""
     The [gdal2tiles](https://github.com/OSGeo/gdal/blob/master/gdal/swig/python/scripts/gdal2tiles.py) tool can generate `tilemapresource.xml` files when it is used to tile a raster. The files it generates are not always spec conforming, but they should be usable most of the time.
@@ -136,7 +136,7 @@ TileMap resources can follow a subset of specifications, named profiles. Current
 
 ### WMS
 
-[Web Map Service](https://www.ogc.org/standards/wms) (WMS) is a specification for serving raster maps over the web. Horizon supports WMS versions 1.1.0, 1.1.1, and 1.3.0, through the [WMS raster provider](HrzProtocol.WmsProviderParams.html).
+[Web Map Service](https://www.ogc.org/standards/wms) (WMS) is a specification for serving raster maps over the web. Horizon supports WMS versions 1.1.0, 1.1.1, and 1.3.0, through the [WMS raster provider](HrzProtocol.WmsRasterProviderParams.html).
 
 The entry point to a WMS service is the base URL of a web service, that can be queried to retrieve information on the rasters it can serve, or to get raster extracts, in the form of images. WMS URLs may include query parameters, such as `service=WMS&version=1.3.0&request=GetCapabilities`, but this is not required, as they are automatically added when not present. (The requested protocol version is 1.3.0 unless the parameter is included in the URL, and set to another version.)
 
@@ -160,7 +160,7 @@ WMS rasters can be requested at any scale. Many servers however have limits on h
 
 ### WMTS
 
-[Web Map Tile Service](https://www.ogc.org/standards/wmts) (WMTS) is a specification for serving tiled raster maps over the web. Horizon supports WMTS version 1.0.0 through the [WMTS raster provider](HrzProtocol.WmtsProviderParams.html).
+[Web Map Tile Service](https://www.ogc.org/standards/wmts) (WMTS) is a specification for serving tiled raster maps over the web. Horizon supports WMTS version 1.0.0 through the [WMTS raster provider](HrzProtocol.WmtsRasterProviderParams.html).
 
 The entry point to a WMTS service is a URL pointing to an XML document describing what a given server can provide, named the `Capabilities` resource. WMTS capabilities URLs generally have one of two forms:
 

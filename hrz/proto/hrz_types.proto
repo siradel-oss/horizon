@@ -387,29 +387,17 @@ enum MissingTilePolicy {
 
 // The provider type describes how a raster is provided from its source.
 enum RasterProviderType {
-    // The raster is a simple image that is entirely downloaded.
-    SINGLE_IMAGE_PROVIDER     = 0;
-    // The URL will have its {x}, {y}, and {z} components replaced with
-    // the tile coordinates.
-    TILED_IMAGE_PROVIDER      = 1;
-    // Use tiles served by Bing Maps.
-    BING_PROVIDER             = 2;
-
-    PALETTIZED_IMAGE_PROVIDER = 3;
-
-    ARCGIS_PROVIDER           = 4;
-    // The tileset is described by a tilemapresource.xml file.
-    TMS_PROVIDER              = 5;
-
-    WMTS_PROVIDER             = 6;
-
-    WMS_PROVIDER              = 7;
-
-    CESIUM_TERRAIN_PROVIDER   = 8;
-
-    TILEJSON_PROVIDER         = 9;
-
-    PMTILES_PROVIDER          = 10;
+    UNTILED_RASTER_PROVIDER        = 0;
+    TILED_RASTER_PROVIDER          = 1;
+    BING_RASTER_PROVIDER           = 2;
+    PALETTIZED_RASTER_PROVIDER     = 3;
+    ARCGIS_RASTER_PROVIDER         = 4;
+    TMS_RASTER_PROVIDER            = 5;
+    WMTS_RASTER_PROVIDER           = 6;
+    WMS_RASTER_PROVIDER            = 7;
+    CESIUM_TERRAIN_RASTER_PROVIDER = 8;
+    TILEJSON_RASTER_PROVIDER       = 9;
+    PMTILES_RASTER_PROVIDER        = 10;
 }
 
 enum BingProviderImageryType {
@@ -421,7 +409,7 @@ enum BingProviderImageryType {
     ROAD_LIGHT         = 5;
 }
 
-message TiledImageRasterProviderParams {
+message TiledRasterProviderParams {
     reserved 1;
 
     RasterGeometry     geometry                 = 10;
@@ -453,7 +441,7 @@ message TiledImageRasterProviderParams {
     uint32             tile_cache_size          = 7;
 }
 
-message BingProviderParams {
+message BingRasterProviderParams {
     string                  api_key                  = 1;
     // Term used by Bing to specify a language in which country names, roads,
     // etc will be written. More at
@@ -467,7 +455,7 @@ message BingProviderParams {
     uint32                  tile_cache_size          = 5;
 }
 
-message ArcGisProviderParams {
+message ArcGisRasterProviderParams {
     string            url                       = 1;
     repeated int32    layer_ids                 = 2;
     HttpHeaderList    http_headers              = 3;
@@ -491,7 +479,7 @@ message ArcGisProviderParams {
     uint32            tile_cache_size           = 7;
 }
 
-message TmsProviderParams {
+message TmsRasterProviderParams {
     // URL of the TileMap resource (tilemapresource.xml).
     string            url                       = 1;
     HttpHeaderList    http_headers              = 2;
@@ -508,7 +496,7 @@ message TmsProviderParams {
     uint32            tile_cache_size           = 6;
 }
 
-message WmtsProviderParams {
+message WmtsRasterProviderParams {
     // URL of the Capabilities resource.
     string            url                      = 1;
     HttpHeaderList    http_headers             = 2;
@@ -540,7 +528,7 @@ message WmsDimension {
     string value = 2;
 }
 
-message WmsProviderParams {
+message WmsRasterProviderParams {
     // URL of the Capabilities resource.
     string                  url                      = 1;
     HttpHeaderList          http_headers             = 2;
@@ -567,7 +555,7 @@ message WmsProviderParams {
     uint32                  tile_cache_size          = 14;
 }
 
-message SingleImageRasterProviderParams {
+message UntiledRasterProviderParams {
     RasterGeometry    geometry            = 6;
 
     // URL of the raster.
@@ -586,7 +574,7 @@ message SingleImageRasterProviderParams {
     MissingTilePolicy missing_tile_policy = 4;
 }
 
-message PalettizedImageRasterProviderParams {
+message PalettizedRasterProviderParams {
     reserved 1, 2, 3, 101, 102, 106, 107, 108, 110, 111;
 
     // Underlying provider
@@ -604,7 +592,7 @@ message PalettizedImageRasterProviderParams {
     RasterNodata   nodata       = 7;
 }
 
-message CesiumTerrainProviderParams {
+message CesiumTerrainRasterProviderParams {
     string            url                       = 1;
     HttpHeaderList    http_headers              = 2;
     string            attribution               = 7;
@@ -620,7 +608,7 @@ message CesiumTerrainProviderParams {
     uint32            tile_cache_size           = 5;
 }
 
-message TileJsonProviderParams {
+message TileJsonRasterProviderParams {
     string            url                       = 1;
     HttpHeaderList    http_headers              = 2;
     string            attribution               = 8;
@@ -639,7 +627,7 @@ message TileJsonProviderParams {
     uint32            tile_cache_size           = 7;
 }
 
-message PmTilesProviderParams {
+message PmTilesRasterProviderParams {
     string            url                      = 1;
     HttpHeaderList    http_headers             = 2;
     string            attribution              = 8;
@@ -656,20 +644,20 @@ message PmTilesProviderParams {
 }
 
 message RasterProvider {
-    RasterProviderType                  type             = 1;
+    RasterProviderType                type           = 1;
 
     // oneof
-    TiledImageRasterProviderParams      tiled_image      = 101;
-    SingleImageRasterProviderParams     single_image     = 102;
-    BingProviderParams                  bing             = 103;
-    PalettizedImageRasterProviderParams palettized_image = 104;
-    ArcGisProviderParams                arcgis           = 105;
-    TmsProviderParams                   tms              = 106;
-    WmtsProviderParams                  wmts             = 107;
-    WmsProviderParams                   wms              = 108;
-    CesiumTerrainProviderParams         cesium_terrain   = 109;
-    TileJsonProviderParams              tilejson         = 110;
-    PmTilesProviderParams               pmtiles          = 111;
+    TiledRasterProviderParams         tiled          = 101;
+    UntiledRasterProviderParams       untiled        = 102;
+    BingRasterProviderParams          bing           = 103;
+    PalettizedRasterProviderParams    palettized     = 104;
+    ArcGisRasterProviderParams        arcgis         = 105;
+    TmsRasterProviderParams           tms            = 106;
+    WmtsRasterProviderParams          wmts           = 107;
+    WmsRasterProviderParams           wms            = 108;
+    CesiumTerrainRasterProviderParams cesium_terrain = 109;
+    TileJsonRasterProviderParams      tilejson       = 110;
+    PmTilesRasterProviderParams       pmtiles        = 111;
 }
 
 enum TilingSchemeType {

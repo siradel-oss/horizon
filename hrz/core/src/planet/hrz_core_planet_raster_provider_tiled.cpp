@@ -23,7 +23,7 @@ unsigned int level_zero_tile_count_y(const hrz_proto::TilingSchemeParams& tiling
 }
 } // namespace
 
-bool is_provider_model_complete(const hrz_proto::TiledImageRasterProviderParams& model)
+bool is_provider_model_complete(const hrz_proto::TiledRasterProviderParams& model)
 {
     if (model.url_pattern().empty()) return false;
 
@@ -36,7 +36,7 @@ bool is_provider_model_complete(const hrz_proto::TiledImageRasterProviderParams&
     return true;
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::TiledImageRasterProviderParams& params)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::TiledRasterProviderParams& params)
 {
     return params.image_format();
 }
@@ -45,7 +45,7 @@ class TiledImageRasterProvider : public RasterProvider
 {
 public:
     TiledImageRasterProvider(
-        const hrz_proto::TiledImageRasterProviderParams& params,
+        const hrz_proto::TiledRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -68,7 +68,7 @@ public:
             raster_id,
             TileFetcher::MetricInfo{
                 provider_request_tally_metric_name(
-                    hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER),
+                    hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER),
                 params.url_pattern().c_str()}),
         geometry(TiledRasterGeometry::from_geometry_and_tiling_scheme(
             params.geometry(),
@@ -78,7 +78,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::TILED_IMAGE_PROVIDER;
+        return hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER;
     }
 
     Status get_status() const override { return Status::Ready; }
@@ -143,13 +143,13 @@ public:
         {
             return UpdateAction::RecreateProvider;
         }
-        else if (path.is_tiled_image())
+        else if (path.is_tiled())
         {
-            auto provider_path = path.clone().tiled_image();
+            auto provider_path = path.clone().tiled();
             if (provider_path.is_http_headers())
             {
                 if (set_http_headers(
-                        assets_loader::from_proto(provider_model.tiled_image().http_headers())))
+                        assets_loader::from_proto(provider_model.tiled().http_headers())))
                 {
                     return UpdateAction::RecreateProvider;
                 }
@@ -199,14 +199,14 @@ private:
     hrz::planet::TiledRasterGeometry geometry;
 };
 
-std::unique_ptr<RasterProvider> create_tiled_image_provider(
-    const hrz_proto::TiledImageRasterProviderParams& params,
+std::unique_ptr<RasterProvider> create_tiled_provider(
+    const hrz_proto::TiledRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)
 {
-    return std::unique_ptr<RasterProvider>(
-        new TiledImageRasterProvider(params, queue, default_tile_cache_size, raster_id));
+    return std::make_unique<TiledImageRasterProvider>(
+        params, queue, default_tile_cache_size, raster_id);
 }
 
 } // namespace hrz::planet

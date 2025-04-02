@@ -94,14 +94,14 @@ private:
 
 namespace hrz::planet
 {
-bool is_provider_model_complete(const hrz_proto::WmsProviderParams& params)
+bool is_provider_model_complete(const hrz_proto::WmsRasterProviderParams& params)
 {
     if (params.url().empty() || params.layers_size() == 0) return false;
 
     return true;
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::WmsProviderParams& params)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::WmsRasterProviderParams& params)
 {
     return params.image_format();
 }
@@ -110,7 +110,7 @@ class WmsProvider : public RasterProvider
 {
 public:
     WmsProvider(
-        const hrz_proto::WmsProviderParams& params,
+        const hrz_proto::WmsRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -150,7 +150,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::WMS_PROVIDER;
+        return hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override { return image_format; }
@@ -389,7 +389,7 @@ public:
                         tile_cache_capacity, raster_id,
                         TileFetcher::MetricInfo{
                             provider_request_tally_metric_name(
-                                hrz_proto::RasterProviderType::WMS_PROVIDER),
+                                hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER),
                             response.url_template.c_str()});
 
                     geometry = std::move(response.geometry);
@@ -537,7 +537,7 @@ private:
 };
 
 std::unique_ptr<RasterProvider> create_wms_provider(
-    const hrz_proto::WmsProviderParams& params,
+    const hrz_proto::WmsRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)

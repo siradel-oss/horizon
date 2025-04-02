@@ -20,7 +20,7 @@ RasterProvider::LockTicket generate_lock_ticket()
 }
 } // namespace
 
-bool is_provider_model_complete(const hrz_proto::SingleImageRasterProviderParams& model)
+bool is_provider_model_complete(const hrz_proto::UntiledRasterProviderParams& model)
 {
     if (model.url().empty()) return false;
 
@@ -31,16 +31,16 @@ bool is_provider_model_complete(const hrz_proto::SingleImageRasterProviderParams
     return true;
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::SingleImageRasterProviderParams& params)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::UntiledRasterProviderParams& params)
 {
     return params.image_format();
 }
 
-class SingleImageRasterProvider : public RasterProvider
+class UntiledRasterProvider : public RasterProvider
 {
 public:
-    SingleImageRasterProvider(
-        const hrz_proto::SingleImageRasterProviderParams& params,
+    UntiledRasterProvider(
+        const hrz_proto::UntiledRasterProviderParams& params,
         assets_loader::Queue queue,
         uint64_t raster_id) :
         image_url(params.url()),
@@ -48,8 +48,6 @@ public:
         attribution(params.attribution()),
         image_format(params.image_format()),
         nodata(params.nodata()),
-        image_status(ImageStatus::NotStarted),
-        load_ticket(0),
         geometry(TiledRasterGeometry::from_geometry_and_tiling_scheme(params.geometry(), {})),
         al_queue(queue),
         raster_id(raster_id)
@@ -58,7 +56,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::SINGLE_IMAGE_PROVIDER;
+        return hrz_proto::RasterProviderType::UNTILED_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override { return image_format; }
@@ -318,13 +316,13 @@ public:
         {
             return UpdateAction::RecreateProvider;
         }
-        else if (path.is_single_image())
+        else if (path.is_untiled())
         {
-            auto provider_path = path.clone().single_image();
+            auto provider_path = path.clone().untiled();
             if (provider_path.is_http_headers())
             {
                 if (set_http_headers(
-                        assets_loader::from_proto(provider_model.single_image().http_headers())))
+                        assets_loader::from_proto(provider_model.untiled().http_headers())))
                 {
                     return UpdateAction::RecreateProvider;
                 }
@@ -405,15 +403,15 @@ private:
     std::variant<std::string, AttributionHandle> attribution;
     hrz_proto::ImageFormat image_format;
     hrz_proto::RasterNodata nodata;
-    ImageStatus image_status;
-    assets_loader::Ticket load_ticket;
+    ImageStatus image_status{};
+    assets_loader::Ticket load_ticket{};
     hrz_jobs::DecodeBlobImageTicket decode_ticket;
     hrz_jobs::GenerateMipmapsTicket generate_mipmaps_ticket;
     hrz::flat_hash_map<LockTicket, TileCoords> active_locks;
 
-    unsigned int image_width;
-    unsigned int image_height;
-    uint8_t max_level;
+    unsigned int image_width{};
+    unsigned int image_height{};
+    uint8_t max_level{};
     hrz::planet::TiledRasterGeometry geometry;
 
     hrz::flat_hash_map<TileCoords, BlobImage> tiles;
@@ -422,12 +420,12 @@ private:
     uint64_t raster_id;
 };
 
-std::unique_ptr<RasterProvider> create_single_image_provider(
-    const hrz_proto::SingleImageRasterProviderParams& params,
+std::unique_ptr<RasterProvider> create_untiled_provider(
+    const hrz_proto::UntiledRasterProviderParams& params,
     assets_loader::Queue queue,
     uint64_t raster_id)
 {
-    return std::make_unique<SingleImageRasterProvider>(params, queue, raster_id);
+    return std::make_unique<UntiledRasterProvider>(params, queue, raster_id);
 }
 
 } // namespace hrz::planet

@@ -1950,7 +1950,7 @@ bool migration_db6a65c4_to_b232d003(const DynamicMessage& src, DynamicMessage* d
         auto dst_provider = dst->get_message("raster").get_message("provider");
 
         return walk_fields_of_type(
-            "HrzProtocol.TiledImageRasterProviderParams", src_provider, &dst_provider,
+            "HrzProtocol.TiledRasterProviderParams", src_provider, &dst_provider,
             [](const DynamicMessage& src, DynamicMessage* dst) -> bool
             {
                 dst->copy_message(

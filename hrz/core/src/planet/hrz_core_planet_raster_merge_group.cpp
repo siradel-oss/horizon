@@ -722,7 +722,7 @@ void RasterMergeGroup::work(
             || image_format == HrzProtocol::ImageFormat::R_F32_SILICIUM
             || image_format == HrzProtocol::ImageFormat::MAPZEN_TERRARIUM
             || raster->provider->get_raster_provider_type()
-                == HrzProtocol::RasterProviderType::SINGLE_IMAGE_PROVIDER
+                == HrzProtocol::RasterProviderType::UNTILED_RASTER_PROVIDER
             || rt.mesh.has_value()) // This means it is not an EPSG:3857 projection.
         {
             return true;

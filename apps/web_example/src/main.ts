@@ -32,7 +32,7 @@ async function addOrthoLayer(api: HrzApi.AsyncApi) {
     let layerModel: HrzProtocol.IImageryRasterLayer = {
         raster: {
             provider: {
-                type: HrzProtocol.RasterProviderType.WMTS_PROVIDER,
+                type: HrzProtocol.RasterProviderType.WMTS_RASTER_PROVIDER,
                 wmts: {
                     url: "https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities",
                     attribution: "Institut national de l'information géographique et forestière",
@@ -74,8 +74,8 @@ async function addDtmLayer(api: HrzApi.AsyncApi) {
     let layerModel: HrzProtocol.IDtmRasterLayer = {
         raster: {
             provider: {
-                type: HrzProtocol.RasterProviderType.TILED_IMAGE_PROVIDER,
-                tiledImage: {
+                type: HrzProtocol.RasterProviderType.TILED_RASTER_PROVIDER,
+                tiled: {
                     urlPattern:
                         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
                     imageFormat: HrzProtocol.ImageFormat.MAPZEN_TERRARIUM,

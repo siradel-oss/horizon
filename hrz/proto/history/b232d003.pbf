@@ -23,7 +23,7 @@ Int32Value
 
 BytesValue
 value (RvalueBH¯bproto3
-°ó
+Çò
 hrz_types.protoHrzProtocol"
 Void"#
 Vec2i
@@ -179,8 +179,8 @@ HttpHeader
 name (	Rname
 value (	Rvalue"C
 HttpHeaderList1
-headers (2.HrzProtocol.HttpHeaderRheaders"…
-TiledImageRasterProviderParams7
+headers (2.HrzProtocol.HttpHeaderRheaders"ƒ
+TiledRasterProviderParams7
 geometry
  (2.HrzProtocol.RasterGeometryRgeometryD
 tiling_scheme (2.HrzProtocol.TilingSchemeParamsRtilingScheme
@@ -192,15 +192,15 @@ urlPattern>
 nodata (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSizeJ"¡
-BingProviderParams
+tile_cache_size (RtileCacheSizeJ"«
+BingRasterProviderParams
 api_key (	RapiKey
 culture (	RcultureG
 imagery_type (2$.HrzProtocol.BingProviderImageryTypeRimageryTypeN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"È
-ArcGisProviderParams
+tile_cache_size (RtileCacheSize"Ô
+ArcGisRasterProviderParams
 url (	Rurl
 	layer_ids (RlayerIds>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
@@ -211,8 +211,8 @@ urlPattern>
 source_image_format (	RsourceImageFormat#
 ignore_bounds (RignoreBounds7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"‰
-TmsProviderParams
+tile_cache_size (RtileCacheSize"Í
+TmsRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution:
@@ -221,8 +221,8 @@ urlPattern>
 image_format (2.HrzProtocol.ImageFormatRimageFormat1
 nodata	 (2.HrzProtocol.RasterNodataRnodata7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"Ø
-WmtsProviderParams
+tile_cache_size (RtileCacheSize"µ
+WmtsRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution
@@ -242,8 +242,8 @@ layer_name (	R	layerName
 style_name (	R	styleName"8
 WmsDimension
 name (	Rname
-value (	Rvalue"¿
-WmsProviderParams
+value (	Rvalue"∆
+WmsRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution3
@@ -263,29 +263,29 @@ dimensions=
 override_max_level (RoverrideMaxLevel
 	max_level (RmaxLevel7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"é
-SingleImageRasterProviderParams7
+tile_cache_size (RtileCacheSize"ä
+UntiledRasterProviderParams7
 geometry (2.HrzProtocol.RasterGeometryRgeometry
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution;
 image_format (2.HrzProtocol.ImageFormatRimageFormat1
 nodata (2.HrzProtocol.RasterNodataRnodataN
-missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy"ª
-#PalettizedImageRasterProviderParams7
+missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy"∂
+PalettizedRasterProviderParams7
 provider (2.HrzProtocol.RasterProviderRprovider5
 palette (2.HrzProtocol.NumericPaletteRpalette5
 nodata_color (2.HrzProtocol.ColorRnodataColor1
-nodata (2.HrzProtocol.RasterNodataRnodataJJJJefJfgJjkJklJlmJnoJop"˛
-CesiumTerrainProviderParams
+nodata (2.HrzProtocol.RasterNodataRnodataJJJJefJfgJjkJklJlmJnoJop"Ñ
+!CesiumTerrainRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution:
 preserve_query_parameters (RpreserveQueryParametersN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"È
-TileJsonProviderParams
+tile_cache_size (RtileCacheSize"Ô
+TileJsonRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution:
@@ -294,8 +294,8 @@ dimensions=
 nodata	 (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"¨
-PmTilesProviderParams
+tile_cache_size (RtileCacheSize"≤
+PmTilesRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution;
@@ -303,21 +303,22 @@ dimensions=
 nodata	 (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"ö
+tile_cache_size (RtileCacheSize"ù
 RasterProvider3
-type (2.HrzProtocol.RasterProviderTypeRtypeL
-tiled_imagee (2+.HrzProtocol.TiledImageRasterProviderParamsR
-tiledImageO
-single_imagef (2,.HrzProtocol.SingleImageRasterProviderParamsRsingleImage3
-bingg (2.HrzProtocol.BingProviderParamsRbing[
-palettized_imageh (20.HrzProtocol.PalettizedImageRasterProviderParamsRpalettizedImage9
-arcgisi (2!.HrzProtocol.ArcGisProviderParamsRarcgis0
-tmsj (2.HrzProtocol.TmsProviderParamsRtms3
-wmtsk (2.HrzProtocol.WmtsProviderParamsRwmts0
-wmsl (2.HrzProtocol.WmsProviderParamsRwmsO
-cesium_terrainm (2(.HrzProtocol.CesiumTerrainProviderParamsRcesiumTerrain?
-tilejsonn (2#.HrzProtocol.TileJsonProviderParamsRtilejson<
-pmtileso (2".HrzProtocol.PmTilesProviderParamsRpmtiles"™
+type (2.HrzProtocol.RasterProviderTypeRtype<
+tilede (2&.HrzProtocol.TiledRasterProviderParamsRtiledB
+untiledf (2(.HrzProtocol.UntiledRasterProviderParamsRuntiled9
+bingg (2%.HrzProtocol.BingRasterProviderParamsRbingK
+
+palettizedh (2+.HrzProtocol.PalettizedRasterProviderParamsR
+palettized?
+arcgisi (2'.HrzProtocol.ArcGisRasterProviderParamsRarcgis6
+tmsj (2$.HrzProtocol.TmsRasterProviderParamsRtms9
+wmtsk (2%.HrzProtocol.WmtsRasterProviderParamsRwmts6
+wmsl (2$.HrzProtocol.WmsRasterProviderParamsRwmsU
+cesium_terrainm (2..HrzProtocol.CesiumTerrainRasterProviderParamsRcesiumTerrainE
+tilejsonn (2).HrzProtocol.TileJsonRasterProviderParamsRtilejsonB
+pmtileso (2(.HrzProtocol.PmTilesRasterProviderParamsRpmtiles"™
 GlobalTilingSchemeParams
 	tile_size (RtileSize4
 level_zero_tile_count_x (RlevelZeroTileCountX4
@@ -544,19 +545,19 @@ LINEAR_RGB
 RELATIVE_TO_TERRAIN*A
 MissingTilePolicy
 USE_LOWER_RESOLUTION 
-USE_EMPTY_TILE*ë
-RasterProviderType
-SINGLE_IMAGE_PROVIDER 
-TILED_IMAGE_PROVIDER
-BING_PROVIDER
-PALETTIZED_IMAGE_PROVIDER
-ARCGIS_PROVIDER
-TMS_PROVIDER
-WMTS_PROVIDER
-WMS_PROVIDER
-CESIUM_TERRAIN_PROVIDER
-TILEJSON_PROVIDER	
-PMTILES_PROVIDER
+USE_EMPTY_TILE*Õ
+RasterProviderType
+UNTILED_RASTER_PROVIDER 
+TILED_RASTER_PROVIDER
+BING_RASTER_PROVIDER
+PALETTIZED_RASTER_PROVIDER
+ARCGIS_RASTER_PROVIDER
+TMS_RASTER_PROVIDER
+WMTS_RASTER_PROVIDER
+WMS_RASTER_PROVIDER"
+CESIUM_TERRAIN_RASTER_PROVIDER
+TILEJSON_RASTER_PROVIDER	
+PMTILES_RASTER_PROVIDER
 *z
 BingProviderImageryType
 ROAD 

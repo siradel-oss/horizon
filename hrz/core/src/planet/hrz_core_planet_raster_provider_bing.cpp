@@ -70,12 +70,12 @@ struct UrlGenerator : public hrz::TileUrlGenerator
 
 namespace hrz::planet
 {
-bool is_provider_model_complete(const hrz_proto::BingProviderParams& model)
+bool is_provider_model_complete(const hrz_proto::BingRasterProviderParams& model)
 {
     return !model.api_key().empty();
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::BingProviderParams&)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::BingRasterProviderParams&)
 {
     return hrz_proto::ImageFormat::SRGBA_8;
 }
@@ -84,7 +84,7 @@ struct BingProvider : RasterProvider
 {
 public:
     BingProvider(
-        const hrz_proto::BingProviderParams& params,
+        const hrz_proto::BingRasterProviderParams& params,
         assets_loader::Queue download_queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -104,7 +104,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::BING_PROVIDER;
+        return hrz_proto::RasterProviderType::BING_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override { return hrz_proto::SRGBA_8; }
@@ -380,7 +380,7 @@ private:
                         std::make_unique<ImageTileDecoder>(get_image_format(), raster_id),
                         std::move(attribution_policy), tile_cache_capacity, raster_id,
                         {provider_request_tally_metric_name(
-                             hrz_proto::RasterProviderType::BING_PROVIDER),
+                             hrz_proto::RasterProviderType::BING_RASTER_PROVIDER),
                          tileset_info.url_pattern.c_str()}));
 
                     {
@@ -436,7 +436,7 @@ private:
 };
 
 std::unique_ptr<RasterProvider> create_bing_provider(
-    const hrz_proto::BingProviderParams& params,
+    const hrz_proto::BingRasterProviderParams& params,
     assets_loader::Queue download_queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)

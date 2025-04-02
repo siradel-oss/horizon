@@ -153,12 +153,12 @@ private:
 };
 } // namespace
 
-bool is_provider_model_complete(const hrz_proto::CesiumTerrainProviderParams& params)
+bool is_provider_model_complete(const hrz_proto::CesiumTerrainRasterProviderParams& params)
 {
     return !params.url().empty();
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::CesiumTerrainProviderParams&)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::CesiumTerrainRasterProviderParams&)
 {
     return hrz_proto::ImageFormat::R_F32;
 }
@@ -167,7 +167,7 @@ class CesiumProvider : public RasterProvider
 {
 public:
     CesiumProvider(
-        const hrz_proto::CesiumTerrainProviderParams& params,
+        const hrz_proto::CesiumTerrainRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -190,7 +190,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::CESIUM_TERRAIN_PROVIDER;
+        return hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER;
     }
 
     hrz_proto::ImageFormat get_image_format() const override
@@ -509,7 +509,7 @@ private:
             raster_id,
             TileFetcher::MetricInfo{
                 provider_request_tally_metric_name(
-                    hrz_proto::RasterProviderType::CESIUM_TERRAIN_PROVIDER),
+                    hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER),
                 raw_url.c_str()});
 
         return true;
@@ -662,7 +662,7 @@ private:
 };
 
 std::unique_ptr<RasterProvider> create_cesium_terrain_provider(
-    const hrz_proto::CesiumTerrainProviderParams& params,
+    const hrz_proto::CesiumTerrainRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)

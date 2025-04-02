@@ -50,8 +50,8 @@ registerDemo("mapbox", Mapbox);
 import Ambiance from "./demo/Ambiance.vue";
 registerDemo("ambiance", Ambiance);
 
-import SingleImageRaster from "./demo/SingleImageRaster.vue";
-registerDemo("singleImageRaster", SingleImageRaster);
+import UntiledRaster from "./demo/UntiledRaster.vue";
+registerDemo("untiledRaster", UntiledRaster);
 
 import TiledImageRaster from "./demo/TiledImageRaster.vue";
 registerDemo("tiledImageRaster", TiledImageRaster);

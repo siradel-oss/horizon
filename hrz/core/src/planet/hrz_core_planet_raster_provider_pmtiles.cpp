@@ -72,14 +72,14 @@ public:
     }
 };
 
-bool is_provider_model_complete(const hrz_proto::PmTilesProviderParams& params)
+bool is_provider_model_complete(const hrz_proto::PmTilesRasterProviderParams& params)
 {
     if (params.url().empty()) return false;
 
     return true;
 }
 
-hrz_proto::ImageFormat get_image_format(const hrz_proto::PmTilesProviderParams& params)
+hrz_proto::ImageFormat get_image_format(const hrz_proto::PmTilesRasterProviderParams& params)
 {
     return params.image_format();
 }
@@ -108,7 +108,7 @@ class PmTilesRasterProvider : public RasterProvider
 
 public:
     PmTilesRasterProvider(
-        const hrz_proto::PmTilesProviderParams& params,
+        const hrz_proto::PmTilesRasterProviderParams& params,
         assets_loader::Queue queue,
         uint32_t default_tile_cache_size,
         uint64_t raster_id) :
@@ -128,7 +128,7 @@ public:
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
     {
-        return hrz_proto::RasterProviderType::PMTILES_PROVIDER;
+        return hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER;
     }
 
     Status get_status() const override
@@ -246,7 +246,7 @@ public:
                         _tile_cache_capacity, _raster_id,
                         TileFetcher::MetricInfo{
                             provider_request_tally_metric_name(
-                                hrz_proto::RasterProviderType::PMTILES_PROVIDER),
+                                hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER),
                             _url.c_str()});
                     _status = kReady;
                     break;
@@ -345,7 +345,7 @@ public:
 };
 
 std::unique_ptr<RasterProvider> create_pmtiles_provider(
-    const hrz_proto::PmTilesProviderParams& params,
+    const hrz_proto::PmTilesRasterProviderParams& params,
     assets_loader::Queue queue,
     uint32_t default_tile_cache_size,
     uint64_t raster_id)
