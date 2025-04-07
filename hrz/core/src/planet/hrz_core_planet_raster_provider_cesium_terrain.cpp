@@ -65,7 +65,8 @@ public:
     {
     }
 
-    Ticket decode_tile(blobs::BlobHandle blob, JobScheduler* js) override
+    Ticket decode_tile(blobs::BlobHandle blob, std::string_view /* mime_type */, JobScheduler* js)
+        override
     {
         auto handle = tiles.alloc();
         auto tile = tiles.get_object(handle);
@@ -502,7 +503,7 @@ private:
         url_generator->use_tms_tile_coords = use_tms_tile_coords;
 
         fetcher.emplace(
-            std::make_unique<UrlTileRequester>(std::move(url_generator), headers), 0,
+            std::make_unique<UrlTileRequester>(std::move(url_generator), std::nullopt, headers), 0,
             missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
             std::make_unique<CesiumTerrainTileDecoder>(tile_format, raster_id),
             std::make_unique<SimpleTileAttributionPolicy>(attribution), tile_cache_capacity,

@@ -126,7 +126,7 @@ void GpuTextureResource::work(
             case BlobLibrary::Loaded:
             {
                 compressed_data_uri = bl->get_uri(compressed_blob_handle.value(), cfg);
-                auto buffer_blob = bl->get_blob(compressed_blob_handle.value(), cfg);
+                auto [buffer_blob, mime_type] = bl->get_blob(compressed_blob_handle.value(), cfg);
 
                 if (buffer_blob.data_size() >= blob_offset + blob_length)
                 {
@@ -140,13 +140,13 @@ void GpuTextureResource::work(
                             blobs::make_sub_blob(ba, buffer_blob, blob_offset, blob_length);
                     }
 
-                    hrz_proto::ImageFormat format = is_data_texture
+                    const hrz_proto::ImageFormat format = is_data_texture
                         ? hrz_proto::ImageFormat::R_F32_SILICIUM
                         : hrz_proto::ImageFormat::SRGBA_8;
 
                     decompress_ticket = image_decoder::decode_async(
                         imgdec, js, std::move(compressed_data_handle.value()), owner, format,
-                        image_decoder::PremultiplyAlpha::DoNotPremultiply,
+                        mime_type, image_decoder::PremultiplyAlpha::DoNotPremultiply,
                         image_decoder::ConvertScalarsToFloat::Convert,
                         image_decoder::DecodeToCompressedImage::Allow);
 

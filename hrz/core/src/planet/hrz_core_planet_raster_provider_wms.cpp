@@ -146,6 +146,11 @@ public:
             dimension_names.push_back(dimension.name());
             dimension_values.push_back(dimension.value());
         }
+
+        if (!params.mime_type_override().empty())
+        {
+            mime_type_override = params.mime_type_override();
+        }
     }
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
@@ -381,7 +386,7 @@ public:
                         std::make_unique<UrlTileRequester>(
                             std::make_unique<UrlGenerator>(
                                 response.url_template, response.geometry),
-                            headers),
+                            mime_type_override, headers),
                         geometry.tiling_scheme.local_tiling().min_level(),
                         missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                         std::make_unique<ImageTileDecoder>(image_format, raster_id),
@@ -508,6 +513,7 @@ private:
 
     InternalStatus status;
     hrz_proto::ImageFormat image_format;
+    std::optional<std::string> mime_type_override;
     hrz_proto::RasterNodata nodata;
     std::string url;
     HttpHeaders headers;

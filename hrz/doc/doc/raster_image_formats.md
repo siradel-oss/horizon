@@ -3,6 +3,91 @@ Title: Image formats
 Category: Rasters
 ---
 
+## Image file formats
+
+### Common formats
+
+Horizon supports image contained in PNG, JPEG, WebP and non animated GIF files, without any additional information.
+
+### Raw formats
+
+Some images might be served as raw values. In this case, it is not possible for Horizon to know how to decode the image. Instead the `mime_type_override` field on the raster provider can be used with the custom `image/x.raw` MIME type and its associated parameters.
+
+* `width`, `height`
+    * Positive integer, mandatory.
+* `channels`
+    * Positive integer.
+    * Defaults to 1.
+* `bit_width`
+    * Bit width of the data type for one pixel of one channel.
+    * Positive integer, multiple of 8.
+    * Default to 8.
+    * Possible values: 8, 16, 32.
+* `interleaving`
+    * Dictates how the channels are interleaved.
+    * Defaults to `pixel`.
+    * Possible values: `pixel`, `line`, `none`.
+* `endian`
+    * Endianness of encoded values.
+    * Default to `little`.
+    * Possible values: `big`, `little`.
+
+*Example:* `image/x.raw; width=256; height=256; channels=3; bit_width=8; interleaving=pixel; endian=little`.
+
+The size of a pixel (`channels` x `bit_width`) must match the size of the chosen [[ImageFormat]]. When loading the image, it will be reordered such as to match interleaving by pixel, and each pixel value will then be reinterpreted as the [[ImageFormat]] type.
+
+An exception is made when the [[ImageFormat]] is `SRGBA_8`, `bit_width` is 8, and `channels` is 3: despite being 24bit, this format is accepted, and the alpha channel is considered fully opaque.
+
+**`pixel` interleaving**
+
+```
+RGB RGB RGB RGB
+RGB RGB RGB RGB
+RGB RGB RGB RGB
+```
+
+**`line` interleaving**
+
+```
+RRRR
+GGGG
+BBBB
+
+RRRR
+GGGG
+BBBB
+
+RRRR
+GGGG
+BBBB
+```
+
+**`none` interleaving**
+
+```
+RRRR
+RRRR
+RRRR
+
+GGGG
+GGGG
+GGGG
+
+BBBB
+BBBB
+BBBB
+```
+
+### BIL, BIP, and BSQ
+
+[These formats](https://desktop.arcgis.com/en/arcmap/latest/manage-data/raster-and-images/bil-bip-and-bsq-raster-files.htm) are raw, normally served alongside a header file containing information on how to decode them. Since some providers don't provide this header file, and the MIME type is not enough to describe the data inside (or often just wrong), Horizon can only use these images using the MIME type override `image/x.raw` described above.
+
+* BIL corresponds to interleaving `line`.
+* BIP corresponds to interleaving `pixel`.
+* BSQ corresponds to interleaving `none`.
+
+<gallery-card demo="ignSrtm"></gallery-card>
+
 ## Colour and scalar formats
 
 Images can contain a variety of data types. These affect both what kind of data is stored for each pixel of an image, as well as precisely how that data is encoded. Image formats join these two concepts into one.

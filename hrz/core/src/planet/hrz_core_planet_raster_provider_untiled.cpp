@@ -52,6 +52,10 @@ public:
         al_queue(queue),
         raster_id(raster_id)
     {
+        if (!params.mime_type_override().empty())
+        {
+            mime_type_override = params.mime_type_override();
+        }
     }
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
@@ -179,9 +183,16 @@ public:
             auto load_ticket_status = assets_loader::get_status(al, load_ticket);
             if (load_ticket_status == assets_loader::RequestStatus::Loaded)
             {
+                auto mime_type = assets_loader::get_content_type(al, load_ticket);
+                if (mime_type_override)
+                {
+                    mime_type = mime_type_override.value();
+                }
+
                 auto blob = assets_loader::get_blob(al, ba, load_ticket);
                 decode_ticket = image_decoder::decode_async(
-                    js, blob, {monitoring::systems::PlanetSurface, raster_id}, image_format);
+                    js, blob, {monitoring::systems::PlanetSurface, raster_id}, image_format,
+                    mime_type);
                 image_status = ImageStatus::Decoding;
                 assets_loader::end(al, load_ticket);
             }
@@ -402,6 +413,7 @@ private:
     HttpHeaders headers;
     std::variant<std::string, AttributionHandle> attribution;
     hrz_proto::ImageFormat image_format;
+    std::optional<std::string> mime_type_override;
     hrz_proto::RasterNodata nodata;
     ImageStatus image_status{};
     assets_loader::Ticket load_ticket{};

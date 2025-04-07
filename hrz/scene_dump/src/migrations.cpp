@@ -1946,15 +1946,19 @@ bool migration_db6a65c4_to_b232d003(const DynamicMessage& src, DynamicMessage* d
 {
     auto migrate_layer = [](const DynamicMessage& src, DynamicMessage* dst) -> bool
     {
-        auto src_provider = src.get_message("raster").get_message("provider");
-        auto dst_provider = dst->get_message("raster").get_message("provider");
-
         return walk_fields_of_type(
-            "HrzProtocol.TiledRasterProviderParams", src_provider, &dst_provider,
-            [](const DynamicMessage& src, DynamicMessage* dst) -> bool
+            "HrzProtocol.RasterProvider", src, dst,
+            [&](const DynamicMessage& src, DynamicMessage* dst) -> bool
             {
-                dst->copy_message(
-                    "tiling_scheme", src.get_message("geometry").get_message("tiling_scheme"));
+                const auto& provider_type = src.get_enum("type");
+                if (provider_type == "TILED_IMAGE_PROVIDER")
+                {
+                    dst->get_message("tiled").copy_message(
+                        "tiling_scheme",
+                        src.get_message("tiled_image")
+                            .get_message("geometry")
+                            .get_message("tiling_scheme"));
+                }
                 return true;
             });
     };

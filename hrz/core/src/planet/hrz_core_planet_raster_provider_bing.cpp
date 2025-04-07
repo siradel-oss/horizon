@@ -374,7 +374,8 @@ private:
                     url_generator->tileset_info = tileset_info;
 
                     fetcher.emplace(TileFetcher(
-                        std::make_unique<UrlTileRequester>(std::move(url_generator), headers),
+                        std::make_unique<UrlTileRequester>(
+                            std::move(url_generator), std::nullopt, headers),
                         tileset_info.lod_min,
                         missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                         std::make_unique<ImageTileDecoder>(get_image_format(), raster_id),

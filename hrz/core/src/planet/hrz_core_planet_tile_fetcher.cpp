@@ -16,13 +16,16 @@ TileFetcher::LockTicket generate_lock_ticket()
 }
 } // namespace
 
-ImageTileDecoder::Ticket ImageTileDecoder::decode_tile(blobs::BlobHandle blob, JobScheduler* js)
+ImageTileDecoder::Ticket ImageTileDecoder::decode_tile(
+    blobs::BlobHandle blob,
+    std::string_view mime_type,
+    JobScheduler* js)
 {
     auto handle = tiles.alloc();
     auto tile = tiles.get_object(handle);
     tile->status = Status::Decoding;
     tile->decode_ticket = image_decoder::decode_async(
-        js, blob, {monitoring::systems::PlanetSurface, raster_id}, image_format);
+        js, blob, {monitoring::systems::PlanetSurface, raster_id}, image_format, mime_type);
     return handle;
 }
 
@@ -384,11 +387,11 @@ void TileFetcher::work(
 
             if (_tile_requester->is_success(load_ticket.ticket, al))
             {
-                auto blob = _tile_requester->retrieve_blob(load_ticket.ticket, al, ba);
+                auto [blob, mime_type] = _tile_requester->retrieve_blob(load_ticket.ticket, al, ba);
                 if (blob.data_size() > 0)
                 {
                     Tile::DecodingTicket decode_ticket{};
-                    decode_ticket.ticket = _tile_decoder->decode_tile(blob, js);
+                    decode_ticket.ticket = _tile_decoder->decode_tile(blob, mime_type, js);
                     tile->status = Tile::Status::Decoding;
                     tile->payload = decode_ticket;
                     _decoding_tiles.insert(*it);

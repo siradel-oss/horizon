@@ -1,3 +1,4 @@
+#include "absl/strings/numbers.h"
 #include "hrz_jobs_declarations.h"
 #include "hrz_protocol_image_helper.h"
 
@@ -7,8 +8,11 @@
 #include <hrz_common_image_processing.h>
 #include <hrz_common_profiling.h>
 #include <hrz_fnd_bit_cast.h>
+#include <hrz_fnd_defer.h>
 #include <hrz_fnd_inlined_vector.h>
 #include <hrz_fnd_log.h>
+#include <hrz_fnd_mime.h>
+#include <hrz_fnd_string_utils.h>
 
 #include <basisu_transcoder.h>
 #include <mycelium_backend.h>
@@ -116,42 +120,43 @@ bool is_data_ktx2(gsl::span<const std::byte> data)
     return data.subspan(0, 12) == gsl::span<const std::byte>{ktx2_identifier};
 }
 
+// @Todo(C++20) Replace this enable_if_t with a requires clause.
+template<typename F, std::enable_if_t<std::is_invocable_r_v<uint32_t, F, uint32_t>, int> = 0>
+void transform_32bit_image_data(std::byte* data, size_t pixel_count, F transform_function)
+{
+    uint32_t value{};
+    for (auto* end_ptr = data + pixel_count * sizeof(uint32_t); data < end_ptr;
+         data += sizeof(uint32_t))
+    {
+        std::memcpy(&value, data, sizeof(uint32_t));
+        value = transform_function(value);
+        std::memcpy(data, &value, sizeof(uint32_t));
+    }
+}
+
 hrz::BlobImage finalize_image(
     hrz_proto::ImageFormat encoded_image_format,
     int width,
     int height,
-    int channels,
+    int bytes_per_pixel,
     bool premultiply_alpha,
     bool convert_scalars_to_float,
-    hrz::blobs::BlobHandle decoded_image_blob,
+    const hrz::blobs::BlobHandle& decoded_image_blob,
     const hrz_jobs::JobContext& context)
 {
     if (premultiply_alpha)
     {
         if (encoded_image_format == hrz_proto::ImageFormat::SRGBA_8)
         {
-            assert(channels == 4);
-
+            assert(bytes_per_pixel == 4);
             auto decoded_image_data = decoded_image_blob.get_mutable_data();
 
-            auto data_ptr = decoded_image_data.data();
-
-            int pixel_count = width * height;
-            for (int i = 0; i < pixel_count; ++i)
-            {
-                // The intermediary uint32_t and the use of bit_cast here here to
-                // avoid warnings. The compiler should be able to optimise this to
-                // a single memcpy.
-                static_assert(sizeof(lm::ubvec4) == sizeof(uint32_t), "ubvec4 size");
-                uint32_t in_uint;
-                std::memcpy(&in_uint, data_ptr, sizeof(uint32_t));
-                lm::ubvec4 in = hrz::bit_cast<lm::ubvec4, uint32_t>(in_uint);
-                lm::ubvec4 out = hrz::premultiply_alpha(in);
-                uint32_t out_uint = hrz::bit_cast<uint32_t, lm::ubvec4>(out);
-                std::memcpy(data_ptr, &out_uint, sizeof(uint32_t));
-
-                data_ptr += sizeof(uint32_t);
-            }
+            transform_32bit_image_data(
+                decoded_image_data.data(), width * height,
+                [](uint32_t v) {
+                    return hrz::bit_cast<uint32_t>(
+                        hrz::premultiply_alpha(hrz::bit_cast<lm::ubvec4>(v)));
+                });
         }
         else
         {
@@ -165,43 +170,38 @@ hrz::BlobImage finalize_image(
     {
         if (encoded_image_format == hrz_proto::ImageFormat::R_F32_SILICIUM)
         {
-            assert(channels == 4);
-
+            assert(bytes_per_pixel == 4);
             auto decoded_image_data = decoded_image_blob.get_mutable_data();
 
-            auto data_ptr = decoded_image_data.data();
-
-            int pixel_count = width * height;
-            for (int i = 0; i < pixel_count; ++i)
-            {
-                uint32_t in;
-                std::memcpy(&in, data_ptr, sizeof(uint32_t));
-                float out = hrz::decode_r_f32_silicium_value_to_float(in);
-                std::memcpy(data_ptr, &out, sizeof(float));
-
-                data_ptr += sizeof(uint32_t);
-            }
+            transform_32bit_image_data(
+                decoded_image_data.data(), width * height,
+                [](uint32_t v)
+                { return hrz::bit_cast<uint32_t>(hrz::decode_r_f32_silicium_value_to_float(v)); });
 
             encoded_image_format = hrz_proto::ImageFormat::R_F32;
         }
         else if (encoded_image_format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8)
         {
-            assert(channels == 4);
-
+            assert(bytes_per_pixel == 4);
             auto decoded_image_data = decoded_image_blob.get_mutable_data();
 
-            auto data_ptr = decoded_image_data.data();
+            transform_32bit_image_data(
+                decoded_image_data.data(), width * height,
+                [](uint32_t v)
+                { return hrz::bit_cast<uint32_t>(hrz::decode_signed_fixed_24_8_to_float(v)); });
 
-            int pixel_count = width * height;
-            for (int i = 0; i < pixel_count; ++i)
-            {
-                uint32_t in;
-                std::memcpy(&in, data_ptr, sizeof(uint32_t));
-                float out = hrz::decode_signed_fixed_24_8_to_float(in);
-                std::memcpy(data_ptr, &out, sizeof(float));
+            encoded_image_format = hrz_proto::ImageFormat::R_F32;
+        }
+        else if (encoded_image_format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM)
+        {
+            assert(bytes_per_pixel == 4);
+            auto decoded_image_data = decoded_image_blob.get_mutable_data();
 
-                data_ptr += sizeof(uint32_t);
-            }
+            transform_32bit_image_data(
+                decoded_image_data.data(), width * height,
+                [](uint32_t v) {
+                    return hrz::bit_cast<uint32_t>(hrz::decode_mapzen_terrarium_value_to_float(v));
+                });
 
             encoded_image_format = hrz_proto::ImageFormat::R_F32;
         }
@@ -305,7 +305,6 @@ my::TextureFormat convert_basisu_texture_format(basist::transcoder_texture_forma
 
 // Based partly on
 // https://github.com/BinomialLLC/basis_universal/blob/9c5da86dbebf5f6eaf5fe42168d93f46566d8d5a/contrib/single_file_transcoder/examples/emscripten.cpp#L352
-// @Todo Decode mipmaps. This needs supporting them in decoded images.
 hrz::JobResult decode_ktx2(
     gsl::span<const std::byte> encoded_image_data,
     hrz_proto::ImageFormat encoded_image_format,
@@ -425,15 +424,11 @@ hrz::JobResult decode_ktx2(
     return hrz::JobResult::SUCCESS;
 }
 
-hrz::JobResult decode_webp(
+std::optional<hrz::blobs::BlobHandle> decode_webp(
     gsl::span<const std::byte> encoded_image_data,
-    hrz_proto::ImageFormat encoded_image_format,
     int width,
     int height,
     int desired_channels,
-    bool premultiply_alpha,
-    bool convert_scalars_to_float,
-    hrz::BlobImage& decoded_image,
     const hrz_jobs::JobContext& context)
 {
     assert(desired_channels == 3 || desired_channels == 4);
@@ -446,7 +441,7 @@ hrz::JobResult decode_webp(
     if (!decoded_image_blob.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate blob of size {}", data_size);
-        return hrz::JobResult::FAILURE;
+        return std::nullopt;
     }
 
     hrz::blobs::register_owner(
@@ -470,29 +465,20 @@ hrz::JobResult decode_webp(
 
     if (data != nullptr)
     {
-        decoded_image_data.release();
-
-        decoded_image = finalize_image(
-            encoded_image_format, width, height, desired_channels, premultiply_alpha,
-            convert_scalars_to_float, std::move(decoded_image_blob.value()), context);
-
-        return hrz::JobResult::SUCCESS;
+        return decoded_image_blob;
     }
     else
     {
         HRZ_LOG_ERROR("Error when decoding image");
-
-        return hrz::JobResult::FAILURE;
+        return std::nullopt;
     }
 }
 
-hrz::JobResult decode_stbi(
+std::optional<hrz::blobs::BlobHandle> decode_stbi(
     gsl::span<const std::byte> encoded_image_data,
-    hrz_proto::ImageFormat encoded_image_format,
+    int* width,
+    int* height,
     int desired_channels,
-    bool premultiply_alpha,
-    bool convert_scalars_to_float,
-    hrz::BlobImage& decoded_image,
     const hrz_jobs::JobContext& context)
 {
     // @Todo Decode image into the output blob directly.
@@ -502,50 +488,257 @@ hrz::JobResult decode_stbi(
     // environments."
     //     -nothings, https://github.com/nothings/stb/issues/964#issuecomment-628301472
 
-    int width;
-    int height;
     int channels_in_file;
 
     stbi_uc* output_data = stbi_load_from_memory(
         (const stbi_uc*)encoded_image_data.data(),
-        static_cast<int>(encoded_image_data.size_bytes()), &width, &height, &channels_in_file,
+        static_cast<int>(encoded_image_data.size_bytes()), width, height, &channels_in_file,
         desired_channels);
 
-    if (output_data)
+    HRZ_DEFER[output_data]
     {
-        auto data_size = width * height * desired_channels; // in bytes
-
-        auto decoded_image_blob =
-            hrz::blobs::allocate_blob_sync(context.get_blob_allocator(), data_size);
-        if (!decoded_image_blob.has_value())
-        {
-            HRZ_LOG_ERROR("Could not allocate blob of size {}", data_size);
-            stbi_image_free(output_data);
-            return hrz::JobResult::FAILURE;
-        }
-
-        hrz::blobs::register_owner(
-            context.get_blob_allocator(), decoded_image_blob.value(), context.get_resource_owner());
-        auto decoded_image_data = decoded_image_blob->get_mutable_data();
-
-        std::memcpy(decoded_image_data.data(), output_data, data_size);
-
         stbi_image_free(output_data);
-        decoded_image_data.release();
+    };
 
-        decoded_image = finalize_image(
-            encoded_image_format, width, height, desired_channels, premultiply_alpha,
-            convert_scalars_to_float, std::move(decoded_image_blob.value()), context);
+    if (!output_data)
+    {
+        HRZ_LOG_ERROR("Error when decoding image: {}", stbi_failure_reason());
+        return std::nullopt;
+    }
 
-        return hrz::JobResult::SUCCESS;
+    auto data_size = *width * *height * desired_channels; // in bytes
+
+    auto decoded_image_blob =
+        hrz::blobs::allocate_blob_sync(context.get_blob_allocator(), data_size);
+    if (!decoded_image_blob.has_value())
+    {
+        HRZ_LOG_ERROR("Could not allocate blob of size {}", data_size);
+        return std::nullopt;
+    }
+
+    hrz::blobs::register_owner(
+        context.get_blob_allocator(), decoded_image_blob.value(), context.get_resource_owner());
+    auto decoded_image_data = decoded_image_blob->get_mutable_data();
+
+    std::memcpy(decoded_image_data.data(), output_data, data_size);
+
+    return decoded_image_blob;
+}
+
+// @Todo(C++23) Use monadic operations on std::optional.
+std::optional<int> atoi_opt(std::optional<std::string_view> sv)
+{
+    int value{};
+    if (sv && absl::SimpleAtoi(sv.value(), &value))
+    {
+        return value;
+    }
+    return std::nullopt;
+}
+
+struct RawImageView
+{
+    int band_stride;
+    int line_stride;
+    int pixel_stride;
+};
+
+template<typename T, bool kSwapBytes>
+void copy_raw_image_data(
+    std::byte* decoded_image_data,
+    const std::byte* encoded_image_data,
+    int width,
+    int height,
+    const RawImageView& raw_image_view,
+    int channels,
+    int skip_channels)
+{
+    const std::byte* in_line_ptr = encoded_image_data;
+    std::byte* out_ptr = decoded_image_data;
+    for (int y = 0; y < height; ++y, in_line_ptr += raw_image_view.line_stride)
+    {
+        const std::byte* in_pixel_ptr = in_line_ptr;
+        for (int x = 0; x < width; ++x, in_pixel_ptr += raw_image_view.pixel_stride)
+        {
+            const std::byte* in_band_ptr = in_pixel_ptr;
+            for (int c = 0; c < channels; ++c, in_band_ptr += raw_image_view.band_stride)
+            {
+                if constexpr (kSwapBytes)
+                {
+                    T value;
+                    std::memcpy(&value, in_band_ptr, sizeof(T));
+                    value = hrz::swap_bytes(value);
+                    std::memcpy(out_ptr, &value, sizeof(T));
+                }
+                else
+                {
+                    std::memcpy(out_ptr, in_band_ptr, sizeof(T));
+                }
+                out_ptr += sizeof(T);
+            }
+            out_ptr += sizeof(T) * skip_channels;
+        }
+    }
+}
+
+std::optional<hrz::blobs::BlobHandle> decode_raw(
+    gsl::span<const std::byte> encoded_image_data,
+    int* width,
+    int* height,
+    int* byte_per_pixel,
+    const hrz_proto::ImageFormat& image_format,
+    const hrz::ParsedMime& mime,
+    const hrz_jobs::JobContext& context)
+{
+    *width = atoi_opt(mime.get_parameter("width")).value_or(0);
+    *height = atoi_opt(mime.get_parameter("height")).value_or(0);
+
+    if (*width <= 0 || *height <= 0 || *width >= 65536 || *height >= 65536)
+    {
+        HRZ_LOG_ERROR("Invalid width or height for raw image");
+        return std::nullopt;
+    }
+
+    const int channels = atoi_opt(mime.get_parameter("channels")).value_or(1);
+    const int bits_per_channel = atoi_opt(mime.get_parameter("bit_width")).value_or(8);
+    const auto interleaving = mime.get_parameter(("interleaving")).value_or("pixel");
+    const bool swap_bytes =
+        hrz::str::iequals(mime.get_parameter("endian").value_or("little"), "big");
+
+    if (bits_per_channel != 8 && bits_per_channel != 16 && bits_per_channel != 32)
+    {
+        HRZ_LOG_ERROR("Bit width for raw image must be 8, 16, or 32");
+        return std::nullopt;
+    }
+
+    const int bytes_per_channel = bits_per_channel / 8;
+
+    const int desired_format_size = (int)hrz_proto::byte_count(image_format);
+    *byte_per_pixel = desired_format_size;
+
+    // We accept 3xuint8 as SRGBA8: alpha will be filled with 255.
+    const bool use_srgb_alpha_fallback =
+        image_format == hrz_proto::ImageFormat::SRGBA_8 && channels == 3 && bytes_per_channel == 1;
+
+    const int skip_channels = use_srgb_alpha_fallback ? 1 : 0;
+
+    if ((channels + skip_channels) * bytes_per_channel != desired_format_size)
+    {
+        HRZ_LOG_ERROR(
+            "Image format {} does not match raw image data: {} channels, {} bits per channel",
+            hrz_proto::ImageFormat_Name(image_format), channels, bits_per_channel);
+        return std::nullopt;
+    }
+
+    if (encoded_image_data.size_bytes() < *width * *height * channels * bytes_per_channel)
+    {
+        HRZ_LOG_ERROR(
+            "Encoded image data size {} is smaller than expected {}",
+            encoded_image_data.size_bytes(), *width * *height * bytes_per_channel);
+        return std::nullopt;
+    }
+
+    RawImageView raw_image_view{};
+    if (hrz::str::iequals(interleaving, "line"))
+    {
+        raw_image_view.line_stride = *width * channels * bytes_per_channel;
+        raw_image_view.band_stride = *width * bytes_per_channel;
+        raw_image_view.pixel_stride = bytes_per_channel;
+    }
+    else if (hrz::str::iequals(interleaving, "pixel"))
+    {
+        raw_image_view.line_stride = *width * channels * bytes_per_channel;
+        raw_image_view.band_stride = bytes_per_channel;
+        raw_image_view.pixel_stride = channels * bytes_per_channel;
+    }
+    else if (hrz::str::iequals(interleaving, "none"))
+    {
+        raw_image_view.line_stride = *width * bytes_per_channel;
+        raw_image_view.band_stride = *width * *height * bytes_per_channel;
+        raw_image_view.pixel_stride = bytes_per_channel;
     }
     else
     {
-        HRZ_LOG_ERROR("Error when decoding image: {}", stbi_failure_reason());
-
-        return hrz::JobResult::FAILURE;
+        HRZ_LOG_ERROR("Unknown interleaving type: {}", interleaving);
+        return std::nullopt;
     }
+
+    const size_t data_size = (size_t)*width * (size_t)*height * (size_t)desired_format_size;
+
+    auto decoded_image_blob =
+        hrz::blobs::allocate_blob_sync(context.get_blob_allocator(), data_size);
+    if (!decoded_image_blob.has_value())
+    {
+        HRZ_LOG_ERROR("Could not allocate blob of size {}", data_size);
+        return std::nullopt;
+    }
+
+    hrz::blobs::register_owner(
+        context.get_blob_allocator(), decoded_image_blob.value(), context.get_resource_owner());
+    auto decoded_image_data = decoded_image_blob->get_mutable_data();
+
+    // We monomorph on the bit width  & byte swap parameter for increased performance.
+    switch (bits_per_channel)
+    {
+        case 8:
+            if (swap_bytes)
+            {
+                copy_raw_image_data<uint8_t, true>(
+                    decoded_image_data.data(), encoded_image_data.data(), *width, *height,
+                    raw_image_view, channels, skip_channels);
+            }
+            else
+            {
+                copy_raw_image_data<uint8_t, false>(
+                    decoded_image_data.data(), encoded_image_data.data(), *width, *height,
+                    raw_image_view, channels, skip_channels);
+            }
+            break;
+        case 16:
+            if (swap_bytes)
+            {
+                copy_raw_image_data<uint16_t, true>(
+                    decoded_image_data.data(), encoded_image_data.data(), *width, *height,
+                    raw_image_view, channels, skip_channels);
+            }
+            else
+            {
+                copy_raw_image_data<uint16_t, false>(
+                    decoded_image_data.data(), encoded_image_data.data(), *width, *height,
+                    raw_image_view, channels, skip_channels);
+            }
+            break;
+        case 32:
+            if (swap_bytes)
+            {
+                copy_raw_image_data<uint32_t, true>(
+                    decoded_image_data.data(), encoded_image_data.data(), *width, *height,
+                    raw_image_view, channels, skip_channels);
+            }
+            else
+            {
+                copy_raw_image_data<uint32_t, false>(
+                    decoded_image_data.data(), encoded_image_data.data(), *width, *height,
+                    raw_image_view, channels, skip_channels);
+            }
+            break;
+        default: assert(false); break;
+    }
+
+    if (use_srgb_alpha_fallback)
+    {
+        static_assert(alignof(lm::ubvec4) == 1);
+        auto decoded_image_data_ptr = gsl::span<lm::ubvec4>(
+            reinterpret_cast<lm::ubvec4*>(decoded_image_data.data()), *width * *height);
+        for (auto& pixel : decoded_image_data_ptr)
+        {
+            pixel.a = 255;
+        }
+    }
+
+    return decoded_image_blob;
 }
+
 } // namespace
 
 namespace hrz_jobs::decode_blob_image
@@ -559,32 +752,42 @@ hrz::JobResult run(
 
     assert(!blob_malloc_adapter.has_value());
     blob_malloc_adapter = hrz::blobs::MallocAdapter{context.get_blob_allocator()};
+    HRZ_DEFER[]
+    {
+        blob_malloc_adapter = std::nullopt;
+    };
 
     auto encoded_image_data = params.encoded_image_data.get_data();
 
-    // Check if encoded image can be parsed.
-    int desired_channels = hrz_proto::byte_count(params.image_format);
-
-    // stbi_load_from_memory() loads images with 8 bits per channel,
-    // between 1 and 4 channels.
-    assert(desired_channels >= 1 && desired_channels <= 4);
-
-    hrz::JobResult result{};
-
     if (is_data_ktx2(encoded_image_data))
     {
-        result = decode_ktx2(
-            encoded_image_data, params.image_format, params.allow_decoding_to_compressed_image,
-            params.platform_info, params.my_instance_info, decoded_image, context);
-
         if (params.premultiply_alpha)
         {
             HRZ_LOG_WARNING("Cannot premultiply alpha of KTX2 image");
         }
+        return decode_ktx2(
+            encoded_image_data, params.image_format, params.allow_decoding_to_compressed_image,
+            params.platform_info, params.my_instance_info, decoded_image, context);
+    }
+
+    const int desired_channels = (int)hrz_proto::byte_count(params.image_format);
+    assert(desired_channels >= 1 && desired_channels <= 4);
+
+    std::optional<hrz::blobs::BlobHandle> decoded_image_blob;
+    const hrz::ParsedMime mime = hrz::parse_mime(params.mime_type);
+
+    int width = 0;
+    int height = 0;
+    int byte_per_pixel = 0;
+
+    if (mime.type == "image" && mime.subtype == "x.raw")
+    {
+        decoded_image_blob = decode_raw(
+            encoded_image_data, &width, &height, &byte_per_pixel, params.image_format, mime,
+            context);
     }
     else
     {
-        int width, height;
         auto is_webp = WebPGetInfo(
                            (const uint8_t*)encoded_image_data.data(), encoded_image_data.size(),
                            &width, &height)
@@ -592,21 +795,29 @@ hrz::JobResult run(
 
         if (is_webp)
         {
-            result = decode_webp(
-                encoded_image_data, params.image_format, width, height, desired_channels,
-                params.premultiply_alpha, params.convert_scalars_to_float, decoded_image, context);
+            decoded_image_blob =
+                decode_webp(encoded_image_data, width, height, desired_channels, context);
+            byte_per_pixel = desired_channels;
         }
         else
         {
-            result = decode_stbi(
-                encoded_image_data, params.image_format, desired_channels, params.premultiply_alpha,
-                params.convert_scalars_to_float, decoded_image, context);
+            decoded_image_blob =
+                decode_stbi(encoded_image_data, &width, &height, desired_channels, context);
+            byte_per_pixel = desired_channels;
         }
     }
 
-    blob_malloc_adapter = std::nullopt;
-
-    return result;
+    if (decoded_image_blob.has_value())
+    {
+        decoded_image = finalize_image(
+            params.image_format, width, height, byte_per_pixel, params.premultiply_alpha,
+            params.convert_scalars_to_float, decoded_image_blob.value(), context);
+        return hrz::JobResult::SUCCESS;
+    }
+    else
+    {
+        return hrz::JobResult::FAILURE;
+    }
 }
 
 } // namespace hrz_jobs::decode_blob_image

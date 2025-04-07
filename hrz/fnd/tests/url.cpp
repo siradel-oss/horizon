@@ -434,8 +434,9 @@ TEST(Url, data_url_all_empty)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:,", &url));
-    ASSERT_EQ(url.is_base64, false);
-    ASSERT_EQ(url.mime_type, "");
+    ASSERT_EQ(url.is_base64(), false);
+    ASSERT_EQ(url.mime_type.type, "");
+    ASSERT_EQ(url.mime_type.subtype, "");
     ASSERT_EQ(url.encoded_payload, "");
 }
 
@@ -443,8 +444,9 @@ TEST(Url, data_url_empty_with_mime)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:text/css,", &url));
-    ASSERT_EQ(url.is_base64, false);
-    ASSERT_EQ(url.mime_type, "text/css");
+    ASSERT_EQ(url.is_base64(), false);
+    ASSERT_EQ(url.mime_type.type, "text");
+    ASSERT_EQ(url.mime_type.subtype, "css");
     ASSERT_EQ(url.encoded_payload, "");
 }
 
@@ -452,8 +454,9 @@ TEST(Url, data_url_empty_with_mime_params)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:text/javascript;hello=world,", &url));
-    ASSERT_EQ(url.is_base64, false);
-    ASSERT_EQ(url.mime_type, "text/javascript");
+    ASSERT_EQ(url.is_base64(), false);
+    ASSERT_EQ(url.mime_type.type, "text");
+    ASSERT_EQ(url.mime_type.subtype, "javascript");
     ASSERT_EQ(url.encoded_payload, "");
 }
 
@@ -461,8 +464,9 @@ TEST(Url, data_url_empty_base64)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:;base64,", &url));
-    ASSERT_EQ(url.is_base64, true);
-    ASSERT_EQ(url.mime_type, "");
+    ASSERT_EQ(url.is_base64(), true);
+    ASSERT_EQ(url.mime_type.type, "");
+    ASSERT_EQ(url.mime_type.subtype, "");
     ASSERT_EQ(url.encoded_payload, "");
 }
 
@@ -470,8 +474,9 @@ TEST(Url, data_url_empty_with_mime_base64)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:text/css;base64,", &url));
-    ASSERT_EQ(url.is_base64, true);
-    ASSERT_EQ(url.mime_type, "text/css");
+    ASSERT_EQ(url.is_base64(), true);
+    ASSERT_EQ(url.mime_type.type, "text");
+    ASSERT_EQ(url.mime_type.subtype, "css");
     ASSERT_EQ(url.encoded_payload, "");
 }
 
@@ -479,8 +484,9 @@ TEST(Url, data_url_empty_with_mime_params_base64)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:text/css;hello=world;a=b;base64,", &url));
-    ASSERT_EQ(url.is_base64, true);
-    ASSERT_EQ(url.mime_type, "text/css");
+    ASSERT_EQ(url.is_base64(), true);
+    ASSERT_EQ(url.mime_type.type, "text");
+    ASSERT_EQ(url.mime_type.subtype, "css");
     ASSERT_EQ(url.encoded_payload, "");
 }
 
@@ -488,8 +494,9 @@ TEST(Url, data_url_ascii_payload)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:text/plain,Hello%2C%20world%21", &url));
-    ASSERT_EQ(url.is_base64, false);
-    ASSERT_EQ(url.mime_type, "text/plain");
+    ASSERT_EQ(url.is_base64(), false);
+    ASSERT_EQ(url.mime_type.type, "text");
+    ASSERT_EQ(url.mime_type.subtype, "plain");
     ASSERT_EQ(url.encoded_payload, "Hello%2C%20world%21");
 }
 
@@ -497,8 +504,9 @@ TEST(Url, data_url_base64_payload)
 {
     url::EncodedData url;
     ASSERT_TRUE(url::parse_data_url_s("data:text/plain;base64,SGVsbG8sIHdvcmxkIQ==", &url));
-    ASSERT_EQ(url.is_base64, true);
-    ASSERT_EQ(url.mime_type, "text/plain");
+    ASSERT_EQ(url.is_base64(), true);
+    ASSERT_EQ(url.mime_type.type, "text");
+    ASSERT_EQ(url.mime_type.subtype, "plain");
     ASSERT_EQ(url.encoded_payload, "SGVsbG8sIHdvcmxkIQ==");
 }
 

@@ -50,6 +50,11 @@ std::optional<std::string_view> find_image_format(
     {
         std::string_view mime_type = format_node.child_value();
 
+        if (!desired_format.empty() && mime_type == desired_format)
+        {
+            return {mime_type};
+        }
+
         for (size_t i = 0; i < HRZ_ARRAY_COUNT(formats); ++i)
         {
             const auto& format = formats[i];
@@ -87,11 +92,6 @@ std::optional<std::string_view> find_image_format(
                     best_format = {mime_type};
                     best_format_supports_transparency = format.supports_tranparency;
                     best_format_score = score;
-                }
-
-                if (!desired_format.empty() && mime_type == desired_format)
-                {
-                    return {mime_type};
                 }
             }
         }

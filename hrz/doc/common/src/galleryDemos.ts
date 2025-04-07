@@ -95,4 +95,9 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["raster", "terrain"],
         thumbnailFile: "terrain_settings.webp",
     },
+    ignSrtm: {
+        title: "IGN SRTM DTM",
+        tags: ["raster", "terrain"],
+        thumbnailFile: "ign_srtm.webp",
+    },
 };

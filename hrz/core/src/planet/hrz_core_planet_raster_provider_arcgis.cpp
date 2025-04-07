@@ -703,8 +703,8 @@ private:
             hrz::BaseUrl{url, preserve_query_parameters}, std::move(lod_names), min_lod);
 
         fetcher.emplace(
-            std::make_unique<UrlTileRequester>(std::move(url_generator), headers), min_lod,
-            missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
+            std::make_unique<UrlTileRequester>(std::move(url_generator), std::nullopt, headers),
+            min_lod, missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
             std::make_unique<ImageTileDecoder>(get_image_format(), raster_id),
             std::make_unique<SimpleTileAttributionPolicy>(attribution), tile_cache_capacity,
             raster_id, TileFetcher::MetricInfo{"ArcGIS", url.c_str()});
@@ -1058,8 +1058,8 @@ private:
                 format_supports_transparency(format), layer_ids);
 
             fetcher.emplace(
-                std::make_unique<UrlTileRequester>(std::move(url_generator), headers), 0,
-                missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
+                std::make_unique<UrlTileRequester>(std::move(url_generator), std::nullopt, headers),
+                0, missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                 std::make_unique<ImageTileDecoder>(get_image_format(), raster_id),
                 std::make_unique<SimpleTileAttributionPolicy>(attribution), tile_cache_capacity,
                 raster_id,
@@ -1078,8 +1078,8 @@ private:
             url_generator->format = format;
 
             fetcher.emplace(
-                std::make_unique<UrlTileRequester>(std::move(url_generator), headers), 0,
-                missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
+                std::make_unique<UrlTileRequester>(std::move(url_generator), std::nullopt, headers),
+                0, missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                 std::make_unique<ImageTileDecoder>(get_image_format(), raster_id),
                 std::make_unique<SimpleTileAttributionPolicy>(attribution), tile_cache_capacity,
                 raster_id, TileFetcher::MetricInfo{"ArcGIS", url.c_str()});

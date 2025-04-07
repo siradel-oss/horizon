@@ -39,7 +39,7 @@ public:
     HRZ_DELETE_COPY_MOVE(TileDecoder);
     virtual ~TileDecoder() = default;
 
-    virtual Ticket decode_tile(blobs::BlobHandle, JobScheduler*) = 0;
+    virtual Ticket decode_tile(blobs::BlobHandle, std::string_view mime_type, JobScheduler*) = 0;
     virtual Status get_tile_status(Ticket) = 0;
     virtual void work_tile(Ticket, JobScheduler*) = 0;
     virtual BlobImage get_tile_image(Ticket) = 0;
@@ -54,7 +54,7 @@ public:
     {
     }
 
-    Ticket decode_tile(blobs::BlobHandle, JobScheduler*) override;
+    Ticket decode_tile(blobs::BlobHandle, std::string_view mime_type, JobScheduler*) override;
     Status get_tile_status(Ticket) override;
     void work_tile(Ticket, JobScheduler*) override;
     BlobImage get_tile_image(Ticket) override;
@@ -173,7 +173,11 @@ public:
 
     virtual bool is_success(Ticket, AssetsLoader*) = 0;
 
-    virtual blobs::BlobHandle retrieve_blob(Ticket, AssetsLoader*, BlobAllocator*) = 0;
+    // Returns blob + MIME type.
+    virtual std::pair<blobs::BlobHandle, std::string> retrieve_blob(
+        Ticket,
+        AssetsLoader*,
+        BlobAllocator*) = 0;
 
     // Returns whether content negotiation headers have been changed.
     virtual bool set_http_headers(const HttpHeaders& http_headers) = 0;
@@ -187,14 +191,18 @@ class UrlTileRequester : public TileRequester
 {
     std::unique_ptr<TileUrlGenerator> _tile_url_generator;
     HttpHeaders _headers;
+    std::optional<std::string> _mime_type_override;
 
     static_assert(sizeof(Ticket) == sizeof(assets_loader::Ticket));
 
 public:
     UrlTileRequester(
         std::unique_ptr<TileUrlGenerator> tile_url_generator,
+        std::optional<std::string_view> mime_type_override,
         const HttpHeaders& headers) :
-        _tile_url_generator(std::move(tile_url_generator)), _headers(headers)
+        _tile_url_generator(std::move(tile_url_generator)),
+        _headers(headers),
+        _mime_type_override(mime_type_override)
     {
     }
 
@@ -232,9 +240,24 @@ public:
             == assets_loader::RequestStatus::Loaded;
     }
 
-    blobs::BlobHandle retrieve_blob(Ticket ticket, AssetsLoader* al, BlobAllocator* ba) override
+    std::pair<blobs::BlobHandle, std::string> retrieve_blob(
+        Ticket ticket,
+        AssetsLoader* al,
+        BlobAllocator* ba) override
     {
-        return assets_loader::get_blob(al, ba, hrz::bit_cast<assets_loader::Ticket>(ticket));
+        std::string_view mime_type = "";
+        if (_mime_type_override)
+        {
+            mime_type = _mime_type_override.value();
+        }
+        else
+        {
+            mime_type =
+                assets_loader::get_content_type(al, hrz::bit_cast<assets_loader::Ticket>(ticket));
+        }
+        return {
+            assets_loader::get_blob(al, ba, hrz::bit_cast<assets_loader::Ticket>(ticket)),
+            std::string(mime_type)};
     }
 
     bool set_http_headers(const HttpHeaders& http_headers) override

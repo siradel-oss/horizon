@@ -53,6 +53,7 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     blobs::BlobHandle,
     hrz::monitoring::ResourceOwner resource_owner,
     hrz_proto::ImageFormat format = hrz_proto::ImageFormat::SRGBA_8,
+    std::string_view mime_type = "",
     PremultiplyAlpha alpha_premultiplication = PremultiplyAlpha::DoNotPremultiply,
     ConvertScalarsToFloat scalar_conversion = ConvertScalarsToFloat::DoNotConvert);
 
@@ -72,6 +73,7 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     blobs::BlobHandle,
     hrz::monitoring::ResourceOwner resource_owner,
     hrz_proto::ImageFormat format = hrz_proto::ImageFormat::SRGBA_8,
+    std::string_view mime_type = "",
     PremultiplyAlpha alpha_premultiplication = PremultiplyAlpha::DoNotPremultiply,
     ConvertScalarsToFloat scalar_conversion = ConvertScalarsToFloat::DoNotConvert,
     DecodeToCompressedImage decode_to_compressed_image = DecodeToCompressedImage::Disallow);

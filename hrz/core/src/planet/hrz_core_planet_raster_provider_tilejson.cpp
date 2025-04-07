@@ -50,6 +50,10 @@ public:
         descriptor_download_ticket(0),
         raster_id(raster_id)
     {
+        if (!params.mime_type_override().empty())
+        {
+            mime_type_override = params.mime_type_override();
+        }
     }
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
@@ -186,7 +190,7 @@ private:
             std::make_unique<UrlTileRequester>(
                 std::make_unique<MultiPatternTileUrlGenerator>(
                     gsl::span<const std::string>(tilejson.url_patterns), 1),
-                headers),
+                mime_type_override, headers),
             0, missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
             std::make_unique<ImageTileDecoder>(image_format, raster_id),
             std::make_unique<SimpleTileAttributionPolicy>(attribution), tile_cache_capacity,
@@ -327,6 +331,7 @@ private:
     std::string additional_attribution;
     assets_loader::Queue al_queue;
     hrz_proto::ImageFormat image_format;
+    std::optional<std::string> mime_type_override;
     hrz_proto::RasterNodata nodata;
     hrz_proto::MissingTilePolicy missing_tile_policy;
     size_t tile_cache_capacity;

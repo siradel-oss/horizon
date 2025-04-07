@@ -18,6 +18,11 @@ const std::unique_ptr<pl_CrsDatabase, decltype(&pl_destroy_crs_database)> CRS_DB
 
 std::optional<unsigned int> get_epsg_code(std::string_view srid_string)
 {
+    if (srid_string == "IGNF:WGS84G")
+    {
+        return {4326};
+    }
+
     auto srid = hrz::crs::parse_srid(srid_string);
     if (srid.has_value())
     {

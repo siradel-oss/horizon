@@ -720,47 +720,11 @@ bool parse_data_url_s(std::string_view url, EncodedData* result)
     if (!str::starts_with(url, "data:")) return false;
     url = url.substr(5); // Skip data:
 
-    result->is_base64 = false;
-
-    int payload_start = str::rfind(url, ',');
+    const int payload_start = str::find(url, ',');
     if (payload_start == -1) return false;
+
     result->encoded_payload = url.substr(payload_start + 1);
-
-    url = url.substr(0, payload_start);
-
-    auto eat_param = [&]() -> std::string_view
-    {
-        int next_separator = str::find(url, ';');
-        if (next_separator >= 0)
-        {
-            std::string_view param = url.substr(0, next_separator);
-            url = url.substr(next_separator + 1);
-            return param;
-        }
-        else
-        {
-            std::string_view param = url;
-            url = "";
-            return param;
-        }
-    };
-
-    // First param is always MIME type
-    if (url.size() > 0)
-    {
-        result->mime_type = eat_param();
-    }
-
-    // Then read all params, we are looking for the one telling us the payload
-    // is base64-encoded.
-    while (url.size() > 0)
-    {
-        if (eat_param() == "base64")
-        {
-            result->is_base64 = true;
-            break;
-        }
-    }
+    result->mime_type = parse_mime(url.substr(0, payload_start));
 
     return true;
 }

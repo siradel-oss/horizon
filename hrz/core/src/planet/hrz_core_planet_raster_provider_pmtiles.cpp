@@ -11,11 +11,17 @@ namespace hrz::planet
 class PmTilesRequester : public TileRequester
 {
     std::string _url;
+    std::string _mime_type_override;
     std::unique_ptr<PmTiles> _pmtiles;
 
 public:
-    explicit PmTilesRequester(std::string_view url, std::unique_ptr<PmTiles> pmtiles) :
-        _url(url), _pmtiles(std::move(pmtiles))
+    explicit PmTilesRequester(
+        std::string_view url,
+        std::optional<std::string_view> mime_type_override,
+        std::unique_ptr<PmTiles> pmtiles) :
+        _url(url),
+        _mime_type_override(mime_type_override.value_or("")),
+        _pmtiles(std::move(pmtiles))
     {
         assert(_pmtiles->get_status() == PmTiles::Status::kReady);
     }
@@ -50,9 +56,14 @@ public:
         return _pmtiles->is_success(hrz::bit_cast<PmTiles::QueryHandle>(ticket));
     }
 
-    blobs::BlobHandle retrieve_blob(Ticket ticket, AssetsLoader*, BlobAllocator*) override
+    std::pair<blobs::BlobHandle, std::string> retrieve_blob(
+        Ticket ticket,
+        AssetsLoader*,
+        BlobAllocator*) override
     {
-        return _pmtiles->retrieve_blob(hrz::bit_cast<PmTiles::QueryHandle>(ticket));
+        return std::make_pair(
+            _pmtiles->retrieve_blob(hrz::bit_cast<PmTiles::QueryHandle>(ticket)),
+            _mime_type_override);
     }
 
     bool set_http_headers(const HttpHeaders& http_headers) override
@@ -97,6 +108,7 @@ class PmTilesRasterProvider : public RasterProvider
     HttpHeaders _http_headers;
     assets_loader::Queue _load_queue;
     hrz_proto::ImageFormat _image_format;
+    std::optional<std::string> _mime_type_override;
     hrz_proto::RasterNodata _nodata;
     hrz_proto::MissingTilePolicy _missing_tile_policy;
     uint64_t _raster_id;
@@ -124,6 +136,10 @@ public:
         _tile_cache_capacity(
             params.override_tile_cache_size() ? params.tile_cache_size() : default_tile_cache_size)
     {
+        if (!params.mime_type_override().empty())
+        {
+            _mime_type_override = params.mime_type_override();
+        }
     }
 
     hrz_proto::RasterProviderType get_raster_provider_type() const override
@@ -238,7 +254,8 @@ public:
                         attribution::register_attribution_group(attributions, attribution_handles);
 
                     _fetcher = std::make_unique<TileFetcher>(
-                        std::make_unique<PmTilesRequester>(_url, std::move(_pmtiles)),
+                        std::make_unique<PmTilesRequester>(
+                            _url, _mime_type_override, std::move(_pmtiles)),
                         _geometry.tiling_scheme.global_tiling().min_level(),
                         _missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
                         std::make_unique<ImageTileDecoder>(_image_format, _raster_id),

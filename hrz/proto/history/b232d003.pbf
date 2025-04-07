@@ -23,7 +23,7 @@ Int32Value
 
 BytesValue
 value (RvalueBHøbproto3
-‚˜
+Äš
 hrz_types.protoHrzProtocol"
 Void"#
 Vec2i
@@ -179,7 +179,7 @@ HttpHeader
 name (	Rname
 value (	Rvalue"C
 HttpHeaderList1
-headers (2.HrzProtocol.HttpHeaderRheaders"Ä
+headers (2.HrzProtocol.HttpHeaderRheaders"ò
 TiledRasterProviderParams7
 geometry
  (2.HrzProtocol.RasterGeometryRgeometryD
@@ -188,7 +188,8 @@ HttpHeader
 urlPattern>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution	 (	Rattribution;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override (	RmimeTypeOverride1
 nodata (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
@@ -211,17 +212,19 @@ urlPattern>
 source_image_format (	RsourceImageFormat#
 ignore_bounds (RignoreBounds7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"ê
+tile_cache_size (RtileCacheSize"˜
 TmsRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution:
 preserve_query_parameters (RpreserveQueryParametersN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override
+ (	RmimeTypeOverride1
 nodata	 (2.HrzProtocol.RasterNodataRnodata7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"µ
+tile_cache_size (RtileCacheSize"ã
 WmtsRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
@@ -230,7 +233,8 @@ urlPattern>
 layer_identifier (	RlayerIdentifier)
 style_identifier (	RstyleIdentifier.
 source_image_format (	RsourceImageFormat;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override (	RmimeTypeOverride1
 nodata (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size	 (RoverrideTileCacheSize&
@@ -242,7 +246,7 @@ layer_name (	R	layerName
 style_name (	R	styleName"8
 WmsDimension
 name (	Rname
-value (	Rvalue"Æ
+value (	Rvalue"ô
 WmsRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
@@ -254,7 +258,8 @@ dimensions=
 background_color (2.HrzProtocol.ColorRbackgroundColor!
 force_opaque (RforceOpaque.
 source_image_format (	RsourceImageFormat;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override (	RmimeTypeOverride1
 nodata (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy	 (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy,
 override_min_level
@@ -263,13 +268,14 @@ dimensions=
 override_max_level (RoverrideMaxLevel
 	max_level (RmaxLevel7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"Š
+tile_cache_size (RtileCacheSize"¸
 UntiledRasterProviderParams7
 geometry (2.HrzProtocol.RasterGeometryRgeometry
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override (	RmimeTypeOverride1
 nodata (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy"¶
 PalettizedRasterProviderParams7
@@ -284,22 +290,26 @@ dimensions=
 preserve_query_parameters (RpreserveQueryParametersN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"ï
+tile_cache_size (RtileCacheSize"
 TileJsonRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution:
 preserve_query_parameters (RpreserveQueryParameters;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override
+ (	RmimeTypeOverride1
 nodata	 (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&
-tile_cache_size (RtileCacheSize"²
+tile_cache_size (RtileCacheSize"à
 PmTilesRasterProviderParams
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
 attribution (	Rattribution;
-image_format (2.HrzProtocol.ImageFormatRimageFormat1
+image_format (2.HrzProtocol.ImageFormatRimageFormat,
+mime_type_override
+ (	RmimeTypeOverride1
 nodata	 (2.HrzProtocol.RasterNodataRnodataN
 missing_tile_policy (2.HrzProtocol.MissingTilePolicyRmissingTilePolicy7
 override_tile_cache_size (RoverrideTileCacheSize&

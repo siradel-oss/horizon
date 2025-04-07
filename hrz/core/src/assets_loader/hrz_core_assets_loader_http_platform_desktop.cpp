@@ -437,19 +437,23 @@ public:
         url::EncodedData result;
         if (url::parse_data_url_s(req->url, &result))
         {
-            std::string_view content_type_span =
-                (result.mime_type == "") ? std::string_view("text/plain") : result.mime_type;
-
-            req->content_type = std::string(content_type_span);
-
-            if (result.is_base64)
+            if (result.mime_type.type.empty() || result.mime_type.subtype.empty())
             {
-                size_t decoded_len_hint = hrz::str::decode_base64_size_hint(
+                req->content_type = "text/plain";
+            }
+            else
+            {
+                req->content_type = result.mime_type.to_string();
+            }
+
+            if (result.is_base64())
+            {
+                const size_t decoded_len_hint = hrz::str::decode_base64_size_hint(
                     result.encoded_payload, hrz::str::Base64DecodingVariant::Both);
 
                 req->data.resize(decoded_len_hint);
 
-                size_t decoded_len = hrz::str::decode_base64_s(
+                const size_t decoded_len = hrz::str::decode_base64_s(
                     result.encoded_payload, req->data, hrz::str::Base64DecodingVariant::Both);
 
                 if (decoded_len_hint != decoded_len)

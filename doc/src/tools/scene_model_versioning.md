@@ -42,6 +42,9 @@ If possible try to minimize the number of new versions created. At most one migr
 
 Whenever possible (when compatibility is maintained) prefer updating the last scene model version rather than creating a new one. This mechanism simply overwrites the descriptor set of the last version with the current descriptor set.
 
+!!! warning "Impact on migrations"
+    Even though the serialized scenes are still compatible after updating the scene model, it might be necessary to update the migration to the version you just updated. For example, if you rename a field that is referenced in the migration procedure.
+
 ### Migrations
 
 Migrations from one version to the next happen as follow:

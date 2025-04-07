@@ -34,6 +34,7 @@ struct EmbeddedBlob
 {
     bool valid;
     blobs::BlobHandle blob;
+    std::string mime_type;
 };
 
 struct StreamableBlob
@@ -46,6 +47,7 @@ struct StreamableBlob
     size_t length;
     assets_loader::Ticket load_ticket;
     blobs::BlobHandle blob;
+    std::string mime_type;
 };
 
 struct BlobToEmbed
@@ -372,27 +374,28 @@ public:
             *blob);
     }
 
-    const blobs::BlobHandle& get_blob(Handle handle, ConfigH cfg_h) const override
+    std::pair<blobs::BlobHandle, std::string_view> get_blob(Handle handle, ConfigH cfg_h)
+        const override
     {
         const Blob* blob = _blobs.get_object(handle.o);
         if (blob)
         {
             return std::visit(
-                [this, cfg_h](const auto& arg) -> const blobs::BlobHandle&
+                [this, cfg_h](const auto& arg) -> std::pair<blobs::BlobHandle, std::string_view>
                 {
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, EmbeddedBlob>)
                     {
                         if (arg.valid)
                         {
-                            return arg.blob;
+                            return std::make_pair(arg.blob, arg.mime_type);
                         }
                     }
                     else if constexpr (std::is_same_v<T, StreamableBlob>)
                     {
                         if (arg.status == Status::Loaded)
                         {
-                            return arg.blob;
+                            return std::make_pair(arg.blob, arg.mime_type);
                         }
                     }
                     else if constexpr (std::is_same_v<T, TemplatedBlob>)
@@ -403,12 +406,12 @@ public:
                             return get_blob(it->second, cfg_h);
                         }
                     }
-                    return _empty_blob;
+                    return std::make_pair(_empty_blob, "");
                 },
                 *blob);
         }
 
-        return _empty_blob;
+        return std::make_pair(_empty_blob, "");
     }
 
     void work(AssetsLoader* al, BlobAllocator* ba) override
@@ -439,6 +442,8 @@ public:
                         if (embedded.valid)
                         {
                             embedded.blob = asset_blob.value();
+                            embedded.mime_type =
+                                assets_loader::get_content_type(al, to_embed.load_ticket);
                         }
 
                         *blob = embedded;
@@ -498,6 +503,8 @@ public:
                     if (blob.has_value())
                     {
                         streamable.blob = blob.value();
+                        streamable.mime_type =
+                            assets_loader::get_content_type(al, streamable.load_ticket);
                         streamable.status = Status::Loaded;
                     }
                     else

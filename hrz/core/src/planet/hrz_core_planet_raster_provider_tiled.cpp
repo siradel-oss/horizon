@@ -59,6 +59,9 @@ public:
                 std::make_unique<PatternTileUrlGenerator>(
                     params.url_pattern(),
                     level_zero_tile_count_y(params.tiling_scheme())),
+                ((!params.mime_type_override().empty())
+                     ? std::optional<std::string>(params.mime_type_override())
+                     : std::nullopt),
                 assets_loader::from_proto(params.http_headers())),
             get_min_lod(params.tiling_scheme()),
             missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,

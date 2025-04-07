@@ -19,6 +19,7 @@ struct BlobImageDecodingParams
 {
     hrz::blobs::BlobHandle encoded_image_data;
     hrz_proto::ImageFormat image_format;
+    std::string mime_type;
     bool premultiply_alpha;
     bool convert_scalars_to_float;
     bool allow_decoding_to_compressed_image;

@@ -82,3 +82,6 @@ registerDemo("dtmLod1", DtmLod1);
 
 import TerrainSettings from "./demo/TerrainSettings.vue";
 registerDemo("terrainSettings", TerrainSettings);
+
+import IgnSrtm from "./demo/IgnSrtm.vue";
+registerDemo("ignSrtm", IgnSrtm);

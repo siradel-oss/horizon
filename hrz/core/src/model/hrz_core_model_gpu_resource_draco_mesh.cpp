@@ -73,7 +73,7 @@ void GpuDracoMeshResource::work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler
             {
                 uri = bl->get_uri(blob_handle.value(), NullCfg);
 
-                auto blob = bl->get_blob(blob_handle.value(), NullCfg);
+                auto [blob, mime_type] = bl->get_blob(blob_handle.value(), NullCfg);
                 auto sub_blob = blobs::make_sub_blob(ba, blob, blob_byte_offset, blob_byte_length);
 
                 decompression_ticket = hrz_jobs::add_job_decompress_draco_mesh(js, sub_blob, owner);

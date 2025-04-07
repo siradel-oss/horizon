@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hrz_fnd_mime.h"
+
 #include <gsl/gsl-lite.hpp>
 
 #include <string>
@@ -62,8 +64,9 @@ std::string percent_encode(std::string_view str);
 struct EncodedData
 {
     std::string_view encoded_payload;
-    std::string_view mime_type;
-    bool is_base64;
+    ParsedMime mime_type;
+
+    bool is_base64() const { return mime_type.has_parameter("base64"); }
 };
 
 bool parse_data_url_s(std::string_view url, EncodedData* result);

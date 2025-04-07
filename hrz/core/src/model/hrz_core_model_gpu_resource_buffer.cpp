@@ -97,7 +97,7 @@ void GpuBufferResource<TYPE>::work_gpu(BlobAllocator* ba, BlobLibrary* bl, Rende
     {
         assert(blob_handle.has_value());
 
-        auto buffer_blob = bl->get_blob(blob_handle.value(), NullCfg);
+        auto [buffer_blob, mime_type] = bl->get_blob(blob_handle.value(), NullCfg);
 
         if (buffer_blob.data_size() >= length)
         {

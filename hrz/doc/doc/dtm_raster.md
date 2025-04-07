@@ -13,6 +13,8 @@ There are two supported source types for elevation data: heightmap images and [C
 
 <gallery-card demo="dtmLod1"></gallery-card>
 
+<gallery-card demo="ignSrtm"></gallery-card>
+
 ## Heightmap image tiles
 
 These tiles are regular images, but instead of each pixel having a colour, they contain elevation values. All [raster image formats](raster_image_formats.html) containing scalar values are supported.

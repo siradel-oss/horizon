@@ -309,10 +309,22 @@ std::optional<TileMatrixSet> parse_tile_matrix_set(const pugi::xml_node& matrix_
     const auto& first_matrix = tile_matrices.front();
     const auto& last_matrix = tile_matrices.back();
 
+    double meters_per_pixel = 1;
+    if (crs.params.type == pl_ProjectionType_LatLong)
+    {
+        meters_per_pixel = hrz::EARTH_RADIUS * crs.to_radian;
+    }
+    else
+    {
+        meters_per_pixel = crs.to_meter;
+    }
+
     double tiling_width =
-        first_matrix.scale * hrz::ogc::PixelSize * first_matrix.size.x * first_matrix.tile_size.x;
+        (first_matrix.scale * hrz::ogc::PixelSize * first_matrix.size.x * first_matrix.tile_size.x)
+        / meters_per_pixel;
     double tiling_height =
-        first_matrix.scale * hrz::ogc::PixelSize * first_matrix.size.y * first_matrix.tile_size.y;
+        (first_matrix.scale * hrz::ogc::PixelSize * first_matrix.size.y * first_matrix.tile_size.y)
+        / meters_per_pixel;
     lm::dvec2 tiling_bottom_right_corner = {
         first_matrix.top_left_corner.x + tiling_width,
         first_matrix.top_left_corner.y - tiling_height // WMTS tile coords increase southwards.

@@ -94,7 +94,9 @@ public:
 
     virtual std::string get_uri(Handle, ConfigH) const = 0;
     virtual Status get_status(Handle, ConfigH) const = 0;
-    virtual const blobs::BlobHandle& get_blob(Handle, ConfigH) const = 0;
+
+    // Returns blob & MIME type.
+    virtual std::pair<blobs::BlobHandle, std::string_view> get_blob(Handle, ConfigH) const = 0;
 
     virtual void work(AssetsLoader*, BlobAllocator*) = 0;
     virtual void destroy(AssetsLoader*) = 0;

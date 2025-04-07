@@ -32,6 +32,7 @@ TEMPLATES = [
     "hrz_basemap_dark_nonames",
     "ign_bd_ortho",
     "ign_routes",
+    "ign_srtm_dtm",
     "initial_viewpoint_france",
     "plan_ign",
     "rennes_buildings",
