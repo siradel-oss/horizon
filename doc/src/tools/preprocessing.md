@@ -21,7 +21,7 @@ tippecanoe -z[max level] -e [dest dir] -pC --drop-densest-as-needed --extend-zoo
 
 We have a big pmtiles file with all the OSM data, but it's too big!
 
-In order to extract it into smaller datasets, we have a tool, http://redacted.localhost/horizon/tools/extract-mvt, composed of 3 scripts.
+In order to extract it into smaller datasets, we have a tool, https://redacted.localhost/horizon/tools/extract-mvt, composed of 3 scripts.
 
 - dl_osm.py, downloads a subset of the tiles pyramid.
 - cull.py, filters the tiles to keep only some layers, features, and attributes.
@@ -31,7 +31,7 @@ Note that none of this is production-ready, generic, or configurable. So good lu
 
 ### DTM from tiff raster
 
-Use `gdal2tiles` from http://redacted.localhost/tpetillon/gdal2tiles and `texture_converter` from http://redacted.localhost/siliciumserver/TextureConverter.
+Use `gdal2tiles` from https://redacted.localhost/tpetillon/gdal2tiles and `texture_converter` from https://redacted.localhost/siliciumserver/TextureConverter.
 
 ```
 gdal2tiles.py -f tiff -z [minzoom]-[maxzoom] -r cubic [input file] [output folder]
