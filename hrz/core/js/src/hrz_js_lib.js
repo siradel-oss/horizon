@@ -117,7 +117,12 @@ var LibraryHorizon = {
                                 fullSize;
                         } else {
                             if (request.byteArray.byteLength !== rangeSize) {
-                                console.error("Partial request response has invalid size");
+                                console.error(
+                                    "Partial request response has invalid size: expected " +
+                                        rangeSize +
+                                        ", got " +
+                                        request.byteArray.byteLength
+                                );
                             }
                         }
                     }

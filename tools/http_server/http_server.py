@@ -1,4 +1,6 @@
 import os
+import re
+import shutil
 import sys
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler, test
@@ -26,14 +28,65 @@ class HrzRequestHandler(SimpleHTTPRequestHandler):
     }
 
     def end_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
-        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
-        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
+        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
 
-        SimpleHTTPRequestHandler.end_headers(self)
+        super().end_headers()
+
+    def send_head(self):
+        self.range_start = 0
+        self.range_end = None
+
+        if 'Range' in self.headers:
+            try:
+                path = self.translate_path(self.path)
+                file = open(path, 'rb')
+                file_size = os.path.getsize(path)
+
+                # Parse the Range header
+                range_header = self.headers['Range']
+                range_match = re.match(r'bytes=(\d+)-(\d*)', range_header)
+                if range_match:
+                    start = int(range_match.group(1))
+                    end = range_match.group(2)
+                    end = int(end) if end else file_size - 1
+
+                    if start >= file_size or end >= file_size or start > end:
+                        self.send_error(416, 'Requested Range Not Satisfiable')
+                        return None
+
+                    self.send_response(206)
+                    self.send_header('Content-Type', self.guess_type(path))
+                    self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
+                    self.send_header('Content-Length', str(end - start + 1))
+                    self.end_headers()
+
+                    self.range_start = start
+                    self.range_end = end
+
+                    file.seek(start)
+                    return file
+                else:
+                    self.send_error(400, 'Invalid Range Header')
+                    return None
+            except FileNotFoundError:
+                self.send_error(404, 'File Not Found')
+                return None
+            except Exception as e:
+                self.send_error(500, f'Internal Server Error: {e}')
+                return None
+        else:
+            return super().send_head()
+
+    def copyfile(self, source, outputfile):
+        if self.range_end is not None:
+            outputfile.write(source.read(self.range_end - self.range_start + 1))
+        else:
+            shutil.copyfileobj(source, outputfile)
 
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
@@ -42,4 +95,4 @@ if __name__ == '__main__':
         web_dir = sys.argv[2]
         os.chdir(web_dir)
 
-    test(HrzRequestHandler, HTTPServer, port=port, bind="0.0.0.0")
+    test(HrzRequestHandler, HTTPServer, port=port, bind='0.0.0.0')
