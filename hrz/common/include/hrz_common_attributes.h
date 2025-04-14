@@ -1303,6 +1303,8 @@ struct PackedAttributeValuesReader
     hrz::BlobArray<PackedAttributeValue>::Data values;
     hrz::BlobArray<char>::Data ool_data;
 
+    inline size_t size() const { return values.size(); }
+
     inline bool as_bool(size_t i) const { return attr_as_bool(values[i], ool_data.as_span()); }
 
     inline int64_t as_int64(size_t i) const { return attr_as_int64(values[i], ool_data.as_span()); }

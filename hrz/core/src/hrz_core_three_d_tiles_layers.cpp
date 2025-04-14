@@ -567,9 +567,6 @@ struct TilesetConfig
 
     uint32_t vector_data_layer_id;
     uint64_t vector_data_layer_request_id;
-    // Only half of the full request IDs. Identifiers for the tile and subtile
-    // must be added in order to form a complete request ID.
-    uint32_t vector_data_attribute_request_id;
     VectorDataLayerStatus vector_data_layer_status;
     bool renew_vector_data_layer_request;
 
@@ -614,6 +611,10 @@ struct Tileset
     hrz_jobs::DecodeThreeDTilesTilesetTicket decode_descriptor_ticket;
     std::string url;
     hrz::BaseUrl base_url = {{}, false};
+
+    // Only half of the full request IDs. Identifiers for the tile and subtile
+    // must be added in order to form a complete request ID.
+    uint32_t vector_data_attribute_request_id;
 
     lm::dmat4 transform;
     double geometric_error;
@@ -851,7 +852,6 @@ struct ThreeDTilesSystem
         config->vector_data_layer_id = 0;
         config->vector_data_layer_request_id =
             ((uint64_t)handle << 32) + std::numeric_limits<uint32_t>::max();
-        config->vector_data_attribute_request_id = handle;
         config->vector_data_layer_status = TilesetConfig::VectorDataLayerStatus::UNREQUESTED;
         config->renew_vector_data_layer_request = true;
         config->style_ast = std::make_shared<hrz::style::FlatAst>();
@@ -878,6 +878,7 @@ struct ThreeDTilesSystem
         tileset->url = url;
         tileset->base_url = {url, preserve_query_parameters};
         tileset->config->headers = headers;
+        tileset->vector_data_attribute_request_id = handle;
         tileset->status = Tileset::Status::LOADING_DESCRIPTOR;
 
         tileset->needs_attribute_reload = false;
@@ -2762,7 +2763,7 @@ struct ThreeDTilesSystem
         subtile.content.emplace<ThreeDTile::B3dmContent>();
 
         subtile.vector_data_attribute_request_id =
-            ((uint64_t)tileset->config->vector_data_attribute_request_id << 32)
+            ((uint64_t)tileset->vector_data_attribute_request_id << 32)
             + ((uint64_t)tile.index << 8) + tile.subtiles.size();
 
         subtile.attribute_values.reserve(config->attributes.size());
@@ -3118,6 +3119,8 @@ struct ThreeDTilesSystem
             _get_lower_geometric_error_in_parent_tiles(tileset, tile_index);
 
         external_tileset->base_url = tileset->base_url.derive_base(tile.uri);
+
+        external_tileset->vector_data_attribute_request_id = handle;
 
         _decode_tileset_descriptor(external_tileset, tile_data_blob, js);
 
@@ -3966,6 +3969,10 @@ struct ThreeDTilesSystem
             case ThreeDTile::Subtile::VectorDataAttributeStatus::LOADED:
             {
                 assert(false);
+                break;
+            }
+            case ThreeDTile::Subtile::VectorDataAttributeStatus::ERROR:
+            {
                 break;
             }
             default:
@@ -5624,7 +5631,8 @@ struct ThreeDTilesSystem
                             {
                                 const auto& attribute = config->attributes.at(attribute_index);
 
-                                if (attribute.has_vector_data_layer_source())
+                                if (attribute.has_vector_data_layer_source()
+                                    && subtile->attribute_values.size() > attribute_index)
                                 {
                                     auto& all_values = std::get<
                                         hrz::InlinedVector<hrz::vector_data::AttributeValues, 16>>(
