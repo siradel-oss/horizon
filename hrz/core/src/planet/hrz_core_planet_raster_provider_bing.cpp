@@ -306,7 +306,12 @@ private:
                     // https://github.com/CesiumGS/cesium/issues/1353
                     if (str::find(tileset_info.url_pattern, '?') >= 0)
                     {
-                        tileset_info.url_pattern += "&n=z";
+                        // Some URLs provided by Bing already contain the parameter,
+                        // and it does not work if it is present twice.
+                        if (tileset_info.url_pattern.find("n=z") == std::string::npos)
+                        {
+                            tileset_info.url_pattern += "&n=z";
+                        }
                     }
                     else
                     {
