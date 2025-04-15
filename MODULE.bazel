@@ -1,0 +1,111 @@
+module(name = "horizon")
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.11")
+bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "bazel_features", version = "1.27.0")
+bazel_dep(name = "rules_python", version = "1.3.0")
+bazel_dep(name = "rules_cc", version = "0.1.1")
+
+# @Todo Remove this once https://github.com/bazelbuild/rules_cc/pull/363 is merged and possibly
+# a new release of rules_cc is made.
+archive_override(
+    module_name = "rules_cc",
+    integrity = "sha256-cS13hosxUt1hjE1k+q3e/MWWX5D13m5t0dXdzQvoLUI=",
+    patches = [
+        "//third_party:patches/rules_cc_clang_cl_dumpbin.patch",
+    ],
+    strip_prefix = "rules_cc-0.1.1",
+    urls = [
+        "https://github.com/bazelbuild/rules_cc/releases/download/0.1.1/rules_cc-0.1.1.tar.gz",
+    ],
+)
+
+# @Todo(1098) Use an hermetic Python toolchain & dependencies
+register_toolchains("@rules_python//python/runtime_env_toolchains:all")
+
+bazel_dep(name = "aspect_rules_ts", version = "2.4.2")
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext.deps(ts_version_from = "//:package.json")
+use_repo(rules_ts_ext, "npm_typescript")
+
+bazel_dep(name = "aspect_rules_js", version = "1.42.0")
+bazel_dep(name = "rules_nodejs", version = "6.3.2")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
+node.toolchain(node_version = "18.13.0")
+use_repo(
+    node,
+    "nodejs",
+    "nodejs_linux_amd64",
+    "nodejs_toolchains",
+    "nodejs_windows_amd64",
+)
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm",
+    data = [
+        "//:package.json",
+        "//:pnpm-workspace.yaml",
+
+        # This must match the content of the pnpm-workspace.yaml file.
+        "//apps/web_example:package.json",
+        "//hrz/ts_protocol:package.json",
+        "//hrz/ts_api:package.json",
+        "//hrz/ts_core:package.json",
+        "//hrz/ts_monitoring_protocol:package.json",
+        "//hrz/ts_scene_dump:package.json",
+        "//hrz/doc:package.json",
+        "//hrz/doc/common:package.json",
+        "//hrz/doc/gallery:package.json",
+    ],
+    npmrc = "//:.npmrc",
+    pnpm_lock = "//:pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
+
+# @Todo(1211) Somehow automatically mirror these.
+# We probably need a new type of deps in the dependencies management system.
+
+include("//tools/bazel:deps.MODULE.bazel")
+
+bazel_dep(name = "protobuf", version = "29.4")
+
+
+bazel_dep(name = "abseil-cpp", version = "20240722.1")
+
+
+bazel_dep(name = "emsdk")
+archive_override(
+    module_name = "emsdk",
+    integrity = "sha256-lIR3nfSFx27d7W8LXkDpZY+Xd4j81l0l1lujLLLviac=",
+    strip_prefix = "emsdk-ed2035a3cc85d3c87c99c017608c7cf0f984ec7c/bazel",
+    urls = [
+        "https://github.com/emscripten-core/emsdk/archive/ed2035a3cc85d3c87c99c017608c7cf0f984ec7c.tar.gz",
+    ],
+)
+
+emsdk_deps = use_extension("@emsdk//:emscripten_deps.bzl", "emscripten_deps")
+emsdk_deps.config(version = "3.1.74")
+
+register_toolchains(
+    "//:glslc_core_windows_toolchain",
+    "//:glslc_core_linux_toolchain",
+    "//:glslc_es_windows_toolchain",
+    "//:glslc_es_linux_toolchain",
+)
+
+make_versions_list = use_repo_rule("//hrz/proto/history:make_versions_list.bzl", "make_versions_list")
+
+make_versions_list(
+    name = "model_versions_list",
+    manifest = "//hrz/proto/history:versions_manifest.csv",
+    var_name = "MODEL_VERSIONS_LIST",
+)
+
+bazel_output_base_util = use_repo_rule("//tools/bazel:bazel_output_base.bzl", "bazel_output_base_util")
+
+bazel_output_base_util(name = "bazel_output_base_util")

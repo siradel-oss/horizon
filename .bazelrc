@@ -1,3 +1,12 @@
+# Allow the Bazel server to check directory sources for changes. Ensures that the Bazel server
+# notices when a directory changes, if you have a directory listed in the srcs of some target.
+# Recommended when using
+# [copy_directory](https://github.com/bazel-contrib/bazel-lib/blob/main/docs/copy_directory.md) and
+# [rules_js](https://github.com/aspect-build/rules_js) since npm package are source directories
+# inputs to copy_directory actions.
+# Docs: https://bazel.build/reference/command-line-reference#flag--host_jvm_args
+startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
+
 # Sometimes cxxopt is applied to C-only targets. So we use per_file_copt
 # to filter only C++ source files. Not ideal...
 
@@ -5,6 +14,8 @@ build:windows --cxxopt=/std:c++17
 build:windows --copt=/utf-8
 build:windows --copt=/bigobj
 build:windows --per_file_copt=.*\.(cc|cpp)$@/D_CRT_USE_BUILTIN_OFFSETOF
+build:windows --copt=/wd4141 # Disables "'inline': used more than once"
+build:windows --host_copt=/wd4141 # Disables "'inline': used more than once"
 
 build:windows_clang --action_env="BAZEL_LLVM=C:\\Program Files\\LLVM\\"
 build:windows_clang --action_env=USE_CLANG_CL=1
@@ -25,6 +36,7 @@ build:wasm_common --per_file_copt=external/.*$@-Wno-everything
 
 build:wasm_windows --config=wasm_common
 build:wasm_windows --host_cxxopt=/std:c++17
+build:wasm_windows --host_copt=/wd4141 # Disables "'inline': used more than once"
 
 build:wasm_linux --config=wasm_common
 build:wasm_linux --host_cxxopt=-std=c++17
@@ -33,11 +45,9 @@ startup --windows_enable_symlinks
 build --enable_runfiles
 run --enable_runfiles
 
-build --incompatible_enable_cc_toolchain_resolution
 build --experimental_cc_implementation_deps
 
 build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 build --@aspect_rules_ts//ts:default_to_tsc_transpiler
 fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
-

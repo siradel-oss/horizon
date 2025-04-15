@@ -70,15 +70,6 @@
     "mirror_url": "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/clang-format/ecadd056_clang-format-windows-17.0.6.tar.gz",
     "type": "local_archive"
   },
-  "com_google_absl": {
-    "digest": "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
-    "prefix": "abseil-cpp-20240722.0",
-    "type": "http_archive",
-    "urls": [
-      "https://github.com/abseil/abseil-cpp/archive/20240722.0.tar.gz",
-      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/com_google_absl/f50e5ac3_20240722.0.tar.gz"
-    ]
-  },
   "copybara": {
     "build_file": "//third_party/copybara:copybara.BUILD.bazel",
     "label": "//third_party/copybara:prebuilt_NWY2N2VlMjhlZDczMTUwZTUwYmE2NTdhZmI0MGFhOTc5NWNiOGZlNi9ocnox.tar.gz",
@@ -153,15 +144,6 @@
     "urls": [
       "https://github.com/mapbox/earcut.hpp/archive/v2.2.3.tar.gz",
       "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/earcut/f382616d_v2.2.3.tar.gz"
-    ]
-  },
-  "emsdk": {
-    "digest": "4f4ba50bd09e2fa5eebbfa12d0626cb7f875174ffda88b6484a1277769a07189",
-    "prefix": "emsdk-3.1.74/bazel",
-    "type": "http_archive",
-    "urls": [
-      "https://github.com/emscripten-core/emsdk/archive/3.1.74.tar.gz",
-      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/emsdk/4f4ba50b_3.1.74.tar.gz"
     ]
   },
   "fmtlib": {
@@ -279,15 +261,6 @@
     "urls": [
       "https://github.com/samhocevar/portable-file-dialogs/archive/67e7b0945aac80efa2ec5c72de98b47f7552735c.tar.gz",
       "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/portable_file_dialogs/91b7b7ea_67e7b0945aac80efa2ec5c72de98b47f7552735c.tar.gz"
-    ]
-  },
-  "protobuf": {
-    "digest": "4dd35e788944b7686aac898f77df4e9a54da0ca694b8801bd6b2a9ffc1b3085e",
-    "prefix": "protobuf-3.19.2",
-    "type": "http_archive",
-    "urls": [
-      "https://github.com/protocolbuffers/protobuf/archive/v3.19.2.tar.gz",
-      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/protobuf/4dd35e78_v3.19.2.tar.gz"
     ]
   },
   "pugixml": {

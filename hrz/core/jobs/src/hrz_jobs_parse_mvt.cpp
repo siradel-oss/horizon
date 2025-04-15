@@ -15,8 +15,7 @@ hrz::JobResult run(
     HRZ_SCOPED_SAMPLE("parse mvt job");
 
     parsed_mvt.arena = std::make_shared<google::protobuf::Arena>();
-    parsed_mvt.tile =
-        google::protobuf::Arena::CreateMessage<vector_tile::Tile>(parsed_mvt.arena.get());
+    parsed_mvt.tile = google::protobuf::Arena::Create<vector_tile::Tile>(parsed_mvt.arena.get());
 
     auto raw_data = raw_data_blob.get_data();
 

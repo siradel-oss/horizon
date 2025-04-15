@@ -274,7 +274,7 @@ struct ThreadProfiler
 
         if (!_current_parent)
         {
-            sample->pb_sample = PbArena::CreateMessage<hrz_monitoring::Sample>(&_pb_arena);
+            sample->pb_sample = PbArena::Create<hrz_monitoring::Sample>(&_pb_arena);
         }
         else
         {
@@ -294,7 +294,7 @@ struct ThreadProfiler
     {
         if (_root)
         {
-            auto* msgs = PbArena::CreateMessage<hrz_monitoring::MonitoringMessages>(&_pb_arena);
+            auto* msgs = PbArena::Create<hrz_monitoring::MonitoringMessages>(&_pb_arena);
             msgs->add_messages()->unsafe_arena_set_allocated_sample(_root->pb_sample);
             hrz_monitoring::push_messages(_monitoring_buffer, *msgs);
         }

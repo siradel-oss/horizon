@@ -16,12 +16,6 @@
             "build_file": "//third_party:asio.BUILD.bazel"
         },
         {
-            "name": "protobuf",
-            "ref": "v3.19.2",
-            "type": "github",
-            "repo": "protocolbuffers/protobuf"
-        },
-        {
             "name": "libwebp",
             "type": "github",
             "repo": "webmproject/libwebp",
@@ -149,12 +143,6 @@
             "build_file": "//third_party:microui.BUILD.bazel"
         },
         {
-            "name": "com_google_absl",
-            "type": "github",
-            "repo": "abseil/abseil-cpp",
-            "ref": "20240722.0"
-        },
-        {
             "name": "sokol",
             "type": "github",
             "repo": "floooh/sokol",
@@ -187,13 +175,6 @@
                 "lz4_clang_tzcnt.diff"
             ],
             "build_file": "//third_party:lz4.BUILD.bazel"
-        },
-        {
-            "name": "emsdk",
-            "type": "github",
-            "repo": "emscripten-core/emsdk",
-            "ref": "3.1.74",
-            "strip_prefix": "emsdk-3.1.74/bazel"
         },
         {
             "name": "glslang",

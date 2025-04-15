@@ -1010,7 +1010,7 @@ void Monitoring::dump_gpu_resources(
     HRZ_SCOPED_SAMPLE("monitoring dump gpu resources");
 
     PbArena arena;
-    auto* msgs = PbArena::CreateMessage<hrz_monitoring::MonitoringMessages>(&arena);
+    auto* msgs = PbArena::Create<hrz_monitoring::MonitoringMessages>(&arena);
     auto* msg = msgs->add_messages();
     auto* snapshot = msg->mutable_gpu_resources();
     snapshot->set_timestamp(hrz::now_frame_us_s64());

@@ -69,7 +69,7 @@ Optionally, OpenGL ES can be used instead of regular OpenGL, when available:
 
 ### C++
 
-- [protobuf](https://github.com/protocolbuffers/protobuf) 3.19.2 (lite runtime)
+- [protobuf](https://github.com/protocolbuffers/protobuf) 3.29.4 (lite runtime)
 
 ### TypeScript
 

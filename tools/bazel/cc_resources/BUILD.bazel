@@ -19,6 +19,6 @@ py_binary(
     python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        "@bazel_tools//tools/python/runfiles",
+        "@rules_python//python/runfiles",
     ],
 )

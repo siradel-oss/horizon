@@ -25,9 +25,9 @@ HDRS = [
 
 DEPS = [
     "//libs/lm",
-    "@com_google_absl//absl/container:flat_hash_set",
-    "@com_google_absl//absl/container:flat_hash_map",
-    "@com_google_absl//absl/container:node_hash_map",
+    "@abseil-cpp//absl/container:flat_hash_set",
+    "@abseil-cpp//absl/container:flat_hash_map",
+    "@abseil-cpp//absl/container:node_hash_map",
     "//third_party:gsl",
     "//third_party:fmtlib",
 ]
@@ -51,7 +51,8 @@ cc_library(
         "MYCELIUM_CORE_33=1",
         "MYCELIUM_GL_DESKTOP=1",
         "MYCELIUM_USE_GLAD=1",
-        "MYCELIUM_GLSL_VERSION=\"330 core\"",
+        "MYCELIUM_GLSL_VERSION=330",
+        "MYCELIUM_GLSL_PROFILE=core",
     ],
     visibility = ["//visibility:public"],
     deps = DEPS,
@@ -69,7 +70,8 @@ cc_library(
         "MYCELIUM_ES_30=1",
         "MYCELIUM_GL_ES=1",
         "MYCELIUM_USE_GLAD=1",
-        "MYCELIUM_GLSL_VERSION=\"300 es\"",
+        "MYCELIUM_GLSL_VERSION=300",
+        "MYCELIUM_GLSL_PROFILE=es",
     ],
     visibility = ["//visibility:public"],
     deps = DEPS,
@@ -86,7 +88,8 @@ cc_library(
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_WEBGL_2=1",
         "MYCELIUM_GL_ES=1",
-        "MYCELIUM_GLSL_VERSION=\"300 es\"",
+        "MYCELIUM_GLSL_VERSION=300",
+        "MYCELIUM_GLSL_PROFILE=es",
     ],
     visibility = ["//visibility:public"],
     deps = DEPS,

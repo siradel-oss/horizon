@@ -1992,7 +1992,7 @@ void dump_blobs(
     HRZ_SCOPED_SAMPLE("blob allocator dump blobs");
 
     google::protobuf::Arena arena;
-    auto* msgs = google::protobuf::Arena::CreateMessage<hrz_monitoring::MonitoringMessages>(&arena);
+    auto* msgs = google::protobuf::Arena::Create<hrz_monitoring::MonitoringMessages>(&arena);
     auto* msg = msgs->add_messages();
     auto* snapshot = msg->mutable_blobs();
     snapshot->set_timestamp(hrz::now_frame_us_s64());

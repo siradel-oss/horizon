@@ -17,7 +17,7 @@ py_binary(
     ],
     deps = [
         ":manifest",
-        "@bazel_tools//tools/python/runfiles",
+        "@rules_python//python/runfiles",
     ],
 )
 

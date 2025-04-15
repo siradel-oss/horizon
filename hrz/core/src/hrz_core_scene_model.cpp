@@ -29,7 +29,7 @@ struct ArenaMessage
     void init()
     {
         arena.reset(new pb::Arena());
-        msg = pb::Arena::CreateMessage<T>(arena.get());
+        msg = pb::Arena::Create<T>(arena.get());
         previous_used_bytes = arena->SpaceUsed();
     }
 
@@ -39,7 +39,7 @@ struct ArenaMessage
         if (current_used_bytes >= 4 * previous_used_bytes)
         {
             std::unique_ptr<pb::Arena> new_arena(new pb::Arena());
-            T* new_msg = pb::Arena::CreateMessage<T>(new_arena.get());
+            T* new_msg = pb::Arena::Create<T>(new_arena.get());
 
             new_msg->MergeFrom(*msg);
 

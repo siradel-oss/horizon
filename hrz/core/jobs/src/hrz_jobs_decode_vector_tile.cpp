@@ -1399,7 +1399,7 @@ bool decode_geobuf(
     }
 
     google::protobuf::Arena arena;
-    auto geobuf = google::protobuf::Arena::CreateMessage<geobuf::Data>(&arena);
+    auto geobuf = google::protobuf::Arena::Create<geobuf::Data>(&arena);
     bool success = false;
     {
         HRZ_SCOPED_SAMPLE("protobuf parsing");

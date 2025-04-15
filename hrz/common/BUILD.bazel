@@ -110,7 +110,8 @@ cc_library(
         "//third_party/msdf",
         "//third_party/stb_truetype",
         "//third_party/tlsf",
-        "@com_google_absl//absl/container:btree",
+        "@abseil-cpp//absl/container:btree",
+        "@abseil-cpp//absl/container:flat_hash_map",
     ],
 )
 

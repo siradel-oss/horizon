@@ -6,8 +6,8 @@ import io
 import re
 import json
 
-from horizon.hrz.generators import protocol_parser
-from horizon.hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data
+from hrz.generators import protocol_parser
+from hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data
 
 generators = {}
 

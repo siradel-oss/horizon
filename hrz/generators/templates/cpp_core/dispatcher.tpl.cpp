@@ -47,11 +47,11 @@ void hrz_core_rpc(
         {% for m in s.methods %}
         case 0x{{ '%0x' % m.id }}: // {{ m.name }}
             {
-                auto input = google::protobuf::Arena::CreateMessage<::{{ m.input|rejoin(".", "::") }}>(&arena);
+                auto input = google::protobuf::Arena::Create<::{{ m.input|rejoin(".", "::") }}>(&arena);
 
                 if (input->ParseFromArray(data_in, data_in_size))
                 {
-                    auto output = google::protobuf::Arena::CreateMessage<::{{ m.output|rejoin(".", "::") }}>(&arena);
+                    auto output = google::protobuf::Arena::Create<::{{ m.output|rejoin(".", "::") }}>(&arena);
                     hrz::impls.{{ service_name|snake_case }}->{{ m.name|snake_case }}(*input, *output);
                     output->SerializeToString(&serialized_output);
                 }

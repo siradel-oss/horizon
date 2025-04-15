@@ -313,7 +313,7 @@ struct SharedData
 
         if (_id_to_operations.empty()) return;
 
-        auto* msgs = PbArena::CreateMessage<hrz_monitoring::MonitoringMessages>(&_pb_arena);
+        auto* msgs = PbArena::Create<hrz_monitoring::MonitoringMessages>(&_pb_arena);
         for (auto& pair : _id_to_operations)
         {
             Metric* metric = _metric_pool.get_object(pair.first);

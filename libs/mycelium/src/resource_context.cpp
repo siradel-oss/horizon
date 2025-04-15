@@ -194,7 +194,8 @@ static GLuint create_shader_inner(
     GLenum type,
     const std::string& global_shader_defines)
 {
-    static constexpr const char* VERSION_STRING_LINE = "#version " STR(MYCELIUM_GLSL_VERSION) "\n";
+    static constexpr const char* VERSION_STRING_LINE =
+        "#version " STR(MYCELIUM_GLSL_VERSION) " " STR(MYCELIUM_GLSL_PROFILE) "\n";
 
     const GLchar* strings[] = {VERSION_STRING_LINE, global_shader_defines.c_str(), source};
     const GLint lengths[] = {

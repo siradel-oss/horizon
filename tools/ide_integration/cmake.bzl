@@ -1,4 +1,6 @@
-CMakeAspectInfo = provider()
+load("@protobuf//bazel/common:proto_info.bzl", "ProtoInfo")
+
+CMakeAspectInfo = provider(fields = ["cmake_commands", "source_files"])
 
 _cpp_header_extensions = [
     "hh",
@@ -23,6 +25,7 @@ _cc_rules = [
     "cc_binary",
     "cc_library",
     "cc_import",
+    "cc_proto_library",
 ]
 
 def _target_path(target):
@@ -40,7 +43,7 @@ def _target_path(target):
 
 def _bazel_label_to_cmake_target_name(target):
     # Turn the target's label into a valid CMake target identifier.
-    return str(target.label).replace("@", "").replace("//:", "_").replace("//", "").replace("/", "_").replace(":", "__")
+    return str(target.label).replace("@", "").replace("//:", "_").replace("//", "").replace("/", "_").replace(":", "__").replace("~", "-")
 
 # Defines with the form `VAR="Value"`, with quotes, go through Bourne shell tokenisation
 # (https://bazel.build/reference/be/common-definitions#sh-tokenization) between BUILD.bazel
@@ -95,14 +98,42 @@ def _cmakelists_aspect_impl(target, ctx):
 
     # This is for writing and debugging C/C++ code in an IDE, so we only
     # care about cc rules.
+
+    is_cc_proto_library = ctx.rule.kind == "cc_proto_library"
+
+    transitive_cmake_commands = []
+    transitive_source_files = []
+
+    deps = []
+    if hasattr(ctx.rule.attr, "srcs"):
+        deps.extend(ctx.rule.attr.srcs)
+    if hasattr(ctx.rule.attr, "deps"):
+        deps.extend(ctx.rule.attr.deps)
+    if hasattr(ctx.rule.attr, "implementation_deps"):
+        deps.extend(ctx.rule.attr.implementation_deps)
+
+    if is_cc_proto_library:
+        deps.extend([ctx.attr._protobuf_runtime])
+
+    for dep in deps:
+        if CMakeAspectInfo in dep:
+            transitive_cmake_commands.append(dep[CMakeAspectInfo].cmake_commands)
+            transitive_source_files.append(dep[CMakeAspectInfo].source_files)
+
     if ctx.rule.kind not in _cc_rules:
         return [
-            CMakeAspectInfo(cmake_commands = depset()),
+            CMakeAspectInfo(
+                cmake_commands = depset(transitive = transitive_cmake_commands),
+                source_files = depset(transitive = transitive_source_files),
+            ),
         ]
 
     target_name = _bazel_label_to_cmake_target_name(target)
 
     srcs = _sources(ctx)
+    if is_cc_proto_library:
+        srcs += [f for f in target.files.to_list() if f.extension in ["h", "cc"]]
+
     is_cpp = _is_cpp_target(srcs)
 
     files = []
@@ -115,10 +146,12 @@ def _cmakelists_aspect_impl(target, ctx):
             files.append("__EXEC_ROOT__/" + src.path)
 
     header_only = True
-    if hasattr(ctx.rule.attr, "srcs"):
-        for src in srcs:
-            if src.extension in _c_or_cpp_extensions and src.extension not in _c_or_cpp_header_extensions:
-                header_only = False
+    has_headers = False
+    for src in srcs:
+        if src.extension in _c_or_cpp_header_extensions:
+            has_headers = True
+        elif src.extension in _c_or_cpp_extensions:
+            header_only = False
 
     cmake_commands = []
     shared_library = False
@@ -147,7 +180,7 @@ def _cmakelists_aspect_impl(target, ctx):
                     srcs = depset(["LINKER_LANGUAGE CXX"]),
                 ),
             )
-    elif ctx.rule.kind == "cc_library":
+    elif ctx.rule.kind == "cc_library" or is_cc_proto_library:
         prps = []
         if not files:
             prps.append("INTERFACE")
@@ -167,38 +200,44 @@ def _cmakelists_aspect_impl(target, ctx):
             ),
         )
 
-        # [strip_]include_prefix options make Bazel generate a _virtual_includes directory
-        # in the genfiles directory tree. The headers are copied there, with the expected
-        # path prefix, given the rules.
-        # So in order to make includes work, if there are prefix rules, we add this directory
-        # to the include search path.
-        strip_include_prefix = ctx.rule.attr.strip_include_prefix if hasattr(ctx.rule.attr, "strip_include_prefix") else None
-        include_prefix = ctx.rule.attr.include_prefix if hasattr(ctx.rule.attr, "include_prefix") else None
-
         include_prps = ["INTERFACE" if header_only else "PUBLIC"]
 
-        if strip_include_prefix or include_prefix:
-            path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
+        paths = []
+        if is_cc_proto_library:
+            for dep in ctx.rule.attr.deps:
+                if ProtoInfo in dep:
+                    paths += ["__EXEC_ROOT__/" + p for p in dep[ProtoInfo].transitive_proto_path.to_list()]
+        elif has_headers:
+            # [strip_]include_prefix options make Bazel generate a _virtual_includes directory
+            # in the genfiles directory tree. The headers are copied there, with the expected
+            # path prefix, given the rules.
+            # So in order to make includes work, if there are prefix rules, we add this directory
+            # to the include search path.
+            strip_include_prefix = ctx.rule.attr.strip_include_prefix if hasattr(ctx.rule.attr, "strip_include_prefix") else None
+            include_prefix = ctx.rule.attr.include_prefix if hasattr(ctx.rule.attr, "include_prefix") else None
 
-            if target.label.workspace_name:
-                path += "external/" + target.label.workspace_name + "/"
+            if strip_include_prefix or include_prefix:
+                path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
+                if target.label.workspace_name:
+                    path += "external/" + target.label.workspace_name + "/"
 
-            if target.label.package:
-                path += target.label.package + "/"
+                if target.label.package:
+                    path += target.label.package + "/"
 
-            path += "_virtual_includes/" + ctx.rule.attr.name
-        else:
-            path = "__EXEC_ROOT__/"
-
-            if target.label.workspace_name:
-                path += "external/" + target.label.workspace_name + "/"
+                path += "_virtual_includes/" + ctx.rule.attr.name
+                paths.append(path)
+            else:
+                path = "__EXEC_ROOT__/"
+                if target.label.workspace_name:
+                    path += "external/" + target.label.workspace_name + "/"
+                paths.append(path)
 
         cmake_commands.append(
             struct(
                 command = "target_include_directories",
                 name = target_name,
                 prps = depset(include_prps),
-                srcs = depset([path]),
+                srcs = depset(paths),
             ),
         )
 
@@ -264,14 +303,16 @@ def _cmakelists_aspect_impl(target, ctx):
                 ),
             )
     else:
-        return [
-            CMakeAspectInfo(cmake_commands = depset()),
-        ]
+        fail("Unhandled rule kind")
 
     if hasattr(ctx.rule.attr, "deps") and ctx.rule.attr.deps:
         deps = []
-        for dep in ctx.rule.attr.deps:
-            deps.append(_bazel_label_to_cmake_target_name(dep))
+
+        if is_cc_proto_library:
+            deps.append(_bazel_label_to_cmake_target_name(ctx.attr._protobuf_runtime))
+        else:
+            for dep in ctx.rule.attr.deps:
+                deps.append(_bazel_label_to_cmake_target_name(dep))
 
         prps = ["INTERFACE" if header_only else "PRIVATE" if shared_library else "PUBLIC"]
 
@@ -431,24 +472,13 @@ def _cmakelists_aspect_impl(target, ctx):
             ),
         )
 
-    # Collect all transitive dependencies.
-    transitive_cmake_commands = []
-    if hasattr(ctx.rule.attr, "deps"):
-        for dep in ctx.rule.attr.deps:
-            if CMakeAspectInfo not in dep:
-                continue
-            transitive_cmake_commands.append(dep[CMakeAspectInfo].cmake_commands)
-
-    if hasattr(ctx.rule.attr, "implementation_deps"):
-        for dep in ctx.rule.attr.implementation_deps:
-            if CMakeAspectInfo not in dep:
-                continue
-            transitive_cmake_commands.append(dep[CMakeAspectInfo].cmake_commands)
-
-    cmake_commands = depset(cmake_commands, transitive = transitive_cmake_commands)
+    transitive_source_files.append(target[CcInfo].compilation_context.headers)
 
     return [
-        CMakeAspectInfo(cmake_commands = cmake_commands),
+        CMakeAspectInfo(
+            cmake_commands = depset(cmake_commands, transitive = transitive_cmake_commands),
+            source_files = depset(srcs, transitive = transitive_source_files),
+        ),
     ]
 
 cmakelists_aspect = aspect(
@@ -456,6 +486,9 @@ cmakelists_aspect = aspect(
     attrs = {
         "_cc_toolchain": attr.label(
             default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+        ),
+        "_protobuf_runtime": attr.label(
+            default = Label("@protobuf//:protobuf"),
         ),
     },
     fragments = ["cpp"],
@@ -473,13 +506,13 @@ def _cmakelists_impl(ctx):
         return []
 
     cmake_commands = []
-    target_outputs = []
+    source_files = []
     for target in ctx.attr.targets:
         cmake_commands.append(target[CMakeAspectInfo].cmake_commands)
-        for f in target.files.to_list():
-            target_outputs.append(f)
+        source_files.append(target[CMakeAspectInfo].source_files)
 
     cmake_commands = depset(transitive = cmake_commands)
+    source_files = depset(transitive = source_files)
 
     content = "cmake_minimum_required(VERSION 3.1)\n" + \
               "project(__PROJ_NAME__)\n" + \
@@ -490,14 +523,9 @@ def _cmakelists_impl(ctx):
 
     ctx.actions.write(output = ctx.outputs.filename, content = content)
 
-    # The rule includes the outputs of the targets in its default output group.
-    # Unless an output file is explicitly requested, this forces the build of
-    # the targets, and through this, the generation of generated files (proto,
-    # API, shaders) and the creation of the directories for include prefixes.
-    # Ultimately, making the CMake project buildable.
     return [
         OutputGroupInfo(
-            default = target_outputs,
+            default = source_files.to_list(),
         ),
     ]
 

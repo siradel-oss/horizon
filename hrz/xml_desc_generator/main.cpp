@@ -371,7 +371,7 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
         printer.Print("            <name>$name$</name>\n", "name", value->name().c_str());
         printer.Print("            <id>$id$</id>\n", "id", std::to_string(value->number()).c_str());
 
-        if (value->has_optional_keyword())
+        if (value->is_optional())
         {
             printer.Print("            <optional>true</optional>\n");
         }
@@ -380,7 +380,7 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
             printer.Print("            <optional>false</optional>\n");
         }
 
-        if (value->containing_oneof() && !value->has_optional_keyword())
+        if (value->real_containing_oneof())
         {
             // Optional for primitive types is implemented as a oneof with only one field.
             printer.Print(

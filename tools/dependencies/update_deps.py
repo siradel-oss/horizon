@@ -16,7 +16,7 @@ def synchronize(manifest, lock):
     lock.write("hrz-packages.lock.json")
 
     print("Writing dependencies Bazel file")
-    deps_bazel.write_bazel_deps(lock, "tools/bazel/deps.bzl")
+    deps_bazel.write_bazel_deps(lock, "tools/bazel/deps.MODULE.bazel")
 
 if __name__ == "__main__":
     default_platform = deps_platforms.get_current_platform()

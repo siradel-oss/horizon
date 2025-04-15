@@ -72,11 +72,11 @@ cc_library(
         "//third_party:fmtlib",
         "//third_party:gsl",
         "//third_party:rapidjson",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/container:node_hash_map",
-        "@com_google_absl//absl/hash",
-        "@com_google_absl//absl/time",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/container:flat_hash_set",
+        "@abseil-cpp//absl/container:node_hash_map",
+        "@abseil-cpp//absl/hash",
+        "@abseil-cpp//absl/time",
     ],
 )
 

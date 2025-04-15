@@ -31,7 +31,7 @@ if args.bazelrc is not None:
     print("Using bazelrc file at " + args.bazelrc)
 
 print("Running bazel info...")
-bazel_info = subprocess.check_output(["bazel"] + bazelrc + ["info"]).decode("utf-8").splitlines()
+bazel_info = subprocess.check_output(["bazel"] + bazelrc + ["info"] + bazel_args).decode("utf-8").splitlines()
 execution_root = retrieve_bazel_info(bazel_info, "execution_root")
 bazel_bin = retrieve_bazel_info(bazel_info, "bazel-bin")
 workspace = retrieve_bazel_info(bazel_info, "workspace")
@@ -57,7 +57,6 @@ if args.asan:
     content = content.replace(
         "#__GLOBAL_OPTIONS__",
         "add_compile_options(-fsanitize=address)\nadd_link_options(-fsanitize=address)")
-
 
 with open("CMakeLists.txt", "w") as fp:
     fp.write(content)

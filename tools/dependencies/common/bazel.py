@@ -1,5 +1,4 @@
 from . import lockfile
-import textwrap
 
 BAZEL_DEPS_HEADER = """
 ############################################################################
@@ -8,10 +7,10 @@ BAZEL_DEPS_HEADER = """
 #          SEE doc/src/external_dependencies.md FOR MORE INFO              #
 ############################################################################
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
-load("//tools/bazel:local_archive.bzl", "local_archive")
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+local_archive = use_repo_rule("//tools/bazel:local_archive.bzl", "local_archive")
 
-def hrz_deps():
 """
 
 def write_bazel_deps(lock: lockfile.Lockfile, path: str):
@@ -20,7 +19,7 @@ def write_bazel_deps(lock: lockfile.Lockfile, path: str):
         rules += entry.as_bazel_rule(name)
 
     file_content = BAZEL_DEPS_HEADER
-    file_content += textwrap.indent(rules, "    ")
+    file_content += rules
 
     with open(path, "wb+") as f:
         f.write(file_content.encode("utf-8"))

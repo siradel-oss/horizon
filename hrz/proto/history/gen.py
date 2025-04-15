@@ -2,7 +2,7 @@ import argparse
 import sys
 import jinja2
 import os.path as path
-from tools.python.runfiles import runfiles
+from python.runfiles import Runfiles
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ from hrz.proto.history.manifest import Manifest, read_manifest
 MANIFEST: Manifest = None
 
 def make_tpl_env():
-    r = runfiles.Create()
+    r = Runfiles.Create()
     template_dir = Path(r.Rlocation("horizon/hrz/proto/history/templates/model_version.tpl.h")).parent
     loader = jinja2.FileSystemLoader(str(template_dir))
     return jinja2.Environment(loader = loader)

@@ -5,6 +5,7 @@ import shutil
 import os
 import platform
 from pathlib import Path
+import json
 
 def retrieve_bazel_info(all, wanted):
     for line in all:
@@ -47,20 +48,21 @@ if mode == "all":
             sys.exit(1)
 
 bazel_info = subprocess.check_output(["bazel", "info"]).decode("utf-8").splitlines()
+repo_mapping = json.loads(subprocess.check_output(["bazel", "mod", "dump_repo_mapping", "_main"]))
 output_base = Path(retrieve_bazel_info(bazel_info, "output_base"))
 
 clang_format_config = {
     "Windows": {
-        "workspace": "clang-format_windows",
+        "workspace": repo_mapping["clang-format_windows"],
         "file": "clang-format.exe",
     },
     "Linux": {
-        "workspace": "clang-format_linux",
+        "workspace": repo_mapping["clang-format_linux"],
         "file": "clang-format",
     },
 }[platform.system()]
 
-clang_format_target = "@" + clang_format_config["workspace"] + "//:" + clang_format_config["file"]
+clang_format_target = "@@" + clang_format_config["workspace"] + "//:" + clang_format_config["file"]
 clang_format_exe = output_base / "external" / clang_format_config["workspace"] / clang_format_config["file"]
 
 subprocess.run(["bazel", "build", clang_format_target])

@@ -194,7 +194,7 @@ alias(
 # Although it would make building those mandatory, even for users that are interested
 # in targets that don't include them (like libcurl or BoringSSL).
 LICENSES_DICT = {
-    "@com_google_absl//:LICENSE": "abseil",
+    "@abseil-cpp//:LICENSE": "abseil",
     "//third_party/fonts:LICENSE-Allerta.txt": "Allerta",
     "@asio//:asio/LICENSE_1_0.txt": "Asio",
     "@basisu//:LICENSE": "Basis Universal",

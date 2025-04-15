@@ -86,7 +86,7 @@ struct RemoteMonitoring : public ws::ClientHandler
 
     void push_messages(const std::function<void(hrz_monitoring::MonitoringMessages*)>& callback)
     {
-        auto* msgs = PbArena::CreateMessage<hrz_monitoring::MonitoringMessages>(&_messages_arena);
+        auto* msgs = PbArena::Create<hrz_monitoring::MonitoringMessages>(&_messages_arena);
 
         callback(msgs);
 

@@ -1,6 +1,6 @@
 import sys
 import jinja2
-from tools.python.runfiles import runfiles
+from python.runfiles import Runfiles
 
 from pathlib import Path
 
@@ -14,7 +14,7 @@ values["namespace"] = NAMESPACE
 values["keys"] = KEYS
 values["header"] = Path(H_PATH).name
 
-r = runfiles.Create()
+r = Runfiles.Create()
 template_dir = Path(r.Rlocation("horizon/tools/bazel/cc_resources/collection.tpl.cpp")).parent
 
 loader = jinja2.FileSystemLoader(template_dir)

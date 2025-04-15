@@ -27,7 +27,7 @@ TEST(MessageBuffer, parsing)
     google::protobuf::io::ArrayOutputStream array_ostream(ground_truth_data, BUFFER_SIZE);
     google::protobuf::io::CodedOutputStream coded_ostream(&array_ostream);
 
-    auto sample = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Sample>(&arena);
+    auto sample = google::protobuf::Arena::Create<hrz_monitoring_proto::Sample>(&arena);
     sample->set_entry(20);
     sample->set_exit(60);
 
@@ -40,10 +40,10 @@ TEST(MessageBuffer, parsing)
     child2->set_exit(60);
 
     auto message1 =
-        google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::MonitoringMessage>(&arena);
+        google::protobuf::Arena::Create<hrz_monitoring_proto::MonitoringMessage>(&arena);
     message1->set_allocated_sample(sample);
 
-    auto metric = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Metric>(&arena);
+    auto metric = google::protobuf::Arena::Create<hrz_monitoring_proto::Metric>(&arena);
 
     metric->set_name("TestValue");
 
@@ -55,10 +55,10 @@ TEST(MessageBuffer, parsing)
     update->set_gauge(42.0);
 
     auto message2 =
-        google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::MonitoringMessage>(&arena);
+        google::protobuf::Arena::Create<hrz_monitoring_proto::MonitoringMessage>(&arena);
     message2->set_allocated_metric(metric);
 
-    auto histogram = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Metric>(&arena);
+    auto histogram = google::protobuf::Arena::Create<hrz_monitoring_proto::Metric>(&arena);
 
     histogram->set_name("TestHistogram");
 
@@ -74,7 +74,7 @@ TEST(MessageBuffer, parsing)
         std::numeric_limits<double>::infinity());
 
     auto message3 =
-        google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::MonitoringMessage>(&arena);
+        google::protobuf::Arena::Create<hrz_monitoring_proto::MonitoringMessage>(&arena);
     message3->set_allocated_metric(histogram);
 
     write_message(&coded_ostream, message1);
@@ -146,9 +146,9 @@ TEST(MessageBuffer, serializing)
     google::protobuf::io::CodedOutputStream coded_ostream(&array_ostream);
 
     auto messages =
-        google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::MonitoringMessages>(&arena);
+        google::protobuf::Arena::Create<hrz_monitoring_proto::MonitoringMessages>(&arena);
 
-    auto sample = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Sample>(&arena);
+    auto sample = google::protobuf::Arena::Create<hrz_monitoring_proto::Sample>(&arena);
     sample->set_entry(20);
     sample->set_exit(60);
 
@@ -163,7 +163,7 @@ TEST(MessageBuffer, serializing)
     auto message1 = messages->add_messages();
     message1->set_allocated_sample(sample);
 
-    auto metric = google::protobuf::Arena::CreateMessage<hrz_monitoring_proto::Metric>(&arena);
+    auto metric = google::protobuf::Arena::Create<hrz_monitoring_proto::Metric>(&arena);
     ;
     metric->set_name("TestValue");
     metric->add_updates()->set_gauge(42.0);
