@@ -2,6 +2,7 @@
 
 #include "hrz_core_loading_priorities.h"
 
+#include <hrz_common_image_processing.h>
 #include <hrz_common_proto_geo.h>
 
 namespace hrz::planet
@@ -14,7 +15,7 @@ constexpr hrz_proto::ImageFormat ImageryRasterCollectionTraits::COMPOSED_TILE_IM
 
 constexpr const char* DtmRasterCollectionTraits::NAME;
 constexpr hrz_proto::LayerType DtmRasterCollectionTraits::LAYER_TYPE;
-constexpr std::array<hrz_proto::ImageFormat, 4>
+constexpr std::array<hrz_proto::ImageFormat, 5>
     DtmRasterCollectionTraits::SOURCE_TILE_IMAGE_FORMATS;
 constexpr hrz_proto::ImageFormat DtmRasterCollectionTraits::COMPOSED_TILE_IMAGE_FORMAT;
 
@@ -58,11 +59,8 @@ bool raster_model_is_complete(const hrz_proto::Raster& model, hrz_proto::LayerTy
     bool has_blending = layer_type == hrz_proto::LayerType::DTM_RASTER || model.has_blending();
 
     auto format = get_image_format(provider_model);
-    bool has_correct_format = (layer_type == hrz_proto::LayerType::DTM_RASTER
-                               && (format == hrz_proto::ImageFormat::R_F32
-                                   || format == hrz_proto::ImageFormat::R_F32_SILICIUM
-                                   || format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8
-                                   || format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM))
+    bool has_correct_format =
+        (layer_type == hrz_proto::LayerType::DTM_RASTER && hrz::is_scalar_image_format(format))
         || (layer_type == hrz_proto::LayerType::IMAGERY_RASTER
             && format == hrz_proto::ImageFormat::SRGBA_8);
 

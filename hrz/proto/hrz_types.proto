@@ -187,8 +187,12 @@ enum ImageFormat {
     SRGB_R_8          = 4;
 
     // 24-bit values in [-32768, 32768] range, with 8 fractional bits.
-    // @label="Mapzen Terrarium"
-    MAPZEN_TERRARIUM  = 5;
+    // @label="Terrarium"
+    TERRARIUM         = 5;
+
+    // 24-bit values in [-10000, 1667721.5] range, with a 0.1 metre resolution.
+    // @label="Terrain-RGB"
+    TERRAIN_RGB       = 6;
 }
 
 message Image {

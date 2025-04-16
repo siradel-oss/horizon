@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hrz_common_blob_allocator.h"
+#include "hrz_common_image_processing.h"
 #include "hrz_common_metadata.h"
 #include "hrz_common_platform_detection.h"
 
@@ -240,11 +241,6 @@ public:
         uint32_t height,
         const blobs::BlobHandle& blob,
         BlobAllocator* ba);
-
-private:
-    static my::TextureFormat image_format_to_gpu_format(hrz_proto::ImageFormat format);
-    static std::optional<hrz_proto::ImageFormat> gpu_format_to_image_format(
-        my::TextureFormat format);
 };
 
 struct BlobImageCompressionParams

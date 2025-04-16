@@ -7,7 +7,6 @@
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_maths.h>
 #include <hrz_protocol_all.h>
-#include <hrz_protocol_image_helper.h>
 
 #include <assert.h>
 #include <gsl/gsl-lite.hpp>
@@ -220,7 +219,12 @@ PixelValue<float, 1> fetch_signed_fixed_24_8_pixel(
     int x,
     int y,
     const NodataFunction& nodata);
-PixelValue<float, 1> fetch_mapzen_terrarium_pixel(
+PixelValue<float, 1> fetch_terrarium_pixel(
+    const ImageView& input,
+    int x,
+    int y,
+    const NodataFunction& nodata);
+PixelValue<float, 1> fetch_terrain_rgb_pixel(
     const ImageView& input,
     int x,
     int y,
@@ -536,7 +540,7 @@ struct SamplingFunctionImpl : public SamplingFunction
     // Returns true if the pixel should be discarded, false otherwise.
     bool sample(const ImageView& input, lm::vec2 uv, void* output_v) const override
     {
-        assert(CHANNELS == hrz_proto::channel_count(input.format));
+        assert(CHANNELS == hrz::image_format_channel_count(input.format));
 
         PixelValue<T, CHANNELS> output;
         output.is_nodata = false;
@@ -617,7 +621,7 @@ bool sample_and_compose_raster(
     const BlendingFunction* blending,
     T* output)
 {
-    assert(CHANNELS == hrz_proto::channel_count(input.format));
+    assert(CHANNELS == hrz::image_format_channel_count(input.format));
     static_assert(
         std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t> || std::is_same_v<T, uint16_t>
             || std::is_same_v<T, int16_t> || std::is_same_v<T, uint32_t>

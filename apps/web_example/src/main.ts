@@ -78,7 +78,7 @@ async function addDtmLayer(api: HrzApi.AsyncApi) {
                 tiled: {
                     urlPattern:
                         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
-                    imageFormat: HrzProtocol.ImageFormat.MAPZEN_TERRARIUM,
+                    imageFormat: HrzProtocol.ImageFormat.TERRARIUM,
                     missingTilePolicy: HrzProtocol.MissingTilePolicy.USE_EMPTY_TILE,
                     geometry: {
                         projection: {

@@ -2,6 +2,7 @@
 #include "planet/hrz_core_planet_tile_fetcher.h"
 
 #include <hrz_common_fmt.h>
+#include <hrz_common_image_processing.h>
 #include <hrz_common_palette.h>
 #include <hrz_common_planet.h>
 #include <hrz_common_proto_maths.h>
@@ -22,20 +23,12 @@ RasterProvider::LockTicket generate_lock_ticket()
     static std::atomic<uint64_t> lock_ticket_generator;
     return (RasterProvider::LockTicket)++lock_ticket_generator;
 }
-
-bool is_scalar_image_format(hrz_proto::ImageFormat format)
-{
-    return format == hrz_proto::ImageFormat::R_F32
-        || format == hrz_proto::ImageFormat::R_F32_SILICIUM
-        || format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8
-        || format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM;
-}
 } // namespace
 
 bool is_provider_model_complete(const hrz_proto::PalettizedRasterProviderParams& model)
 {
     return model.has_provider() && is_provider_model_complete(model.provider())
-        && is_scalar_image_format(get_image_format(model.provider()));
+        && hrz::is_scalar_image_format(get_image_format(model.provider()));
 }
 
 hrz_proto::ImageFormat get_image_format(const hrz_proto::PalettizedRasterProviderParams&)

@@ -42,32 +42,34 @@ void interpolate<uint32_t, 1, hrz_proto::ImageFormat::R_F32_SILICIUM>(
     const uint32_t* b,
     uint32_t* res)
 {
-    uint32_t a_s;
-    std::memcpy(&a_s, a, sizeof(uint32_t));
-    uint32_t b_s;
-    std::memcpy(&b_s, b, sizeof(uint32_t));
-    float a_f = hrz::decode_r_f32_silicium_value_to_float(a_s);
-    float b_f = hrz::decode_r_f32_silicium_value_to_float(b_s);
-    float res_f = (a_f + b_f) / 2;
-    uint32_t res_s = hrz::encode_float_to_r_f32_silicium(res_f);
-    std::memcpy(res, &res_s, sizeof(uint32_t));
+    float a_f = hrz::decode_r_f32_silicium_value_to_float(*a);
+    float b_f = hrz::decode_r_f32_silicium_value_to_float(*b);
+    float res_f = (a_f + b_f) / 2.0f;
+    *res = hrz::encode_float_to_r_f32_silicium(res_f);
 }
 
 template<>
-void interpolate<uint32_t, 1, hrz_proto::ImageFormat::MAPZEN_TERRARIUM>(
+void interpolate<uint32_t, 1, hrz_proto::ImageFormat::TERRARIUM>(
     const uint32_t* a,
     const uint32_t* b,
     uint32_t* res)
 {
-    uint32_t a_s;
-    std::memcpy(&a_s, a, sizeof(uint32_t));
-    uint32_t b_s;
-    std::memcpy(&b_s, b, sizeof(uint32_t));
-    float a_f = hrz::decode_mapzen_terrarium_value_to_float(a_s);
-    float b_f = hrz::decode_mapzen_terrarium_value_to_float(b_s);
-    float res_f = (a_f + b_f) / 2;
-    uint32_t res_s = hrz::encode_float_to_mapzen_terrarium(res_f);
-    std::memcpy(res, &res_s, sizeof(uint32_t));
+    float a_f = hrz::decode_terrarium_value_to_float(*a);
+    float b_f = hrz::decode_terrarium_value_to_float(*b);
+    float res_f = (a_f + b_f) / 2.0f;
+    *res = hrz::encode_float_to_terrarium(res_f);
+}
+
+template<>
+void interpolate<uint32_t, 1, hrz_proto::ImageFormat::TERRAIN_RGB>(
+    const uint32_t* a,
+    const uint32_t* b,
+    uint32_t* res)
+{
+    float a_f = hrz::decode_terrain_rgb_value_to_float(*a);
+    float b_f = hrz::decode_terrain_rgb_value_to_float(*b);
+    float res_f = (a_f + b_f) / 2.0f;
+    *res = hrz::encode_float_to_terrain_rgb(res_f);
 }
 
 // `void*` in order to have the same signature for all template instanciations
@@ -202,8 +204,10 @@ decltype(&generate_pixel<uint8_t, 4, hrz_proto::ImageFormat::SRGBA_8>) get_gener
             return &generate_pixel<float, 1, hrz_proto::ImageFormat::R_F32>;
         case hrz_proto::ImageFormat::R_F32_SILICIUM:
             return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::R_F32_SILICIUM>;
-        case hrz_proto::ImageFormat::MAPZEN_TERRARIUM:
-            return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::MAPZEN_TERRARIUM>;
+        case hrz_proto::ImageFormat::TERRARIUM:
+            return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::TERRARIUM>;
+        case hrz_proto::ImageFormat::TERRAIN_RGB:
+            return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::TERRAIN_RGB>;
         default:
             assert(false);
             HRZ_LOG_ERROR("Unhandled image format: {}", hrz_proto::ImageFormat_Name(format));
@@ -223,7 +227,7 @@ bool generate_tiles_at_level(
 {
     auto blob_allocator = context.get_blob_allocator();
 
-    unsigned int bytes_per_pixel = hrz_proto::byte_count(image_format);
+    unsigned int bytes_per_pixel = hrz::image_format_byte_count(image_format);
 
     unsigned int tile_count_x = std::ceil((float)image_width / tile_size);
     unsigned int tile_count_y = std::ceil((float)image_height / tile_size);
@@ -305,7 +309,7 @@ hrz::JobResult run(
 
     auto generate_pixel_func = get_generate_pixel_func(format);
 
-    unsigned int byte_count = hrz_proto::byte_count(format);
+    unsigned int byte_count = hrz::image_format_byte_count(format);
     unsigned int image_size = std::max(params.image.width(), params.image.height());
     unsigned int expanded_image_size = hrz::next_power_of_two(image_size);
     unsigned int mipmap_count = (unsigned int)std::ceil(std::log2(expanded_image_size)) + 1;
@@ -325,11 +329,12 @@ hrz::JobResult run(
 
     auto pixel_buffer_0_blob = hrz::blobs::allocate_blob_sync(
         context.get_blob_allocator(),
-        half_size(previous_width) * half_size(previous_height) * hrz_proto::byte_count(format));
+        half_size(previous_width) * half_size(previous_height)
+            * hrz::image_format_byte_count(format));
     auto pixel_buffer_1_blob = hrz::blobs::allocate_blob_sync(
         context.get_blob_allocator(),
         half_size(half_size(previous_width)) * half_size(half_size(previous_height))
-            * hrz_proto::byte_count(format));
+            * hrz::image_format_byte_count(format));
     if (!pixel_buffer_0_blob.has_value() || !pixel_buffer_1_blob.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate buffers for mipmap generation");

@@ -22,6 +22,58 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
 
     if (nodata_handling != hrz_proto::NodataHandling::IGNORE_NODATA)
     {
+        auto make_rgb_scalar_nodata_function = [&](uint32_t (*encode_func)(float))
+        {
+            // Ignore alpha channel
+            nodata_mask = 0x00ffffff;
+
+            switch (nodata_value.type())
+            {
+                case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
+                {
+                    uint32_t value = nodata_value.bit_pattern();
+                    if ((value & ~nodata_mask) != 0)
+                    {
+                        HRZ_LOG_WARNING(
+                            "Too many bits provided for {} nodata bit "
+                            "pattern. Ignoring extra bits.",
+                            hrz_proto::ImageFormat_Name(image_format));
+                        value &= nodata_mask;
+                    }
+                    std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                    break;
+                }
+                case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
+                {
+                    uint32_t value = encode_func(nodata_value.uint_value());
+                    std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                    break;
+                }
+                case hrz_proto::NodataValueType::INT_VALUE_NODATA:
+                {
+                    uint32_t value = encode_func(nodata_value.int_value());
+                    std::memcpy(&nodata_pattern, &value, sizeof(int32_t));
+                    break;
+                }
+                case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
+                {
+                    uint32_t value = encode_func(nodata_value.float_value());
+                    std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                    break;
+                }
+                case hrz_proto::NodataValueType::NAN_NODATA:
+                case hrz_proto::NodataValueType::COLOR_NODATA:
+                {
+                    ignore_nodata();
+                    break;
+                }
+                default:
+                    assert(!"Unhandled nodata value type");
+                    ignore_nodata();
+                    break;
+            }
+        };
+
         switch (image_format)
         {
             case hrz_proto::ImageFormat::SRGBA_8:
@@ -207,58 +259,14 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                 }
                 break;
             }
-            case hrz_proto::ImageFormat::MAPZEN_TERRARIUM:
+            case hrz_proto::ImageFormat::TERRARIUM:
             {
-                // Ignore alpha channel
-                nodata_mask = 0x00ffffff;
-
-                switch (nodata_value.type())
-                {
-                    case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
-                    {
-                        uint32_t value = nodata_value.bit_pattern();
-                        if ((value & 0xff000000) != 0)
-                        {
-                            HRZ_LOG_WARNING(
-                                "Too many bits provided for Mapzen Terrarium nodata bit "
-                                "pattern. Ignoring extra bits.");
-                            value &= 0x00ffffff;
-                        }
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
-                        break;
-                    }
-                    case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
-                    {
-                        uint32_t value =
-                            hrz::encode_float_to_mapzen_terrarium(nodata_value.uint_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
-                        break;
-                    }
-                    case hrz_proto::NodataValueType::INT_VALUE_NODATA:
-                    {
-                        uint32_t value =
-                            hrz::encode_float_to_mapzen_terrarium(nodata_value.int_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(int32_t));
-                        break;
-                    }
-                    case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
-                    {
-                        uint32_t value =
-                            hrz::encode_float_to_mapzen_terrarium(nodata_value.float_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
-                        break;
-                    }
-                    case hrz_proto::NodataValueType::NAN_NODATA:
-                    case hrz_proto::NodataValueType::COLOR_NODATA:
-                    {
-                        ignore_nodata();
-                        break;
-                    }
-                    default:
-                        assert(!"Unhandled nodata value type");
-                        ignore_nodata();
-                        break;
-                }
+                make_rgb_scalar_nodata_function(hrz::encode_float_to_terrarium);
+                break;
+            }
+            case hrz_proto::ImageFormat::TERRAIN_RGB:
+            {
+                make_rgb_scalar_nodata_function(hrz::encode_float_to_terrain_rgb);
                 break;
             }
             default:
@@ -372,7 +380,7 @@ PixelValue<float, 1> fetch_signed_fixed_24_8_pixel(
     return {{(float)value / 256.0f}, nodata.is_nodata<int32_t, 1>(&value)};
 }
 
-PixelValue<float, 1> fetch_mapzen_terrarium_pixel(
+PixelValue<float, 1> fetch_terrarium_pixel(
     const ImageView& input,
     int x,
     int y,
@@ -380,9 +388,18 @@ PixelValue<float, 1> fetch_mapzen_terrarium_pixel(
 {
     uint32_t value;
     std::memcpy(&value, input.pixel_data<uint32_t, 1>(x, y), sizeof(uint32_t));
-    return {
-        {hrz::decode_mapzen_terrarium_value_to_float(value)},
-        nodata.is_nodata<uint32_t, 1>(&value)};
+    return {{hrz::decode_terrarium_value_to_float(value)}, nodata.is_nodata<uint32_t, 1>(&value)};
+}
+
+PixelValue<float, 1> fetch_terrain_rgb_pixel(
+    const ImageView& input,
+    int x,
+    int y,
+    const NodataFunction& nodata)
+{
+    uint32_t value;
+    std::memcpy(&value, input.pixel_data<uint32_t, 1>(x, y), sizeof(uint32_t));
+    return {{hrz::decode_terrain_rgb_value_to_float(value)}, nodata.is_nodata<uint32_t, 1>(&value)};
 }
 
 std::unique_ptr<SamplingFunction> make_sampling_function(
@@ -415,11 +432,15 @@ std::unique_ptr<SamplingFunction> make_sampling_function(
             fetch_signed_fixed_24_8_pixel, alpha_channel_usage, std::move(nodata_function),
             filtering);
     }
-    else if (image_format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM)
+    else if (image_format == hrz_proto::ImageFormat::TERRARIUM)
     {
         return std::make_unique<DtmSamplingFunction>(
-            fetch_mapzen_terrarium_pixel, alpha_channel_usage, std::move(nodata_function),
-            filtering);
+            fetch_terrarium_pixel, alpha_channel_usage, std::move(nodata_function), filtering);
+    }
+    else if (image_format == hrz_proto::ImageFormat::TERRAIN_RGB)
+    {
+        return std::make_unique<DtmSamplingFunction>(
+            fetch_terrain_rgb_pixel, alpha_channel_usage, std::move(nodata_function), filtering);
     }
     else
     {

@@ -1,7 +1,6 @@
 #include "planet/hrz_core_planet_raster_provider.h"
 
 #include <hrz_common_image_processing.h>
-#include <hrz_protocol_image_helper.h>
 
 #include <cassert>
 

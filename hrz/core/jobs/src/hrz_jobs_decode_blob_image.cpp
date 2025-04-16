@@ -1,6 +1,5 @@
 #include "absl/strings/numbers.h"
 #include "hrz_jobs_declarations.h"
-#include "hrz_protocol_image_helper.h"
 
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_blob_image.h>
@@ -168,42 +167,39 @@ hrz::BlobImage finalize_image(
 
     if (convert_scalars_to_float)
     {
-        if (encoded_image_format == hrz_proto::ImageFormat::R_F32_SILICIUM)
+        auto convert = [&](float (*decode_func)(uint32_t))
         {
             assert(bytes_per_pixel == 4);
             auto decoded_image_data = decoded_image_blob.get_mutable_data();
 
             transform_32bit_image_data(
                 decoded_image_data.data(), width * height,
-                [](uint32_t v)
-                { return hrz::bit_cast<uint32_t>(hrz::decode_r_f32_silicium_value_to_float(v)); });
+                [decode_func = decode_func](uint32_t v)
+                { return hrz::bit_cast<uint32_t>(decode_func(v)); });
 
             encoded_image_format = hrz_proto::ImageFormat::R_F32;
-        }
-        else if (encoded_image_format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8)
+        };
+
+        switch (encoded_image_format)
         {
-            assert(bytes_per_pixel == 4);
-            auto decoded_image_data = decoded_image_blob.get_mutable_data();
-
-            transform_32bit_image_data(
-                decoded_image_data.data(), width * height,
-                [](uint32_t v)
-                { return hrz::bit_cast<uint32_t>(hrz::decode_signed_fixed_24_8_to_float(v)); });
-
-            encoded_image_format = hrz_proto::ImageFormat::R_F32;
-        }
-        else if (encoded_image_format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM)
-        {
-            assert(bytes_per_pixel == 4);
-            auto decoded_image_data = decoded_image_blob.get_mutable_data();
-
-            transform_32bit_image_data(
-                decoded_image_data.data(), width * height,
-                [](uint32_t v) {
-                    return hrz::bit_cast<uint32_t>(hrz::decode_mapzen_terrarium_value_to_float(v));
-                });
-
-            encoded_image_format = hrz_proto::ImageFormat::R_F32;
+            case hrz_proto::ImageFormat::R_F32: break;
+            case hrz_proto::ImageFormat::R_F32_SILICIUM:
+                convert(hrz::decode_r_f32_silicium_value_to_float);
+                break;
+            case hrz_proto::ImageFormat::SIGNED_FIXED_24_8:
+                convert(hrz::decode_signed_fixed_24_8_to_float);
+                break;
+            case hrz_proto::ImageFormat::TERRARIUM:
+                convert(hrz::decode_terrarium_value_to_float);
+                break;
+            case hrz_proto::ImageFormat::TERRAIN_RGB:
+                convert(hrz::decode_terrain_rgb_value_to_float);
+                break;
+            default:
+                HRZ_LOG_ERROR(
+                    "Image format cannot be converted to float: {}",
+                    hrz_proto::ImageFormat_Name(encoded_image_format));
+                break;
         }
     }
 
@@ -613,7 +609,7 @@ std::optional<hrz::blobs::BlobHandle> decode_raw(
 
     const int bytes_per_channel = bits_per_channel / 8;
 
-    const int desired_format_size = (int)hrz_proto::byte_count(image_format);
+    const int desired_format_size = (int)hrz::image_format_byte_count(image_format);
     *byte_per_pixel = desired_format_size;
 
     // We accept 3xuint8 as SRGBA8: alpha will be filled with 255.
@@ -630,7 +626,7 @@ std::optional<hrz::blobs::BlobHandle> decode_raw(
         return std::nullopt;
     }
 
-    if (encoded_image_data.size_bytes() < *width * *height * channels * bytes_per_channel)
+    if (encoded_image_data.size_bytes() < (size_t)(*width * *height * channels * bytes_per_channel))
     {
         HRZ_LOG_ERROR(
             "Encoded image data size {} is smaller than expected {}",
@@ -770,7 +766,7 @@ hrz::JobResult run(
             params.platform_info, params.my_instance_info, decoded_image, context);
     }
 
-    const int desired_channels = (int)hrz_proto::byte_count(params.image_format);
+    const int desired_channels = (int)hrz::image_format_byte_count(params.image_format);
     assert(desired_channels >= 1 && desired_channels <= 4);
 
     std::optional<hrz::blobs::BlobHandle> decoded_image_blob;

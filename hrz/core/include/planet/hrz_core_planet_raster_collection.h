@@ -15,7 +15,6 @@
 #include <hrz_common_tickets.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_static_vector.h>
-#include <hrz_protocol_image_helper.h>
 #include <hrz_protocol_path_builder.h>
 
 #include <array>
@@ -160,9 +159,10 @@ struct DtmRasterCollectionTraits
 
     static constexpr const char* NAME = "Elevation";
     static constexpr hrz_proto::LayerType LAYER_TYPE = hrz_proto::LayerType::DTM_RASTER;
-    static constexpr std::array<hrz_proto::ImageFormat, 4> SOURCE_TILE_IMAGE_FORMATS = {
+    static constexpr std::array<hrz_proto::ImageFormat, 5> SOURCE_TILE_IMAGE_FORMATS = {
         hrz_proto::ImageFormat::R_F32, hrz_proto::ImageFormat::R_F32_SILICIUM,
-        hrz_proto::ImageFormat::SIGNED_FIXED_24_8, hrz_proto::ImageFormat::MAPZEN_TERRARIUM};
+        hrz_proto::ImageFormat::SIGNED_FIXED_24_8, hrz_proto::ImageFormat::TERRARIUM,
+        hrz_proto::ImageFormat::TERRAIN_RGB};
     static constexpr hrz_proto::ImageFormat COMPOSED_TILE_IMAGE_FORMAT =
         hrz_proto::ImageFormat::R_F32;
     static constexpr bool TRACK_TILE_BOUNDS = true;

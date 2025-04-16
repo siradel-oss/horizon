@@ -23,7 +23,7 @@ Int32Value
 
 BytesValue
 value (RvalueBH�bproto3
-Ě
+Κ
 hrz_types.protoHrzProtocol"
 Void"#
 Vec2i
@@ -527,14 +527,15 @@ image_size (2.HrzProtocol.Vec2uiR	imageSize3
 
 Handedness
 LEFT 	
-RIGHT*t
+RIGHT*~
 ImageFormat
 SRGBA_8 	
 R_F32
 R_F32_SILICIUM
 SIGNED_FIXED_24_8
-SRGB_R_8
-MAPZEN_TERRARIUM*W
+SRGB_R_8
+	TERRARIUM
+TERRAIN_RGB*W
 ColorInterpolationMode
 PERCEPTUAL_OKLAB 
 SRGB

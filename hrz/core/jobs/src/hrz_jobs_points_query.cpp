@@ -3,6 +3,7 @@
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_blob_vector.h>
 #include <hrz_common_crs_database.h>
+#include <hrz_common_image_processing.h>
 #include <hrz_common_image_view.h>
 #include <hrz_common_planet.h>
 #include <hrz_common_proj.h>
@@ -192,17 +193,14 @@ hrz::JobResult sample(
 
     auto check_image_format = [](hrz_proto::ImageFormat format)
     {
-        bool is_okay = format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8
-            || format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM
-            || format == hrz_proto::ImageFormat::R_F32
-            || format == hrz_proto::ImageFormat::R_F32_SILICIUM;
-        if (!is_okay)
+        if (!hrz::is_scalar_image_format(format))
         {
             HRZ_LOG_ERROR(
                 "Invalid image format for elevation query: {} is not a scalar format.",
                 hrz_proto::ImageFormat_Name(format));
+            return false;
         }
-        return is_okay;
+        return true;
     };
 
     for (const auto& raster : params.rasters)
@@ -309,8 +307,11 @@ hrz::JobResult sample(
             case hrz_proto::ImageFormat::SIGNED_FIXED_24_8:
                 pixel_fetch_function = hrz::sampling::fetch_signed_fixed_24_8_pixel;
                 break;
-            case hrz_proto::ImageFormat::MAPZEN_TERRARIUM:
-                pixel_fetch_function = hrz::sampling::fetch_mapzen_terrarium_pixel;
+            case hrz_proto::ImageFormat::TERRARIUM:
+                pixel_fetch_function = hrz::sampling::fetch_terrarium_pixel;
+                break;
+            case hrz_proto::ImageFormat::TERRAIN_RGB:
+                pixel_fetch_function = hrz::sampling::fetch_terrain_rgb_pixel;
                 break;
             default: assert(false && "Unhandled case");
         }

@@ -4,37 +4,6 @@
 
 namespace hrz
 {
-// @Todo Deduplicate (wrt hrz_core_image_utils.h)
-my::TextureFormat BlobImage::image_format_to_gpu_format(hrz_proto::ImageFormat format)
-{
-    switch (format)
-    {
-        case hrz_proto::ImageFormat::SRGBA_8: return my::TextureFormat::RGBA8;
-        case hrz_proto::ImageFormat::SIGNED_FIXED_24_8: return my::TextureFormat::R32I;
-        case hrz_proto::ImageFormat::R_F32: return my::TextureFormat::R32F;
-        case hrz_proto::ImageFormat::R_F32_SILICIUM:
-        case hrz_proto::ImageFormat::MAPZEN_TERRARIUM: return my::TextureFormat::R32UI;
-        case hrz_proto::ImageFormat::SRGB_R_8: return my::TextureFormat::R8;
-        default:
-            HRZ_LOG_ERROR("Unhandled image format: {}", hrz_proto::ImageFormat_Name(format));
-            assert(false);
-            return my::TextureFormat::RGBA8;
-    }
-}
-
-std::optional<hrz_proto::ImageFormat> BlobImage::gpu_format_to_image_format(
-    my::TextureFormat format)
-{
-    switch (format)
-    {
-        case my::TextureFormat::RGBA8: return hrz_proto::ImageFormat::SRGBA_8;
-        case my::TextureFormat::R32I: return hrz_proto::ImageFormat::SIGNED_FIXED_24_8;
-        case my::TextureFormat::R32F: return hrz_proto::ImageFormat::R_F32;
-        case my::TextureFormat::R8: return hrz_proto::ImageFormat::SRGB_R_8;
-        default: return std::nullopt;
-    }
-}
-
 void BlobImage::register_layout_blob_metadata(BlobAllocator* ba)
 {
     assert(ba);

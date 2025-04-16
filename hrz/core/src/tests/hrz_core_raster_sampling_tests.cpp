@@ -1,6 +1,6 @@
+#include <hrz_common_image_processing.h>
 #include <hrz_common_raster_sampling.h>
 #include <hrz_fnd_defines.h>
-#include <hrz_protocol_image_helper.h>
 
 #include <gtest/gtest.h>
 
@@ -22,7 +22,7 @@ uint32_t to_silicium(float v)
 
 uint32_t to_terrarium(float v)
 {
-    return hrz::encode_float_to_mapzen_terrarium(v);
+    return hrz::encode_float_to_terrarium(v);
 }
 
 TEST(RasterSampling, nodata_ignore_imagery)
@@ -840,7 +840,7 @@ TEST(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
     nodata_value.set_float_value(-9999.0f);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::MAPZEN_TERRARIUM);
+        hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");
@@ -880,7 +880,7 @@ TEST(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
     nodata_value.set_int_value(-9999);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::MAPZEN_TERRARIUM);
+        hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");
@@ -920,7 +920,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
     nodata_value.set_bit_pattern(hrz::bit_cast<uint32_t>(to_terrarium(-9999.0f)));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::MAPZEN_TERRARIUM);
+        hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");
@@ -960,7 +960,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
     nodata_value.set_bit_pattern(hrz::bit_cast<uint32_t>(to_terrarium(-9999.0f)) + 0xff000000);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::MAPZEN_TERRARIUM);
+        hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");

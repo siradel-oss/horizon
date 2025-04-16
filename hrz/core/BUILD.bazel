@@ -212,7 +212,6 @@ cc_library(
         "include/hrz_core_global_flags.h",
         "include/hrz_core_grid.h",
         "include/hrz_core_image_decoder.h",
-        "include/hrz_core_image_utils.h",
         "include/hrz_core_impostor_baker.h",
         "include/hrz_core_job_scheduler.h",
         "include/hrz_core_loading_priorities.h",

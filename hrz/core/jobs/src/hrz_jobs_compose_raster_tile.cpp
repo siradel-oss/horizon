@@ -111,7 +111,8 @@ void _rasterize_tile(
             break;
         case hrz_proto::ImageFormat::R_F32:
         case hrz_proto::ImageFormat::R_F32_SILICIUM:
-        case hrz_proto::ImageFormat::MAPZEN_TERRARIUM:
+        case hrz_proto::ImageFormat::TERRARIUM:
+        case hrz_proto::ImageFormat::TERRAIN_RGB:
             sample_and_compose_function =
                 std::make_unique<SamplingBlendingFunctionAdapter<float, 1>>(
                     input, sampling_function, blending_function, bounds);
@@ -654,8 +655,8 @@ hrz::JobResult run(
 {
     HRZ_SCOPED_SAMPLE("compose tile job");
 
-    size_t output_image_data_size =
-        hrz::ATLAS_TILE_SIZE * hrz::ATLAS_TILE_SIZE * hrz_proto::byte_count(params.output_format);
+    size_t output_image_data_size = hrz::ATLAS_TILE_SIZE * hrz::ATLAS_TILE_SIZE
+        * hrz::image_format_byte_count(params.output_format);
     auto output_image_blob =
         hrz::blobs::allocate_blob_sync(context.get_blob_allocator(), output_image_data_size);
     if (!output_image_blob.has_value())

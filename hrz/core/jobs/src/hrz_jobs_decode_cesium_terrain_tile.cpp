@@ -3,6 +3,7 @@
 
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_blob_image.h>
+#include <hrz_common_image_processing.h>
 #include <hrz_common_image_view.h>
 #include <hrz_common_planet.h>
 #include <hrz_common_profiling.h>
@@ -10,7 +11,6 @@
 #include <hrz_fnd_maths.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_protocol_all.h>
-#include <hrz_protocol_image_helper.h>
 
 #include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>

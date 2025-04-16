@@ -514,7 +514,7 @@ def _cmakelists_impl(ctx):
     cmake_commands = depset(transitive = cmake_commands)
     source_files = depset(transitive = source_files)
 
-    content = "cmake_minimum_required(VERSION 3.1)\n" + \
+    content = "cmake_minimum_required(VERSION 3.5)\n" + \
               "project(__PROJ_NAME__)\n" + \
               "set(CMAKE_CXX_STANDARD 17)\n\n" + \
               "#__GLOBAL_OPTIONS__\n\n"

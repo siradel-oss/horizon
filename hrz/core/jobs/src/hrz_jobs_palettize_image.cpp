@@ -1,13 +1,13 @@
 #include "hrz_jobs_declarations.h"
 
 #include <hrz_common_blob_allocator.h>
+#include <hrz_common_image_processing.h>
 #include <hrz_common_image_view.h>
 #include <hrz_common_palette.h>
 #include <hrz_common_planet.h>
 #include <hrz_common_profiling.h>
 #include <hrz_common_raster_sampling.h>
 #include <hrz_fnd_log.h>
-#include <hrz_protocol_image_helper.h>
 
 namespace hrz_jobs::palettize_image
 {
@@ -38,8 +38,11 @@ hrz::JobResult run(
         case hrz_proto::ImageFormat::SIGNED_FIXED_24_8:
             fetch_pixel_func = hrz::sampling::fetch_signed_fixed_24_8_pixel;
             break;
-        case hrz_proto::ImageFormat::MAPZEN_TERRARIUM:
-            fetch_pixel_func = hrz::sampling::fetch_mapzen_terrarium_pixel;
+        case hrz_proto::ImageFormat::TERRARIUM:
+            fetch_pixel_func = hrz::sampling::fetch_terrarium_pixel;
+            break;
+        case hrz_proto::ImageFormat::TERRAIN_RGB:
+            fetch_pixel_func = hrz::sampling::fetch_terrain_rgb_pixel;
             break;
         default:
             HRZ_LOG_ERROR(
@@ -57,7 +60,7 @@ hrz::JobResult run(
         image_format);
 
     size_t output_image_data_size = params.image.width() * params.image.height()
-        * hrz_proto::byte_count(HrzProtocol::ImageFormat::SRGBA_8);
+        * hrz::image_format_byte_count(HrzProtocol::ImageFormat::SRGBA_8);
     auto output_image_blob_opt =
         hrz::blobs::allocate_blob_sync(context.get_blob_allocator(), output_image_data_size);
     if (!output_image_blob_opt.has_value())

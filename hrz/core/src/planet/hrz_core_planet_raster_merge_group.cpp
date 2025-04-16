@@ -1,6 +1,5 @@
 #include "planet/hrz_core_planet_raster_merge_group.h"
 
-#include "hrz_core_image_utils.h"
 #include "hrz_core_job_scheduler.h"
 #include "hrz_core_loading_priorities.h"
 #include "planet/hrz_core_planet_raster.h"
@@ -10,6 +9,7 @@
 #include <hrz_common_crs_database.h>
 #include <hrz_common_fmt.h>
 #include <hrz_common_geo.h>
+#include <hrz_common_image_processing.h>
 #include <hrz_common_planet.h>
 #include <hrz_common_profiling.h>
 #include <hrz_common_proj.h>
@@ -104,11 +104,7 @@ std::optional<hrz_proto::RasterPickResult> get_tile_image_pixel(
 
                 has_raster_data = true;
             }
-            else if (
-                image_format == hrz_proto::ImageFormat::R_F32
-                || image_format == hrz_proto::ImageFormat::R_F32_SILICIUM
-                || image_format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8
-                || image_format == hrz_proto::ImageFormat::MAPZEN_TERRARIUM)
+            else if (hrz::is_scalar_image_format(image_format))
             {
                 std::array<float, 1> pixel;
                 bool is_nodata = sampling_function->sample(input_image, uv, pixel.data());
@@ -720,7 +716,8 @@ void RasterMergeGroup::work(
             image_format == HrzProtocol::ImageFormat::SIGNED_FIXED_24_8
             || image_format == HrzProtocol::ImageFormat::R_F32
             || image_format == HrzProtocol::ImageFormat::R_F32_SILICIUM
-            || image_format == HrzProtocol::ImageFormat::MAPZEN_TERRARIUM
+            || image_format == HrzProtocol::ImageFormat::TERRARIUM
+            || image_format == HrzProtocol::ImageFormat::TERRAIN_RGB
             || raster->provider->get_raster_provider_type()
                 == HrzProtocol::RasterProviderType::UNTILED_RASTER_PROVIDER
             || rt.mesh.has_value()) // This means it is not an EPSG:3857 projection.

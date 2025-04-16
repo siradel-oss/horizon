@@ -49,12 +49,10 @@ hrz_genrule(
 cc_library(
     name = "hrz_cpp_protocol",
     srcs = [
-        "src/hrz_protocol_image_helper.cpp",
         ":generated_hdrs",
         ":generated_srcs",
     ],
     hdrs = [
-        "include/hrz_protocol_image_helper.h",
         ":generate_templates",
     ],
     includes = [
