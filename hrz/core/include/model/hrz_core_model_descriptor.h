@@ -106,6 +106,7 @@ struct ModelDescriptor
     {
         std::optional<int> source;
         std::optional<int> sampler;
+        std::optional<hrz_proto::ImageFormat> data_intepretation;
     };
 
     enum class AlphaMode

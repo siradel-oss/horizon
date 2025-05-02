@@ -31,6 +31,7 @@ std::optional<GpuTextureResource> GpuTextureResource::acquire(
     const auto* texture = _get_ptr(descriptor->textures, id.texture_id);
     if (texture && texture->source.has_value())
     {
+        std::optional<hrz_proto::ImageFormat> data_interpretation = std::nullopt;
         bool use_mipmap = !id.is_data;
 
         if (!id.is_data && texture->sampler.has_value())
@@ -43,6 +44,39 @@ std::optional<GpuTextureResource> GpuTextureResource::acquire(
             }
         }
 
+        if (texture->data_intepretation.has_value())
+        {
+            if (id.is_data)
+            {
+                if (texture->data_intepretation == hrz_proto::ImageFormat::R_F32
+                    || texture->data_intepretation == hrz_proto::ImageFormat::R_F32_SILICIUM)
+                {
+                    data_interpretation = texture->data_intepretation;
+                }
+                else
+                {
+                    // The glTF parser should not have let this value through.
+                    assert(false);
+                }
+            }
+            else
+            {
+                HRZ_LOG_WARNING(
+                    "glTF texture has data interpretation for non-data material, ignoring it");
+            }
+        }
+
+        if (id.is_data && !data_interpretation.has_value())
+        {
+            // Undocumented fallback to R_F32_SILICIUM, for models that have been generated
+            // according to the old specification, where data interpretation was not
+            // specified but Horizon expected R_F32_SILICIUM.
+            HRZ_LOG_WARNING(
+                "glTF data texture has no data interpretation, assuming R_F32_SILICIUM");
+
+            data_interpretation = hrz_proto::ImageFormat::R_F32_SILICIUM;
+        }
+
         int source_id = texture->source.value();
         const auto* image = _get_ptr(descriptor->images, source_id);
         if (!image) return std::nullopt;
@@ -50,7 +84,8 @@ std::optional<GpuTextureResource> GpuTextureResource::acquire(
         if (image->blob.has_value())
         {
             return GpuTextureResource(
-                bl, image->blob.value(), id.cfg, id.is_data, 0, 0, use_mipmap, owner);
+                bl, image->blob.value(), id.cfg, id.is_data, data_interpretation, 0, 0, use_mipmap,
+                owner);
         }
         else if (image->buffer_view.has_value())
         {
@@ -66,14 +101,15 @@ std::optional<GpuTextureResource> GpuTextureResource::acquire(
                     if (buffer->blob.has_value())
                     {
                         return GpuTextureResource(
-                            bl, buffer->blob.value(), id.cfg, id.is_data, view->byte_offset,
-                            view->byte_length, use_mipmap, owner);
+                            bl, buffer->blob.value(), id.cfg, id.is_data, data_interpretation,
+                            view->byte_offset, view->byte_length, use_mipmap, owner);
                     }
                     else if (descriptor->embedded_resources.has_value())
                     {
                         return GpuTextureResource(
                             bl, descriptor->embedded_resources.value(), id.cfg, id.is_data,
-                            view->byte_offset, view->byte_length, use_mipmap, owner);
+                            data_interpretation, view->byte_offset, view->byte_length, use_mipmap,
+                            owner);
                     }
                 }
             }
@@ -88,12 +124,14 @@ GpuTextureResource::GpuTextureResource(
     BlobLibrary::Handle blob,
     BlobLibrary::ConfigH cfg_,
     bool is_data_texture_,
+    std::optional<hrz_proto::ImageFormat> data_interpretation_,
     size_t offset,
     size_t length,
     bool use_mipmaps_,
     const monitoring::ResourceOwner& owner_) :
     cfg(cfg_),
     is_data_texture(is_data_texture_),
+    data_interpretation(data_interpretation_),
     use_mipmaps(use_mipmaps_),
     compressed_blob_handle(blob),
     blob_offset(offset),
@@ -141,14 +179,16 @@ void GpuTextureResource::work(
                     }
 
                     const hrz_proto::ImageFormat format = is_data_texture
-                        ? hrz_proto::ImageFormat::R_F32_SILICIUM
+                        ? data_interpretation.value_or(hrz_proto::ImageFormat::R_F32_SILICIUM)
                         : hrz_proto::ImageFormat::SRGBA_8;
+                    auto scalar_conversion = is_data_texture
+                        ? image_decoder::ConvertScalarsToFloat::Convert
+                        : image_decoder::ConvertScalarsToFloat::DoNotConvert;
 
                     decompress_ticket = image_decoder::decode_async(
                         imgdec, js, std::move(compressed_data_handle.value()), owner, format,
                         mime_type, image_decoder::PremultiplyAlpha::DoNotPremultiply,
-                        image_decoder::ConvertScalarsToFloat::Convert,
-                        image_decoder::DecodeToCompressedImage::Allow);
+                        scalar_conversion, image_decoder::DecodeToCompressedImage::Allow);
 
                     compressed_data_handle = std::nullopt;
 

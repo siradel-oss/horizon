@@ -10,6 +10,7 @@
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_gen_index_pool.h>
 #include <hrz_fnd_gen_object_pool.h>
+#include <hrz_fnd_hash.h>
 #include <hrz_jobs_protocol.h>
 #include <hrz_jobs_tickets.h>
 
@@ -129,14 +130,17 @@ struct GpuDracoMeshResource
     }
 };
 
-struct SamplerWithMipmapUsage
+struct SamplerWithParams
 {
     int sampler_id;
-    bool use_mipmaps;
+    bool can_use_linear_filtering;
+    bool can_use_mipmaps;
 
-    constexpr bool operator==(const SamplerWithMipmapUsage& other) const
+    constexpr bool operator==(const SamplerWithParams& other) const
     {
-        return sampler_id == other.sampler_id && use_mipmaps == other.use_mipmaps;
+        return sampler_id == other.sampler_id
+            && can_use_linear_filtering == other.can_use_linear_filtering
+            && can_use_mipmaps == other.can_use_mipmaps;
     }
 };
 
@@ -146,11 +150,11 @@ struct SamplerWithMipmapUsage
 namespace std
 {
 template<>
-struct hash<hrz::model::SamplerWithMipmapUsage>
+struct hash<hrz::model::SamplerWithParams>
 {
-    size_t operator()(const hrz::model::SamplerWithMipmapUsage& k) const
+    size_t operator()(const hrz::model::SamplerWithParams& k) const
     {
-        return hrz::hash_mix(std::hash<int>{}(k.sampler_id), std::hash<bool>{}(k.use_mipmaps));
+        return hrz::hash_values(k.sampler_id, k.can_use_linear_filtering, k.can_use_mipmaps);
     }
 };
 
@@ -161,21 +165,23 @@ namespace hrz::model
 struct GpuSamplerResource
 {
     ModelDescriptor::Sampler desc;
-    bool use_mipmaps;
+    bool can_use_linear_filtering;
+    bool can_use_mipmaps;
     my::ResourceHandle render_handle;
     GpuResourceStatus status;
 
     monitoring::ResourceOwner owner;
 
     static std::optional<GpuSamplerResource> acquire(
-        SamplerWithMipmapUsage sampler,
+        SamplerWithParams sampler,
         BlobLibrary* bl,
         ModelDescriptor* descriptor,
         const monitoring::ResourceOwner& owner);
 
     GpuSamplerResource(
         const ModelDescriptor::Sampler& desc,
-        bool use_mipmaps,
+        bool can_use_linear_filtering,
+        bool can_use_mipmaps,
         const monitoring::ResourceOwner& owner);
 
     void work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler* js, ImageDecoder* imgdec);
@@ -233,6 +239,7 @@ struct GpuTextureResource
 
     BlobLibrary::ConfigH cfg;
     bool is_data_texture;
+    std::optional<hrz_proto::ImageFormat> data_interpretation;
     bool use_mipmaps;
     std::optional<BlobLibrary::Handle> compressed_blob_handle;
     size_t blob_offset;
@@ -258,6 +265,7 @@ struct GpuTextureResource
         BlobLibrary::Handle blob,
         BlobLibrary::ConfigH cfg,
         bool is_data_texture,
+        std::optional<hrz_proto::ImageFormat> data_interpretation,
         size_t offset,
         size_t length,
         bool use_mipmaps,
@@ -555,7 +563,7 @@ struct GpuResources
     GpuResourcesCollection<int, GpuBufferResource<my::BufferResource::Vertex>> vertex_buffers;
     GpuResourcesCollection<int, GpuBufferResource<my::BufferResource::Index>> index_buffers;
     GpuResourcesCollection<int, GpuDracoMeshResource> draco_meshes;
-    GpuResourcesCollection<SamplerWithMipmapUsage, GpuSamplerResource> samplers;
+    GpuResourcesCollection<SamplerWithParams, GpuSamplerResource> samplers;
     GpuResourcesCollection<TextureWithCfg, GpuTextureResource> textures;
 
     explicit GpuResources(const monitoring::ResourceOwner& resource_owner) :

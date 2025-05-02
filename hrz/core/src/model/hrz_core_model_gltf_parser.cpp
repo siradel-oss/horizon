@@ -612,6 +612,28 @@ void _parse_gltf_texture(const rapidjson::Value& texture_json, ModelDescriptor* 
                 texture.source = webp_source;
             }
         }
+
+        const auto& data_texture_json = _get_gltf_extension(texture_json, SIRADEL_data_texture);
+        if (data_texture_json.IsObject())
+        {
+            auto data_interpretation = json::get_str(data_texture_json, "dataInterpretation");
+            if (data_interpretation.has_value())
+            {
+                if (std::strcmp(data_interpretation.value(), "rgba8BitsToFloat") == 0)
+                {
+                    texture.data_intepretation = hrz_proto::ImageFormat::R_F32;
+                }
+                else if (std::strcmp(data_interpretation.value(), "silicium") == 0)
+                {
+                    // This is undocumented.
+                    texture.data_intepretation = hrz_proto::ImageFormat::R_F32_SILICIUM;
+                }
+                else
+                {
+                    HRZ_LOG_WARNING("Unknown data interpretation: {}", data_interpretation.value());
+                }
+            }
+        }
     }
 
     descriptor->textures.push_back(texture);

@@ -180,7 +180,11 @@ void ModelMaterial::initialize(ModelPrototype* proto)
                             const auto* texture = _get_ptr(desc.textures, texture_id);
                             if (texture && texture->source.has_value())
                             {
-                                // Data textures only use a repeat/nearest/no mipmap sampler
+                                if (texture->sampler.has_value())
+                                {
+                                    material_prim.sampler_to_load = texture->sampler.value();
+                                }
+
                                 TextureWithCfg texture_cfg{texture_id, true, _cfg};
                                 proto->start_loading_texture(texture_cfg, &_used_textures);
                                 material_prim.texture_to_load = texture_id;
@@ -352,6 +356,15 @@ RenderRequest ModelMaterial::build(ModelPrototype* proto, SharedResources* sr, R
                 }
             }
 
+            auto make_sampler_id = [&]()
+            {
+                SamplerWithParams sampler{};
+                sampler.sampler_id = prim.sampler_to_load.value();
+                sampler.can_use_linear_filtering = !prim.is_data_texture;
+                sampler.can_use_mipmaps = prim.use_mipmaps && !prim.is_data_texture;
+                return sampler;
+            };
+
             if (prim.texture_to_load.has_value())
             {
                 TextureWithCfg texture_id{prim.texture_to_load.value(), prim.is_data_texture, _cfg};
@@ -369,10 +382,7 @@ RenderRequest ModelMaterial::build(ModelPrototype* proto, SharedResources* sr, R
 
                     if (prim.sampler_to_load.has_value())
                     {
-                        SamplerWithMipmapUsage sampler{};
-                        sampler.sampler_id = prim.sampler_to_load.value();
-                        sampler.use_mipmaps = prim.use_mipmaps;
-                        proto->start_loading_sampler(sampler, &_used_samplers);
+                        proto->start_loading_sampler(make_sampler_id(), &_used_samplers);
                     }
                 }
                 else if (status == GpuResourceStatus::Error)
@@ -392,8 +402,7 @@ RenderRequest ModelMaterial::build(ModelPrototype* proto, SharedResources* sr, R
 
             if (!prim.texture_to_load.has_value() && prim.sampler_to_load.has_value())
             {
-                SamplerWithMipmapUsage sampler_id = {
-                    prim.sampler_to_load.value(), prim.use_mipmaps};
+                SamplerWithParams sampler_id = make_sampler_id();
 
                 auto status = proto->gpu_resources.samplers.get_status(sampler_id);
                 if (status == GpuResourceStatus::Ready)

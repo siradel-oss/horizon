@@ -83,8 +83,8 @@ struct ModelPrototype
     void start_loading_draco_mesh(int draco_mesh_id, UsedResources<int>* used_draco_meshes);
 
     void start_loading_sampler(
-        SamplerWithMipmapUsage sampler,
-        UsedResources<SamplerWithMipmapUsage>* used_samplers);
+        SamplerWithParams sampler,
+        UsedResources<SamplerWithParams>* used_samplers);
 
     void start_loading_texture(
         TextureWithCfg texture,
@@ -94,13 +94,13 @@ struct ModelPrototype
     void update_indices_load_status(UsedResources<int>&);
     void update_draco_meshes_load_status(UsedResources<int>&);
     void update_textures_load_status(UsedResources<TextureWithCfg>&);
-    void update_samplers_load_status(UsedResources<SamplerWithMipmapUsage>&);
+    void update_samplers_load_status(UsedResources<SamplerWithParams>&);
 
     void release_attributes(UsedResources<int>&);
     void release_indices(UsedResources<int>&);
     void release_draco_meshes(UsedResources<int>&);
     void release_textures(UsedResources<TextureWithCfg>&);
-    void release_samplers(UsedResources<SamplerWithMipmapUsage>&);
+    void release_samplers(UsedResources<SamplerWithParams>&);
 
     void iterate_primitives(const std::function<void(
                                 const ModelDescriptor::Mesh*,

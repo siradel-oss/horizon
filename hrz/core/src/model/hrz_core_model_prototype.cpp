@@ -283,8 +283,8 @@ void ModelPrototype::start_loading_draco_mesh(
 }
 
 void ModelPrototype::start_loading_sampler(
-    SamplerWithMipmapUsage sampler,
-    UsedResources<SamplerWithMipmapUsage>* used_samplers)
+    SamplerWithParams sampler,
+    UsedResources<SamplerWithParams>* used_samplers)
 {
     gpu_resources.samplers.acquire(sampler, blob_library.get(), &descriptor);
     used_samplers->add(sampler);
@@ -337,10 +337,10 @@ void ModelPrototype::update_textures_load_status(UsedResources<TextureWithCfg>& 
         { return _is_finished_loading_gpu_resource(gpu_resources.textures.get_status(key)); });
 }
 
-void ModelPrototype::update_samplers_load_status(UsedResources<SamplerWithMipmapUsage>& used)
+void ModelPrototype::update_samplers_load_status(UsedResources<SamplerWithParams>& used)
 {
     used.iterate_waiting_on(
-        [this](SamplerWithMipmapUsage key) -> bool
+        [this](SamplerWithParams key) -> bool
         { return _is_finished_loading_gpu_resource(gpu_resources.samplers.get_status(key)); });
 }
 
@@ -364,9 +364,9 @@ void ModelPrototype::release_textures(UsedResources<TextureWithCfg>& used)
     used.iterate_all([this](TextureWithCfg id) { gpu_resources.textures.release(id); });
 }
 
-void ModelPrototype::release_samplers(UsedResources<SamplerWithMipmapUsage>& used)
+void ModelPrototype::release_samplers(UsedResources<SamplerWithParams>& used)
 {
-    used.iterate_all([this](SamplerWithMipmapUsage id) { gpu_resources.samplers.release(id); });
+    used.iterate_all([this](SamplerWithParams id) { gpu_resources.samplers.release(id); });
 }
 
 GpuDracoMeshResource* ModelPrototype::get_draco_mesh(int id)

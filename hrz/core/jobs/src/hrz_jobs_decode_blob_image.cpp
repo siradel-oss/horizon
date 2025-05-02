@@ -133,7 +133,7 @@ void transform_32bit_image_data(std::byte* data, size_t pixel_count, F transform
     }
 }
 
-hrz::BlobImage finalize_image(
+std::optional<hrz::BlobImage> finalize_image(
     hrz_proto::ImageFormat encoded_image_format,
     int width,
     int height,
@@ -199,7 +199,7 @@ hrz::BlobImage finalize_image(
                 HRZ_LOG_ERROR(
                     "Image format cannot be converted to float: {}",
                     hrz_proto::ImageFormat_Name(encoded_image_format));
-                break;
+                return std::nullopt;
         }
     }
 
@@ -805,15 +805,17 @@ hrz::JobResult run(
 
     if (decoded_image_blob.has_value())
     {
-        decoded_image = finalize_image(
+        auto decoded_image_opt = finalize_image(
             params.image_format, width, height, byte_per_pixel, params.premultiply_alpha,
             params.convert_scalars_to_float, decoded_image_blob.value(), context);
-        return hrz::JobResult::SUCCESS;
+        if (decoded_image_opt.has_value())
+        {
+            decoded_image = std::move(decoded_image_opt.value());
+            return hrz::JobResult::SUCCESS;
+        }
     }
-    else
-    {
-        return hrz::JobResult::FAILURE;
-    }
+
+    return hrz::JobResult::FAILURE;
 }
 
 } // namespace hrz_jobs::decode_blob_image

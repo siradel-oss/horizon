@@ -3,7 +3,7 @@
 namespace hrz::model
 {
 std::optional<GpuSamplerResource> GpuSamplerResource::acquire(
-    SamplerWithMipmapUsage sampler,
+    SamplerWithParams sampler,
     BlobLibrary* bl,
     ModelDescriptor* descriptor,
     const monitoring::ResourceOwner& owner)
@@ -11,17 +11,20 @@ std::optional<GpuSamplerResource> GpuSamplerResource::acquire(
     if (sampler.sampler_id >= 0 && (size_t)sampler.sampler_id < descriptor->samplers.size())
     {
         return GpuSamplerResource(
-            descriptor->samplers[(size_t)sampler.sampler_id], sampler.use_mipmaps, owner);
+            descriptor->samplers[(size_t)sampler.sampler_id], sampler.can_use_linear_filtering,
+            sampler.can_use_mipmaps, owner);
     }
     return std::nullopt;
 }
 
 GpuSamplerResource::GpuSamplerResource(
     const ModelDescriptor::Sampler& desc,
-    bool use_mipmaps,
+    bool can_use_linear_filtering,
+    bool can_use_mipmaps,
     const monitoring::ResourceOwner& owner) :
     desc(desc),
-    use_mipmaps(use_mipmaps),
+    can_use_linear_filtering(can_use_linear_filtering),
+    can_use_mipmaps(can_use_mipmaps),
     render_handle(my::ResourceHandle::null()),
     status(GpuResourceStatus::Loaded),
     owner(owner)
@@ -38,17 +41,22 @@ void GpuSamplerResource::work_gpu(BlobAllocator*, BlobLibrary* bl, Render* rende
         res.sampler.wrap_x = desc.wrap_s;
         res.sampler.wrap_y = desc.wrap_t;
         res.sampler.is_shadow = false;
-        res.sampler.min_filter = desc.min_filter;
-        res.sampler.mag_filter = desc.mag_filter;
 
-        if (desc.mipmap_min_filter.has_value() && use_mipmaps)
+        res.sampler.min_filter =
+            can_use_linear_filtering ? desc.min_filter : my::SamplerParams::Filter::Nearest;
+        res.sampler.mag_filter =
+            can_use_linear_filtering ? desc.mag_filter : my::SamplerParams::Filter::Nearest;
+
+        if (desc.mipmap_min_filter.has_value() && can_use_mipmaps)
         {
-            res.sampler.mipmap_filter = desc.mipmap_min_filter.value();
+            res.sampler.mipmap_filter = can_use_linear_filtering
+                ? desc.mipmap_min_filter.value()
+                : my::SamplerParams::Filter::Nearest;
             res.use_mipmaps = true;
         }
         else
         {
-            res.sampler.min_filter = desc.min_filter;
+            res.sampler.mipmap_filter = my::SamplerParams::Filter::Nearest;
             res.use_mipmaps = false;
         }
 

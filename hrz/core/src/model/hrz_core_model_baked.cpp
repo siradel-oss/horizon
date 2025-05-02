@@ -373,13 +373,13 @@ void BakedModel::update_primitive(
                 primitive.renderable.primitive_data.textures[i] = material_primitives[i]->texture;
             }
 
-            if (material_primitives[i]->is_data_texture)
-            {
-                primitive.renderable.primitive_data.samplers[i] = sr->fallback_data_sampler;
-            }
-            else if (material_primitives[i]->sampler)
+            if (material_primitives[i]->sampler)
             {
                 primitive.renderable.primitive_data.samplers[i] = material_primitives[i]->sampler;
+            }
+            else if (material_primitives[i]->is_data_texture)
+            {
+                primitive.renderable.primitive_data.samplers[i] = sr->fallback_data_sampler;
             }
         }
     }

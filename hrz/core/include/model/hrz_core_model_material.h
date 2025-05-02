@@ -64,7 +64,7 @@ private:
 
     UsedResources<int> _used_vertex_buffers;
     UsedResources<int> _used_draco_meshes;
-    UsedResources<SamplerWithMipmapUsage> _used_samplers;
+    UsedResources<SamplerWithParams> _used_samplers;
     UsedResources<TextureWithCfg> _used_textures;
 
     std::vector<Primitive> _primitives;
