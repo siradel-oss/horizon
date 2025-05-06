@@ -68,6 +68,24 @@ var LibraryHorizon = {
         var request = UTF8ToString(requestRawStr);
         var param = UTF8ToString(paramRawStr);
 
+        if (location.protocol === "https:" && url.substr(0, 5).toLowerCase() === "http:") {
+            // We are trying to fetch a resource over HTTP from an HTTPS page. This is mixed content and
+            // is not allowed by the browser and it would be blocked, but we can upgrade the request and
+            // try to fetch the resource over HTTPS instead.
+            // However fetching from localhost using HTTP when the page is secure is allowed, so we leave
+            // these URLs unchanged. The regex matches `*.localhost`, `127.x.x.x`, and `[::1]`.
+            var parsedUrl = URL.parse(url);
+            if (
+                parsedUrl &&
+                !parsedUrl.hostname.match(
+                    /^(?:(?:.+\.)?localhost)|(?:127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})|(?:\[::1\])$/
+                )
+            ) {
+                parsedUrl.protocol = "https";
+                url = parsedUrl.href;
+            }
+        }
+
         var xhr = new XMLHttpRequest();
         var handle = Horizon.getNextFetchRequestHandle();
 

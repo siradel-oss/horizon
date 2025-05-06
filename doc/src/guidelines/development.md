@@ -186,10 +186,10 @@ We use C++17, but not all of it. Generally if a language feature or library is n
 - No multiple inheritance (except for pure virtual classes).
 - Keep classes hierarchies as shallow as possible, or just avoid them.
 - Use `#pragma once`.
-- Private fields start with an underscore.
+- Private field names start with an underscore.
 - Prefer `std::string_view` to `const char*` and to `std::string`, where possible.
 - Prefer `gsl::span` for passing contiguous sequences instead of arrays or vectors.
 - Runtime strings are UTF-8.
 - No exceptions.
 - Prefer `hrz::flat_hash_(map|set)` to `std::unordered_(map|set)`. More info [here](https://abseil.io/docs/cpp/guides/container).
-- A lot of "future" C++ features are available through `hrz_fnd` thanks to abseil. Use this instead of their `std` counterparts. For example this includes `optional`, `variant`, `any`, `bit_cast`, ...
+- Some C++ standard library features that are only included in later C++ versions are made available through `hrz_fnd` thanks to abseil. This includes for example `bit_cast`.

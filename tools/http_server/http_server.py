@@ -1,9 +1,12 @@
+import argparse
 import os
 import re
 import shutil
+import ssl
 import sys
 
-from http.server import HTTPServer, SimpleHTTPRequestHandler, test
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from pathlib import Path
 
 class HrzRequestHandler(SimpleHTTPRequestHandler):
     extensions_map={
@@ -89,10 +92,45 @@ class HrzRequestHandler(SimpleHTTPRequestHandler):
             shutil.copyfileobj(source, outputfile)
 
 if __name__ == '__main__':
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--port", help="Port", type=int, default=8080)
+    parser.add_argument("-n", "--hostname", help="Hostname", type=str, default="0.0.0.0")
+    parser.add_argument("-d", "--directory", help="Path of the directory to serve", type=str, default="")
+    parser.add_argument("-t", "--tls", help="Use TLS", action="store_true")
+    parser.add_argument("--certificate", help="Certificate path", type=str, default=Path(__file__).parent / "cert.pem")
+    parser.add_argument("--keyfile", help="Certificate private keyfile path", type=str, default=Path(__file__).parent / "key.pem")
 
-    if len(sys.argv) > 2:
-        web_dir = sys.argv[2]
-        os.chdir(web_dir)
+    args = parser.parse_args(sys.argv[1:])
 
-    test(HrzRequestHandler, HTTPServer, port=port, bind='0.0.0.0')
+    port = args.port
+    hostname = args.hostname
+
+    if args.directory:
+        os.chdir(args.directory)
+
+    httpd = HTTPServer((hostname, port), HrzRequestHandler)
+
+    if args.tls:
+        cert_path = None
+        if args.certificate and os.path.exists(args.certificate):
+            cert_path = args.certificate
+            print(f"Using certificate {cert_path}")
+        else:
+            print("No certificate found!")
+
+        keyfile_path = None
+        if args.keyfile and os.path.exists(args.keyfile):
+            keyfile_path = args.keyfile
+            print(f"Using keyfile {keyfile_path}")
+        else:
+            print("No keyfile found!")
+
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.load_cert_chain(cert_path, keyfile=keyfile_path)
+        httpd.socket = ssl_context.wrap_socket(
+            httpd.socket,
+            server_side=True,
+        )
+
+    print(f'Serving on https://{hostname}:{port}/')
+    httpd.serve_forever()

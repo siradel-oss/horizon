@@ -9,6 +9,10 @@ def _make_run_script_impl(ctx):
         exec_path = exec_path.replace("/", "\\")
 
     command = [exec_path] + ctx.attr.arguments
+
+    if ctx.attr.pass_user_arguments:
+        command += ["%*"] if is_windows else ["$@"]
+
     script_content = ""
 
     # The child executable requires its own runfiles, but we are already in the runfiles
@@ -43,6 +47,10 @@ run_binary = rule(
         ),
         "arguments": attr.string_list(),
         "data": attr.label_list(),
+        "pass_user_arguments": attr.bool(
+            default = False,
+            doc = "If true, the script will pass user-supplied arguments to the executable, after the ones in \"arguments\".",
+        ),
         "_windows_constraint": attr.label(default = "@platforms//os:windows"),
     },
     executable = True,

@@ -192,6 +192,7 @@ public:
             curl_easy_setopt(handle, CURLOPT_USERAGENT, user_agent);
             curl_easy_setopt(handle, CURLOPT_ERRORBUFFER, _slots[i].error_buffer.get());
             curl_easy_setopt(handle, CURLOPT_REFERER, http_referrer);
+            curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1);
 
             _slots[i].handle = handle;
 

@@ -227,13 +227,32 @@ There are several bazel targets available the most important ones are:
 
 The `-c opt` option can be used to build in release mode, and `-c dbg` for debug mode. Not adding any `-c` flag builds in `fastbuild` version: faster than debug at runtime, and faster build time than the optimized version.
 
-Full command example: `bazel run //apps/native_client --config=windows -c opt`.
+Examples:
+
+- `bazel run //apps/native_client --config=windows -c opt`
+- `bazel run //apps/web_client:server --config=wasm_linux -c opt`
 
 ### Command line arguments
 
 The client can be given command line argument referenced in the documentation. You must tell Bazel that the arguments you provide aren't Bazel arguments. For that, follow the following pattern: `bazel run //apps/native_client BZL_ARGS -- HRZ_ARGS`. When using file paths, please use absolute paths.
 
 Example: `bazel run //apps/native_client -c opt --config=linux -- --disable-dev-ui true`
+
+### Serving the web client over HTTPS
+
+By default the web client is served locally with the HTTP protocol. However in production it can only be served with the HTTPS protocol (to satisfy secure context requirements). Because there are some behavioural differences on the browser between the two protocols, it can be useful to serve the web client locally with the HTTPS protocol.
+
+A self-signed certificate is provided with the server, just add `_tls` add the end of the target’s name to use it:
+
+`bazel run //apps/web_client:server_tls --config=wasm_linux -c opt`
+
+You use an existing certificate (and its associated key) by passing the relevant arguments to the server:
+
+`bazel run //apps/web_client:server_tls --config=wasm_linux -c opt -- --certificate path/to/hrz.localhost.pem --keyfile path/to/hrz.localhost-key.pem --hostname hrz.localhost`
+
+If you can’t or don’t want to use self-signed certificates, you can use a tool like [mkcert](https://github.com/FiloSottile/mkcert) instead. It allows setting up a local certificate authority (CA) and generating certificates for localhost domains.
+
+Note that when the client is served over HTTPS, connecting to a native client over non-secure WebSockets is only possible if it runs locally and is reached through a localhost address.
 
 ## Using Bazel's cache
 
