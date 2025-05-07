@@ -1805,7 +1805,7 @@ message SkySettings {
     // is 1.
     float   attenuation  = 2;
 
-    // Color of the sky used when `mode` is `SUN_LIGHTING_STATIC`.
+    // Color of the sky used when `mode` is `SKY_STATIC`.
     // It fades to black as the camera get farther from the planet.
     // Alpha is ignored.
     Color   static_color = 3;

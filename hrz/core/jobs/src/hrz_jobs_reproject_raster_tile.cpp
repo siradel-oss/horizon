@@ -411,7 +411,7 @@ void select_tiled_image_tiles(
             (grid_coords[i].x - info.domain_bounds.min.x) / info.domain_bounds_size.x,
             (info.domain_bounds.max.y - grid_coords[i].y) / info.domain_bounds_size.y);
 
-        lm::dvec2 domain_coords_pixel(lm::floor(domain_coords * info.domain_pixel_size));
+        lm::dvec2 domain_coords_pixel(domain_coords * info.domain_pixel_size);
 
         grid_bbox_pixel = lm::expand(grid_bbox_pixel, domain_coords_pixel);
         grid_bbox_units = lm::expand(grid_bbox_units, grid_coords[i].xy);
