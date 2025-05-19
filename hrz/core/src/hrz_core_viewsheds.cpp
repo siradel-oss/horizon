@@ -30,6 +30,7 @@ struct Cube : public my::Renderer::Renderable
     lm::dvec3 center;
     lm::dmat4 inv_pv;
     lm::dmat4 main_cam_pv;
+    bool draw_from_main_cam = false;
     my::ResourceHandle vertex_buffer;
     my::ResourceHandle index_buffer;
 
@@ -159,7 +160,16 @@ struct Cube : public my::Renderer::Renderable
     {
         {
             lm::vec4 main_clip_vertices[8];
-            for (int i = 0; i < 8; i++)
+
+            if (draw_from_main_cam)
+            {
+                for (size_t i = 0; i < 4; ++i)
+                {
+                    main_clip_vertices[i] = lm::vec4(main_cam_pv * lm::dvec4(center, 1.0));
+                }
+            }
+
+            for (size_t i = draw_from_main_cam ? 4 : 0; i < 8; ++i)
             {
                 lm::dvec4 dclip_vertex = inv_pv * vertices[i];
                 dclip_vertex /= dclip_vertex.w;
@@ -284,6 +294,8 @@ RenderRequest update(ViewshedsSystem* sys, const CameraViewInfo& cam, SceneModel
 
         sys->viewshed_matrix_view[0] = lm::inverse(vs_view);
         sys->viewshed_matrix_proj[0] = vs_proj;
+
+        sys->cube.draw_from_main_cam = settings.draw_wireframe_from_position();
 
         auto visible_color = hrz::to_lm(settings.visible_color());
         visible_color.xyz *= visible_color.a;

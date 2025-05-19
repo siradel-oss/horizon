@@ -1036,7 +1036,7 @@ SendEvents.HrzProtocol.EventsStream.HrzProtocol.Void8
 MoveDevUiToCursor.HrzProtocol.Void.HrzProtocol.Void6
 ClearHttpCache.HrzProtocol.Void.HrzProtocol.VoidB
 SetAttributionEnabled.HrzProtocol.BoolValue.HrzProtocol.VoidBH¯bproto3
-™É
+ÎÉ
 hrz_scene_model.protoHrzProtocolhrz_types.protohrz_layers.proto"%
 SceneViewBitset
 bits (Rbits"ç
@@ -1638,10 +1638,11 @@ J"Õ
 mouse_hover_highlight_color (2.HrzProtocol.ColorRmouseHoverHighlightColor"n
 ViewportSettings-
 viewport (2.HrzProtocol.BboxRviewport+
-scissor (2.HrzProtocol.BboxRscissor"±
+scissor (2.HrzProtocol.BboxRscissor"Ú
 ViewshedSettings'
 enable_viewshed (RenableViewshed)
-enable_wireframe (RenableWireframe;
+enable_wireframe (RenableWireframe?
+draw_wireframe_from_position (RdrawWireframeFromPosition;
 position (2.HrzProtocol.GeographicPositionRposition
 bearing (Rbearing
 tilt (Rtilt

@@ -1916,27 +1916,31 @@ message ViewportSettings {
 }
 
 message ViewshedSettings {
-    bool               enable_viewshed  = 1;
+    bool               enable_viewshed              = 1;
     // Whether or not display the wireframe representation of the viewshed.
-    bool               enable_wireframe = 2;
-    GeographicPosition position         = 3;
+    bool               enable_wireframe             = 2;
+    // If true, draw the wireframe from the position of the viewshed point of
+    // view instead of the near plane.
+    bool               draw_wireframe_from_position = 12;
+    // Position of the point of view of the viewshed.
+    GeographicPosition position                     = 3;
     // Horizontal orientation angle of the viewshed in radians.
-    float              bearing          = 4;
+    float              bearing                      = 4;
     // Vertical orientation angle of the viewshed in radians.
-    float              tilt             = 5;
+    float              tilt                         = 5;
     // Horizontal field of view in degrees. Must be < 120 degrees for a better
     // quality.
-    float              hfov             = 6;
+    float              hfov                         = 6;
     // Ratio between width and height of the viewshed viewport.
-    float              aspect_ratio     = 7;
+    float              aspect_ratio                 = 7;
     // Factor applied to max distance to place near plane of the viewshed.
-    // Must stay between 0 and 1.
-    float              start            = 8;
+    // Must be greater than 0 and less or equal to 1.
+    float              start                        = 8;
     // Max distance of the viewshed in meters.
     // If quality is not good, consider a higher start factor.
-    float              max_distance     = 9;
-    Color              visible_color    = 10;
-    Color              hidden_color     = 11;
+    float              max_distance                 = 9;
+    Color              visible_color                = 10;
+    Color              hidden_color                 = 11;
 }
 
 message RasterSettings {
