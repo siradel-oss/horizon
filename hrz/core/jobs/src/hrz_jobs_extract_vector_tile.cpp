@@ -347,6 +347,8 @@ hrz::JobResult run(
                         src_points.as_span().subspan(
                             src_linestring_first_point, src_linestring_size);
 
+                    src_linestring_first_point += src_linestring_size;
+
                     lm::dbbox2 linestring_bbox = lm::dbbox2::invalid();
                     for (const auto& point : src_linestring_points_span)
                     {
@@ -365,7 +367,7 @@ hrz::JobResult run(
                     compute_linestring_deviations(src_linestring_points_span, deviations);
 
                     // Don't simplify away the first and last points.
-                    clip_data.push_point(src_points[src_linestring_first_point]);
+                    clip_data.push_point(src_linestring_points_span[0]);
                     for (size_t k = 1; k < src_linestring_size - 1; ++k)
                     {
                         if (deviations[k] >= tolerance)
@@ -388,8 +390,6 @@ hrz::JobResult run(
                     {
                         clip_data.end_linestring();
                     }
-
-                    src_linestring_first_point += src_linestring_size;
                 }
 
                 ClippedFeature clipped;
@@ -404,6 +404,11 @@ hrz::JobResult run(
                 size_t clipped_linestring_first_point = 0;
                 for (const auto& clipped_linestring_size : clipped.linestring_sizes)
                 {
+                    if (clipped_linestring_size == 0)
+                    {
+                        continue;
+                    }
+
                     for (size_t k = 0; k < clipped_linestring_size; ++k)
                     {
                         const auto& point = clipped.points[clipped_linestring_first_point + k];
@@ -411,16 +416,13 @@ hrz::JobResult run(
                         tile_geometry_bounds = lm::expand(tile_geometry_bounds, point.xy);
                     }
 
-                    if (clipped_linestring_size > 0)
-                    {
-                        linestring_sizes.push_back(clipped_linestring_size);
-                        feature.linestring_count++;
-                        feature.point_count += clipped_linestring_size;
+                    linestring_sizes.push_back(clipped_linestring_size);
+                    feature.linestring_count++;
+                    feature.point_count += clipped_linestring_size;
 
-                        if (feature_is_simplified)
-                        {
-                            tile_has_full_detail = false;
-                        }
+                    if (feature_is_simplified)
+                    {
+                        tile_has_full_detail = false;
                     }
 
                     clipped_linestring_first_point += clipped_linestring_size;
