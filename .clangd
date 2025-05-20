@@ -33,5 +33,6 @@ Diagnostics:
             - "*-noexcept-move"
             - "*-macro-usage"
             - "*-non-private-member-variables-in-classes"
+            - "*-no-recursion"
         # This is important to enable the misc-const-correctness check
         FastCheckFilter: None

@@ -124,7 +124,7 @@ template<typename F, std::enable_if_t<std::is_invocable_r_v<uint32_t, F, uint32_
 void transform_32bit_image_data(std::byte* data, size_t pixel_count, F transform_function)
 {
     uint32_t value{};
-    for (auto* end_ptr = data + pixel_count * sizeof(uint32_t); data < end_ptr;
+    for (const auto* end_ptr = data + pixel_count * sizeof(uint32_t); data < end_ptr;
          data += sizeof(uint32_t))
     {
         std::memcpy(&value, data, sizeof(uint32_t));
@@ -484,7 +484,7 @@ std::optional<hrz::blobs::BlobHandle> decode_stbi(
     // environments."
     //     -nothings, https://github.com/nothings/stb/issues/964#issuecomment-628301472
 
-    int channels_in_file;
+    int channels_in_file = 0;
 
     stbi_uc* output_data = stbi_load_from_memory(
         (const stbi_uc*)encoded_image_data.data(),
@@ -524,8 +524,7 @@ std::optional<hrz::blobs::BlobHandle> decode_stbi(
 // @Todo(C++23) Use monadic operations on std::optional.
 std::optional<int> atoi_opt(std::optional<std::string_view> sv)
 {
-    int value{};
-    if (sv && absl::SimpleAtoi(sv.value(), &value))
+    if (int value{}; sv && absl::SimpleAtoi(sv.value(), &value))
     {
         return value;
     }
@@ -597,7 +596,7 @@ std::optional<hrz::blobs::BlobHandle> decode_raw(
 
     const int channels = atoi_opt(mime.get_parameter("channels")).value_or(1);
     const int bits_per_channel = atoi_opt(mime.get_parameter("bit_width")).value_or(8);
-    const auto interleaving = mime.get_parameter(("interleaving")).value_or("pixel");
+    const auto interleaving = mime.get_parameter("interleaving").value_or("pixel");
     const bool swap_bytes =
         hrz::str::iequals(mime.get_parameter("endian").value_or("little"), "big");
 

@@ -4,6 +4,7 @@
 
 #include <hrz_common_image_processing.h>
 #include <hrz_fnd_bit_cast.h>
+#include <hrz_fnd_class.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_maths.h>
 #include <hrz_protocol_all.h>
@@ -108,17 +109,22 @@ private:
         hrz_proto::NodataHandling nodata_handling,
         hrz_proto::ImageFormat image_format);
 
+    NodataFunction(const NodataParams& params, hrz_proto::NodataHandling nodata_handling) :
+        pattern(params.pattern & params.mask),
+        mask(params.mask),
+        handling(mask != 0 ? nodata_handling : hrz_proto::NodataHandling::IGNORE_NODATA)
+    {
+    }
+
 public:
     NodataFunction(
         const hrz_proto::NodataValue& nodata_value,
         hrz_proto::NodataHandling nodata_handling,
-        hrz_proto::ImageFormat image_format)
+        hrz_proto::ImageFormat image_format) :
+        NodataFunction(
+            make_nodata_pattern_and_mask(nodata_value, nodata_handling, image_format),
+            nodata_handling)
     {
-        auto params = make_nodata_pattern_and_mask(nodata_value, nodata_handling, image_format);
-        pattern = params.pattern & params.mask;
-        mask = params.mask;
-
-        handling = mask != 0 ? nodata_handling : hrz_proto::NodataHandling::IGNORE_NODATA;
     }
 
     template<typename T, unsigned int CHANNELS>
@@ -171,7 +177,6 @@ public:
 
     uint32_t pattern;
     uint32_t mask;
-    uint32_t zero_value;
     hrz_proto::NodataHandling handling;
 };
 
@@ -179,12 +184,13 @@ struct BlendingFunction
 {
     explicit BlendingFunction(const uint8_t opacity) : opacity(opacity) {}
 
+    HRZ_DEFAULT_COPY_MOVE(BlendingFunction);
     virtual ~BlendingFunction() = default;
 
     virtual void blend(const void* src, void* dst) const = 0;
 
 protected:
-    const uint8_t opacity;
+    uint8_t opacity;
 };
 
 struct DtmBlendingFunction : public BlendingFunction
@@ -232,6 +238,8 @@ PixelValue<float, 1> fetch_terrain_rgb_pixel(
 
 struct SamplingFunction
 {
+    SamplingFunction() = default;
+    HRZ_DEFAULT_COPY_MOVE(SamplingFunction);
     virtual ~SamplingFunction() = default;
 
     // Returns true if the pixel should be discarded, false otherwise.
@@ -247,11 +255,11 @@ struct SamplingFunctionImpl : public SamplingFunction
     SamplingFunctionImpl(
         PixelFetchFunction pixel_fetch_func,
         hrz_proto::AlphaChannelUsage alpha_channel_usage,
-        NodataFunction&& nodata,
+        const NodataFunction& nodata,
         hrz_proto::TextureFiltering filtering) :
         pixel_fetch_func(pixel_fetch_func),
         alpha_channel_usage(alpha_channel_usage),
-        nodata(std::move(nodata)),
+        nodata(nodata),
         filtering(filtering)
     {
     }
@@ -380,13 +388,13 @@ struct SamplingFunctionImpl : public SamplingFunction
     {
         static_assert(std::is_floating_point_v<T>);
 
-        NextSizeT one = (NextSizeT)1.0;
+        static constexpr auto kOne = (NextSizeT)1.0;
 
         if (!data00.is_nodata && !data01.is_nodata && !data10.is_nodata && !data11.is_nodata)
         {
-            NextSizeT r0 = (NextSizeT)data00.value * (one - xf) + (NextSizeT)data01.value * xf;
-            NextSizeT r1 = (NextSizeT)data10.value * (one - xf) + (NextSizeT)data11.value * xf;
-            return {(T)(r0 * (one - yf) + r1 * yf), false};
+            NextSizeT r0 = (NextSizeT)data00.value * (kOne - xf) + (NextSizeT)data01.value * xf;
+            NextSizeT r1 = (NextSizeT)data10.value * (kOne - xf) + (NextSizeT)data11.value * xf;
+            return {(T)(r0 * (kOne - yf) + r1 * yf), false};
         }
 
         // @Todo The interpolation is wrong when only one source value is nodata.
@@ -396,7 +404,7 @@ struct SamplingFunctionImpl : public SamplingFunction
         bool r0_is_nodata = false;
         if (!data00.is_nodata && !data01.is_nodata)
         {
-            r0 = ((NextSizeT)data00.value * (one - xf) + (NextSizeT)data01.value * xf);
+            r0 = ((NextSizeT)data00.value * (kOne - xf) + (NextSizeT)data01.value * xf);
         }
         else if (!data00.is_nodata && data01.is_nodata)
         {
@@ -416,7 +424,7 @@ struct SamplingFunctionImpl : public SamplingFunction
         bool r1_is_nodata = false;
         if (!data10.is_nodata && !data11.is_nodata)
         {
-            r1 = ((NextSizeT)data10.value * (one - xf) + (NextSizeT)data11.value * xf);
+            r1 = ((NextSizeT)data10.value * (kOne - xf) + (NextSizeT)data11.value * xf);
         }
         else if (!data10.is_nodata && data11.is_nodata)
         {
@@ -435,7 +443,7 @@ struct SamplingFunctionImpl : public SamplingFunction
         NextSizeT res;
         if (!r0_is_nodata && !r1_is_nodata)
         {
-            res = (r0 * (one - yf) + r1 * yf);
+            res = (r0 * (kOne - yf) + r1 * yf);
         }
         else if (!r0_is_nodata && r1_is_nodata)
         {
@@ -560,8 +568,8 @@ struct SamplingFunctionImpl : public SamplingFunction
             x0 = std::max(0, x0);
             y0 = std::max(0, y0);
 
-            float xf_f = std::min(std::max(uv.x - (float)x0, 0.0f), 1.0f);
-            float yf_f = std::min(std::max(uv.y - (float)y0, 0.0f), 1.0f);
+            float xf_f = std::min(std::max(uv.x - (float)x0, 0.0F), 1.0F);
+            float yf_f = std::min(std::max(uv.y - (float)y0, 0.0F), 1.0F);
 
             SubpixelCoordT xf;
             SubpixelCoordT yf;

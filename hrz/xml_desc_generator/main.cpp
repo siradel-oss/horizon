@@ -33,8 +33,7 @@ std::string parse_attribute(std::string& source, const char* attribute_name)
     {
         bool is_comment = true;
 
-        auto at_location = attribute_line.find('@');
-        if (at_location != std::string::npos)
+        if (auto at_location = attribute_line.find('@'); at_location != std::string::npos)
         {
             is_comment = false;
 
@@ -154,8 +153,7 @@ void print_service(
     std::set<uint64_t> method_ids;
 
     std::string documentation;
-    google::protobuf::SourceLocation loc;
-    if (s->GetSourceLocation(&loc))
+    if (google::protobuf::SourceLocation loc; s->GetSourceLocation(&loc))
     {
         documentation += loc.leading_comments;
         documentation += " ";
@@ -254,8 +252,8 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
         documentation += loc.trailing_comments;
     }
 
-    std::string expose_to_style;
-    if (parse_attribute_string(documentation, "expose_to_style", &expose_to_style)
+    if (std::string expose_to_style;
+        parse_attribute_string(documentation, "expose_to_style", &expose_to_style)
         && expose_to_style == "true")
     {
         printer.Print("        <expose_to_style>true</expose_to_style>\n");
@@ -347,14 +345,13 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
         documentation += loc.trailing_comments;
     }
 
-    std::string path_root;
-    if (parse_attribute_string(documentation, "path_root", &path_root))
+    if (std::string path_root; parse_attribute_string(documentation, "path_root", &path_root))
     {
         printer.Print("        <path_root>$root$</path_root>\n", "root", path_root.c_str());
     }
 
-    std::string is_path_leaf;
-    if (parse_attribute_string(documentation, "path_leaf", &is_path_leaf) && is_path_leaf == "true")
+    if (std::string is_path_leaf;
+        parse_attribute_string(documentation, "path_leaf", &is_path_leaf) && is_path_leaf == "true")
     {
         printer.Print("        <path_leaf>true</path_leaf>\n");
     }

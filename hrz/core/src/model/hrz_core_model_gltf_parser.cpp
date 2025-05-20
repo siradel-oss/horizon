@@ -13,6 +13,10 @@
 
 namespace
 {
+
+using namespace hrz;
+using namespace hrz::model;
+
 static constexpr const char* s_supported_extensions[] = {
     "KHR_draco_mesh_compression", "EXT_texture_webp",    "KHR_texture_basisu",
     "KHR_materials_variants",     "KHR_materials_unlit", "SIRADEL_templated_image_url",
@@ -32,10 +36,7 @@ enum GltfExtension
 
     SupportedGltfExtensionCount
 };
-} // namespace
 
-namespace hrz::model
-{
 const rapidjson::Value& _get_gltf_extension(const rapidjson::Value& json, GltfExtension ext)
 {
     const auto& extensions_json = json::get_member_or_null(json, "extensions");
@@ -100,7 +101,7 @@ void _parse_gltf_node(
             lm::translation(translation) * lm::rotation_normalized(rotation) * lm::scaling(scale);
     }
 
-    lm::dmat4 transform = parent_transform * local_transform;
+    const lm::dmat4 transform = parent_transform * local_transform;
 
     // Parse the children
     const auto& children_json = json::get_member_or_null(node_json, "children");
@@ -114,8 +115,7 @@ void _parse_gltf_node(
         }
     }
 
-    int mesh_id = json::get_int_or(node_json, "mesh", -1);
-    if (mesh_id >= 0)
+    if (const int mesh_id = json::get_int_or(node_json, "mesh", -1); mesh_id >= 0)
     {
         descriptor->mesh_instances.push_back(ModelDescriptor::MeshInstance{transform, mesh_id});
     }
@@ -209,7 +209,7 @@ void _parse_gltf_primitive(const rapidjson::Value& prim_json, ModelDescriptor* d
                 for (const auto& variant_json : variants_json.GetArray())
                 {
                     if (!variant_json.IsInt()) continue;
-                    int variant_index = variant_json.GetInt();
+                    const int variant_index = variant_json.GetInt();
 
                     if (variant_index >= 0 && (size_t)variant_index < MAX_MATERIAL_VARIANTS)
                     {
@@ -229,8 +229,6 @@ void _parse_gltf_primitive(const rapidjson::Value& prim_json, ModelDescriptor* d
     {
         prim.indices = ModelDescriptor::Attribute{indices_opt.value(), std::nullopt};
     }
-
-    hrz::flat_hash_map<std::string, int> attribute_name_to_index;
 
     const auto& attribs_json = json::get_member_or_null(prim_json, "attributes");
     if (attribs_json.IsObject())
@@ -280,7 +278,7 @@ void _parse_gltf_primitive(const rapidjson::Value& prim_json, ModelDescriptor* d
 
 void _parse_gltf_mesh(const rapidjson::Value& mesh_json, ModelDescriptor* descriptor)
 {
-    size_t prim_first = descriptor->primitives.size();
+    const size_t prim_first = descriptor->primitives.size();
 
     const auto& primitives_json = json::get_member_or_null(mesh_json, "primitives");
     if (primitives_json.IsArray())
@@ -291,7 +289,7 @@ void _parse_gltf_mesh(const rapidjson::Value& mesh_json, ModelDescriptor* descri
         }
     }
 
-    size_t prim_count = descriptor->primitives.size() - prim_first;
+    const size_t prim_count = descriptor->primitives.size() - prim_first;
     descriptor->meshes.push_back(ModelDescriptor::Mesh{prim_first, prim_count});
 }
 
@@ -401,7 +399,7 @@ void _parse_gltf_accessor(const rapidjson::Value& accessor_json, ModelDescriptor
 
 void _parse_gltf_buffer_view(const rapidjson::Value& view_json, ModelDescriptor* descriptor)
 {
-    ModelDescriptor::BufferView view;
+    ModelDescriptor::BufferView view{};
 
     if (view_json.IsObject())
     {
@@ -425,7 +423,7 @@ void _parse_gltf_buffer(
 
     if (buffer_json.IsObject())
     {
-        std::string_view uri = json::get_str_or(buffer_json, "uri", "");
+        const std::string_view uri = json::get_str_or(buffer_json, "uri", "");
         if (uri.empty())
         {
             // We will use the embedded resources buffers here
@@ -516,7 +514,7 @@ void _parse_gltf_sampler(const rapidjson::Value& sampler_json, ModelDescriptor* 
         sampler.mag_filter =
             _convert_sampler_mag_filter(json::get_int_or(sampler_json, "magFilter", 9729));
 
-        int min_filter = json::get_int_or(sampler_json, "minFilter", 9987);
+        const int min_filter = json::get_int_or(sampler_json, "minFilter", 9987);
         sampler.min_filter = _convert_sampler_min_filter(min_filter);
         sampler.mipmap_min_filter = _convert_sampler_mipmap_min_filter(min_filter);
         sampler.use_mipmap = _convert_sampler_use_mipmap(min_filter);
@@ -539,7 +537,8 @@ void _parse_gltf_image(
         const auto& templated_json = _get_gltf_extension(image_json, SIRADEL_templated_image_url);
         if (templated_json.IsObject())
         {
-            std::string_view template_name = json::get_str_or(templated_json, "templateName", "");
+            const std::string_view template_name =
+                json::get_str_or(templated_json, "templateName", "");
 
             std::vector<std::pair<std::string_view, std::string_view>> params;
             const auto& params_json = json::get_member_or_null(templated_json, "parameters");
@@ -550,8 +549,7 @@ void _parse_gltf_image(
                     assert(member.name.IsString());
                     if (member.value.IsString())
                     {
-                        params.push_back(
-                            std::make_pair(member.name.GetString(), member.value.GetString()));
+                        params.emplace_back(member.name.GetString(), member.value.GetString());
                     }
                 }
             }
@@ -568,7 +566,7 @@ void _parse_gltf_image(
         }
         else
         {
-            std::string_view uri = json::get_str_or(image_json, "uri", "");
+            const std::string_view uri = json::get_str_or(image_json, "uri", "");
             if (!uri.empty())
             {
                 image.blob = bl->add_blob_from_url(ba, uri, 0, priority);
@@ -603,8 +601,8 @@ void _parse_gltf_texture(const rapidjson::Value& texture_json, ModelDescriptor* 
             }
         }
 
-        const auto& webp_json = _get_gltf_extension(texture_json, EXT_texture_webp);
-        if (webp_json.IsObject())
+        if (const auto& webp_json = _get_gltf_extension(texture_json, EXT_texture_webp);
+            webp_json.IsObject())
         {
             auto webp_source = json::get_int(webp_json, "source");
             if (webp_source.has_value())
@@ -663,7 +661,7 @@ void _parse_gltf_material(const rapidjson::Value& material_json, ModelDescriptor
     {
         material.alpha_mode =
             _convert_alpha_mode(json::get_str_or(material_json, "alphaMode", "OPAQUE"));
-        material.alpha_cutoff = json::get_float_or(material_json, "alphaCutoff", 0.5f);
+        material.alpha_cutoff = json::get_float_or(material_json, "alphaCutoff", 0.5F);
         material.double_sided = json::get_bool_or(material_json, "doubleSided", false);
         material.material = ModelDescriptor::NoMaterial{};
 
@@ -676,7 +674,7 @@ void _parse_gltf_material(const rapidjson::Value& material_json, ModelDescriptor
 
             json::copy_array_values(
                 gsl::span<float>(diffuse_material.color_factor.m),
-                json::get_member_or_null(pbr_json, "baseColorFactor"), 1.0f);
+                json::get_member_or_null(pbr_json, "baseColorFactor"), 1.0F);
 
             const auto& texture_info_json = json::get_member_or_null(pbr_json, "baseColorTexture");
             diffuse_material.color_texture = json::get_int(texture_info_json, "index");
@@ -844,7 +842,7 @@ bool _parse_gltf_json(
         }
     }
 
-    int scene_index = json::get_int_or(root, "scene", 0);
+    const int scene_index = json::get_int_or(root, "scene", 0);
     const auto& scene_json = json::get_nth_member_or_null(root, "scenes", scene_index);
     const auto& nodes_json = json::get_member_or_null(root, "nodes");
 
@@ -854,7 +852,7 @@ bool _parse_gltf_json(
         for (const auto& node_json : root_nodes_json.GetArray())
         {
             if (!node_json.IsNumber()) continue;
-            int node_id = node_json.GetInt();
+            const int node_id = node_json.GetInt();
             _parse_gltf_node(nodes_json, node_id, root_transform, descriptor);
         }
     }
@@ -942,23 +940,28 @@ bool _parse_gltf_json(
     return true;
 }
 
+} // namespace
+
+namespace hrz::model
+{
+
 uint32_t fetch_glb_declared_size(gsl::span<const std::byte> gltf_data)
 {
     // @Endianness UInt32 reads are little-endian only.
 
     if (gltf_data.size() >= 12) // Enough room for the glb header
     {
-        gsl::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
-        gsl::span<const std::byte> magic = gltf_header.first(4);
+        const gsl::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
+        const gsl::span<const std::byte> magic = gltf_header.first(4);
 
-        uint32_t version;
+        uint32_t version = 0;
         memcpy(&version, gltf_header.data() + 4, 4);
 
         if (memcmp((const char*)magic.data(), "glTF", 4) == 0 && version == 2)
         {
             // This is a glb.
 
-            uint32_t declared_size;
+            uint32_t declared_size = 0;
             memcpy(&declared_size, gltf_header.data() + 8, 4);
 
             return declared_size;
@@ -986,17 +989,17 @@ bool parse_gltf_descriptor(
     if (gltf_size >= 12) // Enough room for the glb header
     {
         auto gltf_data = gltf_blob.get_data();
-        gsl::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
-        gsl::span<const std::byte> magic = gltf_header.first(4);
+        const gsl::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
+        const gsl::span<const std::byte> magic = gltf_header.first(4);
 
-        uint32_t version;
+        uint32_t version = 0;
         memcpy(&version, gltf_header.data() + 4, 4);
 
         if (memcmp((const char*)magic.data(), "glTF", 4) == 0 && version == 2)
         {
             // This is a glb.
 
-            uint32_t declared_size;
+            uint32_t declared_size = 0;
             memcpy(&declared_size, gltf_header.data() + 8, 4);
 
             if (declared_size > gltf_size)
@@ -1018,7 +1021,7 @@ bool parse_gltf_descriptor(
                     auto chunk_header = gltf_data.subspan(current_offset, 8);
                     current_offset += 8;
 
-                    uint32_t chunk_length;
+                    uint32_t chunk_length = 0;
                     memcpy(&chunk_length, chunk_header.data(), 4);
 
                     if (current_offset + chunk_length > gltf_size)
@@ -1039,7 +1042,7 @@ bool parse_gltf_descriptor(
                         // Binary buffer chunk
                         auto embedded_resources =
                             blobs::make_sub_blob(ba, gltf_blob, current_offset, chunk_length);
-                        size_t embedded_resources_offset = descriptor_offset + current_offset;
+                        const size_t embedded_resources_offset = descriptor_offset + current_offset;
 
                         descriptor->embedded_resources = bl->add_blob_from_url(
                             ba, descriptor_url, embedded_resources_offset, buffers_priority,

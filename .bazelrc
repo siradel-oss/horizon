@@ -10,6 +10,7 @@ startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
 # Sometimes cxxopt is applied to C-only targets. So we use per_file_copt
 # to filter only C++ source files. Not ideal...
 
+build:windows --host_cxxopt=/std:c++17
 build:windows --cxxopt=/std:c++17
 build:windows --copt=/utf-8
 build:windows --copt=/bigobj
@@ -25,6 +26,7 @@ build:windows_clang --cxxopt=-std=c++17
 build:windows_clang --cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
 build:windows_clang --host_cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
 
+build:linux --host_cxxopt=-std=c++17
 build:linux --cxxopt=-std=c++17
 build:linux --copt=-fvisibility=hidden
 build:linux --linkopt=-fvisibility=hidden
