@@ -317,7 +317,7 @@ hrz::JobResult sample(
         }
 
         hrz::sampling::DtmSamplingFunction sampling_function(
-            pixel_fetch_function, sampling_params.alpha_channel_usage(), std::move(nodata_function),
+            pixel_fetch_function, sampling_params.alpha_channel_usage(), nodata_function,
             sampling_params.filtering());
 
         hrz::sampling::DtmBlendingFunction blending_function(blending_params.opacity());

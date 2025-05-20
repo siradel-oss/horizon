@@ -431,8 +431,8 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
         values["scene_dump_npm"] = f"{npm_base}@siradel/horizon-scene-dump/-/horizon-scene-dump-{npm_version}.tgz"
         values["monitoring_protocol_npm"] = f"{npm_base}@siradel/horizon-monitoring-protocol/-/horizon-monitoring-protocol-{npm_version}.tgz"
 
-        values["monitoring_app_windows"] = f"{raw_base}monitoring-app-windows-{version}.exe"
-        values["monitoring_app_linux"] = f"{raw_base}monitoring-app-linux-{version}"
+        values["monitoring_app_windows"] = f"{raw_base}monitoring-client-windows-{version}.exe"
+        values["monitoring_app_linux"] = f"{raw_base}monitoring-client-linux-{version}"
 
         values["testing_kit_linux_x11"] = f"{raw_base}testing-kit-linux-x11-{version}.tar.gz"
         values["testing_kit_linux_headless"] = f"{raw_base}testing-kit-linux-headless-{version}.tar.gz"
@@ -457,8 +457,8 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
         values["scene_dump_npm"] = f"{base}horizon-scene-dump-{version}-ts-npm.tgz"
         values["monitoring_protocol_npm"] = f"{base}horizon-monitoring-protocol-{version}-ts-npm.tgz"
 
-        values["monitoring_app_windows"] = f"{base}horizon-monitoring-app-{version}-windows.exe"
-        values["monitoring_app_linux"] = f"{base}horizon-monitoring-app-{version}-linux"
+        values["monitoring_app_windows"] = f"{base}horizon-monitoring-client-{version}-windows.exe"
+        values["monitoring_app_linux"] = f"{base}horizon-monitoring-client-{version}-linux"
 
         values["testing_kit_linux_x11"] = f"{base}horizon-testing-kit-{version}-linux-x11.tar.gz"
         values["testing_kit_linux_headless"] = f"{base}horizon-testing-kit-{version}-linux-headless.tar.gz"
