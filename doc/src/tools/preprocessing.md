@@ -50,8 +50,6 @@ For the tiling step, the `-z` parameter can be omitted to let the tool decide on
 scp <file> connect@redacted.localhost:/shared_data/depot/<file>
 ```
 
-Password: `iopCroco2019*`.
-
 #### Submit computation
 
 ```
