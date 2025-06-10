@@ -247,8 +247,8 @@ struct VectorTileExtractionParams
     hrz::TileCoords coords;
     DecodedVectorTile source_data;
     AabbTree aabb_tree;
-    float tolerance;
-    bool include_clip_margin;
+    float tolerance{};
+    bool include_clip_margin{};
     hrz::GeoBounds bounds;
 };
 

@@ -189,7 +189,7 @@ std::optional<FeatureIds> FeatureIds::make(
 
             for (size_t attr = 0; attr < feature_ids._values.size(); ++attr)
             {
-                uint64_t value_hash = attr_hashed(attribute_values_readers[attr].as_ref(row));
+                const uint64_t value_hash = attr_hashed(attribute_values_readers[attr].as_ref(row));
                 uint64_t data_to_hash[] = {
                     feature_hash, feature_ids._values[attr].attribute_id, value_hash};
                 feature_hash = hrz::hash_mix<uint64_t>(data_to_hash);
@@ -211,7 +211,7 @@ FeatureIds::Hash FeatureIds::compute_hash()
         return _hash.value();
     }
 
-    uint64_t hash = (uint64_t)_size;
+    auto hash = (uint64_t)_size;
 
     for (size_t attr = 0; attr < _values.size(); ++attr)
     {
@@ -392,18 +392,18 @@ void compute_linestring_middle_and_angle(
     double total_length = 0;
 
     uint32_t first_linestring_point = 0;
-    for (uint32_t linestring_size : linestring_sizes)
+    for (const uint32_t linestring_size : linestring_sizes)
     {
         for (uint32_t i = 1; i < linestring_size; ++i)
         {
-            lm::dvec3 a = points[first_linestring_point + i - 1];
-            lm::dvec3 b = points[first_linestring_point + i];
+            const lm::dvec3 a = points[first_linestring_point + i - 1];
+            const lm::dvec3 b = points[first_linestring_point + i];
             total_length += lm::length(a.xy - b.xy);
         }
         first_linestring_point += linestring_size;
     }
 
-    if (total_length < 0.01f)
+    if (total_length < 0.01F)
     {
         *middle = points[0];
         *angle = 0;
@@ -413,20 +413,20 @@ void compute_linestring_middle_and_angle(
     double length_left_to_middle = total_length / 2;
 
     first_linestring_point = 0;
-    for (uint32_t linestring_size : linestring_sizes)
+    for (const uint32_t linestring_size : linestring_sizes)
     {
         for (uint32_t i = 1; i < linestring_size; ++i)
         {
-            lm::dvec3 a = points[first_linestring_point + i - 1];
-            lm::dvec3 b = points[first_linestring_point + i];
-            double segment_length = lm::length(a.xy - b.xy);
+            const lm::dvec3 a = points[first_linestring_point + i - 1];
+            const lm::dvec3 b = points[first_linestring_point + i];
+            const double segment_length = lm::length(a.xy - b.xy);
 
             if (segment_length > length_left_to_middle)
             {
-                double t = length_left_to_middle / segment_length;
+                const double t = length_left_to_middle / segment_length;
                 *middle = lm::mix(a, b, t);
 
-                lm::dvec2 diff = b.xy - a.xy;
+                const lm::dvec2 diff = b.xy - a.xy;
                 *angle = std::atan2(diff.y, diff.x);
                 return;
             }

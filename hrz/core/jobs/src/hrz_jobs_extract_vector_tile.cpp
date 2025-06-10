@@ -228,7 +228,7 @@ hrz::JobResult run(
     lm::dbbox2 tile_bounds = hrz::mercator_tile_bbox_meters(params.coords);
     if (params.include_clip_margin)
     {
-        lm::dvec2 tile_center = lm::center(tile_bounds);
+        const lm::dvec2 tile_center = lm::center(tile_bounds);
 
         lm::dvec2 size = lm::size(tile_bounds);
         size *= 1.1;
@@ -263,7 +263,7 @@ hrz::JobResult run(
 
     // Points with deviation values under this threshold should be simplified away.
     const auto tolerance = hrz::vector_data::compute_vector_tile_tolerance(params.coords.lod)
-        * std::pow(2.0f, params.tolerance);
+        * std::pow(2.0F, params.tolerance);
 
     uint32_t tile_point_count = 0;
     uint32_t tile_linestring_size_count = 0;
@@ -279,7 +279,7 @@ hrz::JobResult run(
 
     while (!search_stack.empty())
     {
-        size_t node_index = search_stack.back();
+        const size_t node_index = search_stack.back();
         search_stack.pop_back();
 
         const auto& node = aabb_tree.at(node_index);
@@ -331,7 +331,8 @@ hrz::JobResult run(
                 feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY
                 || feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
             {
-                bool is_polygon = feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
+                const bool is_polygon =
+                    feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
                 bool feature_is_simplified = false;
 
                 ClippedFeature clip_data;
@@ -343,7 +344,7 @@ hrz::JobResult run(
                     auto src_linestring_size =
                         src_linestring_sizes[src_feature.first_linestring_size + j];
 
-                    gsl::span<const lm::dvec3> src_linestring_points_span =
+                    const gsl::span<const lm::dvec3> src_linestring_points_span =
                         src_points.as_span().subspan(
                             src_linestring_first_point, src_linestring_size);
 
@@ -469,15 +470,17 @@ hrz::JobResult run(
 
     {
         std::vector<hrz::vector_data::AttributeValuesBuilder> attributes;
+        attributes.reserve(params.source_data.attributes.size());
+
         for (size_t i = 0; i < params.source_data.attributes.size(); ++i)
         {
-            attributes.emplace_back(InitialFeatureCapacity, ba, context.get_resource_owner());
+            attributes.emplace_back(feature_src_indices.size(), ba, context.get_resource_owner());
         }
 
         for (size_t i = 0; i < params.source_data.attributes.size(); ++i)
         {
             auto src_attribute = params.source_data.attributes[i].get_reader();
-            for (uint32_t feature_src_index : feature_src_indices)
+            for (const uint32_t feature_src_index : feature_src_indices)
             {
                 attributes[i].push_ref(src_attribute.as_ref(feature_src_index));
             }
@@ -499,9 +502,13 @@ hrz::JobResult run(
     if (!params.source_data.feature_ids.empty())
     {
         hrz::InlinedVector<hrz::vector_data::AttributeValues, 2> feature_id_attribute_values;
-        for (auto& attribute : extracted_tile.attributes)
+
+        for (const auto& attribute : extracted_tile.attributes)
         {
-            feature_id_attribute_values.push_back(attribute);
+            if (params.source_data.feature_ids.has_attribute(attribute.attribute_id))
+            {
+                feature_id_attribute_values.push_back(attribute);
+            }
         }
 
         auto feature_count = features_array.size();
