@@ -15,16 +15,45 @@ static constexpr size_t InitialFeatureCapacity = 1024;
 static constexpr size_t InitialPointCapacity = 4096;
 static constexpr size_t InitialLinestringSizeCapacity = 1024;
 
+// Copyright © 2020 Inigo Quilez
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions: The above copyright
+// notice and this permission notice shall be included in all copies or
+// substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS",
+// WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+// This includes a fix for the case when the segment is a point, which is not
+// handled by the original code, but is important for us.
 inline double point_to_segment_squared_distance(
     const lm::dvec2& p,
     const lm::dvec2& a,
     const lm::dvec2& b)
 {
-    const lm::dvec2 p_proj = lm::dot(p - a, b - a) / lm::dot(b - a, b - a) * (b - a);
-    return lm::length2(p - a - p_proj);
+    const lm::dvec2 ba = b - a;
+    const lm::dvec2 pa = p - a;
+    const double ba2 = lm::length2(ba);
+
+    if (ba2 > 0.0)
+    {
+        const double h = hrz::clamp(lm::dot(pa, ba) / ba2, 0.0, 1.0);
+        return lm::length2(pa - h * ba);
+    }
+    else
+    {
+        return lm::length2(pa);
+    }
 }
 
-// Adapted from https://github.com/mapbox/geojson-vt/blob/main/src/simplify.js
+// Douglas–Peucker simplification
 void compute_linestring_deviations(gsl::span<const lm::dvec3> points, gsl::span<double> deviations)
 {
     if (points.size() <= 2) return;
