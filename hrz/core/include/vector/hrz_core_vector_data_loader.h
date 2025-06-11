@@ -219,12 +219,9 @@ struct LayerNewData
 
 struct DataUpdate
 {
-    uint64_t request_id;
-    std::variant<
-        std::pair<VectorTileGeometry, AttributionHandle>,
-        hrz::InlinedVector<AttributeValues, 16>,
-        FeatureIds>
-        data;
+    uint64_t request_id{};
+    std::variant<VectorTileGeometry, hrz::InlinedVector<AttributeValues, 16>, FeatureIds> data;
+    AttributionHandle attribution;
 };
 
 struct DataError

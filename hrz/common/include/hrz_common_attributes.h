@@ -1259,6 +1259,12 @@ inline T attr_transform(hrz_proto::AttributeTransform transform, const RefAttrib
     return attr_transform<T, Traits>(transform, value, ctx);
 }
 
+inline std::string attr_to_string(const RefAttributeValue& value)
+{
+    return std::get<std::string>(
+        attr_transform<OwnedAttributeValue>(hrz_proto::ATTRIBUTE_TRANSFORM_TO_STRING, value));
+}
+
 static_assert(
     sizeof(PackedAttributeValue) == sizeof(uint64_t),
     "PackedAttributeValue must be 64 bits");

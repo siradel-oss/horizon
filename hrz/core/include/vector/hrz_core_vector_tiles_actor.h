@@ -97,7 +97,8 @@ struct VisibilitySet
         };
 
         SceneViewBitset in_views;
-        AttributionHandle attribution;
+        // This is for geometry and attributes attribution.
+        std::array<AttributionHandle, 2> attribution;
         std::optional<DebugInfo> debug_info;
     };
 

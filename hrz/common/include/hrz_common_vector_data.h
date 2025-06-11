@@ -171,14 +171,6 @@ struct FeatureIds
         gsl::span<AttributeValues> attribute_values,
         BlobArray<FeatureIdHash> hashes_array);
 
-    // Creates an instance that references a subset of already
-    // existing IDs.
-    static FeatureIds make_subset(
-        const FeatureIds& source_ids,
-        size_t first,
-        size_t count,
-        BlobAllocator*);
-
     Hash compute_hash();
 
     hrz::BlobArray<FeatureIdHash> hashes() const { return _hashes; }
@@ -203,7 +195,7 @@ private:
     size_t _size = 0;
     hrz::InlinedVector<AttributeValues, 2> _values;
     hrz::BlobArray<FeatureIdHash> _hashes;
-    std::optional<Hash> _hash = 0;
+    std::optional<Hash> _hash;
 };
 
 struct DecodedVectorTile

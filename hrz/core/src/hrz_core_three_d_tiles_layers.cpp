@@ -503,6 +503,7 @@ struct ThreeDTile
         VectorDataAttributeStatus vector_data_attribute_status =
             VectorDataAttributeStatus::UNREQUESTED;
         std::vector<std::optional<hrz::vector_data::AttributeValues>> attribute_values;
+        hrz::AttributionHandle attribute_attributions;
 
         LoadStatus load_status = LoadStatus::LOADING;
         StylingStatus styling_status = ThreeDTile::StylingStatus::IDLE;
@@ -5650,6 +5651,8 @@ struct ThreeDTilesSystem
                                         }
                                     }
 
+                                    subtile->attribute_attributions = message.attribution;
+
                                     if (!values_found)
                                     {
                                         all_attributes_found = false;
@@ -6282,6 +6285,12 @@ struct ThreeDTilesSystem
 
                 for (auto& subtile : tile.subtiles)
                 {
+                    if (subtile.attribute_attributions)
+                    {
+                        hrz::attribution::use_this_frame(
+                            attributions, subtile.attribute_attributions);
+                    }
+
                     std::visit(
                         [&](auto& content)
                         {

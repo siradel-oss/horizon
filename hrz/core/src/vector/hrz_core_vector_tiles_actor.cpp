@@ -138,7 +138,7 @@ struct VisibilitySetBuilder
 
     void add_tile(
         SceneViewBitset in_views,
-        AttributionHandle attribution,
+        std::array<AttributionHandle, 2> attribution,
         const std::optional<VisibilitySet::Tile::DebugInfo>& debug_info)
     {
         assert(include_debug_info == debug_info.has_value());
@@ -267,6 +267,7 @@ struct TileContent
         Status status;
         uint64_t data_request_ticket = 0;
         hrz::vt::ReprGeometry repr;
+        AttributionHandle attribution;
     };
 
     struct Attributes
@@ -286,6 +287,7 @@ struct TileContent
         // When a value is not present, we just put 0.
         // This is done to ease passing those values to the styling job.
         hrz::InlinedVector<hrz::vector_data::AttributeValues, 16> attributes;
+        AttributionHandle attribution;
 
         std::optional<hrz::BlobArrayAllocation<hrz::vector_data::PackedAttributeValue>>
             anchor_z_attribute_allocation;
@@ -324,7 +326,6 @@ struct TileContent
     FeatureIds feature_ids;
     Geometry geometry;
     Attributes attributes;
-    AttributionHandle attribution{};
 
     hrz::flat_hash_set<uint32_t> reprs_to_style;
     StyleJob style_job;
@@ -1249,15 +1250,13 @@ struct VectorTilesActor : public Actor
                                 content->style_job.status = TileContent::StyleJob::Status::Ready;
                             }
                         }
-                        else if (std::holds_alternative<
-                                     std::pair<vector_data::VectorTileGeometry, AttributionHandle>>(
+                        else if (std::holds_alternative<vector_data::VectorTileGeometry>(
                                      message.data))
                         {
                             assert(
                                 tile_id_and_data_kind.data_kind == vector_data::DataKind::Geometry);
-                            auto& geometry_source = std::get<
-                                std::pair<vector_data::VectorTileGeometry, AttributionHandle>>(
-                                message.data);
+                            auto& geometry_source =
+                                std::get<vector_data::VectorTileGeometry>(message.data);
 
                             if (content->attributes.status
                                 > TileContent::Attributes::Status::Loading)
@@ -1266,8 +1265,8 @@ struct VectorTilesActor : public Actor
                                     TileContent::Attributes::Status::AllocatingSpecialAttributes;
                             }
 
-                            content->geometry.repr.geometry = std::move(geometry_source.first);
-                            content->attribution = std::move(geometry_source.second);
+                            content->geometry.repr.geometry = std::move(geometry_source);
+                            content->geometry.attribution = std::move(message.attribution);
 
                             content->geometry.status = TileContent::Geometry::Status::Clamping;
                             query_elevations_for_clamping(
@@ -1295,6 +1294,7 @@ struct VectorTilesActor : public Actor
                                 std::get<hrz::InlinedVector<vector_data::AttributeValues, 16>>(
                                     message.data);
                             content->attributes.attributes = std::move(attribute_values);
+                            content->attributes.attribution = message.attribution;
 
                             if (content->attributes.status
                                 == TileContent::Attributes::Status::Loading)
@@ -3145,7 +3145,9 @@ struct VectorTilesActor : public Actor
                 debug_info->horizon_occlusion_point = node.horizon_occlusion_point;
             }
 
-            visibility_set.add_tile(draw_in, content.attribution, debug_info);
+            visibility_set.add_tile(
+                draw_in, {content.geometry.attribution, content.attributes.attribution},
+                debug_info);
             node.last_used_in_visibility_set = visibility_set.id;
         }
 

@@ -837,6 +837,7 @@ struct VectorDataLoader
             LayerModelRef layer_model;
             FeatureSelection feature_selection;
             std::vector<TaskDependency> attribute_tasks;
+            AttributionHandle attribution;
         };
 
         struct LoadAttributeValues
@@ -846,6 +847,7 @@ struct VectorDataLoader
             FeatureSelection feature_selection;
             TaskDependency load_vector_data_task;
             AttributeValueListRef attribute_values;
+            AttributionHandle attribution;
         };
 
         struct LoadFeatureIds
@@ -2729,9 +2731,10 @@ private:
     void send_data_message(
         DataRequest& request,
         std::variant<
-            std::pair<TileGeometry, AttributionHandle>,
+            TileGeometry,
             hrz::InlinedVector<vector_data::AttributeValues, 16>,
-            vector_data::FeatureIds> data)
+            vector_data::FeatureIds> data,
+        AttributionHandle attribution)
     {
         auto it = channels.find(request.request_id.channel_id);
         if (it != channels.end())
@@ -2739,7 +2742,8 @@ private:
             auto& channel = it->second;
             channel.send(vector_data::messages::DataUpdate{
                 request.request_id.request_id,
-                {std::move(data)}});
+                {std::move(data)},
+                attribution});
         }
     }
 
@@ -2754,10 +2758,7 @@ private:
         for (auto it = iterpair.first; it != iterpair.second; ++it)
         {
             auto& request = request_ids_to_data_requests.at(it->second);
-            send_data_message(
-                request,
-                std::pair<TileGeometry, AttributionHandle>{
-                    task_data.geometry.value(), task_data.attribution});
+            send_data_message(request, task_data.geometry.value(), task_data.attribution);
         }
     }
 
@@ -2784,7 +2785,7 @@ private:
                     attribute_task.load_attribute_values().attribute_values.value());
             }
 
-            send_data_message(request, std::move(attribute_values_to_send));
+            send_data_message(request, std::move(attribute_values_to_send), task_data.attribution);
         }
     }
 
@@ -2799,7 +2800,7 @@ private:
         for (auto it = iterpair.first; it != iterpair.second; ++it)
         {
             auto& request = request_ids_to_data_requests.at(it->second);
-            send_data_message(request, task_data.feature_ids.value());
+            send_data_message(request, task_data.feature_ids.value(), {});
         }
     }
 
@@ -3502,6 +3503,8 @@ private:
             {
                 in_memory_vector_data_channel.send(in_memory::messages::ReleaseDataRequest{
                     task_data.in_memory_vector_data_request_id.value()});
+                tasks_waiting_for_in_memory_vector_data_message.erase(
+                    task_data.in_memory_vector_data_request_id.value());
             }
         }
         else if (task.type == TaskType::LoadPmTiles)
@@ -4796,6 +4799,27 @@ private:
             }
             else if (all_attributes_loaded)
             {
+                hrz::InlinedVector<AttributionHandle, 16> inner_attributions;
+                for (const auto& attribute_task_ref : task_data.attribute_tasks)
+                {
+                    auto& attribute_task = attribute_task_ref.get_task();
+                    if (attribute_task.load_attribute_values().attribution)
+                    {
+                        inner_attributions.push_back(
+                            attribute_task.load_attribute_values().attribution);
+                    }
+                }
+
+                if (!inner_attributions.empty())
+                {
+                    task_data.attribution =
+                        attribution::register_attribution_group(attributions, inner_attributions);
+                }
+                else
+                {
+                    task_data.attribution = {};
+                }
+
                 set_task_status(task_ref, task, TaskStatus::Loaded);
                 send_attribute_values_message(task_ref, task);
             }
@@ -4820,6 +4844,8 @@ private:
                         // Attribute values have been retrieved.
                         const auto& values = it->second;
                         task_data.attribute_values = values;
+                        task_data.attribution =
+                            load_vector_data_task.load_vector_data().attribution;
                         set_task_status(task_ref, task, TaskStatus::Loaded);
                     }
                     else
@@ -6122,7 +6148,7 @@ private:
             return;
         }
 
-        // Do not release in-meomry vector data, otherwise we would have to request
+        // Do not release in-memory vector data, otherwise we would have to request
         // the data from the in-memory vector data system explicitly after  an update
         // instead of being able to rely on receiving the data automatically when a
         // new version comes out.

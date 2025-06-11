@@ -30,8 +30,6 @@
 #include <functional>
 #include <limits>
 #include <mutex>
-#include <queue>
-#include <string>
 #include <vector>
 
 namespace hrz
