@@ -87,7 +87,7 @@ It seems that large AoS UBO make compile time very high on Apple machines. Use S
 
 ## `010-Chromium-Emscripten-TextDecoder` (2024-10-22)
 
-* https://jira.tools.digital.engie.com/browse/HRZ-1081
+* HRZ-1081
 * https://github.com/emscripten-core/emscripten/issues/15217
 * https://github.com/emscripten-core/emscripten/issues/18034
 * https://github.com/emscripten-core/emscripten/pull/16994

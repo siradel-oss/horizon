@@ -67,7 +67,7 @@ struct BufferPool
     using Handle = uint32_t;
 
     BufferPool(BlobAllocator* ba, hrz::monitoring::ResourceOwner owner, uint32_t buffer_size) :
-        _buffers(ba), _num_buffers(0), _buffer_size(buffer_size)
+        _buffers(ba), _buffer_size(buffer_size)
     {
         _buffers.register_blob_owner(owner);
         _buffers.register_blob_metadata("contents"_ss, "styling buffers"_ss);
@@ -120,7 +120,7 @@ private:
     IndexPool _handles;
     hrz::BlobVector<RawValue> _buffers;
 
-    uint32_t _num_buffers;
+    uint32_t _num_buffers = 0;
     uint32_t _buffer_size;
 
     uint32_t _debug_num_requests = 0;
@@ -766,6 +766,15 @@ struct State
                 }
             }
 
+            // RNG state must be updated before the callback with the evaluated expression, because
+            // the callback can do anything, including modify the order of instances (for example
+            // in the case of a branch condition), and modify this would mean we update
+            // the RNG state in the wrong order.
+            if (must_fetch_rng_states)
+            {
+                CHECK_ERR(update_rng_states(batch_inst_span));
+            }
+
             CHECK_ERR_M("Expression evaluation error", stack.size() == 1);
             if (stack[0].kind == Value::Kind::Constant)
             {
@@ -788,11 +797,6 @@ struct State
             for (const auto& attr_info : attribute_infos)
             {
                 buffer_pool.release_buffer(attr_info.buffer_handle);
-            }
-
-            if (must_fetch_rng_states)
-            {
-                CHECK_ERR(update_rng_states(batch_inst_span));
             }
 
             buffer_pool.check_stability();

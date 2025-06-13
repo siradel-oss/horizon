@@ -2998,4 +2998,87 @@ TEST_F(FeatureStyling, rand_with_ids)
     }
 }
 
+// This test checks that no matter the order of the features, the same
+// random values are generated for the same feature ids.
+// See HRZ-1241.
+TEST_F(FeatureStyling, rand_in_condition)
+{
+    static const char* script =
+        "if (rand_unif_u(0, 2) == 0) { set \"v\" = rand_unif_i(1000, 2000); }"
+        "else { set \"v\" = rand_unif_u(0, 1000); }"
+        "emit 0;";
+
+    static constexpr int kValueProperty = 1;
+
+    auto lexer = Lexer::create(script);
+    auto parser = Parser::create();
+    auto optimizer = Optimizer::create({});
+    parser->add_property(kValueProperty, "v");
+
+    hrz::style::Ast full_ast;
+    auto parse_res = parser->parse(*lexer, full_ast);
+    ASSERT_EQ(Result::Ok, parse_res.type);
+    ASSERT_TRUE(parse_res);
+
+    auto ast = std::make_shared<hrz::style::FlatAst>();
+    ASSERT_TRUE(optimizer->optimize(std::move(full_ast), ast.get()));
+
+    hrz::BlobVector<FeatureIdHash> id_hashes(blob_allocator);
+    for (int i = 0; i < 8; ++i)
+    {
+        id_hashes.push_back(i);
+    }
+
+    const int shuffled_ids[8] = {4, 7, 0, 1, 5, 6, 2, 3};
+
+    hrz::BlobVector<FeatureIdHash> id_hashes2(blob_allocator);
+    for (int i = 0; i < 8; ++i)
+    {
+        id_hashes2.push_back(shuffled_ids[i]);
+    }
+
+    FeaturesStylingData data;
+    data.ast = ast;
+    add_repr(data, 0, "r");
+
+    data.feature_count = 8;
+    data.rng_seed = 0;
+    data.feature_ids_hashes = id_hashes.to_blob_array().value();
+
+    StylingResult resp;
+    auto res = hrz_jobs::style_features::run(data, resp, job_context);
+
+    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(8, resp.features.instances.size());
+    ASSERT_EQ(8, resp.features.values.size());
+
+    int64_t result[8];
+    auto values_reader = resp.features.get_values_reader();
+    auto instances = resp.features.instances.get_cdata();
+    for (const auto& instance : instances)
+    {
+        result[instance.feature_index] = values_reader.as_int64(instance.first_prp);
+    }
+
+    data.feature_count = 8;
+    data.rng_seed = 0;
+    data.feature_ids_hashes = id_hashes2.to_blob_array().value();
+
+    res = hrz_jobs::style_features::run(data, resp, job_context);
+
+    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(8, resp.features.instances.size());
+    ASSERT_EQ(8, resp.features.values.size());
+
+    values_reader = resp.features.get_values_reader();
+    instances = resp.features.instances.get_cdata();
+
+    for (const auto& instance : instances)
+    {
+        EXPECT_EQ(
+            result[shuffled_ids[instance.feature_index]],
+            values_reader.as_int64(instance.first_prp));
+    }
+}
+
 } // namespace
