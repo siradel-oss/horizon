@@ -95,7 +95,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
 
     if (instance_array_opt->empty())
     {
-        return {{hrz::vt::BakedSymbols::ElementInstances{}}};
+        return {std::optional<hrz::vt::BakedSymbols::ElementInstances>{}};
     }
 
     instance_array_opt->register_blob_metadata(

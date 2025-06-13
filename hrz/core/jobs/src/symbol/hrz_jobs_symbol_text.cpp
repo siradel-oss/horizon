@@ -746,7 +746,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
     if (transforms_array_opt->empty())
     {
         // No texts have been generated.
-        return {{hrz::vt::BakedSymbols::ElementInstances{}}};
+        return {std::optional<hrz::vt::BakedSymbols::ElementInstances>{}};
     }
 
     transforms_array_opt->register_blob_metadata(
