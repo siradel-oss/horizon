@@ -53,9 +53,7 @@ layout(std140) uniform Frame
     uvec3 quick_highlight_feature_reference;
     uint merge_groups_bitset;
     vec4 quick_highlight_color;
-    vec3 sky_color_linear;
     float sun_strength;
-    vec3 underground_color_linear;
     float ambient_strength;
     vec3 sun_color_linear;
     float wrap_lighting;

@@ -35,8 +35,10 @@ TEMPLATES = [
     "ign_routes",
     "ign_srtm_dtm",
     "initial_viewpoint_france",
+    "initial_viewpoint_france_far",
     "plan_ign",
     "rennes_buildings",
+    "non_realistic_ambiance",
 ]
 
 ALL_SCENES = [

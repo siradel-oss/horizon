@@ -88,3 +88,6 @@ registerDemo("ignSrtm", IgnSrtm);
 
 import PalettizedTerrain from "./demo/PalettizedTerrain.vue";
 registerDemo("palettizedTerrain", PalettizedTerrain);
+
+import NonRealistic from "./demo/NonRealistic.vue";
+registerDemo("nonRealistic", NonRealistic);

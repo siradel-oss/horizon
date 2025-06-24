@@ -1968,4 +1968,34 @@ bool migration_db6a65c4_to_b232d003(const DynamicMessage& src, DynamicMessage* d
     return true;
 }
 
+bool migration_b232d003_to_1814b7c1(const DynamicMessage& src, DynamicMessage* dst)
+{
+    return walk_fields_of_type(
+        "HrzProtocol.AmbientSettings", src, dst,
+        [&](const DynamicMessage& src, DynamicMessage* dst) -> bool
+        {
+            const auto& src_sky = src.get_message("sky");
+            auto dst_sky = dst->get_message("sky");
+
+            const auto& src_static_color = src_sky.get_message("static_color");
+            auto dst_atmosphere_color = dst_sky.get_message("static_atmosphere_color");
+            dst_atmosphere_color.set_float("r", src_static_color.get_float("r"));
+            dst_atmosphere_color.set_float("g", src_static_color.get_float("g"));
+            dst_atmosphere_color.set_float("b", src_static_color.get_float("b"));
+            dst_atmosphere_color.set_float("a", src_static_color.get_float("a"));
+
+            auto dst_space_color = dst_sky.get_message("static_space_color");
+            dst_space_color.set_float("r", 0.0);
+            dst_space_color.set_float("g", 0.0);
+            dst_space_color.set_float("b", 0.0);
+            dst_space_color.set_float("a", 1.0);
+
+            dst_sky.set_double("static_color_transition_start_distance", 15000.0);
+            dst_sky.set_double("static_color_transition_end_distance", 60000.0);
+            dst_sky.set_enum(
+                "static_color_transition_distance_unit", "STATIC_SKY_COLOR_TRANSITION_UNIT_METERS");
+
+            return true;
+        });
+}
 } // namespace hrz::migration

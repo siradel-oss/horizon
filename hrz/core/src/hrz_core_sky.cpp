@@ -7,6 +7,7 @@
 #include "hrz_core_render.h"
 #include "hrz_core_shaders.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_geo.h>
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_profiling.h>
@@ -60,6 +61,12 @@ struct UboData
     lm::vec3 ground_normal_view{0, 0, 0};
     float fog_min_depth{0};
     HRZ_UBO_STRUCT_FIELD(FogParamsUboData) fog[2];
+    lm::vec3 atmosphere_color_oklab{lm::vec3(0.0f)};
+    float color_transition_start_horizon_angle{0};
+    lm::vec3 space_color_oklab{lm::vec3(0.0f)};
+    float color_transition_end_horizon_angle{0};
+    lm::vec3 underground_color_linear{lm::vec3(0.0f)};
+    uint32_t _padding;
 };
 
 HRZ_CHECK_UBO_SIZE(UboData);
@@ -1521,7 +1528,13 @@ struct SkySystem
     float wrap_lighting = 0.0f;
     lm::vec3 sun_color_linear = lm::vec3(1.0f);
     lm::vec3 ambient_color_linear = lm::vec3(0.42f);
-    lm::vec3 sky_color_linear = lm::vec3(0.9f);
+    lm::vec3 underground_color_linear = lm::vec3(0.8f);
+    lm::vec3 atmosphere_color_oklab = lm::vec3(0.9f);
+    lm::vec3 space_color_oklab = lm::vec3(0.0f);
+    float color_transition_start_distance = 0.0f;
+    float color_transition_end_distance = 0.0f;
+    hrz_proto::StaticSkyColorTransitionUnit color_transition_distance_unit =
+        hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_METERS;
 
     struct Fog
     {
@@ -1566,6 +1579,11 @@ void init_render_precompute(SkySystem* sky, RenderView* render)
     ubo_data.fog[0] = {};
     ubo_data.fog[1] = {};
     ubo_data.fog_min_depth = 0;
+    ubo_data.underground_color_linear = lm::vec3(0.0f);
+    ubo_data.atmosphere_color_oklab = lm::vec3(0.0f);
+    ubo_data.space_color_oklab = lm::vec3(0.0f);
+    ubo_data.color_transition_start_horizon_angle = 0;
+    ubo_data.color_transition_end_horizon_angle = 0;
     sky->ubo.set(0, ubo_data);
 
     sky->precompute_pass.reset(new SkyPrecomputePass(sky->ubo));
@@ -1641,6 +1659,8 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
     RenderRequest render_request;
 
+    bool update_static_sky = false;
+
     if (sky->model_updated)
     {
         SceneModelAccessor accessor(model);
@@ -1659,7 +1679,17 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         sky->sun_altitude = settings.sun().direction().altitude();
         sky->ambient_color_linear =
             srgb_to_linear(to_lm(settings.ambient_lighting().static_color()).rgb);
-        sky->sky_color_linear = srgb_to_linear(to_lm(settings.sky().static_color()).rgb);
+        sky->underground_color_linear = srgb_to_linear(to_lm(settings.underground_color()).rgb);
+        sky->atmosphere_color_oklab =
+            srgb_to_oklab(to_lm(settings.sky().static_atmosphere_color())).rgb;
+        sky->space_color_oklab = srgb_to_oklab(to_lm(settings.sky().static_space_color())).rgb;
+        sky->color_transition_start_distance =
+            settings.sky().static_color_transition_start_distance();
+        sky->color_transition_end_distance = std::max(
+            (float)settings.sky().static_color_transition_end_distance(),
+            sky->color_transition_start_distance);
+        sky->color_transition_distance_unit =
+            settings.sky().static_color_transition_distance_unit();
         sky->atmosphere_attenuation = hrz::clamp(settings.sky().attenuation(), 0.0f, 1.0f);
 
         sky->fog[0].density = settings.primary_fog().density();
@@ -1702,18 +1732,21 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
         sky->model_updated = false;
         render_request.request_visual_render();
+        update_static_sky = true;
     }
 
     hrz::GeoPosition3 geo = hrz::ecef_to_geo3(camera.cam.pos);
 
     UboData ubo_data = sky->ubo.get();
 
-    if (sky->camera_position != geo)
+    if (sky->camera_position != geo || update_static_sky)
     {
         sky->camera_position = geo;
 
+        double altitude_for_static_sky = geo.alt;
+
         // Altitudes close to 0 present artefacts in the sky view texture (black horizontal
-        // lines are present at the top of the texture), which in turn result in black circles
+        // lines are present at the top of the texture), which in turn results in black circles
         // in the sky when looking up.
         if (geo.alt > 1.0)
         {
@@ -1725,6 +1758,71 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         {
             ubo_data.altitude = 1.0;
             ubo_data.horizon_horizon_angle = 0.0;
+
+            altitude_for_static_sky = 1.0;
+        }
+
+        switch (sky->color_transition_distance_unit)
+        {
+            case hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_METERS:
+            {
+                if (sky->color_transition_start_distance < altitude_for_static_sky)
+                {
+                    ubo_data.color_transition_start_horizon_angle = (float)-acos(
+                        (HRZ_S_EARTH_RADIUS + sky->color_transition_start_distance)
+                        / (HRZ_S_EARTH_RADIUS + altitude_for_static_sky));
+
+                    if (sky->color_transition_end_distance < altitude_for_static_sky)
+                    {
+                        ubo_data.color_transition_end_horizon_angle = (float)-acos(
+                            (HRZ_S_EARTH_RADIUS + sky->color_transition_end_distance)
+                            / (HRZ_S_EARTH_RADIUS + altitude_for_static_sky));
+                        ubo_data.space_color_oklab = sky->space_color_oklab;
+                    }
+                    else
+                    {
+                        ubo_data.color_transition_end_horizon_angle = 0;
+                        ubo_data.space_color_oklab = lm::mix(
+                            sky->atmosphere_color_oklab, sky->space_color_oklab,
+                            (float)((altitude_for_static_sky - sky->color_transition_start_distance)
+                                    / (sky->color_transition_end_distance
+                                       - sky->color_transition_start_distance)));
+                    }
+                }
+                else
+                {
+                    ubo_data.color_transition_start_horizon_angle = 0;
+                    ubo_data.space_color_oklab = sky->atmosphere_color_oklab;
+                }
+                break;
+            }
+            case hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS:
+            {
+                double distance_to_horizon = std::sqrt(
+                    2.0 * hrz::EARTH_RADIUS * altitude_for_static_sky
+                    + altitude_for_static_sky * altitude_for_static_sky);
+                // metres per pixel
+                double resolution =
+                    ((std::abs(distance_to_horizon) * std::tan(camera.cam.fovy / 2.0))
+                     / (camera.viewport.size.y / 2.0));
+                double transition_start_distance = sky->color_transition_start_distance * resolution
+                    * camera.viewport.device_pixel_ratio;
+                double transition_end_distance = sky->color_transition_end_distance * resolution
+                    * camera.viewport.device_pixel_ratio;
+
+                double transition_start_angle =
+                    std::atan2(transition_start_distance, distance_to_horizon);
+                ubo_data.color_transition_start_horizon_angle =
+                    ubo_data.horizon_horizon_angle + (float)transition_start_angle;
+                double transition_end_angle =
+                    std::atan2(transition_end_distance, distance_to_horizon);
+                ubo_data.color_transition_end_horizon_angle =
+                    ubo_data.horizon_horizon_angle + (float)transition_end_angle;
+
+                ubo_data.space_color_oklab = sky->space_color_oklab;
+                break;
+            }
+            default: assert(false && "Unhandled case"); break;
         }
 
         // Compute the normal of the planet at the position of the camera (or rather, at the
@@ -1953,6 +2051,14 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         lm::vec4(view_to_sky.x, 0.0f), lm::vec4(view_to_sky.y, 0.0f), lm::vec4(view_to_sky.z, 0.0f),
         lm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
+    if (update_static_sky)
+    {
+        ubo_data.underground_color_linear = sky->underground_color_linear;
+        ubo_data.atmosphere_color_oklab = sky->atmosphere_color_oklab;
+
+        render_request.request_visual_render();
+    }
+
     sky->precompute_pass->request_render(render_request);
 
     sky->ubo.set(0, ubo_data);
@@ -2070,17 +2176,8 @@ void fill_frame_uniform_data(const SkySystem* sky, FrameUniformData* ubo)
     ubo->sun_color_linear = sky->sun_color_linear;
     ubo->wrap_lighting = sky->wrap_lighting;
 
-    float sky_color_factor = 0.0f;
     double altitude = sky->ubo.get().altitude;
-    if (!sky->enable_simulated_sky)
-    {
-        // Fade-in the sky color when getting close to the ground.
-        static constexpr double atmosphere_height = HRZ_S_STRAT_RADIUS - HRZ_S_EARTH_RADIUS;
-        sky_color_factor = std::pow(
-            1.0f - hrz::clamp(sky->ubo.get().altitude / (float)atmosphere_height, 0.0f, 1.0f),
-            2.0f);
-    }
-    else
+    if (sky->enable_simulated_sky)
     {
         // By default the fade start is at depth 0. At max attenuation, it starts at the same
         // distance as the camera elevation.
@@ -2101,8 +2198,6 @@ void fill_frame_uniform_data(const SkySystem* sky, FrameUniformData* ubo)
             b - std::sqrt(std::max(0.0, hrz::EARTH_RADIUS * hrz::EARTH_RADIUS - a * a));
         ubo->atmosphere_fade_start = sky->atmosphere_attenuation * altitude;
     }
-
-    ubo->sky_color_linear = sky->sky_color_linear * sky_color_factor;
 }
 
 void collect_shaders(hrz::GpuResourceContext* rc)

@@ -1797,18 +1797,42 @@ enum SkyMode {
     SKY_STATIC    = 1;
 }
 
+enum StaticSkyColorTransitionUnit {
+    // @label="Metres"
+    STATIC_SKY_COLOR_TRANSITION_UNIT_METERS = 0;
+    // @label="Pixels"
+    STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS = 1;
+}
+
 message SkySettings {
-    SkyMode mode         = 1;
+    SkyMode                      mode                                   = 1;
 
     // Attenuates the strength of the impact of the sky on the planet when
     // `mode` is `SKY_SIMULATED`. 0 is the default, realistic value. The maximum
     // is 1.
-    float   attenuation  = 2;
+    float                        attenuation                            = 2;
 
-    // Color of the sky used when `mode` is `SKY_STATIC`.
-    // It fades to black as the camera get farther from the planet.
+    // Color of the atmosphere used when `mode` is `SKY_STATIC`.
     // Alpha is ignored.
-    Color   static_color = 3;
+    Color                        static_atmosphere_color                = 3;
+
+    // Color of the outer space used when `mode` is `SKY_STATIC`.
+    // Alpha is ignored.
+    Color                        static_space_color                     = 4;
+
+    // Distance from the horizon at which the sky color starts transitioning
+    // from the atmosphere color to the space color.
+    // This is used only when `mode` is `SKY_STATIC`.
+    double                       static_color_transition_start_distance = 5;
+
+    // Distance from the horizon at which the sky color finishes transitioning
+    // from the atmosphere color to the space color.
+    // This is used only when `mode` is `SKY_STATIC`.
+    double                       static_color_transition_end_distance   = 6;
+
+    // Unit of the distances for the static sky color transition.
+    // This is used only when `mode` is `SKY_STATIC`.
+    StaticSkyColorTransitionUnit static_color_transition_distance_unit  = 7;
 }
 
 message SunSettings {

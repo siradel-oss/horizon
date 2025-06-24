@@ -2757,8 +2757,6 @@ RenderRequest work(
     if (view->ambient_settings_updated)
     {
         auto ambient_settings = builder.clone().ambient().get();
-        frame_uniforms_data.underground_color_linear =
-            srgb_to_linear(to_lm(ambient_settings.underground_color()).rgb);
         view->ambient_settings_updated = false;
         render_request.request_visual_render();
     }

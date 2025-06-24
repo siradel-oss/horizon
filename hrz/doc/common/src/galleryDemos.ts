@@ -105,4 +105,9 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["raster", "terrain"],
         thumbnailFile: "palettized_terrain.webp",
     },
+    nonRealistic: {
+        title: "Non-realistic rendering",
+        tags: ["customization"],
+        thumbnailFile: "non_realistic.webp",
+    },
 };

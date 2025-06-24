@@ -2835,16 +2835,36 @@ TranslationResult translate_scene(
         terrain_color->set_b(1.0);
         terrain_color->set_a(1.0);
 
-        // Use the default Mapbox "space-color" at the lowest altitude for sky color
-        // (there is currently no sky in MapLibre, but the feature is under development)
-        auto* sky_color = view_settings->mutable_settings()
-                              ->mutable_ambient()
-                              ->mutable_sky()
-                              ->mutable_static_color();
-        sky_color->set_r(0.21);
-        sky_color->set_g(0.48);
-        sky_color->set_b(0.73);
-        sky_color->set_a(1.00);
+        // Use the default Mapbox colors for the atmosphere: "highColor" and "spaceColor"
+        auto* atmosphere_color = view_settings->mutable_settings()
+                                     ->mutable_ambient()
+                                     ->mutable_sky()
+                                     ->mutable_static_atmosphere_color();
+        atmosphere_color->set_r(0.141);
+        atmosphere_color->set_g(0.360);
+        atmosphere_color->set_b(0.8745);
+        atmosphere_color->set_a(1.00);
+        auto* space_color = view_settings->mutable_settings()
+                                ->mutable_ambient()
+                                ->mutable_sky()
+                                ->mutable_static_space_color();
+        space_color->set_r(0.043);
+        space_color->set_g(0.043);
+        space_color->set_b(0.098);
+        space_color->set_a(1.0);
+        view_settings->mutable_settings()
+            ->mutable_ambient()
+            ->mutable_sky()
+            ->set_static_color_transition_start_distance(15000);
+        view_settings->mutable_settings()
+            ->mutable_ambient()
+            ->mutable_sky()
+            ->set_static_color_transition_end_distance(60000);
+        view_settings->mutable_settings()
+            ->mutable_ambient()
+            ->mutable_sky()
+            ->set_static_color_transition_distance_unit(
+                hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_METERS);
     }
 
     // Root properties

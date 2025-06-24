@@ -41,10 +41,18 @@ hrz_proto::SceneViewSettings default_scene_view_settings()
     ambient->mutable_ambient_lighting()->mutable_static_color()->set_g(0.42f);
     ambient->mutable_ambient_lighting()->mutable_static_color()->set_b(0.42f);
     ambient->mutable_ambient_lighting()->mutable_static_color()->set_a(1.0f);
-    ambient->mutable_sky()->mutable_static_color()->set_r(0.80f);
-    ambient->mutable_sky()->mutable_static_color()->set_g(0.89f);
-    ambient->mutable_sky()->mutable_static_color()->set_b(0.92f);
-    ambient->mutable_sky()->mutable_static_color()->set_a(1.0f);
+    ambient->mutable_sky()->mutable_static_atmosphere_color()->set_r(0.80f);
+    ambient->mutable_sky()->mutable_static_atmosphere_color()->set_g(0.89f);
+    ambient->mutable_sky()->mutable_static_atmosphere_color()->set_b(0.92f);
+    ambient->mutable_sky()->mutable_static_atmosphere_color()->set_a(1.0f);
+    ambient->mutable_sky()->mutable_static_space_color()->set_r(0.0f);
+    ambient->mutable_sky()->mutable_static_space_color()->set_g(0.0f);
+    ambient->mutable_sky()->mutable_static_space_color()->set_b(0.0f);
+    ambient->mutable_sky()->mutable_static_space_color()->set_a(1.0f);
+    ambient->mutable_sky()->set_static_color_transition_start_distance(15000);
+    ambient->mutable_sky()->set_static_color_transition_end_distance(60000);
+    ambient->mutable_sky()->set_static_color_transition_distance_unit(
+        hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_METERS);
     ambient->mutable_underground_color()->set_r(0.45f);
     ambient->mutable_underground_color()->set_g(0.44f);
     ambient->mutable_underground_color()->set_b(0.27f);

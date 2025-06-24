@@ -7,6 +7,8 @@ The ambient settings are part of the scene view settings. They dictate the globa
 
 <gallery-card demo="ambiance"></gallery-card>
 
+<gallery-card demo="nonRealistic"></gallery-card>
+
 ## Lighting
 
 For each layer, and globally, lighting and shadows can be enabled or disabled. When those flags are disabled globally (in the [[AmbientSettings]] of a [[SceneViewSettings]]), they are disabled on all scene elements.
@@ -63,7 +65,7 @@ The `wrap_lighting` parameter controls how fast surfaces stop receiving sunlight
 The sky can be configured using the [[SkySettings]]. Two modes are available:
 
 * It can be simulated to emulate the appearance of a clear sky. The effect of the atmosphere on the planet can be attenuated with the to improve scene readability and reproduce colours from scene objects more accurately.
-* It can be set to a constant color when close to the ground which fades out as the altitude of the camera increases.
+* It can be approximated using two colours (one for the atmosphere, one for the outer space) as the start and end distances from the horizon at which the transition between the two colours occurs. The distances can be expressed in metres or pixels. This mode is named static mode. It can be used to deliberately create non-realistic renderings.
 
 !!! warning "Low graphics mode"
     When the engine is initialized in ["low" graphics mode](graphics_configuration.html) (either by the integration or automatically), the simulated sky, sun, and ambient lighting are disabled. Because of this, even when using the simulated settings, it is important to also provide sensible fallbacks for the static settings fields of the model, in case a user has a machine not powerful enough to have them enabled. (Unless the engine is forced to be initialized in a mode that supports the simulated modes, or the simulated atmosphere is force-enabled by the [[GraphicsSettingsOverrides]] of the [[ViewerOptions]] given at initialization.)

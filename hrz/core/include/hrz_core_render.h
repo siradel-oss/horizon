@@ -193,11 +193,9 @@ struct FrameUniformData
 
     lm::vec4 quick_highlight_color;
 
-    lm::vec3 sky_color_linear;
     float sun_strength;
-
-    lm::vec3 underground_color_linear;
     float ambient_strength;
+    uint32_t _padding1[2];
 
     lm::vec3 sun_color_linear;
     float wrap_lighting;

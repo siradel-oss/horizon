@@ -40,12 +40,22 @@ let DEFAULT_VALUE: HrzProtocol.IAmbientSettings = {
     sky: {
         mode: HrzProtocol.SkyMode.SKY_SIMULATED,
         attenuation: 0.5,
-        staticColor: {
+        staticAtmosphereColor: {
             r: 0.8,
             g: 0.89,
             b: 0.92,
             a: 1,
         },
+        staticSpaceColor: {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 1,
+        },
+        staticColorTransitionStartDistance: 15000,
+        staticColorTransitionEndDistance: 60000,
+        staticColorTransitionDistanceUnit:
+            HrzProtocol.StaticSkyColorTransitionUnit.STATIC_SKY_COLOR_TRANSITION_UNIT_METERS,
     },
     sun: {
         mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_SIMULATED,
@@ -133,7 +143,17 @@ PRESETS["Simple & readable"] = {
         },
         sky: {
             mode: HrzProtocol.SkyMode.SKY_STATIC,
-            staticColor: { r: 75 / 255, g: 165 / 255, b: 210 / 255, a: 1 },
+            staticAtmosphereColor: { r: 75 / 255, g: 165 / 255, b: 210 / 255, a: 1 },
+            staticSpaceColor: {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
+                a: 1,
+            },
+            staticColorTransitionStartDistance: 15000,
+            staticColorTransitionEndDistance: 60000,
+            staticColorTransitionDistanceUnit:
+                HrzProtocol.StaticSkyColorTransitionUnit.STATIC_SKY_COLOR_TRANSITION_UNIT_METERS,
         },
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
@@ -215,7 +235,17 @@ PRESETS["Foggy day"] = {
         },
         sky: {
             mode: HrzProtocol.SkyMode.SKY_STATIC,
-            staticColor: { r: 0.83, g: 0.83, b: 0.83, a: 1 },
+            staticAtmosphereColor: { r: 0.83, g: 0.83, b: 0.83, a: 1 },
+            staticSpaceColor: {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
+                a: 1,
+            },
+            staticColorTransitionStartDistance: 15000,
+            staticColorTransitionEndDistance: 60000,
+            staticColorTransitionDistanceUnit:
+                HrzProtocol.StaticSkyColorTransitionUnit.STATIC_SKY_COLOR_TRANSITION_UNIT_METERS,
         },
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
@@ -263,7 +293,17 @@ PRESETS["Electric sheep"] = {
         },
         sky: {
             mode: HrzProtocol.SkyMode.SKY_STATIC,
-            staticColor: { r: 0.83, g: 0.83, b: 0.83, a: 1 },
+            staticAtmosphereColor: { r: 0.83, g: 0.83, b: 0.83, a: 1 },
+            staticSpaceColor: {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
+                a: 1,
+            },
+            staticColorTransitionStartDistance: 15000,
+            staticColorTransitionEndDistance: 60000,
+            staticColorTransitionDistanceUnit:
+                HrzProtocol.StaticSkyColorTransitionUnit.STATIC_SKY_COLOR_TRANSITION_UNIT_METERS,
         },
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
@@ -706,9 +746,100 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler: MessageHandler)
                         />
                     </p>
                     <p v-show="settings.sky?.mode === HrzProtocol.SkyMode.SKY_STATIC">
+                        <label>Atmosphere color</label>
                         <ColorInput
-                            v-if="settings.sky?.staticColor"
-                            v-model="settings.sky.staticColor"
+                            v-if="settings.sky?.staticAtmosphereColor"
+                            v-model="settings.sky.staticAtmosphereColor"
+                        />
+                    </p>
+                    <p v-show="settings.sky?.mode === HrzProtocol.SkyMode.SKY_STATIC">
+                        <label>Space color</label>
+                        <ColorInput
+                            v-if="settings.sky?.staticSpaceColor"
+                            v-model="settings.sky.staticSpaceColor"
+                        />
+                    </p>
+                    <p v-show="settings.sky?.mode === HrzProtocol.SkyMode.SKY_STATIC">
+                        <select
+                            v-if="settings.sky"
+                            v-model.number="settings.sky.staticColorTransitionDistanceUnit"
+                        >
+                            <option
+                                :value="
+                                    HrzProtocol.StaticSkyColorTransitionUnit
+                                        .STATIC_SKY_COLOR_TRANSITION_UNIT_METERS
+                                "
+                            >
+                                Meters
+                            </option>
+                            <option
+                                :value="
+                                    HrzProtocol.StaticSkyColorTransitionUnit
+                                        .STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS
+                                "
+                            >
+                                Pixels
+                            </option>
+                        </select>
+                    </p>
+                    <p v-show="settings.sky?.mode === HrzProtocol.SkyMode.SKY_STATIC">
+                        <label
+                            >Color transition start distance ({{
+                                $filters.formatNumber(
+                                    settings.sky?.staticColorTransitionStartDistance || 0
+                                )
+                            }}
+                            {{
+                                settings.sky?.staticColorTransitionDistanceUnit ==
+                                HrzProtocol.StaticSkyColorTransitionUnit
+                                    .STATIC_SKY_COLOR_TRANSITION_UNIT_METERS
+                                    ? "m"
+                                    : "px"
+                            }})</label
+                        >
+                        <input
+                            type="range"
+                            min="0"
+                            :max="
+                                settings.sky?.staticColorTransitionDistanceUnit ==
+                                HrzProtocol.StaticSkyColorTransitionUnit
+                                    .STATIC_SKY_COLOR_TRANSITION_UNIT_METERS
+                                    ? 20000000
+                                    : 2000
+                            "
+                            step="any"
+                            v-if="settings.sky"
+                            v-model.number="settings.sky.staticColorTransitionStartDistance"
+                        />
+                    </p>
+                    <p v-show="settings.sky?.mode === HrzProtocol.SkyMode.SKY_STATIC">
+                        <label
+                            >Color transition end distance ({{
+                                $filters.formatNumber(
+                                    settings.sky?.staticColorTransitionEndDistance || 0
+                                )
+                            }}
+                            {{
+                                settings.sky?.staticColorTransitionDistanceUnit ==
+                                HrzProtocol.StaticSkyColorTransitionUnit
+                                    .STATIC_SKY_COLOR_TRANSITION_UNIT_METERS
+                                    ? "m"
+                                    : "px"
+                            }})</label
+                        >
+                        <input
+                            type="range"
+                            min="0"
+                            :max="
+                                settings.sky?.staticColorTransitionDistanceUnit ==
+                                HrzProtocol.StaticSkyColorTransitionUnit
+                                    .STATIC_SKY_COLOR_TRANSITION_UNIT_METERS
+                                    ? 20000000
+                                    : 2000
+                            "
+                            step="any"
+                            v-if="settings.sky"
+                            v-model.number="settings.sky.staticColorTransitionEndDistance"
                         />
                     </p>
                     <hr />
