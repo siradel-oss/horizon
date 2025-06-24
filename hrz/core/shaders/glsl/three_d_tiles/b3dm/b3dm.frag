@@ -25,7 +25,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef GLTF_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp vec2 o_depth_value;
 #endif
 
@@ -56,20 +56,20 @@ void main()
         color_lin = srgb_to_linear(color);
     }
 
-    uvec3 feature_picking_id = uvec3(hrz_mesh.geometry.feature_picking_id.r, v_feature_id);
-    o_color = apply_color_decoration(color_lin, get_normal(), feature_picking_id);
+    uvec3 feature_reference = uvec3(hrz_mesh.geometry.feature_reference.r, v_feature_id);
+    o_color = apply_color_decoration(color_lin, get_normal(), feature_reference);
 #endif
 
 #ifdef GLTF_PICKING
-    o_picking_id = uvec2(hrz_mesh.geometry.batch_picking_id.r, hrz_mesh.geometry.batch_picking_id.g + v_batch_id + hrz_mesh.geometry.batch_id_offset);
+    o_object_reference = hrz_mesh.geometry.object_reference | uvec2(0, v_batch_id + hrz_mesh.geometry.object_id_offset);
 
     if (hrz_mesh.geometry.draw_under_flat_overlays)
     {
         // Flat overlays take precedence when drawn over models.
-        uvec2 overlay_picking_id = compute_picking_overlay_color(v_overlay_cams_clip_pos);
-        if (overlay_picking_id != uvec2(0, 0))
+        uvec2 overlay_object_reference = compute_overlay_object_reference(v_overlay_cams_clip_pos);
+        if (overlay_object_reference != uvec2(0, 0))
         {
-            o_picking_id = overlay_picking_id;
+            o_object_reference = overlay_object_reference;
         }
     }
 

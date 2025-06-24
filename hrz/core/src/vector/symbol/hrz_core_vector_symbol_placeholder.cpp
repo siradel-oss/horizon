@@ -132,7 +132,7 @@ void PlaceholderElementSystem::collect_shaders(hrz::GpuResourceContext* rc)
     res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
     rc->alloc(&res, hrz::monitoring::systems::Symbols);
 
-    const char* picking_color_outputs[] = {"o_picking_id", "o_depth"};
+    const char* picking_color_outputs[] = {"o_object_reference", "o_depth"};
 
     res.name = hrz_shaders::Symbol_placeholder_picking_name;
     res.vertex_source_len = hrz_shaders::Symbol_placeholder_picking_vert_len;

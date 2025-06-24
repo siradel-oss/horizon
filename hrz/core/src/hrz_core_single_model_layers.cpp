@@ -60,8 +60,8 @@ using ArraySync = hrz::scene_model::ArraySync<ArraySyncTraits>;
 
 struct SingleModelLayer
 {
-    uint64_t id;
-    lm::uvec2 picking_id;
+    uint64_t global_layer_id;
+    uint32_t local_layer_id;
 
     int8_t loading_priority;
 
@@ -122,8 +122,8 @@ struct SingleModelLayerSystem
     hrz::flat_hash_set<uint64_t> unregistered_layers;
 
     uint8_t picking_id;
-    GenIndexPool<uint32_t, 4, 20> picking_id_pool;
-    hrz::flat_hash_map<uint32_t, uint64_t> picking_id_to_layer_ids;
+    GenIndexPool<uint32_t, 4, 20> local_layer_id_pool;
+    hrz::flat_hash_map<uint32_t, uint64_t> local_to_global_layer_id;
 
     model::SharedResources* shared_resources;
     std::vector<my::ResourceHandle> to_destroy;
@@ -239,10 +239,12 @@ RenderRequest _update_layer(
                 new_attribution,
                 get_request_queue(layer->loading_priority, assets_loader::Queue::MeshModels),
                 combine_loading_priorities(layer->loading_priority, 0),
-                {monitoring::systems::SingleModelLayers, layer->id});
+                {monitoring::systems::SingleModelLayers, layer->global_layer_id});
 
             layer->model_geometry = model::create_single_model_geometry(
-                layer->model_prototype, layer->picking_id, {layer->picking_id, 0});
+                layer->model_prototype,
+                picking::ObjectReference{system->picking_id, layer->local_layer_id, 0},
+                picking::FeatureReference{system->picking_id, layer->local_layer_id, 0});
         }
 
         layer->materials.prototype_may_have_been_recreated(layer->model_prototype);
@@ -505,12 +507,10 @@ void register_layer(SingleModelLayerSystem* system, SceneModel* model, uint64_t 
     {
         auto handle = system->layer_pool.alloc();
         auto layer = system->layer_pool.get_object(handle);
-        layer->id = layer_id;
+        layer->global_layer_id = layer_id;
 
-        auto layer_picking_id = system->picking_id_pool.alloc();
-        system->picking_id_to_layer_ids.insert({layer_picking_id, layer_id});
-        layer->picking_id =
-            lm::uvec2(picking::combine_picking_ids(system->picking_id, layer_picking_id), 0);
+        layer->local_layer_id = system->local_layer_id_pool.alloc();
+        system->local_to_global_layer_id.insert({layer->local_layer_id, layer_id});
 
         layer->model_prototype = nullptr;
         layer->visibility_constraints = hrz_proto::LayerVisibilityConstraintList();
@@ -608,8 +608,7 @@ RenderRequest _unregister_layers(
                     planet::cancel_elevation_query(planet, layer->elevation_query_ticket.value());
                 }
 
-                uint32_t picking_id = layer->picking_id.x;
-                system->picking_id_pool.release(picking::extract_complementary_id(picking_id));
+                system->local_layer_id_pool.release(layer->local_layer_id);
                 system->layer_pool.release(inner_id);
 
                 render_request.request_visual_render();
@@ -696,7 +695,8 @@ RenderRequest _work_models(
                 assert(!layer->elevation_query_ticket.has_value());
                 auto ticket = planet::query_elevation(
                     planet, layer->anchor.xy,
-                    monitoring::ResourceOwner{monitoring::systems::SingleModelLayers, layer->id});
+                    monitoring::ResourceOwner{
+                        monitoring::systems::SingleModelLayers, layer->global_layer_id});
                 layer->elevation_query_ticket = ticket;
                 layer->needs_clamping = false;
             }
@@ -728,17 +728,16 @@ RenderRequest _work_models(
 
 static SingleModelLayer* _get_layer_from_picking(
     SingleModelLayerSystem* system,
-    uint8_t system_id,
-    uint32_t complementary_id)
+    const picking::ObjectReference& ref)
 {
-    if (system_id != system->picking_id) return nullptr;
+    if (ref.system_id != system->picking_id) return nullptr;
 
-    auto layer_picking_id = complementary_id;
-    auto it = system->picking_id_to_layer_ids.find(layer_picking_id);
+    auto layer_local_id = ref.complementary_id;
+    auto it = system->local_to_global_layer_id.find(layer_local_id);
 
-    if (it == system->picking_id_to_layer_ids.end())
+    if (it == system->local_to_global_layer_id.end())
     {
-        HRZ_LOG_ERROR("Cannot find single model layer for picking id {}", layer_picking_id);
+        HRZ_LOG_ERROR("Cannot find single model layer for picking id {}", layer_local_id);
         return nullptr;
     }
 
@@ -753,14 +752,13 @@ void pick(
 {
     HRZ_SCOPED_SAMPLE("single model layers notify picking");
 
-    auto layer =
-        _get_layer_from_picking(system, result_raw.ref.system_id, result_raw.ref.complementary_id);
+    auto layer = _get_layer_from_picking(system, result_raw.ref);
 
     if (layer && layer->is_visible && layer->visibility_constraints_result.satisfied_in != 0)
     {
         hrz_proto::PickLayerResult* pr = picking_results.mutable_results()->Add();
         pr->mutable_layer()->set_type(hrz_proto::LayerType::SINGLE_MODEL);
-        pr->mutable_layer()->mutable_handle()->set_opaque(layer->id);
+        pr->mutable_layer()->mutable_handle()->set_opaque(layer->global_layer_id);
         pr->mutable_model()->set_data_texture_value(result_raw.data_texture_value);
     }
 }
@@ -786,7 +784,7 @@ std::pair<size_t, size_t> make_typed_object_references(
         const auto& obj = objs[in_cursor++];
         if (!layer || last_complementary_id != obj.complementary_id)
         {
-            layer = _get_layer_from_picking(system, obj.system_id, obj.complementary_id);
+            layer = _get_layer_from_picking(system, obj);
             last_complementary_id = obj.complementary_id;
 
             // Since there is no object ids for single models, it's fine to only
@@ -796,7 +794,7 @@ std::pair<size_t, size_t> make_typed_object_references(
                 && layer->visibility_constraints_result.satisfied_in != 0)
             {
                 auto& typed_obj = output[out_cursor++];
-                typed_obj.mutable_single_model()->set_opaque(layer->id);
+                typed_obj.mutable_single_model()->set_opaque(layer->global_layer_id);
             }
         }
     }
@@ -804,7 +802,7 @@ std::pair<size_t, size_t> make_typed_object_references(
     return std::make_pair(in_cursor, out_cursor);
 }
 
-std::optional<picking::FeatureReference> make_feature_picking_id(
+std::optional<picking::FeatureReference> make_feature_reference(
     SingleModelLayerSystem* system,
     const picking::ObjectReference& obj)
 {
@@ -815,8 +813,7 @@ std::optional<picking::FeatureReference> make_feature_picking_id(
         return std::nullopt;
     }
 
-    auto layer = _get_layer_from_picking(system, obj.system_id, obj.complementary_id);
-
+    auto layer = _get_layer_from_picking(system, obj);
     if (layer == nullptr)
     {
         return std::nullopt;

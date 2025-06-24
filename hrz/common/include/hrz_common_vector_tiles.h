@@ -1,10 +1,9 @@
 #pragma once
 
-#include "hrz_common_blob_allocator.h"
 #include "hrz_common_blob_array.h"
 #include "hrz_common_font_rasterizer.h"
+#include "hrz_common_picking_types.h"
 #include "hrz_common_style.h"
-#include "hrz_common_text.h"
 #include "hrz_common_tile_coords.h"
 #include "hrz_common_vector_data.h"
 #include "hrz_fnd_flat_hash_map.h"
@@ -19,16 +18,17 @@
 
 namespace hrz::vt
 {
-// Picking IDs:
+// Picking IDs (object reference):
 //
 // 2 bits per character, least significant bits are on the right.
 //
 // rrrrrrrrrrrrrrrr|gggggggggggggggg        (uvec2 components)
 // ccccccccccccssss|oooooooooooooooo        (system, complementary, object)
 // llllllltttttssss|tttttttiiiiiiiii        (contents)
+// layer_id        | object_id
 //
 // s: system ID, 8 bits
-// l: layer picking ID, 14 bits
+// l: local layer ID, 14 bits
 // t: tile ID, 24 bits
 // i: feature index, 18 bits (262,144 values)
 //
@@ -38,43 +38,57 @@ namespace hrz::vt
 
 static constexpr uint32_t MAX_FEATURE_INDEX = (1 << 18) - 1;
 
-inline uint32_t feature_index_from_object_id(uint32_t object_id)
+inline uint32_t extract_feature_index(const picking::ObjectReference& ref)
 {
-    return object_id & ((1 << 18) - 1);
+    return ref.object_id & ((1 << 18) - 1);
 }
 
-inline uint32_t tile_id_from_picking_id(uint32_t complementary_id, uint32_t object_id)
+inline uint32_t extract_tile_id(const picking::ObjectReference& ref)
 {
-    return ((complementary_id & ((1 << 10) - 1)) << 14) | (object_id >> 18);
+    return ((ref.complementary_id & ((1 << 10) - 1)) << 14) | (ref.object_id >> 18);
 }
 
-inline uint32_t layer_picking_id_from_complementary_id(uint32_t complementary_id)
+inline uint32_t extract_local_layer_id(const picking::ObjectReference& ref)
 {
-    return (complementary_id >> 10) & ((1 << 14) - 1);
+    return (ref.complementary_id >> 10) & ((1 << 14) - 1);
 }
 
-inline uint32_t make_complementary_id_for_layer_picking_id(uint32_t layer_picking_id)
+inline uint32_t make_complementary_id_for_layer_local_id(uint32_t layer_local_id)
 {
-    assert(layer_picking_id <= ((1 << 14) - 1));
-    return layer_picking_id << 10;
+    assert(layer_local_id <= ((1 << 14) - 1));
+    return layer_local_id << 10;
 }
 
-inline lm::uvec2 make_tile_picking_id_from_system_layer_picking_id(
-    uint32_t system_and_layer_picking_id,
+inline uint32_t make_system_layer_id_partial(uint8_t system_id, uint32_t layer_local_id)
+{
+    return picking::make_layer_id(
+        system_id, make_complementary_id_for_layer_local_id(layer_local_id));
+}
+
+inline picking::ObjectReference make_object_reference(
+    uint32_t system_layer_id_partial,
     uint32_t tile_id)
 {
+    picking::ObjectReference obj_ref{
+        picking::extract_system_id_from_layer_id(system_layer_id_partial),
+        picking::extract_complementary_id_from_layer_id(system_layer_id_partial),
+        0,
+    };
+
     assert(tile_id <= ((1 << 24) - 1));
-    return {system_and_layer_picking_id | ((tile_id >> 14) << 8), (tile_id & (1 << 14) - 1) << 18};
+    obj_ref.complementary_id |= (tile_id >> 14);
+    obj_ref.object_id = (tile_id & (1 << 14) - 1) << 18;
+
+    return obj_ref;
 }
 
-inline lm::uvec2 make_full_picking_id_from_tile_picking_id(
-    const lm::uvec2 tile_picking_id,
-    uint32_t feature_index)
+inline picking::FeatureReference make_feature_reference(uint32_t system_layer_id_partial)
 {
-    assert(feature_index <= ((1 << 18) - 1));
-    auto picking_id = tile_picking_id;
-    picking_id.g |= feature_index;
-    return picking_id;
+    picking::FeatureReference feature_ref;
+    feature_ref.system_id = picking::extract_system_id_from_layer_id(system_layer_id_partial);
+    feature_ref.complementary_id =
+        picking::extract_complementary_id_from_layer_id(system_layer_id_partial);
+    return feature_ref;
 }
 
 struct ExtrudedVectorData
@@ -145,7 +159,6 @@ struct ModelData
     style::StyledFeatures style;
     hrz_proto::VectorClamping clamping;
     hrz::BlobArray<float> clamps;
-    lm::uvec2 tile_picking_id;
     hrz::TileCoords tile_coords;
     bool clip_to_tile;
 
@@ -176,9 +189,8 @@ struct ModelGeometry
     std::vector<lm::usvec4> normals;
     std::vector<lm::vec3> scales;
     std::vector<lm::ubvec4> colors;
-    std::vector<uint32_t> picking_ids;
     std::vector<vector_data::FeatureIdHash> feature_ids;
-    std::vector<uint32_t> batch_ids;
+    std::vector<uint32_t> object_ids;
 
     std::vector<lm::vec3> impostor_positions;
     std::vector<lm::vec3> impostor_scales; // In the Horizon frame

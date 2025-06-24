@@ -2,7 +2,7 @@
 
 layout(std140) uniform Control
 {
-    uint shape_id;
+    uvec2 object_reference;
     uint selected_control_point_id;
     bool pick_selected_control_point;
     bool pick_midpoint_control_points;

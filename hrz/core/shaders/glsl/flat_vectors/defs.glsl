@@ -6,8 +6,9 @@ layout(std140) uniform Tile
 {
     vec4 center_low;
     vec4 center_high;
-    uvec2 picking_id;
-    uint layer_picking_id;
+    uvec3 feature_reference;
+    bool has_feature_ids;
+    uvec2 object_reference;
     float disc_outline_width;
     vec4 disc_outline_color;
 
@@ -39,8 +40,6 @@ layout(std140) uniform Tile
 
     // 0 if in meters, 1 if in pixels.
     uint disc_radius_unit;
-
-    bool has_feature_ids;
 } hrz_tile;
 
 layout(std140) uniform OverlayPasses

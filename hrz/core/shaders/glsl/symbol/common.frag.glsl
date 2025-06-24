@@ -10,7 +10,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef SYMBOL_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp float o_depth;
 #endif
 
@@ -19,18 +19,16 @@ layout(location = 0) out highp float o_highlight;
 #endif
 
 #ifdef SYMBOL_VISUAL
-uvec3 build_feature_picking_id()
+uvec3 build_feature_reference()
 {
-    return uvec3(hrz_tile.layer_picking_id, v_feature_id);
+    return hrz_tile.feature_reference | uvec3(0, v_feature_id);
 }
 #endif
 
 #ifdef SYMBOL_PICKING
-uvec2 build_picking_id()
+uvec2 build_object_reference()
 {
-    uvec2 picking_id = hrz_tile.picking_id;
-    picking_id.g += v_feature_index;
-    return picking_id;
+    return hrz_tile.object_reference | uvec2(0, v_feature_index);
 }
 #endif
 
@@ -50,7 +48,7 @@ void draw_depth(uint z_index)
 void draw_quick_highlight()
 {
 #ifdef SYMBOL_VISUAL
-    if (build_feature_picking_id() == hrz_frame.quick_highlight_picking_id)
+    if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
         o_color = apply_quick_highlight_color(o_color);
     }
@@ -60,7 +58,7 @@ void draw_quick_highlight()
 void draw_picking()
 {
 #ifdef SYMBOL_PICKING
-    o_picking_id.rg = build_picking_id();
+    o_object_reference.rg = build_object_reference();
     o_depth = 1.0 / gl_FragCoord.w;
 #endif
 }

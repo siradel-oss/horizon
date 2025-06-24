@@ -152,8 +152,8 @@ struct Tile
     ConfigH config;
     uint64_t layer_id;
     TileCoords coords;
-    uint32_t layer_picking_id;
-    lm::uvec2 tile_picking_id;
+    picking::ObjectReference object_ref;
+    picking::FeatureReference feature_ref;
     bool has_feature_ids;
 
     std::optional<hrz::vt::SymbolBakingData> baking_data;
@@ -449,8 +449,8 @@ public:
         ConfigH config_handle,
         TileCoords coords,
         uint64_t layer_id,
-        uint32_t layer_picking_id,
-        lm::uvec2 tile_picking_id,
+        const hrz::picking::ObjectReference& object_ref,
+        const hrz::picking::FeatureReference& feature_ref,
         const hrz::vector_data::FeatureIds& feature_ids,
         const ReprGeometry& geometry,
         const style::StyledFeatures& style,
@@ -480,8 +480,8 @@ public:
         tile.coords = coords;
         tile.status = Tile::Status::AwaitingConfig;
         tile.config = config_handle;
-        tile.layer_picking_id = layer_picking_id;
-        tile.tile_picking_id = tile_picking_id;
+        tile.object_ref = object_ref;
+        tile.feature_ref = feature_ref;
         tile.has_feature_ids = feature_ids.has_any_attribute();
         tile.scene_views = config.scene_views;
 
@@ -985,8 +985,8 @@ public:
                             {
                                 add_tile(
                                     it->second, message.coords, message.layer_id,
-                                    message.layer_picking_id, message.tile_picking_id,
-                                    message.feature_ids, message.geometry, message.style,
+                                    message.object_ref, message.feature_ref, message.feature_ids,
+                                    message.geometry, message.style,
                                     TileId{channel_id, message.tile_id});
                             }
                             else
@@ -1125,8 +1125,8 @@ public:
                     hrz::split_double(tile->center.x, ubo.center_low.x, ubo.center_high.x);
                     hrz::split_double(tile->center.y, ubo.center_low.y, ubo.center_high.y);
                     hrz::split_double(tile->center.z, ubo.center_low.z, ubo.center_high.z);
-                    ubo.picking_id = tile->tile_picking_id;
-                    ubo.layer_picking_id = tile->layer_picking_id;
+                    ubo.object_reference = tile->object_ref.to_uvec2();
+                    ubo.feature_reference = tile->feature_ref.to_uvec3();
 
                     my::BufferResource ub_res(my::BufferResource::BufferType::Uniform);
                     ub_res.size = sizeof(ubo);

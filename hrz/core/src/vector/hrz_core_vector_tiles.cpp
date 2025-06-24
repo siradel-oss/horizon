@@ -5,7 +5,6 @@
 #include "hrz_core_global_flags.h"
 #include "hrz_core_render.h"
 #include "hrz_core_selection.h"
-#include "hrz_core_style_script.h"
 #include "vector/hrz_core_vector_repr.h"
 #include "vector/hrz_core_vector_tiles_actor.h"
 
@@ -98,11 +97,11 @@ struct VectorTiles
     uint8_t _data_max_lod{};
 
     VectorTiles(
-        uint64_t layer_id,
+        uint64_t global_layer_id,
         uint32_t vector_data_layer,
         hrz_proto::MissingTilePolicy missing_tile_policy,
         bool static_tiles,
-        uint32_t picking_id,
+        uint32_t system_layer_picking_id,
         hrz::PlanetSurface* planet,
         VectorDataLoader* vdl,
         ActorRunner* ar) :
@@ -110,13 +109,13 @@ struct VectorTiles
         // though the selection system has not been updated we need to get the brand
         // new selection at the first draw.
         _force_update_selection(true),
-        _layer_id(layer_id),
+        _layer_id(global_layer_id),
         _actor_channel(spawn_vector_tiles_actor(
-            layer_id,
+            global_layer_id,
             vector_data_layer,
             missing_tile_policy,
             static_tiles,
-            picking_id,
+            system_layer_picking_id,
             planet,
             vdl,
             ar))
@@ -359,11 +358,10 @@ struct VectorTiles
     }
 
     // Return [TileData*, feature index]
-    std::optional<std::pair<TileData*, uint32_t>> get_feature_data_for_picking_id(
-        uint32_t complementary_id,
-        uint32_t object_id)
+    std::optional<std::pair<TileData*, uint32_t>> get_feature_data_for_object(
+        const picking::ObjectReference& obj)
     {
-        auto tile_id = hrz::vt::tile_id_from_picking_id(complementary_id, object_id);
+        auto tile_id = hrz::vt::extract_tile_id(obj);
 
         auto it = _tile_id_to_tile_data_id.find(tile_id);
         if (it == _tile_id_to_tile_data_id.end())
@@ -373,15 +371,13 @@ struct VectorTiles
         }
 
         auto tile_data = _tile_data_pool.get_object(it->second);
-
         if (tile_data == nullptr)
         {
             HRZ_LOG_WARNING("Tile {} not found", tile_id);
             return std::nullopt;
         }
 
-        auto feature_index = hrz::vt::feature_index_from_object_id(object_id);
-
+        auto feature_index = hrz::vt::extract_feature_index(obj);
         if (feature_index >= tile_data->feature_ids.size())
         {
             HRZ_LOG_WARNING("Invalid feature index for tile {}: {}", tile_id, feature_index);
@@ -391,12 +387,10 @@ struct VectorTiles
         return std::make_pair(tile_data, feature_index);
     }
 
-    std::optional<vector_data::FeatureId> get_feature_id_for_picking_id(
-        uint32_t complementary_id,
-        uint32_t object_id)
+    std::optional<vector_data::FeatureId> get_feature_id_for_object(
+        const picking::ObjectReference& obj)
     {
-        if (auto feature_data = get_feature_data_for_picking_id(complementary_id, object_id);
-            feature_data.has_value())
+        if (auto feature_data = get_feature_data_for_object(obj); feature_data.has_value())
         {
             return {feature_data->first->feature_ids.at(feature_data->second)};
         }
@@ -404,13 +398,9 @@ struct VectorTiles
         return std::nullopt;
     }
 
-    bool pick_feature(
-        uint32_t complementary_id,
-        uint32_t object_id,
-        hrz_proto::PickLayerResult* result)
+    bool pick_feature(const picking::ObjectReference& obj, hrz_proto::PickLayerResult* result)
     {
-        if (auto feature_data = get_feature_data_for_picking_id(complementary_id, object_id);
-            feature_data.has_value())
+        if (auto feature_data = get_feature_data_for_object(obj); feature_data.has_value())
         {
             auto [tile_data, feature_index] = *feature_data;
 
@@ -766,19 +756,19 @@ struct VectorTiles
 };
 
 VectorTiles* create(
-    uint64_t layer_id,
+    uint64_t global_layer_id,
     uint32_t vector_data_layer,
     hrz_proto::MissingTilePolicy missing_tile_policy,
     bool static_tiles,
-    uint32_t picking_id,
+    uint32_t object_reference_layer_id_partial,
     hrz::PlanetSurface* planet,
     VectorDataLoader* vdl,
     ActorRunner* ar)
 {
     assert(vdl);
     return new VectorTiles(
-        layer_id, vector_data_layer, missing_tile_policy, static_tiles, picking_id, planet, vdl,
-        ar);
+        global_layer_id, vector_data_layer, missing_tile_policy, static_tiles,
+        object_reference_layer_id_partial, planet, vdl, ar);
 }
 
 void destroy(VectorTiles* vt)
@@ -849,21 +839,19 @@ void set_palettes(VectorTiles* vt, gsl::span<const hrz_proto::Palette* const> pa
     vt->set_palettes(palettes);
 }
 
-std::optional<vector_data::FeatureId> get_feature_id_from_picking_id(
+std::optional<vector_data::FeatureId> get_feature_id_from_object(
     VectorTiles* vt,
-    uint32_t complementary_id,
-    uint32_t object_id)
+    const picking::ObjectReference& obj)
 {
-    return vt->get_feature_id_for_picking_id(complementary_id, object_id);
+    return vt->get_feature_id_for_object(obj);
 }
 
 bool pick_feature(
     VectorTiles* vt,
-    uint32_t complementary_id,
-    uint32_t object_id,
+    const picking::ObjectReference& obj,
     hrz_proto::PickLayerResult* result)
 {
-    return vt->pick_feature(complementary_id, object_id, result);
+    return vt->pick_feature(obj, result);
 }
 
 void set_style_script(VectorTiles* vt, std::string_view script)

@@ -120,7 +120,7 @@ struct Scene : public hrz_proto::ICameraService
     PlanetSurface* planet;
     PickingIdAllocator* picking_id_allocator;
 
-    hrz::picking::FeatureReference last_quick_highlight_feature_id;
+    hrz::picking::FeatureReference last_quick_highlight_feature_reference;
 
     uint32_t flat_overlay_cascade_count;
     uint32_t flat_overlay_texture_size;
@@ -843,7 +843,7 @@ Scene* create(
         vector_tiles_layers::create_system(scene->picking_id_allocator);
     scene->three_d_tiles_layer_system =
         three_d_tiles_layers::create_system(scene->picking_id_allocator, scene->vector_data_loader);
-    scene->gizmo_layer_system = gizmo_layers::create_system(scene->picking_id_allocator);
+    scene->gizmo_layer_system = gizmo_layers::create_system();
     scene->shape_editor = editor::create_editor(scene->picking_id_allocator);
     scene->clipping_plane_layer_system = clipping_plane_layers::create_system();
     scene->debug_draw = debug_draw::create_system();
@@ -946,8 +946,8 @@ void destroy(
         scene->model, scene->planet);
 
     vector_tiles_layers::destroy_system(
-        scene->vector_tiles_layer_system, &scene->render, scene->vector_data_loader, al, ba, js, fr,
-        scene->symbol_culling, scene->picking_id_allocator, scene->model, scene->planet);
+        scene->vector_tiles_layer_system, &scene->render, al, ba, js, fr, scene->symbol_culling,
+        scene->picking_id_allocator, scene->model, scene->planet);
 
     three_d_tiles_layers::destroy_system(
         scene->three_d_tiles_layer_system, al, js, ba, &scene->render, scene->picking_id_allocator,
@@ -958,8 +958,7 @@ void destroy(
     vector_data::destroy_loader(scene->vector_data_loader, js);
     vector_data::in_memory::destroy_system(scene->in_memory_vector_database, scene->model, ba);
 
-    gizmo_layers::destroy_system(
-        scene->gizmo_layer_system, &scene->render, scene->model, scene->picking_id_allocator);
+    gizmo_layers::destroy_system(scene->gizmo_layer_system, &scene->render, scene->model);
 
     symbol_culling::destroy(scene->symbol_culling);
 
@@ -1403,7 +1402,7 @@ void work(
         scene->render_request |= work(
             entry.second.view, scene->model, entry.second.render_info.cam_view_info,
             scene->canvas_size, scene->device_pixel_ratio, cpi, scene->planet,
-            heatmap_repr_registry, scene->last_quick_highlight_feature_id);
+            heatmap_repr_registry, scene->last_quick_highlight_feature_reference);
     }
 
     if (selection::has_changed_since_last_frame(scene->selection) || scene->has_just_added_views)
@@ -2124,7 +2123,7 @@ static std::pair<size_t, size_t> make_typed_object_references(
         advance_fn(planet::make_typed_object_references(
             scene->planet, objs.subspan(in_cursor), output.subspan(out_cursor)));
 
-        if (!has_advanced_this_iteration)
+        if (!std::exchange(has_advanced_this_iteration, false))
         {
             break;
         }
@@ -2315,26 +2314,26 @@ void deselect_all(Scene* scene)
     selection::deselect_all(scene->selection);
 }
 
-std::optional<picking::FeatureReference> make_feature_picking_id(
+std::optional<picking::FeatureReference> make_feature_reference(
     Scene* scene,
     const picking::ObjectReference& obj)
 {
     {
         auto id =
-            single_model_layers::make_feature_picking_id(scene->single_model_layer_system, obj);
+            single_model_layers::make_feature_reference(scene->single_model_layer_system, obj);
         if (id.has_value()) return id;
     }
     {
         auto id =
-            vector_tiles_layers::make_feature_picking_id(scene->vector_tiles_layer_system, obj);
+            vector_tiles_layers::make_feature_reference(scene->vector_tiles_layer_system, obj);
         if (id.has_value()) return id;
     }
-    return three_d_tiles_layers::make_feature_picking_id(scene->three_d_tiles_layer_system, obj);
+    return three_d_tiles_layers::make_feature_reference(scene->three_d_tiles_layer_system, obj);
 }
 
 void quick_highlight(Scene* scene, const picking::FeatureReference& feature)
 {
-    scene->last_quick_highlight_feature_id = feature;
+    scene->last_quick_highlight_feature_reference = feature;
 }
 
 RenderRequest get_render_request(Scene* scene)

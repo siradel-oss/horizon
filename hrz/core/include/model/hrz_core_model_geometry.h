@@ -59,9 +59,9 @@ private:
     std::vector<my::VertexInputStream> _streams;
     bool _has_normals;
 
-    uint32_t _batch_id_offset{};
-    lm::uvec2 _batch_picking_id;   // Identifies a physical object uniquely
-    lm::uvec3 _feature_picking_id; // Identifies a logical object uniquely
+    uint32_t _object_id_offset{};
+    picking::ObjectReference _object_reference;
+    picking::FeatureReference _feature_reference;
 
     bool ready_to_build() const;
 
@@ -82,9 +82,9 @@ protected:
 
 public:
     ModelGeometry(
-        uint32_t batch_id_offset,
-        lm::uvec2 batch_picking_id,
-        lm::uvec3 feature_picking_id);
+        uint32_t object_id_offset,
+        const picking::ObjectReference& object_reference,
+        const picking::FeatureReference& feature_reference);
     virtual ~ModelGeometry() = default;
 
     virtual void destroy(ModelPrototype*);
@@ -129,9 +129,9 @@ class BatchedModelGeometry : public ModelGeometry
 public:
     BatchedModelGeometry(
         ModelPrototype* proto,
-        uint32_t feature_picking_id,
-        lm::uvec2 batch_picking_id,
-        uint32_t batch_id_offset,
+        uint32_t object_id_offset,
+        const picking::ObjectReference& object_reference,
+        const picking::FeatureReference& feature_reference,
         size_t batch_length,
         gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
 

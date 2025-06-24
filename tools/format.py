@@ -6,6 +6,7 @@ import os
 import platform
 from pathlib import Path
 import json
+import multiprocessing
 
 def retrieve_bazel_info(all, wanted):
     for line in all:
@@ -24,6 +25,7 @@ def run_command(cmd, name):
 
 parser = argparse.ArgumentParser(description="Format code files. If no operation is selected, all are performed.")
 parser.add_argument("-s", "--staged", action='store_true', help="only operate on staged files")
+parser.add_argument("--jj", action='store_true', help="only operate on JJ working copy files")
 parser.add_argument("-c", "--clang-format", action='store_true', help="run Clang-Format (format C/C++ files)")
 parser.add_argument("-p", "--prettier", action='store_true', help="run Prettier (format TypeScript/JavaScript/CSS files)")
 parser.add_argument("-l", "--line-endings", action='store_true', help="fix line endings")
@@ -31,6 +33,7 @@ parser.add_argument("-b", "--buildifier", action='store_true', help="run Buildif
 args = parser.parse_args()
 
 mode = "staged" if args.staged else "all"
+mode = "jj" if args.jj else mode
 
 run_all = not args.clang_format and not args.prettier and not args.line_endings and not args.buildifier
 run_clang_format = run_all or args.clang_format
@@ -99,6 +102,25 @@ elif mode == "staged":
             all_files.append(f)
         elif basename in all_files_names:
             all_files.append(f)
+elif mode == "jj":
+    files = subprocess.check_output(["jj", "show", "-r", "@", "-s", "-T", "''", "--no-pager", "--color", "never"]).decode("utf-8").splitlines()
+    use_ops = ["A", "M"]
+    skip_ops = ["D"]
+    for f in files:
+        op = f[0]
+        if op in skip_ops:
+            continue
+        if op not in use_ops:
+            raise RuntimeError(f"Unexpected operation '{op}' in JJ output, expected one of {use_ops}")
+
+        filename = f[2:]
+        ext = os.path.splitext(filename)[1][1:]
+        basename = os.path.basename(filename)
+
+        if ext in all_extensions:
+            all_files.append(filename)
+        elif basename in all_files_names:
+            all_files.append(filename)
 
 print("Filtering C++ files...")
 for f in all_files:
@@ -113,12 +135,24 @@ print("Excluding template files from C++ files...")
 cpp_files = [f for f in cpp_files if not ".tpl." in f]
 
 if run_clang_format:
-    # Run Clang Format for c & cpp files
+    # Run Clang Format for c & cpp files in parallel
+    import concurrent.futures
+
     print("Running Clang Format...")
 
-    for (i, f) in enumerate(cpp_files):
-        print("\r    Formatting file %d/%d" % (i + 1, len(cpp_files)), end = "")
+    def format_file(f):
         run_command([clang_format_exe, "-i", f], "Clang Format")
+        return f
+
+    num_workers = multiprocessing.cpu_count()
+    total = len(cpp_files)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+        futures = {executor.submit(format_file, f): i for i, f in enumerate(cpp_files)}
+        for i, future in enumerate(concurrent.futures.as_completed(futures)):
+            idx = futures[future]
+            print(f"\r    Formatting file {idx + 1}/{total}", end="")
+            # Raise exception if any
+            future.result()
     print("\n    Done")
 
 if run_prettier:

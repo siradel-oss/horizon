@@ -359,7 +359,7 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     };
 
     const char* color_outputs[] = {"o_color"};
-    const char* picking_outputs[] = {"o_picking_id", "o_depth_value"};
+    const char* picking_outputs[] = {"o_object_reference", "o_depth_value"};
     const char* selection_outputs[] = {"o_highlight"};
 
     hrz::StaticVector<my::IndexName, 16> selection_samplers;

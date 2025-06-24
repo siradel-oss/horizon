@@ -238,7 +238,7 @@ void TextElementSystem::collect_shaders(GpuResourceContext* rc)
 
         res.initial_state.depth.compare = my::DepthState::Equal;
 
-        const char* picking_color_outputs[] = {"o_picking_id", "o_depth"};
+        const char* picking_color_outputs[] = {"o_object_reference", "o_depth"};
 
         my::IndexName picking_samplers[] = {
             {CullingVisibilitySamplerIndex, "u_visibility"},

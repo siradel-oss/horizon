@@ -56,9 +56,9 @@ class InstanceGroup
 
 public:
     InstanceGroup(
-        uint32_t batch_id_offset,
-        lm::uvec2 layer_picking_id,
-        lm::uvec2 tile_picking_id,
+        uint32_t object_id_offset,
+        const picking::ObjectReference& obj_ref,
+        const picking::FeatureReference& feature_ref,
         const monitoring::ResourceOwner& resource_owner,
         std::string_view model_uri);
     void destroy(ModelPrototype*);

@@ -61,6 +61,7 @@ cc_library(
         "include/hrz_common_monitoring_defs.h",
         "include/hrz_common_monitoring_resource_sorter.h",
         "include/hrz_common_palette.h",
+        "include/hrz_common_picking_types.h",
         "include/hrz_common_planet.h",
         "include/hrz_common_platform_detection.h",
         "include/hrz_common_profiling.h",

@@ -27,12 +27,12 @@ public:
         lm::vec3 quantized_position_scale;
         int32_t clip_id;
         lm::vec3 quantized_position_offset;
-        uint32_t layer_picking_id;
-        lm::uvec2 batch_picking_id;
-        uint32_t batch_id_offset;
+        uint32_t object_id_offset;
+        lm::uvec2 object_reference;
         uint32_t feature_color_blend_mode;
+        uint32_t _padding1[1];
+        lm::uvec3 feature_reference;
         float feature_color_blend_strength;
-        uint32_t _padding[3];
 
         bool operator!=(const UniformData& other) const
         {
@@ -43,11 +43,11 @@ public:
                 || quantized_position_scale != other.quantized_position_scale
                 || clip_id != other.clip_id
                 || quantized_position_offset != other.quantized_position_offset
-                || layer_picking_id != other.layer_picking_id
-                || batch_picking_id != other.batch_picking_id
-                || batch_id_offset != other.batch_id_offset
                 || feature_color_blend_mode != other.feature_color_blend_mode
-                || feature_color_blend_strength != other.feature_color_blend_strength;
+                || feature_color_blend_strength != other.feature_color_blend_strength
+                || object_id_offset != other.object_id_offset
+                || object_reference != other.object_reference
+                || feature_reference != other.feature_reference;
         }
     };
 

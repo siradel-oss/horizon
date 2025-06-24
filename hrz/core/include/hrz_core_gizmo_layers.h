@@ -27,12 +27,12 @@ namespace gizmo_layers
 /**
  * Create the gizmo layer system.
  */
-GizmoLayerSystem* create_system(PickingIdAllocator*);
+GizmoLayerSystem* create_system();
 
 /**
  * Destroy the gizmo layer system.
  */
-void destroy_system(GizmoLayerSystem*, Render*, SceneModel*, PickingIdAllocator*);
+void destroy_system(GizmoLayerSystem*, Render*, SceneModel*);
 
 void initialize_rendering(GizmoLayerSystem*, Render*);
 

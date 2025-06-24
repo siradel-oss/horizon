@@ -161,7 +161,7 @@ hrz::JobResult run(
             (normal_up >> 16) & 0xffff);
         geometry.scales.emplace_back(scale);
         geometry.colors.push_back(rgba);
-        geometry.picking_ids.push_back(input.tile_picking_id.g | feature_index);
+        geometry.object_ids.push_back(feature_index);
         geometry.feature_ids.push_back(input_feature_ids.at(instance.feature_index));
 
         // We don't need to multiply with the `frame` matrix because when the model was baked
@@ -201,9 +201,6 @@ hrz::JobResult run(
         geometry.colors.resize(1);
         geometry.colors.shrink_to_fit();
     }
-
-    geometry.batch_ids.resize(geometry.positions.size());
-    std::iota(std::begin(geometry.batch_ids), std::end(geometry.batch_ids), 0);
 
     double scale_avg = 1.0;
     if (geometry.positions.size() > 0)

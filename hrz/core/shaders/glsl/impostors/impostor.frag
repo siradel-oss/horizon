@@ -18,7 +18,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef IMPOSTOR_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp float o_depth;
 #endif
 
@@ -30,16 +30,16 @@ uniform lowp sampler2D hrz_impostor_texture;
 uniform highp sampler2D hrz_impostor_normal_texture;
 
 #ifdef IMPOSTOR_VISUAL
-uvec3 build_feature_picking_id()
+uvec3 build_feature_reference()
 {
-    return uvec3(hrz_tile.layer_picking_id, v_feature_id);
+    return hrz_tile.feature_ref + uvec3(0, v_feature_id);
 }
 #endif
 
 #ifdef IMPOSTOR_PICKING
-uvec2 build_picking_id()
+uvec2 build_object_reference()
 {
-    return uvec2(hrz_tile.picking_id, v_picking_id);
+    return hrz_tile.object_ref + uvec2(0, v_object_id);
 }
 #endif
 
@@ -79,14 +79,14 @@ void main()
     o_color = vec4(linear_to_srgb(color), v_color.a);
     o_color = compute_viewshed_color_no_correction(o_color);
 
-    if (build_feature_picking_id() == hrz_frame.quick_highlight_picking_id)
+    if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
         o_color = apply_quick_highlight_color(o_color);
     }
 #endif
 
 #ifdef IMPOSTOR_PICKING
-    o_picking_id.rg = build_picking_id();
+    o_object_reference.rg = build_object_reference();
     o_depth = 1.0 / gl_FragCoord.w;
 #endif
 

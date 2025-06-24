@@ -59,7 +59,7 @@ vec4 compute_overlay_color(const vec4 overlay_cams_clip_pos[HRZ_S_MAX_OVERLAY_CA
 #endif
 
 #ifdef FLAT_OVERLAY_PICKING
-uvec2 compute_picking_overlay_color(const vec4 overlay_cams_clip_pos[HRZ_S_MAX_OVERLAY_CASCADES])
+uvec2 compute_overlay_object_reference(const vec4 overlay_cams_clip_pos[HRZ_S_MAX_OVERLAY_CASCADES])
 {
     uvec2 color = uvec2(0);
     int index = 0;

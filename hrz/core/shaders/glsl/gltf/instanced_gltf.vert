@@ -30,7 +30,7 @@ uniform highp usampler2D u_instance_feature_id;
 #endif
 
 #ifdef GLTF_PICKING
-uniform highp usampler2D u_instance_picking_id;
+uniform highp usampler2D u_instance_object_id;
 #endif
 
 bool fetch_selection()
@@ -150,7 +150,7 @@ void main()
 #endif
 
 #ifdef GLTF_PICKING
-    v_picking_id = texelFetch(u_instance_picking_id, instance_data_coords, 0).r;
+    v_object_id = texelFetch(u_instance_object_id, instance_data_coords, 0).r;
 #endif
 
     output_uv_and_color();

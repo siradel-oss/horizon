@@ -1,7 +1,6 @@
 #pragma once
 
 #include "hrz_core_channel.h"
-#include "hrz_core_picking_types.h"
 #include "hrz_core_render_request.h"
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
@@ -10,6 +9,7 @@
 #include <hrz_common_blob_array.h>
 #include <hrz_common_blob_array_view.h>
 #include <hrz_common_geo.h>
+#include <hrz_common_picking_types.h>
 
 #include <gsl/gsl-lite.hpp>
 #include <mycelium_render_graph.h>

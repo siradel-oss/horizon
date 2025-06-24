@@ -48,6 +48,7 @@
 #include <hrz_fnd_mem.h>
 #include <hrz_fnd_meta.h>
 #include <hrz_fnd_observed.h>
+#include <hrz_fnd_overload.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_time.h>
 #include <hrz_fnd_url_utils.h>
@@ -70,6 +71,33 @@
 #include <variant>
 #include <vector>
 
+// Let's talk about picking a bit.
+//
+// Object references use the following format:
+// tttttttiiiiissss iiiiiiibbbbbbbbb
+// ---------------- ----------------
+// rrrrrrrrrrrrrrrr gggggggggggggggg
+// layer_id         object_id
+//
+// Each character represents two bits. 64 bits in total.
+// Least significant bits are on the right.
+// s: System picking id
+// t: Tileset handle
+// i: Tile index
+// b: batch id
+// The batch id is added to the low picking id value in
+// the fragment shader.
+// So in the end we have:
+//  * 8 bits, or 256 values, for the system id (we don't control that),
+//  * 14 bits, or 16,384 values, for the tileset handle,
+//  * 24 bits, or 16,777,216 values, for the tile index,
+//  * 18 bits, or 262,144 values, for the batch id.
+//
+// In the model system and shaders, batch ids are simply added to the
+// object_id part, so those bits need to be the lowest bits.
+//
+// Feature references simply use the local layer handle in the layer_id part.
+
 #define DRAW_DEBUG_BOXES 0
 
 #if DRAW_DEBUG_BOXES
@@ -79,7 +107,7 @@
 namespace
 {
 using hrz::three_d_tiles::BoundingVolume;
-using LayerH = uint64_t;
+using LayerH = uint32_t;
 using TilesetH = uint32_t;
 
 enum
@@ -395,7 +423,9 @@ struct ThreeDTile
 
         hrz_jobs::DecodeThreeDTilesBatchTableTicket decode_batch_table_ticket;
         bool has_been_styled_once = false;
-        std::vector<lm::ubvec4> feature_colors = std::vector<lm::ubvec4>(0);
+        std::vector<lm::ubvec4> per_batch_color = std::vector<lm::ubvec4>(0);
+
+        uint32_t batch_length = 0;
     };
 
     struct TilesetContent
@@ -430,7 +460,10 @@ struct ThreeDTile
         std::vector<uint32_t> batch_id_data;
 
         bool has_been_styled_once = false;
-        std::vector<lm::ubvec4> feature_colors = std::vector<lm::ubvec4>(0);
+        std::vector<lm::ubvec4> per_instance_color = std::vector<lm::ubvec4>(0);
+
+        uint32_t batch_length = 0;
+        uint32_t instances_length = 0;
     };
 
     struct PntsContent
@@ -440,7 +473,7 @@ struct ThreeDTile
 
         bool has_been_styled_once = false;
         bool has_transparent_feature = false;
-        std::vector<lm::ubvec4> feature_colors{};
+        std::vector<lm::ubvec4> per_batch_color{};
 
         hrz::Observed<hrz::PointCloud::UniformData> uniform_data;
 
@@ -450,6 +483,8 @@ struct ThreeDTile
         // This is OK because there won't be any blobs loaded.
         std::optional<hrz::PointCloud::Geometry> geometry;
         std::unique_ptr<hrz::PointCloud> point_cloud;
+
+        uint32_t batch_length = 0;
 
         void update_appearance(const hrz::model::DrawProperties& draw_prps)
         {
@@ -485,9 +520,7 @@ struct ThreeDTile
         // subtile has a distinct range of batch ids :
         // [batch_id_offset; batch_id_offset + batch_length[.
         uint32_t batch_id_offset = 0;
-        // For b3dm & pnts, this is the number of logical features in the tile.
-        // For i3dm, this is the number of instances in the tile.
-        uint32_t batch_length = 0;
+
         hrz::vector_data::FeatureIds batches_to_feature_ids;
 
         enum class VectorDataAttributeStatus
@@ -519,6 +552,18 @@ struct ThreeDTile
         constexpr bool has_i3dm() const { return std::holds_alternative<I3dmContent>(content); }
 
         constexpr bool has_pnts() const { return std::holds_alternative<PntsContent>(content); }
+
+        uint32_t batch_length() const
+        {
+            return std::visit(
+                hrz::overload{
+                    [](const std::monostate&) { return 0U; },
+                    [](const B3dmContent& c) { return c.batch_length; },
+                    [](const TilesetContent&) { return 0U; },
+                    [](const I3dmContent& c) { return c.batch_length; },
+                    [](const PntsContent& c) { return c.batch_length; }},
+                content);
+        }
     };
 
     hrz::InlinedVector<Subtile, 1> subtiles;
@@ -545,13 +590,16 @@ struct TilesetConfig
         double max_error;
     };
 
-    LayerH layer_handle; // Internal handle in the pool in the system.
-    uint64_t layer_id;   // Public ID of the layer.
+    // All of this is a bit redundant because there is a one-to-one mapping between
+    // each of them, but they each have a purpose, and it's not like a few integers
+    // of waste will kill us.
+    LayerH layer_handle;      // Internal handle in the pool in the system.
+    uint64_t global_layer_id; // Public ID of the layer.
+
     bool is_visible;
     hrz::layers::MultiviewVisibilityConstraints visibility_constraints_result;
     hrz::AttributionHandle additional_attribution;
 
-    uint32_t feature_picking_id;
     double max_screen_space_error;
     ScreenSpaceErrorHysteresis screen_space_error_hysteresis;
     std::vector<hrz::three_d_tiles::AttributeConfig> attributes;
@@ -798,12 +846,11 @@ struct ThreeDTilesSystem
         hrz::AttributionHandle additional_attribution,
         bool preserve_query_parameters,
         const lm::dmat4& transform,
-        uint32_t feature_picking_id,
         double max_screen_space_error,
         double refinement_hysteresis,
         const std::vector<hrz::three_d_tiles::AttributeConfig>& attributes,
         LayerH layer_handle,
-        uint64_t layer_id,
+        uint64_t global_layer_id,
         bool is_visible,
         int8_t loading_priority,
         int32_t clip_id,
@@ -826,7 +873,8 @@ struct ThreeDTilesSystem
         config->draw_under_flat_overlays = draw_under_flat_overlays;
         config->additional_attribution = additional_attribution;
 
-        config->feature_picking_id = feature_picking_id;
+        config->layer_handle = layer_handle;
+        config->global_layer_id = global_layer_id;
 
         // Avoid dividing by 0 later-on.
         config->max_screen_space_error = std::max(0.01, max_screen_space_error);
@@ -860,9 +908,6 @@ struct ThreeDTilesSystem
 
         config->scene_views_bitset = scene_views_bitset;
 
-        config->layer_handle = layer_handle;
-        config->layer_id = layer_id;
-
         tileset->config = config;
         tileset->is_external = false;
 
@@ -875,7 +920,7 @@ struct ThreeDTilesSystem
             al, url.c_str(), headers, get_request_queue(tileset->config),
             hrz::combine_loading_priorities(
                 tileset->config->loading_priority, std::numeric_limits<uint16_t>::max()),
-            {hrz::monitoring::systems::ThreeDTilesLayers, layer_id});
+            {hrz::monitoring::systems::ThreeDTilesLayers, global_layer_id});
         tileset->url = url;
         tileset->base_url = {url, preserve_query_parameters};
         tileset->config->headers = headers;
@@ -1665,40 +1710,27 @@ struct ThreeDTilesSystem
         _removed_tilesets.insert(handle);
     }
 
-    lm::uvec2 make_batch_picking_id(TilesetH tileset_handle, uint32_t tile_index)
+    hrz::picking::ObjectReference make_object_reference(
+        TilesetH tileset_handle,
+        uint32_t tile_index)
     {
-        // Each picking buffer pixel is filled with:
-        // tttttttiiiiissss iiiiiiibbbbbbbbb
-        // ---------------- ----------------
-        // rrrrrrrrrrrrrrrr gggggggggggggggg
-        // Each character represents two bits. 64 bits in total.
-        // Least significant bits are on the right.
-        // s: System picking id
-        // t: Tileset handle
-        // i: Tile index
-        // b: batch id
-        // The batch id is added to the low picking id value in
-        // the fragment shader.
-        // So in the end we have:
-        //  * 8 bits, or 256 values, for the system id,
-        //  * 14 bits, or 16,384 values, for the tileset handle,
-        //  * 24 bits, or 16,777,216 values, for the tile index,
-        //  * 18 bits, or 262,144 values, for the batch id.
-        return {
-            hrz::picking::combine_picking_ids(
-                _system_picking_id, (tileset_handle << 10) + (tile_index >> 14)),
-            ((tile_index & 0x3fff) << 18)};
+        hrz::picking::ObjectReference obj;
+        obj.system_id = _system_picking_id;
+        obj.complementary_id = (tileset_handle << 10) + (tile_index >> 14);
+        obj.object_id = ((tile_index & 0x3fff) << 18);
+        return obj;
     }
 
-    void extract_batch_picking_id(
-        const lm::uvec2 picking_id,
-        TilesetH& out_tileset_handle,
-        uint32_t& out_tile_index,
-        uint32_t& out_batch_id)
+    static void extract_info_from_object_reference(
+        const hrz::picking::ObjectReference& ref,
+        TilesetH* out_tileset_handle,
+        uint32_t* out_tile_index,
+        uint32_t* out_batch_id)
     {
-        out_tileset_handle = (picking_id.r & 0xfffc00) >> 10;
-        out_tile_index = ((picking_id.r & 0x3ff) << 14) + ((picking_id.g & 0xfffc0000) >> 18);
-        out_batch_id = picking_id.g & 0x3ffff;
+        *out_tileset_handle = (ref.complementary_id & 0xfffc00) >> 10;
+        *out_tile_index =
+            ((ref.complementary_id & 0x3ff) << 14) + ((ref.object_id & 0xfffc0000) >> 18);
+        *out_batch_id = ref.object_id & 0x3ffff;
     }
 
     void _unload_b3dm_subtile(
@@ -1720,8 +1752,9 @@ struct ThreeDTilesSystem
 
         hrz_jobs::cancel_job(js, content.decode_batch_table_ticket);
 
-        content.feature_colors.clear();
-        content.feature_colors.shrink_to_fit();
+        content.per_batch_color.clear();
+        content.per_batch_color.shrink_to_fit();
+        content.batch_length = 0;
     }
 
     void _unload_i3dm_subtile(
@@ -1779,6 +1812,8 @@ struct ThreeDTilesSystem
         content.model = std::nullopt;
         content.material = std::nullopt;
         content.prototype = nullptr;
+        content.batch_length = 0;
+        content.instances_length = 0;
 
         hrz_jobs::cancel_job(js, content.decode_batch_table_ticket);
 
@@ -1794,8 +1829,8 @@ struct ThreeDTilesSystem
         content.scale_data.shrink_to_fit();
         content.batch_id_data.clear();
         content.batch_id_data.shrink_to_fit();
-        content.feature_colors.clear();
-        content.feature_colors.shrink_to_fit();
+        content.per_instance_color.clear();
+        content.per_instance_color.shrink_to_fit();
     }
 
     void _unload_pnts_subtile(
@@ -1812,8 +1847,9 @@ struct ThreeDTilesSystem
             content.point_cloud.reset();
         }
 
-        content.feature_colors.clear();
-        content.feature_colors.shrink_to_fit();
+        content.batch_length = 0;
+        content.per_batch_color.clear();
+        content.per_batch_color.shrink_to_fit();
 
         hrz_jobs::cancel_job(js, content.decode_batch_table_ticket);
     }
@@ -1866,7 +1902,6 @@ struct ThreeDTilesSystem
         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
 
         subtile.batch_id_offset = 0;
-        subtile.batch_length = 0;
         subtile.batches_to_feature_ids = {};
         subtile.attribute_values.clear();
         subtile.vector_data_attribute_request_id = 0;
@@ -1950,6 +1985,8 @@ struct ThreeDTilesSystem
     {
         HRZ_SCOPED_SAMPLE("decode b3dm feature table");
 
+        auto& content = std::get<ThreeDTile::B3dmContent>(subtile->content);
+
         // Binary body is not used with b3dm tiles.
 
         if (feature_table_json_data.empty())
@@ -1974,7 +2011,7 @@ struct ThreeDTilesSystem
             return false;
         }
 
-        subtile->batch_length = hrz::json::get_int_or(document, "BATCH_LENGTH", 0);
+        content.batch_length = hrz::json::get_int_or(document, "BATCH_LENGTH", 0);
 
         if (document.HasMember("RTC_CENTER"))
         {
@@ -2050,8 +2087,8 @@ struct ThreeDTilesSystem
             return false;
         }
 
-        subtile->batch_length = hrz::json::get_int_or(document, "INSTANCES_LENGTH", 0);
-        if (subtile->batch_length == 0)
+        content.instances_length = hrz::json::get_int_or(document, "INSTANCES_LENGTH", 0);
+        if (content.instances_length == 0)
         {
             return true;
         }
@@ -2099,10 +2136,10 @@ struct ThreeDTilesSystem
         else if (!position_node.IsNull())
         {
             auto byte_offset = hrz::json::get_int_or(position_node, "byteOffset", 0);
-            size_t data_size = subtile->batch_length * sizeof(lm::vec3);
+            size_t data_size = content.instances_length * sizeof(lm::vec3);
             CHECK_DATA_SIZE();
 
-            content.position_data.resize(subtile->batch_length);
+            content.position_data.resize(content.instances_length);
             std::memcpy(
                 content.position_data.data(),
                 (const lm::vec3*)(feature_table_bin_data.data() + byte_offset), data_size);
@@ -2148,10 +2185,10 @@ struct ThreeDTilesSystem
             }
 
             auto byte_offset = hrz::json::get_int_or(position_quantized_node, "byteOffset", 0);
-            size_t data_size = subtile->batch_length * sizeof(lm::usvec3);
+            size_t data_size = content.instances_length * sizeof(lm::usvec3);
             CHECK_DATA_SIZE();
 
-            content.position_quantized_data.resize(subtile->batch_length);
+            content.position_quantized_data.resize(content.instances_length);
             std::memcpy(
                 content.position_quantized_data.data(),
                 (const lm::usvec3*)(feature_table_bin_data.data() + byte_offset), data_size);
@@ -2180,27 +2217,27 @@ struct ThreeDTilesSystem
 
             {
                 auto byte_offset = hrz::json::get_int_or(normal_right_node, "byteOffset", 0);
-                size_t data_size = subtile->batch_length * sizeof(lm::vec3);
+                size_t data_size = content.instances_length * sizeof(lm::vec3);
                 CHECK_DATA_SIZE();
 
                 normals_right = {
                     (const lm::vec3*)(feature_table_bin_data.data() + byte_offset),
-                    subtile->batch_length};
+                    content.instances_length};
             }
 
             {
                 auto byte_offset = hrz::json::get_int_or(normal_up_node, "byteOffset", 0);
-                size_t data_size = subtile->batch_length * sizeof(lm::vec3);
+                size_t data_size = content.instances_length * sizeof(lm::vec3);
                 CHECK_DATA_SIZE();
 
                 normals_up = {
                     (const lm::vec3*)(feature_table_bin_data.data() + byte_offset),
-                    subtile->batch_length};
+                    content.instances_length};
             }
 
             // Interleave right and up normals into a single array.
-            content.normal_data.resize(2 * subtile->batch_length);
-            for (uint32_t i = 0; i < subtile->batch_length; ++i)
+            content.normal_data.resize(2 * content.instances_length);
+            for (uint32_t i = 0; i < content.instances_length; ++i)
             {
                 content.normal_data[2 * i + 0] = normals_right[i];
                 content.normal_data[2 * i + 1] = normals_up[i];
@@ -2224,27 +2261,27 @@ struct ThreeDTilesSystem
 
             {
                 auto byte_offset = hrz::json::get_int_or(normal_right_oct32p_node, "byteOffset", 0);
-                size_t data_size = subtile->batch_length * sizeof(lm::usvec2);
+                size_t data_size = content.instances_length * sizeof(lm::usvec2);
                 CHECK_DATA_SIZE();
 
                 normals_right_oct32p = {
                     (const lm::usvec2*)(feature_table_bin_data.data() + byte_offset),
-                    subtile->batch_length};
+                    content.instances_length};
             }
 
             {
                 auto byte_offset = hrz::json::get_int_or(normal_up_oct32p_node, "byteOffset", 0);
-                size_t data_size = subtile->batch_length * sizeof(lm::usvec2);
+                size_t data_size = content.instances_length * sizeof(lm::usvec2);
                 CHECK_DATA_SIZE();
 
                 normals_up_oct32p = {
                     (const lm::usvec2*)(feature_table_bin_data.data() + byte_offset),
-                    subtile->batch_length};
+                    content.instances_length};
             }
 
             // Interleave right and up compressed normals into a single array.
-            content.normal_oct32p_data.resize(subtile->batch_length);
-            for (uint32_t i = 0; i < subtile->batch_length; ++i)
+            content.normal_oct32p_data.resize(content.instances_length);
+            for (uint32_t i = 0; i < content.instances_length; ++i)
             {
                 content.normal_oct32p_data[i].xy = normals_right_oct32p[i];
                 content.normal_oct32p_data[i].zw = normals_up_oct32p[i];
@@ -2255,10 +2292,10 @@ struct ThreeDTilesSystem
         {
             auto byte_offset =
                 hrz::json::get_int_or(document["SCALE_NON_UNIFORM"], "byteOffset", 0);
-            size_t data_size = subtile->batch_length * sizeof(lm::vec3);
+            size_t data_size = content.instances_length * sizeof(lm::vec3);
             CHECK_DATA_SIZE();
 
-            content.scale_data.resize(subtile->batch_length);
+            content.scale_data.resize(content.instances_length);
             std::memcpy(
                 content.scale_data.data(),
                 (const lm::vec3*)(feature_table_bin_data.data() + byte_offset), data_size);
@@ -2266,24 +2303,25 @@ struct ThreeDTilesSystem
         else
         {
             // Use a default uniform scale of 1.
-            content.scale_data.resize(subtile->batch_length, lm::vec3{1});
+            content.scale_data.resize(content.instances_length, lm::vec3{1});
         }
 
         if (document.HasMember("SCALE"))
         {
             auto byte_offset = hrz::json::get_int_or(document["SCALE"], "byteOffset", 0);
-            size_t data_size = subtile->batch_length * sizeof(float);
+            size_t data_size = content.instances_length * sizeof(float);
             CHECK_DATA_SIZE();
 
             gsl::span<const float> scales = {
-                (const float*)(feature_table_bin_data.data() + byte_offset), subtile->batch_length};
-            for (uint32_t i = 0; i < subtile->batch_length; ++i)
+                (const float*)(feature_table_bin_data.data() + byte_offset),
+                content.instances_length};
+            for (uint32_t i = 0; i < content.instances_length; ++i)
             {
                 content.scale_data[i] *= scales[i];
             }
         }
 
-        content.batch_id_data.resize(subtile->batch_length);
+        content.batch_id_data.resize(content.instances_length);
 
         if (document.HasMember("BATCH_ID"))
         {
@@ -2300,31 +2338,31 @@ struct ThreeDTilesSystem
                 case hrz::three_d_tiles::AttributeComponentType::BYTE:
                 case hrz::three_d_tiles::AttributeComponentType::UNSIGNED_BYTE:
                 {
-                    size_t data_size = subtile->batch_length * sizeof(uint8_t);
+                    size_t data_size = content.instances_length * sizeof(uint8_t);
                     CHECK_DATA_SIZE();
                     _load_binary_data<uint8_t, uint32_t>(
                         (const uint8_t*)(feature_table_bin_data.data() + byte_offset),
-                        content.batch_id_data.data(), subtile->batch_length);
+                        content.batch_id_data.data(), content.instances_length);
                     break;
                 }
                 case hrz::three_d_tiles::AttributeComponentType::SHORT:
                 case hrz::three_d_tiles::AttributeComponentType::UNSIGNED_SHORT:
                 {
-                    size_t data_size = subtile->batch_length * sizeof(uint16_t);
+                    size_t data_size = content.instances_length * sizeof(uint16_t);
                     CHECK_DATA_SIZE();
                     _load_binary_data<uint16_t, uint32_t>(
                         (const uint16_t*)(feature_table_bin_data.data() + byte_offset),
-                        content.batch_id_data.data(), subtile->batch_length);
+                        content.batch_id_data.data(), content.instances_length);
                     break;
                 }
                 case hrz::three_d_tiles::AttributeComponentType::INT:
                 case hrz::three_d_tiles::AttributeComponentType::UNSIGNED_INT:
                 {
-                    size_t data_size = subtile->batch_length * sizeof(uint32_t);
+                    size_t data_size = content.instances_length * sizeof(uint32_t);
                     CHECK_DATA_SIZE();
                     _load_binary_data<uint32_t, uint32_t>(
                         (const uint32_t*)(feature_table_bin_data.data() + byte_offset),
-                        content.batch_id_data.data(), subtile->batch_length);
+                        content.batch_id_data.data(), content.instances_length);
                     break;
                 }
                 default:
@@ -2334,6 +2372,11 @@ struct ThreeDTilesSystem
                         component_type_str, tile.uri);
                     return false;
             }
+
+            content.batch_length =
+                *std::max_element(
+                    std::begin(content.batch_id_data), std::end(content.batch_id_data))
+                + 1;
         }
         else
         {
@@ -2341,6 +2384,7 @@ struct ThreeDTilesSystem
             // "If BATCH_ID semantic is undefined, batchId is just the instance number"
             // https://github.com/pmconne/cesium/blob/a4be986c04b863e97e251c3fc6b78f106f7de4d7/Source/Scene/Instanced3DModel3DTileContent.js#L433
             std::iota(std::begin(content.batch_id_data), std::end(content.batch_id_data), 0);
+            content.batch_length = content.instances_length;
         }
 
 #undef CHECK_DATA_SIZE
@@ -2382,12 +2426,11 @@ struct ThreeDTilesSystem
             return false;
         }
 
-        subtile->batch_length = std::max(0, hrz::json::get_int_or(document, "BATCH_LENGTH", 0));
-
         auto& content = subtile->content.emplace<ThreeDTile::PntsContent>();
         auto& geometry = content.geometry.emplace();
 
-        geometry.batch_count = subtile->batch_length;
+        content.batch_length = std::max(0, hrz::json::get_int_or(document, "BATCH_LENGTH", 0));
+        geometry.batch_count = content.batch_length;
 
         geometry.point_count = hrz::json::get_int_or(document, "POINTS_LENGTH", 0);
         if (geometry.point_count == 0)
@@ -2614,7 +2657,7 @@ struct ThreeDTilesSystem
                 (uint16_t)hrz::octahedral_compress_normal<8>(lm::vec3{0, 0, 1});
         }
 
-        if (subtile->batch_length > 0 && document.HasMember("BATCH_ID"))
+        if (content.batch_length > 0 && document.HasMember("BATCH_ID"))
         {
             auto byte_offset = hrz::json::get_int_or(document["BATCH_ID"], "byteOffset", 0);
 
@@ -2788,7 +2831,7 @@ struct ThreeDTilesSystem
 
         {
             hrz::three_d_tiles::EncodedBatchTable params;
-            params.batch_length = subtile.batch_length;
+            params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
                 ba, tile_data_blob, header_size + feature_table_json_size + feature_table_bin_size,
                 batch_table_json_size);
@@ -2800,7 +2843,7 @@ struct ThreeDTilesSystem
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
                 js, params,
-                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
         auto gltf_blob = hrz::blobs::make_sub_blob(ba, tile_data_blob, gltf_offset);
@@ -2815,7 +2858,7 @@ struct ThreeDTilesSystem
             get_request_queue(tileset->config),
             hrz::combine_loading_priorities(
                 tileset->config->loading_priority, std::numeric_limits<uint16_t>::max()),
-            {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+            {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
 
         content.materials.prototype_may_have_been_recreated(content.prototype);
         content.materials.recreate_all_materials(content.prototype, config->materials);
@@ -2826,9 +2869,9 @@ struct ThreeDTilesSystem
                 : std::optional<std::string_view>(std::nullopt));
 
         // If the batch length is 0, all the geometry takes on the same style.
-        size_t color_count = std::max((uint32_t)1, subtile.batch_length);
+        size_t color_count = std::max((uint32_t)1, content.batch_length);
         // Fill the colours with pure white, so that the styling has no effect so far.
-        content.feature_colors.resize(color_count, lm::ubvec4{0xff});
+        content.per_batch_color.resize(color_count, lm::ubvec4{0xff});
 
         tile.subtiles.push_back(std::move(subtile));
 
@@ -2910,7 +2953,7 @@ struct ThreeDTilesSystem
 
         {
             hrz::three_d_tiles::EncodedBatchTable params;
-            params.batch_length = subtile.batch_length;
+            params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
                 ba, tile_data_blob, header_size + feature_table_json_size + feature_table_bin_size,
                 batch_table_json_size);
@@ -2922,7 +2965,7 @@ struct ThreeDTilesSystem
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
                 js, params,
-                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
         content.draw_prps = config->inherited_draw_prps;
@@ -2941,7 +2984,7 @@ struct ThreeDTilesSystem
                 get_request_queue(tileset->config),
                 hrz::combine_loading_priorities(
                     tileset->config->loading_priority, std::numeric_limits<uint16_t>::max()),
-                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
         else if (gltf_format == 0) // External glTF
         {
@@ -2971,7 +3014,7 @@ struct ThreeDTilesSystem
                 proto_ref.load_queue = get_request_queue(tileset->config);
                 proto_ref.loading_priority = request_priority;
                 proto_ref.resource_owner = {
-                    hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id};
+                    hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id};
 
                 proto_ref.ref_count = 1;
 
@@ -2996,10 +3039,9 @@ struct ThreeDTilesSystem
             return false;
         }
 
-        // If the batch length is 0, all the geometry takes on the same style.
-        size_t color_count = std::max((uint32_t)1, subtile.batch_length);
+        size_t color_count = std::max((uint32_t)1, content.instances_length);
         // Fill the colours with pure white, so that the styling has no effect so far.
-        content.feature_colors.resize(color_count, lm::ubvec4{0xff});
+        content.per_instance_color.resize(color_count, lm::ubvec4{0xff});
 
         tile.subtiles.push_back(std::move(subtile));
 
@@ -3053,9 +3095,11 @@ struct ThreeDTilesSystem
         auto config = tileset->config;
 
         hrz::monitoring::ResourceOwner owner{
-            hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id};
+            hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id};
 
         ThreeDTile::Subtile subtile;
+
+        subtile.content.emplace<ThreeDTile::PntsContent>();
 
         auto feature_table_json_data = tile_data.subspan(header_size, feature_table_json_size);
         auto feature_table_bin_blob = tile_data_blob.make_sub_blob(
@@ -3070,7 +3114,7 @@ struct ThreeDTilesSystem
 
         {
             hrz::three_d_tiles::EncodedBatchTable params;
-            params.batch_length = subtile.batch_length;
+            params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
                 ba, tile_data_blob, header_size + feature_table_json_size + feature_table_bin_size,
                 batch_table_json_size);
@@ -3085,8 +3129,8 @@ struct ThreeDTilesSystem
         }
 
         // If the batch length is 0, all the geometry takes on the same style.
-        size_t color_count = std::max((uint32_t)1, subtile.batch_length);
-        content.feature_colors.resize(color_count, lm::ubvec4{0xff});
+        size_t color_count = std::max((uint32_t)1, content.batch_length);
+        content.per_batch_color.resize(color_count, lm::ubvec4{0xff});
 
         content.update_appearance(config->inherited_draw_prps);
 
@@ -3181,13 +3225,13 @@ struct ThreeDTilesSystem
 
         {
             hrz::three_d_tiles::EncodedBatchTable params;
-            params.batch_length = subtile.batch_length;
+            params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(ba, tile_data_blob, 0, 0);
             params.bin_data = hrz::blobs::make_sub_blob(ba, tile_data_blob, 0, 0);
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
                 js, params,
-                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
         auto gltf_blob = hrz::blobs::make_sub_blob(ba, tile_data_blob, 0);
@@ -3202,7 +3246,7 @@ struct ThreeDTilesSystem
             get_request_queue(tileset->config),
             hrz::combine_loading_priorities(
                 tileset->config->loading_priority, std::numeric_limits<uint16_t>::max()),
-            {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+            {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
 
         content.materials.prototype_may_have_been_recreated(content.prototype);
         content.materials.recreate_all_materials(content.prototype, config->materials);
@@ -3213,9 +3257,9 @@ struct ThreeDTilesSystem
                 : std::optional<std::string_view>(std::nullopt));
 
         // If the batch length is 0, all the geometry takes on the same style.
-        size_t color_count = std::max((uint32_t)1, subtile.batch_length);
+        size_t color_count = std::max((uint32_t)1, content.batch_length);
         // Fill the colours with pure white, so that the styling has no effect so far.
-        content.feature_colors.resize(color_count, lm::ubvec4{0xff});
+        content.per_batch_color.resize(color_count, lm::ubvec4{0xff});
 
         tile.subtiles.push_back(std::move(subtile));
 
@@ -3508,7 +3552,8 @@ struct ThreeDTilesSystem
         params.transform = tileset->transform;
         params.root_depth = tileset->root_depth;
         tileset->decode_descriptor_ticket = hrz_jobs::add_job_decode_three_d_tiles_tileset(
-            js, params, {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+            js, params,
+            {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
 
         tileset->status = Tileset::Status::DECODING_DESCRIPTOR;
     }
@@ -3898,7 +3943,7 @@ struct ThreeDTilesSystem
             auto& content = std::get<ThreeDTile::B3dmContent>(subtile.content);
 
             std::fill(
-                content.feature_colors.begin(), content.feature_colors.end(), lm::ubvec4{0xff});
+                content.per_batch_color.begin(), content.per_batch_color.end(), lm::ubvec4{0xff});
 
             return hrz::RenderRequest::visual();
         }
@@ -3907,7 +3952,8 @@ struct ThreeDTilesSystem
             auto& content = std::get<ThreeDTile::I3dmContent>(subtile.content);
 
             std::fill(
-                content.feature_colors.begin(), content.feature_colors.end(), lm::ubvec4{0xff});
+                content.per_instance_color.begin(), content.per_instance_color.end(),
+                lm::ubvec4{0xff});
 
             return hrz::RenderRequest::visual();
         }
@@ -3915,7 +3961,7 @@ struct ThreeDTilesSystem
         {
             auto& content = std::get<ThreeDTile::PntsContent>(subtile.content);
             std::fill(
-                content.feature_colors.begin(), content.feature_colors.end(), lm::ubvec4{0xff});
+                content.per_batch_color.begin(), content.per_batch_color.end(), lm::ubvec4{0xff});
             content.has_transparent_feature = false;
             return hrz::RenderRequest::visual();
         }
@@ -4010,7 +4056,8 @@ struct ThreeDTilesSystem
         // encompassing the whole tile.
         // Dummy attribute values have been generated in the batch
         // table decoding job.
-        job_data.feature_count = subtile.batch_length == 0 ? 1 : subtile.batch_length;
+        uint32_t batch_length = subtile.batch_length();
+        job_data.feature_count = batch_length == 0 ? 1 : batch_length;
 
         for (unsigned int i = 0; i < config.attributes.size(); ++i)
         {
@@ -4048,7 +4095,7 @@ struct ThreeDTilesSystem
         }
 
         subtile.style_job_ticket = hrz_jobs::add_job_style_features(
-            js, job_data, {hrz::monitoring::systems::ThreeDTilesLayers, config.layer_id});
+            js, job_data, {hrz::monitoring::systems::ThreeDTilesLayers, config.global_layer_id});
 
         return true;
     }
@@ -4060,20 +4107,33 @@ struct ThreeDTilesSystem
         hrz::style::StylingResult result;
         hrz_jobs::get_job_response(js, subtile.style_job_ticket, result);
 
-        gsl::span<lm::ubvec4> feature_colors;
+        // This scratch buffer can be used by to temporarily store per batch colors.
+        std::vector<lm::ubvec4> scratch;
+
+        gsl::span<lm::ubvec4> per_batch_color;
+        gsl::span<lm::ubvec4> per_instance_color;
+        gsl::span<const uint32_t> instance_to_batch;
+
         bool* has_transparency_ptr = nullptr;
+
         if (subtile.has_b3dm())
         {
-            feature_colors = std::get<ThreeDTile::B3dmContent>(subtile.content).feature_colors;
+            per_batch_color = std::get<ThreeDTile::B3dmContent>(subtile.content).per_batch_color;
         }
         else if (subtile.has_i3dm())
         {
-            feature_colors = std::get<ThreeDTile::I3dmContent>(subtile.content).feature_colors;
+            auto& content = std::get<ThreeDTile::I3dmContent>(subtile.content);
+
+            per_instance_color = content.per_instance_color;
+            instance_to_batch = content.batch_id_data;
+
+            scratch.resize(std::max(content.batch_length, 1U));
+            per_batch_color = scratch;
         }
         else if (subtile.has_pnts())
         {
             auto& content = std::get<ThreeDTile::PntsContent>(subtile.content);
-            feature_colors = content.feature_colors;
+            per_batch_color = content.per_batch_color;
             has_transparency_ptr = &content.has_transparent_feature;
         }
         else
@@ -4081,13 +4141,13 @@ struct ThreeDTilesSystem
             assert(!"We shouldn't be here");
         }
 
-        if (!feature_colors.data()) return {};
+        if (!per_batch_color.data()) return {};
 
         // If a feature has been emitted, it will get
         // its colour down below. So by initialising
         // all the colours to 0, features that have not
         // been emitted are made invisible.
-        std::fill(feature_colors.begin(), feature_colors.end(), lm::ubvec4{0});
+        std::fill(per_batch_color.begin(), per_batch_color.end(), lm::ubvec4{0});
 
         auto result_prps = result.features.prps.get_data();
         auto result_values = result.features.get_values_reader();
@@ -4115,7 +4175,26 @@ struct ThreeDTilesSystem
                     has_transparent_color = true;
                 }
 
-                feature_colors[batch_id] = color;
+                per_batch_color[batch_id] = color;
+            }
+        }
+
+        if (!per_instance_color.empty())
+        {
+            for (uint32_t inst = 0; inst < per_instance_color.size(); ++inst)
+            {
+                if (inst < instance_to_batch.size())
+                {
+                    const uint32_t batch_id = instance_to_batch[inst];
+                    if (batch_id < per_batch_color.size())
+                    {
+                        per_instance_color[inst] = per_batch_color[batch_id];
+                    }
+                }
+                else
+                {
+                    per_instance_color[inst] = per_batch_color[0];
+                }
             }
         }
 
@@ -4187,7 +4266,7 @@ struct ThreeDTilesSystem
                 ctx.al, tileset->base_url.derive(tile->uri), tileset->config->headers,
                 get_request_queue(tileset->config),
                 _compute_request_priority(*tile, *tileset->config, ctx.views_info, ctx.visiting_in),
-                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
         else
         {
@@ -4196,7 +4275,7 @@ struct ThreeDTilesSystem
                 tile->range.value().length, tileset->config->headers,
                 get_request_queue(tileset->config),
                 _compute_request_priority(*tile, *tileset->config, ctx.views_info, ctx.visiting_in),
-                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id});
+                {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
         hrz::metrics::increment_counter(&tileset->requests_count_metric);
         tile->load_status = ThreeDTile::LoadStatus::LOADING_TILE;
@@ -4493,7 +4572,7 @@ struct ThreeDTilesSystem
                     for (auto& subtile : tile->subtiles)
                     {
                         subtile.batch_id_offset = batch_id_offset;
-                        batch_id_offset += subtile.batch_length;
+                        batch_id_offset += subtile.batch_length();
                     }
                     tile->subtiles_left_to_load = tile->subtiles.size();
                     tile->load_status = ThreeDTile::LoadStatus::LOADING_CONTENT;
@@ -4542,7 +4621,7 @@ struct ThreeDTilesSystem
         const Tileset& tileset,
         ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
-        lm::uvec2 batch_picking_id,
+        const hrz::picking::ObjectReference& obj_ref,
         const TilesetWorkContext& ctx)
     {
         assert(subtile.load_status == ThreeDTile::Subtile::LoadStatus::LOADING);
@@ -4566,8 +4645,10 @@ struct ThreeDTilesSystem
                 // extended to the end of the create_batched_model_geometry,
                 // which copies the content without keeping a reference to it.
                 content.geometry = {hrz::model::create_batched_model_geometry(
-                    content.prototype, tileset.config->feature_picking_id, batch_picking_id,
-                    subtile.batch_id_offset, subtile.batch_length,
+                    content.prototype, obj_ref,
+                    hrz::picking::FeatureReference(
+                        _system_picking_id, tileset.config->layer_handle),
+                    subtile.batch_id_offset, content.batch_length,
                     subtile.batches_to_feature_ids.hashes().get_data().unsafe_as_span())};
 
                 hrz::model::set_batched_selection(
@@ -4613,7 +4694,7 @@ struct ThreeDTilesSystem
         Tileset& tileset,
         ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
-        lm::uvec2 batch_picking_id,
+        const hrz::picking::ObjectReference& obj_ref,
         const TilesetWorkContext& ctx)
     {
         assert(subtile.load_status == ThreeDTile::Subtile::LoadStatus::LOADING);
@@ -4683,11 +4764,10 @@ struct ThreeDTilesSystem
             group_data.transform = tile.base_transform * subtile.rtc_transform;
             group_data.cull_modifier = my::CullModifier::Swap;
             group_data.scales = content.scale_data;
-            group_data.colors = content.feature_colors;
-            group_data.feature_picking_ids = content.batch_id_data;
-            group_data.feature_id_hashes =
+            group_data.colors = content.per_instance_color;
+            group_data.object_ids = content.batch_id_data;
+            group_data.feature_id_per_object =
                 subtile.batches_to_feature_ids.hashes().get_data().unsafe_as_span();
-            group_data.batch_ids = content.batch_id_data;
 
             if (use_compressed_positions)
             {
@@ -4717,8 +4797,9 @@ struct ThreeDTilesSystem
             }
 
             content.instance_group = hrz::model::create_instance_group(
-                content.prototype, batch_picking_id, batch_picking_id, subtile.batch_id_offset,
-                group_data);
+                content.prototype, obj_ref,
+                hrz::picking::FeatureReference(_system_picking_id, tileset.config->layer_handle),
+                subtile.batch_id_offset, group_data);
 
             hrz::model::set_instance_group_selection(
                 content.prototype, content.instance_group.value(),
@@ -4734,18 +4815,19 @@ struct ThreeDTilesSystem
             content.normal_oct32p_data.shrink_to_fit();
             content.scale_data.clear();
             content.scale_data.shrink_to_fit();
-            content.batch_id_data.clear();
-            content.batch_id_data.shrink_to_fit();
+
+            // Don't clear batch_id_data, we need it to expand the per batch colors
+            // to per instance colors after styling!
         }
 
         return render_request;
     }
 
-    static hrz::RenderRequest _work_loading_subtile_pnts(
+    hrz::RenderRequest _work_loading_subtile_pnts(
         Tileset& tileset,
         ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
-        lm::uvec2 batch_picking_id,
+        const hrz::picking::ObjectReference& obj_ref,
         const TilesetWorkContext& ctx)
     {
         assert(subtile.load_status == ThreeDTile::Subtile::LoadStatus::LOADING);
@@ -4773,11 +4855,13 @@ struct ThreeDTilesSystem
             subtile.batches_to_feature_ids = std::move(response.batches_to_feature_ids);
 
             content.uniform_data.mutate(
-                [batch_picking_id, &subtile, &tileset](hrz::PointCloud::UniformData& data)
+                [this, obj_ref, &subtile, &tileset](hrz::PointCloud::UniformData& data)
                 {
-                    data.layer_picking_id = tileset.config->feature_picking_id;
-                    data.batch_picking_id = batch_picking_id;
-                    data.batch_id_offset = subtile.batch_id_offset;
+                    data.object_reference = obj_ref.to_uvec2();
+                    data.feature_reference = hrz::picking::FeatureReference(
+                                                 _system_picking_id, tileset.config->layer_handle)
+                                                 .to_uvec3();
+                    data.object_id_offset = subtile.batch_id_offset;
                 });
         }
 
@@ -4874,7 +4958,8 @@ struct ThreeDTilesSystem
         hrz::RenderRequest render_request;
         bool erase = false;
 
-        lm::uvec2 batch_picking_id = make_batch_picking_id(tileset_handle, tile_index);
+        hrz::picking::ObjectReference tile_object_reference =
+            make_object_reference(tileset_handle, tile_index);
 
         // Forget about inactive views
         tile.should_render_children_in &= ctx.visiting_in;
@@ -4968,7 +5053,7 @@ struct ThreeDTilesSystem
                             if constexpr (std::is_same_v<T, ThreeDTile::B3dmContent>)
                             {
                                 render_request |= _work_loading_subtile_b3dm(
-                                    *tileset, tile, subtile, batch_picking_id, ctx);
+                                    *tileset, tile, subtile, tile_object_reference, ctx);
                             }
                             else if constexpr (std::is_same_v<T, ThreeDTile::TilesetContent>)
                             {
@@ -4986,12 +5071,12 @@ struct ThreeDTilesSystem
                             else if constexpr (std::is_same_v<T, ThreeDTile::I3dmContent>)
                             {
                                 render_request |= _work_loading_subtile_i3dm(
-                                    *tileset, tile, subtile, batch_picking_id, ctx);
+                                    *tileset, tile, subtile, tile_object_reference, ctx);
                             }
                             else if constexpr (std::is_same_v<T, ThreeDTile::PntsContent>)
                             {
                                 render_request |= _work_loading_subtile_pnts(
-                                    *tileset, tile, subtile, batch_picking_id, ctx);
+                                    *tileset, tile, subtile, tile_object_reference, ctx);
                             }
                             else if constexpr (!std::is_same_v<T, std::monostate>)
                             {
@@ -5821,7 +5906,7 @@ struct ThreeDTilesSystem
                         // There is at least one colour: if the tile does not have
                         // batch IDs, the whole geometry is treated as batch 0.
                         hrz::model::set_batched_colors(
-                            content.prototype, *content.geometry, content.feature_colors);
+                            content.prototype, *content.geometry, content.per_batch_color);
 
                         content.has_been_styled_once = true;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
@@ -5835,7 +5920,7 @@ struct ThreeDTilesSystem
                         assert(content.prototype && content.instance_group);
 
                         hrz::model::set_instance_group_colors(
-                            content.prototype, *content.instance_group, content.feature_colors);
+                            content.prototype, *content.instance_group, content.per_instance_color);
 
                         content.has_been_styled_once = true;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
@@ -5848,7 +5933,7 @@ struct ThreeDTilesSystem
                     {
                         assert(content.point_cloud);
                         content.point_cloud->update_feature_colors(
-                            content.feature_colors, content.has_transparent_feature);
+                            content.per_batch_color, content.has_transparent_feature);
                         content.has_been_styled_once = true;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
                     }
@@ -6139,11 +6224,11 @@ struct ThreeDTilesSystem
         content.geometry->feature_ids = subtile.batches_to_feature_ids.hashes();
 
         content.point_cloud = hrz::PointCloud::create(
-            render, {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->layer_id},
+            render, {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id},
             content.geometry.value(), content.uniform_data.get());
 
         content.point_cloud->update_feature_colors(
-            content.feature_colors, content.has_transparent_feature);
+            content.per_batch_color, content.has_transparent_feature);
 
         assert(content.point_cloud);
         content.geometry = std::nullopt;
@@ -6406,14 +6491,14 @@ struct ThreeDTilesSystem
         for (const auto& subtile : tile.subtiles)
         {
             if (batch_id >= subtile.batch_id_offset
-                && batch_id < subtile.batch_id_offset + subtile.batch_length)
+                && batch_id < subtile.batch_id_offset + subtile.batch_length())
             {
                 if (subtile.batches_to_feature_ids.size() == 0)
                 {
                     return std::nullopt; // No feature ids
                 }
 
-                assert(subtile.batches_to_feature_ids.size() == subtile.batch_length);
+                assert(subtile.batches_to_feature_ids.size() == subtile.batch_length());
                 return {subtile.batches_to_feature_ids.at(batch_id - subtile.batch_id_offset)};
             }
         }
@@ -6465,11 +6550,11 @@ struct ThreeDTilesSystem
         for (const auto& subtile : tile.subtiles)
         {
             if (batch_id < subtile.batch_id_offset
-                || batch_id >= subtile.batch_id_offset + subtile.batch_length)
+                || batch_id >= subtile.batch_id_offset + subtile.batch_length())
             {
                 continue;
             }
-            assert(batch_id < subtile.batch_length);
+            assert(batch_id < subtile.batch_length());
 
             if (attribute_index >= tileset->config->attributes.size())
             {
@@ -6491,7 +6576,7 @@ struct ThreeDTilesSystem
             }
 
             auto& values = values_opt.value();
-            assert(values.values.size() == subtile.batch_length);
+            assert(values.values.size() == subtile.batch_length());
 
             const auto& attribute = tileset->config->attributes.at(attribute_index);
 
@@ -6594,8 +6679,7 @@ struct ArraySyncTraits
 
 struct Layer
 {
-    uint64_t id;
-    uint32_t feature_picking_id;
+    uint64_t global_id;
 
     TilesetH tileset;
 
@@ -6631,35 +6715,16 @@ namespace hrz
 {
 struct ThreeDTilesLayerSystem
 {
-    using IndexPool = GenIndexPool<LayerH, 32, 32>;
+    using IndexPool = GenIndexPool<LayerH, 8, 16>;
     using LayerPool = GenObjectPool<Layer, IndexPool, 64>;
 
     LayerPool layer_pool;
-    hrz::flat_hash_map<uint64_t, LayerH> layer_ids_to_handles;
-    hrz::flat_hash_map<LayerH, uint64_t> layer_handles_to_ids;
+    hrz::flat_hash_map<uint64_t, LayerH> global_layer_id_to_handle;
+    hrz::flat_hash_map<LayerH, uint64_t> layer_handles_to_global_id;
 
     std::vector<uint64_t> unregistered_layers;
 
-    // The regular ("batch") picking IDs for B3DM tiles give:
-    //   - The system picking ID,
-    //   - The tileset handle,
-    //   - The batch ID.
-    //
-    // This is enough to uniquely identify a batch inside a tile. However a
-    // single feature can be split into multiple batches, potentially belonging
-    // to multiple tiles, and even multiple tilesets. So all the components of
-    // a single feature cannot be identified with a regular picking ID (which
-    // is needed in order to apply a particular style for the quick highlight).
-    //
-    // To avoid this limitation, a second set of picking IDs are maintained,
-    // they identify whole features inside a layer, instead of batches inside a
-    // tileset. Feature IDs are made available at render time through a texture
-    // that enables converting batch IDs into feature IDs.
-    uint8_t batch_system_picking_id;
-    uint8_t feature_system_picking_id;
-
-    hrz::GenIndexPool<uint32_t, 4, 20> feature_complementary_picking_id_pool;
-    hrz::flat_hash_map<uint32_t, LayerH> feature_complementary_picking_id_to_layer_handle;
+    uint8_t system_picking_id;
 
     ThreeDTilesSystem three_d_tiles;
 };
@@ -6668,10 +6733,10 @@ namespace three_d_tiles_layers
 {
 namespace
 {
-Layer* _get_layer(ThreeDTilesLayerSystem* system, uint64_t layer_id)
+Layer* _get_layer(ThreeDTilesLayerSystem* system, uint64_t global_layer_id)
 {
-    auto it = system->layer_ids_to_handles.find(layer_id);
-    if (it == system->layer_ids_to_handles.end())
+    auto it = system->global_layer_id_to_handle.find(global_layer_id);
+    if (it == system->global_layer_id_to_handle.end())
     {
         return nullptr;
     }
@@ -6686,13 +6751,13 @@ void _unregister_layers(
 {
     assert(system && model && al && js);
 
-    for (auto layer_id : system->unregistered_layers)
+    for (auto global_layer_id : system->unregistered_layers)
     {
-        auto it = system->layer_ids_to_handles.find(layer_id);
-        if (it != system->layer_ids_to_handles.end())
+        auto it = system->global_layer_id_to_handle.find(global_layer_id);
+        if (it != system->global_layer_id_to_handle.end())
         {
             hrz_proto::PathRoot root;
-            root.mutable_three_d_tiles_layer()->set_opaque(layer_id);
+            root.mutable_three_d_tiles_layer()->set_opaque(global_layer_id);
             scene_model::unregister_element(model, root);
 
             auto layer_handle = it->second;
@@ -6705,18 +6770,11 @@ void _unregister_layers(
                     system->three_d_tiles.remove_tileset(layer->tileset);
                 }
 
-                uint32_t feature_complementary_picking_id =
-                    picking::extract_complementary_id(layer->feature_picking_id);
-                system->feature_complementary_picking_id_to_layer_handle.erase(
-                    feature_complementary_picking_id);
-                system->feature_complementary_picking_id_pool.release(
-                    feature_complementary_picking_id);
-
                 system->layer_pool.release(layer_handle);
             }
 
-            system->layer_ids_to_handles.erase(it);
-            system->layer_handles_to_ids.erase(layer_handle);
+            system->global_layer_id_to_handle.erase(it);
+            system->layer_handles_to_global_id.erase(layer_handle);
         }
     }
 
@@ -6725,7 +6783,7 @@ void _unregister_layers(
 
 RenderRequest _update_layer(
     ThreeDTilesLayerSystem* system,
-    uint64_t layer_id,
+    uint64_t global_layer_id,
     SceneModel* model,
     const SelectionSystem* selection,
     AssetsLoader* al,
@@ -6733,18 +6791,18 @@ RenderRequest _update_layer(
 {
     RenderRequest render_request;
 
-    auto layer = _get_layer(system, layer_id);
+    auto layer = _get_layer(system, global_layer_id);
     if (!layer) return render_request;
 
     hrz::SceneModelAccessor accessor(model);
 
     hrz_proto::LayerHandle scene_model_handle;
-    scene_model_handle.set_opaque(layer_id);
+    scene_model_handle.set_opaque(global_layer_id);
 
     hrz_proto::ThreeDTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(
         accessor, scene_model_handle);
 
-    LayerH internal_layer_handle = system->layer_ids_to_handles.at(layer_id);
+    LayerH internal_layer_handle = system->global_layer_id_to_handle.at(global_layer_id);
 
     bool reload_tileset = layer->source_updated || layer->transform_updated
         || layer->id_attribute_name_updated || layer->attributes_updated
@@ -6843,10 +6901,10 @@ RenderRequest _update_layer(
 
         layer->tileset = system->three_d_tiles.add_tileset(
             new_url, headers, attribution, preserve_query_parameters, transform,
-            layer->feature_picking_id, max_screen_space_error, refinement_hysteresis, attributes,
-            internal_layer_handle, layer_id, is_visible, loading_priority, clip_id,
-            scene_views_bitset, color_blend_mode, color_blend_strength, lighting_settings,
-            visibility_constraints, draw_under_flat_overlays, al);
+            max_screen_space_error, refinement_hysteresis, attributes, internal_layer_handle,
+            global_layer_id, is_visible, loading_priority, clip_id, scene_views_bitset,
+            color_blend_mode, color_blend_strength, lighting_settings, visibility_constraints,
+            draw_under_flat_overlays, al);
     }
 
     if (reload_tileset || layer->vector_data_layer_id_updated)
@@ -7066,12 +7124,13 @@ RenderRequest _update_layer(
 
     if (reload_tileset
         || (hrz::selection::has_changed_since_last_frame(selection)
-            && hrz::selection::has_changed_since_last_frame(selection, layer_id)))
+            && hrz::selection::has_changed_since_last_frame(selection, global_layer_id)))
     {
-        size_t count = hrz::selection::selected_objects_count(selection, layer_id);
+        size_t count = hrz::selection::selected_objects_count(selection, global_layer_id);
         std::vector<vector_data::FeatureIdHash> selected_feature_ids(count);
         hrz::selection::get_selected_objects(
-            selection, layer_id, gsl::span<vector_data::FeatureIdHash>(selected_feature_ids));
+            selection, global_layer_id,
+            gsl::span<vector_data::FeatureIdHash>(selected_feature_ids));
 
         system->three_d_tiles.clear_selected_features(layer->tileset);
         system->three_d_tiles.add_selected_features(layer->tileset, selected_feature_ids);
@@ -7087,9 +7146,8 @@ ThreeDTilesLayerSystem* create_system(
     VectorDataLoader* vdl)
 {
     auto system = new ThreeDTilesLayerSystem();
-    system->batch_system_picking_id = picking::allocate_system_id(picking_id_allocator);
-    system->feature_system_picking_id = picking::allocate_system_id(picking_id_allocator);
-    system->three_d_tiles.init(system->batch_system_picking_id, vector_data::create_channel(vdl));
+    system->system_picking_id = picking::allocate_system_id(picking_id_allocator);
+    system->three_d_tiles.init(system->system_picking_id, vector_data::create_channel(vdl));
 
     return system;
 }
@@ -7105,7 +7163,7 @@ void destroy_system(
 {
     assert(system && al && js && ba && render && pia && scene_model);
 
-    for (auto& pair : system->layer_ids_to_handles)
+    for (auto& pair : system->global_layer_id_to_handle)
     {
         unregister_layer(system, pair.first);
     }
@@ -7113,8 +7171,7 @@ void destroy_system(
 
     system->three_d_tiles.destroy(al, js, ba, render);
 
-    picking::release_system_id(pia, system->batch_system_picking_id);
-    picking::release_system_id(pia, system->feature_system_picking_id);
+    picking::release_system_id(pia, system->system_picking_id);
 
     delete system;
 }
@@ -7126,29 +7183,22 @@ void initialize_rendering(ThreeDTilesLayerSystem* system, Render* render)
     system->three_d_tiles.initialize_rendering(render);
 }
 
-void register_layer(ThreeDTilesLayerSystem* system, SceneModel* model, uint64_t layer_id)
+void register_layer(ThreeDTilesLayerSystem* system, SceneModel* model, uint64_t global_layer_id)
 {
     assert(system && model);
 
-    if (system->layer_ids_to_handles.count(layer_id) == 0)
+    if (system->global_layer_id_to_handle.count(global_layer_id) == 0)
     {
         auto layer_handle = system->layer_pool.alloc();
         auto layer = system->layer_pool.get_object(layer_handle);
-        layer->id = layer_id;
+        layer->global_id = global_layer_id;
         layer->tileset = 0;
 
-        system->layer_ids_to_handles.insert({layer_id, layer_handle});
-        system->layer_handles_to_ids.insert({layer_handle, layer_id});
-
-        uint32_t feature_complementary_picking_id =
-            system->feature_complementary_picking_id_pool.alloc();
-        layer->feature_picking_id = picking::combine_picking_ids(
-            system->feature_system_picking_id, feature_complementary_picking_id);
-        system->feature_complementary_picking_id_to_layer_handle.insert(
-            {feature_complementary_picking_id, layer_handle});
+        system->global_layer_id_to_handle.insert({global_layer_id, layer_handle});
+        system->layer_handles_to_global_id.insert({layer_handle, global_layer_id});
 
         hrz_proto::PathRoot root;
-        root.mutable_three_d_tiles_layer()->set_opaque(layer_id);
+        root.mutable_three_d_tiles_layer()->set_opaque(global_layer_id);
         scene_model::register_element(model, root);
 
         // Default data
@@ -7262,7 +7312,7 @@ RenderRequest work(
 
     _unregister_layers(system, model, al, js);
 
-    for (auto it : system->layer_ids_to_handles)
+    for (auto it : system->global_layer_id_to_handle)
     {
         render_request |= _update_layer(system, it.first, model, selection, al, attributions);
     }
@@ -7289,25 +7339,23 @@ struct PickingInfo
     uint32_t batch_id;
 };
 
-static std::optional<PickingInfo> get_picking_info(
+static std::optional<PickingInfo> _get_picking_info(
     ThreeDTilesLayerSystem* system,
-    uint8_t system_id,
-    uint32_t complementary_id,
-    uint32_t object_id)
+    const picking::ObjectReference& ref)
 {
-    if (system_id != system->batch_system_picking_id) return std::nullopt;
+    if (ref.system_id != system->system_picking_id) return std::nullopt;
 
     TilesetH tileset_handle = 0;
     uint32_t tile_index = 0;
     uint32_t batch_id = 0;
-    system->three_d_tiles.extract_batch_picking_id(
-        {complementary_id, object_id}, tileset_handle, tile_index, batch_id);
+    system->three_d_tiles.extract_info_from_object_reference(
+        ref, &tileset_handle, &tile_index, &batch_id);
 
-    LayerH layer_handle = system->three_d_tiles.get_layer_for_tileset(tileset_handle);
+    const LayerH layer_handle = system->three_d_tiles.get_layer_for_tileset(tileset_handle);
 
     if (tileset_handle == 0)
     {
-        HRZ_LOG_ERROR("Cannot find 3D Tiles layer for picking id {}", complementary_id);
+        HRZ_LOG_ERROR("Cannot find 3D Tiles layer for tileset {}", tileset_handle);
         return std::nullopt;
     }
 
@@ -7316,10 +7364,10 @@ static std::optional<PickingInfo> get_picking_info(
         return std::nullopt;
     }
 
-    uint64_t layer_id = system->layer_handles_to_ids.at(layer_handle);
+    const uint64_t global_layer_id = system->layer_handles_to_global_id.at(layer_handle);
     auto feature_id = system->three_d_tiles.get_feature_id(tileset_handle, tile_index, batch_id);
 
-    return {{layer_id, feature_id, tileset_handle, tile_index, batch_id}};
+    return {{global_layer_id, feature_id, tileset_handle, tile_index, batch_id}};
 }
 } // namespace
 
@@ -7331,9 +7379,7 @@ void pick(
     assert(system);
     assert(result_raw.position.has_value());
 
-    auto info_opt = get_picking_info(
-        system, result_raw.ref.system_id, result_raw.ref.complementary_id,
-        result_raw.ref.object_id);
+    auto info_opt = _get_picking_info(system, result_raw.ref);
 
     if (!info_opt.has_value()) return;
 
@@ -7391,13 +7437,13 @@ std::pair<size_t, size_t> make_typed_object_references(
     while (in_cursor < objs.size())
     {
         const auto& obj = objs[in_cursor];
-        if (obj.system_id == system->batch_system_picking_id)
+        if (obj.system_id == system->system_picking_id)
         {
             TilesetH new_tileset_handle = 0;
             uint32_t tile_index = 0;
             uint32_t batch_id = 0;
-            system->three_d_tiles.extract_batch_picking_id(
-                {obj.complementary_id, obj.object_id}, new_tileset_handle, tile_index, batch_id);
+            system->three_d_tiles.extract_info_from_object_reference(
+                obj, &new_tileset_handle, &tile_index, &batch_id);
 
             if (new_tileset_handle != tileset_handle)
             {
@@ -7406,7 +7452,7 @@ std::pair<size_t, size_t> make_typed_object_references(
                 {
                     layer_handle = system->three_d_tiles.get_layer_for_tileset(tileset_handle);
                     is_visible = system->three_d_tiles.is_tileset_visible(tileset_handle);
-                    layer_id = system->layer_handles_to_ids.at(layer_handle);
+                    layer_id = system->layer_handles_to_global_id.at(layer_handle);
                 }
             }
 
@@ -7437,13 +7483,13 @@ std::pair<size_t, size_t> make_typed_object_references(
     return std::make_pair(in_cursor, out_cursor);
 }
 
-std::optional<picking::FeatureReference> make_feature_picking_id(
+std::optional<picking::FeatureReference> make_feature_reference(
     ThreeDTilesLayerSystem* system,
     const picking::ObjectReference& obj)
 {
     assert(system);
 
-    if (obj.system_id != system->batch_system_picking_id)
+    if (obj.system_id != system->system_picking_id)
     {
         return std::nullopt;
     }
@@ -7451,12 +7497,12 @@ std::optional<picking::FeatureReference> make_feature_picking_id(
     TilesetH tileset_handle = 0;
     uint32_t tile_index = 0;
     uint32_t batch_id = 0;
-    system->three_d_tiles.extract_batch_picking_id(
-        {obj.complementary_id, obj.object_id}, tileset_handle, tile_index, batch_id);
+    system->three_d_tiles.extract_info_from_object_reference(
+        obj, &tileset_handle, &tile_index, &batch_id);
 
     if (tileset_handle != 0)
     {
-        LayerH layer_handle = system->three_d_tiles.get_layer_for_tileset(tileset_handle);
+        const LayerH layer_handle = system->three_d_tiles.get_layer_for_tileset(tileset_handle);
         const Layer* layer = system->layer_pool.get_object(layer_handle);
 
         if (layer)
@@ -7466,12 +7512,9 @@ std::optional<picking::FeatureReference> make_feature_picking_id(
 
             if (feature_id.has_value() && !feature_id->is_null())
             {
-                uint32_t complementary_id =
-                    picking::extract_complementary_id(layer->feature_picking_id);
-
                 picking::FeatureReference ref;
-                ref.system_id = system->feature_system_picking_id;
-                ref.complementary_id = complementary_id;
+                ref.system_id = system->system_picking_id;
+                ref.complementary_id = layer_handle;
                 ref.feature_id_hash = feature_id.value().hash();
                 return ref;
             }

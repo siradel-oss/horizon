@@ -43,8 +43,7 @@ static_assert(
 
 struct PlanetParamsUbo
 {
-    uint32_t picking_combined_id;
-    uint32_t picking_object_id;
+    lm::uvec2 object_reference;
     float mipmap_bias;
     uint32_t compensate_inclination;
     uint32_t mix_lods;
@@ -208,8 +207,8 @@ struct PlanetSurface
         last_clipmap_bake = std::numeric_limits<double>::lowest();
 
         picking_system_id = picking::allocate_system_id(pia);
-        planet_params_ubo.picking_combined_id = picking::combine_picking_ids(picking_system_id, 0);
-        planet_params_ubo.picking_object_id = 0;
+        planet_params_ubo.object_reference =
+            picking::ObjectReference{picking_system_id, 0, 0}.to_uvec2();
         planet_params_ubo.mipmap_bias = max_screen_space_error_to_mipmap_bias(2.0f);
         planet_params_ubo.compensate_inclination = (uint32_t) true;
     }

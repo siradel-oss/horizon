@@ -113,6 +113,16 @@ struct VectorTileGeometry
 
 using FeatureIdHash = uint64_t;
 
+inline lm::uvec2 feature_id_hash_as_uvec2(FeatureIdHash hash)
+{
+    static_assert(
+        sizeof(vector_data::FeatureIdHash) == sizeof(uint64_t), "Unsupported feature ID hash size");
+
+    // @Endianness This relies on hashes being sent as little-endian
+    //             values to the GPU.
+    return hrz::bit_cast<lm::uvec2>(hash);
+}
+
 struct FeatureIds;
 
 struct FeatureId

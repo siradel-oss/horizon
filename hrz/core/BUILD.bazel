@@ -219,7 +219,6 @@ cc_library(
         "include/hrz_core_palette_ubo.h",
         "include/hrz_core_picking_id_allocator.h",
         "include/hrz_core_picking_system.h",
-        "include/hrz_core_picking_types.h",
         "include/hrz_core_pmtiles.h",
         "include/hrz_core_point_cloud.h",
         "include/hrz_core_render.h",

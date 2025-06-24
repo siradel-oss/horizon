@@ -13,8 +13,7 @@
 
 layout(std140) uniform PlanetParams
 {
-    highp uint picking_combined_id;
-    highp uint picking_object_id;
+    highp uvec2 object_reference;
 
     float mipmap_bias;
     bool compensate_inclination;

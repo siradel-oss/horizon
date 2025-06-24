@@ -54,7 +54,7 @@ enum
     Instanced_CompressedNormalSampler,
     Instanced_ScaleSampler,
     Instanced_ColorSampler,
-    Instanced_PickingIdSampler,
+    Instanced_ObjectIdSampler,
     Instanced_FeatureIdSampler,
     Instanced_SelectionSampler,
 };

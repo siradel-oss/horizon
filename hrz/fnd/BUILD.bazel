@@ -47,6 +47,7 @@ cc_library(
         "include/hrz_fnd_node_hash_map.h",
         "include/hrz_fnd_object_pool.h",
         "include/hrz_fnd_observed.h",
+        "include/hrz_fnd_overload.h",
         "include/hrz_fnd_path_utils.h",
         "include/hrz_fnd_random.h",
         "include/hrz_fnd_shared_object_pool.h",

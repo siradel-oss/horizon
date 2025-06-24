@@ -1347,24 +1347,28 @@ enum
 struct ShapeUniformData
 {
     lm::vec4 color;
+    lm::uvec2 object_reference;
     float line_width;
-    uint32_t shape_id;
-    uint32_t _padding[2];
+    uint32_t _padding[1];
 };
+
+HRZ_CHECK_UBO_SIZE(ShapeUniformData);
 
 struct ControlUniformData
 {
-    uint32_t shape_id;
+    lm::uvec2 object_reference;
     uint32_t selected_control_point_id;
     hrz::bool32 pick_selected_control_point;
     hrz::bool32 pick_midpoint_control_points;
     float control_point_size;
-    uint32_t show_midpoint_control_points;
-    uint32_t _padding[2];
+    hrz::bool32 show_midpoint_control_points;
+    uint32_t _padding[1];
     lm::vec4 control_point_color;
     lm::vec4 midpoint_control_point_color;
     lm::vec4 selected_control_point_color;
 };
+
+HRZ_CHECK_UBO_SIZE(ControlUniformData);
 
 struct RenderableShape : public my::Renderer::Renderable
 {
@@ -1576,7 +1580,7 @@ struct Shape
     };
 
     Handle handle;
-    uint64_t layer_id;
+    uint64_t global_layer_id;
     Kind kind;
     LineType line_type;
     size_t max_point_count; // 1 for points, 2 for lines
@@ -1597,7 +1601,7 @@ struct Shape
 
     uint32_t z_index;
 
-    uint32_t picking_id;
+    hrz::picking::ObjectReference object_ref;
 
     std::vector<hrz::GeoPosition2> control_points;
 
@@ -1759,7 +1763,7 @@ void update_shape_model(
 {
     hrz::SceneModelAccessor accessor(scene_model);
     hrz_proto::LayerHandle handle;
-    handle.set_opaque(shape.layer_id);
+    handle.set_opaque(shape.global_layer_id);
     hrz_proto::EditableShapeLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, handle);
 
     hrz_proto::EditableShapeLayer layer = builder.clone().get();
@@ -1814,7 +1818,7 @@ void update_shape_model(
 
     hrz_proto::ShapeEditorMessage message;
     message.set_type(hrz_proto::ShapeEditorUpdateType::SHAPE_GEOMETRY_UPDATE);
-    message.mutable_shape()->mutable_layer()->set_opaque(shape.layer_id);
+    message.mutable_shape()->mutable_layer()->set_opaque(shape.global_layer_id);
     hrz::client_message_queue::enqueue_shape_editor_message(mq, std::move(message));
 }
 
@@ -2193,11 +2197,11 @@ void initialize_rendering(ShapeEditor* editor, Render* render)
     init_render(editor, render);
 }
 
-void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t layer_id)
+void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t global_layer_id)
 {
     assert(editor && scene_model);
 
-    if (editor->layer_ids_to_shape_handles.find(layer_id)
+    if (editor->layer_ids_to_shape_handles.find(global_layer_id)
         != std::end(editor->layer_ids_to_shape_handles))
     {
         // Layer is already registered.
@@ -2207,8 +2211,8 @@ void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t layer
     auto shape_handle = editor->shape_pool.alloc();
     Shape* shape = editor->shape_pool.get_object(shape_handle);
     shape->handle = shape_handle;
-    shape->layer_id = layer_id;
-    shape->picking_id = picking::combine_picking_ids(editor->picking_id, shape_handle);
+    shape->global_layer_id = global_layer_id;
+    shape->object_ref = picking::ObjectReference{editor->picking_id, shape_handle, 0};
 
     shape->kind = Shape::Kind::Polyline;
     shape->line_type = LineType::Geodesics;
@@ -2229,14 +2233,14 @@ void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t layer
     shape->is_visible = true;
     shape->scene_views_bitset = (1 << hrz::SCENE_VIEW_COUNT) - 1;
 
-    editor->layer_ids_to_shape_handles.insert({layer_id, shape_handle});
+    editor->layer_ids_to_shape_handles.insert({global_layer_id, shape_handle});
 
     shape->generate_renderable = true;
     shape->generate_control_renderable = true;
     editor->shapes_to_update_on_gpu.insert(shape_handle);
 
     hrz_proto::PathRoot root;
-    root.mutable_editable_shape_layer()->set_opaque(layer_id);
+    root.mutable_editable_shape_layer()->set_opaque(global_layer_id);
     scene_model::register_element(scene_model, root);
 
     // Default data
@@ -2277,11 +2281,11 @@ void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t layer
     builder.set(data);
 }
 
-void unregister_layer(ShapeEditor* editor, uint64_t layer_id)
+void unregister_layer(ShapeEditor* editor, uint64_t global_layer_id)
 {
     assert(editor);
 
-    auto it = editor->layer_ids_to_shape_handles.find(layer_id);
+    auto it = editor->layer_ids_to_shape_handles.find(global_layer_id);
     if (it == editor->layer_ids_to_shape_handles.end()) return;
 
     auto handle = it->second;
@@ -2315,13 +2319,13 @@ void unregister_layer(ShapeEditor* editor, uint64_t layer_id)
 
 void notify_model_update(
     ShapeEditor* editor,
-    uint64_t layer_id,
+    uint64_t global_layer_id,
     scene_model::UpdateType,
     const scene_model::EditableShapeLayerPath& path)
 {
     assert(editor);
 
-    auto it = editor->layer_ids_to_shape_handles.find(layer_id);
+    auto it = editor->layer_ids_to_shape_handles.find(global_layer_id);
     if (it == editor->layer_ids_to_shape_handles.end()) return;
 
     auto shape_handle = it->second;
@@ -2386,7 +2390,7 @@ void pick(
     {
         hrz_proto::PickLayerResult* res = picking_results.mutable_results()->Add();
         res->mutable_layer()->set_type(hrz_proto::LayerType::EDITABLE_SHAPE);
-        res->mutable_layer()->mutable_handle()->set_opaque(shape->layer_id);
+        res->mutable_layer()->mutable_handle()->set_opaque(shape->global_layer_id);
         *res->mutable_editable_shape() = hrz_proto::Void();
     }
 }
@@ -2421,7 +2425,7 @@ std::pair<size_t, size_t> make_typed_object_references(
             if (shape && shape->is_visible)
             {
                 auto& typed_ref = output[out_cursor++];
-                typed_ref.mutable_editable_shape()->set_opaque(shape->layer_id);
+                typed_ref.mutable_editable_shape()->set_opaque(shape->global_layer_id);
             }
         }
     }
@@ -2456,7 +2460,7 @@ RenderRequest unregister_layers(ShapeEditor* editor, SceneModel* scene_model)
         if (shape)
         {
             hrz_proto::PathRoot root;
-            root.mutable_editable_shape_layer()->set_opaque(shape->layer_id);
+            root.mutable_editable_shape_layer()->set_opaque(shape->global_layer_id);
             scene_model::unregister_element(scene_model, root);
 
             collect_gpu_data(*shape, editor->unused_resources);
@@ -2504,7 +2508,7 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
         SceneModelAccessor accessor(scene_model);
 
         hrz_proto::LayerHandle handle;
-        handle.set_opaque(shape.layer_id);
+        handle.set_opaque(shape.global_layer_id);
 
         hrz_proto::EditableShapeLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
 
@@ -2631,7 +2635,7 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
 
             hrz_proto::ShapeEditorMessage message;
             message.set_type(hrz_proto::ShapeEditorUpdateType::SHAPE_GEOMETRY_UPDATE);
-            message.mutable_shape()->mutable_layer()->set_opaque(shape.layer_id);
+            message.mutable_shape()->mutable_layer()->set_opaque(shape.global_layer_id);
             hrz::client_message_queue::enqueue_shape_editor_message(mq, std::move(message));
 
             shape.geometry_updated = false;
@@ -2812,7 +2816,7 @@ bool work_events(ShapeEditor* editor, SceneModel* scene_model, ClientMessageQueu
             auto& selected_shape = get_shape(editor->selected_shape.value());
             update_ubo(selected_shape);
 
-            message.mutable_shape()->mutable_layer()->set_opaque(selected_shape.layer_id);
+            message.mutable_shape()->mutable_layer()->set_opaque(selected_shape.global_layer_id);
         }
 
         client_message_queue::enqueue_shape_editor_message(mq, std::move(message));
@@ -3914,7 +3918,7 @@ std::optional<uint64_t> get_selected_shape(const ShapeEditor* editor)
         auto shape = editor->shape_pool.get_object(editor->selected_shape.value());
         if (shape != nullptr)
         {
-            return {shape->layer_id};
+            return {shape->global_layer_id};
         }
     }
 
@@ -4028,7 +4032,7 @@ struct SinusoidalVectorCollector
 };
 } // namespace
 
-hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t layer_id)
+hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t global_layer_id)
 {
     assert(editor);
 
@@ -4036,7 +4040,7 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
     info.set_length(0);
     info.set_area(0);
 
-    auto it = editor->layer_ids_to_shape_handles.find(layer_id);
+    auto it = editor->layer_ids_to_shape_handles.find(global_layer_id);
     if (it == editor->layer_ids_to_shape_handles.end())
     {
         return info;
@@ -4348,7 +4352,7 @@ ShapeUniformData make_shape_uniforms(const Shape& shape, const ShapeEditor* edit
     }
 
     uniforms.line_width = selected ? shape.selected_stroke_width : shape.stroke_width;
-    uniforms.shape_id = shape.picking_id;
+    uniforms.object_reference = shape.object_ref.to_uvec2();
 
     return uniforms;
 }
@@ -4360,7 +4364,7 @@ ShapeUniformData make_outline_uniforms(const Shape& shape, const ShapeEditor* ed
     ShapeUniformData uniforms;
     uniforms.color = selected ? shape.selected_stroke_color : shape.stroke_color;
     uniforms.line_width = shape.stroke_width;
-    uniforms.shape_id = shape.picking_id;
+    uniforms.object_reference = shape.object_ref.to_uvec2();
 
     return uniforms;
 }
@@ -4368,7 +4372,8 @@ ShapeUniformData make_outline_uniforms(const Shape& shape, const ShapeEditor* ed
 ControlUniformData make_control_uniforms(const Shape& shape, const ShapeEditor* editor)
 {
     ControlUniformData uniforms;
-    uniforms.shape_id = shape.picking_id;
+    uniforms.object_reference = shape.object_ref.to_uvec2();
+
     if (editor->selected_shape == shape.handle && editor->selected_control_point.has_value())
     {
         uniforms.selected_control_point_id = editor->selected_control_point.value();
@@ -4482,7 +4487,7 @@ void generate_polyline_renderable(Shape& shape, ShapeEditor* editor, Render* ren
     gsl::span<const hrz::GeoPosition2> points = {
         shape.points.data(), std::min(shape.points.size(), shape.max_point_count)};
     generate_polyline_renderable(
-        shape.layer_id, points, false, shape.line_type, shape.z_index << 1,
+        shape.global_layer_id, points, false, shape.line_type, shape.z_index << 1,
         shape.scene_views_bitset, make_shape_uniforms(shape, editor), shape.renderable, editor,
         render);
 }
@@ -4550,7 +4555,7 @@ void generate_polygon_renderable(
     vb_res.data = mesh.vertex_data.data();
 
     my::ResourceHandle vertex_buffer = render->rc->alloc(
-        &vb_res, monitoring::systems::ShapeEditor, shape.layer_id,
+        &vb_res, monitoring::systems::ShapeEditor, shape.global_layer_id,
         {{"contents"_ss, "polygon vertex data"_ss}});
 
     my::BufferResource ib_res(my::BufferResource::BufferType::Index);
@@ -4559,7 +4564,7 @@ void generate_polygon_renderable(
     ib_res.data = mesh.indices.data();
 
     my::ResourceHandle index_buffer = render->rc->alloc(
-        &ib_res, monitoring::systems::ShapeEditor, shape.layer_id,
+        &ib_res, monitoring::systems::ShapeEditor, shape.global_layer_id,
         {{"contents"_ss, "polygon indices"_ss}});
 
     my::VertexInputStream streams[] = {
@@ -4573,7 +4578,7 @@ void generate_polygon_renderable(
     vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
     my::ResourceHandle vertex_input =
-        render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape.layer_id);
+        render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape.global_layer_id);
 
     auto uniforms = make_shape_uniforms(shape, editor);
 
@@ -4583,7 +4588,7 @@ void generate_polygon_renderable(
     ub_res.data = &uniforms;
 
     my::ResourceHandle uniform_buffer = render->rc->alloc(
-        &ub_res, monitoring::systems::ShapeEditor, shape.layer_id,
+        &ub_res, monitoring::systems::ShapeEditor, shape.global_layer_id,
         {{"contents"_ss, "polygon uniforms"_ss}});
 
     auto& renderable = shape.renderable;
@@ -4624,7 +4629,7 @@ void generate_polygon_renderables(Shape& shape, ShapeEditor* editor, Render* ren
         shape.renderable_outlines.push_back({});
 
         generate_polyline_renderable(
-            shape.layer_id, points.subspan(current_linestring_start, linestring_size), true,
+            shape.global_layer_id, points.subspan(current_linestring_start, linestring_size), true,
             shape.line_type, (shape.z_index << 1) + 1, shape.scene_views_bitset, outline_uniforms,
             shape.renderable_outlines.back(), editor, render);
 
@@ -4698,7 +4703,7 @@ void regenerate_polygon_renderables(Shape& shape, ShapeEditor* editor, Render* r
         shape.renderable_outlines.push_back({});
 
         generate_polyline_renderable(
-            shape.layer_id, points.subspan(current_linestring_start, linestring_size), true,
+            shape.global_layer_id, points.subspan(current_linestring_start, linestring_size), true,
             shape.line_type, 1, shape.scene_views_bitset, outline_uniforms,
             shape.renderable_outlines.back(), editor, render);
 
@@ -4814,7 +4819,7 @@ void generate_control_points_renderable(Shape& shape, ShapeEditor* editor, Rende
     vb_res.data = vbo_data.data();
 
     my::ResourceHandle instance_buffer = render->rc->alloc(
-        &vb_res, monitoring::systems::ShapeEditor, shape.layer_id,
+        &vb_res, monitoring::systems::ShapeEditor, shape.global_layer_id,
         {{"contents"_ss, "control point instance data"_ss}});
 
     my::VertexInputStream streams[] = {
@@ -4836,7 +4841,7 @@ void generate_control_points_renderable(Shape& shape, ShapeEditor* editor, Rende
     vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
     my::ResourceHandle vertex_input =
-        render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape.layer_id);
+        render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape.global_layer_id);
 
     auto uniforms = make_control_uniforms(shape, editor);
 
@@ -4846,7 +4851,7 @@ void generate_control_points_renderable(Shape& shape, ShapeEditor* editor, Rende
     ub_res.data = &uniforms;
 
     my::ResourceHandle uniform_buffer = render->rc->alloc(
-        &ub_res, monitoring::systems::ShapeEditor, shape.layer_id,
+        &ub_res, monitoring::systems::ShapeEditor, shape.global_layer_id,
         {{"contents"_ss, "control point uniforms"_ss}});
 
     auto& renderable = shape.renderable_control;
@@ -5161,7 +5166,7 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.initial_state.stencil.back.depth_pass_op = my::StencilState::Keep;
         rc->alloc(&res, hrz::monitoring::systems::ShapeEditor);
 
-        const char* picking_color_outputs[] = {"o_picking_id"};
+        const char* picking_color_outputs[] = {"o_object_reference"};
 
         res.name = hrz_shaders::ShapeEditorShape_picking_name;
         res.vertex_source_len = hrz_shaders::ShapeEditorShape_picking_vert_len;
@@ -5216,7 +5221,7 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.initial_state.stencil.enable = false;
         rc->alloc(&res, hrz::monitoring::systems::ShapeEditor);
 
-        const char* picking_color_outputs[] = {"o_picking_id", "o_depth"};
+        const char* picking_color_outputs[] = {"o_object_reference", "o_depth"};
 
         res.name = hrz_shaders::ShapeEditorControl_picking_name;
         res.vertex_source_len = hrz_shaders::ShapeEditorControl_picking_vert_len;

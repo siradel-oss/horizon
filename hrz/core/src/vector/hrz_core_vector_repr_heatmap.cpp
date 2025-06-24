@@ -39,11 +39,9 @@ struct TileUniformData
 {
     lm::vec4 center_low;
     lm::vec4 center_high;
-    lm::uvec2 tile_picking_id;
-    uint32_t layer_picking_id;
     hrz::bool32 size_in_meters;
     float blur_size;
-    uint32_t padding[3];
+    uint32_t padding[2];
 };
 
 HRZ_CHECK_UBO_SIZE(TileUniformData);
@@ -179,8 +177,6 @@ struct Tile
     std::optional<TileGeometry> geometry;
     std::optional<RenderableFeatures> renderable;
 
-    lm::uvec2 picking_id;
-    uint32_t layer_picking_id;
     uint32_t scene_views;
     hrz_proto::HeatmapAccumulationMode accumulation;
 
@@ -405,8 +401,6 @@ public:
         ConfigH config_handle,
         hrz::TileCoords coords,
         uint64_t layer_id,
-        uint32_t layer_picking_id,
-        lm::uvec2 tile_picking_id,
         const hrz::vector_data::FeatureIds&,
         const hrz::vt::ReprGeometry& geometry,
         const hrz::style::StyledFeatures& style,
@@ -422,8 +416,6 @@ public:
         Tile tile;
         tile.id = tile_id;
         tile.layer_id = layer_id;
-        tile.layer_picking_id = layer_picking_id;
-        tile.picking_id = tile_picking_id;
         tile.coords = coords;
 
         hrz::vt::HeatmapData bake_data;
@@ -657,8 +649,6 @@ public:
             hrz::split_double(geometry.bsphere.center.x, ubo.center_low.x, ubo.center_high.x);
             hrz::split_double(geometry.bsphere.center.y, ubo.center_low.y, ubo.center_high.y);
             hrz::split_double(geometry.bsphere.center.z, ubo.center_low.z, ubo.center_high.z);
-            ubo.tile_picking_id = tile->picking_id;
-            ubo.layer_picking_id = tile->layer_picking_id;
             ubo.blur_size = tile->blur_size;
             ubo.size_in_meters =
                 tile->disc_radius_size_unit == hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_METERS;
@@ -778,7 +768,6 @@ public:
                             {
                                 add_tile(
                                     it->second, message.coords, message.layer_id,
-                                    message.layer_picking_id, message.tile_picking_id,
                                     message.feature_ids, message.geometry, message.style,
                                     TileId{channel_id, message.tile_id});
                             }

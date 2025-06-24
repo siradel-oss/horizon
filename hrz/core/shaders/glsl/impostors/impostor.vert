@@ -12,7 +12,7 @@ layout(location = 2) in vec3 i_scale;
 layout(location = 3) in vec3 i_impostor_position;
 layout(location = 4) in uvec2 i_impostor_orientation;
 layout(location = 5) in uvec2 i_feature_id;
-layout(location = 6) in uint i_picking_id;
+layout(location = 6) in uint i_object_id;
 layout(location = 7) in uint i_selection;
 
 #include "impostors/defs.glsl"
@@ -69,7 +69,7 @@ void main()
 #endif
 
 #ifdef IMPOSTOR_PICKING
-    v_picking_id = i_picking_id;
+    v_object_id = i_object_id;
 #endif
 
     v_color = srgb_to_linear(i_color);
@@ -128,6 +128,8 @@ void main()
 
     // Get the scaling coefficients corresponding to the impostor frame
     int frame_index = int(frame.x) + int(frame.y) * int(hrz_impostor.atlas_size.x);
+
+    // See the documentation of scale_coefficients in the impostors baker for more info.
     vec3 scale_coeffs_x = texelFetch(hrz_impostor_scale_coefficients_texture, ivec2(frame_index * 2, 0), 0).xyz;
     vec3 scale_coeffs_y = texelFetch(hrz_impostor_scale_coefficients_texture, ivec2(frame_index * 2 + 1, 0), 0).xyz;
 

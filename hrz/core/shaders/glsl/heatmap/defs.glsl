@@ -4,8 +4,6 @@ layout(std140) uniform Tile
 {
     vec4 center_low;
     vec4 center_high;
-    uvec2 picking_id;
-    uint layer_picking_id;
     bool size_in_meters;
     float blur_size;
 } hrz_tile;

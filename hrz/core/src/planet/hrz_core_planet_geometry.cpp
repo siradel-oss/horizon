@@ -2382,7 +2382,7 @@ struct PlanetRenderable : public my::Renderer::Renderable
                  hrz::vector_flat_overlay::picking_sampler_names[i]});
         }
 
-        static const char* outputs[] = {"o_picking_id", "o_depth"};
+        static const char* outputs[] = {"o_object_reference", "o_depth"};
 
         my::ShaderResource res{};
         res.name = hrz_shaders::Planet_picking_name;

@@ -283,7 +283,7 @@ void deselect_all(Scene*);
  * Turns a picking object reference into a feature reference, that
  * can be used for example for the quick highlight.
  */
-std::optional<picking::FeatureReference> make_feature_picking_id(
+std::optional<picking::FeatureReference> make_feature_reference(
     Scene*,
     const picking::ObjectReference&);
 

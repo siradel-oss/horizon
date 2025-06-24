@@ -10,7 +10,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef EDITOR_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp float o_depth;
 #endif
 
@@ -45,8 +45,7 @@ void main()
         discard;
     }
 
-    o_picking_id.r = hrz_control.shape_id;
-    o_picking_id.g = v_control_id;
+    o_object_reference = hrz_control.object_reference | uvec2(0, v_control_id);
     o_depth = 1.0 / gl_FragCoord.w;
 #endif
 }

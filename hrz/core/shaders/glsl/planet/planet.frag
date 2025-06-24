@@ -43,7 +43,7 @@ layout(location = 0) out uvec4 o_feedback;
 #endif
 
 #ifdef PLANET_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp float o_depth;
 #endif
 
@@ -252,15 +252,14 @@ void main()
 #endif
 
 #ifdef PLANET_PICKING
-    uvec2 overlay_color = compute_picking_overlay_color(v_overlay_cams_clip_pos);
+    uvec2 overlay_color = compute_overlay_object_reference(v_overlay_cams_clip_pos);
     if (overlay_color.r != 0u)
     {
-        o_picking_id = overlay_color;
+        o_object_reference = overlay_color;
     }
     else
     {
-        o_picking_id.r = hrz_planet.picking_combined_id;
-        o_picking_id.g = hrz_planet.picking_object_id;
+        o_object_reference = hrz_planet.object_reference;
     }
 
     o_depth = 1.0 / gl_FragCoord.w;

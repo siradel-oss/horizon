@@ -28,9 +28,12 @@ struct TileUniformData
 {
     lm::vec4 center_low;
     lm::vec4 center_high;
-    lm::uvec2 picking_id;
-    uint32_t layer_picking_id;
-    uint32_t _padding;
+
+    lm::uvec2 object_reference;
+    uint32_t _padding1[2];
+
+    lm::uvec3 feature_reference;
+    uint32_t _padding2[1];
 };
 
 HRZ_CHECK_UBO_SIZE(TileUniformData);

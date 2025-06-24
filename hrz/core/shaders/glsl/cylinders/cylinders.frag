@@ -21,7 +21,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef CYLINDER_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp float o_depth;
 #endif
 
@@ -30,9 +30,9 @@ layout(location = 0) out float o_highlight;
 #endif
 
 #ifdef CYLINDER_VISUAL
-uvec3 build_feature_picking_id()
+uvec3 build_feature_reference()
 {
-    return uvec3(hrz_tile.layer_picking_id, v_feature_id);
+    return hrz_tile.feature_reference | uvec3(0, v_feature_id);
 }
 
 vec4 apply_sun_color(vec4 srgb, vec3 sun)
@@ -43,11 +43,9 @@ vec4 apply_sun_color(vec4 srgb, vec3 sun)
 #endif
 
 #ifdef CYLINDER_PICKING
-uvec2 build_picking_id()
+uvec2 build_object_reference()
 {
-    uvec2 picking_id = hrz_tile.picking_id;
-    picking_id.g += v_feature_index;
-    return picking_id;
+    return hrz_tile.object_reference | uvec2(0, v_feature_index);
 }
 #endif
 
@@ -95,14 +93,14 @@ void main()
     o_color = compute_viewshed_color(o_color, v_normal);
     o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());
 
-    if (build_feature_picking_id() == hrz_frame.quick_highlight_picking_id)
+    if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
         o_color = apply_quick_highlight_color(o_color);
     }
 #endif
 
 #ifdef CYLINDER_PICKING
-    o_picking_id.rg = build_picking_id();
+    o_object_reference.rg = build_object_reference();
     o_depth = 1.0 / gl_FragCoord.w;
 #endif
 

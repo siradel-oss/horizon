@@ -117,7 +117,7 @@ vec3 get_normal()
 #endif
 
 #if defined(GLTF_VISUAL) && !defined(GLTF_IMPOSTOR)
-vec4 apply_color_decoration(vec4 color_lin, vec3 normal, uvec3 feature_picking_id)
+vec4 apply_color_decoration(vec4 color_lin, vec3 normal, uvec3 feature_reference)
 {
     if (hrz_prim.geometry.lighting_enabled)
     {
@@ -128,7 +128,7 @@ vec4 apply_color_decoration(vec4 color_lin, vec3 normal, uvec3 feature_picking_i
     color = compute_viewshed_color(color, normal);
     color = mix_premultiplied_colors(color, compute_clip_outline_color());
 
-    if (hrz_frame.quick_highlight_picking_id == feature_picking_id)
+    if (hrz_frame.quick_highlight_feature_reference == feature_reference)
     {
         color = apply_quick_highlight_color(color);
     }

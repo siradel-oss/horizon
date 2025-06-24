@@ -83,9 +83,11 @@ struct TileUniformData
 {
     lm::vec4 center_low;
     lm::vec4 center_high;
-    lm::uvec2 tile_picking_id;
-    uint32_t layer_picking_id;
+    lm::uvec3 feature_reference;
+    hrz::bool32 has_feature_ids;
+    lm::uvec2 object_reference;
     float disc_outline_width;
+    uint32_t _padding2;
     lm::vec4 disc_outline_color;
     uint32_t polyline_sides;
     uint32_t line_width_unit;
@@ -103,8 +105,7 @@ struct TileUniformData
     float polygon_pattern_reference_lat_scale_factor_offset;
     uint32_t polygon_pattern_color_blend_mode;
     uint32_t disc_radius_unit;
-    hrz::bool32 has_feature_ids;
-    uint32_t _padding;
+    uint32_t _padding[2];
 };
 
 HRZ_CHECK_UBO_SIZE(TileUniformData);
@@ -630,7 +631,7 @@ public:
         };
 
         const char* color_outputs[] = {"o_color"};
-        const char* picking_outputs[] = {"o_picking_id"};
+        const char* picking_outputs[] = {"o_object_reference"};
         const char* selection_outputs[] = {"o_highlight"};
 
         {
@@ -1267,8 +1268,8 @@ public:
         ConfigH config_handle,
         hrz::TileCoords coords,
         uint64_t layer_id,
-        uint32_t layer_picking_id,
-        lm::uvec2 tile_picking_id,
+        const hrz::picking::ObjectReference& object_ref,
+        const hrz::picking::FeatureReference& feature_ref,
         const hrz::vector_data::FeatureIds& feature_ids,
         const hrz::vt::ReprGeometry& geometry,
         const hrz::style::StyledFeatures& style,
@@ -1324,8 +1325,8 @@ public:
         tile.scene_views = cfg.scene_views;
         tile.round_tips = cfg.round_tips;
 
-        tile.ubo.tile_picking_id = tile_picking_id;
-        tile.ubo.layer_picking_id = layer_picking_id;
+        tile.ubo.object_reference = object_ref.to_uvec2();
+        tile.ubo.feature_reference = feature_ref.to_uvec3();
         tile.ubo.has_feature_ids = tile.has_feature_ids;
         tile.ubo.disc_outline_width = cfg.disc_outline_width;
         tile.ubo.disc_outline_color = cfg.disc_outline_color;
@@ -2327,10 +2328,9 @@ public:
                             {
                                 add_tile(
                                     it->second, message.coords, message.layer_id,
-                                    message.layer_picking_id, message.tile_picking_id,
-                                    message.feature_ids, message.geometry, message.style,
-                                    message.min_elevation, message.max_elevation,
-                                    TileId{channel_id, message.tile_id});
+                                    message.object_ref, message.feature_ref, message.feature_ids,
+                                    message.geometry, message.style, message.min_elevation,
+                                    message.max_elevation, TileId{channel_id, message.tile_id});
                             }
                             else
                             {

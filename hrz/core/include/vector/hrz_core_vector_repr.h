@@ -7,6 +7,7 @@
 
 #include <hrz_common_blob_array.h>
 #include <hrz_common_geo.h>
+#include <hrz_common_picking_types.h>
 #include <hrz_common_tile_coords.h>
 #include <hrz_common_vector_data.h>
 #include <hrz_fnd_flat_hash_map.h>
@@ -21,9 +22,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <mutex>
-#include <optional>
-#include <queue>
 #include <utility>
 #include <variant>
 
@@ -88,8 +86,8 @@ struct AddTile
     uint64_t style_id;
     TileCoords coords;
     uint64_t layer_id;
-    uint32_t layer_picking_id;
-    lm::uvec2 tile_picking_id;
+    picking::ObjectReference object_ref;
+    picking::FeatureReference feature_ref;
     hrz::vector_data::FeatureIds feature_ids;
     ReprGeometry geometry;
     style::StyledFeatures style;

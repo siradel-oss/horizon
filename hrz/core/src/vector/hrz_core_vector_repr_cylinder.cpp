@@ -52,16 +52,15 @@ struct TileUniformData
 {
     lm::vec4 center_low;
     lm::vec4 center_high;
-    lm::uvec2 picking_id;
-    uint32_t layer_picking_id;
+    lm::uvec2 object_ref;
     int32_t clip_id;
     hrz::bool32 lighting_enabled;
     hrz::bool32 receive_shadows;
     uint32_t dash_mode;
     uint32_t dash_period_unit;
     uint32_t dash_length_unit;
+    lm::uvec3 feature_ref;
     uint32_t animation_speed_unit;
-    uint32_t _padding[2];
 };
 
 HRZ_CHECK_UBO_SIZE(TileUniformData);
@@ -399,7 +398,7 @@ public:
         res_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
         rc->alloc(&res_d, hrz::monitoring::systems::Cylinders);
 
-        const char* picking_color_outputs[] = {"o_picking_id", "o_depth"};
+        const char* picking_color_outputs[] = {"o_object_reference", "o_depth"};
 
         res.name = hrz_shaders::Cylinders_picking_name;
         res.vertex_source_len = hrz_shaders::Cylinders_picking_vert_len;
@@ -602,8 +601,8 @@ public:
         ConfigH config_handle,
         hrz::TileCoords coords,
         uint64_t layer_id,
-        uint32_t layer_picking_id,
-        lm::uvec2 tile_picking_id,
+        const hrz::picking::ObjectReference& object_ref,
+        const hrz::picking::FeatureReference& feature_ref,
         const hrz::vector_data::FeatureIds& feature_ids,
         const hrz::vt::ReprGeometry& geometry,
         const hrz::style::StyledFeatures& style,
@@ -666,8 +665,8 @@ public:
         dst_style.out_of_line_data = style.out_of_line_data;
         dst_style.instances = style.instances;
 
-        tile.ubo.picking_id = tile_picking_id;
-        tile.ubo.layer_picking_id = layer_picking_id;
+        tile.ubo.object_ref = object_ref.to_uvec2();
+        tile.ubo.feature_ref = feature_ref.to_uvec3();
         tile.ubo.clip_id = -1;
         tile.ubo.lighting_enabled = cfg.lighting_settings.lighting_enabled;
         tile.ubo.receive_shadows = cfg.lighting_settings.receive_shadows;
@@ -1043,8 +1042,8 @@ public:
                             {
                                 add_tile(
                                     it->second, message.coords, message.layer_id,
-                                    message.layer_picking_id, message.tile_picking_id,
-                                    message.feature_ids, message.geometry, message.style,
+                                    message.object_ref, message.feature_ref, message.feature_ids,
+                                    message.geometry, message.style,
                                     TileId{channel_id, message.tile_id});
                             }
                             else

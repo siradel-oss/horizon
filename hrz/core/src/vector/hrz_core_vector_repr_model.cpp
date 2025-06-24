@@ -42,7 +42,7 @@ enum
     InputStreamImpostorPosition = 3,
     InputStreamImpostorOrientation = 4,
     InputStreamFeatureId = 5,
-    InputStreamPickingId = 6,
+    InputStreamObjectId = 6,
     InputStreamSelection = 7,
 };
 
@@ -50,13 +50,14 @@ struct ImpostorTileUniformData
 {
     lm::vec4 center_low;
     lm::vec4 center_high;
-    uint32_t picking_id; // The second part of the tile ID is handled by the baking job.
-    uint32_t layer_picking_id;
+    lm::uvec2 object_ref;
     int32_t clip_id = -1;
     hrz::bool32 lighting_enabled;
     uint32_t color_blend_mode;
     float color_blend_strength;
     uint32_t _padding[2];
+    lm::uvec3 feature_ref;
+    uint32_t _padding2[1];
 };
 
 HRZ_CHECK_UBO_SIZE(ImpostorTileUniformData);
@@ -244,8 +245,7 @@ struct TileGeometry
     std::vector<lm::vec3> positions;                          // Per instance.
     std::vector<lm::usvec4> normals;                          // Per instance.
     std::vector<lm::vec3> scales;                             // Per instance.
-    std::vector<uint32_t> picking_ids;                        // Per instance.
-    std::vector<uint32_t> batch_ids;                          // Per instance.
+    std::vector<uint32_t> object_ids;                         // Per instance.
     std::vector<lm::ubvec4> colors;                           // Per instance
     std::vector<lm::vec3> impostor_positions;                 // Per instance.
     std::vector<lm::vec3> impostor_scales;                    // Per instance.
@@ -306,8 +306,8 @@ struct Tile
     // are used for drawing the instanced model. We should find a way of
     // deduplicating all of this one day.
     //      -slerouzic, 2021-08-24
-    lm::uvec2 picking_id;
-    uint32_t layer_picking_id;
+    hrz::picking::ObjectReference object_ref;
+    hrz::picking::FeatureReference feature_ref;
     hrz::render::LightingSettings lighting_settings_in_config;
 
     std::optional<hrz::model::InstanceGroupH> instance_group = std::nullopt;
@@ -334,7 +334,7 @@ struct ImpostorGpuResources
                     {InputStreamScale, "i_scale"},
                     {InputStreamImpostorPosition, "i_impostor_position"},
                     {InputStreamImpostorOrientation, "i_impostor_orientation"},
-                    {InputStreamPickingId, "i_picking_id"},
+                    {InputStreamObjectId, "i_object_id"},
                     {InputStreamSelection, "i_selection"},
                 };
 
@@ -344,7 +344,7 @@ struct ImpostorGpuResources
                     {UboImpostor, "Impostor"},
                 };
 
-                my::IndexName common_sampler = {SamplerImpostorTexture, "hrz_impostor_texture"};
+                my::IndexName atlas_sampler = {SamplerImpostorTexture, "hrz_impostor_texture"};
                 my::IndexName shadow_sampler = {
                     SamplerImpostorShadowTexture, "hrz_impostor_normal_texture"};
                 my::IndexName scale_sampler = {
@@ -352,7 +352,7 @@ struct ImpostorGpuResources
                     "hrz_impostor_scale_coefficients_texture"};
 
                 hrz::StaticVector<my::IndexName, 16> visual_samplers;
-                visual_samplers.push_back(common_sampler);
+                visual_samplers.push_back(atlas_sampler);
                 visual_samplers.push_back(shadow_sampler);
                 visual_samplers.push_back(scale_sampler);
 
@@ -364,6 +364,10 @@ struct ImpostorGpuResources
                 }
 
                 visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+
+                hrz::StaticVector<my::IndexName, 16> non_visual_samplers;
+                non_visual_samplers.push_back(atlas_sampler);
+                non_visual_samplers.push_back(scale_sampler);
 
                 static const char* outputs[] = {"o_color"};
 
@@ -390,7 +394,7 @@ struct ImpostorGpuResources
                 res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
                 visual_shader = render->rc->alloc(&res, hrz::monitoring::systems::Impostors);
 
-                static const char* picking_color_outputs[] = {"o_picking_id", "o_depth"};
+                static const char* picking_color_outputs[] = {"o_object_reference", "o_depth"};
 
                 res.name = hrz_shaders::Impostor_picking_name;
                 res.vertex_source_len = hrz_shaders::Impostor_picking_vert_len;
@@ -398,8 +402,8 @@ struct ImpostorGpuResources
                 res.fragment_source_len = hrz_shaders::Impostor_picking_frag_len;
                 res.fragment_source = hrz_shaders::Impostor_picking_frag;
                 res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
-                res.sampler_count = 1;
-                res.samplers = &common_sampler;
+                res.sampler_count = non_visual_samplers.size();
+                res.samplers = non_visual_samplers.data();
                 res.outputs = picking_color_outputs;
                 res.initial_state.color_blend.enable = false;
                 picking_shader = render->rc->alloc(&res, hrz::monitoring::systems::Impostors);
@@ -658,8 +662,8 @@ public:
         ConfigH config_handle,
         hrz::TileCoords coords,
         uint64_t layer_id,
-        uint32_t layer_picking_id,
-        lm::uvec2 tile_picking_id,
+        const hrz::picking::ObjectReference& object_ref,
+        const hrz::picking::FeatureReference& feature_ref,
         const hrz::vector_data::FeatureIds& feature_ids,
         const hrz::vt::ReprGeometry& geometry,
         const hrz::style::StyledFeatures& style,
@@ -723,8 +727,6 @@ public:
         bake_data.clamping.CopyFrom(geometry.clamping);
         bake_data.clamps = geometry.clamps;
 
-        bake_data.tile_picking_id = tile_picking_id;
-
         auto& dst_style = bake_data.style;
         dst_style.prps = style.prps;
         dst_style.values = style.values;
@@ -733,13 +735,14 @@ public:
         tile.bake_data = std::move(bake_data);
         tile.status = Tile::Status::StartBaking;
 
-        tile.picking_id = tile_picking_id;
-        tile.layer_picking_id = layer_picking_id;
+        tile.object_ref = object_ref;
+        tile.feature_ref = feature_ref;
 
         if (cfg.impostor_params.use_impostor())
         {
             Tile::Impostor impostor;
-            impostor.ubo_data.picking_id = tile_picking_id.r;
+            impostor.ubo_data.object_ref = object_ref.to_uvec2();
+            impostor.ubo_data.feature_ref = feature_ref.to_uvec3();
             impostor.ubo_data.clip_id = -1;
             impostor.ubo_data.lighting_enabled = cfg.lighting_settings.lighting_enabled;
             impostor.ubo_dirty = true;
@@ -874,8 +877,8 @@ public:
                             {
                                 add_tile(
                                     it->second, message.coords, message.layer_id,
-                                    message.layer_picking_id, message.tile_picking_id,
-                                    message.feature_ids, message.geometry, message.style,
+                                    message.object_ref, message.feature_ref, message.feature_ids,
+                                    message.geometry, message.style,
                                     TileId{channel_id, message.tile_id});
                             }
                             else
@@ -1336,11 +1339,10 @@ private:
         uint32_t feature_id_count = geometry.feature_ids.size();
         uint32_t instance_count = geometry.positions.size();
         uint32_t color_count = geometry.colors.size();
-        uint32_t picking_id_count = geometry.picking_ids.size();
 
         assert(feature_id_count == instance_count);
         assert(instance_count == color_count || color_count == 1);
-        assert(instance_count == picking_id_count);
+        assert(instance_count == geometry.object_ids.size());
 
         if (instance_count > 0)
         {
@@ -1358,16 +1360,14 @@ private:
                 (lm::usvec4*)&geometry.normals[0], geometry.normals.size()};
             group_data.scales = {(lm::vec3*)&geometry.scales[0], geometry.scales.size()};
             group_data.colors = {(lm::ubvec4*)&geometry.colors[0], color_count};
-            group_data.feature_picking_ids = {&geometry.picking_ids[0], picking_id_count};
-            group_data.feature_id_hashes = {&geometry.feature_ids[0], feature_id_count};
-            group_data.batch_ids = {&geometry.batch_ids[0], feature_id_count};
+            group_data.feature_id_per_instance = {&geometry.feature_ids[0], feature_id_count};
+            group_data.object_ids = {&geometry.object_ids[0], feature_id_count};
             group_data.position_compression.type = hrz::model::DracoCompressionType::None;
             group_data.normal_compression.type = hrz::model::DracoCompressionType::OctEncoded;
             group_data.normal_compression.quantization_scale = lm::vec3(2.0f / 65535.0f);
 
             tile->instance_group = hrz::model::create_instance_group(
-                cfg->model_prototype, lm::uvec2(tile->layer_picking_id, 0),
-                lm::uvec2(tile->picking_id.r, 0), 0, group_data);
+                cfg->model_prototype, tile->object_ref, tile->feature_ref, 0, group_data);
         }
 
         auto send_status_update_message = [&]()
@@ -1426,7 +1426,7 @@ private:
             copy_attribute((std::byte*)geometry.impostor_orientations.data(), sizeof(lm::uvec2));
             copy_attribute(
                 (std::byte*)geometry.feature_ids.data(), sizeof(hrz::vector_data::FeatureIdHash));
-            copy_attribute((std::byte*)geometry.picking_ids.data(), sizeof(uint32_t));
+            copy_attribute((std::byte*)geometry.object_ids.data(), sizeof(uint32_t));
 
             {
                 my::BufferResource vb_res(my::BufferResource::BufferType::Vertex);
@@ -1526,7 +1526,7 @@ private:
                  my::VertexFormat::UInt32_2, 12, instance_size, my::VertexRate::PerInstance},
                 {InputStreamFeatureId, renderable.instance_buffer, my::VertexFormat::UInt32_2, 20,
                  instance_size, my::VertexRate::PerInstance},
-                {InputStreamPickingId, renderable.instance_buffer, my::VertexFormat::UInt32, 28,
+                {InputStreamObjectId, renderable.instance_buffer, my::VertexFormat::UInt32, 28,
                  instance_size, my::VertexRate::PerInstance},
                 renderable.selection_storage.get_vertex_input_stream(render, InputStreamSelection),
             };
@@ -1544,8 +1544,8 @@ private:
             hrz::split_double(geometry.origin.x, ubo_data.center_low.x, ubo_data.center_high.x);
             hrz::split_double(geometry.origin.y, ubo_data.center_low.y, ubo_data.center_high.y);
             hrz::split_double(geometry.origin.z, ubo_data.center_low.z, ubo_data.center_high.z);
-            ubo_data.picking_id = tile->picking_id.r;
-            ubo_data.layer_picking_id = tile->layer_picking_id;
+            ubo_data.object_ref = tile->object_ref.to_uvec2();
+            ubo_data.feature_ref = tile->feature_ref.to_uvec3();
             ubo_data.clip_id = tile->draw_prps.clip_id;
             ubo_data.color_blend_mode = tile->draw_prps.feature_color_blend_mode;
             ubo_data.color_blend_strength = tile->draw_prps.feature_color_blend_strength;
@@ -1609,10 +1609,8 @@ private:
         geometry.scales.shrink_to_fit();
         geometry.colors.clear();
         geometry.colors.shrink_to_fit();
-        geometry.picking_ids.clear();
-        geometry.picking_ids.shrink_to_fit();
-        geometry.batch_ids.clear();
-        geometry.batch_ids.shrink_to_fit();
+        geometry.object_ids.clear();
+        geometry.object_ids.shrink_to_fit();
         geometry.impostor_positions.clear();
         geometry.impostor_positions.shrink_to_fit();
         geometry.impostor_scales.clear();
@@ -1780,8 +1778,7 @@ private:
 
                     geometry.feature_ids = std::move(response.feature_ids);
                     geometry.colors = std::move(response.colors);
-                    geometry.picking_ids = std::move(response.picking_ids);
-                    geometry.batch_ids = std::move(response.batch_ids);
+                    geometry.object_ids = std::move(response.object_ids);
                     geometry.impostor_positions = std::move(response.impostor_positions);
                     geometry.impostor_scales = std::move(response.impostor_scales);
                     geometry.impostor_orientations = std::move(response.impostor_orientations);

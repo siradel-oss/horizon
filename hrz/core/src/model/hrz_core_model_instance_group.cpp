@@ -5,9 +5,9 @@
 namespace hrz::model
 {
 InstanceGroup::InstanceGroup(
-    uint32_t batch_id_offset,
-    lm::uvec2 layer_picking_id,
-    lm::uvec2 tile_picking_id,
+    uint32_t object_id_offset,
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref,
     const monitoring::ResourceOwner& resource_owner,
     std::string_view model_uri) :
     _positions_texture(
@@ -29,9 +29,9 @@ InstanceGroup::InstanceGroup(
         resource_owner,
         {{"contents", "instance feature IDs"}, {"model URI", model_uri}})
 {
-    _ubo_data.batch_id_offset = batch_id_offset;
-    _ubo_data.layer_picking_id = layer_picking_id;
-    _ubo_data.tile_picking_id = tile_picking_id;
+    _ubo_data.object_id_offset = object_id_offset;
+    _ubo_data.object_reference = obj_ref.to_uvec2();
+    _ubo_data.feature_reference = feature_ref.to_uvec3();
 }
 
 void InstanceGroup::destroy(ModelPrototype* proto)
@@ -154,11 +154,17 @@ void InstanceGroup::set_data(ModelPrototype* proto, const InstanceGroupData& gro
 
     _transform = group_data.transform;
 
+    const bool has_feature_ids_per_object = !group_data.feature_id_per_object.empty();
+    const bool has_feature_ids_per_instance = !group_data.feature_id_per_instance.empty();
+
     bool has_normals = !group_data.normals.empty() || !group_data.compressed_normals.empty();
     bool use_compressed_normals =
         !group_data.compressed_normals.empty() && group_data.normals.empty();
     bool use_compressed_positions =
         !group_data.compressed_positions.empty() && group_data.positions.empty();
+
+    _instance_count = use_compressed_positions ? group_data.compressed_positions.size()
+                                               : group_data.positions.size();
 
     bool has_unique_scale =
         _instance_count != group_data.scales.size() && group_data.scales.size() == 1;
@@ -169,16 +175,13 @@ void InstanceGroup::set_data(ModelPrototype* proto, const InstanceGroupData& gro
     _ubo_data.position_compression = group_data.position_compression;
     _ubo_data.normal_compression = group_data.normal_compression;
 
-    _instance_count = use_compressed_positions ? group_data.compressed_positions.size()
-                                               : group_data.positions.size();
-
     assert(group_data.normals.empty() || group_data.normals.size() == 2 * _instance_count);
     assert(
         group_data.compressed_normals.empty()
         || group_data.compressed_normals.size() == _instance_count);
     assert(has_unique_scale || group_data.scales.size() == _instance_count);
     assert(has_unique_color || group_data.colors.size() == _instance_count);
-    assert(group_data.feature_picking_ids.size() == _instance_count);
+    assert(group_data.object_ids.size() == _instance_count);
 
     // @Todo Don't override selection at every update!
     _selection_storage = selection::SelectionStorageUint32TextureMultiIndex(
@@ -301,20 +304,23 @@ void InstanceGroup::set_data(ModelPrototype* proto, const InstanceGroupData& gro
             _has_transparent_color = true;
         }
 
-        uint32_t batch_id = group_data.batch_ids[instance];
-        if (group_data.feature_id_hashes.size() == group_data.feature_picking_ids.size())
+        const uint32_t object_id = group_data.object_ids[instance];
+        picking_ids[instance] = object_id;
+
+        if (has_feature_ids_per_instance)
         {
-            picking_ids[instance] = group_data.feature_picking_ids[instance];
-            feature_ids[instance] = group_data.feature_id_hashes[batch_id];
-            _selection_storage.register_indirection(
-                group_data.feature_id_hashes[batch_id], instance);
+            feature_ids[instance] = group_data.feature_id_per_instance[instance];
+        }
+        else if (has_feature_ids_per_object)
+        {
+            feature_ids[instance] = group_data.feature_id_per_object[object_id];
         }
         else
         {
-            picking_ids[instance] = batch_id;
-            feature_ids[instance] = batch_id;
-            _selection_storage.register_indirection(instance, batch_id);
+            feature_ids[instance] = object_id;
         }
+
+        _selection_storage.register_indirection(feature_ids[instance], instance);
 
         points.push_back(global_position);
     }
@@ -365,8 +371,7 @@ gsl::span<const my::TextureBinding> InstanceGroup::write_texture_bindings(
          sr->fallback_data_sampler},
         {Instanced_ScaleSampler, _scales_texture.get_resource(), sr->fallback_data_sampler},
         {Instanced_ColorSampler, _colors_texture.get_resource(), sr->fallback_data_sampler},
-        {Instanced_PickingIdSampler, _picking_ids_texture.get_resource(),
-         sr->fallback_data_sampler},
+        {Instanced_ObjectIdSampler, _picking_ids_texture.get_resource(), sr->fallback_data_sampler},
         {Instanced_FeatureIdSampler, _feature_ids_texture.get_resource(),
          sr->fallback_data_sampler},
     };
@@ -385,14 +390,13 @@ void InstanceGroup::patch_primitive(RenderablePrimitive* prim) const
 
 InstanceGroupH create_instance_group(
     ModelPrototype* proto,
-    lm::uvec2 layer_picking_id,
-    lm::uvec2 tile_picking_id,
-    uint32_t batch_id_offset,
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref,
+    uint32_t object_id_offset,
     const InstanceGroupData& data)
 {
     uint64_t handle = proto->instance_group_pool.alloc(
-        batch_id_offset, layer_picking_id, tile_picking_id, proto->resource_owner,
-        proto->descriptor_uri);
+        object_id_offset, obj_ref, feature_ref, proto->resource_owner, proto->descriptor_uri);
     auto* group = proto->instance_group_pool.get_object(handle);
     group->set_data(proto, data);
     return InstanceGroupH{handle};

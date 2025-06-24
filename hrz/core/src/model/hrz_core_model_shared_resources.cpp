@@ -131,7 +131,7 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     res_d.initial_state.rasterization.cull_mode = my::RasterizationState::None;
     rc->alloc(&res_d, hrz::monitoring::systems::Models);
 
-    const char* picking_color_outputs[] = {"o_picking_id", "o_depth_value"};
+    const char* picking_color_outputs[] = {"o_object_reference", "o_depth_value"};
 
     res.name = hrz_shaders::Gltf_picking_name;
     res.vertex_source_len = hrz_shaders::Gltf_picking_vert_len;
@@ -308,7 +308,7 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
         {Instanced_CompressedNormalSampler, "u_instance_compressed_normal"},
         {Instanced_ScaleSampler, "u_instance_scale"},
         {Instanced_ColorSampler, "u_instance_color"},
-        {Instanced_PickingIdSampler, "u_instance_picking_id"},
+        {Instanced_ObjectIdSampler, "u_instance_object_id"},
     };
 
     my::IndexName samplers_depth[] = {
@@ -361,7 +361,7 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     res_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
     rc->alloc(&res_d, hrz::monitoring::systems::Models);
 
-    const char* picking_color_outputs[] = {"o_picking_id", "o_depth_value"};
+    const char* picking_color_outputs[] = {"o_object_reference", "o_depth_value"};
 
     res.name = hrz_shaders::GltfInstanced_picking_name;
     res.vertex_source_len = hrz_shaders::GltfInstanced_picking_vert_len;
@@ -556,7 +556,7 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
     res_f_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
     rc->alloc(&res_f_d, hrz::monitoring::systems::Models);
 
-    const char* picking_color_outputs[] = {"o_picking_id", "o_depth_value"};
+    const char* picking_color_outputs[] = {"o_object_reference", "o_depth_value"};
 
     res.name = hrz_shaders::ThreeDTilesB3dm_picking_name;
     res.vertex_source_len = hrz_shaders::ThreeDTilesB3dm_picking_vert_len;

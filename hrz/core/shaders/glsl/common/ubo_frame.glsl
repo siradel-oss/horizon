@@ -50,7 +50,7 @@ layout(std140) uniform Frame
     bool terrain_lighting_enabled;
     bool terrain_receive_shadows;
     vec4 terrain_color_opacity;
-    uvec3 quick_highlight_picking_id;
+    uvec3 quick_highlight_feature_reference;
     uint merge_groups_bitset;
     vec4 quick_highlight_color;
     vec3 sky_color_linear;

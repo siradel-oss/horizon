@@ -3,11 +3,11 @@
 #include "camera/hrz_core_camera_types.h"
 #include "hrz_core_clipping_plane_layers.h"
 #include "hrz_core_events.h"
-#include "hrz_core_picking_types.h"
 #include "hrz_core_render_request.h"
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
 
+#include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
 #include <mycelium_backend.h>

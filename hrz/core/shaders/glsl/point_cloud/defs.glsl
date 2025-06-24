@@ -11,9 +11,9 @@ layout(std140) uniform PointCloud
     vec3 quantized_position_scale;
     int clip_id;
     vec3 quantized_position_offset;
-    uint layer_picking_id;
-    uvec2 batch_picking_id;
-    uint batch_id_offset;
+    uint object_id_offset;
+    uvec2 object_reference;
     uint feature_color_blend_mode;
+    uvec3 feature_reference;
     float feature_color_blend_strength;
 } hrz_point_cloud;

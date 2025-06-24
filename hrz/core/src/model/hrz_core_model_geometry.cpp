@@ -28,14 +28,14 @@ static ModelGeometry* _get_model_geometry(ModelPrototype* proto, ModelGeometryH 
 }
 
 ModelGeometry::ModelGeometry(
-    uint32_t batch_id_offset,
-    lm::uvec2 batch_picking_id,
-    lm::uvec3 feature_picking_id) :
+    uint32_t object_id_offset,
+    const picking::ObjectReference& object_reference,
+    const picking::FeatureReference& feature_reference) :
     _status(InternalStatus::Uninitialized),
     _has_normals(false),
-    _batch_id_offset(batch_id_offset),
-    _batch_picking_id(batch_picking_id),
-    _feature_picking_id(feature_picking_id)
+    _object_id_offset(object_id_offset),
+    _object_reference(object_reference),
+    _feature_reference(feature_reference)
 {
 }
 
@@ -490,9 +490,9 @@ gsl::span<const my::VertexInputStream> ModelGeometry::get_streams(const Primitiv
 
 void ModelGeometry::fill_ubo_data(MeshGeometryUniformData* data)
 {
-    data->feature_picking_id = _feature_picking_id;
-    data->batch_picking_id = _batch_picking_id;
-    data->batch_id_offset = _batch_id_offset;
+    data->object_reference = _object_reference.to_uvec2();
+    data->feature_reference = _feature_reference.to_uvec3();
+    data->object_id_offset = _object_id_offset;
 
     // "When normals are not specified, client implementations MUST calculate flat normals"
     data->flat_shaded = !_has_normals;
@@ -500,12 +500,12 @@ void ModelGeometry::fill_ubo_data(MeshGeometryUniformData* data)
 
 BatchedModelGeometry::BatchedModelGeometry(
     ModelPrototype* proto,
-    uint32_t feature_picking_id,
-    lm::uvec2 batch_picking_id,
-    uint32_t batch_id_offset,
+    uint32_t object_id_offset,
+    const picking::ObjectReference& object_reference,
+    const picking::FeatureReference& feature_reference,
     size_t batch_length,
     gsl::span<const vector_data::FeatureIdHash> feature_id_hashes) :
-    ModelGeometry(batch_id_offset, batch_picking_id, lm::uvec2(feature_picking_id, 0)),
+    ModelGeometry(object_id_offset, object_reference, feature_reference),
     _feature_ids_texture(
         proto->resource_owner,
         {{"model URI"_ss, proto->descriptor_uri}, {"contents"_ss, "feature ids texture"_ss}}),
@@ -646,22 +646,22 @@ void BatchedModelGeometry::patch_render_data(
 
 SingleModelGeometryH create_single_model_geometry(
     ModelPrototype* proto,
-    lm::uvec2 picking_id,
-    lm::uvec3 feature_picking_id)
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref)
 {
-    std::unique_ptr<ModelGeometry> geometry(new ModelGeometry(0, picking_id, feature_picking_id));
+    std::unique_ptr<ModelGeometry> geometry(new ModelGeometry(0, obj_ref, feature_ref));
     return {proto->geometry_pool.alloc(std::move(geometry))};
 }
 
 ImpostorBakingModelGeometryH create_impostor_baking_model_geometry(ModelPrototype* proto)
 {
-    std::unique_ptr<ModelGeometry> geometry(new ModelGeometry(0, lm::uvec2(0), lm::uvec3(0)));
+    std::unique_ptr<ModelGeometry> geometry(new ModelGeometry(0, {}, {}));
     return {proto->geometry_pool.alloc(std::move(geometry))};
 }
 
 InstancedModelGeometryH create_instanced_model_geometry(ModelPrototype* proto)
 {
-    std::unique_ptr<ModelGeometry> geometry(new ModelGeometry(0, lm::uvec2(0), lm::uvec3(0)));
+    std::unique_ptr<ModelGeometry> geometry(new ModelGeometry(0, {}, {}));
     return {proto->geometry_pool.alloc(std::move(geometry))};
 }
 
@@ -691,15 +691,14 @@ void set_batched_colors(
 
 BatchedModelGeometryH create_batched_model_geometry(
     ModelPrototype* proto,
-    uint32_t layer_picking_id,
-    lm::uvec2 batch_picking_id,
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref,
     uint32_t batch_id_offset,
     size_t batch_length,
     gsl::span<const vector_data::FeatureIdHash> feature_id_hashes)
 {
     std::unique_ptr<ModelGeometry> geometry(new BatchedModelGeometry(
-        proto, layer_picking_id, batch_picking_id, batch_id_offset, batch_length,
-        feature_id_hashes));
+        proto, batch_id_offset, obj_ref, feature_ref, batch_length, feature_id_hashes));
     return {proto->geometry_pool.alloc(std::move(geometry))};
 }
 

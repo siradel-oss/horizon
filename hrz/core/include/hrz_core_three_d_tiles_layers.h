@@ -1,10 +1,10 @@
 #pragma once
 
-#include "hrz_core_picking_types.h"
 #include "hrz_core_render_request.h"
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
 
+#include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
 #include <gsl/gsl-lite.hpp>
@@ -109,7 +109,7 @@ std::pair<size_t, size_t> make_typed_object_references(
  * a new one that can identify a single feature across multiple tiles. This is
  * useful for the highlighting system.
  */
-std::optional<picking::FeatureReference> make_feature_picking_id(
+std::optional<picking::FeatureReference> make_feature_reference(
     ThreeDTilesLayerSystem* system,
     const picking::ObjectReference& obj);
 

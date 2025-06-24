@@ -9,7 +9,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef EDITOR_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 #endif
 
 void main()
@@ -25,7 +25,6 @@ void main()
 #endif
 
 #ifdef EDITOR_PICKING
-    o_picking_id.r = hrz_shape.shape_id;
-    o_picking_id.g = 0xffffffffu;
+    o_object_reference = hrz_shape.object_reference | uvec2(0, 0xffffffffu);
 #endif
 }

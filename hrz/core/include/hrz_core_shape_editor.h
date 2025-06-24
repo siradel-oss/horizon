@@ -1,11 +1,11 @@
 #pragma once
 
 #include "camera/hrz_core_camera_system.h"
-#include "hrz_core_picking_types.h"
 #include "hrz_core_render_request.h"
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
 
+#include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
 #include <lin_maths.h>

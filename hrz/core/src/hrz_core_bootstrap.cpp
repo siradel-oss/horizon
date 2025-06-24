@@ -345,9 +345,8 @@ public:
 
                 if (should_do_highlight)
                 {
-                    auto hovered_feature =
-                        hrz::scene::make_feature_picking_id(scene, hovered_object)
-                            .value_or(hrz::picking::FeatureReference());
+                    auto hovered_feature = hrz::scene::make_feature_reference(scene, hovered_object)
+                                               .value_or(hrz::picking::FeatureReference());
                     hrz::scene::quick_highlight(scene, hovered_feature);
                     _last_highlight = now;
                 }

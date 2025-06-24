@@ -34,9 +34,9 @@ HRZ_CHECK_UBO_SIZE(VertexCompressionParamsUniformData);
 struct MeshGeometryUniformData
 {
     lm::vec4 mesh_color;
-    lm::uvec3 feature_picking_id;
-    uint32_t batch_id_offset;
-    lm::uvec2 batch_picking_id;
+    lm::uvec3 feature_reference;
+    uint32_t object_id_offset;
+    lm::uvec2 object_reference;
     bool32 overlay_material_enabled;
     float overlay_material_opacity;
     bool32 apply_feature_color_to_overlay;
@@ -98,11 +98,11 @@ struct InstanceGroupUniformData
     GlslStd140Mat3 linear_transform;
     lm::vec4 origin_low;
     lm::vec4 origin_high;
-    lm::uvec2 layer_picking_id;
-    lm::uvec2 tile_picking_id;
+    lm::uvec3 feature_reference;
+    uint32_t object_id_offset;
     VertexCompressionParamsUniformData position_compression;
     VertexCompressionParamsUniformData normal_compression;
-    uint32_t batch_id_offset;
+    lm::uvec2 object_reference;
 };
 
 HRZ_CHECK_UBO_SIZE(InstanceGroupUniformData);

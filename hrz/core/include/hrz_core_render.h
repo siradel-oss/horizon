@@ -188,7 +188,7 @@ struct FrameUniformData
 
     lm::vec4 terrain_color_opacity;
 
-    lm::uvec3 quick_highlight_picking_id{0, 0, 0};
+    lm::uvec3 quick_highlight_feature_reference{0, 0, 0};
     uint32_t merge_groups_bitset;
 
     lm::vec4 quick_highlight_color;

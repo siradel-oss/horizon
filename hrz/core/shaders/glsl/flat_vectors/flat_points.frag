@@ -13,7 +13,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef FLAT_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 #endif
 
 #ifdef FLAT_SELECTION
@@ -42,14 +42,14 @@ void main()
 #ifdef FLAT_VISUAL
     o_color = color * min(v_radius_px, 1.0);
 
-    if (build_feature_picking_id() == hrz_frame.quick_highlight_picking_id)
+    if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
         o_color = apply_quick_highlight_color_premultiplied(o_color);
     }
 #endif
 
 #ifdef FLAT_PICKING
-    o_picking_id.rg = build_picking_id();
+    o_object_reference.rg = build_object_reference();
 #endif
 
 #ifdef FLAT_SELECTION

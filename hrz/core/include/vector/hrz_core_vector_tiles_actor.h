@@ -304,11 +304,11 @@ struct VectorTilesActor;
 using VectorTilesActorChannel = Channel<ToActorMessage, FromActorMessage>;
 
 VectorTilesActorChannel spawn_vector_tiles_actor(
-    uint64_t layer_id,
+    uint64_t global_layer_id,
     uint32_t vector_data_layer,
     hrz_proto::MissingTilePolicy missing_tile_policy,
     bool static_tiles,
-    uint32_t picking_id,
+    uint32_t object_reference_layer_id_partial,
     PlanetSurface* planet,
     VectorDataLoader* vdl,
     ActorRunner* ar);

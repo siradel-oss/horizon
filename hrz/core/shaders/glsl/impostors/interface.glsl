@@ -17,5 +17,5 @@ flat varying vec3 v_impostor_to_view_z;
 #endif
 
 #ifdef IMPOSTOR_PICKING
-flat varying uint v_picking_id;
+flat varying uint v_object_id;
 #endif

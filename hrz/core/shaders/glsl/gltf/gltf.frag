@@ -11,7 +11,7 @@ layout(location = 0) out vec4 o_color;
 #endif
 
 #ifdef GLTF_PICKING
-layout(location = 0) out highp uvec2 o_picking_id;
+layout(location = 0) out highp uvec2 o_object_reference;
 layout(location = 1) out highp vec2 o_depth_value;
 #endif
 
@@ -29,11 +29,11 @@ void main()
     vec4 color_lin = compute_material_color_lin(hrz_mesh.geometry.mesh_color_blend_mode, hrz_mesh.geometry.mesh_color_blend_strength, value);
 
 #ifdef GLTF_VISUAL
-    o_color = apply_color_decoration(color_lin, get_normal(), hrz_mesh.geometry.feature_picking_id);
+    o_color = apply_color_decoration(color_lin, get_normal(), hrz_mesh.geometry.feature_reference);
 #endif
 
 #ifdef GLTF_PICKING
-    o_picking_id.rg = hrz_mesh.geometry.batch_picking_id;
+    o_object_reference.rg = hrz_mesh.geometry.object_reference;
     o_depth_value.x = 1.0 / gl_FragCoord.w;
     o_depth_value.y = value;
 #endif

@@ -18,7 +18,7 @@
 #endif
 
 #ifdef POINT_CLOUD_PICKING
-    layout(location = 0) out highp uvec2 o_picking_id;
+    layout(location = 0) out highp uvec2 o_object_reference;
     layout(location = 1) out highp vec2 o_depth_value;
 #endif
 
@@ -44,7 +44,7 @@ void main()
     color = compute_viewshed_color(color, v_normal);
     color = mix_premultiplied_colors(color, compute_clip_outline_color());
 
-    if (uvec3(hrz_point_cloud.layer_picking_id, v_feature_id) == hrz_frame.quick_highlight_picking_id)
+    if ((hrz_point_cloud.feature_reference | uvec3(0, v_feature_id)) == hrz_frame.quick_highlight_feature_reference)
     {
         color = apply_quick_highlight_color(color);
     }
@@ -53,7 +53,7 @@ void main()
 #endif
 
 #ifdef POINT_CLOUD_PICKING
-    o_picking_id = uvec2(hrz_point_cloud.batch_picking_id.r, hrz_point_cloud.batch_picking_id.g + v_batch_id + hrz_point_cloud.batch_id_offset);
+    o_object_reference = hrz_point_cloud.object_reference | uvec2(0, v_batch_id + hrz_point_cloud.object_id_offset);
 
     o_depth_value.x = 1.0 / gl_FragCoord.w;
     o_depth_value.y = 0.0;

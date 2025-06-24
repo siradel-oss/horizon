@@ -532,7 +532,7 @@ struct TileNode
 
 struct VectorTilesActor : public Actor
 {
-    uint64_t _layer_id{};
+    uint64_t _global_layer_id{};
     uint32_t _vector_data_layer{};
     hrz_proto::MissingTilePolicy _missing_tile_policy;
     bool _static_tiles;
@@ -543,7 +543,7 @@ struct VectorTilesActor : public Actor
     GeoBounds _layer_bounds = GeoBounds::full();
     GeoBounds _data_bounds = GeoBounds::full();
     float _max_screen_space_error{};
-    uint32_t _layer_picking_id{};
+    uint32_t _object_reference_layer_id_partial{};
     hrz_proto::VectorClamping _clamping;
     SceneViewBitset _visible_in;
 
@@ -682,15 +682,15 @@ struct VectorTilesActor : public Actor
         uint32_t vector_data_layer,
         hrz_proto::MissingTilePolicy missing_tile_policy,
         bool static_tiles,
-        uint32_t picking_id,
+        uint32_t object_reference_layer_id_partial,
         hrz::Channel<FromActorMessage, ToActorMessage> channel,
         PlanetSurface* planet,
         VectorDataLoader* vdl) :
-        _layer_id(layer_id),
+        _global_layer_id(layer_id),
         _vector_data_layer(vector_data_layer),
         _missing_tile_policy(missing_tile_policy),
         _static_tiles(static_tiles),
-        _layer_picking_id(picking_id),
+        _object_reference_layer_id_partial(object_reference_layer_id_partial),
         _planet_channel(planet::create_surface_channel(planet)),
         _elevation_query_channel(planet::get_elevation_query(planet)->create_channel()),
         _vector_data_channel(vector_data::create_channel(vdl)),
@@ -860,7 +860,7 @@ struct VectorTilesActor : public Actor
 
                             assert(_repr_channels.contains(type));
                             _repr_channels[type].send(repr::messages::RegisterStyle{
-                                ref.config_id.value(), new_repr, _layer_id});
+                                ref.config_id.value(), new_repr, _global_layer_id});
                         }
 
                         assert(_reprs_configs.size() == new_reprs.size());
@@ -914,7 +914,7 @@ struct VectorTilesActor : public Actor
 
                         assert(_repr_channels.contains(type));
                         _repr_channels[type].send(repr::messages::RegisterStyle{
-                            ref.config_id.value(), new_repr, _layer_id});
+                            ref.config_id.value(), new_repr, _global_layer_id});
 
                         for (const auto& it : _tiles_by_coords)
                         {
@@ -952,7 +952,7 @@ struct VectorTilesActor : public Actor
                             {
                                 _repr_channels[repr_config.type].send(
                                     repr::messages::UnregisterStyle{
-                                        repr_config.config_id.value(), _layer_id});
+                                        repr_config.config_id.value(), _global_layer_id});
                             }
 
                             auto type = repr.type();
@@ -970,7 +970,7 @@ struct VectorTilesActor : public Actor
 
                             assert(_repr_channels.contains(type));
                             _repr_channels[type].send(repr::messages::RegisterStyle{
-                                repr_config.config_id.value(), repr, _layer_id});
+                                repr_config.config_id.value(), repr, _global_layer_id});
 
                             _script_compilation_status = ScriptCompilationStatus::MustRecompile;
                         }
@@ -1013,7 +1013,7 @@ struct VectorTilesActor : public Actor
                             {
                                 _repr_channels[repr_config.type].send(
                                     repr::messages::UnregisterStyle{
-                                        repr_config.config_id.value(), _layer_id});
+                                        repr_config.config_id.value(), _global_layer_id});
                             }
 
                             _reprs_configs.erase(_reprs_configs.begin() + index);
@@ -1639,7 +1639,8 @@ struct VectorTilesActor : public Actor
             _any_tile_content_waiting_load_delay = false;
 
             auto visibility_set_builder = VisibilitySetBuilder(
-                _next_visibility_set_id++, _include_debug_info_in_visibility_set, _layer_id, ba);
+                _next_visibility_set_id++, _include_debug_info_in_visibility_set, _global_layer_id,
+                ba);
 
             traverse_tile_node_for_visibility_set(
                 _root_tile_id, _cullers.value(), visibility_set_builder, _visible_in, _visible_in,
@@ -1725,7 +1726,7 @@ struct VectorTilesActor : public Actor
             if (repr.config_id.has_value())
             {
                 _repr_channels[repr.type].send(
-                    repr::messages::UnregisterStyle{repr.config_id.value(), _layer_id});
+                    repr::messages::UnregisterStyle{repr.config_id.value(), _global_layer_id});
             }
         }
         _reprs_configs.clear();
@@ -1970,7 +1971,7 @@ struct VectorTilesActor : public Actor
                     hrz::planet::elevation_query::messages::QueryElevation{
                         tile_id,
                         std::move(point_view),
-                        {monitoring::systems::VectorTiles, _layer_id}});
+                        {monitoring::systems::VectorTiles, _global_layer_id}});
                 geometry.status = TileContent::Geometry::Status::Clamping;
             }
         }
@@ -1990,7 +1991,7 @@ struct VectorTilesActor : public Actor
                     hrz::planet::elevation_query::messages::QueryElevation{
                         tile_id,
                         std::move(point_view),
-                        {monitoring::systems::VectorTiles, _layer_id}});
+                        {monitoring::systems::VectorTiles, _global_layer_id}});
                 geometry.status = TileContent::Geometry::Status::Clamping;
             }
         }
@@ -2022,7 +2023,7 @@ struct VectorTilesActor : public Actor
                     bool allocations_have_errors = false;
 
                     auto maybe_restart_allocation_and_wait_for_ready =
-                        [feature_count, ba, layer_id = _layer_id, &allocations_are_ready,
+                        [feature_count, ba, layer_id = _global_layer_id, &allocations_are_ready,
                          &allocations_have_errors](
                             const hrz::StaticString& name,
                             std::optional<
@@ -2270,7 +2271,7 @@ struct VectorTilesActor : public Actor
                 }
 
                 content.style_job.ticket = hrz_jobs::add_job_style_features(
-                    js, data, {hrz::monitoring::systems::Styling, _layer_id});
+                    js, data, {hrz::monitoring::systems::Styling, _global_layer_id});
 
                 return true;
             };
@@ -2462,9 +2463,9 @@ struct VectorTilesActor : public Actor
 
                     assert(!content.reprs[i].baking.has_value());
 
-                    lm::uvec2 tile_picking_id =
-                        hrz::vt::make_tile_picking_id_from_system_layer_picking_id(
-                            _layer_picking_id, tile_id);
+                    auto tile_object_ref =
+                        make_object_reference(_object_reference_layer_id_partial, tile_id);
+                    auto feature_ref = make_feature_reference(_object_reference_layer_id_partial);
 
                     TileContent::ReprSlot::Repr repr;
                     repr.type = cfg.type;
@@ -2472,8 +2473,8 @@ struct VectorTilesActor : public Actor
                     content.reprs[i].baking = repr;
 
                     _repr_channels[repr.type].send(repr::messages::AddTile{
-                        repr.id, cfg.config_id.value(), content.coords, _layer_id,
-                        _layer_picking_id, tile_picking_id, content.feature_ids.feature_ids,
+                        repr.id, cfg.config_id.value(), content.coords, _global_layer_id,
+                        tile_object_ref, feature_ref, content.feature_ids.feature_ids,
                         content.geometry.repr, content.style_job.result_repr, node->elevation.min,
                         node->elevation.max});
                 }
@@ -3034,7 +3035,7 @@ struct VectorTilesActor : public Actor
                     "Too many vector tiles loaded for layer {}. Blocking refinement. "
                     "This may be due to a too low max screen-space error value "
                     "(current value: {}).",
-                    _layer_id, _max_screen_space_error);
+                    _global_layer_id, _max_screen_space_error);
                 _has_warned_about_too_many_tiles = true;
             }
         }
@@ -3202,11 +3203,11 @@ struct VectorTilesActor : public Actor
 };
 
 VectorTilesActorChannel spawn_vector_tiles_actor(
-    uint64_t layer_id,
+    uint64_t global_layer_id,
     uint32_t vector_data_layer,
     hrz_proto::MissingTilePolicy missing_tile_policy,
     bool static_tiles,
-    uint32_t picking_id,
+    uint32_t object_reference_layer_id_partial,
     PlanetSurface* planet,
     VectorDataLoader* vdl,
     ActorRunner* ar)
@@ -3215,8 +3216,8 @@ VectorTilesActorChannel spawn_vector_tiles_actor(
         hrz::create_channel<FromActorMessage, ToActorMessage>();
 
     auto actor = std::make_unique<VectorTilesActor>(
-        layer_id, vector_data_layer, missing_tile_policy, static_tiles, picking_id,
-        std::move(from_actor_channel), planet, vdl);
+        global_layer_id, vector_data_layer, missing_tile_policy, static_tiles,
+        object_reference_layer_id_partial, std::move(from_actor_channel), planet, vdl);
 
     actor_runner::add_actor(ar, std::move(actor));
 

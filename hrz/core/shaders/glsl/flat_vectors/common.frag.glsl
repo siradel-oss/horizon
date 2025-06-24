@@ -1,17 +1,15 @@
 #pragma once
 
 #ifdef FLAT_VISUAL
-uvec3 build_feature_picking_id()
+uvec3 build_feature_reference()
 {
-    return uvec3(hrz_tile.layer_picking_id, v_feature_id);
+    return hrz_tile.feature_reference | uvec3(0, v_feature_id);
 }
 #endif
 
 #ifdef FLAT_PICKING
-uvec2 build_picking_id()
+uvec2 build_object_reference()
 {
-    uvec2 picking_id = hrz_tile.picking_id;
-    picking_id.g += v_feature_index;
-    return picking_id;
+    return hrz_tile.object_reference | uvec2(0, v_feature_index);
 }
 #endif

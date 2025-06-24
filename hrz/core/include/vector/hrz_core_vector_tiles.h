@@ -5,6 +5,7 @@
 #include "hrz_core_visibility_constraints.h"
 
 #include <hrz_common_geo.h>
+#include <hrz_common_picking_types.h>
 #include <hrz_common_vector_data.h>
 
 #include <cstdint>
@@ -37,7 +38,7 @@ VectorTiles* create(
     uint32_t vector_data_layer,
     hrz_proto::MissingTilePolicy missing_tile_policy,
     bool static_tiles,
-    uint32_t picking_id,
+    uint32_t object_reference_layer_id_partial,
     hrz::PlanetSurface* planet,
     VectorDataLoader* vdl,
     ActorRunner* ar);
@@ -78,16 +79,11 @@ void set_max_screen_space_error(VectorTiles*, unsigned int max_screen_space_erro
 
 void set_palettes(VectorTiles*, gsl::span<const hrz_proto::Palette* const>);
 
-std::optional<vector_data::FeatureId> get_feature_id_from_picking_id(
+std::optional<vector_data::FeatureId> get_feature_id_from_object(
     VectorTiles*,
-    uint32_t complementary_id,
-    uint32_t object_id);
+    const picking::ObjectReference& obj);
 
-bool pick_feature(
-    VectorTiles*,
-    uint32_t complementary_id,
-    uint32_t object_id,
-    hrz_proto::PickLayerResult*);
+bool pick_feature(VectorTiles*, const picking::ObjectReference& obj, hrz_proto::PickLayerResult*);
 
 void set_style_script(VectorTiles*, std::string_view script);
 

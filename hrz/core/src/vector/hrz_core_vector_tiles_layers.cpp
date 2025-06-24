@@ -68,8 +68,8 @@ struct ArraySyncTraits
 
 struct Layer
 {
-    uint64_t id;
-    uint32_t picking_id;
+    uint64_t global_layer_id;
+    uint32_t local_layer_id;
 
     uint32_t vector_data_layer;
     bool static_tiles;
@@ -113,17 +113,15 @@ namespace hrz
 {
 struct VectorTilesLayerSystem
 {
-    using IndexPool = GenIndexPool<uint64_t, 32, 32>;
+    using IndexPool = GenIndexPool<uint32_t, 2, 12>;
     using LayerPool = GenObjectPool<Layer, IndexPool, 64>;
 
     LayerPool layer_pool;
-    hrz::flat_hash_map<uint64_t, uint64_t> layer_ids_to_handles;
+    hrz::flat_hash_map<uint64_t, uint32_t> global_layer_id_to_handle;
 
     std::vector<uint64_t> unregistered_layers;
 
     uint8_t picking_id;
-    hrz::GenIndexPool<uint32_t, 2, 12> picking_id_pool;
-    hrz::flat_hash_map<uint32_t, uint64_t> picking_id_to_layer_ids;
 
     bool has_render_been_initialized = false;
     hrz::vt::ReprRegistry reprs;
@@ -135,34 +133,29 @@ namespace vector_tiles_layers
 {
 namespace
 {
-Layer* _get_layer(VectorTilesLayerSystem* system, uint64_t layer_id)
+Layer* _get_layer(VectorTilesLayerSystem* system, uint64_t global_layer_id)
 {
-    auto it = system->layer_ids_to_handles.find(layer_id);
-    if (it == system->layer_ids_to_handles.end())
+    auto it = system->global_layer_id_to_handle.find(global_layer_id);
+    if (it == system->global_layer_id_to_handle.end())
     {
         return nullptr;
     }
     return system->layer_pool.get_object(it->second);
 }
 
-RenderRequest _unregister_layers(
-    VectorTilesLayerSystem* system,
-    SceneModel* model,
-    BlobAllocator* ba,
-    JobScheduler* js,
-    hrz::PlanetSurface* planet)
+RenderRequest _unregister_layers(VectorTilesLayerSystem* system, SceneModel* model)
 {
-    assert(system && model && js);
+    assert(system && model);
 
     RenderRequest render_request;
 
-    for (auto layer_id : system->unregistered_layers)
+    for (auto global_layer_id : system->unregistered_layers)
     {
-        auto it = system->layer_ids_to_handles.find(layer_id);
-        if (it != system->layer_ids_to_handles.end())
+        auto it = system->global_layer_id_to_handle.find(global_layer_id);
+        if (it != system->global_layer_id_to_handle.end())
         {
             hrz_proto::PathRoot root;
-            root.mutable_vector_tiles_layer()->set_opaque(layer_id);
+            root.mutable_vector_tiles_layer()->set_opaque(global_layer_id);
             scene_model::unregister_element(model, root);
 
             auto layer_handle = it->second;
@@ -171,14 +164,10 @@ RenderRequest _unregister_layers(
             if (layer)
             {
                 vt::destroy(layer->vt);
-
-                system->picking_id_pool.release(
-                    picking::extract_complementary_id(layer->picking_id));
-
                 system->layer_pool.release(layer_handle);
             }
 
-            system->layer_ids_to_handles.erase(it);
+            system->global_layer_id_to_handle.erase(it);
 
             render_request.request_visual_render();
             render_request.schedule_flat_overlay_render();
@@ -193,10 +182,8 @@ RenderRequest _unregister_layers(
 RenderRequest _update_layer(
     VectorTilesLayerSystem* system,
     SceneModel* model,
-    uint64_t layer_id,
+    uint64_t global_layer_id,
     VectorDataLoader* vdl,
-    BlobAllocator* ba,
-    JobScheduler* js,
     PlanetSurface* planet,
     ActorRunner* ar)
 {
@@ -204,13 +191,13 @@ RenderRequest _update_layer(
 
     RenderRequest render_request;
 
-    auto layer = _get_layer(system, layer_id);
+    auto layer = _get_layer(system, global_layer_id);
     if (!layer) return render_request;
 
     hrz::SceneModelAccessor accessor(model);
 
     hrz_proto::LayerHandle layer_handle;
-    layer_handle.set_opaque(layer_id);
+    layer_handle.set_opaque(global_layer_id);
 
     hrz_proto::VectorTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, layer_handle);
 
@@ -224,8 +211,9 @@ RenderRequest _update_layer(
         vt::destroy(layer->vt);
 
         layer->vt = vt::create(
-            layer_id, vector_data_layer_id, missing_tile_policy, static_tiles, layer->picking_id,
-            planet, vdl, ar);
+            global_layer_id, vector_data_layer_id, missing_tile_policy, static_tiles,
+            vt::make_system_layer_id_partial(system->picking_id, layer->local_layer_id), planet,
+            vdl, ar);
         vt::set_visible_in(layer->vt, layer->visible_in());
     }
 
@@ -419,7 +407,6 @@ VectorTilesLayerSystem* create_system(PickingIdAllocator* picking_id_allocator)
 void destroy_system(
     VectorTilesLayerSystem* system,
     Render* render,
-    VectorDataLoader* vector_data_loader,
     AssetsLoader* assets_loader,
     BlobAllocator* blob_allocator,
     JobScheduler* job_scheduler,
@@ -431,11 +418,11 @@ void destroy_system(
 {
     assert(system && planet);
 
-    for (auto& pair : system->layer_ids_to_handles)
+    for (auto& pair : system->global_layer_id_to_handle)
     {
         unregister_layer(system, pair.first);
     }
-    _unregister_layers(system, model, blob_allocator, job_scheduler, planet);
+    _unregister_layers(system, model);
 
     if (system->has_render_been_initialized)
     {
@@ -579,34 +566,31 @@ void register_layer(
     hrz::PlanetSurface* planet,
     VectorDataLoader* vdl,
     ActorRunner* ar,
-    uint64_t layer_id)
+    uint64_t global_layer_id)
 {
     assert(system && model && vdl);
 
-    if (system->layer_ids_to_handles.count(layer_id) == 0)
+    if (system->global_layer_id_to_handle.count(global_layer_id) == 0)
     {
-        auto layer_handle = system->layer_pool.alloc();
-        auto layer = system->layer_pool.get_object(layer_handle);
-        layer->id = layer_id;
+        auto local_layer_id = system->layer_pool.alloc();
+        auto layer = system->layer_pool.get_object(local_layer_id);
+        layer->global_layer_id = global_layer_id;
+        layer->local_layer_id = local_layer_id;
 
-        auto layer_picking_id = system->picking_id_pool.alloc();
-        layer->picking_id = picking::combine_picking_ids(
-            system->picking_id,
-            hrz::vt::make_complementary_id_for_layer_picking_id(layer_picking_id));
-        system->picking_id_to_layer_ids.insert({layer_picking_id, layer_id});
         layer->visibility_constraints_result = layers::MultiviewVisibilityConstraints();
 
         layer->vector_data_layer = 0;
         layer->missing_tile_policy = hrz_proto::MissingTilePolicy::USE_EMPTY_TILE;
         layer->static_tiles = false;
         layer->vt = vt::create(
-            layer_id, layer->vector_data_layer, layer->missing_tile_policy, layer->static_tiles,
-            layer->picking_id, planet, vdl, ar);
+            global_layer_id, layer->vector_data_layer, layer->missing_tile_policy,
+            layer->static_tiles,
+            vt::make_system_layer_id_partial(system->picking_id, local_layer_id), planet, vdl, ar);
 
-        system->layer_ids_to_handles.insert(std::make_pair(layer_id, layer_handle));
+        system->global_layer_id_to_handle.insert(std::make_pair(global_layer_id, local_layer_id));
 
         hrz_proto::PathRoot root;
-        root.mutable_vector_tiles_layer()->set_opaque(layer_id);
+        root.mutable_vector_tiles_layer()->set_opaque(global_layer_id);
         scene_model::register_element(model, root);
 
         // Default data
@@ -667,9 +651,9 @@ RenderRequest work(
 
     vt::image_loader::work(system->image_loader, al, ba, js);
 
-    render_request |= _unregister_layers(system, model, ba, js, planet);
+    render_request |= _unregister_layers(system, model);
 
-    for (auto it : system->layer_ids_to_handles)
+    for (auto it : system->global_layer_id_to_handle)
     {
         auto layer = _get_layer(system, it.first);
         if (layer)
@@ -691,9 +675,9 @@ RenderRequest work(
 
     heatmaps::hide_all_layers(system->heatmap_repr_registry);
 
-    for (auto it : system->layer_ids_to_handles)
+    for (auto it : system->global_layer_id_to_handle)
     {
-        render_request |= _update_layer(system, model, it.first, vdl, ba, js, planet, ar);
+        render_request |= _update_layer(system, model, it.first, vdl, planet, ar);
 
         auto layer = _get_layer(system, it.first);
         if (!layer)
@@ -709,7 +693,7 @@ RenderRequest work(
         if (layer->visible_in().any())
         {
             render_request |= work_render_request;
-            heatmaps::make_layer_visible(system->heatmap_repr_registry, layer->id);
+            heatmaps::make_layer_visible(system->heatmap_repr_registry, layer->global_layer_id);
         }
     }
 
@@ -720,24 +704,20 @@ RenderRequest work(
     return render_request;
 }
 
-static Layer* _get_layer_from_picking(
+static Layer* _get_layer_from_object(
     VectorTilesLayerSystem* system,
-    uint8_t system_id,
-    uint32_t complementary_id)
+    const picking::ObjectReference& obj)
 {
-    if (system_id != system->picking_id) return nullptr;
+    if (obj.system_id != system->picking_id) return nullptr;
 
-    auto layer_picking_id = hrz::vt::layer_picking_id_from_complementary_id(complementary_id);
-    auto it = system->picking_id_to_layer_ids.find(layer_picking_id);
+    auto local_layer_id = hrz::vt::extract_local_layer_id(obj);
+    Layer* layer = system->layer_pool.get_object(local_layer_id);
 
-    if (it == system->picking_id_to_layer_ids.end())
+    if (!layer)
     {
-        HRZ_LOG_ERROR("Cannot find vector tiles layer for picking id {}", layer_picking_id);
-        return nullptr;
+        HRZ_LOG_ERROR("Cannot find vector tiles layer for picking id {}", local_layer_id);
     }
-
-    auto handle = system->layer_ids_to_handles.at(it->second);
-    return system->layer_pool.get_object(handle);
+    return layer;
 }
 
 void pick(
@@ -775,14 +755,14 @@ void pick(
         heatmap->set_value(pair.second);
     }
 
-    auto layer = _get_layer_from_picking(system, obj.system_id, obj.complementary_id);
+    auto layer = _get_layer_from_object(system, obj);
     if (!layer || layer->visible_in().none())
     {
         return;
     }
 
-    auto* result = get_or_create_layer_result(layer->id);
-    vt::pick_feature(layer->vt, obj.complementary_id, obj.object_id, result);
+    auto* result = get_or_create_layer_result(layer->global_layer_id);
+    vt::pick_feature(layer->vt, obj, result);
 }
 
 std::pair<size_t, size_t> make_typed_object_references(
@@ -807,16 +787,16 @@ std::pair<size_t, size_t> make_typed_object_references(
 
         if (!layer || last_complementary_id != obj.complementary_id)
         {
-            layer = _get_layer_from_picking(system, obj.system_id, obj.complementary_id);
+            layer = _get_layer_from_object(system, obj);
             last_complementary_id = obj.complementary_id;
         }
 
         if (layer && layer->visible_in().any())
         {
             auto* typed_obj = output[out_cursor++].mutable_vector_tiles();
-            typed_obj->mutable_layer()->set_opaque(layer->id);
-            auto feature_id =
-                vt::get_feature_id_from_picking_id(layer->vt, obj.complementary_id, obj.object_id);
+            typed_obj->mutable_layer()->set_opaque(layer->global_layer_id);
+
+            auto feature_id = vt::get_feature_id_from_object(layer->vt, obj);
             if (feature_id.has_value() && !feature_id->is_null())
             {
                 feature_id->to_proto(typed_obj->mutable_feature_id());
@@ -827,7 +807,7 @@ std::pair<size_t, size_t> make_typed_object_references(
     return std::make_pair(in_cursor, out_cursor);
 }
 
-std::optional<picking::FeatureReference> make_feature_picking_id(
+std::optional<picking::FeatureReference> make_feature_reference(
     VectorTilesLayerSystem* system,
     const picking::ObjectReference& obj)
 {
@@ -838,26 +818,23 @@ std::optional<picking::FeatureReference> make_feature_picking_id(
         return std::nullopt;
     }
 
-    auto layer = _get_layer_from_picking(system, obj.system_id, obj.complementary_id);
-
+    auto layer = _get_layer_from_object(system, obj);
     if (layer == nullptr)
     {
         return std::nullopt;
     }
 
-    auto feature_id =
-        vt::get_feature_id_from_picking_id(layer->vt, obj.complementary_id, obj.object_id);
-
+    auto feature_id = vt::get_feature_id_from_object(layer->vt, obj);
     if (!feature_id.has_value() || feature_id->is_null())
     {
         return std::nullopt;
     }
 
     picking::FeatureReference ref;
-    ref.feature_id_hash = feature_id->hash();
-    ref.complementary_id = hrz::vt::make_complementary_id_for_layer_picking_id(
-        hrz::vt::layer_picking_id_from_complementary_id(obj.complementary_id));
     ref.system_id = obj.system_id;
+    ref.complementary_id =
+        vt::make_complementary_id_for_layer_local_id(vt::extract_local_layer_id(obj));
+    ref.feature_id_hash = feature_id->hash();
 
     return ref;
 }
@@ -873,7 +850,7 @@ RenderRequest work_gpu(
 
     vt::image_loader::work_gpu(system->image_loader, render);
 
-    for (auto& pair : system->layer_ids_to_handles)
+    for (auto& pair : system->global_layer_id_to_handle)
     {
         auto layer = system->layer_pool.get_object(pair.second);
 
@@ -895,7 +872,7 @@ void draw(
 {
     assert(system && render);
 
-    for (auto& pair : system->layer_ids_to_handles)
+    for (auto& pair : system->global_layer_id_to_handle)
     {
         auto layer = system->layer_pool.get_object(pair.second);
 
@@ -918,7 +895,7 @@ bool is_working(VectorTilesLayerSystem* system)
         return true;
     }
 
-    for (auto& it : system->layer_ids_to_handles)
+    for (auto& it : system->global_layer_id_to_handle)
     {
         auto layer = _get_layer(system, it.first);
         if (!layer || layer->visible_in().none()) continue;
@@ -941,7 +918,7 @@ void dev_ui(
     {
         fmt::memory_buffer buffer;
 
-        for (auto pair : system->layer_ids_to_handles)
+        for (auto pair : system->global_layer_id_to_handle)
         {
             const char* layer_name = "<Unknown>";
 

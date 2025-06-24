@@ -2247,10 +2247,8 @@ public:
 
 struct Layer
 {
-    uint64_t id;
-    uint32_t picking_id;
-
-    std::unique_ptr<Gizmo> gizmo;
+    uint64_t global_layer_id;
+    Gizmo gizmo;
 };
 } // anonymous namespace
 
@@ -2264,11 +2262,8 @@ struct GizmoLayerSystem
     LayerPool layer_pool;
     hrz::flat_hash_map<uint64_t, uint64_t> layer_ids_to_handles;
 
-    uint8_t picking_id{};
-
     hrz::flat_hash_set<uint64_t> unregistered_layers;
     hrz::flat_hash_set<uint64_t> updated_layers;
-    std::vector<std::unique_ptr<Gizmo>> destroyed_gizmos;
 
     my::ResourceHandle gizmo_mesh_shader = my::ResourceHandle::null();
     my::ResourceHandle gizmo_circle_shader = my::ResourceHandle::null();
@@ -2303,11 +2298,7 @@ RenderRequest _unregister_layers(GizmoLayerSystem* system, SceneModel* scene_mod
 
             if (layer)
             {
-                system->destroyed_gizmos.push_back(std::move(layer->gizmo));
-                layer->gizmo.reset(nullptr);
-
                 system->layer_pool.release(layer_handle);
-
                 render_request.request_visual_render();
             }
 
@@ -2320,29 +2311,20 @@ RenderRequest _unregister_layers(GizmoLayerSystem* system, SceneModel* scene_mod
 }
 } // anonymous namespace
 
-GizmoLayerSystem* create_system(PickingIdAllocator* picking_id_allocator)
+GizmoLayerSystem* create_system()
 {
-    GizmoLayerSystem* system = new GizmoLayerSystem();
-    system->picking_id = picking::allocate_system_id(picking_id_allocator);
-
-    return system;
+    return new GizmoLayerSystem();
 }
 
-void destroy_system(
-    GizmoLayerSystem* system,
-    Render* render,
-    SceneModel* scene_model,
-    PickingIdAllocator* picking_id_allocator)
+void destroy_system(GizmoLayerSystem* system, Render* render, SceneModel* scene_model)
 {
     assert(system);
-    assert(scene_model && picking_id_allocator);
+    assert(scene_model);
     for (const auto& it : system->layer_ids_to_handles)
     {
         unregister_layer(system, it.first);
     }
     _unregister_layers(system, scene_model);
-
-    picking::release_system_id(picking_id_allocator, system->picking_id);
 
     system->grid_renderable.deinit_rendering(render);
     system->line_renderable.destroy(render->rc);
@@ -2556,12 +2538,13 @@ hrz_proto::GizmoLayer default_layer_data()
     return layer_data;
 }
 
-void register_layer(GizmoLayerSystem* system, SceneModel* scene_model, uint64_t layer_id)
+void register_layer(GizmoLayerSystem* system, SceneModel* scene_model, uint64_t global_layer_id)
 {
     assert(system);
     assert(scene_model);
 
-    if (system->layer_ids_to_handles.find(layer_id) != std::end(system->layer_ids_to_handles))
+    if (system->layer_ids_to_handles.find(global_layer_id)
+        != std::end(system->layer_ids_to_handles))
     {
         // Layer is already registered.
         return;
@@ -2569,21 +2552,16 @@ void register_layer(GizmoLayerSystem* system, SceneModel* scene_model, uint64_t 
 
     auto layer_handle = system->layer_pool.alloc();
     Layer* layer = system->layer_pool.get_object(layer_handle);
-    layer->id = layer_id;
+    layer->global_layer_id = global_layer_id;
 
-    auto layer_picking_id = system->picking_id;
-    layer->picking_id = layer_picking_id;
-
-    layer->gizmo.reset(new Gizmo());
-
-    system->layer_ids_to_handles.insert(std::make_pair(layer_id, layer_handle));
+    system->layer_ids_to_handles.insert(std::make_pair(global_layer_id, layer_handle));
 
     hrz_proto::PathRoot root;
-    root.mutable_gizmo_layer()->set_opaque(layer_id);
+    root.mutable_gizmo_layer()->set_opaque(global_layer_id);
     scene_model::register_element(scene_model, root);
 
     hrz_proto::GizmoLayer layer_data = default_layer_data();
-    layer->gizmo->update_from_model(layer_data);
+    layer->gizmo.update_from_model(layer_data);
 
     SceneModelAccessor accessor(scene_model);
     hrz_proto::GizmoLayerPathBuilder<SceneModelAccessor> builder(accessor, root.gizmo_layer());
@@ -2636,7 +2614,7 @@ RenderRequest work(
             handle.set_opaque(layer_id);
             hrz_proto::GizmoLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
 
-            layer->gizmo->update_from_model(builder.clone().get());
+            layer->gizmo.update_from_model(builder.clone().get());
             render_request.request_visual_render();
         }
     }
@@ -2648,16 +2626,13 @@ RenderRequest work(
         if (!layer) continue;
 
         render_request |=
-            layer->gizmo->work(mq, scene_model, it.first, main_view_index, views_infos);
+            layer->gizmo.work(mq, scene_model, it.first, main_view_index, views_infos);
     }
 
     return render_request;
 }
 
-void work_gpu(GizmoLayerSystem* system, Render*)
-{
-    system->destroyed_gizmos.clear();
-}
+void work_gpu(GizmoLayerSystem* system, Render*) {}
 
 void draw(GizmoLayerSystem* system, Render* render, gsl::span<const RenderViewInfo> views_info)
 {
@@ -2673,7 +2648,7 @@ void draw(GizmoLayerSystem* system, Render* render, gsl::span<const RenderViewIn
         Layer* layer = system->layer_pool.get_object(it.second);
         if (!layer) continue;
 
-        layer->gizmo->draw(
+        layer->gizmo.draw(
             render, views_info, system->circle_renderable, system->torus_renderable,
             system->square_renderable, system->arrow_renderable, system->line_renderable,
             system->grid_renderable);
@@ -2699,7 +2674,7 @@ bool handle_event(
         Layer* layer = system->layer_pool.get_object(it.second);
         if (!layer) continue;
 
-        if (layer->gizmo->handle_event(event, view_index, view_info))
+        if (layer->gizmo.handle_event(event, view_index, view_info))
         {
             return true;
         }

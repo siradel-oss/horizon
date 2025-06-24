@@ -6,8 +6,8 @@ layout(std140) uniform Tile
 {
     vec4 origin_low;
     vec4 origin_high;
-    uvec2 picking_id;
-    uint layer_picking_id;
+    uvec2 object_reference;
+    uvec3 feature_reference;
 } hrz_tile;
 
 layout(std140) uniform AnchorPrototype

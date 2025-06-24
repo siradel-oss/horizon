@@ -20,9 +20,9 @@ struct VertexCompressionParams
 struct MeshGeometry
 {
     vec4 mesh_color;
-    uvec3 feature_picking_id;
-    uint batch_id_offset;
-    uvec2 batch_picking_id;
+    uvec3 feature_reference;
+    uint object_id_offset;
+    uvec2 object_reference;
     bool overlay_material_enabled;
     float overlay_material_opacity;
     bool apply_feature_color_to_overlay;
@@ -72,11 +72,11 @@ layout(std140) uniform MeshInstanceGroup
     mat3 linear_transform;
     vec4 origin_low;
     vec4 origin_high;
-    uvec2 layer_picking_id;
-    uvec2 tile_picking_id;
+    uvec3 feature_reference;
+    uint object_id_offset;
     VertexCompressionParams position_compression;
     VertexCompressionParams normal_compression;
-    uint batch_id_offset;
+    uvec2 object_reference;
 } hrz_instance_group;
 
 const int DATA_TEXTURE_SIZE = HRZ_S_INSTANCE_GROUP_DATA_TEXTURE_WIDTH;

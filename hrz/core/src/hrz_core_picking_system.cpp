@@ -24,7 +24,7 @@ namespace
 {
 struct PositionPickingRequest
 {
-    uint32_t combined_id;
+    uint32_t layer_id;
     uint32_t object_id;
     lm::ivec2 pos;
     lm::ivec2 heatmap_pos;
@@ -455,7 +455,7 @@ void _read_depth_and_id_pixels(
         uint32_t combined_id = id_buffer[id_offset + 0];
         uint32_t object_id = id_buffer[id_offset + 1];
 
-        req->combined_id = combined_id;
+        req->layer_id = combined_id;
         req->object_id = object_id;
 
         ptrdiff_t depth_value_offset = index * 4;
@@ -517,11 +517,11 @@ void _read_depth_and_id_pixels(
 
             for (int x = 0; x < rect_width; ++x)
             {
-                uint32_t combined_id = id_ptr[0];
-                uint32_t object_id = id_ptr[1];
+                const uint32_t layer_id = id_ptr[0];
+                const uint32_t object_id = id_ptr[1];
                 id_ptr += 4;
 
-                uint64_t id = ((uint64_t)combined_id << 32) | (uint64_t)object_id;
+                const uint64_t id = hrz::picking::make_packed_object_reference(layer_id, object_id);
                 if (id != last_id && id != 0) // Optimization: skip insertion most of the time
                 {
                     last_id = id;
@@ -873,9 +873,7 @@ bool retrieve_result(PickingSystem* system, PositionTicket ticket, PositionResul
     if (!req || !req->ready) return false;
 
     result->position = req->world_pos;
-    result->ref.system_id = extract_system_id(req->combined_id);
-    result->ref.complementary_id = extract_complementary_id(req->combined_id);
-    result->ref.object_id = req->object_id;
+    result->ref = ObjectReference::from_packed(req->layer_id, req->object_id);
     result->data_texture_value = req->data_texture_value;
     result->heatmap_values = std::move(req->heatmap_values);
     result->included_rasters = req->included_rasters;
@@ -891,16 +889,12 @@ bool retrieve_result(PickingSystem* sys, AreaTicket ticket, std::vector<AreaResu
     AreaPickingRequest* req = sys->area_requests_pool.get_object(ticket.o);
     if (!req || !req->ready) return false;
 
-    size_t start_index = result.size();
+    const size_t start_index = result.size();
 
-    for (uint64_t id : req->result)
+    for (const uint64_t id : req->result)
     {
-        uint32_t combined_id = (uint32_t)(id >> 32);
-
         AreaResult res;
-        res.ref.system_id = extract_system_id(combined_id);
-        res.ref.complementary_id = extract_complementary_id(combined_id);
-        res.ref.object_id = (uint32_t)(id & 0xffffffffull);
+        res.ref = ObjectReference::from_packed(id);
 
         result.push_back(res);
     }

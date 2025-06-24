@@ -18,6 +18,6 @@ flat varying vec4 v_feature_color_lin;
 
 #ifdef GLTF_PICKING
 #   ifdef GLTF_INSTANCED
-        flat varying uint v_picking_id;
+        flat varying uint v_object_id;
 #   endif
 #endif

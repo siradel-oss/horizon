@@ -2556,7 +2556,7 @@ void initialize_rendering(SceneView* view, Render* render_global)
         &render, hrz::monitoring::systems::SceneView, {{"contents"_ss, "frame parameters"_ss}});
     FrameUniformData frame_uniforms;
     // These values are checked in work(), so they need to be initialised.
-    frame_uniforms.quick_highlight_picking_id = {0, 0, 0};
+    frame_uniforms.quick_highlight_feature_reference = {0, 0, 0};
     frame_uniforms.debug_flags = 0;
     view->frame_uniforms.set(0, frame_uniforms);
 
@@ -2916,16 +2916,10 @@ RenderRequest work(
 
     frame_uniforms_data.time = hrz::now_frame_s();
 
-    auto previous_quick_highlight = frame_uniforms_data.quick_highlight_picking_id;
-    {
-        auto hash = quick_highlight_feature_id.feature_id_hash_as_uvec2();
-        frame_uniforms_data.quick_highlight_picking_id = lm::uvec3(
-            picking::combine_picking_ids(
-                quick_highlight_feature_id.system_id, quick_highlight_feature_id.complementary_id),
-            hash.x, hash.y);
-    }
+    auto previous_quick_highlight = frame_uniforms_data.quick_highlight_feature_reference;
+    frame_uniforms_data.quick_highlight_feature_reference = quick_highlight_feature_id.to_uvec3();
 
-    if (frame_uniforms_data.quick_highlight_picking_id != previous_quick_highlight)
+    if (frame_uniforms_data.quick_highlight_feature_reference != previous_quick_highlight)
     {
         render_request.request_visual_render();
         render_request.schedule_flat_overlay_render();

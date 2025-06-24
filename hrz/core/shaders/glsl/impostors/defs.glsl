@@ -6,12 +6,12 @@ layout(std140) uniform Tile
 {
     vec4 center_low;
     vec4 center_high;
-    uint picking_id;
-    uint layer_picking_id;
+    uvec2 object_ref;
     int clip_id;
     bool lighting_enabled;
     uint color_blend_mode;
     float color_blend_strength;
+    uvec3 feature_ref;
 } hrz_tile;
 
 layout(std140) uniform Impostor

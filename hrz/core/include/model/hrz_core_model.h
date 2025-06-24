@@ -9,6 +9,7 @@
 
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_monitoring_defs.h>
+#include <hrz_common_picking_types.h>
 #include <hrz_common_vector_data.h>
 #include <hrz_fnd_flat_hash_set.h>
 
@@ -146,14 +147,14 @@ struct BatchedModelGeometryH
 
 SingleModelGeometryH create_single_model_geometry(
     ModelPrototype*,
-    lm::uvec2 picking_id,
-    lm::uvec3 feature_picking_id);
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref);
 ImpostorBakingModelGeometryH create_impostor_baking_model_geometry(ModelPrototype*);
 InstancedModelGeometryH create_instanced_model_geometry(ModelPrototype*);
 BatchedModelGeometryH create_batched_model_geometry(
     ModelPrototype*,
-    uint32_t layer_picking_id,
-    lm::uvec2 batch_picking_id,
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref,
     uint32_t batch_id_offset,
     size_t batch_length,
     gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
@@ -189,9 +190,16 @@ struct InstanceGroupData
     gsl::span<const lm::usvec4> compressed_normals;
     gsl::span<const lm::vec3> scales;
     gsl::span<const lm::ubvec4> colors;
-    gsl::span<const uint32_t> feature_picking_ids;
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes;
-    gsl::span<const uint32_t> batch_ids;
+
+    gsl::span<const uint32_t> object_ids; // Used in the objet reference for picking.
+
+    // Fill only one of them. If per object, we'll do the indirection with object_ids
+    // during baking. If per instance, we just copy everything, no need for
+    // any processing.
+    // Those two methods are available so that upstream systems don't have to
+    // allocate memory for the indirection if they don't have per instance IDs.
+    gsl::span<const vector_data::FeatureIdHash> feature_id_per_object;
+    gsl::span<const vector_data::FeatureIdHash> feature_id_per_instance;
 
     VertexCompressionParamsUniformData position_compression;
     VertexCompressionParamsUniformData normal_compression;
@@ -211,9 +219,9 @@ enum class InstanceGroupStatus
 
 InstanceGroupH create_instance_group(
     ModelPrototype*,
-    lm::uvec2 layer_picking_id,
-    lm::uvec2 group_picking_id,
-    uint32_t batch_id_offset,
+    const picking::ObjectReference& obj_ref,
+    const picking::FeatureReference& feature_ref,
+    uint32_t object_id_offset,
     const InstanceGroupData&);
 void destroy(ModelPrototype*, InstanceGroupH);
 
