@@ -12,3 +12,5 @@ In turn the palettized provider can define its own nodata value with the `nodata
 When picking on a palettized raster, the results contain the original values from the internal provider, i.e. numbers. If the value is nodata (as specified by the internal provider), the `nodata` property of [[RasterPickResult]] is set to `true`.
 
 <gallery-card demo="palettizedRaster"></gallery-card>
+
+<gallery-card demo="palettizedTerrain"></gallery-card>

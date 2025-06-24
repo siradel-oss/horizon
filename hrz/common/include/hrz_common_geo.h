@@ -453,6 +453,11 @@ inline GeoPosition3 web_mercator_to_geo3(lm::dvec3 web_mercator)
 
 GeoBounds web_mercator_bounds_to_geo(const lm::dbbox2& web_mercator_bounds);
 
+std::optional<TileCoords> geo_to_mercator_tile(
+    const GeoPosition2& geo,
+    uint8_t lod,
+    bool tms_coords = false);
+
 static lm::dvec3 ecef_to_web_mercator_alt(lm::dvec3 pos)
 {
     GeoPosition3 geo = ecef_to_geo3(pos);

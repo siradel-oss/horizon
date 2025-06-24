@@ -46,9 +46,22 @@ struct FeedbackData
     std::vector<lm::uvec2> clipmap_offsets;
 };
 
+enum TileRequestOrigin : uint8_t
+{
+    FeedbackOrigin = 1 << 0,
+    CameraVerticalProjectionOrigin = 1 << 1,
+};
+
+struct RequestedTileCoords
+{
+    TileCoords coords;
+    uint32_t uses;
+    TileRequestOrigin origin;
+};
+
 struct TileList
 {
-    std::vector<hrz::TileCoordsWithUsage> tile_usage;
+    std::vector<RequestedTileCoords> tile_usage;
 };
 
 struct RasterTileReprojParams

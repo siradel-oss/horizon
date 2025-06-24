@@ -1212,6 +1212,66 @@ std::unique_ptr<DistanceToFixedTargetDriver> DistanceToFixedTargetDriver::create
         terrain_collision_inertia);
 }
 
+class MaintainHeightAboveTerrainDriverImpl final : public MaintainHeightAboveTerrainDriver
+{
+    lm::ddual_quat _pose;
+
+    double _min_height_above_terrain;
+    double _terrain_collision_inertia;
+
+public:
+    MaintainHeightAboveTerrainDriverImpl(
+        const lm::ddual_quat& pose,
+        double min_height_above_terrain,
+        double terrain_collision_inertia) :
+        _pose(pose),
+        _min_height_above_terrain(min_height_above_terrain),
+        _terrain_collision_inertia(terrain_collision_inertia)
+    {
+    }
+
+    std::unique_ptr<MaintainHeightAboveTerrainDriver> recreate_with_pose(
+        const lm::ddual_quat& pose) override
+    {
+        return MaintainHeightAboveTerrainDriver::create(
+            pose, _min_height_above_terrain, _terrain_collision_inertia);
+    }
+
+    lm::ddual_quat get_pose() const override { return _pose; }
+
+    lm::ddual_quat work(double dt, double height_above_terrain, bool should_keep_bearing) override
+    {
+        if (height_above_terrain < _min_height_above_terrain)
+        {
+            _pose = push_camera_position_above_terrain(
+                _pose, height_above_terrain, _min_height_above_terrain,
+                _terrain_collision_inertia * kDragTerrainCollisionTimeFactor, dt);
+        }
+
+        return _pose;
+    }
+
+    bool is_idle() const override { return true; }
+
+    void update_energy_half_time(double e) override {}
+
+    void update_terrain_settings(double min_height_above_terrain, double terrain_collision_inertia)
+        override
+    {
+        _min_height_above_terrain = min_height_above_terrain;
+        _terrain_collision_inertia = terrain_collision_inertia;
+    }
+};
+
+std::unique_ptr<MaintainHeightAboveTerrainDriver> MaintainHeightAboveTerrainDriver::create(
+    const lm::ddual_quat& pose,
+    double min_height_above_terrain,
+    double terrain_collision_inertia)
+{
+    return std::make_unique<MaintainHeightAboveTerrainDriverImpl>(
+        pose, min_height_above_terrain, terrain_collision_inertia);
+}
+
 class AnimationDriverImpl : public AnimationDriver
 {
     AnimationPlayer _player;

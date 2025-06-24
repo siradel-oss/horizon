@@ -67,12 +67,6 @@ inline TileCoords from_proto(const hrz_proto::TileCoords& c)
     return t;
 }
 
-struct TileCoordsWithUsage
-{
-    TileCoords coords;
-    uint32_t uses;
-};
-
 template<typename T>
 struct TileToTileUvTransform
 {

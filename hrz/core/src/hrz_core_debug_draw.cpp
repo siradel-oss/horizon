@@ -1369,6 +1369,12 @@ void dev_ui(DebugDrawSystem* dd, mu_Context* ctx, const char* window_name)
                 set_flag(
                     Flag::DebugDrawHorizonOcclusionPoints, (bool)draw_horizon_occlusion_points);
             }
+
+            int draw_terrain_patch_bboxes = (int)get_flag(Flag::DebugDrawTerrainPatchBboxes);
+            if (mu_checkbox(ctx, "Draw terrain patch bounding boxes", &draw_terrain_patch_bboxes))
+            {
+                set_flag(Flag::DebugDrawTerrainPatchBboxes, (bool)draw_terrain_patch_bboxes);
+            }
         }
 
         mu_end_window(ctx);

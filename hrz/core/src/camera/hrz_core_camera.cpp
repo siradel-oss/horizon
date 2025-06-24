@@ -1050,7 +1050,7 @@ public:
 
         auto pos_geo = hrz::ecef_to_geo3(_baked_info.pos);
 
-        mu_text(ctx, "Position");
+        mu_text(ctx, "Position (ECEF)");
         mu_text(
             ctx,
             hrz::format_to_buffer(

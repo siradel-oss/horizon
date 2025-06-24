@@ -69,7 +69,7 @@ class CameraHeightComputationPass : public hrz::render::TimedRenderPass
     std::deque<Download> _downloads;
     hrz::DownloadBufferPool _download_buffer_pool;
 
-    float _last_downloaded_height = 0.0f;
+    float _last_downloaded_height = std::numeric_limits<float>::max();
 
 public:
     CameraHeightComputationPass() : TimedRenderPass("camera height") {}
@@ -475,7 +475,7 @@ void update(CameraHeightSystem* system, const CameraViewInfo& cam_view)
 
     // In order to maximise the precision, the far buffer is set to be a bit
     // below the lowest expected terrain elevation values.
-    // Therefor the closer the camera is to the planet, the better the precision.
+    // Therefore the closer the camera is to the planet, the better the precision.
     system->projection_matrix = lm::orthographic_opengl<double>(
         1.0, 1.0, HRZ_S_NEAR, pos_geo.alt + HRZ_S_CAMERA_HEIGHT_FAR_OFFSET);
 

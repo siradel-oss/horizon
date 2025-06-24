@@ -27,11 +27,23 @@ struct View
     lm::dmat4 view;
 };
 
+struct OrientedBoundingBox
+{
+    lm::dvec3 center;
+    lm::dvec3 u_axis;
+    double u_half_length;
+    lm::dvec3 v_axis;
+    double v_half_length;
+    lm::dvec3 w_axis;
+    double w_half_length;
+};
+
 struct FrustumCuller
 {
     lm::dvec3 pos, dir;
     double near, far;
     lm::vec4 planes[6];
+    lm::dvec4 world_planes[6];
 
     inline double depth(const lm::dvec3& center) const
     {
@@ -40,6 +52,8 @@ struct FrustumCuller
     }
 
     bool intersects(const lm::dvec3& p_dp, double radius_dp) const;
+
+    bool intersects(const OrientedBoundingBox& bbox) const;
 
     bool operator==(const FrustumCuller& other) const
     {
@@ -159,6 +173,20 @@ public:
             const lm::dvec3& center,
             double radius,
             ViewMask view_mask) const = 0;
+
+        virtual bool is_visible_in_main_view(const OrientedBoundingBox& bbox) const = 0;
+
+        virtual bool is_visible_in_any_view(
+            const OrientedBoundingBox& bbox,
+            BinMask bin_mask = AllBins) const = 0;
+
+        virtual bool is_visible_in_some_views(
+            const OrientedBoundingBox& bbox,
+            int view_count,
+            const ViewId* views) const = 0;
+
+        virtual bool is_visible_in_some_views(const OrientedBoundingBox& bbox, ViewMask view_mask)
+            const = 0;
 
         virtual lm::dvec3 get_eye_point(ViewId = MainView) const = 0;
         virtual View get_view(ViewId) const = 0;

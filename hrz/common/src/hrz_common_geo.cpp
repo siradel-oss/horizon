@@ -456,6 +456,32 @@ hrz::GeoBounds hrz::web_mercator_bounds_to_geo(const lm::dbbox2& web_mercator_bo
         hrz::web_mercator_to_geo2(web_mercator_bounds.max));
 }
 
+std::optional<hrz::TileCoords> hrz::geo_to_mercator_tile(
+    const GeoPosition2& geo,
+    uint8_t lod,
+    bool tms_coords)
+{
+    auto wmerc = geo_to_web_mercator(geo);
+
+    if (std::abs(wmerc.y) >= hrz::MERCATOR_MAX_LAT_METERS)
+    {
+        return std::nullopt;
+    }
+
+    uint32_t tile_count_at_lod = 1 << lod;
+    double tile_size = hrz::MERCATOR_RANGE / tile_count_at_lod;
+
+    uint32_t tile_x = (uint32_t)((wmerc.x + hrz::HALF_MERCATOR_RANGE) / tile_size);
+    uint32_t tile_y = (uint32_t)((wmerc.y + hrz::HALF_MERCATOR_RANGE) / tile_size);
+
+    if (!tms_coords)
+    {
+        tile_y = (tile_count_at_lod - 1) - tile_y;
+    }
+
+    return TileCoords(tile_x, tile_y, lod);
+}
+
 lm::dbbox2 hrz::mercator_tile_bbox_meters(TileCoords tile, bool tms_coords)
 {
     double tile_size = mercator_tile_size_meters(tile);

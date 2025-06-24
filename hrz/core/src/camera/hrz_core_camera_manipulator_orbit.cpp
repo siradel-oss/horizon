@@ -483,10 +483,19 @@ class OrbitManipulator : public CameraManipulator
 
     class IdleController : public BaseController
     {
-        const lm::ddual_quat _pose;
+        std::unique_ptr<MaintainHeightAboveTerrainDriver> _driver;
 
     public:
-        explicit IdleController(const lm::ddual_quat& pose) : _pose{pose} {}
+        explicit IdleController(
+            const lm::ddual_quat& pose,
+            double min_height_above_terrain,
+            double terrain_collision_inertia) :
+            _driver{MaintainHeightAboveTerrainDriver::create(
+                pose,
+                min_height_above_terrain,
+                terrain_collision_inertia)}
+        {
+        }
 
         lm::ddual_quat work(
             CameraManipulatorContext* ctx,
@@ -495,7 +504,7 @@ class OrbitManipulator : public CameraManipulator
             bool keep_bearing,
             const std::array<PickingSystem*, hrz::SCENE_VIEW_COUNT>&) override
         {
-            return _pose;
+            return _driver->work(dt, height_above_terrain, keep_bearing);
         }
 
         void update_energy_half_time(const EnergyHalfTime& e) override {}
@@ -2009,7 +2018,8 @@ class OrbitManipulator : public CameraManipulator
         assert(std::holds_alternative<UninitializedState>(_state));
         auto config = std::get<UninitializedState>(_state).config;
         _state = InitializedState{config, pose, false};
-        replace_controller(std::make_unique<IdleController>(pose));
+        replace_controller(std::make_unique<IdleController>(
+            pose, config.min_height_above_terrain, config.terrain_collision_inertia));
     }
 
 public:
@@ -2224,7 +2234,9 @@ public:
         else
         {
             state.pose = to_dual_quat(new_pose);
-            replace_controller(std::make_unique<IdleController>(state.pose));
+            replace_controller(std::make_unique<IdleController>(
+                state.pose, state.config.min_height_above_terrain,
+                state.config.terrain_collision_inertia));
         }
 
         state.should_keep_bearing = true;

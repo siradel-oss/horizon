@@ -23,6 +23,7 @@
 #include <gsl/gsl-lite.hpp>
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -59,7 +60,23 @@ struct TileBoundsTracker
 {
     PixelToValueFunction pixel_to_value;
     hrz::flat_hash_map<hrz::TileCoords, std::pair<double, double>> values;
+    double min_value;
+    double max_value;
     uint64_t version;
+
+    void clear_and_increment_version()
+    {
+        values.clear();
+        min_value = std::numeric_limits<double>::max();
+        max_value = std::numeric_limits<double>::lowest();
+        version += 1;
+    }
+
+    void reset()
+    {
+        clear_and_increment_version();
+        version = 0;
+    }
 };
 
 // A `RasterMergeGroup` instance represents a set of rasters
@@ -260,8 +277,10 @@ public:
     void get_attributions(hrz::InlinedUniqueVector<AttributionHandle, 8>* attributions) const;
 
     void update_requested_tiles(
-        gsl::span<const gsl::span<const TileCoordsWithUsage>> requested_tiles,
+        gsl::span<const gsl::span<const RequestedTileCoords>> requested_tiles,
         size_t requested_tiles_hash,
+        TileRequestOrigin
+            allowed_tile_request_origins, // union of hrz_proto::TileRequestOrigin values
         IRasterCollection* collection,
         AssetsLoader* al,
         JobScheduler* js);
@@ -314,6 +333,7 @@ public:
     // during construction.
     uint64_t get_bounds_tracker_version() const;
     bool get_tile_bounds(const hrz::TileCoords& coords, double* min, double* max) const;
+    std::pair<double, double> get_bounds_min_max() const; // First is min, second is max.
 
 private:
     void cancel_jobs_and_release_tiles(

@@ -467,12 +467,20 @@ struct PlanetSurface
             }
         }
 
-        for (auto* geometry : geometries)
+        auto dtm_min_max = dtm_rasters.get_bounds_min_max();
+        assert(geometries.size() <= SCENE_VIEW_COUNT);
+        assert(views_info.size() <= SCENE_VIEW_COUNT);
+        assert(geometries.size() == views_info.size());
+        for (size_t i = 0; i < geometries.size(); ++i)
         {
-            ::hrz::planet::work(geometry, ba, js, model, &clipmap_params);
+            auto& geometry = geometries[i];
+            auto& view_info = views_info[i];
+
+            ::hrz::planet::work(
+                geometry, ba, js, model, &clipmap_params, dtm_min_max, view_info, min_mipmap_bias);
         }
 
-        std::vector<gsl::span<const TileCoordsWithUsage>> requested_tile_lists;
+        std::vector<gsl::span<const planet::RequestedTileCoords>> requested_tile_lists;
         size_t requested_tiles_hash = 0;
 
         bool requested_tiles_updated = false;

@@ -214,10 +214,35 @@ PositionalViewpoint from_proto(const hrz_proto::PositionalViewpoint& proto)
 PositionalViewpoint positional_viewpoint_from_dual_quat(const lm::ddual_quat& pose)
 {
     lm::dvec3 position_ecef = lm::extract_translation(pose);
-    lm::dvec3 forward_ecef = pose.r * lm::dvec3(0, 0, -1);
-    hrz::Ray ray{position_ecef, forward_ecef};
     lm::dvec3 target_ecef;
-    if (!hrz::planet_intersection(ray, &target_ecef, 0))
+
+    lm::dvec3 forward_ecef = pose.r * lm::dvec3(0, 0, -1);
+    hrz::Ray forward_ray{position_ecef, forward_ecef};
+    lm::dvec3 forward_target_ecef;
+    if (hrz::planet_intersection(forward_ray, &forward_target_ecef, 0))
+    {
+        // If the camera is below elevation 0, the forward ray intersection
+        // test returns a position on the other side of the planet. This is
+        // not conceptually correct, but can also lead to precisions issues
+        // when the distance to the target is large.
+        // So we also check backwards. If this second test confirms that the
+        // camera is inside the planet, a dummy target slightly in front of
+        // the camera is returned.
+        lm::dvec3 backward_ecef = pose.r * lm::dvec3(0, 0, 1);
+        hrz::Ray backward_ray{position_ecef, backward_ecef};
+        lm::dvec3 backward_target_ecef;
+        if (hrz::planet_intersection(backward_ray, &backward_target_ecef, 0)
+            && (lm::length2(backward_target_ecef - position_ecef)
+                < lm::length2(forward_target_ecef - position_ecef)))
+        {
+            target_ecef = position_ecef + forward_ecef;
+        }
+        else
+        {
+            target_ecef = forward_target_ecef;
+        }
+    }
+    else
     {
         target_ecef = position_ecef + forward_ecef;
     }

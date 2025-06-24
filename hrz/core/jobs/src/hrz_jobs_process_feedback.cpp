@@ -133,7 +133,8 @@ hrz::JobResult run(
         {
             if (it.second >= MIN_PIXEL_COUNT)
             {
-                response.tile_usage.emplace_back(hrz::TileCoordsWithUsage{it.first, it.second});
+                response.tile_usage.emplace_back(hrz::planet::RequestedTileCoords{
+                    it.first, it.second, hrz::planet::TileRequestOrigin::FeedbackOrigin});
             }
         }
     }

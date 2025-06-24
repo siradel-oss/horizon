@@ -869,7 +869,7 @@ void dev_ui(const VectorFlatOverlaySystem* system, mu_Context* ctx)
     const auto& pos = visual_info.pos;
     auto pos_geo = hrz::ecef_to_geo3(pos);
 
-    mu_text(ctx, "Camera position");
+    mu_text(ctx, "Camera position (ECEF)");
     mu_text(ctx, hrz::format_to_buffer(buffer, "({:.2f}, {:.2f}, {:.2f})", pos.x, pos.y, pos.z));
 
     mu_text(ctx, "Camera position (geo)");

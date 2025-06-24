@@ -449,3 +449,68 @@ TEST(CommonGeoMaths, wgs_84_bounds_intersect)
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
 }
+
+TEST(CommonGeoMaths, geo_to_mercator_tile)
+{
+    {
+        hrz::GeoPosition2 p{lm::radians(48.1), lm::radians(-4.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 6);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 6);
+        EXPECT_EQ(coords->x, 31);
+        EXPECT_EQ(coords->y, 22);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(48.1), lm::radians(-4.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 6, true);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 6);
+        EXPECT_EQ(coords->x, 31);
+        EXPECT_EQ(coords->y, 41);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(48.1), lm::radians(-4.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 12);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 12);
+        EXPECT_EQ(coords->x, 2002);
+        EXPECT_EQ(coords->y, 1422);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(48.1), lm::radians(-4.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 12, true);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 12);
+        EXPECT_EQ(coords->x, 2002);
+        EXPECT_EQ(coords->y, 2673);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(-35.0), lm::radians(148.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 2);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 2);
+        EXPECT_EQ(coords->x, 3);
+        EXPECT_EQ(coords->y, 2);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(-35.0), lm::radians(148.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 2, true);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 2);
+        EXPECT_EQ(coords->x, 3);
+        EXPECT_EQ(coords->y, 1);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(35.7), lm::radians(139.7 + 360.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 8);
+        EXPECT_TRUE(coords.has_value());
+        EXPECT_EQ(coords->lod, 8);
+        EXPECT_EQ(coords->x, 227);
+        EXPECT_EQ(coords->y, 100);
+    }
+    {
+        hrz::GeoPosition2 p{lm::radians(88.0), lm::radians(0.0)};
+        auto coords = hrz::geo_to_mercator_tile(p, 2);
+        EXPECT_FALSE(coords.has_value());
+    }
+}

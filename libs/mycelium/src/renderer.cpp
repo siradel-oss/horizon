@@ -104,6 +104,51 @@ bool FrustumCuller::intersects(const lm::dvec3& p_dp, double radius_dp) const
 #endif
 }
 
+bool FrustumCuller::intersects(const OrientedBoundingBox& bbox) const
+{
+    // See https://gamedev.stackexchange.com/a/44501
+
+    lm::dmat3 orientation = {
+        {bbox.u_axis.x, bbox.v_axis.x, bbox.w_axis.x},
+        {bbox.u_axis.y, bbox.v_axis.y, bbox.w_axis.y},
+        {bbox.u_axis.z, bbox.v_axis.z, bbox.w_axis.z},
+    };
+
+    auto classify = [&](const lm::dvec4& plane)
+    {
+        lm::dvec3 normal = orientation * plane.xyz;
+
+        // Maximum extent in direction of plane normal
+        double r = std::abs(bbox.u_half_length * normal.x) + std::abs(bbox.v_half_length * normal.y)
+            + std::abs(bbox.w_half_length * normal.z);
+
+        // Signed distance between box center and plane
+        double d = lm::dot(plane.xyz, bbox.center) + plane.w;
+
+        // Return signed distance
+        if (std::abs(d) < r)
+        {
+            return 0.0;
+        }
+        else if (d < 0.0)
+        {
+            return d + r;
+        }
+        return d - r;
+    };
+
+    for (const auto& plane : world_planes)
+    {
+        double side = classify(plane);
+        if (side > 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 FrustumCuller FrustumCuller::from_view(const lm::dmat4& proj, const lm::dmat4& view)
 {
     lm::dmat3 view_linear = lm::dmat3(view.x.xyz, view.y.xyz, view.z.xyz);
@@ -128,11 +173,28 @@ FrustumCuller FrustumCuller::from_view(const lm::dmat4& proj, const lm::dmat4& v
     lm::dmat4 m = lm::transpose(proj * view_linearized);
     lm::dvec4 planes_dp[] = {m.w + m.x, m.w - m.x, m.w + m.y, m.w - m.y, m.w + m.z, m.w - m.z};
 
-    for (int i = 0; i < 6; ++i)
+    for (unsigned int i = 0; i < 6; ++i)
     {
         double inv_mag = 1.0 / lm::length(planes_dp[i].xyz);
         baked.planes[i] = lm::vec4(planes_dp[i] * inv_mag);
     }
+
+    lm::dmat4 pv_t = lm::transpose(proj * view);
+
+    auto normalize = [](const lm::dvec4& plane)
+    {
+        double inv_length = 1.0 / lm::length(plane.xyz);
+        lm::dvec4 p = plane;
+        p *= inv_length;
+        return p;
+    };
+
+    baked.world_planes[0] = normalize(-pv_t.w - pv_t.x);
+    baked.world_planes[1] = normalize(-pv_t.w + pv_t.x);
+    baked.world_planes[2] = normalize(-pv_t.w - pv_t.y);
+    baked.world_planes[3] = normalize(-pv_t.w + pv_t.y);
+    baked.world_planes[4] = normalize(-pv_t.w - pv_t.z);
+    baked.world_planes[5] = normalize(-pv_t.w + pv_t.z);
 
     return baked;
 }
@@ -415,6 +477,39 @@ public:
         const override
     {
         return is_visible_in_some_views(center, radius, make_view_mask(bin_mask));
+    }
+
+    bool is_visible_in_main_view(const OrientedBoundingBox& bbox) const override
+    {
+        return _views[0].culler.intersects(bbox);
+    }
+
+    bool is_visible_in_some_views(const OrientedBoundingBox& bbox, ViewMask view_mask)
+        const override
+    {
+        for (uint32_t i = 0; i < _aux_view_count + 1; ++i)
+        {
+            if ((view_mask & (1u << i)) && _views[i].culler.intersects(bbox))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool is_visible_in_some_views(
+        const OrientedBoundingBox& bbox,
+        int view_count,
+        const ViewId* views) const override
+    {
+        return is_visible_in_some_views(bbox, make_view_mask(view_count, views));
+    }
+
+    bool is_visible_in_any_view(const OrientedBoundingBox& bbox, BinMask bin_mask = AllBins)
+        const override
+    {
+        return is_visible_in_some_views(bbox, make_view_mask(bin_mask));
     }
 
     lm::dvec3 get_eye_point(ViewId view_id) const override

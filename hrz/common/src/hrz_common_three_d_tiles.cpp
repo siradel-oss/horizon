@@ -362,6 +362,9 @@ bool intersects_space_subset(
 
     auto box_check = [&](const BoundingVolume::Box& box)
     {
+        // See https://gamedev.stackexchange.com/a/44501
+        //     https://iquilezles.org/articles/frustumcorrect/
+
         lm::dmat3 orientation = {
             {box.u_axis.x, box.v_axis.x, box.w_axis.x},
             {box.u_axis.y, box.v_axis.y, box.w_axis.y},

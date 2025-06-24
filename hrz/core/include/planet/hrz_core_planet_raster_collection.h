@@ -67,6 +67,8 @@ struct ImageryRasterCollectionTraits
         hrz_proto::ImageFormat::SRGBA_8};
     static constexpr hrz_proto::ImageFormat COMPOSED_TILE_IMAGE_FORMAT =
         hrz_proto::ImageFormat::SRGBA_8;
+    static constexpr planet::TileRequestOrigin TILE_REQUEST_ORIGINS =
+        planet::TileRequestOrigin::FeedbackOrigin;
     static constexpr bool TRACK_TILE_BOUNDS = false;
 
     static double pixel_to_value(const void*) { return 0.0; }
@@ -165,6 +167,9 @@ struct DtmRasterCollectionTraits
         hrz_proto::ImageFormat::TERRAIN_RGB};
     static constexpr hrz_proto::ImageFormat COMPOSED_TILE_IMAGE_FORMAT =
         hrz_proto::ImageFormat::R_F32;
+    static constexpr planet::TileRequestOrigin TILE_REQUEST_ORIGINS =
+        (TileRequestOrigin)(planet::TileRequestOrigin::FeedbackOrigin
+                            | planet::TileRequestOrigin::CameraVerticalProjectionOrigin);
     static constexpr bool TRACK_TILE_BOUNDS = true;
 
     static double pixel_to_value(const void* pixel)
@@ -371,7 +376,7 @@ public:
     }
 
     void update_requested_tiles(
-        gsl::span<const gsl::span<const TileCoordsWithUsage>> requested_tiles,
+        gsl::span<const gsl::span<const RequestedTileCoords>> requested_tiles,
         size_t requested_tiles_hash,
         AssetsLoader* al,
         JobScheduler* js)
@@ -379,7 +384,7 @@ public:
         for (auto& group : _groups)
         {
             group.group->update_requested_tiles(
-                requested_tiles, requested_tiles_hash, this, al, js);
+                requested_tiles, requested_tiles_hash, Traits::TILE_REQUEST_ORIGINS, this, al, js);
         }
     }
 
@@ -876,6 +881,23 @@ public:
             }
         }
         return false;
+    }
+
+    std::pair<double, double> get_bounds_min_max() const
+    {
+        assert(Traits::TRACK_TILE_BOUNDS);
+
+        std::pair<double, double> min_max = {
+            std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()};
+
+        for (const auto& group : _groups)
+        {
+            auto group_min_max = group.group->get_bounds_min_max();
+            min_max.first = std::min(min_max.first, group_min_max.first);
+            min_max.second = std::max(min_max.second, group_min_max.second);
+        }
+
+        return min_max;
     }
 
 private:

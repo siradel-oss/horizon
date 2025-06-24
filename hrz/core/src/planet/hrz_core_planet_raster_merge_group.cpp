@@ -151,7 +151,7 @@ RasterMergeGroup::RasterMergeGroup(
 
     if (_bounds_tracker.has_value())
     {
-        _bounds_tracker->version = 0;
+        _bounds_tracker->reset();
     }
 }
 
@@ -222,6 +222,12 @@ bool RasterMergeGroup::get_tile_bounds(const hrz::TileCoords& coords, double* mi
     *min = it->second.first;
     *max = it->second.second;
     return true;
+}
+
+std::pair<double, double> RasterMergeGroup::get_bounds_min_max() const
+{
+    assert(_bounds_tracker.has_value());
+    return {_bounds_tracker->min_value, _bounds_tracker->max_value};
 }
 
 void RasterMergeGroup::cancel_jobs_and_release_tiles(
@@ -332,8 +338,9 @@ void RasterMergeGroup::get_attributions(
 }
 
 void RasterMergeGroup::update_requested_tiles(
-    gsl::span<const gsl::span<const TileCoordsWithUsage>> requested_tiles,
+    gsl::span<const gsl::span<const RequestedTileCoords>> requested_tiles,
     size_t requested_tiles_hash,
+    TileRequestOrigin allowed_tile_request_origins,
     IRasterCollection* collection,
     AssetsLoader* al,
     JobScheduler* js)
@@ -383,7 +390,10 @@ void RasterMergeGroup::update_requested_tiles(
     {
         for (const auto& requested_tile : requested_tile_span)
         {
-            assert(requested_tile.uses > 0);
+            if ((requested_tile.origin & allowed_tile_request_origins) == 0)
+            {
+                continue;
+            }
 
             auto it = _tiles.find(requested_tile.coords);
             if (it != _tiles.end())
@@ -623,8 +633,7 @@ void RasterMergeGroup::invalidate_raster_tiles(
 
     if (_bounds_tracker.has_value())
     {
-        _bounds_tracker->values.clear();
-        _bounds_tracker->version++;
+        _bounds_tracker->clear_and_increment_version();
     }
 }
 
@@ -690,8 +699,7 @@ void RasterMergeGroup::restart_tiles(IRasterCollection* collection, JobScheduler
 
     if (_bounds_tracker.has_value())
     {
-        _bounds_tracker->values.clear();
-        _bounds_tracker->version++;
+        _bounds_tracker->clear_and_increment_version();
     }
 }
 
@@ -1271,11 +1279,25 @@ void RasterMergeGroup::work(
                         tile.status = ComposedTile::Status::Composed;
                     }
 
-                    if (_bounds_tracker.has_value() && response.min_value.has_value()
-                        && response.max_value.has_value())
+                    if (_bounds_tracker.has_value())
                     {
-                        _bounds_tracker.value().values.insert_or_assign(
-                            tile.coords, {response.min_value.value(), response.max_value.value()});
+                        if (response.min_value.has_value() && response.max_value.has_value())
+                        {
+                            _bounds_tracker.value().values.insert_or_assign(
+                                tile.coords,
+                                {response.min_value.value(), response.max_value.value()});
+                        }
+
+                        if (response.min_value.has_value())
+                        {
+                            _bounds_tracker->min_value =
+                                std::min(_bounds_tracker->min_value, response.min_value.value());
+                        }
+                        if (response.max_value.has_value())
+                        {
+                            _bounds_tracker->max_value =
+                                std::max(_bounds_tracker->max_value, response.max_value.value());
+                        }
                     }
                 }
                 else
@@ -1820,6 +1842,16 @@ void RasterMergeGroup::dev_ui(
 
         if (_bounds_tracker.has_value() && mu_begin_treenode(ctx, "Tile bounds"))
         {
+            {
+                static int layout[] = {24, -1};
+                mu_layout_row(ctx, 2, layout, 0);
+
+                mu_text(ctx, "Min:");
+                mu_text(ctx, hrz::format_to_buffer(buffer, "{}", _bounds_tracker->min_value));
+                mu_text(ctx, "Max:");
+                mu_text(ctx, hrz::format_to_buffer(buffer, "{}", _bounds_tracker->max_value));
+            }
+
             {
                 static int layout[] = {-1};
                 mu_layout_row(ctx, 1, layout, 0);

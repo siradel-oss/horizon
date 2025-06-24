@@ -188,6 +188,18 @@ public:
     virtual void set_steps_velocity(double steps) = 0;
 };
 
+class MaintainHeightAboveTerrainDriver : public ICameraDriver
+{
+public:
+    static std::unique_ptr<MaintainHeightAboveTerrainDriver> create(
+        const lm::ddual_quat& pose,
+        double min_height_above_terrain,
+        double terrain_collision_inertia);
+
+    virtual std::unique_ptr<MaintainHeightAboveTerrainDriver> recreate_with_pose(
+        const lm::ddual_quat& pose) = 0;
+};
+
 class AnimationDriver : public ICameraDriver
 {
 public:

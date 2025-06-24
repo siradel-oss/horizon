@@ -13,6 +13,7 @@ namespace hrz
     HRZ_DEFINE_FLAG(DebugDrawHeatmapOobSampling)      \
     HRZ_DEFINE_FLAG(DebugDrawVectorTileBounds)        \
     HRZ_DEFINE_FLAG(DebugDrawHorizonOcclusionPoints)  \
+    HRZ_DEFINE_FLAG(DebugDrawTerrainPatchBboxes)      \
     HRZ_DEFINE_FLAG(DebugFreeze3DTilesCulling)        \
     HRZ_DEFINE_FLAG(DebugFreezeVectorTilesCulling)    \
     HRZ_DEFINE_FLAG(ForceRender)                      \

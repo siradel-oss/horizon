@@ -4,6 +4,7 @@
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
 
+#include <hrz_common_planet.h>
 #include <hrz_common_shader_defines.h>
 #include <hrz_common_tile_coords.h>
 #include <hrz_protocol_all.h>
@@ -13,6 +14,8 @@
 #include <mycelium_render_graph.h>
 #include <mycelium_renderer.h>
 
+#include <utility>
+
 namespace hrz
 {
 struct BlobAllocator;
@@ -21,6 +24,7 @@ struct PlanetGeometry;
 struct PickingIdAllocator;
 struct Render;
 struct RenderView;
+struct RenderViewInfo;
 struct VectorFlatOverlaySystem;
 
 namespace vtex
@@ -43,7 +47,7 @@ struct GeometryResources
 
 struct RequestedTiles
 {
-    gsl::span<const TileCoordsWithUsage> tiles;
+    gsl::span<const planet::RequestedTileCoords> tiles;
     size_t hash;
     bool was_updated;
 };
@@ -52,7 +56,15 @@ PlanetGeometry* create_geometry();
 my::RenderPassId initialize_rendering(PlanetGeometry* geometry, RenderView* render);
 void destroy(PlanetGeometry*, JobScheduler*, Render*);
 
-void work(PlanetGeometry*, BlobAllocator*, JobScheduler*, SceneModel*, const vtex::ClipmapParams*);
+void work(
+    PlanetGeometry*,
+    BlobAllocator*,
+    JobScheduler*,
+    SceneModel*,
+    const vtex::ClipmapParams*,
+    const std::pair<double, double>& dtm_min_max,
+    const RenderViewInfo& camera_info,
+    double mipmap_bias);
 
 bool is_working(const PlanetGeometry*);
 

@@ -1,6 +1,7 @@
 #include "planet/hrz_core_planet_geometry.h"
 
 #include "hrz_core_buffer.h"
+#include "hrz_core_debug_draw.h"
 #include "hrz_core_global_flags.h"
 #include "hrz_core_render.h"
 #include "hrz_core_shadows.h"
@@ -26,6 +27,8 @@
 
 #include <float.h>
 
+#include <array>
+#include <cmath>
 #include <optional>
 
 #define MAX_IMAGERY_GROUP_COUNT HRZ_S_MAX_IMAGERY_GROUP_COUNT
@@ -36,6 +39,7 @@ enum
 {
     SubdivisionCount = 5,
     VerticesPerSide = (1 << SubdivisionCount) + 1,
+    RootPatchCount = 20,
     MaxPatchCount = 512,
     MaxGeometryCacheCount = MaxPatchCount + MaxPatchCount / 4,
     MaxPatchDepth = 24,
@@ -617,6 +621,8 @@ my::ResourceHandle create_nearest_sampler(hrz::Render* render)
 struct TreeTraverseCtx
 {
     lm::dvec3 eye_pos;
+    std::pair<double, double> dtm_min_max;
+    bool dtm_min_max_has_changed;
     const my::Renderer::Culler* culler;
     lm::dmat4 view_matrix;
     lm::dvec3 horizon_cone_direction;
@@ -627,21 +633,54 @@ struct TreeTraverseCtx
     my::Renderer::ViewMask main_views;
 };
 
-// We're going to compute a decent bounding sphere.  We can do this trivially
-// without fearing having a really suboptimal bounding sphere because we more or
-// less already know what our patches look like: curved triangles that are not
-// curved more than the Earth, which is basically a sphere.
-//      -slerouzic, 2020-02-04
-hrz::BSphere<double> compute_patch_bounding_sphere(lm::dvec3 pa, lm::dvec3 pb, lm::dvec3 pc)
+my::OrientedBoundingBox compute_patch_oriented_bounding_box(
+    lm::dvec3 pa,
+    lm::dvec3 pb,
+    lm::dvec3 pc,
+    const std::pair<double, double>& dtm_min_max)
 {
-    lm::dvec3 center = (pa + pb + pc) / 3;
-    lm::dvec3 center_direction = lm::normalize(center);
-    static const double MAX_ELEVATION = 9000;
+    double min_elevation = dtm_min_max.first;
+    double max_elevation = dtm_min_max.second;
 
-    lm::dvec3 vertices[] = {pa, pb, pc, pa + center_direction * MAX_ELEVATION};
+    lm::dvec3 vertices_center = (pa + pb + pc) / 3;
+    lm::dvec3 center_direction = lm::normalize(vertices_center);
+    lm::dvec3 on_sphere_center = center_direction * hrz::EARTH_RADIUS;
+    lm::dvec3 center = on_sphere_center + center_direction * (min_elevation + max_elevation) / 2;
 
-    return hrz::compute_bounding_sphere(
-        gsl::span<const lm::dvec3>(vertices, HRZ_ARRAY_COUNT(vertices)));
+    lm::dvec3 u_axis = center_direction;
+    lm::dvec3 v_axis = lm::normalize((pa - center) - lm::dot(pa - center, u_axis) * u_axis);
+    lm::dvec3 w_axis = lm::cross(u_axis, v_axis);
+
+    double u_half_length = 0.0;
+    double v_half_length = 0.0;
+    double w_half_length = 0.0;
+
+    auto update_half_lengths = [&](const lm::dvec3& p)
+    {
+        lm::dvec3 offset = p - center;
+        u_half_length = std::max(u_half_length, std::abs(lm::dot(offset, u_axis)));
+        v_half_length = std::max(v_half_length, std::abs(lm::dot(offset, v_axis)));
+        w_half_length = std::max(w_half_length, std::abs(lm::dot(offset, w_axis)));
+    };
+
+    update_half_lengths(on_sphere_center + center_direction * min_elevation);
+    update_half_lengths(on_sphere_center + center_direction * max_elevation);
+
+    lm::dvec3 pa_direction = lm::normalize(pa);
+    update_half_lengths(pa + pa_direction * min_elevation);
+    update_half_lengths(pa + pa_direction * max_elevation);
+
+    lm::dvec3 pb_direction = lm::normalize(pb);
+    update_half_lengths(pb + pb_direction * min_elevation);
+    update_half_lengths(pb + pb_direction * max_elevation);
+
+    lm::dvec3 pc_direction = lm::normalize(pc);
+    update_half_lengths(pc + pc_direction * min_elevation);
+    update_half_lengths(pc + pc_direction * max_elevation);
+
+    return my::OrientedBoundingBox{
+        center, u_axis, u_half_length, v_axis, v_half_length, w_axis, w_half_length,
+    };
 }
 
 // This structure stores the patches that tessellate the sphere.
@@ -722,7 +761,7 @@ struct PatchTree
         // Distance to the camera. Used to give priority to patches close to the camera.
         float distance;
 
-        hrz::BSphere<double> bsphere_wgs84;
+        std::optional<my::OrientedBoundingBox> bbox = std::nullopt;
 
         // This is the cone that goes through the center of the planet and
         // contains the patch.
@@ -739,8 +778,6 @@ struct PatchTree
             a = pa;
             b = pb;
             c = pc;
-
-            bsphere_wgs84 = compute_patch_bounding_sphere(pa.pos, pb.pos, pc.pos);
 
             const double inv_wgs84 = 1.0 / hrz::WGS84_AXES_LENGTH_RATIO;
             lm::dvec3 a_sph = a.pos;
@@ -777,6 +814,11 @@ struct PatchTree
         void compute_and_set_distance_to_camera(const lm::dvec3& cam)
         {
             distance = hrz::distance_to_triangle(a.pos, b.pos, c.pos, cam);
+        }
+
+        void compute_oriented_bounding_box(const std::pair<double, double>& dtm_min_max)
+        {
+            bbox = compute_patch_oriented_bounding_box(a.pos, b.pos, c.pos, dtm_min_max);
         }
     };
 
@@ -1001,7 +1043,7 @@ struct PatchTree
             vertices[i] = PatchVertex::from_geo(vertices_geo[i]);
         }
 
-        static Patch root_patches[20];
+        static Patch root_patches[RootPatchCount];
         root_patches[0].set_vertices(vertices[1], vertices[2], vertices[0]);
         root_patches[1].set_vertices(vertices[2], vertices[3], vertices[0]);
         root_patches[2].set_vertices(vertices[3], vertices[4], vertices[0]);
@@ -1022,6 +1064,7 @@ struct PatchTree
         root_patches[17].set_vertices(vertices[9], vertices[8], vertices[11]);
         root_patches[18].set_vertices(vertices[10], vertices[9], vertices[11]);
         root_patches[19].set_vertices(vertices[6], vertices[10], vertices[11]);
+        static_assert(19 == RootPatchCount - 1);
 
         patches.reserve(MaxPatchCount * 2);
         patches.insert(patches.end(), std::begin(root_patches), std::end(root_patches));
@@ -1252,7 +1295,7 @@ struct PatchTree
         }
     }
 
-    void cull_patch(TreeTraverseCtx& ctx, uint16_t patch_id)
+    void cull_patch(const TreeTraverseCtx& ctx, uint16_t patch_id)
     {
         assert(patch_id < patches.size());
 
@@ -1273,27 +1316,92 @@ struct PatchTree
         // Then frustum culling
         else
         {
-            // We don't need to cull against any other view than the main view
-            // because it's so coarse already that anything that would be in
-            // the 5km range of the shadow maps would very probably be made
-            // visible by the main view.
-            // The argument for the viewshed views is the same.
-            // This very greatly reduces the number of patches!
-            patch.culled = !ctx.culler->is_visible_in_some_views(
-                patch.bsphere_wgs84.center, patch.bsphere_wgs84.radius, ctx.main_views);
+            const auto& bbox = patch.bbox.value();
+            patch.culled = !ctx.culler->is_visible_in_some_views(bbox, ctx.main_views);
+
+            if (hrz::get_flag(hrz::Flag::DebugDrawTerrainPatchBboxes))
+            {
+                std::array<lm::dvec3, 2> x_axis_vertices;
+                x_axis_vertices[0] = bbox.center + bbox.u_axis * -bbox.u_half_length;
+                x_axis_vertices[1] = bbox.center + bbox.u_axis * bbox.u_half_length;
+                std::array<lm::dvec3, 2> y_axis_vertices;
+                y_axis_vertices[0] = bbox.center + bbox.v_axis * -bbox.v_half_length;
+                y_axis_vertices[1] = bbox.center + bbox.v_axis * bbox.v_half_length;
+                std::array<lm::dvec3, 2> z_axis_vertices;
+                z_axis_vertices[0] = bbox.center + bbox.w_axis * -bbox.w_half_length;
+                z_axis_vertices[1] = bbox.center + bbox.w_axis * bbox.w_half_length;
+                std::array<lm::dvec3, 5> bottom_vertices;
+                bottom_vertices[0] = bbox.center + bbox.u_axis * -bbox.u_half_length
+                    + bbox.v_axis * -bbox.v_half_length + bbox.w_axis * -bbox.w_half_length;
+                bottom_vertices[1] = bbox.center + bbox.u_axis * -bbox.u_half_length
+                    + bbox.v_axis * bbox.v_half_length + bbox.w_axis * -bbox.w_half_length;
+                bottom_vertices[2] = bbox.center + bbox.u_axis * -bbox.u_half_length
+                    + bbox.v_axis * bbox.v_half_length + bbox.w_axis * bbox.w_half_length;
+                bottom_vertices[3] = bbox.center + bbox.u_axis * -bbox.u_half_length
+                    + bbox.v_axis * -bbox.v_half_length + bbox.w_axis * bbox.w_half_length;
+                bottom_vertices[4] = bbox.center + bbox.u_axis * -bbox.u_half_length
+                    + bbox.v_axis * -bbox.v_half_length + bbox.w_axis * -bbox.w_half_length;
+                std::array<lm::dvec3, 5> top_vertices;
+                top_vertices[0] = bbox.center + bbox.u_axis * bbox.u_half_length
+                    + bbox.v_axis * -bbox.v_half_length + bbox.w_axis * -bbox.w_half_length;
+                top_vertices[1] = bbox.center + bbox.u_axis * bbox.u_half_length
+                    + bbox.v_axis * bbox.v_half_length + bbox.w_axis * -bbox.w_half_length;
+                top_vertices[2] = bbox.center + bbox.u_axis * bbox.u_half_length
+                    + bbox.v_axis * bbox.v_half_length + bbox.w_axis * bbox.w_half_length;
+                top_vertices[3] = bbox.center + bbox.u_axis * bbox.u_half_length
+                    + bbox.v_axis * -bbox.v_half_length + bbox.w_axis * bbox.w_half_length;
+                top_vertices[4] = bbox.center + bbox.u_axis * bbox.u_half_length
+                    + bbox.v_axis * -bbox.v_half_length + bbox.w_axis * -bbox.w_half_length;
+                std::array<lm::dvec3, 2> side_vertices_0 = {bottom_vertices[0], top_vertices[0]};
+                std::array<lm::dvec3, 2> side_vertices_1 = {bottom_vertices[1], top_vertices[1]};
+                std::array<lm::dvec3, 2> side_vertices_2 = {bottom_vertices[2], top_vertices[2]};
+                std::array<lm::dvec3, 2> side_vertices_3 = {bottom_vertices[3], top_vertices[3]};
+                hrz::debug_draw::polyline(
+                    {(const double*)x_axis_vertices.data(), x_axis_vertices.size() * 3},
+                    {1, 0, 0, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)y_axis_vertices.data(), y_axis_vertices.size() * 3},
+                    {0, 1, 0, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)z_axis_vertices.data(), z_axis_vertices.size() * 3},
+                    {1, 1, 0, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)bottom_vertices.data(), bottom_vertices.size() * 3},
+                    {1, 1, 1, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)top_vertices.data(), top_vertices.size() * 3}, {1, 1, 1, 1},
+                    hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)side_vertices_0.data(), side_vertices_0.size() * 3},
+                    {1, 1, 1, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)side_vertices_1.data(), side_vertices_1.size() * 3},
+                    {1, 1, 1, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)side_vertices_2.data(), side_vertices_2.size() * 3},
+                    {1, 1, 1, 1}, hrz::debug_draw::Space::Ecef);
+                hrz::debug_draw::polyline(
+                    {(const double*)side_vertices_3.data(), side_vertices_3.size() * 3},
+                    {1, 1, 1, 1}, hrz::debug_draw::Space::Ecef);
+            }
         }
     }
 
-    void traverse_patch_culling(TreeTraverseCtx& ctx, uint16_t patch_id)
+    void traverse_patch_culling(const TreeTraverseCtx& ctx, uint16_t patch_id)
     {
         assert(patch_id < patches.size());
-
-        cull_patch(ctx, patch_id);
 
         Patch& patch = patches[patch_id];
         bool should_visit_children = true;
 
         patch.compute_and_set_distance_to_camera(ctx.eye_pos);
+
+        if (!patch.bbox.has_value() || ctx.dtm_min_max_has_changed)
+        {
+            patch.compute_oriented_bounding_box(ctx.dtm_min_max);
+        }
+
+        cull_patch(ctx, patch_id);
 
         if (patch.culled)
         {
@@ -1341,11 +1449,11 @@ struct PatchTree
         }
     }
 
-    void traverse_culling(TreeTraverseCtx& ctx)
+    void traverse_culling(const TreeTraverseCtx& ctx)
     {
         HRZ_SCOPED_SAMPLE("planet traverse culling");
 
-        for (uint16_t i = 0; i < 20; ++i)
+        for (uint16_t i = 0; i < RootPatchCount; ++i)
         {
             traverse_patch_culling(ctx, i);
         }
@@ -1437,7 +1545,7 @@ struct PatchTree
         }
     }
 
-    void tessellate_patch(TreeTraverseCtx& ctx, uint16_t patch_id)
+    void tessellate_patch(const TreeTraverseCtx& ctx, uint16_t patch_id)
     {
         HRZ_SCOPED_SAMPLE_A("planet tessellate patch");
 
@@ -1466,7 +1574,7 @@ struct PatchTree
     {
         HRZ_SCOPED_SAMPLE("planet traverse render");
 
-        static const uint16_t root_neighbors[20][3] = {
+        static const uint16_t root_neighbors[RootPatchCount][3] = {
             {5, 1, 4},    {6, 2, 0},    {7, 3, 1},    {8, 4, 2},    {9, 0, 3},
             {0, 14, 10},  {1, 10, 11},  {2, 11, 12},  {3, 12, 13},  {4, 13, 14},
             {15, 6, 5},   {16, 7, 6},   {17, 8, 7},   {18, 9, 8},   {19, 5, 9},
@@ -1474,14 +1582,14 @@ struct PatchTree
         };
 
         uint16_t level_first = 0;
-        uint16_t level_count = 20;
+        uint16_t level_count = RootPatchCount;
         to_visit.clear();
         to_render.clear();
         patch_could_free_geometry_slot.clear();
 
-        to_render_reserved_count = 20;
+        to_render_reserved_count = RootPatchCount;
 
-        for (uint16_t i = 0; i < 20; ++i)
+        for (uint16_t i = 0; i < RootPatchCount; ++i)
         {
             to_visit.push_back(PatchWithNeighbors{
                 i, root_neighbors[i][0], root_neighbors[i][1], root_neighbors[i][2]});
@@ -2562,7 +2670,9 @@ struct PlanetRenderable : public my::Renderer::Renderable
         my::Renderer::ViewId main_view_id,
         my::Renderer::ViewMask main_views,
         bool use_adaptive_resolution,
-        double height_above_terrain)
+        double height_above_terrain,
+        const std::pair<double, double>& dtm_min_max,
+        bool dtm_min_max_has_changed)
     {
         HRZ_SCOPED_SAMPLE("planet collect render info");
 
@@ -2581,24 +2691,31 @@ struct PlanetRenderable : public my::Renderer::Renderable
             eye_pos_geo.alt = height_above_terrain + 50;
             eye_pos = hrz::geo_to_ecef(eye_pos_geo);
         }
+        else
+        {
+            auto eye_pos_geo = hrz::ecef_to_geo3(eye_pos);
+            eye_pos_geo.alt = std::max(eye_pos_geo.alt, 50.0);
+            eye_pos = hrz::geo_to_ecef(eye_pos_geo);
+        }
 
         lm::dvec3 eye_pos_sphere = eye_pos;
         eye_pos_sphere.z /= hrz::WGS84_AXES_LENGTH_RATIO;
 
-        // We offset the altitude a little bit so that distant mountains don't
-        // disappear too quickly when very close to the ground.
-        double dist_to_center_sphere = std::max(lm::length(eye_pos_sphere), 0.0) + 250;
+        double dist_to_center_sphere =
+            std::max(lm::length(eye_pos_sphere), EARTH_RADIUS + dtm_min_max.first);
         lm::dvec3 horizon_plane_normal = lm::normalize(eye_pos_sphere);
 
         TreeTraverseCtx cull_ctx;
         cull_ctx.eye_pos = eye_pos;
+        cull_ctx.dtm_min_max = dtm_min_max;
+        cull_ctx.dtm_min_max_has_changed = dtm_min_max_has_changed;
         cull_ctx.culler = &culler;
 
-        double cos = EARTH_RADIUS / dist_to_center_sphere;
+        double cos = (EARTH_RADIUS + dtm_min_max.first) / dist_to_center_sphere;
         cull_ctx.horizon_cone_half_angle_cos_sin = lm::dvec2(cos, std::sqrt(1.0 - cos * cos));
         cull_ctx.horizon_cone_direction = horizon_plane_normal;
 
-        cull_ctx.reserved_instance_count = 20;
+        cull_ctx.reserved_instance_count = RootPatchCount;
         cull_ctx.view_matrix = view_matrix;
         cull_ctx.terrain_res = _terrain_res;
         cull_ctx.subdivision = _subdivision;
@@ -2687,7 +2804,7 @@ struct PlanetGeometry
     BlobImage last_feedback_image;
 
     bool requested_tiles_updated = false;
-    std::vector<TileCoordsWithUsage> requested_tiles;
+    std::vector<planet::RequestedTileCoords> requested_tiles;
     size_t requested_tiles_hash{};
 
     bool model_updated = false;
@@ -2695,6 +2812,10 @@ struct PlanetGeometry
 
     bool is_opaque = true;
     bool use_adaptive_resolution = false;
+
+    static constexpr double DTM_STEP = 500.0; // meters
+    std::pair<double, double> discrete_dtm_min_max{0.0, DTM_STEP};
+    bool dtm_min_max_updated = true;
 
     my::RenderPassId initialize_rendering(RenderView* render)
     {
@@ -2777,7 +2898,7 @@ struct PlanetGeometry
 
         renderable->update(
             render->rd->as_culler(), main_view_id, render->main_views, use_adaptive_resolution,
-            height_above_terrain);
+            height_above_terrain, discrete_dtm_min_max, std::exchange(dtm_min_max_updated, false));
         render_request |= renderable->work_gpu(render);
 
         return render_request;
@@ -2795,7 +2916,10 @@ struct PlanetGeometry
         BlobAllocator* ba,
         JobScheduler* js,
         SceneModel* model,
-        const vtex::ClipmapParams* clipmap_params)
+        const vtex::ClipmapParams* clipmap_params,
+        const std::pair<double, double>& dtm_min_max,
+        const RenderViewInfo& camera_info,
+        double mipmap_bias)
     {
         HRZ_SCOPED_SAMPLE("planet geometry work");
 
@@ -2885,10 +3009,38 @@ struct PlanetGeometry
 
             feedback_status = FeedbackStatus::Idle;
 
-            if (response.tile_usage.empty()) return;
-
             requested_tiles.clear();
             requested_tiles_hash = 0;
+
+            // Add the tile directly below (or above) the camera.
+            // This allows refining the DTM at the camera's location, which in turn enables
+            // moving the camera above ground if needed.
+            {
+                auto camera_geo = hrz::ecef_to_geo2(camera_info.cam_view_info.cam.pos);
+
+                // metres per pixel
+                double resolution = (std::abs(camera_info.height_above_terrain)
+                                     * std::tan(camera_info.cam_view_info.cam.fovy / 2.0))
+                    / (camera_info.cam_view_info.viewport.size.y / 2.0);
+                double level0_resolution =
+                    (hrz::EARTH_CIRCUMFERENCE / hrz::MERCATOR_TILE_SIZE) * std::cos(camera_geo.lat);
+
+                double level0_lod = std::log2(level0_resolution);
+                double camera_lod = -std::log2(resolution) + level0_lod - mipmap_bias;
+
+                auto camera_tile_coords =
+                    hrz::geo_to_mercator_tile(camera_geo, std::round(camera_lod));
+
+                if (camera_tile_coords.has_value())
+                {
+                    requested_tiles.push_back(planet::RequestedTileCoords{
+                        camera_tile_coords.value(), std::numeric_limits<uint32_t>::max(),
+                        planet::TileRequestOrigin::CameraVerticalProjectionOrigin});
+                    requested_tiles_hash = hrz::hash_mix(
+                        requested_tiles_hash,
+                        std::hash<hrz::TileCoords>{}(camera_tile_coords.value()));
+                }
+            }
 
             for (const auto& tile : response.tile_usage)
             {
@@ -2897,12 +3049,40 @@ struct PlanetGeometry
 
                 if (coords.lod == hrz::vtex::ClipmapParams::NoLod) continue;
 
-                requested_tiles.push_back(TileCoordsWithUsage{coords, tile.uses});
+                requested_tiles.push_back(
+                    planet::RequestedTileCoords{coords, tile.uses, tile.origin});
                 requested_tiles_hash =
                     hrz::hash_mix(requested_tiles_hash, std::hash<hrz::TileCoords>{}(coords));
             }
 
             requested_tiles_updated = true;
+        }
+
+        auto discretize_to_step = [](double value, double step)
+        {
+            double q = value / step;
+            if (value < 0.0)
+            {
+                q = std::floor(q);
+            }
+            else
+            {
+                q = std::ceil(q);
+            }
+            return q * step;
+        };
+
+        // Because we recompute the patches' bounding boxes when the DTM min/max changes,
+        // we discretise it to reduce the number of recomputations.
+        std::pair<double, double> new_discrete_dtm_min_max = {
+            discretize_to_step(dtm_min_max.first, DTM_STEP),
+            discretize_to_step(dtm_min_max.second, DTM_STEP)};
+        new_discrete_dtm_min_max.first = std::min(new_discrete_dtm_min_max.first, 0.0);
+        new_discrete_dtm_min_max.second = std::max(new_discrete_dtm_min_max.second, DTM_STEP);
+        if (new_discrete_dtm_min_max != discrete_dtm_min_max)
+        {
+            discrete_dtm_min_max = new_discrete_dtm_min_max;
+            dtm_min_max_updated = true;
         }
     }
 
@@ -2939,10 +3119,13 @@ void work(
     BlobAllocator* ba,
     JobScheduler* js,
     SceneModel* model,
-    const vtex::ClipmapParams* clipmap_params)
+    const vtex::ClipmapParams* clipmap_params,
+    const std::pair<double, double>& dtm_min_max,
+    const RenderViewInfo& camera_info,
+    double mipmap_bias)
 {
     assert(planet && ba && js && model && clipmap_params);
-    planet->work(ba, js, model, clipmap_params);
+    planet->work(ba, js, model, clipmap_params, dtm_min_max, camera_info, mipmap_bias);
 }
 
 RenderRequest work_gpu(

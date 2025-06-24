@@ -100,4 +100,9 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["raster", "terrain"],
         thumbnailFile: "ign_srtm.webp",
     },
+    palettizedTerrain: {
+        title: "Palettised topography and bathymetry",
+        tags: ["raster", "terrain"],
+        thumbnailFile: "palettized_terrain.webp",
+    },
 };

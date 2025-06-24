@@ -30,7 +30,7 @@
 #define HRZ_S_VIEWSHED_CNT 1
 #define HRZ_S_VIEWSHED_SHADOW_MAP_SIZE 512
 #define HRZ_S_MAX_CLIP_PLANES 8
-#define HRZ_S_CAMERA_HEIGHT_FAR_OFFSET 500
+#define HRZ_S_CAMERA_HEIGHT_FAR_OFFSET 11000.0
 
 // If you change this, also change the documentation for
 // HrzProtocol.Material.data_texture_palette and

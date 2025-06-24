@@ -85,3 +85,6 @@ registerDemo("terrainSettings", TerrainSettings);
 
 import IgnSrtm from "./demo/IgnSrtm.vue";
 registerDemo("ignSrtm", IgnSrtm);
+
+import PalettizedTerrain from "./demo/PalettizedTerrain.vue";
+registerDemo("palettizedTerrain", PalettizedTerrain);
