@@ -402,7 +402,7 @@ struct ImpostorGpuResources
                 res.fragment_source_len = hrz_shaders::Impostor_picking_frag_len;
                 res.fragment_source = hrz_shaders::Impostor_picking_frag;
                 res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
-                res.sampler_count = non_visual_samplers.size();
+                res.sampler_count = (uint32_t)non_visual_samplers.size();
                 res.samplers = non_visual_samplers.data();
                 res.outputs = picking_color_outputs;
                 res.initial_state.color_blend.enable = false;

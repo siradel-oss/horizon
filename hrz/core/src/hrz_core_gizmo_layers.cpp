@@ -2286,22 +2286,17 @@ RenderRequest _unregister_layers(GizmoLayerSystem* system, SceneModel* scene_mod
 
     for (auto layer_id : system->unregistered_layers)
     {
-        auto it = system->layer_ids_to_handles.find(layer_id);
+        const auto it = system->layer_ids_to_handles.find(layer_id);
         if (it != std::end(system->layer_ids_to_handles))
         {
             hrz_proto::PathRoot root;
             root.mutable_gizmo_layer()->set_opaque(layer_id);
             scene_model::unregister_element(scene_model, root);
 
-            auto layer_handle = it->second;
-            Layer* layer = system->layer_pool.get_object(layer_handle);
+            const auto layer_handle = it->second;
+            system->layer_pool.release(layer_handle);
 
-            if (layer)
-            {
-                system->layer_pool.release(layer_handle);
-                render_request.request_visual_render();
-            }
-
+            render_request.request_visual_render();
             system->layer_ids_to_handles.erase(it);
         }
     }
@@ -2632,7 +2627,7 @@ RenderRequest work(
     return render_request;
 }
 
-void work_gpu(GizmoLayerSystem* system, Render*) {}
+void work_gpu(GizmoLayerSystem*, Render*) {}
 
 void draw(GizmoLayerSystem* system, Render* render, gsl::span<const RenderViewInfo> views_info)
 {

@@ -418,9 +418,9 @@ void destroy_system(
 {
     assert(system && planet);
 
-    for (auto& pair : system->global_layer_id_to_handle)
+    for (auto [global_layer_id, _] : system->global_layer_id_to_handle)
     {
-        unregister_layer(system, pair.first);
+        unregister_layer(system, global_layer_id);
     }
     _unregister_layers(system, model);
 
@@ -653,9 +653,9 @@ RenderRequest work(
 
     render_request |= _unregister_layers(system, model);
 
-    for (auto it : system->global_layer_id_to_handle)
+    for (auto [global_layer_id, _] : system->global_layer_id_to_handle)
     {
-        auto layer = _get_layer(system, it.first);
+        auto layer = _get_layer(system, global_layer_id);
         if (layer)
         {
             auto old_visibility_constraints_result = layer->visibility_constraints_result;
@@ -675,11 +675,11 @@ RenderRequest work(
 
     heatmaps::hide_all_layers(system->heatmap_repr_registry);
 
-    for (auto it : system->global_layer_id_to_handle)
+    for (auto [global_layer_id, _] : system->global_layer_id_to_handle)
     {
-        render_request |= _update_layer(system, model, it.first, vdl, planet, ar);
+        render_request |= _update_layer(system, model, global_layer_id, vdl, planet, ar);
 
-        auto layer = _get_layer(system, it.first);
+        auto layer = _get_layer(system, global_layer_id);
         if (!layer)
         {
             continue;
@@ -850,10 +850,9 @@ RenderRequest work_gpu(
 
     vt::image_loader::work_gpu(system->image_loader, render);
 
-    for (auto& pair : system->global_layer_id_to_handle)
+    for (const auto [_, layer_handle] : system->global_layer_id_to_handle)
     {
-        auto layer = system->layer_pool.get_object(pair.second);
-
+        auto layer = system->layer_pool.get_object(layer_handle);
         vt::work_gpu(layer->vt, render, views_info);
     }
 
@@ -872,9 +871,9 @@ void draw(
 {
     assert(system && render);
 
-    for (auto& pair : system->global_layer_id_to_handle)
+    for (const auto [_, layer_handle] : system->global_layer_id_to_handle)
     {
-        auto layer = system->layer_pool.get_object(pair.second);
+        auto layer = system->layer_pool.get_object(layer_handle);
 
         if (layer->visible_in().any())
         {
@@ -895,9 +894,9 @@ bool is_working(VectorTilesLayerSystem* system)
         return true;
     }
 
-    for (auto& it : system->global_layer_id_to_handle)
+    for (auto [global_layer_id, _] : system->global_layer_id_to_handle)
     {
-        auto layer = _get_layer(system, it.first);
+        auto layer = _get_layer(system, global_layer_id);
         if (!layer || layer->visible_in().none()) continue;
 
         if (vt::is_working(layer->vt)) return true;

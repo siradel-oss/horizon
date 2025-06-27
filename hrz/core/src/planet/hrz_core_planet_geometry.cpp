@@ -3028,8 +3028,8 @@ struct PlanetGeometry
                 double level0_lod = std::log2(level0_resolution);
                 double camera_lod = -std::log2(resolution) + level0_lod - mipmap_bias;
 
-                auto camera_tile_coords =
-                    hrz::geo_to_mercator_tile(camera_geo, std::round(camera_lod));
+                const auto camera_tile_coords =
+                    hrz::geo_to_mercator_tile(camera_geo, (uint8_t)std::round(camera_lod));
 
                 if (camera_tile_coords.has_value())
                 {

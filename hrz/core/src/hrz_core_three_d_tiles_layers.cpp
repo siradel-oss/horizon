@@ -1712,7 +1712,7 @@ struct ThreeDTilesSystem
 
     hrz::picking::ObjectReference make_object_reference(
         TilesetH tileset_handle,
-        uint32_t tile_index)
+        uint32_t tile_index) const
     {
         hrz::picking::ObjectReference obj;
         obj.system_id = _system_picking_id;
@@ -7163,9 +7163,9 @@ void destroy_system(
 {
     assert(system && al && js && ba && render && pia && scene_model);
 
-    for (auto& pair : system->global_layer_id_to_handle)
+    for (auto [global_layer_id, _] : system->global_layer_id_to_handle)
     {
-        unregister_layer(system, pair.first);
+        unregister_layer(system, global_layer_id);
     }
     _unregister_layers(system, scene_model, al, js);
 
@@ -7312,9 +7312,10 @@ RenderRequest work(
 
     _unregister_layers(system, model, al, js);
 
-    for (auto it : system->global_layer_id_to_handle)
+    for (auto [global_layer_id, _] : system->global_layer_id_to_handle)
     {
-        render_request |= _update_layer(system, it.first, model, selection, al, attributions);
+        render_request |=
+            _update_layer(system, global_layer_id, model, selection, al, attributions);
     }
 
     render_request |= system->three_d_tiles.work(al, js, ba, imgdec, attributions, views_info);
@@ -7339,7 +7340,7 @@ struct PickingInfo
     uint32_t batch_id;
 };
 
-static std::optional<PickingInfo> _get_picking_info(
+std::optional<PickingInfo> _get_picking_info(
     ThreeDTilesLayerSystem* system,
     const picking::ObjectReference& ref)
 {
@@ -7348,7 +7349,8 @@ static std::optional<PickingInfo> _get_picking_info(
     TilesetH tileset_handle = 0;
     uint32_t tile_index = 0;
     uint32_t batch_id = 0;
-    system->three_d_tiles.extract_info_from_object_reference(
+
+    ThreeDTilesSystem::extract_info_from_object_reference(
         ref, &tileset_handle, &tile_index, &batch_id);
 
     const LayerH layer_handle = system->three_d_tiles.get_layer_for_tileset(tileset_handle);
@@ -7442,7 +7444,8 @@ std::pair<size_t, size_t> make_typed_object_references(
             TilesetH new_tileset_handle = 0;
             uint32_t tile_index = 0;
             uint32_t batch_id = 0;
-            system->three_d_tiles.extract_info_from_object_reference(
+
+            ThreeDTilesSystem::extract_info_from_object_reference(
                 obj, &new_tileset_handle, &tile_index, &batch_id);
 
             if (new_tileset_handle != tileset_handle)
@@ -7497,7 +7500,8 @@ std::optional<picking::FeatureReference> make_feature_reference(
     TilesetH tileset_handle = 0;
     uint32_t tile_index = 0;
     uint32_t batch_id = 0;
-    system->three_d_tiles.extract_info_from_object_reference(
+
+    ThreeDTilesSystem::extract_info_from_object_reference(
         obj, &tileset_handle, &tile_index, &batch_id);
 
     if (tileset_handle != 0)
