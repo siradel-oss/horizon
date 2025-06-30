@@ -71,7 +71,7 @@ export namespace HrzApi {
     namespace AsyncSceneModelAccessor {
         export function get(api: AsyncApi, path: HrzProtocol.IPath): Promise<Uint8Array> {
             return api.SceneModelService.get(path)
-                .then((response) => { return Promise.resolve(response.payload); });
+                .then((response) => { return Promise.resolve(response.value); });
         }
 
         export function set(api: AsyncApi, path: HrzProtocol.IPath, payload: Uint8Array): Promise<HrzProtocol.Void> {
@@ -80,17 +80,17 @@ export namespace HrzApi {
 
         export function add(api: AsyncApi, path: HrzProtocol.IPath, payload: Uint8Array): Promise<number> {
             return api.SceneModelService.add({path: path, payload: payload})
-                .then((response) => { return Promise.resolve(response.count); });
+                .then((response) => { return Promise.resolve(response.value); });
         }
 
         export function remove(api: AsyncApi, path: HrzProtocol.IPath): Promise<number> {
             return api.SceneModelService.remove(path)
-                .then((response) => { return Promise.resolve(response.count); });
+                .then((response) => { return Promise.resolve(response.value); });
         }
 
         export function count(api: AsyncApi, path: HrzProtocol.IPath): Promise<number> {
             return api.SceneModelService.count(path)
-                .then((response) => { return Promise.resolve(response.count); });
+                .then((response) => { return Promise.resolve(response.value); });
         }
     }
 
@@ -148,7 +148,7 @@ export namespace HrzApi {
 
     namespace SyncSceneModelAccessor {
         export function get(api: SyncApi, path: HrzProtocol.IPath): Uint8Array {
-            return api.SceneModelService.get(path).payload;
+            return api.SceneModelService.get(path).value;
         }
 
         export function set(api: SyncApi, path: HrzProtocol.IPath, payload: Uint8Array): void {
@@ -156,15 +156,15 @@ export namespace HrzApi {
         }
 
         export function add(api: SyncApi, path: HrzProtocol.IPath, payload: Uint8Array): number {
-            return api.SceneModelService.add({path: path, payload: payload}).count;
+            return api.SceneModelService.add({path: path, payload: payload}).value;
         }
 
         export function remove(api: SyncApi, path: HrzProtocol.IPath): number {
-            return api.SceneModelService.remove(path).count;
+            return api.SceneModelService.remove(path).value;
         }
 
         export function count(api: SyncApi, path: HrzProtocol.IPath): number {
-            return api.SceneModelService.count(path).count;
+            return api.SceneModelService.count(path).value;
         }
     }
 

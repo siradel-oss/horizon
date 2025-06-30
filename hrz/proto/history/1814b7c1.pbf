@@ -1036,8 +1036,8 @@ SendEvents.HrzProtocol.EventsStream.HrzProtocol.Void8
 MoveDevUiToCursor.HrzProtocol.Void.HrzProtocol.Void6
 ClearHttpCache.HrzProtocol.Void.HrzProtocol.VoidB
 SetAttributionEnabled.HrzProtocol.BoolValue.HrzProtocol.VoidBHøbproto3
-Ý‡
-hrz_scene_model.protoHrzProtocolhrz_types.protohrz_layers.proto"%
+ú†
+hrz_scene_model.protoHrzProtocolhrz_types.protohrz_layers.protohrz_wrappers.proto"%
 SceneViewBitset
 bits (Rbits"
 LightingSettings'
@@ -1066,11 +1066,7 @@ gizmoLayerL
 parts (Rparts"P
 SceneModelSet%
 path (2.HrzProtocol.PathRpath
-payload (Rpayload")
-SceneModelGet
-payload (Rpayload",
-SceneModelArrayCount
-count (Rcount"4
+payload (Rpayload"4
 TemplatedUrl
 name (	Rname
 url (	Rurl"¿
@@ -1868,13 +1864,13 @@ $GIZMO_TRANSLATION_PLANE_CAMERA_PLANE
 SKY_STATIC*x
 StaticSkyColorTransitionUnit+
 'STATIC_SKY_COLOR_TRANSITION_UNIT_METERS +
-'STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS2Ä
-SceneModelService4
-Get.HrzProtocol.Path.HrzProtocol.SceneModelGet4
-Set.HrzProtocol.SceneModelSet.HrzProtocol.VoidD
-Add.HrzProtocol.SceneModelSet!.HrzProtocol.SceneModelArrayCount>
-Remove.HrzProtocol.Path!.HrzProtocol.SceneModelArrayCount=
-Count.HrzProtocol.Path!.HrzProtocol.SceneModelArrayCountBHøbproto3
+'STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS2¦
+SceneModelService1
+Get.HrzProtocol.Path.HrzProtocol.BytesValue4
+Set.HrzProtocol.SceneModelSet.HrzProtocol.Void;
+Add.HrzProtocol.SceneModelSet.HrzProtocol.UInt32Value5
+Remove.HrzProtocol.Path.HrzProtocol.UInt32Value4
+Count.HrzProtocol.Path.HrzProtocol.UInt32ValueBHøbproto3
  
 hrz_shape_editor.protoHrzProtocolhrz_types.protohrz_layers.proto"@
 ShapeSelection.

@@ -3119,9 +3119,9 @@ public:
 class SceneModelServiceImpl : public hrz_proto::ISceneModelService
 {
 public:
-    void get(const ::hrz_proto::Path& path, ::hrz_proto::SceneModelGet& output) override
+    void get(const ::hrz_proto::Path& path, ::hrz_proto::BytesValue& output) override
     {
-        output.set_payload(hrz::scene::get_model(core->scene(), path));
+        output.set_value(hrz::scene::get_model(core->scene(), path));
     }
 
     void set(const ::hrz_proto::SceneModelSet& input, ::hrz_proto::Void& output) override
@@ -3129,20 +3129,19 @@ public:
         hrz::scene::set_model(core->scene(), input.path(), input.payload());
     }
 
-    void add(const ::hrz_proto::SceneModelSet& input, ::hrz_proto::SceneModelArrayCount& output)
-        override
+    void add(const ::hrz_proto::SceneModelSet& input, ::hrz_proto::UInt32Value& output) override
     {
-        output.set_count(hrz::scene::add_model(core->scene(), input.path(), input.payload()));
+        output.set_value(hrz::scene::add_model(core->scene(), input.path(), input.payload()));
     }
 
-    void remove(const ::hrz_proto::Path& path, ::hrz_proto::SceneModelArrayCount& output) override
+    void remove(const ::hrz_proto::Path& path, ::hrz_proto::UInt32Value& output) override
     {
-        output.set_count(hrz::scene::remove_model(core->scene(), path));
+        output.set_value(hrz::scene::remove_model(core->scene(), path));
     }
 
-    void count(const ::hrz_proto::Path& path, ::hrz_proto::SceneModelArrayCount& output) override
+    void count(const ::hrz_proto::Path& path, ::hrz_proto::UInt32Value& output) override
     {
-        output.set_count(hrz::scene::count_model(core->scene(), path));
+        output.set_value(hrz::scene::count_model(core->scene(), path));
     }
 };
 

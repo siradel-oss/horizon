@@ -5,6 +5,7 @@ option  optimize_for     = LITE_RUNTIME;
 
 import "hrz_types.proto";
 import "hrz_layers.proto";
+import "hrz_wrappers.proto";
 
 enum SceneViewIndex {
     SCENE_VIEW_0 = 0;
@@ -38,22 +39,98 @@ message PathRoot {
     reserved 200;
 
     oneof kind {
+        // Points to a [[SingleModelLayer]] message.
         LayerHandle    single_model_layer            = 1;
+
+        // Points to a [[DtmRasterLayer]] message.
         LayerHandle    dtm_raster_layer              = 2;
+
+        // Points to an [[ImageryRasterLayer]] message.
         LayerHandle    imagery_raster_layer          = 3;
+
+        // Points to a [[VectorDataLayer]] message.
         LayerHandle    vector_data_layer             = 4;
+
+        // Points to a [[VectorTilesLayer]] message.
         LayerHandle    vector_tiles_layer            = 5;
+
+        // Points to a [[ThreeDTilesLayer]] message.
         LayerHandle    three_d_tiles_layer           = 6;
+
+        // Points to a [[ClippingPlaneLayer]] message.
         LayerHandle    clipping_plane_layer          = 7;
+
+        // Points to an [[InMemoryVectorSourceLayer]] message.
         LayerHandle    in_memory_vector_source_layer = 8;
+
+        // Points to a [[GizmoLayer]] message.
         LayerHandle    gizmo_layer                   = 9;
+
+        // Points to an [[EditableShapeLayer]] message.
         LayerHandle    editable_shape_layer          = 10;
+
+        // Points to a single [[SceneSettings]] message.
         Void           scene_settings                = 100;
+
+        // Points to a [[SceneViewSettings]] message.
         SceneViewIndex scene_view_settings           = 103;
+
+        // Points to a [[CameraSettings]] message.
         CameraIndex    camera_settings               = 101;
     }
 }
 
+// A path is composed of a root and a list of numbers that point to a specific
+// part of the scene model.
+//
+// The root points to a specific tree in the scene model. See [[PathRoot]].
+//
+// To explain the parts array, we will consider the following
+// scene model tree:
+//
+// ```
+// my_layer
+// ├── name (#1)
+// └── palette (#2)
+//     ├── color_space (#1)
+//     └── color_points[] (#2)
+//         ├── [0]
+//         │   ├── r (#1)
+//         │   ├── g (#2)
+//         │   └── b (#3)
+//         └── [1]
+//             ├── r (#1)
+//             ├── g (#2)
+//             └── b (#3)
+// ```
+//
+// In this example, there is a root message with two fields (`name` and
+// `palette`). The palette itself has one field, `color_points`, which is an
+// array of colors. Each color has three fields: `r`, `g`, and `b`.
+//
+// The numbers denoted by a `#` character are the IDs of the fields, described
+// by the Protobuf schema (omitted here).
+//
+// A path is the concatenation of field numbers, starting from the root, that
+// points to a specific field. Examples:
+//
+// - The path to `name` would be `[1]`.
+// - The path to `palette` would be `[2]`.
+// - The path to `palette.color_space` would be `[2, 1]`.
+//
+// Pointing to an entire array (called the root of the array) is done by using
+// the field number of the array. This is used for methods that count or add
+// elements.
+//
+// - The path to `palette.color_points` would be `[2, 2]`.
+//
+// Pointing to a specific element of an array is done by using the field number
+// of the array, and the index of the element in the array. The index is
+// zero-based. The path then continues as normal.
+//
+// - The path to `palette.color_points[0]` would be `[2, 2, 0]`.
+// - The path to `palette.color_points[0].r` would be `[2, 2, 0, 1]`.
+// - The path to `palette.color_points[1].b` would be `[2, 2, 1, 3]`.
 message Path {
     PathRoot        root  = 1;
     repeated uint32 parts = 2;
@@ -64,26 +141,59 @@ message SceneModelSet {
     bytes payload = 2;
 }
 
-message SceneModelGet { bytes payload = 2; }
-
-message SceneModelArrayCount { uint32 count = 1; }
-
+// This service provides read and write access to the scene model.
+// It should not be used directly, but instead through the path builders API.
+// This is because there is no type-checking, and payloads are serialized,
+// which means that it is easy to make a mistake and send or receive the wrong
+// message type.
+//
+// Each method is a different access type to the scene model, and uses a path
+// to point to the location in the scene model that should be accessed.
+//
+// The `Get` and `Set` methods cannot operate on an entire array. Use the `Add`
+// and `Remove` methods instead, or mutate a parent message, or a single element
+// of the array.
+//
 // @service_id = 0x463fd4f6
 service SceneModelService {
+    // Retrieves a part of the scene model at the given path.
+    // The returned value is the Protobuf-serialized value, that should
+    // be deserialized using the appropriate message type.
+    //
     // @method_id=0x1e48af60
-    rpc Get(Path) returns (SceneModelGet);
+    rpc Get(Path) returns (BytesValue);
 
+    // Sets a part of the scene model at the given path.
+    // The payload is the Protobuf-serialized value, serialized with
+    // the appropriate message type.
+    //
     // @method_id=0x81c38365
     rpc Set(SceneModelSet) returns (Void);
 
+    // Adds a new element to an array in the scene model.
+    // The path must point to the root of an array (see the [[Path]]
+    // documentation), and the payload must be the Protobuf-serialized value of
+    // the element, serialized with the appropriate message type. The number of
+    // elements in the array after adding this new element is returned.
+    //
     // @method_id=0x605469da
-    rpc Add(SceneModelSet) returns (SceneModelArrayCount);
+    rpc Add(SceneModelSet) returns (UInt32Value);
 
+    // Removes an element from an array in the scene model.
+    // The path must point to the element in the array to be removed
+    // (see the [[Path]] documentation).
+    // The number of elements in the array after removing this element
+    // is returned.
+    //
     // @method_id=0x7f555d53
-    rpc Remove(Path) returns (SceneModelArrayCount);
+    rpc Remove(Path) returns (UInt32Value);
 
+    // Counts the number of elements in an array in the scene model.
+    // The path must point to the root of an array (see the [[Path]]
+    // documentation).
+    //
     // @method_id=0x44987164
-    rpc Count(Path) returns (SceneModelArrayCount);
+    rpc Count(Path) returns (UInt32Value);
 }
 
 message TemplatedUrl {
@@ -345,7 +455,7 @@ enum PolygonPatternReferenceLatitudeType {
     // position, and scale breaks are as far as possible from this latitude.
     // However the positions of the scale breaks are readjusted dynamically and
     // this can create temporal scale breaks as the camera moves. Use this
-    // option when the scene emcompasses large areas.
+    // option when the scene encompasses large areas.
     // @label="Dynamic reference latitude"
     POLYGON_PATTERN_DYNAMIC_REFERENCE_LATITUDE = 1;
 }
@@ -622,7 +732,7 @@ message ModelVectorRepr {
     // property.
     EulerRotationOrder rotation_order               = 15;
 
-    // Discard symbols ouside the borders of the tiles. Useful for hiding
+    // Discard symbols outside the borders of the tiles. Useful for hiding
     // margins often added by vector data tilers.
     bool               clip_to_tile                 = 20;
 }
@@ -1639,7 +1749,7 @@ message EditableShapeGeometry {
     // same thing, just with everything inline.
     repeated double           coords           = 2;
 
-    // Number of points for each linestring. Linstrings must not be closed.
+    // Number of points for each linestring. Linestrings must not be closed.
     // Exterior linestring must be counter-clockwise, and interior ones must
     // be clockwise.
     // This is used only for polygons.
@@ -1745,11 +1855,11 @@ enum SunDirectionMode {
     // The direction is computed from the current date and time.
     // @label="Relative to the date"
     SUN_DIRECTION_RELATIVE_TO_DATE             = 0;
-    // The direction is explicitely given using azimuth and altitude angles.
+    // The direction is explicitly given using azimuth and altitude angles.
     // Counter-clockwise rotation, with azimuth 0 being North-aligned.
     // @label="Relative to the cardinal frame"
     SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME   = 1;
-    // The direction is explicitely given using azimuth and altitude angles.
+    // The direction is explicitly given using azimuth and altitude angles.
     // Counter-clockwise rotation, with azimuth 0 aligned towards the forward
     // direction of the camera (or the up direction when it perfectly faces the
     // Earth).
@@ -1862,7 +1972,7 @@ message FogSettings {
     // The distance at which the fog starts impacting the scene.
     // Positions that are closer are completely unaffected by fog.
     float start_distance = 3;
-    // The altitude at which the fog starts decreasing in in intenesity.
+    // The altitude at which the fog starts decreasing in in intensity.
     // The decrease is exponential.
     float falloff_start  = 4;
     // The altitude at which the fog's impact becomes negligible.

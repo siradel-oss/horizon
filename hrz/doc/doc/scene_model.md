@@ -5,9 +5,13 @@ Category: General
 
 *Most examples below are given in TypeScript, but they are similar in all target languages.*
 
+The scene model is bunch of tree structures that describes an entire scene. Each tree starts with a root that describes its type, and identifies it amongst trees of the same type. For example each layer is a tree with a root that gives its handle.
+
+Each root type is associated with a root protocol message type, which is itself the description of the tree structure. For example, a scene view [root](HrzProtocol.PathRoot.html) uses a [[SceneViewIndex]] as parameter, and points to a [[SceneViewSettings]] structure.
+
 ## Layers
 
-The scene model is a tree structure that describes an entire scene. The tree can have many different roots. Layers are a type of root nodes that essentially declare how and what is going to be displayed in the scene. A layer is only described by its [type](HrzProtocol.LayerType.html), and identified by its [handle](HrzProtocol.LayerHandle.html). They are created, destroyed, and queried by using the [Layer service](HrzProtocol.LayerService.html).
+Layers are a type of root nodes that essentially declare how and what is going to be displayed in the scene. A layer is only described by its [type](HrzProtocol.LayerType.html), and identified by its [handle](HrzProtocol.LayerHandle.html). They are created, destroyed, and queried by using the [Layer service](HrzProtocol.LayerService.html).
 
 Each layer type has an associated message type that describes it entirely. Similarly, each layer instance has an associated message instance that describes it entirely. Below is an example of the structure of such a message.
 
@@ -66,7 +70,7 @@ let cameraSettings = await path.get(api);
 
 ## Addressing the scene model with paths
 
-The scene model is never accessed directly via the [[SceneModelService]]. Instead, the user is expected to use the scene model API, which allows read and write access to the scene model in a type-safe way.
+The user is expected to use the scene model API, which allows read and write access to the scene model in a type-safe manner, instead interacting with the [[SceneModelService]] directly. If you need to use the [[SceneModelService]], for example to develop tooling, see its documentation for how it works, and how paths are encoded.
 
 At the heart of this API are paths. Paths describe a location in the scene model. They all start from a [root](HrzProtocol.PathRoot.html).
 

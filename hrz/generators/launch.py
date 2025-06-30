@@ -231,8 +231,15 @@ def convert_doc_fields_markdown(values):
         for key, value in values.items():
             if key == "documentation" and isinstance(value, str):
                 md = markdown.Markdown(
-                    extensions = ["meta", "extra", "sane_lists", "toc", "codehilite"],
-                    extension_configs = { "codehilite": [("guess_lang", False)]})
+                    extensions = ["extra", "sane_lists", "codehilite", "wikilinks"],
+                    extension_configs = {
+                        "codehilite": [("guess_lang", False)],
+                        "wikilinks": [
+                            ("base_url", "HrzProtocol."),
+                            ("end_url", ".html"),
+                            ("html_class", "protocol-type-link"),
+                        ],
+                    })
                 html_contents = md.convert(value)
                 values[key] = html_contents
             else:

@@ -6,8 +6,17 @@ def remove_package(full_name, package):
         return full_name[len(package + "."):]
     return full_name
 
-def strip_documentation(documentation):
-    return "\n".join([re.sub("^ ", "", line) for line in documentation.strip().split("\n")])
+def remove_leading_spaces(text: str):
+    lines = text.splitlines()
+    if len(lines) == 0:
+        return text
+
+    non_empty_lines = [line for line in lines if line.strip()]
+    if not non_empty_lines:
+        return text
+
+    min_leading_spaces = min(len(line) - len(line.lstrip(" ")) for line in non_empty_lines)
+    return "\n".join(line[min_leading_spaces:] for line in lines)
 
 def parse(input_file_name):
     content = open(input_file_name, "r", encoding="utf-8").read()
@@ -29,7 +38,7 @@ def parse(input_file_name):
             service["full_name"] = s.find("full_name").text
             service["name"] = remove_package(service["full_name"], package)
             service["package"] = package
-            service["documentation"] = strip_documentation(s.findtext("documentation", default=""))
+            service["documentation"] = remove_leading_spaces(s.findtext("documentation", default=""))
             service["id"] = int(s.find("id").text)
             service["methods"] = []
 
@@ -38,7 +47,7 @@ def parse(input_file_name):
                 method["name"] = m.find("name").text
                 method["input"] = m.find("input").text
                 method["output"] = m.find("output").text
-                method["documentation"] = strip_documentation(m.findtext("documentation", default=""))
+                method["documentation"] = remove_leading_spaces(m.findtext("documentation", default=""))
                 method["deprecated"] = True if m.find("deprecated").text == "true" else False
                 method["id"] = int(m.find("id").text)
                 service["methods"].append(method)
@@ -50,7 +59,7 @@ def parse(input_file_name):
             enum["full_name"] = e.find("full_name").text
             enum["name"] = remove_package(enum["full_name"], package)
             enum["package"] = package
-            enum["documentation"] = e.findtext("documentation", default="").strip()
+            enum["documentation"] = remove_leading_spaces(e.findtext("documentation", default=""))
             enum["expose_to_style"] = True if e.find("expose_to_style").text == "true" else False
             enum["values"] = []
 
@@ -59,7 +68,7 @@ def parse(input_file_name):
                 val["name"] = v.find("name").text
                 val["id"] = int(v.find("id").text)
                 val["deprecated"] = True if v.find("deprecated").text == "true" else False
-                val["documentation"] = strip_documentation(v.find("documentation").text)
+                val["documentation"] = remove_leading_spaces(v.find("documentation").text)
                 val["params_field_name"] = v.findtext("params_field_name", default="")
                 val["response_field_name"] = v.findtext("response_field_name", default="")
                 val["params_type"] = v.findtext("params_type", default="")
@@ -74,7 +83,7 @@ def parse(input_file_name):
             msg["full_name"] = m.find("full_name").text
             msg["name"] = remove_package(msg["full_name"], package)
             msg["package"] = package
-            msg["documentation"] = m.findtext("documentation", default="").strip()
+            msg["documentation"] = remove_leading_spaces(m.findtext("documentation", default=""))
             msg["fields"] = []
 
             path_root_node = m.find("path_root")
@@ -99,7 +108,7 @@ def parse(input_file_name):
                 field["repeated"] = True if f.find("repeated").text == "true" else False
                 field["deprecated"] = True if f.find("deprecated").text == "true" else False
                 field["optional"] = True if f.find("optional").text == "true" else False
-                field["documentation"] = f.findtext("documentation", default="").strip()
+                field["documentation"] = remove_leading_spaces(f.findtext("documentation", default=""))
                 msg["fields"].append(field)
 
             protocol["messages"].append(msg)
