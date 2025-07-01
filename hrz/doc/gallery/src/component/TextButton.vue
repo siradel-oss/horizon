@@ -5,7 +5,7 @@ export type Type = "button" | "submit" | "reset";
 
 interface Props {
     color: ColorName;
-    type: Type;
+    type?: Type;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
         :type="props.type"
     >
         <div
-            class="absolute rounded-full w-full h-full inset-0 opacity-0 hover:opacity-hover active:opacity-active transition-opacity z-10"
+            class="absolute rounded-full w-full h-full inset-0 opacity-0 hover:opacity-(--hover-alpha) active:opacity-(--active-alpha) transition-opacity z-10"
             :class="COLOR_CLASS[props.color].bg"
         ></div>
         <slot></slot>

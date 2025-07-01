@@ -329,6 +329,7 @@ cmakelists(
     targets = [
         "//apps/native_client",
         "//tools/monitoring_client",
+        "//hrz/xml_desc_generator",
         "//hrz/common:tests",
         "//hrz/fnd:tests",
         "//hrz/mapbox:tests",

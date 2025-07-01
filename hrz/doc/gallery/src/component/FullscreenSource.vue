@@ -5,7 +5,7 @@ import { onMounted, ref } from "vue";
 
 interface Props {
     file: string;
-    text: string;
+    text?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {

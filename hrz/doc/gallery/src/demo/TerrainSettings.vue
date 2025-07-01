@@ -3,7 +3,7 @@ import SplitView from "@/layout/SplitView.vue";
 import Viewer from "@/component/Viewer.vue";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import { applyScene, applySceneTemplate, getLayerByName } from "@/utils/scenes";
+import { applyDefaultOrthoBaseLayer, applyScene, getLayerByName } from "@/utils/scenes";
 import { ref, reactive, watch } from "vue";
 import { debounce, deepAssign } from "@/utils/utils";
 import ColorInput from "@/component/ColorInput.vue";
@@ -17,9 +17,7 @@ let rasterSettings = reactive<HrzProtocol.IRasterSettings>({});
 
 async function onHorizonReady(api_: HrzApi.AsyncApi) {
     await applyScene(api_, "dinan_dtm_lod1");
-    await applySceneTemplate(api_, "ign_bd_ortho").then(async function () {
-        layerOrtho = await getLayerByName(api_, "IGN BD ORTHO");
-    });
+    layerOrtho = await applyDefaultOrthoBaseLayer(api_);
 
     let sceneTerrainSettings = await HrzApi.SceneViewSettingsPathBuilder.create(
         HrzProtocol.SceneViewIndex.SCENE_VIEW_0

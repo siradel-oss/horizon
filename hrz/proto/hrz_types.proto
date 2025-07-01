@@ -253,12 +253,6 @@ enum ColorInterpolationMode {
     THRESHOLD        = 3;
 }
 
-enum NumericPaletteType {
-    INT64  = 0;
-    UINT64 = 1;
-    DOUBLE = 2;
-}
-
 message NumericPalette {
     reserved 3;
 
@@ -896,28 +890,29 @@ enum AttributeTransform {
     // Other values are left unchanged.
     ATTRIBUTE_TRANSFORM_TO_COLOR   = 1;
 
-    // Strings are parsed as integers.
-    // Numeric values are rounded and cast to integers.
-    // Gives 0 on failure.
+    // Strings are parsed as integers, or 0 on failure.
+    // Numeric values are implicitly cast to integers.
     ATTRIBUTE_TRANSFORM_TO_INT     = 2;
 
-    // Strings are parsed as unsigned integers.
-    // Numeric values are rounded and cast to unsigned integers.
-    // Gives 0 on failure.
+    // Strings are parsed as unsigned integers, or 0 on failure.
+    // Numeric values are implicitly cast to unsigned integers.
     ATTRIBUTE_TRANSFORM_TO_UINT    = 3;
 
-    // Strings are parsed as numbers.
-    // Gives NaN on failure.
+    // Strings are parsed as numbers, or NaN on failure.
+    // Numeric values are implicitly cast to numbers.
     ATTRIBUTE_TRANSFORM_TO_NUMBER  = 4;
 
     // Numeric attributes are stringified.
+    // Null gives an empty string.
+    // Booleans give "true" or "false".
     ATTRIBUTE_TRANSFORM_TO_STRING  = 5;
 
     // All values are transformed to booleans.
     // 0 integers and numbers are false.
     // NaN numbers are false.
     // "true" and "false" (case-insensitive) are true and false respectively.
-    // All other strings are parsed as numbers and true if non-zero and non-NaN.
+    // All other strings are parsed as numbers, which returns true if non-zero
+    // and non-NaN.
     // Null is false.
     ATTRIBUTE_TRANSFORM_TO_BOOLEAN = 6;
 }

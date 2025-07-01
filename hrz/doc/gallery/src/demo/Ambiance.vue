@@ -8,7 +8,7 @@ import { MessageHandler } from "@/utils/messages";
 import { applyDefaultOrthoBaseLayer, applySceneTemplate, getLayerByName } from "@/utils/scenes";
 import { ref, reactive, watch, computed } from "vue";
 import { deepAssign } from "@/utils/utils";
-import TextButton from "@/component/TextButton.vue";
+import ColorButton from "@/component/ColorButton.vue";
 import ColorInput from "@/component/ColorInput.vue";
 
 // We provide sensible fallbacks for cases where some settings would be
@@ -406,6 +406,7 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler: MessageHandler)
                     presets that you can adjust at will.
                 </p>
             </div>
+            <hr />
             <div class="my-6">
                 <label>Preset</label><br />
                 <select v-model="selectedPreset">
@@ -418,8 +419,8 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler: MessageHandler)
                     {{ PRESETS[selectedPreset].description }}
                 </p>
                 <p v-if="selectedPreset !== 'custom'">
-                    <TextButton color="onSurfaceVariant" @click="selectedPreset = 'custom'"
-                        >Customize</TextButton
+                    <ColorButton icon="edit" @click="selectedPreset = 'custom'"
+                        >Customize</ColorButton
                     >
                 </p>
                 <div v-if="selectedPreset === 'custom'">
@@ -1009,6 +1010,7 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler: MessageHandler)
                         />
                     </p>
                 </div>
+                <hr />
                 <p>
                     <FullscreenSource file="source/Ambiance.vue" />
                 </p>

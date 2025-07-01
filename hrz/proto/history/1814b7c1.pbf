@@ -23,7 +23,7 @@ Int32Value
 
 BytesValue
 value (RvalueBHøbproto3
-Îš
+•š
 hrz_types.protoHrzProtocol"
 Void"#
 Vec2i
@@ -541,13 +541,7 @@ Handedness
 SRGB
 
 LINEAR_RGB
-	THRESHOLD*7
-NumericPaletteType	
-INT64 
-
-UINT64
-
-DOUBLE*%
+	THRESHOLD*%
 PaletteType	
 LABEL 
 NUMERIC*B

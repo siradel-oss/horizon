@@ -25,7 +25,7 @@ onMounted(() => {
         <img src="$/hrz/branding/logo.svg" class="h-12" />
         <p class="text-mHeadlineSmall">Horizon gallery</p>
         <p class="text-mTitleSmall">Version {{ HrzApi.VERSION }}</p>
-        <div class="flex-grow"></div>
+        <div class="grow"></div>
         <TextButton v-if="props.hasBackLink" color="onSurfaceVariant" @click="go('index.html')"
             >Back to list</TextButton
         >

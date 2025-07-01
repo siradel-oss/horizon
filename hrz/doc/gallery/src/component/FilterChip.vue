@@ -13,7 +13,8 @@ const styleSelectedContainer = " pl-2 pr-4 bg-secondaryContainer text-onSecondar
 const styleSelectedStateLayer = "bg-onSecondaryContainer";
 
 const styleEnabledContainer = "cursor-pointer";
-const styleEnabledStateLayer = "opacity-0 hover:opacity-hover active:opacity-active";
+const styleEnabledStateLayer =
+    "opacity-0 hover:opacity-(--hover-alpha) active:opacity-(--active-alpha)";
 
 const styleDisabledContainer =
     "px-4 border border-onSurface/[12%] bg-onSurface/[12%] text-onSurface/[38%]";

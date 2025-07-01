@@ -110,4 +110,34 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["customization"],
         thumbnailFile: "non_realistic.webp",
     },
+    markers: {
+        title: "Markers",
+        tags: ["interaction", "vector", "symbol"],
+        thumbnailFile: "markers.webp",
+    },
+    liveData: {
+        title: "Live data",
+        tags: ["interaction", "vector", "live"],
+        thumbnailFile: "live_data.webp",
+    },
+    csvData: {
+        title: "CSV data & histogram",
+        tags: ["vector", "csv", "dataviz", "histogram"],
+        thumbnailFile: "csv_data.webp",
+    },
+    parisMetro: {
+        title: "Paris metro",
+        tags: ["vector", "dataviz", "polyline", "timeline"],
+        thumbnailFile: "paris_metro.webp",
+    },
+    labelPalette: {
+        title: "Label palette",
+        tags: ["vector", "lod1"],
+        thumbnailFile: "label_palette.webp",
+    },
+    rennesTrees: {
+        title: "Lots of trees",
+        tags: ["vector", "point", "model"],
+        thumbnailFile: "rennes_trees.webp",
+    },
 };

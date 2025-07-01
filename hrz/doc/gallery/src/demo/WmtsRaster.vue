@@ -3,7 +3,7 @@ import SplitView from "@/layout/SplitView.vue";
 import Viewer from "@/component/Viewer.vue";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import { applySceneTemplate, getLayerByName } from "@/utils/scenes";
+import { applyDefaultOrthoBaseLayer, applySceneTemplate, getLayerByName } from "@/utils/scenes";
 import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
 
 let api: HrzApi.AsyncApi;
@@ -12,11 +12,9 @@ let layerRoutes: HrzProtocol.ILayerHandle | undefined;
 
 async function onHorizonReady(api_: HrzApi.AsyncApi) {
     api = api_;
-    applySceneTemplate(api, "ign_bd_ortho").then(async function () {
-        layerOrtho = await getLayerByName(api, "IGN BD ORTHO");
-    });
-    applySceneTemplate(api, "ign_routes").then(async function () {
-        layerRoutes = await getLayerByName(api, "IGN Routes");
+    layerOrtho = await applyDefaultOrthoBaseLayer(api);
+    layerRoutes = await applySceneTemplate(api, "ign_routes").then(async () => {
+        return getLayerByName(api, "IGN Routes");
     });
     applySceneTemplate(api, "initial_viewpoint_france");
 }

@@ -91,3 +91,21 @@ registerDemo("palettizedTerrain", PalettizedTerrain);
 
 import NonRealistic from "./demo/NonRealistic.vue";
 registerDemo("nonRealistic", NonRealistic);
+
+import Markers from "./demo/Markers.vue";
+registerDemo("markers", Markers);
+
+import LiveData from "./demo/LiveData.vue";
+registerDemo("liveData", LiveData);
+
+import CsvData from "./demo/CsvData.vue";
+registerDemo("csvData", CsvData);
+
+import ParisMetro from "./demo/ParisMetro.vue";
+registerDemo("parisMetro", ParisMetro);
+
+import LabelPalette from "./demo/LabelPalette.vue";
+registerDemo("labelPalette", LabelPalette);
+
+import RennesTrees from "./demo/RennesTrees.vue";
+registerDemo("rennesTrees", RennesTrees);

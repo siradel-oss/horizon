@@ -15,7 +15,7 @@ function go() {
         class="relative w-[280px] bg-surface rounded-xl border border-outlineVariant cursor-pointer overflow-clip hover:shadow-md transition-shadow"
     >
         <div
-            class="absolute inset-0 bg-onSurface opacity-0 hover:opacity-hover active:opacity-active transition-opacity"
+            class="absolute inset-0 bg-onSurface opacity-0 hover:opacity-(--hover-alpha) active:opacity-(--active-alpha) transition-opacity"
         ></div>
         <div class="relative pointer-events-none" style="background: transparent">
             <img

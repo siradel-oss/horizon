@@ -9,6 +9,7 @@ import { ref, reactive, watch } from "vue";
 import ColorInput from "@/component/ColorInput.vue";
 import { MessageHandler } from "@/utils/messages";
 import FullscreenSource from "@/component/FullscreenSource.vue";
+import { eqLong } from "@/utils/utils";
 
 enum PaletteMode {
     GRADIENT = "Gradient",
@@ -186,7 +187,7 @@ async function scheduleRasterDataFetch(position: HrzProtocol.IGeographicPosition
             fetchRequest.ticket,
             (result: HrzProtocol.IPickLayerResult[]) => {
                 let foundLayerResult = result.find((layerResult) => {
-                    return JSON.stringify(layerResult.layer?.handle) == JSON.stringify(layer.value);
+                    return eqLong(layerResult.layer?.handle?.opaque, layer.value?.opaque);
                 });
                 if (foundLayerResult) {
                     if (
@@ -285,7 +286,7 @@ async function scheduleRasterDataFetch(position: HrzProtocol.IGeographicPosition
             <Viewer @ready="onHorizonReady" @clickAt="schedulePick" />
             <div
                 ref="popup"
-                class="absolute w-72 left-4 top-4 shadow-lg rounded-xl p-4 text-mBodyMedium bg-secondaryContainer text-onSecondaryContainer"
+                class="absolute w-72 left-4 top-4 shadow-lg rounded-xl p-4 text-mBodyMedium bg-surfaceContainerLow text-onSurface"
             >
                 <span v-if="pickedRasterValue !== null"
                     >Picked raster value: <strong>{{ pickedRasterValue }}</strong></span

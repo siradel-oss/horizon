@@ -53,7 +53,7 @@ function onHorizonReady(api: HrzApi.AsyncApi) {
             <Viewer @ready="onHorizonReady" />
             <div
                 ref="spinner"
-                class="spinner absolute bottom-4 left-4 transition-opacity duration-300 ease-in-out"
+                class="absolute bottom-4 left-4 w-[50px] aspect-square rounded-full border-8 border-onPrimary border-r-primary animate-spin transition-opacity duration-300 ease-in-out"
                 :class="{ 'opacity-0': successiveIsNotWorking > 4 }"
             ></div>
         </template>

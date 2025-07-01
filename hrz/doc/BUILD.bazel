@@ -309,6 +309,17 @@ make_doc(
         "doc/dtm_raster.md",
         "doc/multiple_rasters.md",
         "doc/terrain_settings.md",
+        # Vectors section
+        "doc/vector_data_layers.md",
+        "doc/vector_attributes.md",
+        "doc/client_vector_data.md",
+        "doc/vector_tile_layers.md",
+        "doc/styling_api.md",
+        "doc/extruded_vectors.md",
+        "doc/instanced_models.md",
+        "doc/cylinders.md",
+        "doc/heatmaps.md",
+        ":style_enums.md",
     ] + select({
         "//:is_opensource": [],
         "//conditions:default": [

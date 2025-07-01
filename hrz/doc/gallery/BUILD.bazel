@@ -1,5 +1,4 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//hrz/doc/gallery:tailwindcss/package_json.bzl", tailwindcss_bin = "bin")
 load("@npm//hrz/doc/gallery:vite/package_json.bzl", vite_bin = "bin")
 load("@npm//hrz/doc/gallery:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
@@ -24,7 +23,12 @@ SCENES = [
     "osm_rennes_tiled_raster",
     "osm_rennes_tilejson",
     "osm_rennes_tms",
+    "paris_metro",
     "paris_pmtiles",
+    "rennes_building_type",
+    "rennes_iris_client_data",
+    "rennes_iris_pop",
+    "rennes_trees",
     "san_francisco_data_raster",
     "world_street_map_arcgis",
 ]
@@ -83,7 +87,8 @@ filegroup(
 )
 
 COMMON_DATA = glob(["src/**/*"]) + [
-    ":tsconfig.json",
+    "package.json",
+    "tsconfig.json",
     ":node_modules",
 ]
 
@@ -108,11 +113,14 @@ vue_tsc_bin.vue_tsc(
 vite_bin.vite(
     name = "lib",
     srcs = COMMON_DATA + [
+        "index.html",
+        "vite.config.ts",
         ":type_check",
-        ":vite.config.ts",
     ],
     outs = [
-        "dist/gallery.bundle.js",
+        "dist/index.css",
+        "dist/index.html",
+        "dist/index.js",
     ],
     args = [
         "build",
@@ -120,31 +128,6 @@ vite_bin.vite(
         "dist",
     ],
     chdir = package_name(),
-)
-
-tailwindcss_bin.tailwindcss(
-    name = "style",
-    srcs = glob(["src/**/*"]) + [
-        "index.html",
-        "tailwind.config.js",
-        # This forces the style to be built after the JS bundle,
-        # otherwise vite nukes the dist folder on Windows, and if
-        # style.css was built before the js bundle, it's erased.
-        ":lib",
-    ],
-    outs = [
-        "dist/style.css",
-    ],
-    args = [
-        "-i",
-        "$(location src/style.css)",
-        "-o",
-        "$@",
-        "-c",
-        "$(location tailwind.config.js)",
-        "-m",
-    ],
-    chdir = "../../../",
 )
 
 pkg_files(
@@ -169,14 +152,12 @@ pkg_files(
 
 pkg_files(
     name = "pkg_root",
-    srcs = ["index.html"],
+    srcs = [":lib"],
 )
 
 pkg_files(
     name = "pkg_assets",
     srcs = [
-        ":lib",
-        ":style",
         "//hrz/branding:favicon.ico",
         "//hrz/branding:favicon-16x16.png",
         "//hrz/branding:favicon-32x32.png",

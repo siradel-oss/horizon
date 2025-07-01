@@ -1,3 +1,6 @@
+import { HrzProtocol } from "@siradel/horizon-protocol";
+import * as Long from "long";
+
 export function deepAssign(from: any, to: any) {
     for (const key of Object.getOwnPropertyNames(from)) {
         if (typeof from[key] === "object") {
@@ -23,4 +26,21 @@ export function debounce(callback: (...args: any) => void, waitMs: number): (...
     } else {
         return callback;
     }
+}
+
+export function eqLong(
+    a: number | Long | null | undefined,
+    b: number | Long | null | undefined
+): boolean {
+    if (a === null || a === undefined || b === null || b === undefined) {
+        return true;
+    }
+
+    if (Long.isLong(a)) {
+        return a.eq(b);
+    }
+    if (Long.isLong(b)) {
+        return b.eq(a);
+    }
+    return a === b;
 }

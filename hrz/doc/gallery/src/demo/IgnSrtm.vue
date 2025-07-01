@@ -3,7 +3,7 @@ import SplitView from "@/layout/SplitView.vue";
 import Viewer from "@/component/Viewer.vue";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import { applySceneTemplate, getLayerByName } from "@/utils/scenes";
+import { applyDefaultOrthoBaseLayer, applySceneTemplate, getLayerByName } from "@/utils/scenes";
 import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
 
 let api: HrzApi.AsyncApi;
@@ -15,7 +15,7 @@ async function onHorizonReady(api_: HrzApi.AsyncApi) {
     applySceneTemplate(api, "ign_srtm_dtm").then(async function () {
         layerDtm = await getLayerByName(api, "IGN SRTM DTM");
     });
-    applySceneTemplate(api, "ign_bd_ortho");
+    applyDefaultOrthoBaseLayer(api);
 }
 
 async function retrieveDtmRasterLayerModel(): Promise<any> {

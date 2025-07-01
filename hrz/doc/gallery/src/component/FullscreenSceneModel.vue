@@ -17,7 +17,7 @@ function simplifyModelInPlace(model: any) {
 }
 
 interface Props {
-    text: string;
+    text?: string;
     retrieveData: () => Promise<any>;
 }
 

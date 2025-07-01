@@ -2,20 +2,18 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import * as path from "path";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
     mode: "production",
     base: "",
-    plugins: [nodeResolve(), vue()],
+    plugins: [nodeResolve(), tailwindcss(), vue()],
     build: {
         target: "ES2020",
         rollupOptions: {
-            input: {
-                gallery: path.resolve(__dirname, "src/index.ts"),
-            },
             output: {
-                format: "es",
-                entryFileNames: "[name].bundle.js",
+                entryFileNames: "[name].js",
+                assetFileNames: "[name].[ext]",
             },
         },
     },

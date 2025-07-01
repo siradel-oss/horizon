@@ -3,7 +3,7 @@ import SplitView from "@/layout/SplitView.vue";
 import Viewer from "@/component/Viewer.vue";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import { applyScene, applySceneTemplate, getLayerByName } from "@/utils/scenes";
+import { applyDefaultOrthoBaseLayer, applyScene, getLayerByName } from "@/utils/scenes";
 import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
 import FullscreenSource from "@/component/FullscreenSource.vue";
 
@@ -15,7 +15,7 @@ async function onHorizonReady(api_: HrzApi.AsyncApi) {
     applyScene(api, "osm_rennes_tilejson").then(async function () {
         layer = await getLayerByName(api, "OpenStreetMap");
     });
-    applySceneTemplate(api, "ign_bd_ortho");
+    applyDefaultOrthoBaseLayer(api);
 }
 
 async function retrieveRasterLayerModel(): Promise<any> {

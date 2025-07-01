@@ -1,14 +1,15 @@
 <script lang="ts" setup>
 import { debounce } from "@/utils/utils";
+import { colorFromHex } from "@/utils/colors";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 import { computed, ref, watch } from "vue";
 
 const emits = defineEmits(["update:modelValue", "change"]);
 
 interface Props {
-    alpha: boolean;
+    alpha?: boolean;
     modelValue: HrzProtocol.IColor;
-    modelModifiers: any;
+    modelModifiers?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -38,10 +39,7 @@ const htmlColor = computed({
         return `#${r}${g}${b}`;
     },
     set(value: string) {
-        const r = parseInt(value.slice(1, 3), 16) / 255;
-        const g = parseInt(value.slice(3, 5), 16) / 255;
-        const b = parseInt(value.slice(5, 7), 16) / 255;
-        model.value = { r, g, b, a: model.value.a };
+        model.value = colorFromHex(value);
     },
 });
 

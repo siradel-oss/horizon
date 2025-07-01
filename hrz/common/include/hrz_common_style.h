@@ -29,6 +29,7 @@ Styling script grammar
 
 ### Values
 
+ESCAPED_CHAR    :=   '\n' | '\t' | '\\' | '\"' | '\u{' HEXDIGIT+ '}'
 string_lit      :=   '"' (CHAR | ESCAPED_CHAR)* '"'
 uint_lit        :=   ('0x' HEXDIGIT+) | DIGIT+
 sint_lit        :=   '-'? DIGIT+

@@ -9,7 +9,8 @@
         "skipLibCheck": true,
         "strict": true,
         "paths": {
-            "@/*": ["../../../../../hrz/doc/gallery/src/*"]
+            "@/*": ["../../../../../hrz/doc/gallery/src/*"],
+            "long": ["@types/long"],
         }
     },
     "include": ["src/**/*"]

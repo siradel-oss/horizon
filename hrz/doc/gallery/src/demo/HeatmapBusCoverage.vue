@@ -9,6 +9,7 @@ import {
     getLayerByName,
     applyDefaultSymbolicBaseLayer,
 } from "@/utils/scenes";
+import { debounce } from "@/utils/utils";
 import { ref, watch } from "vue";
 import FullscreenSource from "@/component/FullscreenSource.vue";
 import { MessageHandler } from "@/utils/messages";
@@ -26,33 +27,39 @@ let heatmapReprIndex: number;
 let heatmapPalette: HrzProtocol.INumericPalette;
 
 // Updates the opacity of each color of the heatmap palette.
-watch(heatmapOpacity, async function () {
-    for (let colorPoint of heatmapPalette.colorPoints || []) {
-        if (colorPoint.firstColor) {
-            colorPoint.firstColor.a = heatmapOpacity.value;
+watch(
+    heatmapOpacity,
+    debounce(async function () {
+        for (let colorPoint of heatmapPalette.colorPoints || []) {
+            if (colorPoint.firstColor) {
+                colorPoint.firstColor.a = heatmapOpacity.value;
+            }
+            if (colorPoint.secondColor) {
+                colorPoint.secondColor.a = heatmapOpacity.value;
+            }
         }
-        if (colorPoint.secondColor) {
-            colorPoint.secondColor.a = heatmapOpacity.value;
-        }
-    }
-    await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
-        .style()
-        .representations(heatmapReprIndex)
-        .heatmap()
-        .numericPalette()
-        .set(api, heatmapPalette);
-});
+        await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
+            .style()
+            .representations(heatmapReprIndex)
+            .heatmap()
+            .numericPalette()
+            .set(api, heatmapPalette);
+    }, 200)
+);
 
 // Updates the disc radius of the heatmap.
-watch(acceptableRange, async function () {
-    await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
-        .style()
-        .representations(heatmapReprIndex)
-        .heatmap()
-        .discRadius()
-        .defaultValue()
-        .set(api, acceptableRange.value);
-});
+watch(
+    acceptableRange,
+    debounce(async function () {
+        await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
+            .style()
+            .representations(heatmapReprIndex)
+            .heatmap()
+            .discRadius()
+            .defaultValue()
+            .set(api, acceptableRange.value);
+    }, 200)
+);
 
 function displayPickResult(results: HrzProtocol.IPickResults) {
     let result = results.results?.at(0)?.vector?.heatmaps?.at(0)?.value;
@@ -140,7 +147,7 @@ async function retrieveVectorTilesLayerData(): Promise<any> {
                         min="0"
                         max="1"
                         step="any"
-                        v-model.number.lazy="heatmapOpacity"
+                        v-model.number="heatmapOpacity"
                     />
                 </div>
                 <div class="my-6">
@@ -151,7 +158,7 @@ async function retrieveVectorTilesLayerData(): Promise<any> {
                         min="0"
                         max="1000"
                         step="any"
-                        v-model.number.lazy="acceptableRange"
+                        v-model.number="acceptableRange"
                     />
                 </div>
                 <p>
@@ -167,7 +174,7 @@ async function retrieveVectorTilesLayerData(): Promise<any> {
             <Viewer @ready="onHorizonReady" @clickAt="schedulePick" />
             <div
                 ref="popup"
-                class="absolute w-72 left-4 top-4 shadow-lg rounded-xl p-4 text-mBodyMedium bg-secondaryContainer text-onSecondaryContainer"
+                class="absolute w-72 left-4 top-4 shadow-lg rounded-xl p-4 text-mBodyMedium bg-surfaceContainerLow text-onSurface"
             >
                 <span v-if="pickedBusStops !== null"
                     >Bus stops in the acceptable range: <strong>{{ pickedBusStops }}</strong></span

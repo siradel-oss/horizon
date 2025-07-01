@@ -27,7 +27,7 @@ The simplest backend is [Horizon Core](getting_started.html), which is the viewe
 A user can implement a [custom backend](custom_backend.html) that can intercept those messages. For instance, it is possible to implement a backend sending the messages via websockets to be able to control a remote instance of Horizon. Other usecases include dumping all messages to be able to replay sessions, or having a backend that does nothing at all, useful for tests.
 
 <p style="text-align:center;">
-    <img src="img/architecture.svg" alt="" />
+    <img height="350" src="img/architecture.svg" alt="" />
 </p>
 
 ## Packages

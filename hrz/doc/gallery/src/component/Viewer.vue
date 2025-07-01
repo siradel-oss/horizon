@@ -16,6 +16,14 @@ const options: HrzProtocol.IViewerOptions = {
                 action: HrzProtocol.KeyAction.TOGGLE_DEV_UI,
                 key: HrzProtocol.Key.K_P,
             },
+            {
+                action: HrzProtocol.KeyAction.MOD_KEY,
+                key: HrzProtocol.Key.K_CTRL,
+            },
+            {
+                action: HrzProtocol.KeyAction.RESET_NORTH,
+                key: HrzProtocol.Key.K_R,
+            },
         ],
     },
     graphicsSettingsOverrides: {
@@ -85,17 +93,25 @@ function mouseUp(e: MouseEvent) {
     }
 }
 </script>
+
 <template>
     <canvas
         id="hrz-canvas"
         ref="canvas"
-        class="touch-none focus:outline-none w-full h-full"
+        class="touch-none focus:outline-hidden w-full h-full"
         @mousedown="mouseDown"
         @mouseup="mouseUp"
-    />
+    ></canvas>
     <div
         v-show="attributions.length > 0"
         v-html="attributions"
-        class="attributions absolute right-0 bottom-0 p-2 text-mBodySmall bg-scrim/[25%] text-white backdrop-blur rounded-tl-lg"
+        class="attributions absolute right-0 bottom-0 p-2 text-mBodySmall bg-scrim/[25%] text-white backdrop-blur-sm rounded-tl-lg"
     ></div>
 </template>
+
+<style scoped>
+@reference "../style.css";
+.attributions >>> a {
+    @apply text-white underline;
+}
+</style>
