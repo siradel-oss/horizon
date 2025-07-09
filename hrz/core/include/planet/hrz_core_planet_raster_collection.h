@@ -500,13 +500,21 @@ public:
         }
     }
 
-    void work_views(SceneModel* model)
+    bool work_views(SceneModel* model)
     {
         hrz::SceneModelAccessor accessor(model);
         hrz_proto::SceneSettingsPathBuilder<hrz::SceneModelAccessor> path(accessor);
         auto scene_settings = path.get();
-        _scene_views = scene_settings.active_views().bits();
-        _should_sort_rasters = true;
+        uint32_t new_scene_views = scene_settings.active_views().bits();
+
+        if (new_scene_views != _scene_views)
+        {
+            _scene_views = new_scene_views;
+            _should_sort_rasters = true;
+            return true;
+        }
+
+        return false;
     }
 
     bool work_rasters(SceneModel* model, AssetsLoader* al, BlobAllocator* ba, JobScheduler* js)
@@ -515,9 +523,8 @@ public:
 
         if (_scene_views_updated)
         {
-            work_views(model);
+            rasters_have_changed |= work_views(model);
             _scene_views_updated = false;
-            rasters_have_changed = true;
         }
 
         for (auto& raster_id : _created_rasters)
