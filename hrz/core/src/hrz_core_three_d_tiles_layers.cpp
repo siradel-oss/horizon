@@ -4345,7 +4345,7 @@ struct ThreeDTilesSystem
         const TilesetConfig& config,
         ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
-        bool load_attribute_values,
+        bool reload_attribute_values,
         const TilesetWorkContext& ctx)
     {
         hrz::RenderRequest render_request;
@@ -4362,14 +4362,27 @@ struct ThreeDTilesSystem
             subtile.styling_status = ThreeDTile::StylingStatus::WAITING_FOR_RESOURCE_UPDATE;
         }
         else if (
-            (load_attribute_values || !subtile.has_received_vector_data_attributes_once)
-            && subtile.vector_data_attribute_status
-                != ThreeDTile::Subtile::VectorDataAttributeStatus::LOADED
+            (reload_attribute_values || !subtile.has_received_vector_data_attributes_once
+             || subtile.vector_data_attribute_status
+                 == ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED)
             && _needs_attribute_values(config, subtile))
         {
+            if (reload_attribute_values
+                && subtile.vector_data_attribute_status
+                    != ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED)
+            {
+                _vector_data_channel.send(hrz::vector_data::messages::ReleaseDataRequest{
+                    subtile.vector_data_attribute_request_id});
+                subtile.vector_data_attribute_status =
+                    ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED;
+            }
+
             subtile.styling_status = _request_attribute_values(config, subtile);
         }
-        else if (_try_start_style_job(config, tile, subtile, ctx.js))
+        else if (
+            subtile.vector_data_attribute_status
+                != ThreeDTile::Subtile::VectorDataAttributeStatus::ERROR
+            && _try_start_style_job(config, tile, subtile, ctx.js))
         {
             subtile.styling_status = ThreeDTile::StylingStatus::WAITING_FOR_JOB;
         }
@@ -5696,6 +5709,7 @@ struct ThreeDTilesSystem
                         {
                             tileset->config->vector_data_layer_status =
                                 TilesetConfig::VectorDataLayerStatus::ERROR;
+                            _trigger_restyling(tileset, true);
                         }
                     }
                     else if constexpr (std::is_same_v<MessageType, messages::LayerNewData>)
@@ -5780,7 +5794,25 @@ struct ThreeDTilesSystem
                                 {
                                     HRZ_LOG_ERROR(
                                         "Attribute request error for tile \"{}\"", tile->uri);
-                                    _reset_subtile_style(*subtile);
+
+                                    for (unsigned int attribute_index = 0;
+                                         attribute_index < config->attributes.size();
+                                         ++attribute_index)
+                                    {
+                                        const auto& attribute =
+                                            config->attributes.at(attribute_index);
+
+                                        if (attribute.has_vector_data_layer_source()
+                                            && subtile->attribute_values.size() > attribute_index)
+                                        {
+                                            subtile->attribute_values.at(attribute_index) =
+                                                std::nullopt;
+                                            subtile->attribute_attributions = {};
+                                        }
+                                    }
+
+                                    subtile->vector_data_attribute_status =
+                                        ThreeDTile::Subtile::VectorDataAttributeStatus::ERROR;
                                     subtile->styling_status =
                                         ThreeDTile::StylingStatus::WAITING_FOR_RESOURCE_UPDATE;
                                 }
@@ -5789,7 +5821,7 @@ struct ThreeDTilesSystem
                             if (tile->load_status == ThreeDTile::LoadStatus::LOADED
                                 || tile->load_status == ThreeDTile::LoadStatus::RENDERABLE)
                             {
-                                _trigger_restyling(tileset, true);
+                                _trigger_restyling(tileset, false);
                             }
                         }
                     }
@@ -5801,6 +5833,12 @@ struct ThreeDTilesSystem
                         {
                             subtile->vector_data_attribute_status =
                                 ThreeDTile::Subtile::VectorDataAttributeStatus::ERROR;
+
+                            if (tile->load_status == ThreeDTile::LoadStatus::LOADED
+                                || tile->load_status == ThreeDTile::LoadStatus::RENDERABLE)
+                            {
+                                _trigger_restyling(tileset, false);
+                            }
                         }
                     }
                     else
