@@ -432,7 +432,7 @@ void _generate_root_tile(
             tile_feature.point_count = 0;
             tile_feature.first_linestring_size = 0;
             tile_feature.linestring_count = 0;
-            tile_feature.anchor = {0, 0, 0};
+            tile_feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
             tile_feature.anchor_angle = 0;
             tile->features.push_back(tile_feature);
             tile->out_of_line_data_size += feature->out_of_line_data_size;
@@ -712,7 +712,7 @@ void _generate_tile_for_features(
             tile_feature.first_linestring_size = 0;
             tile_feature.linestring_count = 0;
             tile_feature.type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-            tile_feature.anchor = {0, 0, 0};
+            tile_feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
             tile_feature.anchor_angle = 0;
 
             tile->features.push_back(tile_feature);
@@ -1865,8 +1865,8 @@ void work(
             tracker.attribution = layer->attribution;
 
             {
-                auto feature_id_hashes_data = feature_id_hashes.get_data();
-                auto features_data = tracker.tile_data.geometry.features.get_data();
+                auto feature_id_hashes_data = feature_id_hashes.get_mutable_data();
+                auto features_data = tracker.tile_data.geometry.features.get_mutable_data();
                 for (size_t i = 0; i < tile->features.size(); ++i)
                 {
                     const auto& feature = tile->features.at(i);
@@ -1888,13 +1888,13 @@ void work(
                 // the end of the copy call.
                 std::copy(
                     tile->positions.begin(), tile->positions.end(),
-                    tracker.tile_data.geometry.points.get_data().unsafe_data());
+                    tracker.tile_data.geometry.points.get_mutable_data().unsafe_data());
 
                 // @Safety the lifetime of the temporary blob array data object is extended until
                 // the end of the copy call.
                 std::copy(
                     tile->sizes.begin(), tile->sizes.end(),
-                    tracker.tile_data.geometry.linestring_sizes.get_data().unsafe_data());
+                    tracker.tile_data.geometry.linestring_sizes.get_mutable_data().unsafe_data());
             }
 
             auto out_of_line_data_blob = tracker.out_of_line_attributes_data->to_array(ba);
@@ -1903,7 +1903,7 @@ void work(
             // We scope this so that the out of line data blob mutable handle is released before
             // copying it into each attribute.
             {
-                auto out_of_line_data = out_of_line_data_blob.get_data();
+                auto out_of_line_data = out_of_line_data_blob.get_mutable_data();
                 tracker.out_of_line_attributes_data = std::nullopt;
 
                 CharSpanWriter out_of_line_writer(out_of_line_data.as_span());
@@ -1915,7 +1915,7 @@ void work(
 
                     // Scope to release the mutable handle to the values blob.
                     {
-                        auto values_data = values_blob.get_data();
+                        auto values_data = values_blob.get_mutable_data();
                         size_t value_count = 0;
 
                         for (const auto& tile_feature : tile->features)

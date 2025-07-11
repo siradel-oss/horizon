@@ -991,8 +991,7 @@ message VectorAttribute {
     // to an attribute.
     bool               is_source_feature_ids = 4;
 
-    // Set to true to make this attribute part of the
-    // feature IDs, inside the engine.
+    // Set to true to make this attribute part of the feature IDs.
     bool               is_feature_id         = 5;
 }
 
@@ -1123,6 +1122,7 @@ message VectorDataSource {
 
     // Indicates whether this source has the feature geometries.
     // Such a source may also contain attributes.
+    // At most one source can have geometries.
     bool                             has_geometry            = 4;
 
     repeated VectorAttribute         attributes              = 7;

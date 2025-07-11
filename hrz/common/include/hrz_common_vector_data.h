@@ -54,6 +54,7 @@ struct EncodedVectorTile
     hrz::TileCoords coords;
     VectorDataPackage data;
     std::string layer_name;
+    bool decode_geometry;
     std::optional<size_t> source_feature_id_attribute;
     std::vector<AttributeModel> attributes;
 };
@@ -254,8 +255,17 @@ struct VectorTileExtractionParams
     hrz::GeoBounds bounds;
 };
 
-struct UnsortedVectorData
+struct UnjoinedVectorData
 {
+    // If true, the features are joined by feature ID,
+    // otherwise their order is unchanged, but the number
+    // of geometries and attribute values is adjusted if
+    // needed to conform to the reference feature IDs count.
+    // (If new geometries are needed, empty polygons are
+    // used; if new attribute values are needed, nulls are
+    // used.)
+    bool join_by_feature_ids;
+
     // This is the reference feature order.
     // The list can contain duplicates, that must be respected.
     FeatureIds reference_feature_ids;
@@ -263,13 +273,14 @@ struct UnsortedVectorData
     // The feature order of the geometry and attributes values.
     FeatureIds feature_ids;
 
+    // The features in the geometry will be sorted.
     std::optional<VectorTileGeometry> geometry;
 
     // These attribute values will be sorted.
     std::vector<AttributeValues> attributes;
 };
 
-struct SortedVectorData
+struct JoinedVectorData
 {
     std::optional<VectorTileGeometry> geometry;
     std::vector<AttributeValues> attributes;

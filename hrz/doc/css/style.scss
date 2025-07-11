@@ -260,13 +260,17 @@ a:visited {
 table {
     width: 100%;
     border-collapse: collapse;
+    text-align: center;
 }
 
 td,
 th {
-    border-top: 1px solid hsla(var(--fg-color), 10%);
-    border-bottom: 1px solid hsla(var(--fg-color), 10%);
+    border: 1px solid hsla(var(--fg-color), 10%);
     padding: 0.3em 0.7em;
+}
+
+th {
+    background-color: hsla(var(--fg-color), 8%);
 }
 
 table tr:nth-child(odd) {
@@ -277,7 +281,9 @@ table tr:nth-child(even) {
     background-color: hsla(var(--fg-color), 4%);
 }
 
-table tr td p {
+table tr td p,
+table tr td ul,
+table tr td ol {
     text-align: left;
 }
 

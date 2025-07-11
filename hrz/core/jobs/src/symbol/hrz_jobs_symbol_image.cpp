@@ -161,7 +161,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
 
     const auto* indirection = image_data.instance_index_geometry_index.data();
     auto unsorted = instance_array_opt->get_data();
-    auto sorted = sorted_instance_array_opt->get_data();
+    auto sorted = sorted_instance_array_opt->get_mutable_data();
 
     std::vector<hrz::vt::BakedSymbols::ImageInstances::Batch> batches;
     uint32_t current_batch_instance_count = 0;

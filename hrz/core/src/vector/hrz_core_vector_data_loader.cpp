@@ -269,7 +269,51 @@ struct VectorDataLoader
 
     struct LayerModel
     {
+        static constexpr uint32_t PRIMARY_SOURCE = 0;
         static constexpr uint32_t NO_SOURCE = std::numeric_limits<uint32_t>::max();
+
+        struct Attribute
+        {
+            uint32_t id;
+            bool is_source_feature_ids;
+            std::string name_in_source;
+            bool is_feature_id;
+            uint32_t data_source;
+            hrz_proto::AttributeTransform transform;
+
+            vector_data::AttributeModel to_attribute_model() const
+            {
+                vector_data::AttributeModel model{};
+                model.id = id;
+                model.is_feature_id = is_feature_id;
+                model.name = name_in_source;
+                model.transform = transform;
+                return model;
+            }
+        };
+
+        enum class JoinType
+        {
+            // Take the vector data as is.
+            // This is for the primary source.
+            None,
+
+            // Keep the features in the order they are in the source,
+            // but make sure there are as many features as there are
+            // in the primary source, by either deleting features if
+            // there are too many, or adding empty geometries and
+            // default attribute values if there are too few.
+            MatchFeatureCount,
+
+            // Reorder the features so that they match the order they
+            // are in in the primary source. This respects duplicated
+            // feature IDs. Empty geometries and default attribute
+            // values are inserted if the secondary source has no
+            // matching feature for a feature in the primary source.
+            // This can only be used if both the primary source
+            // and the secondary source have feature IDs.
+            SortByFeatureIds,
+        };
 
         struct Source
         {
@@ -350,7 +394,9 @@ struct VectorDataLoader
                 UntiledDataProvider>
                 provider;
             bool has_geometry;
+            hrz::flat_hash_map<uint32_t, Attribute> attributes;
             std::optional<uint32_t> source_feature_id_attribute;
+            JoinType join_type;
             metrics::MetricDesc request_count_metric;
 
             // Set by LoadSourceModel task
@@ -461,34 +507,18 @@ struct VectorDataLoader
             }
         };
 
-        struct Attribute
-        {
-            uint32_t id;
-            bool is_source_feature_ids;
-            std::string name_in_source;
-            bool is_feature_id;
-            uint32_t data_source;
-            hrz_proto::AttributeTransform transform;
-
-            vector_data::AttributeModel to_attribute_model() const
-            {
-                vector_data::AttributeModel model{};
-                model.id = id;
-                model.is_feature_id = is_feature_id;
-                model.name = name_in_source;
-                model.transform = transform;
-                return model;
-            }
-        };
-
         uint64_t layer_handle;
         uint32_t id;
         uint32_t data_version;
         int8_t loading_priority;
         std::vector<Source> data_sources;
-        hrz::flat_hash_map<uint32_t, Attribute> attributes;
+
+        // attribute ID -> source index
+        // Then use the map in `Source` to go from the attribute ID to the attribute definition.
+        hrz::flat_hash_map<uint32_t, uint32_t> attributes;
+
         uint32_t geometry_source;
-        uint32_t feature_id_source;
+        bool has_feature_ids; // If true, the IDs are provided by the first source.
 
         std::vector<uint32_t> updated_headers_sources_indices;
     };
@@ -727,12 +757,15 @@ struct VectorDataLoader
         LoadFeatureIds,
 
         // Loads geometry, attribute values, and feature IDs for a given feature selection.
-        // Everything respects the canonical order of features.
+        // If the data is not from the primary source, it is joined. If the join is by
+        // feature IDs, the geometry and attribute values are adjusted to match the feature
+        // order of the primary source. If the join is a count match, the geometry and
+        // attribute value counts are adjusted to match the primary source.
         LoadVectorData,
 
         // Loads geometry, attribute values, and feature IDs from a vector tile file for a given
         // tile coordinate, and a layer if the format is MVT.
-        // The data is not sorted.
+        // The data is not joined (i.e. sorted or made to have the expected number of features).
         LoadVectorTileData,
 
         // Loads a vector data file at the given URL, and parses it if the format is MVT.
@@ -758,15 +791,14 @@ struct VectorDataLoader
 
         // Loads geometry, attribute values, and feature IDs from an in-memory vector data layer
         // for a given feature selection.
-        // The data is not sorted.
+        // The data is not joined (i.e. sorted or made to have the expected number of features).
         LoadInMemoryVectorData,
 
         // Loads a file at the given URL.
         LoadUrlData,
 
         // Requests geometry, attribute values, and feature IDs from the client.
-        // For attribute values, the client must respond with the correct number of values in
-        // the same order as the request, so no sorting is needed.
+        // The data is not joined (i.e. sorted or made to have the expected number of features).
         RequestClientData,
 
         // Loads a TileJSON file and parses it.
@@ -868,7 +900,8 @@ struct VectorDataLoader
             TaskDependency request_client_data_task;
             TaskDependency extract_vector_tile_data_task;
             TaskDependency load_feature_ids_task;
-            hrz_jobs::SortVectorDataTicket sort_ticket;
+            FeatureIdListRef reference_feature_ids;
+            hrz_jobs::JoinVectorDataTicket join_ticket;
             FeatureIdListRef feature_ids;
             TileGeometryRef geometry;
             AttributionHandle attribution;
@@ -1292,9 +1325,8 @@ struct VectorDataLoader
         model.data_version = 0;
         model.loading_priority = hrz::clamp_cast<int32_t, int8_t>(layer.loading_priority());
         model.geometry_source = LayerModel::NO_SOURCE;
-        model.feature_id_source = LayerModel::NO_SOURCE;
+        model.has_feature_ids = false;
 
-        bool has_warned_about_multiple_sources_for_feature_ids = false;
         bool has_warned_about_multiple_sources_for_geometry = false;
 
         for (uint32_t s = 0; s < (uint32_t)layer.sources_size(); ++s)
@@ -1463,6 +1495,10 @@ struct VectorDataLoader
                 }
             }
 
+            model_source.join_type = s == LayerModel::PRIMARY_SOURCE
+                ? LayerModel::JoinType::None
+                : LayerModel::JoinType::MatchFeatureCount;
+
             for (uint32_t a = 0; a < (uint32_t)source.attributes_size(); ++a)
             {
                 const auto& attribute = source.attributes(a);
@@ -1475,12 +1511,6 @@ struct VectorDataLoader
                 model_attribute.is_feature_id = attribute.is_feature_id();
                 model_attribute.data_source = s;
 
-                if (model.attributes.find(model_attribute.id) != model.attributes.end())
-                {
-                    HRZ_LOG_WARNING(
-                        "Duplicate attribute id {} in layer {}", model_attribute.id, model.id);
-                }
-
                 if (model_attribute.is_source_feature_ids)
                 {
                     if (!model_source.source_feature_id_attribute.has_value())
@@ -1490,32 +1520,111 @@ struct VectorDataLoader
                     else
                     {
                         HRZ_LOG_WARNING(
-                            "Multiple attributes declared as source feature ID in layer {}: {} and "
-                            "{}",
-                            model.id, model_source.source_feature_id_attribute.value(),
+                            "Multiple attributes declared as source feature ID in source {} of "
+                            "layer {}: {} and {}",
+                            s, model.id, model_source.source_feature_id_attribute.value(),
                             model_attribute.id);
                     }
                 }
 
                 if (model_attribute.is_feature_id)
                 {
-                    if (model.feature_id_source == LayerModel::NO_SOURCE)
+                    if (s == LayerModel::PRIMARY_SOURCE)
                     {
-                        model.feature_id_source = s;
+                        model.has_feature_ids = true;
                     }
-                    else if (
-                        model.feature_id_source != s
-                        && !has_warned_about_multiple_sources_for_feature_ids)
+                    else
                     {
-                        HRZ_LOG_WARNING(
-                            "Multiple data sources with feature IDs. Only the first one will be "
-                            "used.");
-                        has_warned_about_multiple_sources_for_feature_ids = true;
+                        bool found = false;
+                        for (const auto& it : model.attributes)
+                        {
+                            if (it.first == model_attribute.id && model_attribute.is_feature_id)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            HRZ_LOG_WARNING(
+                                "Attribute {}, declared as feature ID in source {} of layer {}, "
+                                "has no counterpart in the first source",
+                                model_attribute.id, s, model.id);
+
+                            model_attribute.is_feature_id = false;
+                        }
+
+                        model_source.join_type = LayerModel::JoinType::SortByFeatureIds;
+                    }
+                }
+                else if (model.attributes.find(model_attribute.id) != model.attributes.end())
+                {
+                    HRZ_LOG_WARNING(
+                        "Duplicate attribute ID {} in source {} of layer {}", model_attribute.id, s,
+                        model.id);
+                }
+
+                model_source.attributes.insert({model_attribute.id, std::move(model_attribute)});
+            }
+
+            if (model_source.join_type == LayerModel::JoinType::SortByFeatureIds)
+            {
+                // If a secondary source is joined on feature IDs,
+                // check that it has all feature ID attributes.
+                for (const auto& it : model.attributes)
+                {
+                    const auto& attribute_id = it.first;
+
+                    if (it.second == LayerModel::PRIMARY_SOURCE)
+                    {
+                        const auto& attribute =
+                            model.data_sources[LayerModel::PRIMARY_SOURCE].attributes[attribute_id];
+
+                        if (attribute.is_feature_id)
+                        {
+                            const auto& attribute_it = model_source.attributes.find(attribute_id);
+
+                            if (attribute_it == model_source.attributes.end())
+                            {
+                                HRZ_LOG_ERROR(
+                                    "Feature ID attribute {} is missing from source {} of layer {}",
+                                    attribute_id, s, model.id);
+                            }
+                            else if (!attribute_it->second.is_feature_id)
+                            {
+                                HRZ_LOG_ERROR(
+                                    "Attribute {} from source {} of layer {} is not marked as "
+                                    "feature ID, when it is in the first source",
+                                    attribute_id, s, model.id);
+                            }
+                        }
                     }
                 }
 
-                model.attributes.insert({model_attribute.id, model_attribute});
+                if (!model.has_feature_ids)
+                {
+                    model_source.join_type = LayerModel::JoinType::MatchFeatureCount;
+                }
             }
+
+            for (const auto& it : model_source.attributes)
+            {
+                // Source feature IDs can be duplicated among multiple sources
+                // (this is necessary to perform joins by feature ID), but we
+                // only want them to be retrieved from the primary source.
+                if (s == LayerModel::PRIMARY_SOURCE || !it.second.is_feature_id)
+                {
+                    model.attributes.insert({it.first, model.data_sources.size()});
+                }
+            }
+
+            assert(
+                !(s == LayerModel::PRIMARY_SOURCE
+                  && model_source.join_type != LayerModel::JoinType::None));
+            assert(
+                !(s != LayerModel::PRIMARY_SOURCE
+                  && model_source.join_type == LayerModel::JoinType::None));
 
             model.data_sources.push_back(std::move(model_source));
         }
@@ -1526,7 +1635,7 @@ struct VectorDataLoader
     void load_attribute_data_into_map(
         std::vector<vector_data::AttributeValues>& attributes,
         hrz::flat_hash_map<uint32_t, AttributeValueListRef>& attribute_ids_to_values,
-        const LayerModel& layer_model,
+        const LayerModel::Source& data_source,
         size_t expected_value_count)
     {
         for (size_t a = 0; a < attributes.size(); ++a)
@@ -1534,9 +1643,9 @@ struct VectorDataLoader
             auto& attribute = attributes[a];
 
             {
-                const auto& it = layer_model.attributes.find(attribute.attribute_id);
+                const auto& it = data_source.attributes.find(attribute.attribute_id);
 
-                if (it == layer_model.attributes.end())
+                if (it == data_source.attributes.end())
                 {
                     // Unknown attribute
                     continue;
@@ -1811,6 +1920,7 @@ struct VectorDataLoader
         task_data.request_client_data_task = {};
         task_data.extract_vector_tile_data_task = {};
         task_data.load_feature_ids_task = {};
+        task_data.reference_feature_ids = FeatureIdListRef{};
         task_data.feature_ids = FeatureIdListRef{};
         task_data.geometry = TileGeometryRef{};
         task_data.attribution = {};
@@ -3533,7 +3643,7 @@ private:
             case TaskType::LoadVectorData:
             {
                 auto& task_data = task.load_vector_data();
-                hrz_jobs::cancel_job(js, task_data.sort_ticket);
+                hrz_jobs::cancel_job(js, task_data.join_ticket);
             }
             break;
             case TaskType::LoadVectorTileData:
@@ -3679,9 +3789,9 @@ private:
         {
             auto& task_data = task.load_vector_data();
 
-            if (hrz_jobs::is_job_valid(js, task_data.sort_ticket))
+            if (hrz_jobs::is_job_valid(js, task_data.join_ticket))
             {
-                hrz_jobs::cancel_job(js, task_data.sort_ticket);
+                hrz_jobs::cancel_job(js, task_data.join_ticket);
             }
 
             task_data.feature_ids.release();
@@ -3700,6 +3810,11 @@ private:
                 task_data.request_client_data_task.release_data();
                 task_data.extract_vector_tile_data_task.release_data();
                 task_data.load_feature_ids_task.release_data();
+
+                if (!task_data.feature_selection.has_feature_ids())
+                {
+                    task_data.reference_feature_ids.release();
+                }
             }
         }
         else if (task.type == TaskType::LoadVectorTileData)
@@ -4055,10 +4170,10 @@ private:
             const auto& layer_model = task_data.layer_model.value();
             for (auto& it : layer_model.attributes)
             {
-                const auto& attribute = it.second;
+                const auto& attribute_id = it.first;
                 auto sub_task = TaskDependency::between_tasks(
                     get_or_create_load_attribute_values_task(
-                        task_data.layer_model, attribute.id, task_data.feature_selection),
+                        task_data.layer_model, attribute_id, task_data.feature_selection),
                     task_ref);
                 task_data.attribute_tasks.push_back(std::move(sub_task));
             }
@@ -4069,50 +4184,40 @@ private:
         {
             auto& task_data = task.load_attribute_values();
             const auto& layer_model = task_data.layer_model.value();
-            const auto& attribute = layer_model.attributes.at(task_data.attribute_id);
+            const auto& attribute_source = layer_model.attributes.at(task_data.attribute_id);
 
             task_data.load_vector_data_task = TaskDependency::between_tasks(
                 get_or_create_load_vector_data_task(
-                    task_data.layer_model, attribute.data_source, task_data.feature_selection),
+                    task_data.layer_model, attribute_source, task_data.feature_selection),
                 task_ref);
             set_task_status(task_ref, task, TaskStatus::Unloaded);
         }
         else if (task.type == TaskType::LoadFeatureIds)
         {
             auto& task_data = task.load_feature_ids();
-            const auto& layer_model = task_data.layer_model.value();
 
             if (task_data.feature_selection.has_feature_ids())
             {
                 task_data.feature_ids = task_data.feature_selection.feature_ids();
                 set_task_status(task_ref, task, TaskStatus::Loaded);
             }
-            else if (
-                layer_model.geometry_source != LayerModel::NO_SOURCE
-                || layer_model.feature_id_source != LayerModel::NO_SOURCE)
+            else if (task_data.feature_selection.has_tile_coords())
             {
-                if (task_data.feature_selection.has_tile_coords())
-                {
-                    // Geometry source has priority over feature ID source.
-                    auto data_source = layer_model.geometry_source != LayerModel::NO_SOURCE
-                        ? layer_model.geometry_source
-                        : layer_model.feature_id_source;
-
-                    task_data.load_vector_data_task = TaskDependency::between_tasks(
-                        get_or_create_load_vector_data_task(
-                            task_data.layer_model, data_source, task_data.feature_selection),
-                        task_ref);
-                    set_task_status(task_ref, task, TaskStatus::Unloaded);
-                }
-                else
-                {
-                    assert(false && "Unhandled case");
-                    set_task_status(task_ref, task, TaskStatus::ModelError);
-                }
+                // Whether or not the primary source has feature IDs, we load its
+                // vector data. If it has feature IDs, they will be returned.
+                // If not, it must have geometries, and a feature ID list with the
+                // correct number of feature will be returned. (Though not containing
+                // any actual feature ID.)
+                task_data.load_vector_data_task = TaskDependency::between_tasks(
+                    get_or_create_load_vector_data_task(
+                        task_data.layer_model, LayerModel::PRIMARY_SOURCE,
+                        task_data.feature_selection),
+                    task_ref);
+                set_task_status(task_ref, task, TaskStatus::Unloaded);
             }
             else
             {
-                HRZ_LOG_ERROR("No source for feature IDs provided.");
+                assert(false && "Unhandled case");
                 set_task_status(task_ref, task, TaskStatus::ModelError);
             }
         }
@@ -4124,19 +4229,25 @@ private:
 
             auto load_feature_ids_if_needed = [&]()
             {
-                // If the data source is not the one authoritative for the order of
-                // features in a tile (i.e. is not the source for geometry), and is
-                // accessed by tile, the vector data will need to be reordered to
-                // conform to the authoritative order.
-                // Features IDs are loaded as they will be in the right order and
-                // serve as parameter to the reordering job.
-                if (task_data.data_source != layer_model.geometry_source
-                    && !task_data.feature_selection.has_feature_ids())
+                // If the data needs to be joined, we need reference feature IDs
+                // for either joining by feature ID or just checking if there are
+                // enough values. (Even when no feature ID attributes are defined,
+                // reference feature IDs at least contain the number of features.)
+                if (data_source.join_type != LayerModel::JoinType::None)
                 {
-                    task_data.load_feature_ids_task = TaskDependency::between_tasks(
-                        get_or_create_load_feature_ids_task(
-                            task_data.layer_model, task_data.feature_selection),
-                        task_ref);
+                    if (task_data.feature_selection.has_feature_ids())
+                    {
+                        assert(task_data.feature_selection.feature_ids().has_value());
+                        task_data.reference_feature_ids = task_data.feature_selection.feature_ids();
+                        assert(task_data.reference_feature_ids.has_value());
+                    }
+                    else
+                    {
+                        task_data.load_feature_ids_task = TaskDependency::between_tasks(
+                            get_or_create_load_feature_ids_task(
+                                task_data.layer_model, task_data.feature_selection),
+                            task_ref);
+                    }
                 }
             };
 
@@ -4179,8 +4290,7 @@ private:
                         task_data.layer_model, task_data.data_source, task_data.feature_selection),
                     task_ref);
 
-                // Client data is expected to be already sorted.
-                // There is no need to load the feature IDs as the client task handles it.
+                load_feature_ids_if_needed();
 
                 set_task_status(task_ref, task, TaskStatus::Unloaded);
             }
@@ -4375,29 +4485,17 @@ private:
         else if (task.type == TaskType::LoadInMemoryVectorData)
         {
             auto& task_data = task.load_in_memory_vector_data();
-            const auto& layer_model = task_data.layer_model.value();
 
-            if (task_data.data_source == layer_model.geometry_source
-                && !task_data.feature_selection.has_tile_coords())
+            if (task_data.data_source != LayerModel::PRIMARY_SOURCE
+                && !task_data.feature_selection.has_feature_ids())
             {
-                HRZ_LOG_ERROR(
-                    "No tile coords provided for retrieving geometries from in-memory vector data "
-                    "layer.");
-                set_task_status(task_ref, task, TaskStatus::ModelError);
+                task_data.load_feature_ids_task = TaskDependency::between_tasks(
+                    get_or_create_load_feature_ids_task(
+                        task_data.layer_model, task_data.feature_selection),
+                    task_ref);
             }
-            else
-            {
-                if (task_data.data_source != layer_model.geometry_source
-                    && !task_data.feature_selection.has_feature_ids())
-                {
-                    task_data.load_feature_ids_task = TaskDependency::between_tasks(
-                        get_or_create_load_feature_ids_task(
-                            task_data.layer_model, task_data.feature_selection),
-                        task_ref);
-                }
 
-                set_task_status(task_ref, task, TaskStatus::Unloaded);
-            }
+            set_task_status(task_ref, task, TaskStatus::Unloaded);
         }
         else if (task.type == TaskType::LoadUrlData)
         {
@@ -4420,16 +4518,12 @@ private:
             }
             else if (
                 access == hrz_proto::VectorDataSourceAccess::ACCESS_BY_FEATURE_ID
-                && layer_model.geometry_source == task_data.data_source)
+                || task_data.data_source != LayerModel::PRIMARY_SOURCE)
             {
-                HRZ_LOG_ERROR("Cannot request client vector geometry using feature IDs");
-                set_task_status(task_ref, task, TaskStatus::ModelError);
-            }
-            else if (layer_model.geometry_source != task_data.data_source)
-            {
-                // Even if the provider's access has been set to an access by tile and not by
-                // feature ids, we still require the feature ids so that we match the client values
-                // with the features of the tile.
+                // When for a secondary source, even if the provider's access has
+                // been set to an access by tile and not by feature IDs, we still
+                // require the feature IDs so that we match the client values with
+                // the features of the tile.
                 task_data.load_feature_ids_task = TaskDependency::between_tasks(
                     get_or_create_load_feature_ids_task(
                         task_data.layer_model, task_data.feature_selection),
@@ -4871,68 +4965,75 @@ private:
         else if (task.type == TaskType::LoadFeatureIds)
         {
             auto& task_data = task.load_feature_ids();
-            const auto& layer_model = task_data.layer_model.value();
 
             if (task_data.feature_selection.has_feature_ids())
             {
                 task_data.feature_ids = task_data.feature_selection.feature_ids();
                 set_task_status(task_ref, task, TaskStatus::Loaded);
             }
-            else if (
-                layer_model.geometry_source != LayerModel::NO_SOURCE
-                || layer_model.feature_id_source != LayerModel::NO_SOURCE)
+            else if (task_data.load_vector_data_task.has_task())
             {
-                if (task_data.load_vector_data_task.has_task())
+                auto& load_vector_data_task = task_data.load_vector_data_task.get_task();
+                if (load_vector_data_task.status == TaskStatus::Loaded)
                 {
-                    auto& load_vector_data_task = task_data.load_vector_data_task.get_task();
-                    if (load_vector_data_task.status == TaskStatus::Loaded)
-                    {
-                        task_data.feature_ids =
-                            load_vector_data_task.load_vector_data().feature_ids;
-                        task_data.load_vector_data_task.release_data();
-                        set_task_status(task_ref, task, TaskStatus::Loaded);
-                        send_feature_ids_message(task_ref, task);
-                    }
-                    else if (is_error(load_vector_data_task.status))
-                    {
-                        task_data.load_vector_data_task.release_data();
-                        set_task_status(task_ref, task, load_vector_data_task.status);
+                    task_data.feature_ids = load_vector_data_task.load_vector_data().feature_ids;
+                    task_data.load_vector_data_task.release_data();
+                    set_task_status(task_ref, task, TaskStatus::Loaded);
+                    send_feature_ids_message(task_ref, task);
+                }
+                else if (is_error(load_vector_data_task.status))
+                {
+                    task_data.load_vector_data_task.release_data();
+                    set_task_status(task_ref, task, load_vector_data_task.status);
 
-                        auto iterpair = tasks_to_data_request_ids.equal_range(task_ref);
-                        for (auto it = iterpair.first; it != iterpair.second; ++it)
-                        {
-                            auto& request = request_ids_to_data_requests.at(it->second);
-                            send_data_error_message(request);
-                        }
-                    }
-                    else
+                    auto iterpair = tasks_to_data_request_ids.equal_range(task_ref);
+                    for (auto it = iterpair.first; it != iterpair.second; ++it)
                     {
-                        set_task_status(task_ref, task, TaskStatus::Blocked);
+                        auto& request = request_ids_to_data_requests.at(it->second);
+                        send_data_error_message(request);
                     }
                 }
-            }
-            else
-            {
-                assert(false && "Unhandled case");
-                set_task_status(task_ref, task, TaskStatus::ModelError);
+                else
+                {
+                    set_task_status(task_ref, task, TaskStatus::Blocked);
+                }
             }
         }
         else if (task.type == TaskType::LoadVectorData)
         {
             auto& task_data = task.load_vector_data();
             const auto& layer_model = task_data.layer_model.value();
+            const auto& data_source = layer_model.data_sources.at(task_data.data_source);
 
-            // If the data comes from the source that provides the geometry,
-            // then its values are in the correct order, and the data can be
-            // considered to be loaded.
-            // Otherwise, the data must be sorted according to the order of
-            // the geometry.
-            auto check_for_sorted_data = [&]()
+            // If the data comes from the primary source, then its values are in
+            // the correct order, and the data can be considered to be loaded.
+            // Otherwise, the data must be joined to match the feature order or
+            // count of the primary source (i.e. the first source in the list).
+            auto check_for_joined_data = [&]()
             {
-                if (task_data.data_source == layer_model.geometry_source
-                    || task_data.feature_selection.has_feature_ids())
+                if (data_source.join_type == LayerModel::JoinType::None)
                 {
                     set_task_status(task_ref, task, TaskStatus::Loaded);
+                }
+                else if (task_data.reference_feature_ids.has_value())
+                {
+                    vector_data::UnjoinedVectorData params;
+                    params.join_by_feature_ids =
+                        data_source.join_type == LayerModel::JoinType::SortByFeatureIds;
+                    params.reference_feature_ids = task_data.reference_feature_ids.value();
+                    params.feature_ids = task_data.feature_ids.value();
+                    if (task_data.geometry.has_value())
+                    {
+                        params.geometry = {task_data.geometry.value()};
+                    }
+                    for (const auto& it : task_data.attribute_ids_to_values)
+                    {
+                        params.attributes.push_back(it.second.value());
+                    }
+
+                    task_data.join_ticket = hrz_jobs::add_job_join_vector_data(
+                        js, params,
+                        {monitoring::systems::VectorDataLoader, layer_model.layer_handle});
                 }
                 else
                 {
@@ -4940,28 +5041,47 @@ private:
                 }
             };
 
-            if (hrz_jobs::is_job_valid(js, task_data.sort_ticket))
+            auto copy_geometry_if_needed = [&](const TileGeometryRef& geometry)
             {
-                if (hrz_jobs::is_job_finished(js, task_data.sort_ticket))
+                if (layer_model.geometry_source == task_data.data_source)
                 {
-                    if (hrz_jobs::get_job_status(js, task_data.sort_ticket)
+                    task_data.geometry = geometry;
+                }
+            };
+
+            auto copy_relevant_attributes =
+                [&](hrz::flat_hash_map<uint32_t, AttributeValueListRef> attribute_ids_to_values)
+            {
+                for (const auto& it : attribute_ids_to_values)
+                {
+                    if (data_source.attributes.find(it.first) != data_source.attributes.end())
+                    {
+                        task_data.attribute_ids_to_values.insert_or_assign(it.first, it.second);
+                    }
+                }
+            };
+
+            if (hrz_jobs::is_job_valid(js, task_data.join_ticket))
+            {
+                if (hrz_jobs::is_job_finished(js, task_data.join_ticket))
+                {
+                    if (hrz_jobs::get_job_status(js, task_data.join_ticket)
                         == hrz::job_scheduler::JobStatus::Finished_Success)
                     {
-                        vector_data::SortedVectorData data;
-                        hrz_jobs::get_job_response(js, task_data.sort_ticket, data);
-                        size_t feature_count = task_data.load_feature_ids_task.get_task()
-                                                   .load_feature_ids()
-                                                   .feature_ids->size();
+                        vector_data::JoinedVectorData data;
+                        hrz_jobs::get_job_response(js, task_data.join_ticket, data);
+                        size_t feature_count = task_data.reference_feature_ids->size();
 
-                        task_data.feature_ids = task_data.load_feature_ids_task.get_task()
-                                                    .load_feature_ids()
-                                                    .feature_ids;
+                        task_data.feature_ids = task_data.reference_feature_ids;
 
                         task_data.geometry = tile_geometries.alloc();
-                        task_data.geometry.value() = std::move(data.geometry.value());
+                        if (data.geometry.has_value())
+                        {
+                            task_data.geometry.value() = std::move(data.geometry.value());
+                        }
 
                         load_attribute_data_into_map(
-                            data.attributes, task_data.attribute_ids_to_values, layer_model,
+                            data.attributes, task_data.attribute_ids_to_values, data_source,
                             feature_count);
 
                         set_task_status(task_ref, task, TaskStatus::Loaded);
@@ -4969,33 +5089,41 @@ private:
                     else
                     {
                         HRZ_LOG_ERROR(
-                            "Could not sort data of tile of vector data layer {}", layer_model.id);
-                        hrz_jobs::cancel_job(js, task_data.sort_ticket);
+                            "Could not join data of tile of vector data layer {}", layer_model.id);
+                        hrz_jobs::cancel_job(js, task_data.join_ticket);
                         set_task_status(task_ref, task, TaskStatus::DataError);
                     }
                 }
             }
             else if (
-                task_data.load_feature_ids_task.has_task() && task_data.feature_ids.has_value())
+                task_data.load_feature_ids_task.has_task()
+                && !task_data.reference_feature_ids.has_value())
             {
-                // The task needs its data to be sorted.
-
                 auto& load_feature_ids_task = task_data.load_feature_ids_task.get_task();
                 if (load_feature_ids_task.status == TaskStatus::Loaded)
                 {
-                    vector_data::UnsortedVectorData params;
-                    params.reference_feature_ids =
-                        load_feature_ids_task.load_feature_ids().feature_ids.value();
-                    params.feature_ids = task_data.feature_ids.value();
-                    params.geometry = {task_data.geometry.value()};
-                    for (const auto& it : task_data.attribute_ids_to_values)
-                    {
-                        params.attributes.push_back(it.second.value());
-                    }
+                    task_data.reference_feature_ids =
+                        load_feature_ids_task.load_feature_ids().feature_ids;
 
-                    task_data.sort_ticket = hrz_jobs::add_job_sort_vector_data(
-                        js, params,
-                        {monitoring::systems::VectorDataLoader, layer_model.layer_handle});
+                    if (task_data.feature_ids.has_value())
+                    {
+                        // If this condition is true, it means that the data
+                        // has been loaded, and it can be joined.
+                        // (But most of the time reference feature IDs are
+                        // loaded first, before the actual data has been
+                        // loaded. In this case other calls to this function
+                        // trigger the joining.)
+                        check_for_joined_data();
+                    }
+                }
+                else if (is_error(load_feature_ids_task.status))
+                {
+                    task_data.load_feature_ids_task.release_data();
+                    set_task_status(task_ref, task, load_feature_ids_task.status);
+                }
+                else
+                {
+                    set_task_status(task_ref, task, TaskStatus::Blocked);
                 }
             }
             else if (task_data.load_vector_tile_data_task.has_task())
@@ -5005,13 +5133,13 @@ private:
                 {
                     const auto& data = load_vector_tile_data_task.load_vector_tile_data();
                     task_data.feature_ids = data.feature_ids;
-                    task_data.geometry = data.geometry;
+                    copy_geometry_if_needed(data.geometry);
                     task_data.attribution = data.attribution;
-                    task_data.attribute_ids_to_values = data.attribute_ids_to_values;
+                    copy_relevant_attributes(data.attribute_ids_to_values);
 
                     task_data.load_vector_tile_data_task.release_data();
 
-                    check_for_sorted_data();
+                    check_for_joined_data();
                 }
                 else if (is_error(load_vector_tile_data_task.status))
                 {
@@ -5031,13 +5159,13 @@ private:
                 {
                     const auto& data = load_in_memory_vector_data_task.load_in_memory_vector_data();
                     task_data.feature_ids = data.feature_ids;
-                    task_data.geometry = data.geometry;
+                    copy_geometry_if_needed(data.geometry);
                     task_data.attribution = data.attribution;
-                    task_data.attribute_ids_to_values = data.attribute_ids_to_values;
+                    copy_relevant_attributes(data.attribute_ids_to_values);
 
                     task_data.load_in_memory_vector_data_task.release_data();
 
-                    check_for_sorted_data();
+                    check_for_joined_data();
                 }
                 else if (is_error(load_in_memory_vector_data_task.status))
                 {
@@ -5056,15 +5184,13 @@ private:
                 {
                     const auto& data = request_client_data_task.request_client_data();
                     task_data.feature_ids = data.feature_ids;
-                    task_data.geometry = data.geometry;
+                    copy_geometry_if_needed(data.geometry);
                     task_data.attribution = data.attribution;
-                    task_data.attribute_ids_to_values = data.attribute_ids_to_values;
+                    copy_relevant_attributes(data.attribute_ids_to_values);
 
                     task_data.request_client_data_task.release_data();
 
-                    // There is no need to sort the received data, as client data is expected
-                    // to be already sorted.
-                    set_task_status(task_ref, task, TaskStatus::Loaded);
+                    check_for_joined_data();
                 }
                 else if (is_error(request_client_data_task.status))
                 {
@@ -5084,13 +5210,13 @@ private:
                 {
                     const auto& data = extract_vector_tile_data_task.extract_vector_tile_data();
                     task_data.feature_ids = data.feature_ids;
-                    task_data.geometry = data.geometry;
+                    copy_geometry_if_needed(data.geometry);
                     task_data.attribution = data.attribution;
-                    task_data.attribute_ids_to_values = data.attribute_ids_to_values;
+                    copy_relevant_attributes(data.attribute_ids_to_values);
 
                     task_data.load_in_memory_vector_data_task.release_data();
 
-                    check_for_sorted_data();
+                    check_for_joined_data();
                 }
                 else if (is_error(extract_vector_tile_data_task.status))
                 {
@@ -5117,9 +5243,10 @@ private:
                 job_params.coords = tile_coords;
                 job_params.data = package;
                 job_params.layer_name = layer_name;
+                job_params.decode_geometry = layer_model.geometry_source == task_data.data_source;
                 job_params.source_feature_id_attribute = std::nullopt;
 
-                for (const auto& it : layer_model.attributes)
+                for (const auto& it : data_source.attributes)
                 {
                     auto attribute_id = it.first;
                     const auto& attribute = it.second;
@@ -5182,16 +5309,19 @@ private:
                         vector_data::DecodedVectorTile data;
                         hrz_jobs::get_job_response(js, task_data.decode_ticket, data);
 
-                        assert(data.feature_ids.size() == data.geometry.features.size());
                         task_data.feature_ids = feature_id_lists.alloc();
                         task_data.feature_ids.value() = std::move(data.feature_ids);
 
-                        task_data.geometry = tile_geometries.alloc();
-                        task_data.geometry.value() = std::move(data.geometry);
+                        if (layer_model.geometry_source == task_data.data_source)
+                        {
+                            assert(data.feature_ids.size() == data.geometry.features.size());
+                            task_data.geometry = tile_geometries.alloc();
+                            task_data.geometry.value() = std::move(data.geometry);
+                        }
 
                         load_attribute_data_into_map(
-                            data.attributes, task_data.attribute_ids_to_values, layer_model,
-                            data.geometry.features.size());
+                            data.attributes, task_data.attribute_ids_to_values, data_source,
+                            data.feature_ids.size());
 
                         set_task_status(task_ref, task, TaskStatus::Loaded);
                     }
@@ -5470,6 +5600,9 @@ private:
                     if (hrz_jobs::get_job_status(js, task_data.extract_ticket)
                         == hrz::job_scheduler::JobStatus::Finished_Success)
                     {
+                        const auto& data_source =
+                            layer_model.data_sources.at(task_data.data_source);
+
                         vector_data::DecodedVectorTile extracted_tile;
                         hrz_jobs::get_job_response(js, task_data.extract_ticket, extracted_tile);
 
@@ -5484,7 +5617,7 @@ private:
 
                         load_attribute_data_into_map(
                             extracted_tile.attributes, task_data.attribute_ids_to_values,
-                            layer_model, extracted_tile.geometry.features.size());
+                            data_source, extracted_tile.geometry.features.size());
 
                         set_task_status(task_ref, task, TaskStatus::Loaded);
                     }
@@ -5709,6 +5842,8 @@ private:
             {
                 auto make_request_client_message = [&]() -> hrz_proto::VectorDataRequestMessage
                 {
+                    const auto& data_source = layer_model.data_sources.at(task_data.data_source);
+
                     task_data.client_ticket = client_ticket_generator.generate();
 
                     hrz_proto::VectorDataRequestMessage message;
@@ -5716,18 +5851,13 @@ private:
                     message.set_vector_data_layer_id(task_data.layer_model->id);
                     message.set_vector_data_source_index(task_data.data_source);
                     message.set_expects_geometry(
-                        task_data.layer_model->geometry_source == task_data.data_source);
+                        layer_model.geometry_source == task_data.data_source);
 
-                    for (const auto& pair : layer_model.attributes)
+                    for (const auto& pair : data_source.attributes)
                     {
-                        // We only want to request attribute values for the ones that have been
-                        // defined in the same data source.
-                        if (pair.second.data_source == task_data.data_source)
-                        {
-                            message.add_attribute_ids(pair.first);
-                            task_data.attributes.push_back(
-                                layer_model.attributes.at(pair.first).to_attribute_model());
-                        }
+                        message.add_attribute_ids(pair.first);
+                        task_data.attributes.push_back(
+                            data_source.attributes.at(pair.first).to_attribute_model());
                     }
 
                     return message;
@@ -5801,7 +5931,15 @@ private:
                                                   .load_feature_ids()
                                                   .feature_ids.value();
 
-                    if (!feature_ids.empty())
+                    if (!feature_ids.has_any_attribute())
+                    {
+                        HRZ_LOG_ERROR(
+                            "Cannot request values by feature ID without features IDs, for source "
+                            "{} of layer {}.",
+                            task_data.data_source, layer_model.id);
+                        set_task_status(task_ref, task, TaskStatus::ModelError);
+                    }
+                    else if (!feature_ids.empty())
                     {
                         auto message = make_request_client_message();
                         feature_ids.to_proto(
@@ -5827,9 +5965,17 @@ private:
                     else
                     {
                         // No need to make an empty request to the client.
+
+                        if (layer_model.geometry_source == task_data.data_source)
+                        {
+                            task_data.geometry = tile_geometries.alloc();
+                            task_data.geometry.value() = vector_data::VectorTileGeometry{};
+                        }
+
                         for (const auto& pair : layer_model.attributes)
                         {
-                            if (pair.second.data_source != task_data.data_source)
+                            const auto& data_source = pair.second;
+                            if (data_source != task_data.data_source)
                             {
                                 continue;
                             }
@@ -6375,13 +6521,16 @@ private:
                             auto& task_ref = it->second;
                             auto& task = task_ref.value();
                             assert(task.type == TaskType::LoadInMemoryVectorData);
-                            auto& task_data = task.load_in_memory_vector_data();
-                            const auto& layer_model = task_data.layer_model.value();
 
                             if (task.status == TaskStatus::Blocked
                                 || task.status == TaskStatus::Loaded
                                 || task.status == TaskStatus::Unloaded)
                             {
+                                auto& task_data = task.load_in_memory_vector_data();
+                                const auto& layer_model = task_data.layer_model.value();
+                                const auto& data_source =
+                                    layer_model.data_sources.at(task_data.data_source);
+
                                 auto& data = message.data;
 
                                 assert(data.feature_ids.size() == data.geometry.features.size());
@@ -6394,7 +6543,7 @@ private:
                                 task_data.attribution = message.attribution;
 
                                 load_attribute_data_into_map(
-                                    data.attributes, task_data.attribute_ids_to_values, layer_model,
+                                    data.attributes, task_data.attribute_ids_to_values, data_source,
                                     data.geometry.features.size());
 
                                 set_task_status(task_ref, task, TaskStatus::Loaded);
@@ -6757,36 +6906,46 @@ public:
             }
         };
 
-        std::optional<uint32_t> expected_feature_count = std::nullopt;
-
-        if (task_data.load_feature_ids_task.has_task())
-        {
-            const auto& feature_ids =
-                task_data.load_feature_ids_task.get_task().load_feature_ids().feature_ids;
-            assert(feature_ids.has_value());
-            if (feature_ids.has_value())
-            {
-                expected_feature_count = {(uint32_t)feature_ids.value().size()};
-            }
-        }
-
-        if (expected_feature_count.has_value()
-            && expected_feature_count.value() != (size_t)response.features_size())
+        if (response.error())
         {
             HRZ_LOG_WARNING(
-                "Incorrect amount of features in client vector data for ticket {}: got {}, "
-                "expected {}",
-                response.ticket(), response.features_size(), expected_feature_count.value());
-
+                "Received error from client for vector data request {}", response.ticket());
             set_history_entry_status(ClientRequestHistory::RequestStatus::Error);
             set_task_status(task_ref, task, TaskStatus::DataError);
         }
         else
         {
-            task_data.client_response = {std::move(response)};
+            std::optional<uint32_t> expected_feature_count = std::nullopt;
 
-            set_history_entry_status(ClientRequestHistory::RequestStatus::Received);
-            set_task_status(task_ref, task, TaskStatus::Loading);
+            if (task_data.load_feature_ids_task.has_task())
+            {
+                const auto& feature_ids =
+                    task_data.load_feature_ids_task.get_task().load_feature_ids().feature_ids;
+                assert(feature_ids.has_value());
+                if (feature_ids.has_value())
+                {
+                    expected_feature_count = {(uint32_t)feature_ids.value().size()};
+                }
+            }
+
+            if (expected_feature_count.has_value()
+                && expected_feature_count.value() != (size_t)response.features_size())
+            {
+                HRZ_LOG_WARNING(
+                    "Incorrect amount of features in client vector data for ticket {}: got {}, "
+                    "expected {}",
+                    response.ticket(), response.features_size(), expected_feature_count.value());
+
+                set_history_entry_status(ClientRequestHistory::RequestStatus::Error);
+                set_task_status(task_ref, task, TaskStatus::DataError);
+            }
+            else
+            {
+                task_data.client_response = {std::move(response)};
+
+                set_history_entry_status(ClientRequestHistory::RequestStatus::Received);
+                set_task_status(task_ref, task, TaskStatus::Loading);
+            }
         }
 
         client_tickets_to_tasks.erase(response.ticket());
@@ -6958,7 +7117,7 @@ void dev_ui(VectorDataLoader* loader, mu_Context* ctx, const char* window_name)
 {
     HRZ_SCOPED_LOCK(loader->dev_ui_mutex);
 
-    if (mu_begin_window_ex(ctx, window_name, mu_rect(300, 100, 530, 500), MU_OPT_CLOSED))
+    if (mu_begin_window_ex(ctx, window_name, mu_rect(300, 100, 600, 500), MU_OPT_CLOSED))
     {
         auto get_spinner_str = [&]() -> const char*
         {
@@ -7006,12 +7165,12 @@ void dev_ui(VectorDataLoader* loader, mu_Context* ctx, const char* window_name)
                     });
             }
 
-            static int layout[] = {120, 120, 40, 110, 40, -1};
+            static int layout[] = {120, 120, 80, 110, 40, -1};
             mu_layout_row(ctx, 6, layout, 0);
 
             mu_text(ctx, "#");
             mu_text(ctx, "Type");
-            mu_text(ctx, "Layer #");
+            mu_text(ctx, "Layer ID");
             mu_text(ctx, "Feature selection");
             mu_text(ctx, "Task #");
             mu_text(ctx, "Status");

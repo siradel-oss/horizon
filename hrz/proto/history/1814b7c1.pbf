@@ -2205,7 +2205,7 @@ queue_size (2.HrzProtocol.QueueSizeR	queueSize";
 MessageQueueServiceL
 DequeueMessages.HrzProtocol.DequeueParams.HrzProtocol.DequeuedMessages9
 GetQueueSize.HrzProtocol.Void.HrzProtocol.QueueSizeBH¯bproto3
-†	
+∂	
 hrz_client_data.protoHrzProtocolhrz_types.proto"è
 ClientFeatureGeometry3
 type (2.HrzProtocol.VectorGeometryTypeRtype
@@ -2213,9 +2213,10 @@ queue_size (2.HrzProtocol.QueueSizeR	queueSize";
 linestring_sizes (RlinestringSizes"ó
 ClientFeature>
 geometry (2".HrzProtocol.ClientFeatureGeometryRgeometryF
-attribute_values (2.HrzProtocol.AttributeValueRattributeValues"ç
+attribute_values (2.HrzProtocol.AttributeValueRattributeValues"£
 VectorDataRequestResponse
-ticket (Rticket6
+ticket (Rticket
+error (Rerror6
 features (2.HrzProtocol.ClientFeatureRfeatures 
 attribution (	Rattribution"º
 VectorDataInvalidation/

@@ -962,7 +962,7 @@ hrz::JobResult run(
     // Input points as lat/lon positions for computing exact geodesic distances
     hrz::BlobArray<hrz::GeoPosition3> points_geo_array(
         context.get_blob_allocator(), points_geo_blob_opt.value());
-    auto points_geo_data = points_geo_array.get_data();
+    auto points_geo_data = points_geo_array.get_mutable_data();
 
     transform_wmerc_to_geo(input_points.size(), input_points.data(), points_geo_data.data());
     gsl::span<const hrz::GeoPosition3> points_geo = points_geo_data.as_span();

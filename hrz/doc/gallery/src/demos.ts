@@ -109,3 +109,6 @@ registerDemo("labelPalette", LabelPalette);
 
 import RennesTrees from "./demo/RennesTrees.vue";
 registerDemo("rennesTrees", RennesTrees);
+
+import Localization from "./demo/Localization.vue";
+registerDemo("localization", Localization);

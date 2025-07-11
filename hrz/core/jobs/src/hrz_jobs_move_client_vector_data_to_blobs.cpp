@@ -12,16 +12,16 @@
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_log.h>
 
+// This job takes Protobuf data from a client request response, changes
+// its format to the engines's internal structures for vector data, which
+// includes allocating blobs and storing data in them.
+//
+// On top of this, this job also ensures there is a consistent number of
+// geometries and attribute values, adding empty geometries and null values
+// if needed.
+
 namespace hrz_jobs::move_client_vector_data_to_blobs
 {
-namespace
-{
-static constexpr size_t InitialPointCapacity = 512;
-static constexpr size_t InitialLinestringSizeCapacity = 256;
-static constexpr size_t InitialFeatureCapacity = 512;
-static constexpr size_t InitialAttributeCapacity = 512;
-} // namespace
-
 hrz::JobResult run(
     const hrz::vector_data::RawClientVectorData& params,
     hrz::vector_data::DecodedVectorTile& response,
@@ -31,10 +31,21 @@ hrz::JobResult run(
 
     const auto& client_response = params.client_data;
 
-    // Allocate the geometry
-    auto point_capacity = params.expects_geometry ? InitialPointCapacity : 0;
-    auto linestring_sizes_capacity = params.expects_geometry ? InitialLinestringSizeCapacity : 0;
-    auto feature_capacity = params.expects_geometry ? InitialFeatureCapacity : 0;
+    size_t point_capacity = 0;
+    size_t linestring_sizes_capacity = 0;
+    size_t feature_capacity = params.expects_geometry ? client_response.features_size() : 0;
+
+    if (params.expects_geometry)
+    {
+        for (const auto& feature : client_response.features())
+        {
+            if (feature.has_geometry())
+            {
+                point_capacity += feature.geometry().coords_size() / 3;
+                linestring_sizes_capacity += feature.geometry().linestring_sizes_size();
+            }
+        }
+    }
 
     auto points = hrz::BlobVector<lm::dvec3>(context.get_blob_allocator(), point_capacity);
     auto linestring_sizes =
@@ -150,7 +161,7 @@ hrz::JobResult run(
     // Get the attributes and feature ids
     uint32_t feature_id_attribute_count = 0;
 
-    // Why not use a map of MutableAttributeValues ?
+    // Why not use a map of MutableAttributeValues?
     // Because their order matter, as we will want to extract the first few of them
     // in a span later.
     hrz::flat_hash_map<uint32_t, uint32_t> attribute_id_to_index;
@@ -161,7 +172,8 @@ hrz::JobResult run(
     {
         attribute_id_to_index.insert({id, (uint32_t)attribute_index_to_values.size()});
         attribute_index_to_values.emplace_back(
-            InitialAttributeCapacity, context.get_blob_allocator(), context.get_resource_owner());
+            client_response.features_size(), context.get_blob_allocator(),
+            context.get_resource_owner());
         attribute_id.push_back(id);
     };
 
@@ -196,21 +208,19 @@ hrz::JobResult run(
 
         for (const auto& feature : client_response.features())
         {
-            bool has_error = false;
-
             if (i >= (size_t)feature.attribute_values_size())
             {
-                has_error = true;
                 if (!has_warned_about_missing_attribute)
                 {
                     HRZ_LOG_WARNING(
-                        "Missing attribute {} value for client-provided feature: Got {} values, "
-                        "expected "
-                        "{}. A default value will be used instead.",
+                        "Missing attribute {} value for client-provided feature: got {} values, "
+                        "expected {}. A default value will be used instead.",
                         model_attribute.id, feature.attribute_values_size(),
                         params.attributes.size());
                     has_warned_about_missing_attribute = true;
                 }
+
+                values.push_null();
             }
             else
             {
@@ -218,11 +228,6 @@ hrz::JobResult run(
                 values.push_transform(
                     model_attribute.transform,
                     hrz::vector_data::attr_as_ref(feature_attribute_value));
-            }
-
-            if (has_error)
-            {
-                values.push_null();
             }
         }
     }
@@ -247,7 +252,7 @@ hrz::JobResult run(
         attribute_index_to_values_finalized);
 
     hrz::BlobVector<hrz::vector_data::FeatureIdHash> hashes_vector(
-        context.get_blob_allocator(), client_response.features_size() + 1);
+        context.get_blob_allocator(), client_response.features_size());
     hashes_vector.resize(client_response.features_size());
     hashes_vector.register_blob_metadata("contents"_ss, "client feature ID hashes"_ss);
     hashes_vector.register_blob_owner(context.get_resource_owner());

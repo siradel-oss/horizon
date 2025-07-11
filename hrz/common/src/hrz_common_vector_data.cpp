@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 
 namespace hrz::vector_data
 {
@@ -117,7 +118,7 @@ std::optional<FeatureIds> FeatureIds::make(
     if (attribute_values.empty())
     {
         {
-            auto hashes_data = hashes.get_data();
+            auto hashes_data = hashes.get_mutable_data();
             for (size_t i = 0; i < hashes_data.size(); ++i)
             {
                 hashes_data[i] = 0;
@@ -181,7 +182,7 @@ std::optional<FeatureIds> FeatureIds::make(
     }
 
     {
-        auto hashes_data = hashes.get_data();
+        auto hashes_data = hashes.get_mutable_data();
 
         for (size_t row = 0; row < feature_ids._size; ++row)
         {
@@ -384,7 +385,7 @@ void compute_linestring_middle_and_angle(
 {
     if (points.empty())
     {
-        *middle = {};
+        *middle = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
         *angle = 0;
         return;
     }

@@ -140,4 +140,9 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["vector", "point", "model"],
         thumbnailFile: "rennes_trees.webp",
     },
+    localization: {
+        title: "Map localisation",
+        tags: ["vector", "symbol", "i18n"],
+        thumbnailFile: "localization.webp",
+    },
 };

@@ -104,6 +104,7 @@ if __name__ == '__main__':
 
     port = args.port
     hostname = args.hostname
+    protocol = "https" if args.tls else "http"
 
     if args.directory:
         os.chdir(args.directory)
@@ -132,5 +133,5 @@ if __name__ == '__main__':
             server_side=True,
         )
 
-    print(f'Serving on https://{hostname}:{port}/')
+    print(f'Serving on {protocol}://{hostname}:{port}/')
     httpd.serve_forever()

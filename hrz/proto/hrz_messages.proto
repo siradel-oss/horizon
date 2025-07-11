@@ -104,9 +104,8 @@ message VectorDataRequestMessage {
     // the response.
     repeated uint32 attribute_ids    = 4;
 
-    // Whether or not the vector data source responsible for
-    // the request has geometry.
-    // If not, the response must not include geometry.
+    // Whether or not the geometry of the features should be
+    // included in the response.
     bool            expects_geometry = 5;
 }
 

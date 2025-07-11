@@ -20,6 +20,7 @@ SCENES = [
     "heatmap_bus_coverage",
     "heatmap_earthquakes",
     "ign_scan_1000_wms",
+    "map_localization",
     "osm_rennes_tiled_raster",
     "osm_rennes_tilejson",
     "osm_rennes_tms",

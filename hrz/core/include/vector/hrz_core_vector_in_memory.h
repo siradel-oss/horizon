@@ -65,7 +65,7 @@ namespace messages
 {
 /*
  * Request for the given in-memory vector source layer and tile coordinates.
- *  * All data this is subsequently obtained from this request, whether
+ * All data that is subsequently obtained from this request, whether
  * it is geometry, attribute values, or features IDs, is in the same
  * order: the one in which they are defined in the model. There can be
  * duplicate feature IDs.
@@ -80,7 +80,7 @@ struct TileDataRequest
 
 /**
  * Request for the given in-memory vector source layer and features.
- *      * All data this is subsequently obtained from this request, whether
+ * All data that is subsequently obtained from this request, whether
  * it is geometry, attribute values, or features IDs, is in the same
  * order: that of the parameter `feature_ids`. Duplicate feature IDs
  * are respected and result in duplicate geometry and attribute values.

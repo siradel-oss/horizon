@@ -1370,6 +1370,16 @@ struct VectorTilesActor : public Actor
 
                             render_request.request_visual_render();
                         }
+                        else if (content->load_status == TileContent::LoadStatus::Ready)
+                        {
+                            content->load_status = TileContent::LoadStatus::Error;
+                            content->display_status = TileContent::DisplayStatus::Error;
+                            content->reset_style_job();
+
+                            destroy_reprs(*content, DestroyRepr_All);
+
+                            render_request.request_visual_render();
+                        }
                     }
                     else
                     {
@@ -2128,7 +2138,7 @@ struct VectorTilesActor : public Actor
                 auto& array = content.attributes.anchor_z_attribute_values;
 
                 auto features = content.geometry.repr.geometry.features.get_data();
-                auto anchors = array.get_data();
+                auto anchors = array.get_mutable_data();
 
                 assert(anchors.size() == features.size());
                 auto write_ptr = anchors.data();
@@ -2144,7 +2154,7 @@ struct VectorTilesActor : public Actor
                 auto& array = content.attributes.anchor_angle_attribute_values;
 
                 auto features = content.geometry.repr.geometry.features.get_data();
-                auto angles = array.get_data();
+                auto angles = array.get_mutable_data();
 
                 assert(angles.size() == features.size());
                 auto write_ptr = angles.data();
@@ -2160,7 +2170,7 @@ struct VectorTilesActor : public Actor
                 auto& array = content.attributes.feature_type_attribute_values;
 
                 auto features = content.geometry.repr.geometry.features.get_data();
-                auto feature_types = array.get_data();
+                auto feature_types = array.get_mutable_data();
 
                 static_assert(
                     hrz_proto::VectorGeometryType::POINT_GEOMETRY == 0, "Point geometry type 0");

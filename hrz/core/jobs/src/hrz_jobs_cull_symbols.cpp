@@ -230,7 +230,7 @@ bool cull_one_view(
 
     response.view_bitsets[view_info.view_index] = all_bitsets_array;
 
-    auto all_bitsets = all_bitsets_array.get_data();
+    auto all_bitsets = all_bitsets_array.get_mutable_data();
     memset(all_bitsets.data(), 0, all_bitsets.size_bytes());
     total_bitset_bucket_count = 0;
 

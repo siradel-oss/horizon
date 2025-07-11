@@ -7,7 +7,10 @@ import "hrz_types.proto";
 
 message ClientFeatureGeometry {
     VectorGeometryType type             = 1;
+
+    // In Web Mercator.
     repeated double    coords           = 2;
+
     repeated uint32    linestring_sizes = 3;
 }
 
@@ -18,11 +21,11 @@ message ClientFeature {
 
 message VectorDataRequestResponse {
     uint32                 ticket      = 1;
+    bool                   error       = 4;
     repeated ClientFeature features    = 2;
     string                 attribution = 3;
 }
 
-//
 message VectorDataInvalidation {
     uint32 vector_data_layer_id     = 1;
 

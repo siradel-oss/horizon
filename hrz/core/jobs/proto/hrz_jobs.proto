@@ -121,9 +121,9 @@ enum JobType {
     // @response_type="class hrz::BlobImage"
     DECODE_BLOB_IMAGE                = 26;
 
-    // @params_type="struct hrz::vector_data::UnsortedVectorData"
-    // @response_type="class hrz::vector_data::SortedVectorData"
-    SORT_VECTOR_DATA                 = 27;
+    // @params_type="struct hrz::vector_data::UnjoinedVectorData"
+    // @response_type="class hrz::vector_data::JoinedVectorData"
+    JOIN_VECTOR_DATA                 = 27;
 
     // @params_type="struct hrz::three_d_tiles::EncodedBatchTable"
     // @response_type="struct hrz::three_d_tiles::DecodedBatchTable"

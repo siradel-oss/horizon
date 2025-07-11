@@ -40,6 +40,15 @@ public:
         register_blob_metadata(allocator, "type"_ss, "blob array"_ss);
     }
 
+private:
+    BlobArray(blobs::BlobHandle blob) : _blob(std::move(blob)), _size(_blob.data_size() / sizeof(T))
+    {
+        assert(_blob.is_valid());
+        assert(_blob.check_integrity());
+        assert(_blob.data_size() % sizeof(T) == 0);
+    }
+
+public:
     blobs::BlobHandle blob() const { return _blob; }
 
     size_t size() const { return _size; }
@@ -66,6 +75,16 @@ public:
             blobs::register_owner(allocator, _blob, owner);
         }
     }
+
+    BlobArray make_sub_array(size_t offset, size_t size) const
+    {
+        assert(offset + size <= _size);
+
+        blobs::BlobHandle sub_blob = _blob.make_sub_blob(offset * sizeof(T), size * sizeof(T));
+        return BlobArray(std::move(sub_blob));
+    }
+
+    BlobArray make_sub_array(size_t offset) const { return make_sub_array(offset, _size - offset); }
 
     struct Data
     {
@@ -231,7 +250,7 @@ public:
         gsl::span<T> _data_view;
     };
 
-    MutableData get_data()
+    MutableData get_mutable_data()
     {
         if (_blob.is_valid())
         {

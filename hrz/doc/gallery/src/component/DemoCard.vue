@@ -4,14 +4,10 @@ import { Demo } from "@/demos";
 const props = defineProps<{
     demo: Demo;
 }>();
-
-function go() {
-    location.href = `?demo=${props.demo.id}`;
-}
 </script>
 <template>
-    <div
-        @click="go"
+    <a
+        :href="`?demo=${props.demo.id}`"
         class="relative w-[280px] bg-surface rounded-xl border border-outlineVariant cursor-pointer overflow-clip hover:shadow-md transition-shadow"
     >
         <div
@@ -34,5 +30,5 @@ function go() {
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 </template>

@@ -3,8 +3,7 @@ import { HrzApi } from "@siradel/horizon-api";
 import { HrzDarkMode } from "@siradel/horizon-doc-common";
 import { onMounted, ref, computed } from "vue";
 import IconButton from "@/component/IconButton.vue";
-import TextButton from "@/component/TextButton.vue";
-import { go } from "@/utils/browser";
+import LinkButton from "@/component/LinkButton.vue";
 
 const props = defineProps<{
     hasBackLink: boolean;
@@ -26,10 +25,10 @@ onMounted(() => {
         <p class="text-mHeadlineSmall">Horizon gallery</p>
         <p class="text-mTitleSmall">Version {{ HrzApi.VERSION }}</p>
         <div class="grow"></div>
-        <TextButton v-if="props.hasBackLink" color="onSurfaceVariant" @click="go('index.html')"
-            >Back to list</TextButton
+        <LinkButton v-if="props.hasBackLink" color="onSurfaceVariant" href="index.html"
+            >Back to list</LinkButton
         >
-        <TextButton color="onSurfaceVariant" @click="go('../')">Documentation</TextButton>
+        <LinkButton color="onSurfaceVariant" href="../">Documentation</LinkButton>
         <IconButton
             :icon="icon"
             color="onSurfaceVariant"

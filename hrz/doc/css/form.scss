@@ -221,3 +221,10 @@ table.no-border {
         border: none;
     }
 }
+
+table.no-bg {
+    background-color: transparent;
+    tr, td, th {
+        background-color: transparent;
+    }
+}

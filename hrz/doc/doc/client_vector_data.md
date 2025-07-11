@@ -79,61 +79,32 @@ It is the client’s responsibility to listen for such messages, and respond to 
 
 Data can be requested either by tile coordinates or feature IDs: this is determined by the `access` field of [[ClientVectorDataProviderParams]].
 
-!!! note "Geometry requests"
-    Client geometry can only requested using tile coordinates. If a [[VectorDataSource]] has geometry, the `access` field of its [client provider](HrzProtocol.ClientVectorDataProviderParams.html) **must** be set to `ACCESS_BY_TILE`.
+### Responding to a vector data request
 
-### Answering a vector data request
+The contents of the [request message](HrzProtocol.VectorDataRequestMessage.html) determine the contents that should be included in the response.
 
-The contents of the [request message](HrzProtocol.VectorDataRequestMessage.html) determines the contents that should be included in the response.
-
-The `vector_data_layer_id` and `vector_data_source_index` fields identify the vector data source responsible for initiating the request, in the case where there are multiple sources that use a client provider.
+The `vector_data_layer_id` and `vector_data_source_index` fields identify the vector data source responsible for initiating the request, as there can be multiple sources using a client provider.
 
 The `selection` union determines the features that require data:
 
-- With an `ACCESS_BY_TILE`, `tile_selection` contains the coordinates of the tile whose features require data. The `features` array of the [response](HrzProtocol.VectorDataRequestResponse.html) must include one entry per feature geometry in the tile (IDs can be duplicated between multiple geometries). If the source responsible for the request is **NOT** the geometry-defining source for the layer, then **the order of the features in the response must match the order of the features as declared by the geometry-defining source of the layer**, including potential duplicate feature IDs.
+- With an `ACCESS_BY_TILE`, `tile_selection` contains the coordinates of the tile for which feature data is required. The `features` array of the [response](HrzProtocol.VectorDataRequestResponse.html) must include one entry per feature geometry in the tile (IDs can be duplicated between multiple geometries).
 
 !!! note "Tile coordinates"
     Horizon uses the [XYZ tiling scheme](https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection) for vector tile coordinates. It is the same one that is used by multiple raster tile providers, such as [OpenStreetMap](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 
-- With an `ACCESS_BY_FEATURE_ID`, `feature_id_selection` contains an array of [feature IDs](HrzProtocol.FeatureId.html). The `features` array of the [response](HrzProtocol.VectorDataRequestResponse.html) must include one entry per feature ID, **in the same order**, and including potential duplicates.
+- With an `ACCESS_BY_FEATURE_ID`, `feature_id_selection` contains an array of [feature IDs](HrzProtocol.FeatureId.html). The `features` array of the [response](HrzProtocol.VectorDataRequestResponse.html) must include one entry per feature ID. If the source is the primary source, or if it does not use feature IDs to join its results with the primary source, it is important that results be returned **in the same order** as the feature IDs in the request, including potential duplicates.
 
-If the [response](HrzProtocol.VectorDataRequestResponse.html) has the incorrect number of features, an error is reported in the logs, and the data is not used. If the order of the feature is incorrect, Horizon will have no way to tell, and the features will have the wrong attribute values.
+If the [response](HrzProtocol.VectorDataRequestResponse.html) has an incorrect number of features, an error is reported in the logs, and the data is not used. If the data is joined to another source, no feature IDs are used, and the order of the feature is incorrect, Horizon will have no way to tell, so the features will not get their intended data.
 
-The [response](HrzProtocol.VectorDataRequestResponse.html) consists of a ticket and an array of [[ClientFeature]]s. Each feature can include attribute values and/or geometry.
+The [response](HrzProtocol.VectorDataRequestResponse.html) includes the request ticket for identification purposes, an array of [[ClientFeature]]s, and an attribution string. Each feature can include attribute values and/or geometry.
 
 - Each feature must contain as many attribute values as there are IDs in the request's `attribute_ids` field. **The values must be in the same order as the IDs**, including potential duplicates.
 
-- Geometry should only be included if the request's `expects_geometry` is `true`. If geometry is included nonetheless, it is ignored. The `expects_geometry` field is provided as a convenience, as it mirrors the value of the requested [[VectorDataSource]]'s `has_geometry`.
+- Geometry should be included if the request's `expects_geometry` field is `true`. If geometry is included when not requested, it is ignored.
 
 !!! note "Geometry format"
     The geometry has the same format as the one used for in-memory vector sources, which is described above. However, the coordinates of the geometry must be in the Web Mercator ([EPSG:3857](https://epsg.io/3857)) projection.
 
-The response must be sent using the `ProvideVectorData` method of the [[ClientDataService]] using the request's `ticket`.
+If the client is unable to fulfill the request, it can signal this by setting the `error` field to `true`. If any data is included in the same message, the data is ignored.
 
-### Invalidating vector data
-
-Vector data used by Horizon can be invalidated using the `InvalidateVectorData` method of [[ClientDataService]]. When data is invalidated, it will be requested and loaded again. Which data should be invalidated is determined by the [parameters passed to the method](HrzProtocol.VectorDataInvalidation.html).
-
-First, a specific [[VectorDataSource]] should be identified with a `vector_data_layer_id` and `vector_data_source_index` (the latter being the index of the source in the `sources` array of the [layer definition](HrzProtocol.VectorDataLayer.html)).
-
-!!! note ""
-    Any vector data source can be invalidated, not just the ones with client providers.
-
-Then, the `selection` union is used to determine which features should be invalidated.
-
-- If `tile_coords` is set, all features of the corresponding tile will be invalidated.
-- If `feature_ids` is set, all features with the given IDs will be invalidated (some other features may also be invalidated with them).
-- If `everything` is set, then all features within the data layer will be invalidated.
-
-!!! note "Vector data sources and client data invalidation"
-    It should be noted that the contents of a vector data request is determined by the contents of its associated [[VectorDataSource]]. For instance:
-
-    - If a vector data layer has one client source defining two attributes, then the two attributes will be requested within the same message.
-    - If a vector data layer has two client sources defining one attribute each, then the two attributes will be requested across two different messages.
-
-    This has important consequences when invalidating the values of one of the two attributes:
-
-    - In the first case, a single request will be sent, asking for the values of both attributes again, as both are defined in the same vector data source.
-    - In the second case, a single request will also be sent, but asking for the values of the invalidated attribute only, as the other attribute originates from a different source.
-
-    As such, if it is known that the values of a specific attribute will be frequently invalidated, it is advised to define this attribute in a separate source.
+The response must be sent using the `ProvideVectorData` method of the [[ClientDataService]], including the request’s `ticket` in the message to allow Horizon to identify to which request belongs this reponse.

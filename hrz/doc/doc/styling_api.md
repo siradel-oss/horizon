@@ -121,6 +121,8 @@ not null                // true
 null and 18             // null
 ```
 
+(Note that `null` in the examples above stands for an expression whose result value is `null`. Explicitly writing `null` in a script isn’t supported.)
+
 ### Constant folding
 
 As an optimization, most expressions with only constant values are evaluated at compile time. This includes composite values constructed from function calls.
