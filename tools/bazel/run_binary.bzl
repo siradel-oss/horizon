@@ -1,5 +1,7 @@
+load(":os_info.bzl", "OsInfo")
+
 def _make_run_script_impl(ctx):
-    is_windows = ctx.target_platform_has_constraint(ctx.attr._windows_constraint[platform_common.ConstraintValueInfo])
+    is_windows = ctx.attr._exec_os_info[OsInfo].is_windows
 
     file_name = ctx.label.name + (".bat" if is_windows else ".sh")
     file = ctx.actions.declare_file(file_name)
@@ -51,7 +53,10 @@ run_binary = rule(
             default = False,
             doc = "If true, the script will pass user-supplied arguments to the executable, after the ones in \"arguments\".",
         ),
-        "_windows_constraint": attr.label(default = "@platforms//os:windows"),
+        "_exec_os_info": attr.label(
+            default = Label(":os_info"),
+            cfg = "exec",
+        ),
     },
     executable = True,
 )

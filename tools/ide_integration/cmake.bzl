@@ -43,7 +43,7 @@ def _target_path(target):
 
 def _bazel_label_to_cmake_target_name(target):
     # Turn the target's label into a valid CMake target identifier.
-    return str(target.label).replace("@", "").replace("//:", "_").replace("//", "").replace("/", "_").replace(":", "__").replace("~", "-")
+    return str(target.label).replace("@", "").replace("//:", "_").replace("//", "").replace("/", "_").replace(":", "__").replace("+", "_")
 
 # Defines with the form `VAR="Value"`, with quotes, go through Bourne shell tokenisation
 # (https://bazel.build/reference/be/common-definitions#sh-tokenization) between BUILD.bazel
@@ -485,7 +485,7 @@ cmakelists_aspect = aspect(
     attr_aspects = ["deps", "implementation_deps"],
     attrs = {
         "_cc_toolchain": attr.label(
-            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+            default = Label("@rules_cc//cc:current_cc_toolchain"),
         ),
         "_protobuf_runtime": attr.label(
             default = Label("@protobuf//:protobuf"),
@@ -493,7 +493,7 @@ cmakelists_aspect = aspect(
     },
     fragments = ["cpp"],
     required_aspect_providers = [CMakeAspectInfo],
-    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    toolchains = ["@rules_cc//cc:toolchain_type"],
     implementation = _cmakelists_aspect_impl,
 )
 
@@ -514,7 +514,7 @@ def _cmakelists_impl(ctx):
     cmake_commands = depset(transitive = cmake_commands)
     source_files = depset(transitive = source_files)
 
-    content = "cmake_minimum_required(VERSION 3.5)\n" + \
+    content = "cmake_minimum_required(VERSION 3.10)\n" + \
               "project(__PROJ_NAME__)\n" + \
               "set(CMAKE_CXX_STANDARD 17)\n\n" + \
               "#__GLOBAL_OPTIONS__\n\n"

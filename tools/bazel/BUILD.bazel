@@ -1,4 +1,10 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load(":os_info.bzl", "os_info")
+
+os_info(
+    name = "os_info",
+    visibility = ["//tools/bazel:__pkg__"],
+)
 
 py_binary(
     name = "untar",

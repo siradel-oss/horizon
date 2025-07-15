@@ -1,4 +1,4 @@
-#include "tools/cpp/runfiles/runfiles.h"
+#include "rules_cc/cc/runfiles/runfiles.h"
 
 #include <hrz_common_compression.h>
 
@@ -7,7 +7,7 @@
 #include <fstream>
 #include <optional>
 
-using bazel::tools::cpp::runfiles::Runfiles;
+using rules_cc::cc::runfiles::Runfiles;
 
 class Compression : public testing::Test
 {

@@ -24,6 +24,10 @@ This file stores the authoritative information for all auto-managed dependencies
 
 This dependency type downloads an archive from a GitHub repository and mirrors it on the Nexus. The repository is specified as the `repo` field with the `user/repository` format. The version is specified in the `ref` field that can be either a tag name or a commit hash. This type of dependency completely ignores platforms. Additionally a `build_file` field can point to a file to act as the `BUILD.bazel` file for this dependency, if it is not provided.
 
+### Type `http_archive`
+
+This dependency type downloads an archive and mirrors it on the Nexus. Applicable options are `url` (mandatory), `build_file`, `patches`, and `strip_prefix`.
+
 ### Type `http_file`
 
 This dependency type downloads a single file from an HTTP address and mirrors it on the Nexus. The address is given in the `url` field. Additionally the `executable` boolean attribute can be used to indicate that this file should be executable.

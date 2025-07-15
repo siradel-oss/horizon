@@ -140,7 +140,7 @@ cc_binary(
         ":hrz_common",
         "//third_party:gtest",
         "//third_party:gtest_main",
-        "@bazel_tools//tools/cpp/runfiles",
+        "@rules_cc//cc/runfiles",
     ],
 )
 

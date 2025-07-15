@@ -118,9 +118,9 @@
         },
         {
             "name": "pugixml",
-            "type": "github",
-            "repo": "zeux/pugixml",
-            "ref": "v1.14",
+            "type": "http_archive",
+            "url": "https://github.com/zeux/pugixml/releases/download/v1.15/pugixml-1.15.tar.gz",
+            "strip_prefix": "pugixml-1.15",
             "build_file": "//third_party:pugixml.BUILD.bazel"
         },
         {

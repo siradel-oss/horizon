@@ -52,7 +52,7 @@ if mode == "all":
             sys.exit(1)
 
 bazel_info = subprocess.check_output(["bazel", "info"]).decode("utf-8").splitlines()
-repo_mapping = json.loads(subprocess.check_output(["bazel", "mod", "dump_repo_mapping", "_main"]))
+repo_mapping = json.loads(subprocess.check_output(["bazel", "mod", "dump_repo_mapping", ""]))
 output_base = Path(retrieve_bazel_info(bazel_info, "output_base"))
 
 clang_format_config = {

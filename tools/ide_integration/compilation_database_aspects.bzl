@@ -35,7 +35,7 @@ load(
     "CPP_COMPILE_ACTION_NAME",
     "C_COMPILE_ACTION_NAME",
 )
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
 
 CompilationAspectInfo = provider(fields = ["compilation_db"])
 
@@ -282,12 +282,12 @@ compilation_database_aspect = aspect(
     attr_aspects = ["srcs", "deps", "implementation_deps"],
     attrs = {
         "_cc_toolchain": attr.label(
-            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+            default = Label("@rules_cc//cc:current_cc_toolchain"),
         ),
     },
     fragments = ["cpp"],
     provides = [CompilationAspectInfo],
-    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    toolchains = ["@rules_cc//cc:toolchain_type"],
     implementation = _compilation_database_aspect_impl,
     apply_to_generating_rules = True,
 )

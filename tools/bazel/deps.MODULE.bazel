@@ -276,12 +276,12 @@ http_archive(
 http_archive(
     name = "pugixml",
     urls = [
-        "https://github.com/zeux/pugixml/archive/v1.14.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/pugixml/610f9837_v1.14.tar.gz",
+        "https://github.com/zeux/pugixml/releases/download/v1.15/pugixml-1.15.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/pugixml/655ade57_pugixml-1.15.tar.gz",
     ],
-    sha256 = "610f98375424b5614754a6f34a491adbddaaec074e9044577d965160ec103d2e",
+    sha256 = "655ade57fa703fb421c2eb9a0113b5064bddb145d415dd1f88c79353d90d511a",
     build_file = "//third_party:pugixml.BUILD.bazel",
-    strip_prefix = "pugixml-1.14",
+    strip_prefix = "pugixml-1.15",
 )
 http_archive(
     name = "rapidjson",

@@ -1,7 +1,6 @@
 filegroup(
     name = "all",
     srcs = glob([
-        "*.tpl.cpp",
         "*.tpl.h",
     ]),
     visibility = ["//visibility:public"],

@@ -13,7 +13,7 @@ cc_library(
         "src/dec/*.c",
         "src/dec/*.h",
         "src/demux/*.c",
-        "src/demux/*.h",
+        #"src/demux/*.h",
         #"src/enc/*.c",
         "src/enc/*.h",
         "src/webp/*.h",

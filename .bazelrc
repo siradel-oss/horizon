@@ -20,8 +20,9 @@ build:windows --host_copt=/wd4141 # Disables "'inline': used more than once"
 
 build:windows_clang --action_env="BAZEL_LLVM=C:\\Program Files\\LLVM\\"
 build:windows_clang --action_env=USE_CLANG_CL=1
-build:windows_clang --copt -Wno-unknown-warning-option
-build:windows_clang --copt -Wno-builtin-macro-redefined
+build:windows_clang --copt=-Wno-unknown-warning-option
+build:windows_clang --copt=-Wno-builtin-macro-redefined
+build:windows_clang --host_copt=-Wno-builtin-macro-redefined
 build:windows_clang --cxxopt=-std=c++17
 build:windows_clang --cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
 build:windows_clang --host_cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF

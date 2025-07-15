@@ -196,6 +196,8 @@ def parse(data: any) -> Manifest:
             man.add(ExternalManifestEntry.from_dict(entry))
         elif type == "http_file":
             man.add(HttpFileManifestEntry.from_dict(entry))
+        elif type == "http_archive":
+            man.add(HttpArchiveManifestEntry.from_dict(entry))
 
     return man
 

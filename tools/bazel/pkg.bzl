@@ -1,5 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load(":os_info.bzl", "OsInfo")
 
 """
 dirs has this structure:
@@ -33,6 +34,7 @@ def _structured_files_copy_impl(ctx):
         root = ""
 
     files = []
+    is_windows = ctx.attr._exec_os_info[OsInfo].is_windows
 
     for dep in ctx.attr.files:
         path_on_server = ctx.attr.files[dep]
@@ -40,7 +42,7 @@ def _structured_files_copy_impl(ctx):
         for f in dep.files.to_list():
             copied_file = ctx.actions.declare_file(root + path_on_server + "/" + f.basename)
             files.append(copied_file)
-            if ctx.attr.is_windows:
+            if is_windows:
                 ctx.actions.run(
                     outputs = [copied_file],
                     inputs = [f],
@@ -85,7 +87,10 @@ _structured_files_copy = rule(
             allow_files = True,
         ),
         "output_dir": attr.string(default = ""),
-        "is_windows": attr.bool(mandatory = True),
+        "_exec_os_info": attr.label(
+            default = Label(":os_info"),
+            cfg = "exec",
+        ),
     },
 )
 
@@ -110,10 +115,6 @@ def structured_files_copy(name, files, output_dir):
         name = name,
         files = files2,
         output_dir = output_dir,
-        is_windows = select({
-            "@bazel_tools//src/conditions:host_windows": True,
-            "//conditions:default": False,
-        }),
     )
 
 def _untar_impl(ctx):
