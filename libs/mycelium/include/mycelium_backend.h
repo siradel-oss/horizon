@@ -990,9 +990,9 @@ struct ShaderDerivativeResource : public Resource
         const ShaderResource& res,
         const char* name = nullptr) :
         Resource(ShaderDerivative),
+        name(name),
         base_shader(shader),
-        initial_state(res.initial_state),
-        name(name)
+        initial_state(res.initial_state)
     {
     }
 
@@ -1423,7 +1423,7 @@ public:
 
     virtual void configure_shaders_linking(const ShadersLinkingConfig&) = 0;
     virtual void advance_shaders_link(bool idle = false) = 0;
-    virtual ResourceHandle retrieve_shader(const char* name) const = 0;
+    virtual ResourceHandle retrieve_shader(const char* name) const override = 0;
     virtual void add_global_shader_define(const char* name, const char* value = "") = 0;
 
     virtual bool is_texture_download_ready(uint64_t id) const = 0;

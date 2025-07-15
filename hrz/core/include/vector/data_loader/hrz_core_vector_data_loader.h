@@ -5,20 +5,10 @@
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
 
-#include <hrz_common_blob_array.h>
-#include <hrz_common_geo.h>
 #include <hrz_common_tile_coords.h>
 #include <hrz_common_vector_data.h>
-#include <hrz_fnd_flat_hash_map.h>
-#include <hrz_fnd_inlined_vector.h>
-#include <hrz_jobs_protocol.h>
-#include <hrz_protocol_all.h>
-
-#include <gsl/gsl-lite.hpp>
-#include <lin_maths.h>
 
 #include <cstdint>
-#include <optional>
 #include <variant>
 
 namespace hrz

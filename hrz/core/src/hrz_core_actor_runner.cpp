@@ -1,7 +1,7 @@
 #include "hrz_core_actor_runner.h"
 
 #include "hrz_core_actor.h"
-#include "vector/hrz_core_vector_data_loader.h"
+#include "vector/data_loader/hrz_core_vector_data_loader.h"
 
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_metrics.h>

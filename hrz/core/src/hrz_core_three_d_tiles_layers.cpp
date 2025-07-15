@@ -20,7 +20,7 @@
 #include "model/hrz_core_model.h"
 #include "model/hrz_core_model_descriptor.h"
 #include "model/hrz_core_model_materials_manager.h"
-#include "vector/hrz_core_vector_data_loader.h"
+#include "vector/data_loader/hrz_core_vector_data_loader.h"
 
 #include <hrz_common_attributes.h>
 #include <hrz_common_blob_allocator.h>

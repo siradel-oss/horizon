@@ -21,7 +21,7 @@
 #include "hrz_core_three_d_tiles_layers.h"
 #include "planet/hrz_core_planet_geometry.h"
 #include "planet/hrz_core_planet_surface.h"
-#include "vector/hrz_core_vector_data_loader.h"
+#include "vector/data_loader/hrz_core_vector_data_loader.h"
 #include "vector/hrz_core_vector_flat_overlay.h"
 #include "vector/hrz_core_vector_heatmaps.h"
 #include "vector/hrz_core_vector_in_memory.h"

@@ -26,7 +26,7 @@
 #include "hrz_core_version.h"
 #include "monitoring/hrz_core_monitoring.h"
 #include "monitoring/hrz_core_monitoring_remote.h"
-#include "vector/hrz_core_vector_data_loader.h"
+#include "vector/data_loader/hrz_core_vector_data_loader.h"
 
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_font_rasterizer.h>

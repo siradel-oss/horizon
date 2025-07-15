@@ -5,7 +5,7 @@
 #include "hrz_core_job_scheduler.h"
 #include "planet/hrz_core_planet_elevation_query.h"
 #include "planet/hrz_core_planet_surface.h"
-#include "vector/hrz_core_vector_data_loader.h"
+#include "vector/data_loader/hrz_core_vector_data_loader.h"
 #include "vector/hrz_core_vector_repr.h"
 
 #include <hrz_common_attributes.h>
