@@ -364,6 +364,9 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::RequestClientDa
             {
                 // No need to make an empty request to the client.
 
+                task_data.feature_ids = feature_id_lists.alloc();
+                task_data.feature_ids.value() = vector_data::FeatureIds{};
+
                 if (layer_model.geometry_source == task_data.data_source)
                 {
                     task_data.geometry = tile_geometries.alloc();
