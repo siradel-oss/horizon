@@ -67,4 +67,10 @@ By wrapping parts of the code between `BEGIN(dash)INTERNAL` and `END(dash)INTERN
 
 ## Publishing a release to the open-source repository
 
-**After all artifacts have been published to the private repository, and the version tag has been created on the public repository**, it is possible to publish the artifacts as a GitHub release on the public repository. To do so, execute the `ci/oss_publish/create_release.py` script with the version name and and GitHub App private key. The artifacts to publish are listed in the `ci/oss_publish/artifacts.json` file.
+**After all artifacts have been published to the private repository, and the version tag has been created on the public repository**, it is possible to publish the artifacts as a GitHub release on the public repository. To do so, execute the `ci/oss_publish/create_release.py` script with the version name and and GitHub App private key.
+
+For example to publish version `a.b.c`:
+
+- `python3 ci/oss_publish/create_release.py --ghapp_pk_pem path/to/key.pem a.b.c`
+
+The artifacts to publish are listed in the `ci/oss_publish/artifacts.json` file.

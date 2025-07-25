@@ -84,13 +84,13 @@ There are no rule for what should increment the major or patch number, but gener
     - Set the date to the present day.
     - In the release notes field, put the relevant section of the `CHANGELOG.md` file, as well as anything you deem useful. (Don’t include the line with the version number and the date.)
 - Publish the version to the open-source repository.
-    - First publish the `release_a.b.c` branch at the point where it diverged from `master` or `maintenance_a.b`. (See the "Publishing a branch to the open-source repository" section below.)
+    - First publish the `release_a.b.c` branch at the point where it diverged from `master` or `maintenance_a.b`. (See the “[Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository)” section below.)
     - Then execute the `ci/oss_publish/publish.py` script:
         - `python ci/oss_publish/publish.py release_a.b.c --tag va.b.c`
-        - See the [Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository) section for a guide on how to authenticate.
+        - See the “[Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository)” section for a guide on how to authenticate.
     - If somehow this fails (for example if the release branch was already published), you can create the tag manually.
     - The tag should point to the public version of the release commit.
-    - Once the tag has been published, the public `release_a.b.c` can be deleted, but you can also keep it if you want.
+    - Once the tag has been published, the branch `release_a.b.c` on the public repository can be deleted, but you can also keep it if you want.
     - Finally, [create the release on the open-source repository](open_source.md#publishing-a-release-to-the-open-source-repository).
 - Back on your local clone, set the version number to the next snapshot:
     - `python3 tools/build_info/set_version.py d.e.f-SNAPSHOT`
@@ -134,16 +134,28 @@ If a previously released version needs to be patched, and eventually have patch 
 To publish code on the open-source repository using the `ci/oss_publish/publish.py` script, you must either:
 
 - Have write access to the repository (using an SSH key linked to your GitHub account, itself linked to the organization & repository). In which case you have nothing more to do. The commits will be marked as committed by you (author is unchanged in iterative mode).
-- Or authenticate as the "Copysira" GitHub App. For this you need the GitHub App private key (as a PEM file). Ask your teammates how to obtain it. Then use the `--ghapp_pk_pem` option of the `publish.py` script to use it.
+- Or authenticate as the “Copysira” GitHub App. For this you need the GitHub App private key (as a PEM file). Ask your teammates how to obtain it. Then use the `--ghapp_pk_pem` option of the `publish.py` script to use it.
 
-Once you have write access, to publish the branch:
+Once you have write access, before publishing a branch, three pieces of information from the private repository are required:
 
-- The three elements you need are:
-    - The name of the branch you want to publish (we'll call it `my_branch`)
-    - The name of the branch from which `my_branch` diverged (we'll call it `my_base`). This branch MUST also be present on the public repository.
-    - The commit where those branches diverged. This can be obtained with `git merge-base my_branch my_base`. (We'll call it `the_commit`.)
-- In the public repository, try looking for a commit whose message contains `GitOrigin-RevId: the_commit`.
-    - If this commit is on the branch `my_base` (this can be checked with `git branch -a --contains public_commit`, `my_base` should be in the list), you're done, just create `my_branch` here.
-- Otherwise, try synchronizing `my_base` with the `ci/oss_publish/publish.py` script, then retry the step above.
-- Otherwise, try manually looking for the closest commit corresponding to `the_commit` on the public version of `my_base` and if found, create `my_branch` there. This is because some commits might not be mirrored to the public repository, for instance when they only contain modifications to files that are not public.
+- The name of the branch you want to publish. (We'll call it `my_branch`.)
+- The name of the branch from which `my_branch` diverged. (We'll call it `my_base`.) That branch MUST also be present on the public repository.
+    - If `my_base` is not present on the public repository, execute these instructions for `my_base`, to get it to published first.
+- The commit where those branches diverged. This can be obtained with `git merge-base my_branch my_base`. (We'll call it `the_commit`.)
+
+Ensure the point of divergeance between `my_branch` and `my_base` is on the public repository:
+
+- On this repository, look for a commit whose message contains `GitOrigin-RevId: the_commit`.
+    - This can be done with the search bar on GitHub’s website.
+- If this commit is on the branch `my_base` (this can be checked with `git branch -a --contains public_commit`, `my_base` should be in the list), you have the right commit and can go to the branch creation step.
+- Otherwise, try synchronizing `my_base` with the `ci/oss_publish/publish.py` script, then check again as above:
+    - `python3 ci/oss_publish/publish.py my_base`
+- Otherwise, try manually looking for the closest commit corresponding to `the_commit` on the public version of `my_base` and if found, use this commit. This is because some commits might not be mirrored to the public repository, for instance when they only contain modifications to files that are not public.
 - If all this fails, you are on your own.
+
+Create the branch on the public repository:
+
+- Create a new branch named `my_branch` on the public repository, pointing at the commit selected in the steps above. This can be done manually on GitHub’s page for the repository.
+
+Publish the branch:
+- `python ci/oss_publish/publish.py my_branch`
