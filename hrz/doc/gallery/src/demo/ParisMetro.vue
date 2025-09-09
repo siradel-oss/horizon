@@ -74,7 +74,7 @@ watch([layer, isUnderground], async () => {
 async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler_: MessageHandler) {
     api.value = api_;
     msgHandler = msgHandler_;
-    await applyScene(api.value, "paris_metro").then(async function () {
+    await applyScene(api.value, "paris_metro_cylinders").then(async function () {
         layer.value = (await getLayerByName(api.value!, "Metro")) || {};
     });
     await applyDefaultSymbolicBaseLayer(api.value);

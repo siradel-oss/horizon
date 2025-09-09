@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
     text: "View source",
 });
 
-const dialog = ref();
+const dialog = ref<InstanceType<typeof ScrimDialog>>();
 const source = ref("Loading...");
 
 onMounted(async function () {
@@ -23,8 +23,8 @@ onMounted(async function () {
 });
 </script>
 <template>
-    <TextButton color="onSurfaceVariant" @click="dialog.open()">{{ props.text }}</TextButton>
+    <TextButton color="onSurfaceVariant" @click="dialog?.open()">{{ props.text }}</TextButton>
     <ScrimDialog ref="dialog">
-        <div class="p-4 whitespace-pre" v-text="source"></div>
+        <div class="p-4 whitespace-pre font-mono" v-text="source"></div>
     </ScrimDialog>
 </template>

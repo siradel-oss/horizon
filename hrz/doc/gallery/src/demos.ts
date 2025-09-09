@@ -112,3 +112,9 @@ registerDemo("rennesTrees", RennesTrees);
 
 import Localization from "./demo/Localization.vue";
 registerDemo("localization", Localization);
+
+import LesArcs from "./demo/LesArcs.vue";
+registerDemo("lesArcs", LesArcs);
+
+import PolylineAnimation from "./demo/PolylineAnimation.vue";
+registerDemo("polylineAnimation", PolylineAnimation);

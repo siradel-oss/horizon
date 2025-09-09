@@ -145,4 +145,14 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["vector", "symbol", "i18n"],
         thumbnailFile: "localization.webp",
     },
+    lesArcs: {
+        title: "Les Arcs",
+        tags: ["vector", "flat overlay", "polyline", "terrain"],
+        thumbnailFile: "les_arcs.webp",
+    },
+    polylineAnimation: {
+        title: "Polyline animation",
+        tags: ["vector", "polyline", "animation"],
+        thumbnailFile: "polyline_animation.webp",
+    },
 };

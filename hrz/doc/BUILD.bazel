@@ -318,6 +318,7 @@ make_doc(
         "doc/extruded_vectors.md",
         "doc/instanced_models.md",
         "doc/cylinders.md",
+        "doc/flat_overlays.md",
         "doc/heatmaps.md",
         ":style_enums.md",
     ] + select({

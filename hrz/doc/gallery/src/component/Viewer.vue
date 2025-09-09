@@ -4,9 +4,21 @@ import { HrzCoreBackend } from "@siradel/horizon-core";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 import { MessageHandler } from "@/utils/messages";
+import ScrimDialog from "./ScrimDialog.vue";
+
+enum AdditionalAttributionsLink {
+    HIDDEN,
+    SHOW_MORE,
+    SHOW_ATTRIBUTIONS,
+}
 
 const canvas = ref<HTMLCanvasElement | null>(null);
-const attributions = ref<string>("");
+const shortAttributions = ref<string>("");
+const fullAttributions = ref<string[]>([]);
+const additionalAttributionsLink = ref<AdditionalAttributionsLink>(
+    AdditionalAttributionsLink.HIDDEN
+);
+const attributionsDialog = ref<InstanceType<typeof ScrimDialog>>();
 
 const options: HrzProtocol.IViewerOptions = {
     showLoadingScreen: true,
@@ -64,10 +76,43 @@ onMounted(() => {
 });
 
 function handleAttributions(msg: HrzProtocol.IAttributionsMessage) {
-    attributions.value = (msg.attributions || [])
-        .map((a) => a.text?.trim())
-        .filter((a) => (a?.length || 0) > 0)
-        .join(", ");
+    let individualAttributions = (msg.attributions || [])
+        .map((a) => a.text?.trim() || "")
+        .filter((a) => (a?.length || 0) > 0);
+
+    const MAX_TEXT_LENGTH = 200;
+    let textLength = 0;
+    let hasNonDisplayedAttributions = false;
+
+    shortAttributions.value = "";
+
+    individualAttributions.forEach((a) => {
+        let text = document.createElement("div");
+        text.innerHTML = a;
+        const thisTextLength = text.innerText.length;
+
+        if (textLength + thisTextLength > MAX_TEXT_LENGTH) {
+            hasNonDisplayedAttributions = true;
+        } else {
+            textLength += thisTextLength;
+            if (shortAttributions.value.length > 0) {
+                shortAttributions.value += ", ";
+            }
+            shortAttributions.value += a;
+        }
+    });
+
+    fullAttributions.value = individualAttributions;
+
+    if (hasNonDisplayedAttributions) {
+        if (shortAttributions.value.length > 0) {
+            additionalAttributionsLink.value = AdditionalAttributionsLink.SHOW_MORE;
+        } else {
+            additionalAttributionsLink.value = AdditionalAttributionsLink.SHOW_ATTRIBUTIONS;
+        }
+    } else {
+        additionalAttributionsLink.value = AdditionalAttributionsLink.HIDDEN;
+    }
 }
 
 function handleClick(e: MouseEvent) {
@@ -103,10 +148,24 @@ function mouseUp(e: MouseEvent) {
         @mouseup="mouseUp"
     ></canvas>
     <div
-        v-show="attributions.length > 0"
-        v-html="attributions"
+        v-show="fullAttributions.length > 0"
         class="attributions absolute right-0 bottom-0 p-2 text-mBodySmall bg-scrim/[25%] text-white backdrop-blur-sm rounded-tl-lg"
-    ></div>
+    >
+        <span v-html="shortAttributions"></span>
+        <span v-show="additionalAttributionsLink === AdditionalAttributionsLink.SHOW_MORE"
+            >,
+            <a href="#" @click.prevent="attributionsDialog?.open()">and more&hellip;</a>
+        </span>
+        <span v-show="additionalAttributionsLink === AdditionalAttributionsLink.SHOW_ATTRIBUTIONS">
+            <a href="#" @click.prevent="attributionsDialog?.open()">Show attributions&hellip;</a>
+        </span>
+    </div>
+    <ScrimDialog ref="attributionsDialog">
+        <div class="p-4 typography-normal">
+            <h1>Attributions</h1>
+            <p v-for="a in fullAttributions" v-html="a"></p>
+        </div>
+    </ScrimDialog>
 </template>
 
 <style scoped>

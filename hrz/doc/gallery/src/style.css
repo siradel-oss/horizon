@@ -263,8 +263,16 @@
         h3 {
             @apply text-mTitleLarge my-[1em] text-onSurfaceVariant;
         }
-        p {
+        p,
+        ul,
+        ol {
             @apply text-mBodyMedium my-[1em];
+        }
+        ul {
+            @apply list-disc pl-6;
+        }
+        li {
+            @apply my-[0.5em];
         }
         pre {
             @apply text-mBodyMedium my-[1em] p-2 rounded-lg text-onSurfaceVariant bg-surfaceContainerLow overflow-auto;

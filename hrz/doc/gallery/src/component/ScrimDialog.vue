@@ -7,9 +7,7 @@ defineExpose({ open: () => (shown.value = true) });
 </script>
 <template>
     <div class="fixed inset-0 bg-scrim/[75%] p-6 z-[9999]" v-if="shown" @click.self="shown = false">
-        <div
-            class="relative max-w-[960px] mx-auto h-full bg-surface text-onSurface rounded-xl font-mono"
-        >
+        <div class="relative max-w-[960px] mx-auto h-full bg-surface text-onSurface rounded-xl">
             <div class="absolute top-2 right-2">
                 <IconButton
                     icon="close"

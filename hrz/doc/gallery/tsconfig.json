@@ -13,5 +13,8 @@
             "long": ["@types/long"],
         }
     },
+    "vueCompilerOptions": {
+        "globalTypesPath": "../../../../../hrz/doc/gallery/src/types/global.d.ts",
+    },
     "include": ["src/**/*"]
 }

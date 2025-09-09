@@ -20,11 +20,13 @@ SCENES = [
     "heatmap_bus_coverage",
     "heatmap_earthquakes",
     "ign_scan_1000_wms",
+    "les_arcs",
     "map_localization",
     "osm_rennes_tiled_raster",
     "osm_rennes_tilejson",
     "osm_rennes_tms",
-    "paris_metro",
+    "paris_metro_cylinders",
+    "paris_metro_dashes",
     "paris_pmtiles",
     "rennes_building_type",
     "rennes_iris_client_data",
@@ -35,6 +37,7 @@ SCENES = [
 ]
 
 TEMPLATES = [
+    "aws_terrain_tiles",
     "hrz_basemap_dark_nonames",
     "ign_bd_ortho",
     "ign_routes",

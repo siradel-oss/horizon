@@ -25,19 +25,19 @@ const props = withDefaults(defineProps<Props>(), {
     text: "View scene model",
 });
 
-const dialog = ref();
+const dialog = ref<InstanceType<typeof ScrimDialog>>();
 const formattedData = ref("Loading...");
 
 async function open() {
     let data = await props.retrieveData();
     simplifyModelInPlace(data);
     formattedData.value = JSON.stringify(data, null, 2);
-    dialog.value.open();
+    dialog.value?.open();
 }
 </script>
 <template>
     <TextButton color="onSurfaceVariant" @click="open">{{ props.text }}</TextButton>
     <ScrimDialog ref="dialog">
-        <div class="p-4 whitespace-pre" v-text="formattedData"></div>
+        <div class="p-4 whitespace-pre font-mono" v-text="formattedData"></div>
     </ScrimDialog>
 </template>
