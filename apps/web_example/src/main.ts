@@ -34,7 +34,7 @@ async function addOrthoLayer(api: HrzApi.AsyncApi) {
             provider: {
                 type: HrzProtocol.RasterProviderType.WMTS_RASTER_PROVIDER,
                 wmts: {
-                    url: "https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities",
+                    url: "https://data.geopf.fr/annexes/ressources/wmts/essentiels.xml",
                     attribution: "Institut national de l'information géographique et forestière",
                     layerIdentifier: "ORTHOIMAGERY.ORTHOPHOTOS",
                     imageFormat: HrzProtocol.ImageFormat.SRGBA_8,
