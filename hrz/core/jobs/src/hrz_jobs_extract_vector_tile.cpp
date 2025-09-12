@@ -34,12 +34,12 @@ static constexpr size_t InitialLinestringSizeCapacity = 1024;
 // This includes a fix for the case when the segment is a point, which is not
 // handled by the original code, but is important for us.
 inline double point_to_segment_squared_distance(
-    const lm::dvec2& p,
-    const lm::dvec2& a,
-    const lm::dvec2& b)
+    const lm::dvec3& p,
+    const lm::dvec3& a,
+    const lm::dvec3& b)
 {
-    const lm::dvec2 ba = b - a;
-    const lm::dvec2 pa = p - a;
+    const lm::dvec3 ba = b - a;
+    const lm::dvec3 pa = p - a;
     const double ba2 = lm::length2(ba);
 
     if (ba2 > 0.0)
@@ -70,7 +70,7 @@ void compute_linestring_deviations(gsl::span<const lm::dvec3> points, gsl::span<
     for (size_t i = 1; i < points.size() - 1; i++)
     {
         const auto& p = points[i];
-        const double squared_distance = point_to_segment_squared_distance(p.xy, a.xy, b.xy);
+        const double squared_distance = point_to_segment_squared_distance(p, a, b);
 
         if (squared_distance > max_squared_distance)
         {
@@ -195,7 +195,7 @@ void clip_feature(
                 // --|-->  |
                 if (p1.m[axis] > min)
                 {
-                    out->push_point(intersect(p0.xy, p1.xy, axis, min));
+                    out->push_point(intersect(p0, p1, axis, min));
                 }
             }
             else if (p0.m[axis] > max)
@@ -203,7 +203,7 @@ void clip_feature(
                 //   |  <--|---
                 if (p1.m[axis] < max)
                 {
-                    out->push_point(intersect(p0.xy, p1.xy, axis, max));
+                    out->push_point(intersect(p0, p1, axis, max));
                 }
             }
             else
@@ -215,7 +215,7 @@ void clip_feature(
             // <-|---  |
             if (p0.m[axis] > min && p1.m[axis] < min)
             {
-                out->push_point(intersect(p0.xy, p1.xy, axis, min));
+                out->push_point(intersect(p0, p1, axis, min));
                 if (!polygon)
                 {
                     out->end_linestring();
@@ -224,7 +224,7 @@ void clip_feature(
             //   |  ---|-->
             else if (p0.m[axis] < max && p1.m[axis] > max)
             {
-                out->push_point(intersect(p0.xy, p1.xy, axis, max));
+                out->push_point(intersect(p0, p1, axis, max));
                 if (!polygon)
                 {
                     out->end_linestring();

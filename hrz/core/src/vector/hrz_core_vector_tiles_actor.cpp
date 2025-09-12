@@ -497,8 +497,8 @@ struct TileNode
         // with representations that occupy more vertical space can be culled too early during
         // the traversal of the node tree.
         //
-        // This could be improved by having each representation return the maximum height of
-        // baked tiles, and using the highest amount all representations as a margin.
+        // @Todo(1264) This could be improved by having each representation return the maximum
+        // height of baked tiles, and using the highest amount all representations as a margin.
         static constexpr double max_elevation_margin = 200.0;
 
         bounds.min_height = elevation.min;
