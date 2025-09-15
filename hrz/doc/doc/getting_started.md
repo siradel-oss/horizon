@@ -44,12 +44,37 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 ```
 
+Two files must be available at runtime: `hrz_core.js` and `hrz_core.wasm`. Here is an example of how to copy them at build-time using Vite.
+
+```ts
+import { viteStaticCopy } from "vite-plugin-static-copy";
+
+export default defineConfig({
+    // ...
+    plugins: [
+        // ...
+        viteStaticCopy({
+            targets: [
+                {
+                    src: "node_modules/@siradel/horizon-core/dist/hrz_core.js",
+                    dest: "<fill this in>",
+                },
+                {
+                    src: "node_modules/@siradel/horizon-core/dist/hrz_core.wasm",
+                    dest: "<fill this in>",
+                },
+            ],
+        }),
+    ],
+});
+```
+
 All the files must be served with the HTTPS protocol.
 
 The initialisation of the core is performed by calling the `HrzCoreBackend.init()` function, which takes four parameters:
 
  * The canvas HTML element where the planet will be drawn,
- * The base address of Horizon’s runtime files (`hrz_core.js`  and `hrz_core.wasm`), which can be relative to the current page’s,
+ * The base address of Horizon’s runtime files, which can be relative to the current page’s,
  * The viewer options, of type [[ViewerOptions]].
  * A callback function, whose parameters are:
    * A reference to the backend, of type `HrzCoreBackend`, which implements both `HrzApi.AsyncBackend` and `HrzApi.SyncBackend`,
