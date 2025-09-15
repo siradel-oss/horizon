@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 
+struct mu_Context;
+
 namespace hrz
 {
 /**
@@ -111,6 +113,8 @@ uint32_t add(SceneModel* model, const hrz_proto::Path& path, const T& input)
     std::string raw = input.SerializeAsString();
     return add_raw(model, path, raw);
 }
+
+void dev_ui(SceneModel* model, mu_Context* ctx);
 
 } // namespace scene_model
 

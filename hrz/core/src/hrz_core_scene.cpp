@@ -698,26 +698,36 @@ std::string_view path_to_string(const Scene* scene, const hrz_proto::Path& path)
     return {buffer.data(), buffer.size()};
 }
 
-void add_scene_model_log_line(Scene* scene, const hrz_proto::Path& path, const std::string& prefix)
+void add_scene_model_log_line_raw(Scene* scene, std::string_view line)
+{
+    auto& logs = scene->scene_model_logs;
+
+    const double since_epoch = hrz::now_frame_ms() / 1000.0;
+    const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
+    const int minutes = std::floor(since_epoch / 60.0);
+    const int seconds = std::floor(since_epoch) - 60.0 * minutes;
+
+    std::string* str = logs.get_string_to_write();
+    str->resize(SCENE_MODEL_MAX_LOG_LINE_LENGTH);
+    size_t length = fmt::format_to_n(
+                        &*str->begin(), SCENE_MODEL_MAX_LOG_LINE_LENGTH, "[{:>4}:{:02}.{:03}] {}",
+                        minutes, seconds, millis, line)
+                        .size;
+    str->resize(length);
+}
+
+void add_scene_model_log_line(Scene* scene, const hrz_proto::Path& path, std::string_view prefix)
 {
     HRZ_INCREMENT_COUNTER("Scene model modification count", {});
 
-    auto& logs = scene->scene_model_logs;
+    static fmt::memory_buffer buffer;
+    buffer.clear();
 
-    double since_epoch = hrz::now_frame_ms() / 1000.0;
-    double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
-    int minutes = std::floor(since_epoch / 60.0);
-    int seconds = std::floor(since_epoch) - 60.0 * minutes;
+    const std::string_view path_str = path_to_string(scene, path);
+    fmt::format_to(std::back_inserter(buffer), "{:<7} {}", prefix, path_str.data());
 
-    std::string_view path_str = path_to_string(scene, path);
-    std::string* str = logs.get_string_to_write();
-    str->resize(SCENE_MODEL_MAX_LOG_LINE_LENGTH);
-    size_t length =
-        fmt::format_to_n(
-            &*str->begin(), SCENE_MODEL_MAX_LOG_LINE_LENGTH, "[{:>4}:{:02}.{:03}] {:<7} {}",
-            minutes, seconds, millis, prefix, path_str.data())
-            .size;
-    str->resize(length);
+    const std::string_view line{buffer.data(), buffer.size()};
+    add_scene_model_log_line_raw(scene, line);
 }
 
 void clear_scene_model_logs(Scene* scene)
@@ -1679,6 +1689,13 @@ uint64_t create_layer(
         default: break;
     }
 
+    fmt::memory_buffer buf;
+    buf.clear();
+    fmt::format_to(
+        std::back_inserter(buf), "CREATE layer \"{}\" (type {})", handle,
+        hrz_proto::LayerType_Name(layer_type));
+    add_scene_model_log_line_raw(scene, std::string_view{buf.data(), buf.size()});
+
     return handle;
 }
 
@@ -1692,6 +1709,13 @@ void destroy_layer(Scene* scene, uint64_t layer_id)
         HRZ_LOG_ERROR("Cannot destroy layer with id {}: not found", layer_id);
         return;
     }
+
+    fmt::memory_buffer buf;
+    buf.clear();
+    fmt::format_to(
+        std::back_inserter(buf), "DESTROY layer \"{}\" (type {})", it->second.name,
+        hrz_proto::LayerType_Name(it->second.type));
+    add_scene_model_log_line_raw(scene, std::string_view{buf.data(), buf.size()});
 
     auto layer_type = it->second.type;
 
@@ -1735,7 +1759,22 @@ void destroy_layer(Scene* scene, uint64_t layer_id)
 void rename_layer(Scene* scene, uint64_t layer_id, std::string_view name)
 {
     assert(scene);
-    scene->layers_info.layers[layer_id].name = std::string(name.data(), name.size());
+
+    auto it = scene->layers_info.layers.find(layer_id);
+    if (it == scene->layers_info.layers.end())
+    {
+        HRZ_LOG_ERROR("Cannot rename layer with id {}: not found", layer_id);
+        return;
+    }
+
+    fmt::memory_buffer buf;
+    buf.clear();
+    fmt::format_to(
+        std::back_inserter(buf), "RENAME layer \"{}\" -> \"{}\" (type {})", it->second.name, name,
+        hrz_proto::LayerType_Name(it->second.type));
+    add_scene_model_log_line_raw(scene, std::string_view{buf.data(), buf.size()});
+
+    it->second.name = name;
 }
 
 bool is_layer_valid(const Scene* scene, uint64_t layer_id)
@@ -2416,6 +2455,13 @@ void scene_model_dev_ui(
                 mu_text(ctx, pair.second.name.c_str());
             }
 
+            mu_end_treenode(ctx);
+        }
+
+        mu_layout_row(ctx, 1, &window_width, 0);
+        if (mu_begin_treenode(ctx, "Authoritative scene model"))
+        {
+            scene_model::dev_ui(scene->model, ctx);
             mu_end_treenode(ctx);
         }
 

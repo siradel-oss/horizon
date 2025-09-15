@@ -557,6 +557,9 @@ public:
 
         for (uint64_t raster_id : _destroyed_rasters)
         {
+            hrz_proto::PathRoot root = Traits::make_path_root(raster_id);
+            scene_model::unregister_element(model, root);
+
             remove_raster(raster_id, al, ba, js);
             rasters_have_changed = true;
         }
@@ -607,7 +610,7 @@ public:
                 {
                     raster->raster_group = group;
                     set_raster_slot(
-                        raster_id, slot, js); // Update slot, as it dependns on the group.
+                        raster_id, slot, js); // Update slot, as it depends on the group.
                 }
                 // If no group contains the raster, it means that it wasn't complete and
                 // displayed anyway, so no need to do anything.

@@ -8,6 +8,11 @@
 #include <hrz_fnd_thread.h>
 #include <hrz_fnd_time.h>
 
+extern "C"
+{
+#include <microui/microui.h>
+}
+
 #include <mutex>
 
 static constexpr double DEFRAG_DELAY_MS = 5000;
@@ -56,9 +61,9 @@ gsl::span<const uint32_t> _path_to_span(const hrz_proto::Path& path)
     return gsl::span<const uint32_t>(field.data(), field.size());
 }
 
-const char* path_root_name(const hrz_proto::PathRoot& root_type)
+const char* path_root_name(hrz_proto::PathRoot::KindCase kind)
 {
-    switch (root_type.kind_case())
+    switch (kind)
     {
         case hrz_proto::PathRoot::kSingleModelLayer: return "single model layer";
         case hrz_proto::PathRoot::kDtmRasterLayer: return "DTM raster layer";
@@ -77,6 +82,11 @@ const char* path_root_name(const hrz_proto::PathRoot& root_type)
     }
 }
 
+const char* path_root_name(const hrz_proto::PathRoot& root_type)
+{
+    return path_root_name(root_type.kind_case());
+}
+
 #define LOG_INVALID_ROOT(op, root_type) \
     HRZ_LOG_ERROR("[{}] Invalid {} path root", op, path_root_name(root_type));
 
@@ -84,6 +94,8 @@ class SceneModelRootType
 {
 public:
     virtual ~SceneModelRootType() = default;
+
+    virtual size_t size() const = 0;
 
     virtual void register_element(const hrz_proto::PathRoot& root) = 0;
     virtual void unregister_element(const hrz_proto::PathRoot& root) = 0;
@@ -106,6 +118,8 @@ class SingleSceneModelRootType : public SceneModelRootType
 
 public:
     SingleSceneModelRootType() { _model.init(); }
+
+    size_t size() const final { return 1; }
 
     void register_element(const hrz_proto::PathRoot& root) final
     {
@@ -166,6 +180,12 @@ public:
         const std::function<KeyType(const hrz_proto::PathRoot&)>& get_key_fn) :
         _get_key{get_key_fn}
     {
+    }
+
+    size_t size() const final
+    {
+        HRZ_SCOPED_SHARED_LOCK(_mutex);
+        return _models.size();
     }
 
     void register_element(const hrz_proto::PathRoot& root) final
@@ -509,6 +529,29 @@ uint32_t remove(SceneModel* model, const hrz_proto::Path& path)
         return it->second->remove(path);
     }
     return 0;
+}
+
+void dev_ui(SceneModel* model, mu_Context* ctx)
+{
+    int layout_full[] = {-1};
+
+    mu_layout_row(ctx, 1, layout_full, 0);
+    mu_text(ctx, "Number of elements per root type");
+
+    int layout_columns[] = {200, -1};
+
+    mu_layout_row(ctx, 2, layout_columns, 0);
+
+    static fmt::memory_buffer buffer;
+    for (auto& sys : model->models)
+    {
+        mu_text(ctx, path_root_name(sys.first));
+
+        buffer.clear();
+        fmt::format_to(std::back_inserter(buffer), "{}", sys.second->size());
+        buffer.push_back('\0');
+        mu_label(ctx, buffer.data());
+    }
 }
 
 } // namespace scene_model
