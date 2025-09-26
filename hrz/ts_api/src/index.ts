@@ -1,1 +1,1 @@
-export { HrzApi } from "./hrz_api";
+export { HrzApi } from "./hrz_api.js";

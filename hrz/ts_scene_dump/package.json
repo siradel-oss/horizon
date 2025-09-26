@@ -1,5 +1,6 @@
 {
     "name": "@siradel/horizon-scene-dump",
+    "type": "module",
     "dependencies": {
         "@siradel/horizon-api": "workspace:*",
         "@siradel/horizon-protocol": "workspace:*"

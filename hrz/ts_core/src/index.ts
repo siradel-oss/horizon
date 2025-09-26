@@ -1,1 +1,1 @@
-export { HrzCoreBackend } from "./backend";
+export { HrzCoreBackend } from "./backend.js";

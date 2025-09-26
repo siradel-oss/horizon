@@ -1,11 +1,14 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:protobufjs/package_json.bzl", pbjs_bin = "bin")
+load("@npm//:protobufjs-cli/package_json.bzl", pbjs_bin = "bin")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//third_party:protobufjs_cli_deps.bzl", "PROTOBUFJS_CLI_DEPS")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
 load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:utils.bzl", "merge_dicts")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -19,11 +22,14 @@ pbjs_bin.pbjs(
         "//hrz/monitoring:proto",
     ],
     outs = [
-        "dist/hrz_monitoring_protocol.js",
+        "dist/hrz_monitoring_protocol_unpatched.js",
     ],
     args = [
+        "--es6",
         "-t",
         "static-module",
+        "-w",
+        "es6",
         "$(location //hrz/monitoring:proto)",
         "-o",
         "$@",
@@ -32,13 +38,22 @@ pbjs_bin.pbjs(
     copy_srcs_to_bin = False,
 )
 
+expand_template(
+    name = "replace_in_hrz_monitoring_protocol_js",
+    out = "dist/hrz_monitoring_protocol.js",
+    substitutions = {
+        "protobufjs/minimal": "protobufjs/minimal.js",
+    },
+    template = "dist/hrz_monitoring_protocol_unpatched.js",
+)
+
 pbjs_bin.pbts(
     name = "generate_ts",
     srcs = PROTOBUFJS_CLI_DEPS + [
         "dist/hrz_monitoring_protocol.js",
     ],
     outs = [
-        "dist/hrz_monitoring_protocol.d.ts",
+        "dist/hrz_monitoring_protocol_unpatched.d.ts",
     ],
     args = [
         "$(location dist/hrz_monitoring_protocol.js)",
@@ -46,6 +61,15 @@ pbjs_bin.pbts(
         "$@",
     ],
     chdir = "../../../",
+)
+
+expand_template(
+    name = "fix_import_in_ts",
+    out = "dist/hrz_monitoring_protocol.d.ts",
+    substitutions = {
+        'import Long = require("long");': 'import Long from "long";',
+    },
+    template = "dist/hrz_monitoring_protocol_unpatched.d.ts",
 )
 
 structured_files_copy(
@@ -59,24 +83,22 @@ structured_files_copy(
 ts_project(
     name = "ts_lib",
     srcs = [
-        ":generate_ts",
+        ":fix_import_in_ts",
         ":src_copies",
     ],
     declaration = True,
     out_dir = "dist",
     root_dir = "dist",
-    tsconfig = {
-        "compilerOptions": {
-            "lib": [
-                "ES2015",
-                "DOM",
-            ],
-            "target": "ES5",
-            "strict": True,
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "declaration": True,
+            },
         },
-    },
+    ),
     deps = [
-        ":node_modules/@types/long",
+        ":node_modules/long",
         ":node_modules/protobufjs",
     ],
 )

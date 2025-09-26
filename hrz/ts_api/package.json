@@ -1,8 +1,9 @@
 {
     "name": "@siradel/horizon-api",
+    "type": "module",
     "dependencies": {
         "@siradel/horizon-protocol": "workspace:*",
-        "@types/long": "^4.0.1"
+        "long": "^5.3.2"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

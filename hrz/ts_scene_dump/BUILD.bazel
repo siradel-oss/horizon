@@ -2,8 +2,10 @@ load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
 load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:utils.bzl", "merge_dicts")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -27,16 +29,14 @@ ts_project(
     declaration = True,
     out_dir = "dist",
     root_dir = "dist",
-    tsconfig = {
-        "compilerOptions": {
-            "lib": [
-                "ES2015",
-                "DOM",
-            ],
-            "target": "ES5",
-            "strict": True,
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "declaration": True,
+            },
         },
-    },
+    ),
     deps = [
         ":node_modules/@siradel/horizon-api",
         ":node_modules/@siradel/horizon-protocol",

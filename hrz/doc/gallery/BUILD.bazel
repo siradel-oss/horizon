@@ -93,6 +93,7 @@ filegroup(
 COMMON_DATA = glob(["src/**/*"]) + [
     "package.json",
     "tsconfig.json",
+    "//:tsconfig",
     ":node_modules",
 ]
 
@@ -105,7 +106,6 @@ vue_tsc_bin.vue_tsc(
     args = [
         "--emitDeclarationOnly",
         "-d",
-        "--strict",
         "--outFile",
         "dist/tsmarker.d.ts",
         "-p",

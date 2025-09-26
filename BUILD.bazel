@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -43,6 +44,12 @@ npm_link_package(
 npm_link_package(
     name = "node_modules/@siradel/horizon-doc-common",
     src = "//hrz/doc/common:npm_pkg",
+)
+
+copy_to_bin(
+    name = "tsconfig",
+    srcs = ["tsconfig.json"],
+    visibility = [":__subpackages__"],
 )
 
 #

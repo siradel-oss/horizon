@@ -1,4 +1,5 @@
 import { HrzProtocol } from "@siradel/horizon-protocol";
+import Long from "long";
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

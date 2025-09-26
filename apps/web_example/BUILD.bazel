@@ -1,7 +1,9 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//apps/web_example:webpack-cli/package_json.bzl", webpack_bin = "bin")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:utils.bzl", "merge_dicts")
 load("//tools/http_server:http_server.bzl", "http_server")
 
 package(default_visibility = ["//visibility:public"])
@@ -17,17 +19,15 @@ ts_project(
     ],
     out_dir = "dist",
     root_dir = "src",
-    tsconfig = {
-        "compilerOptions": {
-            "lib": [
-                "ES2020",
-                "DOM",
-            ],
-            "target": "ES2020",
-            "experimentalDecorators": True,
-            "moduleResolution": "Bundler",
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "experimentalDecorators": True,
+                "strict": False,
+            },
         },
-    },
+    ),
     deps = [
         ":node_modules/@siradel/horizon-api",
         ":node_modules/@siradel/horizon-core",

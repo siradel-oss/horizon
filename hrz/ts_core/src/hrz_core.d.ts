@@ -1,5 +1,3 @@
-export = HrzCore;
-
 declare function HrzCore(Module: any): HrzCore.Promise;
 
 declare namespace HrzCore {
@@ -23,3 +21,5 @@ declare namespace HrzCore {
         then(cb: { (api: NativeApi): void }): void;
     }
 }
+
+export default HrzCore;

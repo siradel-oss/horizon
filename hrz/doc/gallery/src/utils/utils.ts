@@ -1,5 +1,4 @@
-import { HrzProtocol } from "@siradel/horizon-protocol";
-import * as Long from "long";
+import Long from "long";
 
 export function deepAssign(from: any, to: any) {
     for (const key of Object.getOwnPropertyNames(from)) {

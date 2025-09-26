@@ -25,17 +25,17 @@ archive_override(
 # @Todo(1098) Use an hermetic Python toolchain & dependencies
 register_toolchains("@rules_python//python/runtime_env_toolchains:all")
 
-bazel_dep(name = "aspect_rules_ts", version = "3.5.3")
+bazel_dep(name = "aspect_rules_ts", version = "3.7.0")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps(ts_version_from = "//:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
 
-bazel_dep(name = "aspect_rules_js", version = "2.2.0")
+bazel_dep(name = "aspect_rules_js", version = "2.5.0")
 bazel_dep(name = "rules_nodejs", version = "6.4.0")
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
-node.toolchain(node_version = "18.13.0")
+node.toolchain(node_version = "20.18.0")
 use_repo(
     node,
     "nodejs",
@@ -82,15 +82,15 @@ bazel_dep(name = "abseil-cpp", version = "20240722.1")
 bazel_dep(name = "emsdk")
 archive_override(
     module_name = "emsdk",
-    integrity = "sha256-lIR3nfSFx27d7W8LXkDpZY+Xd4j81l0l1lujLLLviac=",
-    strip_prefix = "emsdk-ed2035a3cc85d3c87c99c017608c7cf0f984ec7c/bazel",
+    integrity = "sha256-JBQvVQapnat1sYzOzy46I7TiQ/pvrBtsILIIG7T7yMU=",
+    strip_prefix = "emsdk-4.0.14/bazel",
     urls = [
-        "https://github.com/emscripten-core/emsdk/archive/ed2035a3cc85d3c87c99c017608c7cf0f984ec7c.tar.gz",
+        "https://github.com/emscripten-core/emsdk/archive/refs/tags/4.0.14.tar.gz",
     ],
 )
 
 emsdk_deps = use_extension("@emsdk//:emscripten_deps.bzl", "emscripten_deps")
-emsdk_deps.config(version = "3.1.74")
+emsdk_deps.config(version = "4.0.14")
 
 register_toolchains(
     "//:glslc_core_windows_toolchain",
@@ -110,3 +110,10 @@ make_versions_list(
 bazel_output_base_util = use_repo_rule("//tools/bazel:bazel_output_base.bzl", "bazel_output_base_util")
 
 bazel_output_base_util(name = "bazel_output_base_util")
+
+tsconfig_util = use_repo_rule("//tools/bazel:tsconfig.bzl", "tsconfig_util")
+
+tsconfig_util(
+    name = "tsconfig_util",
+    tsconfig = "//:tsconfig.json",
+)

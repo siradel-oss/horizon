@@ -1,2 +1,2 @@
-export { HrzProtocol } from "./hrz_protocol";
-export { HrzProtocolHelper } from "./helper";
+export { HrzProtocol } from "./hrz_protocol.js";
+export { HrzProtocolHelper } from "./helper.js";

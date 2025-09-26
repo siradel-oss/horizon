@@ -85,13 +85,6 @@ Using the parallel shader compile WebGL extension on iOS or MacOS creates long f
 
 It seems that large AoS UBO make compile time very high on Apple machines. Use SoA instead if this happens.
 
-## `010-Chromium-Emscripten-TextDecoder` (2024-10-22)
-
-* HRZ-1081
-* https://github.com/emscripten-core/emscripten/issues/15217
-* https://github.com/emscripten-core/emscripten/issues/18034
-* https://github.com/emscripten-core/emscripten/pull/16994
-
 ## `011-Chromium-RangeRequests-Cache` (2024-11-14)
 
 When doing lots of range requests to the same resource in Chromium-based browsers, sometimes their caching thing fails and we get no response. Adding a different query parameter for each request seems to fix this.
@@ -109,3 +102,10 @@ Waking up the promise and making `checkMailbox` (the function that calls `__emsc
 The workaround is based on the one in this comment: https://github.com/emscripten-core/emscripten/issues/20920#issuecomment-2565983153
 
 # Retired
+
+## `010-Chromium-Emscripten-TextDecoder` (2024-10-22)
+
+* HRZ-1081
+* https://github.com/emscripten-core/emscripten/issues/15217
+* https://github.com/emscripten-core/emscripten/issues/18034
+* https://github.com/emscripten-core/emscripten/pull/16994

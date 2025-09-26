@@ -69,8 +69,8 @@ function onAlphaChange(event: InputEvent, isInputEvent: boolean) {
         <input
             type="color"
             :value="htmlColor"
-            @input="event => onColorChange(event as InputEvent, true)"
-            @change="event => onColorChange(event as InputEvent, false)"
+            @input="(event) => onColorChange(event as InputEvent, true)"
+            @change="(event) => onColorChange(event as InputEvent, false)"
             class="flex-1"
         />
         <input
@@ -80,8 +80,8 @@ function onAlphaChange(event: InputEvent, isInputEvent: boolean) {
             step="any"
             v-if="model && props.alpha"
             :value="model.a"
-            @input="event => onAlphaChange(event as InputEvent, true)"
-            @change="event => onAlphaChange(event as InputEvent, false)"
+            @input="(event) => onAlphaChange(event as InputEvent, true)"
+            @change="(event) => onAlphaChange(event as InputEvent, false)"
             class="flex-1"
         />
     </div>

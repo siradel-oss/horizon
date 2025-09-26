@@ -7,6 +7,7 @@ def _set_wasm_name_in_js_impl(ctx):
         output = ctx.outputs.out,
         substitutions = {
             ctx.attr.from_name + ".wasm": ctx.attr.to_name + ".wasm",
+            "new URL(\"" + ctx.attr.from_name + "\"": "new URL(\"" + ctx.attr.to_name + "\"",
         },
     )
 
@@ -45,8 +46,9 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
     additional_linkopts += [
         "-sMODULARIZE=1",
         "-sEXPORT_NAME=" + module_name,
+        "-sEXPORTED_RUNTIME_METHODS=HEAPU8",
         "-sUSE_WEBGL2=1",
-        "-sTEXTDECODER=0",  # @Workaround(010-Chromium-Emscripten-TextDecoder)
+        "-sEXPORT_ES6=1",
         "-mbulk-memory",
     ]
 

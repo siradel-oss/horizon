@@ -1,6 +1,6 @@
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import * as Core from "./hrz_core";
+import Core from "./hrz_core.js";
 
 enum Os {
     Android,

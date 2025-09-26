@@ -1,8 +1,7 @@
 {
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "baseUrl": "../../bazel-bin/hrz/ts_scene_dump/node_modules",
-        "lib": ["ES2015", "DOM"],
-        "target": "ES5",
-        "strict": true
+        "declaration": true
     }
 }

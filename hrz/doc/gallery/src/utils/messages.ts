@@ -1,6 +1,6 @@
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
-import { eqLong } from "./utils";
+import { eqLong } from "./utils.js";
 
 export class MessageHandler {
     private watchers = new Array<(msg: HrzProtocol.ITypedMessage) => boolean>();

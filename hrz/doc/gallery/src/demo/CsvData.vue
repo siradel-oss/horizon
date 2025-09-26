@@ -398,7 +398,8 @@ function displayPickResult(msg: HrzProtocol.IPickResults) {
     pickResult.value.stats = {};
 
     for (let i = 0; i < result.vector.ids.length; ++i) {
-        switch (result.vector.ids[i]) {
+        const idValue = HrzProtocolHelper.uint64AsNumber(result.vector.ids[i]);
+        switch (idValue) {
             case IRIS_NAME_ATTR_ID:
                 pickResult.value.irisName = result.vector.values[i].stringValue || "";
                 break;

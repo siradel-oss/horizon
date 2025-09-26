@@ -4,10 +4,12 @@ load("@npm//hrz/doc:sass/package_json.bzl", sass_bin = "bin")
 load("@npm//hrz/doc:webpack-cli/package_json.bzl", webpack_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//:version.bzl", "HRZ_VERSION")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:pkg.bzl", "structured_files_copy")
 load("//tools/bazel:untar.bzl", "untar")
+load("//tools/bazel:utils.bzl", "merge_dicts")
 load("//tools/http_server:http_server.bzl", "http_server")
 load(":make_doc.bzl", "make_doc")
 
@@ -65,18 +67,15 @@ ts_project(
     srcs = [":copy_srcs_opensource"],
     out_dir = "dist",
     root_dir = "src_opensource",
-    tsconfig = {
-        "compilerOptions": {
-            "lib": [
-                "ES2020",
-                "DOM",
-            ],
-            "target": "ES2020",
-            "moduleResolution": "Node",
-            "experimentalDecorators": True,
-            "emitDecoratorMetadata": True,
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "experimentalDecorators": True,
+                "strict": False,
+            },
         },
-    },
+    ),
     deps = [
         ":node_modules",
     ],
@@ -87,18 +86,15 @@ ts_project(
     srcs = [":copy_srcs_internal"],
     out_dir = "dist",
     root_dir = "src_internal",
-    tsconfig = {
-        "compilerOptions": {
-            "lib": [
-                "ES2020",
-                "DOM",
-            ],
-            "target": "ES2020",
-            "moduleResolution": "Node",
-            "experimentalDecorators": True,
-            "emitDecoratorMetadata": True,
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "experimentalDecorators": True,
+                "strict": False,
+            },
         },
-    },
+    ),
     deps = [
         ":node_modules",
     ],
