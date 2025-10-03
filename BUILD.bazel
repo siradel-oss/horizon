@@ -5,6 +5,7 @@ load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:prettier/package_json.bzl", prettier_bin = "bin")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel/glsl:glsl_toolchain.bzl", "glsl_toolchain")
 load("//tools/ide_integration:cmake.bzl", "cmakelists")
@@ -13,6 +14,12 @@ load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_da
 package(default_visibility = ["//visibility:public"])
 
 exports_files(["LICENSE"])
+
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements.txt",
+)
 
 npm_link_all_packages(name = "node_modules")
 

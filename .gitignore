@@ -5,6 +5,7 @@
 *.pyc
 *.csproj.user
 /bazel-*
+/.venv/
 /CMakeLists.txt*
 CMakeLists.txt.user*
 b

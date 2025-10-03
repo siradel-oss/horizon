@@ -9,23 +9,11 @@
     - (Optional) Install *only* the English language pack when installing the build tools. This reduces spam during building.
       If you do this, please also set the `VSLANG` environment variable to 1033.
 - Bazel via [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html)
-- Python >= 3.8
+- Python >= 3.11, <= 3.12
     - Run the installer as administrator
     - Select "Add python.exe to PATH"
     - Select "Customize installation"
     - In "Advanced options", select "Install Python 3.x for all users"
-- Install the following Python packages with pip. (You might also need to install them from an administrator command prompt if you're getting errors when building.)
-    - jinja2
-    - markdown (if you have *ImportError: No module named 'pkg_resources'* try *pip install --upgrade setuptools*)
-    - pygments
-    - mkdocs
-    - mkdocs-material
-    - requests
-    - lark (optional)
-    - lark-parser (optional)
-    - imgui\[sdl2] (optional)
-    - pysdl2-dll (optional)
-    - PyJWT (optional)
 - pnpm 8.x (not 9 or above!) (optional, necessary for managing npm dependencies)
 - fd-find (use `cargo install fd-find` or download at https://github.com/sharkdp/fd/releases)
 - CMake >= 3.1 (optional, for external dependencies)
@@ -58,24 +46,12 @@ startup --server_javabase=<path to you Java install> # For example C:\Program Fi
 - The X11 Input extension library, libXi (package `libxi-dev` on Ubuntu)
 - The X cursor management library (package `libxcursor-dev` on Ubuntu)
 - pnpm 8.x (not 9 or above!) (optional, necessary for managing npm dependencies)
-- Python >= 3.8, along with the following packages:
-    - jinja2
-    - markdown
-    - pygments
-    - mkdocs
-    - mkdocs-material
-    - requests
-    - lark (optional)
-    - lark-parser (optional)
-    - imgui\[sdl2] (optional)
-    - pysdl2-dll (optional)
-    - PyJWT (optional)
-- fd-find (use `cargo install fd-find` or download at https://github.com/sharkdp/fd/releases)
+- Python >= 3.11, <= 3.12
+- fd-find (package `fd-find` on Ubuntu)
 - CMake >= 3.1 (optional, for external dependencies)
 - emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
 - JDK >= 17 (optional, for external dependencies & publishing the repository)
-
-- TK bindings for Python (package `python3-tk` on Ubuntu) (optional)
+- TK bindings for Python (package `python3-tk` on Ubuntu) (optional, for visual tests GUI)
 
 ### More certificate issues!
 
@@ -150,6 +126,30 @@ Additionally, on Windows:
     - An alternative option is to use MSYS2, install `pacman -S zip unzip patch diffutils git`, then set `BAZEL_SH` to `usr\bin\bash.exe` inside of the MSYS2 installation directory.
 - Set the `BAZEL_VC` environment variable to point to your MSVC build tools (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC`).
 - (Optional) Set the `BAZEL_LLVM` environment variable to point to your LLVM installation (`C:\Program Files\LLVM`).
+
+## Running Python scripts
+
+Several Python scripts have dependencies that are not in Python’s standard library. These dependencies are fetched automatically when a script is run as part of the build process, but some setup is required when running them manually.
+
+The simplest way is to create a virtual environment:
+
+On Windows:
+```bash
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+On Linux
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+The virtual environment must be reactivated every time a new shell is opened.
+
+Alternatively, instead of running scripts with `python3 <file.py>`, you can execute `.venv/bin/python <file.py>`. This allows not having to activate the virtual environment.
 
 ### Editor integration
 

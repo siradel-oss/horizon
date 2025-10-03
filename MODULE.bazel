@@ -25,6 +25,14 @@ archive_override(
 # @Todo(1098) Use an hermetic Python toolchain & dependencies
 register_toolchains("@rules_python//python/runtime_env_toolchains:all")
 
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pypi",
+    python_version = "3.11",
+    requirements_lock = "//:requirements.txt",
+)
+use_repo(pip, "pypi")
+
 bazel_dep(name = "aspect_rules_ts", version = "3.7.0")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)

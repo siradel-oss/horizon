@@ -190,3 +190,22 @@ npm_link_package(
 ```
 
 More information about pnpm and rules_js: https://docs.aspect.build/rulesets/aspect_rules_js/docs/pnpm.
+
+## Python dependencies
+
+Direct Python dependencies are declared in `requirements.in`. However building the project requires all dependencies, including transitive dependencies, to be declared. This is done in `requirements.txt`.
+
+Every time a dependency is added or updated in `requirements.in`, `requirements.txt` must be updated by executing `bazel run //:requirements.update`.
+
+Checking if `requirements.txt` is up-to-date can be done by executing `bazel test //:requirements_test`.
+
+Targets’ dependencies use the `@pypi//<package_name>` syntax. For example for a target depending on `jinja2`:
+
+```python
+py_binary(
+    ...
+    deps = [
+        "@pypi//jinja2",
+    ],
+)
+```

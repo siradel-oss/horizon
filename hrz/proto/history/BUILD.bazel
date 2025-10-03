@@ -17,6 +17,7 @@ py_binary(
     ],
     deps = [
         ":manifest",
+        "@pypi//jinja2",
         "@rules_python//python/runfiles",
     ],
 )

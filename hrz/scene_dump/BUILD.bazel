@@ -10,6 +10,7 @@ py_binary(
     ],
     deps = [
         "//hrz/proto/history:manifest",
+        "@pypi//jinja2",
         "@rules_python//python/runfiles",
     ],
 )

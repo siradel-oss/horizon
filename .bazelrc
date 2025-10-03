@@ -17,6 +17,7 @@ build:windows --copt=/bigobj
 build:windows --per_file_copt=.*\.(cc|cpp)$@/D_CRT_USE_BUILTIN_OFFSETOF
 build:windows --copt=/wd4141 # Disables "'inline': used more than once"
 build:windows --host_copt=/wd4141 # Disables "'inline': used more than once"
+build:windows --build_python_zip=false
 
 build:windows_clang --action_env="BAZEL_LLVM=C:\\Program Files\\LLVM\\"
 build:windows_clang --action_env=USE_CLANG_CL=1

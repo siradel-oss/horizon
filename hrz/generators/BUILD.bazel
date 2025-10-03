@@ -19,6 +19,10 @@ py_binary(
     main = "launch.py",
     python_version = "PY3",
     visibility = ["//visibility:public"],
+    deps = [
+        "@pypi//jinja2",
+        "@pypi//markdown",
+    ],
 )
 
 filegroup(

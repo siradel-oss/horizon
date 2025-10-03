@@ -19,6 +19,7 @@ py_binary(
     python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        "@pypi//jinja2",
         "@rules_python//python/runfiles",
     ],
 )
