@@ -410,8 +410,9 @@ hrz_cc_shared(
     ],
 )
 
-cc_binary(
+cc_test(
     name = "tests",
+    testonly = False,
     srcs = [
         "src/tests/hrz_core_attribution_tests.cpp",
         "src/tests/hrz_core_base_url_tests.cpp",
@@ -427,6 +428,7 @@ cc_binary(
         "src/tests/hrz_core_tests_entry_point.cpp",
         "src/tests/hrz_core_tile_url_generator_tests.cpp",
     ],
+    linkstatic = True,
     local_defines = [
         "HRZ_LOG_PREFIX=HrzCoreTests",
     ],

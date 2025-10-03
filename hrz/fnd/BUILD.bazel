@@ -89,8 +89,9 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-cc_binary(
+cc_test(
     name = "tests",
+    testonly = False,
     srcs = [
         "tests/hash.cpp",
         "tests/http.cpp",
@@ -105,6 +106,7 @@ cc_binary(
         "tests/url.cpp",
         "tests/varint.cpp",
     ],
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":hrz_fnd",

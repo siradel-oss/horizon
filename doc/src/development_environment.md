@@ -244,11 +244,15 @@ By default the web client is served locally with the HTTP protocol. However in p
 
 A self-signed certificate is provided with the server, just add `_tls` add the end of the target’s name to use it:
 
-`bazel run //apps/web_client:server_tls --config=wasm_linux -c opt`
+```sh
+bazel run //apps/web_client:server_tls --config=wasm_linux -c opt
+```
 
 You use an existing certificate (and its associated key) by passing the relevant arguments to the server:
 
-`bazel run //apps/web_client:server_tls --config=wasm_linux -c opt -- --certificate path/to/hrz.localhost.pem --keyfile path/to/hrz.localhost-key.pem --hostname hrz.localhost`
+```sh
+bazel run //apps/web_client:server_tls --config=wasm_linux -c opt -- --certificate path/to/hrz.localhost.pem --keyfile path/to/hrz.localhost-key.pem --hostname hrz.localhost
+```
 
 If you can’t or don’t want to use self-signed certificates, you can use a tool like [mkcert](https://github.com/FiloSottile/mkcert) instead. It allows setting up a local certificate authority (CA) and generating certificates for localhost domains.
 
@@ -268,13 +272,29 @@ In order to save your configuration across branches, put these settings in a `.b
 
 Example of config file:
 
-```
+```sh
 build --disk_cache=D:/bazel_cache
 
 # or...
 
 build --remote_cache=http://redacted.localhost/
 ```
+
+## Unit-testing
+
+Run tests with `bazel test`:
+
+```sh
+bazel test //hrz/fnd:tests --config=windows
+```
+
+A `test_suite` exists in the root `BUILD.bazel` to run all tests. Please add newly created test targets to it.
+
+```sh
+bazel test //:all_tests --config=windows
+```
+
+Test logs, outputs, and reports are written to `bazel-testlogs`. Tests can be filtered with `--test_filter=...` using the same syntax as GoogleTest. Note that only tests based on GoogleTest will write an XML report (thanks to some Bazel + GoogleTest magic).
 
 ## Debugging
 

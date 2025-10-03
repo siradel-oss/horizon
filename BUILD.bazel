@@ -287,13 +287,6 @@ compilation_database(
         "//apps/native_client",
         "//tools/monitoring_client",
         "//hrz/core:hrz_core.dll",
-        "//hrz/common:tests",
-        "//hrz/fnd:tests",
-        "//hrz/mapbox:tests",
-        "//hrz/monitoring:tests",
-        "//hrz/core:tests",
-        "//hrz/core/jobs:tests",
-        "//libs/mycelium:tests",
         "//libs/ws:ws_echo_server",
         "//tools/compress_file_lz4",
         "//tools/scene_dump:get_dump_version",
@@ -303,7 +296,7 @@ compilation_database(
         "//apps/web_client:generate_scenes_list",
         "//tools/visual_testing:viewer",
         "//tools/visual_testing:comparator",
-        "//hrz/http_cache:tests",
+        "//:all_tests",
     ],
 )
 
@@ -313,14 +306,6 @@ cmakelists(
         "//apps/native_client",
         "//tools/monitoring_client",
         "//hrz/xml_desc_generator",
-        "//hrz/common:tests",
-        "//hrz/fnd:tests",
-        "//hrz/mapbox:tests",
-        "//hrz/monitoring:tests",
-        "//hrz/core/jobs:tests",
-        "//hrz/core/platform:tests",
-        "//hrz/core:tests",
-        "//libs/mycelium:tests",
         "//libs/ws:ws_echo_server",
         "//tools/compress_file_lz4",
         "//tools/scene_dump:get_dump_version",
@@ -330,6 +315,7 @@ cmakelists(
         "//apps/web_client:generate_scenes_list",
         "//tools/visual_testing:viewer",
         "//tools/visual_testing:comparator",
+        "//:all_tests",
     ] + select({
         "//:os_windows": [
             "//hrz/core:hrz_core.dll",
@@ -358,4 +344,21 @@ prettier_bin.prettier_binary(
     env = {
         "BAZEL_BINDIR": "$(BINDIR)",
     },
+)
+
+test_suite(
+    name = "all_tests",
+    testonly = False,
+    tests = [
+        "//hrz/common:tests",
+        "//hrz/core:tests",
+        "//hrz/core/jobs:tests",
+        "//hrz/core/platform:tests",
+        "//hrz/fnd:tests",
+        "//hrz/http_cache:tests",
+        "//hrz/mapbox:tests",
+        "//hrz/monitoring:tests",
+        "//libs/mycelium:tests",
+        "//libs/proj_lite:tests",
+    ],
 )

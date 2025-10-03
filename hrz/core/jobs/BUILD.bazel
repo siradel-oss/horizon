@@ -212,12 +212,14 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-cc_binary(
+cc_test(
     name = "tests",
+    testonly = False,
     srcs = [
         "include/hrz_jobs_ogc_utils.h",
         "tests/ogc_utils.cpp",
     ],
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":hrz_core_jobs",

@@ -57,14 +57,17 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-cc_binary(
+cc_test(
     name = "tests",
+    testonly = False,
     srcs = [
         "tests/common.h",
         "tests/crs.cpp",
         "tests/crs_common.h",
         "tests/generated.cpp",
     ] + glob(["tests/crs_generated/*.cpp"]),
+    linkstatic = True,
+    visibility = ["//visibility:public"],
     deps = [
         ":proj_lite",
         "//third_party:gtest",

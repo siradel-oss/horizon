@@ -26,6 +26,7 @@ _cc_rules = [
     "cc_library",
     "cc_import",
     "cc_proto_library",
+    "cc_test",
 ]
 
 def _target_path(target):
@@ -111,6 +112,8 @@ def _cmakelists_aspect_impl(target, ctx):
         deps.extend(ctx.rule.attr.deps)
     if hasattr(ctx.rule.attr, "implementation_deps"):
         deps.extend(ctx.rule.attr.implementation_deps)
+    if hasattr(ctx.rule.attr, "tests"):
+        deps.extend(ctx.rule.attr.tests)
 
     if is_cc_proto_library:
         deps.extend([ctx.attr._protobuf_runtime])
@@ -156,7 +159,7 @@ def _cmakelists_aspect_impl(target, ctx):
     cmake_commands = []
     shared_library = False
 
-    if ctx.rule.kind == "cc_binary":
+    if ctx.rule.kind in ["cc_binary", "cc_test"]:
         shared_library = hasattr(ctx.rule.attr, "linkshared") and ctx.rule.attr.linkshared
 
         command = "add_library" if shared_library else "add_executable"
@@ -482,7 +485,7 @@ def _cmakelists_aspect_impl(target, ctx):
     ]
 
 cmakelists_aspect = aspect(
-    attr_aspects = ["deps", "implementation_deps"],
+    attr_aspects = ["deps", "srcs", "implementation_deps", "tests"],
     attrs = {
         "_cc_toolchain": attr.label(
             default = Label("@rules_cc//cc:current_cc_toolchain"),

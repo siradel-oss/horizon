@@ -75,12 +75,14 @@ cc_resources(
     namespace = "mapbox",
 )
 
-cc_binary(
+cc_test(
     name = "tests",
+    testonly = False,
     srcs = [
         "tests/hrz_mapbox_expression_tests.cpp",
         "tests/hrz_mapbox_parser_tests.cpp",
     ],
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":hrz_mapbox",

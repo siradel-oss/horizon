@@ -54,3 +54,5 @@ build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 build --@aspect_rules_ts//ts:default_to_tsc_transpiler
 fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+test --test_output=errors

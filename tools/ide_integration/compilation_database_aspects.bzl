@@ -208,6 +208,8 @@ def _compilation_database_aspect_impl(target, ctx):
         deps.extend(ctx.rule.attr.deps)
     if hasattr(ctx.rule.attr, "implementation_deps"):
         deps.extend(ctx.rule.attr.implementation_deps)
+    if hasattr(ctx.rule.attr, "tests"):
+        deps.extend(ctx.rule.attr.tests)
 
     transitive_compilation_db = []
     all_compdb_files = []
@@ -279,7 +281,7 @@ def _compilation_database_aspect_impl(target, ctx):
 compilation_database_aspect = aspect(
     # Also include srcs in the attribute aspects so people can use filegroup targets.
     # See https://github.com/grailbio/bazel-compilation-database/issues/84.
-    attr_aspects = ["srcs", "deps", "implementation_deps"],
+    attr_aspects = ["srcs", "deps", "implementation_deps", "tests"],
     attrs = {
         "_cc_toolchain": attr.label(
             default = Label("@rules_cc//cc:current_cc_toolchain"),
