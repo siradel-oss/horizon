@@ -174,6 +174,7 @@ struct Config
 
     uint32_t scene_views = 0;
     bool clip_to_tile = false;
+    float bevel_width = 0;
     hrz::render::LightingSettings lighting_settings;
 };
 
@@ -478,6 +479,7 @@ public:
         config.default_altitude_offset = repr.extruded_geometry().altitude_offset().default_value();
         config.scene_views = repr.scene_views().bits();
         config.clip_to_tile = repr.extruded_geometry().clip_to_tile();
+        config.bevel_width = repr.extruded_geometry().bevel_width();
         config.lighting_settings = hrz::render::from_proto(repr.extruded_geometry().lighting());
 
         config.extrusion_prp = register_prp(extrusion_prp_name, config.default_extrusion);
@@ -569,6 +571,7 @@ public:
         bake_data.extrusion_prp = cfg.extrusion_prp;
         bake_data.altitude_offset_prp = cfg.altitude_offset_prp;
         bake_data.clip_to_tile = cfg.clip_to_tile;
+        bake_data.bevel_width = cfg.bevel_width;
 
         bake_data.feature_ids = feature_ids.hashes();
         bake_data.geometry = geometry.geometry;

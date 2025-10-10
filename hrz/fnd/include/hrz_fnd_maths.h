@@ -59,12 +59,26 @@ inline void split_double(double double_value, float& float_low, float& float_hig
     }
 }
 
-inline double lerp(double start, double end, double t)
+template<typename T>
+inline T lerp(T start, T end, T t)
 {
     return (end - start) * t + start;
 }
 
-inline double clamped_lerp(double start, double end, double t)
+/**
+ * Lerps two values at once with different interpolation factors.
+ * This is useful to avoid creating temporary variables to store
+ * interpolated values without overriding the source values.
+ * Example: `std::tie(a, b) = hrz::lerp_two(a, b, t0, t1);`
+ */
+template<typename T>
+inline std::pair<T, T> lerp_two(T start, T end, T t0, T t1)
+{
+    return std::make_pair(lerp(start, end, t0), lerp(start, end, t1));
+}
+
+template<typename T>
+inline T clamped_lerp(T start, T end, T t)
 {
     return clamp(lerp(start, end, t), start, end);
 }

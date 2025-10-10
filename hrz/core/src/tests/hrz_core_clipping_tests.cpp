@@ -441,11 +441,11 @@ TEST(SegmentClipping, all_inside)
     std::vector<lm::vec3> out;
 
     hrz::clip_segment<float>(
-        lm::vec2(0.25), lm::vec2(0.75), 0, 1, lm::bbox2({0, 0}, {1, 1}),
-        [&](const lm::vec2& a, const lm::vec2& b, float az, float bz)
+        lm::vec2(0.25), lm::vec2(0.75), lm::bbox2({0, 0}, {1, 1}),
+        [&](const lm::vec2& a, const lm::vec2& b, float t0, float t1)
         {
-            out.push_back(lm::vec3(a, az));
-            out.push_back(lm::vec3(b, bz));
+            out.emplace_back(a, t0);
+            out.emplace_back(b, t1);
         });
 
     ASSERT_EQ(out.size(), 2);
@@ -465,11 +465,11 @@ TEST(SegmentClipping, all_outside)
     std::vector<lm::vec3> out;
 
     hrz::clip_segment<float>(
-        lm::vec2(0.25), lm::vec2(0.75), 0, 1, lm::bbox2({2, 2}, {4, 4}),
+        lm::vec2(0.25), lm::vec2(0.75), lm::bbox2({2, 2}, {4, 4}),
         [&](const lm::vec2& a, const lm::vec2& b, float az, float bz)
         {
-            out.push_back(lm::vec3(a, az));
-            out.push_back(lm::vec3(b, bz));
+            out.emplace_back(a, az);
+            out.emplace_back(b, bz);
         });
 
     ASSERT_EQ(out.size(), 0);
@@ -480,11 +480,11 @@ TEST(SegmentClipping, first_outside)
     std::vector<lm::vec3> out;
 
     hrz::clip_segment<float>(
-        lm::vec2(-0.5, 0.5), lm::vec2(0.5, 0.5), 0, 1, lm::bbox2({0, 0}, {1, 1}),
+        lm::vec2(-0.5, 0.5), lm::vec2(0.5, 0.5), lm::bbox2({0, 0}, {1, 1}),
         [&](const lm::vec2& a, const lm::vec2& b, float az, float bz)
         {
-            out.push_back(lm::vec3(a, az));
-            out.push_back(lm::vec3(b, bz));
+            out.emplace_back(a, az);
+            out.emplace_back(b, bz);
         });
 
     ASSERT_EQ(out.size(), 2);
@@ -504,11 +504,11 @@ TEST(SegmentClipping, second_outside)
     std::vector<lm::vec3> out;
 
     hrz::clip_segment<float>(
-        lm::vec2(0.5, 0.5), lm::vec2(0.5, 1.5), 0, 1, lm::bbox2({0, 0}, {1, 1}),
+        lm::vec2(0.5, 0.5), lm::vec2(0.5, 1.5), lm::bbox2({0, 0}, {1, 1}),
         [&](const lm::vec2& a, const lm::vec2& b, float az, float bz)
         {
-            out.push_back(lm::vec3(a, az));
-            out.push_back(lm::vec3(b, bz));
+            out.emplace_back(a, az);
+            out.emplace_back(b, bz);
         });
 
     ASSERT_EQ(out.size(), 2);
@@ -528,11 +528,11 @@ TEST(SegmentClipping, both_outside_intersecting)
     std::vector<lm::vec3> out;
 
     hrz::clip_segment<float>(
-        lm::vec2(1.5, 2.0), lm::vec2(-0.5, 0), 0, 1, lm::bbox2({0, 0}, {1, 1}),
+        lm::vec2(1.5, 2.0), lm::vec2(-0.5, 0), lm::bbox2({0, 0}, {1, 1}),
         [&](const lm::vec2& a, const lm::vec2& b, float az, float bz)
         {
-            out.push_back(lm::vec3(a, az));
-            out.push_back(lm::vec3(b, bz));
+            out.emplace_back(a, az);
+            out.emplace_back(b, bz);
         });
 
     ASSERT_EQ(out.size(), 2);

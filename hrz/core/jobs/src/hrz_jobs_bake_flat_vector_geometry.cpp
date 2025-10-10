@@ -846,10 +846,12 @@ void generate_polylines_geometry(
                     hrz::rhumb_line_distance(geo0.latlon(), geo1.latlon(), false);
 
                 hrz::clip_segment<double>(
-                    pp0.xy, pp1.xy, pp0.z, pp1.z, tile_bounds,
-                    [&](const lm::dvec2& a, const lm::dvec2& b, double az, double bz)
+                    pp0.xy, pp1.xy, tile_bounds,
+                    [&](const lm::dvec2& a, const lm::dvec2& b, double ta, double tb)
                     {
-                        lm::dvec3 clipped[2] = {lm::dvec3(a, az), lm::dvec3(b, bz)};
+                        lm::dvec3 clipped[2] = {
+                            lm::dvec3(a, hrz::lerp(pp0.z, pp1.z, ta)),
+                            lm::dvec3(b, hrz::lerp(pp0.z, pp1.z, tb))};
 
                         hrz::GeoPosition3 clipped_geo[2];
                         transform_wmerc_to_geo(2, clipped, clipped_geo);

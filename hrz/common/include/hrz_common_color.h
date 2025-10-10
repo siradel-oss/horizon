@@ -50,6 +50,16 @@ static inline lm::ubvec4 convert_rgba_color_to_bytes(const lm::vec4& color)
     return {to_byte(color.r), to_byte(color.g), to_byte(color.b), to_byte(color.a)};
 }
 
+static inline lm::vec4 convert_bytes_to_rgba_color(const lm::ubvec4& color)
+{
+    return lm::vec4{
+        (float)color.r / 255.0F,
+        (float)color.g / 255.0F,
+        (float)color.b / 255.0F,
+        (float)color.a / 255.0F,
+    };
+}
+
 static inline lm::ubvec4 convert_uint_color_to_bytes(uint32_t c)
 {
     return hrz::bit_cast<lm::ubvec4, uint32_t>(c);

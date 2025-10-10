@@ -22,14 +22,200 @@ namespace hrz_jobs::bake_extruded_vector_geometry
 {
 namespace
 {
-static constexpr double MAX_SEGMENT_ANGULAR_LENGTH = lm::radians(4.0); // in radians
+static constexpr double kMaxSegmentAngularLength = lm::radians(4.0); // in radians
 
-static constexpr size_t InitialVertexCapacity = 512;
-static constexpr size_t InitialPositionCapacity = 2048;
-static constexpr size_t InitialIndexCapacity = 2048;
+static constexpr size_t kInitialVertexCapacity = 512;
+static constexpr size_t kInitialPositionCapacity = 2048;
+static constexpr size_t kInitialIndexCapacity = 2048;
+
+static constexpr double kInvSqrt2 = 0.7071067811865475; // 1 / sqrt(2)
+
+// Above this angle, we just generate smooth normals instead of a bevel, when
+// bevels are enabled.
+static constexpr double kBevelMaxAngle = lm::radians(160.0);
+
+// Walls below this threshold are too short to do anything useful with.
+static constexpr double kBevelMinWallLength = 1e-6;
+
+// Below this bevel width, we don't do any beveling.
+static constexpr float kBevelMinWidth = 1e-2F;
 
 using Vertex = hrz::vt::ExtrudedVectorGeometry::Vertex;
 using VertexBuffer = hrz::BlobVector<Vertex>;
+
+struct GeometryBuilder
+{
+    // Baked positions for later reprojection
+    hrz::BlobVector<lm::dvec3> positions;
+
+    // Actual GPU data
+    VertexBuffer vertices;
+    hrz::BlobVector<uint32_t> indices;
+
+    explicit GeometryBuilder(hrz::BlobAllocator* ba) :
+        positions(ba, kInitialPositionCapacity),
+        vertices(ba, kInitialVertexCapacity),
+        indices(ba, kInitialIndexCapacity)
+    {
+    }
+
+    inline uint32_t vertices_count() const
+    {
+        return static_cast<uint32_t>(vertices.size().value_or(0));
+    }
+
+    void append_vertex(
+        lm::dvec3 position,
+        lm::vec3 normal,
+        lm::ubvec4 color,
+        uint32_t feature_index)
+    {
+        vertices.push_back({{}, hrz::octahedral_compress_normal(normal), color, feature_index});
+        positions.push_back(position);
+    }
+
+    void append_index(uint32_t index) { indices.push_back(index); }
+};
+
+struct TileInfo
+{
+    lm::dmat3 normal_matrix;
+    hrz::TileCoords tile_coords;
+    lm::dbbox2 wmerc_tile_bounds;
+    hrz::GeoBounds geo_data_bounds;
+
+    bool clip_to_tile{};
+    float bevel_width{};
+};
+
+struct FeatureInfo : public TileInfo
+{
+    explicit FeatureInfo(const TileInfo& ti) : TileInfo{ti} {}
+
+    uint32_t feature_index{};
+
+    lm::ubvec4 roof_color_srgb;
+    lm::ubvec4 wall_top_color_srgb;
+    lm::ubvec4 wall_bottom_color_srgb;
+
+    bool double_sided_roof{};
+    bool double_sided_walls{};
+    bool roof_bevel{};
+    bool invert_walls_winding{};
+
+    // Used to subdivide walls and roofs so that they don't intersect the planet.
+    double max_angular_distance{};
+};
+
+struct VertexWithBevelInfo
+{
+    // Original point location.
+    lm::dvec3 pos;
+
+    // Inset position for the roof when beveled.
+    lm::dvec3 inset;
+
+    // Normals with the points before and after this one.
+    lm::vec3 normal0;
+    lm::vec3 normal1;
+
+    bool has_bevel{};
+
+    // Position of the beveled point with the face "before".
+    lm::dvec3 bevel_pos0;
+
+    // Position of the beveled point with the face "after".
+    lm::dvec3 bevel_pos1;
+};
+
+void make_linestring_bevel_info(
+    gsl::span<const lm::dvec3> points,
+    gsl::span<VertexWithBevelInfo> out_vertex_info,
+    float bevel_width,
+    bool is_closed,
+    bool use_z,
+    bool invert_normals)
+{
+    for (size_t i = 0; i < points.size(); ++i)
+    {
+        lm::dvec3 p0 = points[i == 0 ? (is_closed ? points.size() - 1 : 0) : i - 1];
+        lm::dvec3 p1 = points[i];
+        lm::dvec3 p2 = points[i + 1 == points.size() ? (is_closed ? 0 : points.size() - 1) : i + 1];
+
+        if (!use_z)
+        {
+            p0.z = 0.0;
+            p1.z = 0.0;
+            p2.z = 0.0;
+        }
+
+        const lm::dvec3 diff0 = p1 - p0;
+        const lm::dvec3 diff1 = p2 - p1;
+
+        const double len0 = lm::length(diff0);
+        const double len1 = lm::length(diff1);
+
+        out_vertex_info[i].pos = p1;
+        out_vertex_info[i].inset = p1;
+
+        out_vertex_info[i].normal0 = len0 > 0
+            ? lm::vec3(lm::normalize(lm::cross(diff0, lm::dvec3(0, 0, 1))))
+            : lm::vec3(0, 0, 1);
+        out_vertex_info[i].normal1 = len1 > 0
+            ? lm::vec3(lm::normalize(lm::cross(diff1, lm::dvec3(0, 0, 1))))
+            : lm::vec3(0, 0, 1);
+
+        if (invert_normals)
+        {
+            out_vertex_info[i].normal0 = -out_vertex_info[i].normal0;
+            out_vertex_info[i].normal1 = -out_vertex_info[i].normal1;
+        }
+
+        out_vertex_info[i].has_bevel = false;
+
+        if (len0 < kBevelMinWallLength || len1 < kBevelMinWallLength
+            || bevel_width < kBevelMinWidth)
+        {
+            continue;
+        }
+
+        const float angle = std::acos(lm::dot(-diff0, diff1) / (len0 * len1));
+        const float sin_half_angle = std::sin(angle / 2.0F);
+
+        // Angle too sharp -> no bevel.
+        if (sin_half_angle < 1e-3F)
+        {
+            continue;
+        }
+
+        const float offset = bevel_width / (2.0F * sin_half_angle);
+
+        const lm::vec3 inset_dir(
+            -lm::normalize(out_vertex_info[i].normal0 + out_vertex_info[i].normal1));
+
+        out_vertex_info[i].inset =
+            p1 + lm::dvec3(inset_dir) * kInvSqrt2 * bevel_width / sin_half_angle;
+
+        // Edges too short -> no bevel.
+        if (len0 < 2 * offset || len1 < 2 * offset)
+        {
+            continue;
+        }
+
+        // Angle too low -> generate smooth normals, no bevel.
+        if (angle > kBevelMaxAngle)
+        {
+            out_vertex_info[i].normal0 = -inset_dir;
+            out_vertex_info[i].normal1 = -inset_dir;
+            continue;
+        }
+
+        out_vertex_info[i].has_bevel = true;
+
+        out_vertex_info[i].bevel_pos0 = p1 - lm::dvec3(diff0 / len0) * offset;
+        out_vertex_info[i].bevel_pos1 = p1 + lm::dvec3(diff1 / len1) * offset;
+    }
+}
 
 // The longer the angular length, and the closer to the ground,
 // the more a segment must be subdivided so that it does not
@@ -41,7 +227,7 @@ double max_segment_angular_length_for_altitude(
 {
     if (tile_coords.lod >= 10) return std::numeric_limits<double>::infinity();
 
-    double max_angular_distance = MAX_SEGMENT_ANGULAR_LENGTH;
+    double max_angular_distance = kMaxSegmentAngularLength;
     if (altitude > 0.0)
     {
         max_angular_distance = std::max(
@@ -52,68 +238,36 @@ double max_segment_angular_length_for_altitude(
     return max_angular_distance;
 }
 
-void append_vertex(
-    VertexBuffer& vertices,
-    hrz::BlobVector<lm::dvec3>& positions,
-    lm::dvec3 position,
-    lm::vec3 normal,
-    lm::ubvec4 color,
-    uint32_t feature_index)
-{
-    vertices.push_back({{}, hrz::octahedral_compress_normal(normal), color, feature_index});
-    positions.push_back(position);
-}
-
 void generate_roof_geometry(
     gsl::span<const lm::dvec3> feature_span,
     gsl::span<const gsl::span<const lm::dvec3>> linestrings,
-    hrz::BlobVector<lm::dvec3>& positions,
-    VertexBuffer& vertices,
-    hrz::BlobVector<uint32_t>& indices,
+    GeometryBuilder& builder,
     double altitude,
-    lm::ubvec4 rgba,
-    const lm::dmat3& normal_matrix,
-    uint32_t feature_index,
-    bool use_z,
-    bool double_sided,
-    const hrz::TileCoords& tile_coords,
-    const lm::dbbox2& wmerc_tile_bounds,
-    const hrz::GeoBounds& geo_data_bounds,
-    bool clip_to_tile)
+    const FeatureInfo& info)
 {
-    if (!vertices.is_valid()) return;
+    if (!builder.vertices.is_valid()) return;
 
-    auto max_angular_distance =
-        max_segment_angular_length_for_altitude(altitude, tile_coords, geo_data_bounds);
-
-    uint32_t first_vertex_index = vertices.size().value_or(0);
+    const uint32_t first_vertex_index = builder.vertices_count();
 
     std::vector<lm::dvec3> vertex_positions;
     vertex_positions.reserve(feature_span.size());
 
-    auto generate_vertex = [&](const lm::dvec3& pt) -> uint32_t
+    auto generate_vertex = [&builder, altitude, &info,
+                            &vertex_positions](const lm::dvec3& pt) -> uint32_t
     {
-        lm::dvec3 position;
-        if (use_z)
-        {
-            position = pt + lm::dvec3(0, 0, altitude);
-        }
-        else
-        {
-            position = lm::dvec3(pt.xy, altitude);
-        }
-
-        lm::dvec3 normal = normal_matrix.z;
+        const lm::dvec3 position = pt + lm::dvec3(0, 0, altitude);
+        const lm::dvec3 normal = info.normal_matrix.z;
 
         auto index = vertex_positions.size();
 
         vertex_positions.push_back(pt);
 
-        append_vertex(vertices, positions, position, lm::vec3(normal), rgba, feature_index);
+        builder.append_vertex(position, lm::vec3(normal), info.roof_color_srgb, info.feature_index);
 
-        if (double_sided)
+        if (info.double_sided_roof)
         {
-            append_vertex(vertices, positions, position, lm::vec3(-normal), rgba, feature_index);
+            builder.append_vertex(
+                position, lm::vec3(-normal), info.roof_color_srgb, info.feature_index);
         }
 
         return index;
@@ -121,17 +275,11 @@ void generate_roof_geometry(
 
     auto triangulation_indices = mapbox::earcut<uint32_t>(linestrings);
 
-    if (clip_to_tile)
+    if (info.clip_to_tile)
     {
-        std::vector<lm::dvec3> clipped_points;
         std::vector<uint32_t> clipped_indices;
-        clipped_indices.reserve(triangulation_indices.size());
-
-        auto feature_span_view = hrz::ArrayView<const lm::dvec2>(
+        auto feature_span_view_vec2 = hrz::ArrayView<const lm::dvec2>(
             (const lm::dvec2*)feature_span.data(), feature_span.size(), sizeof(lm::dvec3));
-
-        // Some of the original feature points are not used because of clipping.
-        hrz::flat_hash_map<uint32_t, uint32_t> point_indices_to_vertex_indices;
 
         for (size_t i = 0; i < triangulation_indices.size(); i += 3)
         {
@@ -139,63 +287,54 @@ void generate_roof_geometry(
             const uint32_t i1 = triangulation_indices[i + 1];
             const uint32_t i2 = triangulation_indices[i + 2];
 
+            const double p0z = feature_span[i0].z;
+            const double p1z = feature_span[i1].z;
+            const double p2z = feature_span[i2].z;
+
             hrz::clip_triangle<double, uint32_t>(
-                feature_span_view, i0, i1, i2, feature_span.size() + clipped_points.size(),
-                wmerc_tile_bounds,
-                [&](uint32_t i0, uint32_t i1, uint32_t i2)
+                feature_span_view_vec2, i0, i1, i2, info.wmerc_tile_bounds,
+                [&clipped_indices](uint32_t i0, uint32_t i1, uint32_t i2)
                 {
-                    uint32_t i[3] = {i0, i1, i2};
-                    for (size_t j = 0; j < 3; ++j)
-                    {
-                        uint32_t vertex_index = 0;
-                        auto it = point_indices_to_vertex_indices.find(i[j]);
-                        if (it == point_indices_to_vertex_indices.end())
-                        {
-                            vertex_index = generate_vertex(
-                                i[j] >= feature_span.size()
-                                    ? clipped_points[i[j] - feature_span.size()]
-                                    : feature_span[i[j]]);
-                            point_indices_to_vertex_indices.insert({i[j], vertex_index});
-                        }
-                        else
-                        {
-                            vertex_index = it->second;
-                        }
-                        clipped_indices.push_back(vertex_index);
-                    }
+                    clipped_indices.push_back(i0);
+                    clipped_indices.push_back(i1);
+                    clipped_indices.push_back(i2);
                 },
-                [&](const lm::dvec2& p) { clipped_points.emplace_back(p); });
+                [p0z, p1z, p2z, &generate_vertex](const lm::dvec2& p, const lm::dvec3& w)
+                {
+                    const double z = p0z * w.x + p1z * w.y + p2z * w.z;
+                    return generate_vertex(lm::dvec3(p, z));
+                });
         }
 
         triangulation_indices = std::move(clipped_indices);
     }
     else
     {
-        for (uint32_t i = 0; i < feature_span.size(); ++i)
+        for (const auto& p : feature_span)
         {
-            generate_vertex(feature_span[i]);
+            generate_vertex(p);
         }
     }
 
-    if (std::isfinite(max_angular_distance))
+    if (std::isfinite(info.max_angular_distance))
     {
         hrz::flat_hash_map<lm::uvec2, uint32_t> midpoints_indices;
 
         for (size_t i = 0; i < triangulation_indices.size();)
         {
-            uint32_t i0 = triangulation_indices[i + 0];
-            uint32_t i1 = triangulation_indices[i + 1];
-            uint32_t i2 = triangulation_indices[i + 2];
+            const uint32_t i0 = triangulation_indices[i + 0];
+            const uint32_t i1 = triangulation_indices[i + 1];
+            const uint32_t i2 = triangulation_indices[i + 2];
 
-            lm::dvec3 p0 = vertex_positions[i0];
-            lm::dvec3 p1 = vertex_positions[i1];
-            lm::dvec3 p2 = vertex_positions[i2];
+            const lm::dvec3 p0 = vertex_positions[i0];
+            const lm::dvec3 p1 = vertex_positions[i1];
+            const lm::dvec3 p2 = vertex_positions[i2];
 
-            auto geo0 = hrz::web_mercator_to_geo2(p0.xy);
-            auto geo1 = hrz::web_mercator_to_geo2(p1.xy);
-            auto geo2 = hrz::web_mercator_to_geo2(p2.xy);
+            const auto geo0 = hrz::web_mercator_to_geo2(p0.xy);
+            const auto geo1 = hrz::web_mercator_to_geo2(p1.xy);
+            const auto geo2 = hrz::web_mercator_to_geo2(p2.xy);
 
-            double edge_lengths[] = {
+            const double edge_lengths[] = {
                 lm::length(lm::dvec2{geo1.lon, geo1.lat} - lm::dvec2{geo0.lon, geo0.lat}),
                 lm::length(lm::dvec2{geo2.lon, geo2.lat} - lm::dvec2{geo1.lon, geo1.lat}),
                 lm::length(lm::dvec2{geo0.lon, geo0.lat} - lm::dvec2{geo2.lon, geo2.lat}),
@@ -218,7 +357,7 @@ void generate_roof_geometry(
                 longest_edge = 2;
             }
 
-            if (edge_lengths[longest_edge] > max_angular_distance)
+            if (edge_lengths[longest_edge] > info.max_angular_distance)
             {
                 lm::uvec2 edge_index_pair;
 
@@ -290,18 +429,18 @@ void generate_roof_geometry(
             }
             else
             {
-                assert(edge_lengths[0] <= max_angular_distance);
-                assert(edge_lengths[1] <= max_angular_distance);
-                assert(edge_lengths[2] <= max_angular_distance);
+                assert(edge_lengths[0] <= info.max_angular_distance);
+                assert(edge_lengths[1] <= info.max_angular_distance);
+                assert(edge_lengths[2] <= info.max_angular_distance);
 
                 i += 3;
             }
         }
     }
 
-    if (double_sided)
+    if (info.double_sided_roof)
     {
-        size_t index_count = triangulation_indices.size();
+        const size_t index_count = triangulation_indices.size();
         assert(index_count % 3 == 0);
         for (size_t i = 0; i < index_count; i += 3)
         {
@@ -315,10 +454,82 @@ void generate_roof_geometry(
         }
     }
 
-    for (size_t i = 0; i < triangulation_indices.size(); ++i)
+    for (const uint32_t idx : triangulation_indices)
     {
-        indices.push_back(triangulation_indices[i] + first_vertex_index);
+        builder.append_index(idx + first_vertex_index);
     }
+}
+
+void generate_roof_geometry(
+    gsl::span<const VertexWithBevelInfo> vbis,
+    gsl::span<const std::pair<size_t, size_t>> linestrings,
+    GeometryBuilder& builder,
+    double roof_altitude,
+    const FeatureInfo& info)
+{
+    std::vector<lm::dvec3> roof_vertices;
+    std::vector<gsl::span<const lm::dvec3>> rings;
+
+    if (!info.roof_bevel)
+    {
+        // No roof bevel, generate a flat roof with all the side vertices,
+        // including the beveled ones.
+
+        size_t count = 0;
+        for (const auto& vbi : vbis)
+        {
+            count += vbi.has_bevel ? 2 : 1;
+        }
+
+        roof_vertices.resize(count);
+        rings.reserve(linestrings.size());
+
+        size_t v_index = 0;
+        for (const auto& linestring : linestrings)
+        {
+            const size_t start_v_index = v_index;
+
+            for (size_t i = 0; i < linestring.second; ++i)
+            {
+                const auto& vbi = vbis[linestring.first + i];
+                if (vbi.has_bevel)
+                {
+                    roof_vertices[v_index++] = vbi.bevel_pos0;
+                    roof_vertices[v_index++] = vbi.bevel_pos1;
+                }
+                else
+                {
+                    roof_vertices[v_index++] = vbi.pos;
+                }
+            }
+
+            rings.emplace_back(roof_vertices.data() + start_v_index, v_index - start_v_index);
+        }
+    }
+    else
+    {
+        // When the roof is beveled, inset the roof polygon by the bevel offset.
+
+        roof_vertices.resize(vbis.size());
+        rings.reserve(linestrings.size());
+
+        size_t v_index = 0;
+        for (const auto& linestring : linestrings)
+        {
+            const size_t start_v_index = v_index;
+            gsl::span<const VertexWithBevelInfo> vbis_ring(
+                vbis.data() + linestring.first, linestring.second);
+
+            for (size_t i = 0; i < linestring.second; ++i)
+            {
+                roof_vertices[v_index++] = vbis_ring[i].inset;
+            }
+
+            rings.emplace_back(roof_vertices.data() + start_v_index, v_index - start_v_index);
+        }
+    }
+
+    generate_roof_geometry(roof_vertices, rings, builder, roof_altitude, info);
 }
 
 void generate_wall_geometry(
@@ -328,80 +539,307 @@ void generate_wall_geometry(
     double floor1,
     double roof0,
     double roof1,
-    hrz::BlobVector<lm::dvec3>& positions,
-    VertexBuffer& vertices,
-    hrz::BlobVector<uint32_t>& indices,
-    lm::ubvec4 upper_rgba,
-    lm::ubvec4 lower_rgba,
-    const lm::dmat3& normal_matrix,
-    uint32_t feature_index,
-    const hrz::TileCoords& tile_coords,
-    const hrz::GeoBounds& geo_data_bounds)
+    lm::vec3 n0,
+    lm::vec3 n1,
+    GeometryBuilder& builder,
+    const FeatureInfo& info)
 {
-    auto vertices_size = vertices.size();
-    if (!vertices_size.has_value()) return;
+    if (!builder.vertices.is_valid()) return;
 
-    double altitude = std::max(roof0, roof1);
-    auto max_angular_distance =
-        max_segment_angular_length_for_altitude(altitude, tile_coords, geo_data_bounds);
+    bool in_bounds = true;
 
-    bool append_as_is = false;
-
-    if (std::isfinite(max_angular_distance))
+    if (info.clip_to_tile)
     {
-        auto geo0 = hrz::web_mercator_to_geo2(pp0);
-        auto geo1 = hrz::web_mercator_to_geo2(pp1);
+        in_bounds = false;
 
-        double segment_length =
+        const bool in_bounds_0 = lm::contains(info.wmerc_tile_bounds, pp0);
+        const bool in_bounds_1 = lm::contains(info.wmerc_tile_bounds, pp1);
+
+        in_bounds = in_bounds_0 || in_bounds_1;
+
+        if (!in_bounds_0 || !in_bounds_1)
+        {
+            hrz::clip_segment<double>(
+                pp0, pp1, info.wmerc_tile_bounds,
+                [&](const lm::dvec2& a, const lm::dvec2& b, double ta, double tb)
+                {
+                    pp0 = a;
+                    pp1 = b;
+
+                    std::tie(floor0, floor1) = hrz::lerp_two(floor0, floor1, ta, tb);
+                    std::tie(roof0, roof1) = hrz::lerp_two(roof0, roof1, ta, tb);
+
+                    auto nn0 = lm::mix(n0, n1, static_cast<float>(ta));
+                    auto nn1 = lm::mix(n0, n1, static_cast<float>(tb));
+
+                    n0 = lm::normalize(nn0);
+                    n1 = lm::normalize(nn1);
+
+                    in_bounds = true;
+                });
+        }
+    }
+
+    if (!in_bounds)
+    {
+        return;
+    }
+
+    if (std::isfinite(info.max_angular_distance))
+    {
+        const auto geo0 = hrz::web_mercator_to_geo2(pp0);
+        const auto geo1 = hrz::web_mercator_to_geo2(pp1);
+
+        const double segment_length =
             lm::length(lm::dvec2{geo1.lon, geo1.lat} - lm::dvec2{geo0.lon, geo0.lat});
 
-        if (segment_length > max_angular_distance)
+        if (segment_length > info.max_angular_distance)
         {
-            lm::dvec2 midpoint = lm::mix(pp0, pp1, 0.5);
-            double midpoint_floor = hrz::lerp(floor0, floor1, 0.5);
-            double midpoint_roof = hrz::lerp(roof0, roof1, 0.5);
+            const lm::dvec2 midpoint = lm::mix(pp0, pp1, 0.5);
+            const double midpoint_floor = hrz::lerp(floor0, floor1, 0.5);
+            const double midpoint_roof = hrz::lerp(roof0, roof1, 0.5);
+
+            const auto midpoint_normal = lm::normalize(lm::vec3(n0 + n1));
 
             generate_wall_geometry(
-                pp0, midpoint, floor0, midpoint_floor, roof0, midpoint_roof, positions, vertices,
-                indices, upper_rgba, lower_rgba, normal_matrix, feature_index, tile_coords,
-                geo_data_bounds);
+                pp0, midpoint, floor0, midpoint_floor, roof0, midpoint_roof, n0, midpoint_normal,
+                builder, info);
             generate_wall_geometry(
-                midpoint, pp1, midpoint_floor, floor1, midpoint_roof, roof1, positions, vertices,
-                indices, upper_rgba, lower_rgba, normal_matrix, feature_index, tile_coords,
-                geo_data_bounds);
+                midpoint, pp1, midpoint_floor, floor1, midpoint_roof, roof1, midpoint_normal, n1,
+                builder, info);
+
+            return;
         }
-        else
+    }
+
+    const uint32_t first_wall_index = builder.vertices_count();
+
+    n0 = lm::vec3(info.normal_matrix * n0);
+    n1 = lm::vec3(info.normal_matrix * n1);
+
+    builder.append_vertex(
+        lm::dvec3(pp0, floor0), n0, info.wall_bottom_color_srgb, info.feature_index);
+    builder.append_vertex(lm::dvec3(pp0, roof0), n0, info.wall_top_color_srgb, info.feature_index);
+    builder.append_vertex(
+        lm::dvec3(pp1, floor1), n1, info.wall_bottom_color_srgb, info.feature_index);
+    builder.append_vertex(lm::dvec3(pp1, roof1), n1, info.wall_top_color_srgb, info.feature_index);
+
+    builder.append_index(first_wall_index + 0);
+    builder.append_index(first_wall_index + (info.invert_walls_winding ? 1 : 2));
+    builder.append_index(first_wall_index + (info.invert_walls_winding ? 2 : 1));
+    builder.append_index(first_wall_index + 1);
+    builder.append_index(first_wall_index + (info.invert_walls_winding ? 3 : 2));
+    builder.append_index(first_wall_index + (info.invert_walls_winding ? 2 : 3));
+
+    if (info.double_sided_walls)
+    {
+        builder.append_vertex(
+            lm::dvec3(pp0, floor0), -n0, info.wall_bottom_color_srgb, info.feature_index);
+        builder.append_vertex(
+            lm::dvec3(pp0, roof0), -n0, info.wall_top_color_srgb, info.feature_index);
+        builder.append_vertex(
+            lm::dvec3(pp1, floor1), -n1, info.wall_bottom_color_srgb, info.feature_index);
+        builder.append_vertex(
+            lm::dvec3(pp1, roof1), -n1, info.wall_top_color_srgb, info.feature_index);
+
+        builder.append_index(first_wall_index + 4);
+        builder.append_index(first_wall_index + (info.invert_walls_winding ? 6 : 5));
+        builder.append_index(first_wall_index + (info.invert_walls_winding ? 5 : 6));
+        builder.append_index(first_wall_index + 5);
+        builder.append_index(first_wall_index + (info.invert_walls_winding ? 6 : 7));
+        builder.append_index(first_wall_index + (info.invert_walls_winding ? 7 : 6));
+    }
+}
+
+// Vertex structure used for polygon generation and clipping.
+// "Interp" because we can interpolate its values.
+struct VertexInterp
+{
+    lm::dvec3 pos;
+    lm::vec3 normal;
+    lm::vec4 color;
+};
+
+void generate_polygon(
+    gsl::span<const VertexInterp> input_verts,
+    GeometryBuilder& builder,
+    const FeatureInfo& info)
+{
+    hrz::InlinedVector<VertexInterp, 16> clipped_verts;
+
+    if (info.clip_to_tile)
+    {
+        hrz::InlinedVector<lm::dvec2, 16> positions;
+        hrz::InlinedVector<VertexInterp, 16> tmp_verts;
+
+        positions.reserve(input_verts.size());
+        tmp_verts.reserve(input_verts.size());
+
+        for (const auto& v : input_verts)
         {
-            append_as_is = true;
+            positions.push_back(v.pos.xy);
+            tmp_verts.push_back(v);
         }
+
+        hrz::clip_convex_polygon<double>(
+            positions, info.wmerc_tile_bounds,
+            [&tmp_verts](const lm::dvec2&, int i0, int i1, double t) -> int
+            {
+                const auto& a = tmp_verts[i0];
+                const auto& b = tmp_verts[i1];
+
+                tmp_verts.push_back({
+                    lm::mix(a.pos, b.pos, t),
+                    lm::normalize(lm::mix(a.normal, b.normal, static_cast<float>(t))),
+                    lm::mix(a.color, b.color, static_cast<float>(t)),
+                });
+
+                return static_cast<int>(tmp_verts.size() - 1);
+            },
+            [&tmp_verts, &clipped_verts](gsl::span<const std::pair<lm::dvec2, int>> clipped)
+            {
+                if (clipped.size() < 3) return;
+
+                clipped_verts.clear();
+                clipped_verts.reserve(clipped.size());
+
+                for (const auto& p : clipped)
+                {
+                    clipped_verts.push_back(tmp_verts[p.second]);
+                }
+            });
+
+        input_verts = clipped_verts;
+    }
+
+    if (input_verts.size() < 3) return;
+
+    const auto first_index = static_cast<uint32_t>(builder.vertices_count());
+
+    for (const auto& p : input_verts)
+    {
+        builder.append_vertex(
+            p.pos, p.normal, hrz::convert_rgba_color_to_bytes(p.color), info.feature_index);
+    }
+
+    // Generate fans
+    for (size_t i = 1; i + 1 < input_verts.size(); ++i)
+    {
+        builder.append_index(first_index + 0);
+        builder.append_index(first_index + static_cast<uint32_t>(i));
+        builder.append_index(first_index + static_cast<uint32_t>(i + 1));
+    }
+}
+
+void generate_wall_roof_bevel(
+    const VertexWithBevelInfo& bi0,
+    const VertexWithBevelInfo& bi1,
+    double wall_top_z_0,
+    double wall_top_z_1,
+    double roof_z_0,
+    double roof_z_1,
+    GeometryBuilder& builder,
+    const FeatureInfo& info)
+{
+    if (!builder.vertices.is_valid()) return;
+
+    const lm::vec3 n0(info.normal_matrix * bi0.normal1);
+    const lm::vec3 n1(info.normal_matrix * bi1.normal0);
+    const lm::vec3 nroof(info.normal_matrix.z);
+
+    {
+        VertexInterp v[4] = {
+            {
+                lm::dvec3((bi0.has_bevel ? bi0.bevel_pos1 : bi0.pos).xy, wall_top_z_0),
+                n0,
+                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+            },
+            {
+                lm::dvec3((bi1.has_bevel ? bi1.bevel_pos0 : bi1.pos).xy, wall_top_z_1),
+                n1,
+                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+            },
+            {
+                lm::dvec3(bi1.inset.xy, roof_z_1),
+                nroof,
+                hrz::convert_bytes_to_rgba_color(info.roof_color_srgb),
+            },
+            {
+                lm::dvec3(bi0.inset.xy, roof_z_0),
+                nroof,
+                hrz::convert_bytes_to_rgba_color(info.roof_color_srgb),
+            }};
+
+        if (info.invert_walls_winding)
+        {
+            std::swap(v[0], v[3]);
+            std::swap(v[1], v[2]);
+        }
+
+        generate_polygon(v, builder, info);
+    }
+
+    // There might be a little bit of vertex duplication here.
+    // One way to fix that would be to pass indexed geometry to the generate_polygon function,
+    // and multiple polygons at once.
+    // Then somehow keep track of indices. Not easy!
+    // But this is not a big deal, so ignore this for now.
+    // And technically there is already duplication between the top of the wall and the bottom
+    // of the bevel, and the top of the bevel and the roof.
+
+    if (bi0.has_bevel)
+    {
+        VertexInterp v[3] = {
+            {
+                lm::dvec3(bi0.bevel_pos0.xy, wall_top_z_0),
+                lm::vec3(info.normal_matrix * bi0.normal0),
+                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+            },
+            {
+                lm::dvec3(bi0.bevel_pos1.xy, wall_top_z_0),
+                lm::vec3(info.normal_matrix * bi0.normal1),
+                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+            },
+            {
+                lm::dvec3(bi0.inset.xy, roof_z_0),
+                nroof,
+                hrz::convert_bytes_to_rgba_color(info.roof_color_srgb),
+            }};
+
+        if (info.invert_walls_winding)
+        {
+            std::swap(v[1], v[2]);
+        }
+
+        generate_polygon(v, builder, info);
+    }
+}
+
+void generate_wall_geometry(
+    const VertexWithBevelInfo& vbi0,
+    const VertexWithBevelInfo& vbi1,
+    double floor0,
+    double floor1,
+    double wall_top0,
+    double wall_top1,
+    GeometryBuilder& builder,
+    const FeatureInfo& info)
+{
+    if (!vbi0.has_bevel)
+    {
+        generate_wall_geometry(
+            vbi0.pos.xy, vbi1.has_bevel ? vbi1.bevel_pos0.xy : vbi1.pos.xy, floor0, floor1,
+            wall_top0, wall_top1, vbi0.normal1, vbi1.normal0, builder, info);
     }
     else
     {
-        append_as_is = true;
-    }
+        generate_wall_geometry(
+            vbi0.bevel_pos0.xy, vbi0.bevel_pos1.xy, floor0, floor0, wall_top0, wall_top0,
+            vbi0.normal0, vbi0.normal1, builder, info);
 
-    if (append_as_is)
-    {
-        uint32_t first_wall_index = vertices_size.value();
-
-        auto normal =
-            lm::vec3(normal_matrix * lm::normalize(lm::dvec3(pp0.y - pp1.y, pp1.x - pp0.x, 0)));
-
-        append_vertex(
-            vertices, positions, lm::dvec3(pp0, floor0), normal, lower_rgba, feature_index);
-        append_vertex(
-            vertices, positions, lm::dvec3(pp0, roof0), normal, upper_rgba, feature_index);
-        append_vertex(
-            vertices, positions, lm::dvec3(pp1, floor1), normal, lower_rgba, feature_index);
-        append_vertex(
-            vertices, positions, lm::dvec3(pp1, roof1), normal, upper_rgba, feature_index);
-
-        indices.push_back(first_wall_index + 0);
-        indices.push_back(first_wall_index + 1);
-        indices.push_back(first_wall_index + 2);
-        indices.push_back(first_wall_index + 1);
-        indices.push_back(first_wall_index + 3);
-        indices.push_back(first_wall_index + 2);
+        generate_wall_geometry(
+            vbi0.bevel_pos1.xy, vbi1.has_bevel ? vbi1.bevel_pos0.xy : vbi1.pos.xy, floor0, floor1,
+            wall_top0, wall_top1, vbi0.normal1, vbi1.normal0, builder, info);
     }
 }
 
@@ -416,9 +854,12 @@ hrz::JobResult run(
 
     const auto& style = input.style;
 
-    auto default_upper_rgba = hrz::convert_rgba_color_to_bytes(input.default_upper_color);
-    auto default_lower_rgba = hrz::convert_rgba_color_to_bytes(input.default_lower_color);
-    auto default_roof_rgba = hrz::convert_rgba_color_to_bytes(input.default_roof_color);
+    const lm::ubvec4 default_upper_color_srgb =
+        hrz::convert_rgba_color_to_bytes(input.default_upper_color);
+    const lm::ubvec4 default_lower_color_srgb =
+        hrz::convert_rgba_color_to_bytes(input.default_lower_color);
+    const lm::ubvec4 default_roof_color_srgb =
+        hrz::convert_rgba_color_to_bytes(input.default_roof_color);
 
     auto input_features = input.geometry.features.get_data();
     auto input_points = input.geometry.points.get_data();
@@ -430,39 +871,45 @@ hrz::JobResult run(
     auto style_values = input.style.get_values_reader();
 
     // Compute the transformation to transform the normals
-    double radius{};
-    lm::dvec3 center;
-    hrz::vector_repr::compute_tile_radius_center(input.geometry.bounds, &radius, &center);
-    hrz::GeoPosition3 geo = hrz::ecef_to_geo3(center);
-    lm::dmat4 geo_location_xform = hrz::enu_to_ecef_transform_for_geo(geo);
-    lm::dmat3 normal_matrix{
+    const hrz::BSphere<double> tile_bsphere =
+        hrz::vector_repr::compute_tile_bounding_sphere(input.geometry.bounds);
+    const hrz::GeoPosition3 geo = hrz::ecef_to_geo3(tile_bsphere.center);
+    const lm::dmat4 geo_location_xform = hrz::enu_to_ecef_transform_for_geo(geo);
+    const lm::dmat3 normal_matrix{
         geo_location_xform.x.xyz, geo_location_xform.y.xyz, geo_location_xform.z.xyz};
 
     bool has_transparent_geometry = false;
 
-    bool use_z = input.clamping.use_z();
-    hrz::FeatureClampingGenerator clamps_gen(input_clamps.as_span(), input.clamping);
+    const bool use_z = input.clamping.use_z();
+    const hrz::FeatureClampingGenerator clamps_gen(input_clamps.as_span(), input.clamping);
 
-    lm::dbbox2 wmerc_tile_bounds = hrz::mercator_tile_bbox_meters(input.coords);
-    auto sw_geo = hrz::web_mercator_to_geo2(input.geometry.bounds.min);
-    auto ne_geo = hrz::web_mercator_to_geo2(input.geometry.bounds.max);
-    hrz::GeoBounds geo_data_bounds = {sw_geo.lon, ne_geo.lon, sw_geo.lat, ne_geo.lat};
+    GeometryBuilder builder(context.get_blob_allocator());
 
-    VertexBuffer vertices(context.get_blob_allocator(), InitialVertexCapacity);
-    hrz::BlobVector<uint32_t> indices(context.get_blob_allocator(), InitialIndexCapacity);
-
-    // Baked positions for later reprojection
-    hrz::BlobVector<lm::dvec3> positions(context.get_blob_allocator(), InitialPositionCapacity);
+    TileInfo tile_info;
+    tile_info.bevel_width = std::max(input.bevel_width, 0.0F);
+    tile_info.clip_to_tile = input.clip_to_tile, tile_info.normal_matrix = normal_matrix,
+    tile_info.tile_coords = input.coords,
+    tile_info.wmerc_tile_bounds = hrz::mercator_tile_bbox_meters(input.coords),
+    tile_info.geo_data_bounds = hrz::GeoBounds(
+        hrz::web_mercator_to_geo2(input.geometry.bounds.min),
+        hrz::web_mercator_to_geo2(input.geometry.bounds.max));
 
     uint32_t max_feature_index = 0;
 
-    // Create triangulation
+    std::vector<VertexWithBevelInfo> vertices_bevel_info;
+    std::vector<std::pair<size_t, size_t>> linestrings; // Start-size pairs
+
     for (const auto& instance : style.instances.get_data())
     {
         if (instance.repr_id != input.repr_id) continue;
 
+        FeatureInfo info(tile_info);
+        info.roof_color_srgb = default_roof_color_srgb;
+        info.wall_top_color_srgb = default_upper_color_srgb;
+        info.wall_bottom_color_srgb = default_lower_color_srgb;
+
         const auto& feature = input_features.at(instance.feature_index);
-        auto feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
+        info.feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
 
         if (feature.type != hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
             && feature.type != hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
@@ -470,16 +917,13 @@ hrz::JobResult run(
             continue;
         }
 
-        max_feature_index = std::max(max_feature_index, feature_index);
+        max_feature_index = std::max(max_feature_index, info.feature_index);
 
-        uint64_t prp_begin = instance.first_prp;
-        uint64_t prp_end = prp_begin + instance.prp_count;
+        const uint64_t prp_begin = instance.first_prp;
+        const uint64_t prp_end = prp_begin + instance.prp_count;
 
         double altitude_offset = input.default_altitude_offset;
         double extrusion = input.default_extrusion;
-        lm::ubvec4 upper_rgba = default_upper_rgba;
-        lm::ubvec4 lower_rgba = default_lower_rgba;
-        lm::ubvec4 roof_rgba = default_roof_rgba;
 
         for (uint64_t j = prp_begin; j < prp_end; ++j)
         {
@@ -489,15 +933,15 @@ hrz::JobResult run(
             }
             if (style_prps[j] == input.upper_color_prp)
             {
-                upper_rgba = style_values.as_color(j);
+                info.wall_top_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.lower_color_prp)
             {
-                lower_rgba = style_values.as_color(j);
+                info.wall_bottom_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.roof_color_prp)
             {
-                roof_rgba = style_values.as_color(j);
+                info.roof_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.altitude_offset_prp)
             {
@@ -505,7 +949,8 @@ hrz::JobResult run(
             }
         }
 
-        if (upper_rgba.a != 255 || lower_rgba.a != 255 || roof_rgba.a != 255)
+        if (info.wall_top_color_srgb.a != 255 || info.wall_bottom_color_srgb.a != 255
+            || info.roof_color_srgb.a != 255)
         {
             has_transparent_geometry = true;
         }
@@ -515,121 +960,152 @@ hrz::JobResult run(
         auto feature_linestring_sizes =
             input_sizes.as_span().subspan(feature.first_linestring_size, feature.linestring_count);
 
-        hrz::PointClampingGenerator point_clamp_gen =
+        const hrz::PointClampingGenerator point_clamp_gen =
             clamps_gen.for_feature(instance.feature_index, feature.first_point);
+
+        linestrings.clear();
+        vertices_bevel_info.clear();
+        vertices_bevel_info.resize(feature_points.size());
+
+        const bool is_polygon = feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
+
+        uint32_t current_linestring_start = 0;
+        for (const uint32_t linestring_size : feature_linestring_sizes)
+        {
+            const gsl::span<const lm::dvec3> linestring_points =
+                feature_points.subspan(current_linestring_start, linestring_size);
+            const gsl::span<VertexWithBevelInfo> linestring_bevel_verts_info(
+                vertices_bevel_info.data() + current_linestring_start, linestring_size);
+
+            // The first linestring of a polygon determines the winding order.
+            if (is_polygon && linestrings.empty())
+            {
+                info.invert_walls_winding = hrz::is_clockwise(linestring_points);
+            }
+
+            make_linestring_bevel_info(
+                linestring_points, linestring_bevel_verts_info, info.bevel_width, is_polygon, use_z,
+                info.invert_walls_winding && is_polygon);
+
+            linestrings.emplace_back(current_linestring_start, linestring_size);
+            current_linestring_start += linestring_size;
+        }
+
+        double min_clamp = std::numeric_limits<double>::max();
+        double max_clamp = std::numeric_limits<double>::lowest();
+        for (size_t i = 0; i < feature.point_count; ++i)
+        {
+            const double clamp = point_clamp_gen.get_clamp_for_point(i);
+            min_clamp = std::min(min_clamp, clamp);
+            max_clamp = std::max(max_clamp, clamp);
+        }
+
+        double min_z = std::numeric_limits<double>::max();
+        for (const auto& p : vertices_bevel_info)
+        {
+            min_z = std::min(min_z, p.pos.z);
+        }
+
+        const double min_wall_top_altitude = min_clamp + altitude_offset + extrusion + min_z;
+        info.max_angular_distance = max_segment_angular_length_for_altitude(
+            min_wall_top_altitude, info.tile_coords, info.geo_data_bounds);
+
+        if (std::isfinite(info.max_angular_distance))
+        {
+            // Disable bevels if we need tessellation. Why?
+            //
+            // Bevels just don't work with tessellation for very large polygons
+            // because it creates non planar geometry, and tessellation for walls and
+            // roofs use specialized techniques that only work because they are horizontal
+            // or vertical.
+            //
+            // Making this work for bevels would be very complex as the tessellation would have
+            // to match the other primitives exactly to not create cracks, which is not
+            // possible with current specialized techniques.
+            //
+            // So this would need a more general solution for arbitrary meshes, which we don't have
+            // at the moment, and I really don't feel like working on that given that bevels
+            // should be fairly small most of the time, which would make them invisible at the
+            // scale where tessellation is needed. And if somebody really needs huge tessellation
+            // of very large polygons, well, they'll come complain and we'll negotiate.
+            //
+            // Note that currently the same issues would exist for polygons with extremely
+            // elongated shapes (such a a rectangle with very high/low aspect ratio), but they are
+            // rare and generally people don't use extruded polygons at this scale, so ignore that
+            // for now.
+            //
+            // Bevels are still applied to the walls though, so that's something at least.
+            //
+            //     -slerouzic, 2025-10-09
+            info.bevel_width = 0.0;
+        }
 
         if (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
         {
-            std::vector<gsl::span<const lm::dvec3>> linestrings;
+            info.double_sided_walls = false;
+            info.double_sided_roof = min_clamp == max_clamp && extrusion == 0;
+            info.roof_bevel = info.bevel_width > kBevelMinWidth && !info.double_sided_roof
+                && extrusion > info.bevel_width * 2.0;
 
-            uint32_t current_linestring_start = 0;
-            for (uint32_t linestring_size : feature_linestring_sizes)
+            const double roof_altitude = max_clamp + altitude_offset + extrusion;
+            const double wall_top_offset = info.roof_bevel ? -info.bevel_width * kInvSqrt2 : 0.0;
+
+            generate_roof_geometry(vertices_bevel_info, linestrings, builder, roof_altitude, info);
+
+            if (!info.double_sided_roof)
             {
-                gsl::span<const lm::dvec3> ring_points =
-                    feature_points.subspan(current_linestring_start, linestring_size);
-                current_linestring_start += linestring_size;
-                linestrings.push_back(ring_points);
-            }
-
-            double min_clamp = std::numeric_limits<double>::max();
-            double max_clamp = std::numeric_limits<double>::lowest();
-            for (size_t i = 0; i < feature.point_count; ++i)
-            {
-                double clamp = point_clamp_gen.get_clamp_for_point(i);
-                min_clamp = std::min(min_clamp, clamp);
-                max_clamp = std::max(max_clamp, clamp);
-            }
-
-            double roof_altitude = max_clamp + altitude_offset + extrusion;
-            bool is_simple_plane = min_clamp == max_clamp && extrusion == 0;
-
-            generate_roof_geometry(
-                feature_points, linestrings, positions, vertices, indices, roof_altitude, roof_rgba,
-                normal_matrix, feature_index, input.clamping.use_z(), is_simple_plane, input.coords,
-                wmerc_tile_bounds, geo_data_bounds, input.clip_to_tile);
-
-            if (!is_simple_plane)
-            {
-                bool is_clockwise = hrz::is_clockwise(linestrings[0]);
-
                 // Generate walls geometry for each linestring
                 for (auto linestring_span : linestrings)
                 {
-                    uint32_t linestring_size = linestring_span.size();
-                    size_t index_ring_start =
-                        std::distance(feature_points.data(), linestring_span.data());
+                    const uint32_t linestring_size = linestring_span.second;
+                    const size_t index_ring_start = linestring_span.first;
 
-                    uint32_t p0 = linestring_size - 1;
-                    for (uint32_t p1 = 0; p1 < linestring_size; ++p1)
+                    auto bevel_info_span = gsl::span<VertexWithBevelInfo>(
+                        vertices_bevel_info.data() + index_ring_start, linestring_size);
+
+                    for (uint32_t p0 = linestring_size - 1, p1 = 0; p1 < linestring_size; p0 = p1++)
                     {
-                        lm::dvec3 pp0 = linestring_span[p0];
-                        lm::dvec3 pp1 = linestring_span[p1];
-                        bool in_bounds = true;
+                        const auto& bi0 = bevel_info_span[p0];
+                        const auto& bi1 = bevel_info_span[p1];
 
-                        if (input.clip_to_tile)
+                        const double floor0 = altitude_offset
+                            + point_clamp_gen.clamp_point(index_ring_start + p0, bi0.pos.z);
+                        const double floor1 = altitude_offset
+                            + point_clamp_gen.clamp_point(index_ring_start + p1, bi1.pos.z);
+
+                        const double roof0 = roof_altitude + bi0.pos.z + wall_top_offset;
+                        const double roof1 = roof_altitude + bi1.pos.z + wall_top_offset;
+
+                        generate_wall_geometry(
+                            bi0, bi1, floor0, floor1, roof0, roof1, builder, info);
+
+                        if (info.roof_bevel)
                         {
-                            in_bounds = lm::contains(wmerc_tile_bounds, pp0.xy)
-                                || lm::contains(wmerc_tile_bounds, pp1.xy);
-                            hrz::clip_segment<double>(
-                                pp0.xy, pp1.xy, pp0.z, pp1.z, wmerc_tile_bounds,
-                                [&](const lm::dvec2& a, const lm::dvec2& b, double az, double bz)
-                                {
-                                    pp0 = lm::dvec3(a, az);
-                                    pp1 = lm::dvec3(b, bz);
-                                    in_bounds = true;
-                                });
+                            generate_wall_roof_bevel(
+                                bi0, bi1, roof0, roof1, roof_altitude + bi0.pos.z,
+                                roof_altitude + bi1.pos.z, builder, info);
                         }
-
-                        if (in_bounds)
-                        {
-                            double floor0 = altitude_offset
-                                + point_clamp_gen.clamp_point(index_ring_start + p0, pp0.z);
-                            double floor1 = altitude_offset
-                                + point_clamp_gen.clamp_point(index_ring_start + p1, pp1.z);
-
-                            double roof0 = roof_altitude + (use_z ? pp0.z : 0);
-                            double roof1 = roof_altitude + (use_z ? pp1.z : 0);
-
-                            if (!is_clockwise)
-                            {
-                                std::swap(pp0, pp1);
-                                std::swap(floor0, floor1);
-                                std::swap(roof0, roof1);
-                            }
-
-                            generate_wall_geometry(
-                                pp0.xy, pp1.xy, floor0, floor1, roof0, roof1, positions, vertices,
-                                indices, upper_rgba, lower_rgba, normal_matrix, feature_index,
-                                input.coords, geo_data_bounds);
-                        }
-
-                        p0 = p1;
                     }
                 }
             }
         }
         else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
         {
-            uint32_t wall_count = feature_points.size() - 1;
+            const uint32_t wall_count = vertices_bevel_info.size() - 1;
+            info.double_sided_walls = true;
 
-            for (uint32_t p0 = 0; p0 < wall_count; ++p0)
+            for (uint32_t i = 0; i < wall_count; ++i)
             {
-                lm::dvec3 pp0 = feature_points[p0];
-                lm::dvec3 pp1 = feature_points[p0 + 1];
+                const auto& bi0 = vertices_bevel_info[i];
+                const auto& bi1 = vertices_bevel_info[i + 1];
 
-                double alt0 = altitude_offset + point_clamp_gen.clamp_point(p0, pp0.z);
-                double alt1 = altitude_offset + point_clamp_gen.clamp_point(p0 + 1, pp1.z);
-
-                // Generate double-sided walls.
-                generate_wall_geometry(
-                    pp0.xy, pp1.xy, alt0, alt1, alt0 + extrusion, alt1 + extrusion, positions,
-                    vertices, indices, upper_rgba, lower_rgba, normal_matrix, feature_index,
-                    input.coords, geo_data_bounds);
+                const double floor0 = altitude_offset + point_clamp_gen.clamp_point(i, bi0.pos.z);
+                const double floor1 =
+                    altitude_offset + point_clamp_gen.clamp_point(i + 1, bi1.pos.z);
 
                 generate_wall_geometry(
-                    pp1.xy, pp0.xy, alt1, alt0, alt1 + extrusion, alt0 + extrusion, positions,
-                    vertices, indices, upper_rgba, lower_rgba, normal_matrix, feature_index,
-                    input.coords, geo_data_bounds);
+                    bi0, bi1, floor0, floor1, floor0 + extrusion, floor1 + extrusion, builder,
+                    info);
             }
         }
     }
@@ -648,9 +1124,9 @@ hrz::JobResult run(
     }
     feature_ids.resize(feature_id_array_size);
 
-    auto vertex_array_opt = vertices.to_blob_array();
-    auto index_array_opt = indices.to_blob_array();
-    auto positions_data_opt = positions.data();
+    auto vertex_array_opt = builder.vertices.to_blob_array();
+    auto index_array_opt = builder.indices.to_blob_array();
+    auto positions_data_opt = builder.positions.data();
     auto feature_ids_data_opt = feature_ids.to_blob_array();
     if (!vertex_array_opt.has_value() || !index_array_opt.has_value()
         || !positions_data_opt.has_value() || !feature_ids_data_opt.has_value())
@@ -667,7 +1143,7 @@ hrz::JobResult run(
     {
         auto vertices_data = vertex_array_opt.value().get_data();
         hrz::vector_repr::compute_rel_coords(
-            {positions_data}, center,
+            {positions_data}, tile_bsphere.center,
             {(lm::vec3*)vertices_data.data(), positions_data.size(), sizeof(Vertex)});
     }
 
@@ -680,7 +1156,7 @@ hrz::JobResult run(
     geometry.indices = std::move(index_array_opt.value());
     geometry.feature_ids = std::move(feature_ids_data_opt.value());
     geometry.max_feature_index = max_feature_index;
-    geometry.center = center;
+    geometry.center = tile_bsphere.center;
     geometry.bsphere_center = bsphere.center;
     geometry.bsphere_radius = bsphere.radius;
     geometry.has_transparency = has_transparent_geometry;

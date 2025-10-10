@@ -114,6 +114,7 @@ struct ExtrudedVectorData
     uint64_t altitude_offset_prp;
 
     bool clip_to_tile;
+    float bevel_width;
 };
 
 struct ExtrudedVectorGeometry

@@ -17,6 +17,22 @@ void compute_rel_coords(
     }
 }
 
+hrz::BSphere<double> compute_tile_bounding_sphere(const TileCoords& tile_coords)
+{
+    double radius{};
+    lm::dvec3 center;
+    compute_tile_radius_center(tile_coords, &radius, &center);
+    return hrz::BSphere<double>{center, radius};
+}
+
+hrz::BSphere<double> compute_tile_bounding_sphere(const lm::dbbox2& bbox)
+{
+    double radius{};
+    lm::dvec3 center;
+    compute_tile_radius_center(bbox, &radius, &center);
+    return hrz::BSphere<double>{center, radius};
+}
+
 void compute_tile_radius_center(const TileCoords& tile_coords, double* radius, lm::dvec3* center)
 {
     const lm::dbbox2 bbox = hrz::mercator_tile_bbox_meters(tile_coords);

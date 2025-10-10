@@ -19,6 +19,9 @@ void compute_rel_coords(
     const lm::dvec3& center,
     hrz::ArrayView<lm::vec3> rel_coords);
 
+hrz::BSphere<double> compute_tile_bounding_sphere(const TileCoords& tile_coords);
+hrz::BSphere<double> compute_tile_bounding_sphere(const lm::dbbox2& bbox);
+
 void compute_tile_radius_center(const TileCoords& tile_coords, double* radius, lm::dvec3* center);
 void compute_tile_radius_center(const lm::dbbox2& bbox, double* radius, lm::dvec3* center);
 

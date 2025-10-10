@@ -14,11 +14,6 @@ bool compare(const T& a, const T& b)
     return a.y < b.y;
 }
 
-template bool compare<lm::vec2>(const lm::vec2& a, const lm::vec2& b);
-template bool compare<lm::vec3>(const lm::vec3& a, const lm::vec3& b);
-template bool compare<lm::dvec2>(const lm::dvec2& a, const lm::dvec2& b);
-template bool compare<lm::dvec3>(const lm::dvec3& a, const lm::dvec3& b);
-
 template<>
 bool compare<hrz::GeoPosition2>(const hrz::GeoPosition2& a, const hrz::GeoPosition2& b)
 {
@@ -31,11 +26,6 @@ double det(const T& a, const T& b, const T& c)
 {
     return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
 }
-
-template double det<lm::vec2>(const lm::vec2& a, const lm::vec2& b, const lm::vec2& c);
-template double det<lm::vec3>(const lm::vec3& a, const lm::vec3& b, const lm::vec3& c);
-template double det<lm::dvec2>(const lm::dvec2& a, const lm::dvec2& b, const lm::dvec2& c);
-template double det<lm::dvec3>(const lm::dvec3& a, const lm::dvec3& b, const lm::dvec3& c);
 
 template<>
 double det<hrz::GeoPosition2>(

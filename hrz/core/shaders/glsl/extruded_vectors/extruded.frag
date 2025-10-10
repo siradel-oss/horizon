@@ -49,16 +49,17 @@ void main()
     test_clip();
 
 #ifdef EXTRUDED_VISUAL
+    vec3 normal = normalize(v_normal);
     vec3 sun = vec3(1.0);
     if (hrz_tile.lighting_enabled)
     {
-        sun = do_sun_lighting(v_normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_tile.receive_shadows);
+        sun = do_sun_lighting(normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_tile.receive_shadows);
     }
 
     vec3 color = v_color.rgb * sun;
     o_color = vec4(linear_to_srgb(color), v_color.a);
 
-    o_color = compute_viewshed_color(o_color, v_normal);
+    o_color = compute_viewshed_color(o_color, normal);
     o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());
 
     if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)

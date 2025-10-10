@@ -11,6 +11,8 @@ When a polygon is flat (that is when all its clamped points have the same altitu
 
 The colour of the facades is interpolated between two colours, from top to bottom. Using a darker colour for the lower part of the geometry can help with both the aesthetics and readability of the scene. The colour of the roof is also independent from both facade colours.
 
+This representation also offers an option for adding bevels to the extruded geometry, however this is subject to some restrictions and increases memory usage. See the protocol documentation for more information.
+
 <gallery-card demo="dtmLod1"></gallery-card>
 
 <gallery-card demo="labelPalette"></gallery-card>

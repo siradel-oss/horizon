@@ -1030,7 +1030,7 @@ SendEvents.HrzProtocol.EventsStream.HrzProtocol.Void8
 MoveDevUiToCursor.HrzProtocol.Void.HrzProtocol.Void6
 ClearHttpCache.HrzProtocol.Void.HrzProtocol.VoidB
 SetAttributionEnabled.HrzProtocol.BoolValue.HrzProtocol.VoidBH¯bproto3
-˙Ü
+õá
 hrz_scene_model.protoHrzProtocolhrz_types.protohrz_layers.protohrz_wrappers.proto"%
 SceneViewBitset
 bits (Rbits"ç
@@ -1114,7 +1114,7 @@ sceneViews"ó
 VectorDataLayer
 id (Rid7
 sources (2.HrzProtocol.VectorDataSourceRsources)
-loading_priority (RloadingPriorityJJJ"ÿ
+loading_priority (RloadingPriorityJJJ"˘
 ExtrudedGeometryVectorRepr8
 	extrusion (2.HrzProtocol.FloatPropertyR	extrusion;
 upper_color (2.HrzProtocol.ColorPropertyR
@@ -1128,7 +1128,9 @@ roof_color (2.HrzProtocol.ColorPropertyR	roofColorC
 clip_to_tile (R
 clipToTile
 clip_id (RclipId9
-lighting (2.HrzProtocol.LightingSettingsRlightingJJJ"è
+lighting (2.HrzProtocol.LightingSettingsRlighting
+bevel_width (R
+bevelWidthJJJ"è
 FlatOverlayVectorRepr9
 
 line_width (2.HrzProtocol.FloatPropertyR	lineWidth0

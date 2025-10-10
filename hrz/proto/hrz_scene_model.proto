@@ -388,6 +388,21 @@ message ExtrudedGeometryVectorRepr {
     int32            clip_id         = 4;
 
     LightingSettings lighting        = 6;
+
+    // When > 0, adds a bevel to the edges of the extruded shape.
+    // This is the width of the newly created beveled faces, in meters.
+    // This also makes edges with very large angles be shaded smoothly in
+    // order to match the appearance of the beveled edges.
+    //
+    // Note that setting this too high might create geometry artifacts.
+    //
+    // Warning: This has a significant effect on memory usage. Expect double
+    // the memory usage when this is enabled, no matter the size of the bevel.
+    //
+    // Note: This option might be implicitly disabled for some features when
+    // they require additional tessellation for conforming to the planet's
+    // curvature, or when there is not enough room for the bevel.
+    float            bevel_width     = 13;
 }
 
 enum PolylineSide {
