@@ -85,8 +85,8 @@ There are no rule for what should increment the major or patch number, but gener
     - In the release notes field, put the relevant section of the `CHANGELOG.md` file, as well as anything you deem useful. (Don’t include the line with the version number and the date.)
 - Publish the version to the open-source repository.
     - First publish the `release_a.b.c` branch at the point where it diverged from `master` or `maintenance_a.b`. (See the “[Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository)” section below.)
-    - Then execute the `ci/oss_publish/publish.py` script:
-        - `python ci/oss_publish/publish.py release_a.b.c --tag va.b.c`
+    - Then `//ci/oss_publish:publish`:
+        - `bazel run //ci/oss_publish:publish -- release_a.b.c --tag va.b.c`
         - See the “[Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository)” section for a guide on how to authenticate.
     - If somehow this fails (for example if the release branch was already published), you can create the tag manually.
     - The tag should point to the public version of the release commit.
@@ -131,10 +131,10 @@ If a previously released version needs to be patched, and eventually have patch 
 
 ## Publishing a branch to the open-source repository
 
-To publish code on the open-source repository using the `ci/oss_publish/publish.py` script, you must either:
+To publish code on the open-source repository using the `//ci/oss_publish:publish` program, you must either:
 
 - Have write access to the repository (using an SSH key linked to your GitHub account, itself linked to the organization & repository). In which case you have nothing more to do. The commits will be marked as committed by you (author is unchanged in iterative mode).
-- Or authenticate as the “Copysira” GitHub App. For this you need the GitHub App private key (as a PEM file). Ask your teammates how to obtain it. Then use the `--ghapp_pk_pem` option of the `publish.py` script to use it.
+- Or authenticate as the “Copysira” GitHub App. For this you need the GitHub App private key (as a PEM file). Ask your teammates how to obtain it. Then use the `--ghapp_pk_pem` option of `//ci/oss_publish:publish` to use it.
 
 Once you have write access, before publishing a branch, three pieces of information from the private repository are required:
 
@@ -148,8 +148,8 @@ Ensure the point of divergeance between `my_branch` and `my_base` is on the publ
 - On this repository, look for a commit whose message contains `GitOrigin-RevId: the_commit`.
     - This can be done with the search bar on GitHub’s website.
 - If this commit is on the branch `my_base` (this can be checked with `git branch -a --contains public_commit`, `my_base` should be in the list), you have the right commit and can go to the branch creation step.
-- Otherwise, try synchronizing `my_base` with the `ci/oss_publish/publish.py` script, then check again as above:
-    - `python3 ci/oss_publish/publish.py my_base`
+- Otherwise, try synchronizing `my_base` with `//ci/oss_publish:publish`, then check again as above:
+    - `bazel run //ci/oss_publish:publish -- my_base`
 - Otherwise, try manually looking for the closest commit corresponding to `the_commit` on the public version of `my_base` and if found, use this commit. This is because some commits might not be mirrored to the public repository, for instance when they only contain modifications to files that are not public.
 - If all this fails, you are on your own.
 
@@ -158,4 +158,4 @@ Create the branch on the public repository:
 - Create a new branch named `my_branch` on the public repository, pointing at the commit selected in the steps above. This can be done manually on GitHub’s page for the repository.
 
 Publish the branch:
-- `python ci/oss_publish/publish.py my_branch`
+- `bazel run //ci/oss_publish:publish -- my_branch`

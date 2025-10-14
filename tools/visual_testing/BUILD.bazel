@@ -1,3 +1,4 @@
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 
 cc_binary(
@@ -42,6 +43,24 @@ cc_binary(
     deps = [
         "//third_party/stb_image:stb_image_default_malloc",
         "//third_party/stb_image_write",
+    ],
+)
+
+py_binary(
+    name = "generate_html_visual_test_report",
+    srcs = ["generate_html_visual_test_report.py"],
+    data = [
+        "report/index.tpl.html",
+        "report/report.tpl.html",
+        "//hrz/branding:favicon-128x128.png",
+        "//hrz/branding:favicon-16x16.png",
+        "//hrz/branding:favicon-32x32.png",
+        "//hrz/branding:favicon-96x96.png",
+    ],
+    main = "generate_html_visual_test_report.py",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@pypi//jinja2",
     ],
 )
 
