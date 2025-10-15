@@ -20,7 +20,8 @@
 - LLVM >= 12 (optional, for `compile_commands.json` generation)
     - The 2022 Visual Studio build tools only support clang >= 16.0.0.
 - emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
-- JDK >= 17 (optional, for external dependencies & publishing the repository)
+- JDK >= 17 (optional, for external dependencies and OSS publication)
+- The `cryptography` Python package (optional, for OSS publication)
 
 #### Certificate issues
 
@@ -50,7 +51,8 @@ startup --server_javabase=<path to you Java install> # For example C:\Program Fi
 - fd-find (package `fd-find` on Ubuntu)
 - CMake >= 3.1 (optional, for external dependencies)
 - emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
-- JDK >= 17 (optional, for external dependencies & publishing the repository)
+- JDK >= 17 (optional, for external dependencies and OSS publication)
+- Cryptography primitives for Python (package `python3-cryptography` on Ubuntu) (optional, for OSS publication)
 - TK bindings for Python (package `python3-tk` on Ubuntu) (optional, for visual tests GUI)
 
 ### More certificate issues!
