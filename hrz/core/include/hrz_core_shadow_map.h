@@ -39,7 +39,7 @@ public:
     ShadowMapPass(
         const char* pass_name,
         const char* input_camera_height,
-        gsl::span<const char* const> output_names,
+        std::span<const char* const> output_names,
         size_t cascade_count,
         size_t rendered_cascade_count,
         uint32_t size,

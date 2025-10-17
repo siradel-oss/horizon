@@ -7,11 +7,11 @@
 #include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <cstdint>
 #include <optional>
+#include <span>
 
 namespace hrz
 {
@@ -118,7 +118,7 @@ RenderRequest work(
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry* attributions,
     ActorRunner* ar,
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     PlanetSurface* planet,
     const SelectionSystem* selection);
 
@@ -131,13 +131,13 @@ RenderRequest work(
 void pick(
     VectorTilesLayerSystem* system,
     const picking::ObjectReference&,
-    gsl::span<const std::pair<uint32_t, float>> heatmap_values,
+    std::span<const std::pair<uint32_t, float>> heatmap_values,
     hrz_proto::PickResults&);
 
 std::pair<size_t, size_t> make_typed_object_references(
     VectorTilesLayerSystem* system,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output);
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output);
 
 /**
  * This transforms a generic picking ID (which points to a particular instance
@@ -156,7 +156,7 @@ RenderRequest work_gpu(
     Render* render,
     BlobAllocator*,
     SymbolCullingSystem*,
-    gsl::span<const RenderViewInfo> views_info);
+    std::span<const RenderViewInfo> views_info);
 
 /**
  * Draw the vector tiles layers.
@@ -165,7 +165,7 @@ void draw(
     VectorTilesLayerSystem* system,
     Render* render,
     const RenderRequest& render_request,
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry* attributions);
 

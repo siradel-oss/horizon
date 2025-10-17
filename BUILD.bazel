@@ -312,7 +312,6 @@ cmakelists(
     targets = [
         "//apps/native_client",
         "//tools/monitoring_client",
-        "//hrz/xml_desc_generator",
         "//libs/ws:ws_echo_server",
         "//tools/compress_file_lz4",
         "//tools/scene_dump:get_dump_version",

@@ -18,7 +18,6 @@ cc_library(
     hdrs = [
         "include/hrz_fnd_arena.h",
         "include/hrz_fnd_array_view.h",
-        "include/hrz_fnd_bit_cast.h",
         "include/hrz_fnd_bitset.h",
         "include/hrz_fnd_char_utils.h",
         "include/hrz_fnd_class.h",
@@ -72,7 +71,6 @@ cc_library(
     deps = [
         "//libs/lm",
         "//third_party:fmtlib",
-        "//third_party:gsl",
         "//third_party:rapidjson",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",

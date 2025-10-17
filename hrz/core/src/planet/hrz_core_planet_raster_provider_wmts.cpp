@@ -46,7 +46,7 @@ struct UrlGenerator : public hrz::TileUrlGenerator
         const uint32_t ry = tile_count - y - 1;
 
         return fmt::format(
-            pattern, fmt::arg("z", identifier), fmt::arg("x", x), fmt::arg("y", y),
+            fmt::runtime(pattern), fmt::arg("z", identifier), fmt::arg("x", x), fmt::arg("y", y),
             fmt::arg("ry", ry));
     }
 

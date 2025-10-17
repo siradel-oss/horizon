@@ -54,7 +54,7 @@ struct BitsetTexture
     {
         if (!texture && !bits.empty())
         {
-            auto data = hrz::as_bytes(gsl::span<const uint32_t>(bits));
+            auto data = std::as_bytes(std::span<const uint32_t>(bits));
 
             my::TextureResource res;
             res.layout.type = my::TextureLayout::Type2D;
@@ -83,7 +83,7 @@ struct BitsetTexture
             render->my->update_texture(
                 texture, my::TextureFormat::R32UI, 0, dirty_bbox.min.x, dirty_bbox.min.y, 0,
                 dirty_size.x + 1, dirty_size.y + 1, 1,
-                hrz::as_bytes(gsl::span<const uint32_t>(bits).subspan(uint32_offset)),
+                std::as_bytes(std::span<const uint32_t>(bits).subspan(uint32_offset)),
                 my::Instance::DataHasTargetTextureSize);
             dirty_bbox = lm::ubbox2::invalid();
         }
@@ -98,7 +98,7 @@ struct BitsetTexture
     }
 
     // Returns whether work_gpu must be called
-    bool set_ones(gsl::span<const uint32_t> new_data, lm::ubbox2 new_ones_bbox)
+    bool set_ones(std::span<const uint32_t> new_data, lm::ubbox2 new_ones_bbox)
     {
         if (new_data.size() != bits.size())
         {
@@ -258,7 +258,7 @@ void destroy(SymbolCullingSystem* sys)
 RenderRequest work(
     SymbolCullingSystem* sys,
     JobScheduler* js,
-    gsl::span<const RenderViewInfo> views_info)
+    std::span<const RenderViewInfo> views_info)
 {
     RenderRequest render_request;
 

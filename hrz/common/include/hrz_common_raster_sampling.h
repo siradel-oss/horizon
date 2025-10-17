@@ -3,18 +3,18 @@
 #include "hrz_common_image_view.h"
 
 #include <hrz_common_image_processing.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_class.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_maths.h>
 #include <hrz_protocol_all.h>
 
 #include <assert.h>
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <array>
+#include <bit>
 #include <memory>
+#include <span>
 #include <type_traits>
 
 namespace hrz::sampling

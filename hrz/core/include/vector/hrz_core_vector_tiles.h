@@ -54,14 +54,14 @@ RenderRequest work(
 
 bool is_working(VectorTiles*);
 
-void work_gpu(VectorTiles*, Render*, gsl::span<const RenderViewInfo> views_info);
+void work_gpu(VectorTiles*, Render*, std::span<const RenderViewInfo> views_info);
 
 void draw(
     VectorTiles*,
     Render*,
     const RenderRequest&,
     ReprRegistry*,
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry*);
 
@@ -73,11 +73,11 @@ void set_bounds(
 
 void set_clamping(VectorTiles*, const hrz_proto::VectorClamping&);
 
-void set_attributes(VectorTiles*, gsl::span<const hrz_proto::StylingAttributeRef* const>);
+void set_attributes(VectorTiles*, std::span<const hrz_proto::StylingAttributeRef* const>);
 
 void set_max_screen_space_error(VectorTiles*, unsigned int max_screen_space_error);
 
-void set_palettes(VectorTiles*, gsl::span<const hrz_proto::Palette* const>);
+void set_palettes(VectorTiles*, std::span<const hrz_proto::Palette* const>);
 
 std::optional<vector_data::FeatureId> get_feature_id_from_object(
     VectorTiles*,
@@ -91,7 +91,7 @@ void add_representation(VectorTiles*, ReprRegistry*, hrz_proto::VectorRepr&& rep
 void set_all_representations(
     VectorTiles*,
     ReprRegistry*,
-    gsl::span<const hrz_proto::VectorRepr* const> reprs);
+    std::span<const hrz_proto::VectorRepr* const> reprs);
 void update_representation(VectorTiles*, ReprRegistry*, size_t index, hrz_proto::VectorRepr&& repr);
 void remove_representation(VectorTiles*, ReprRegistry*, size_t index);
 

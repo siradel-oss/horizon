@@ -56,16 +56,17 @@
 #include <hrz_jobs_tickets.h>
 #include <hrz_protocol_path_builder.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cassert>
 #include <limits>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <tuple>
 #include <variant>
@@ -295,9 +296,11 @@ std::vector<lm::vec3> make_box(const BoundingVolume& volume)
 }
 #endif
 
-// @Endianness The b3dm and i3dm file formats are little-endian.
-inline uint32_t read_uint32(gsl::span<const std::byte> span, const size_t offset)
+inline uint32_t read_uint32(std::span<const std::byte> span, const size_t offset)
 {
+    static_assert(
+        std::endian::native == std::endian::little, "b3dm and i3dm file formats are little-endian");
+
     uint32_t v;
     std::memcpy(&v, (const uint32_t*)(span.data() + offset * sizeof(uint32_t)), sizeof(uint32_t));
     return v;
@@ -1020,7 +1023,7 @@ struct ThreeDTilesSystem
     void set_style(
         TilesetH handle,
         const std::string& style_script,
-        gsl::span<const hrz_proto::Palette* const> palettes_proto,
+        std::span<const hrz_proto::Palette* const> palettes_proto,
         uint64_t rng_seed)
     {
         auto tileset = _get_tileset(handle);
@@ -1491,7 +1494,7 @@ struct ThreeDTilesSystem
 
     void recreate_all_materials(
         TilesetH handle,
-        gsl::span<const hrz_proto::Material* const> materials)
+        std::span<const hrz_proto::Material* const> materials)
     {
         auto tileset = _get_tileset(handle);
         if (tileset == nullptr) return;
@@ -1675,7 +1678,7 @@ struct ThreeDTilesSystem
 
     void add_selected_features(
         TilesetH handle,
-        gsl::span<const hrz::vector_data::FeatureIdHash> feature_ids)
+        std::span<const hrz::vector_data::FeatureIdHash> feature_ids)
     {
         auto tileset = _get_tileset(handle);
         if (tileset == nullptr) return;
@@ -1980,8 +1983,8 @@ struct ThreeDTilesSystem
     bool _decode_b3dm_feature_table(
         const ThreeDTile& tile,
         ThreeDTile::Subtile* subtile,
-        gsl::span<const std::byte> feature_table_json_data,
-        gsl::span<const std::byte> /*feature_table_bin_data*/) const
+        std::span<const std::byte> feature_table_json_data,
+        std::span<const std::byte> /*feature_table_bin_data*/) const
     {
         HRZ_SCOPED_SAMPLE("decode b3dm feature table");
 
@@ -2058,8 +2061,8 @@ struct ThreeDTilesSystem
     bool _decode_i3dm_feature_table(
         const ThreeDTile& tile,
         ThreeDTile::Subtile* subtile,
-        gsl::span<const std::byte> feature_table_json_data,
-        gsl::span<const std::byte> feature_table_bin_data)
+        std::span<const std::byte> feature_table_json_data,
+        std::span<const std::byte> feature_table_bin_data)
     {
         HRZ_SCOPED_SAMPLE("decode i3dm feature table");
 
@@ -2100,7 +2103,7 @@ struct ThreeDTilesSystem
         {
             lm::dvec3 rtc_center;
             if (hrz::json::copy_array_values(
-                    gsl::span<double>(rtc_center.m), document["RTC_CENTER"])
+                    std::span<double>(rtc_center.m), document["RTC_CENTER"])
                 != 3)
             {
                 HRZ_LOG_ERROR("Unexpected number of values in the \"RTC_CENTER\" array.");
@@ -2165,7 +2168,7 @@ struct ThreeDTilesSystem
             }
 
             if (hrz::json::copy_array_values(
-                    gsl::span<double>(content.quantized_volume_offset.m),
+                    std::span<double>(content.quantized_volume_offset.m),
                     document["QUANTIZED_VOLUME_OFFSET"])
                 != 3)
             {
@@ -2175,7 +2178,7 @@ struct ThreeDTilesSystem
             }
 
             if (hrz::json::copy_array_values(
-                    gsl::span<double>(content.quantized_volume_scale.m),
+                    std::span<double>(content.quantized_volume_scale.m),
                     document["QUANTIZED_VOLUME_SCALE"])
                 != 3)
             {
@@ -2212,8 +2215,8 @@ struct ThreeDTilesSystem
         {
             content.use_east_north_up_orientation = false;
 
-            gsl::span<const lm::vec3> normals_right;
-            gsl::span<const lm::vec3> normals_up;
+            std::span<const lm::vec3> normals_right;
+            std::span<const lm::vec3> normals_up;
 
             {
                 auto byte_offset = hrz::json::get_int_or(normal_right_node, "byteOffset", 0);
@@ -2256,8 +2259,8 @@ struct ThreeDTilesSystem
         {
             content.use_east_north_up_orientation = false;
 
-            gsl::span<const lm::usvec2> normals_right_oct32p;
-            gsl::span<const lm::usvec2> normals_up_oct32p;
+            std::span<const lm::usvec2> normals_right_oct32p;
+            std::span<const lm::usvec2> normals_up_oct32p;
 
             {
                 auto byte_offset = hrz::json::get_int_or(normal_right_oct32p_node, "byteOffset", 0);
@@ -2312,7 +2315,7 @@ struct ThreeDTilesSystem
             size_t data_size = content.instances_length * sizeof(float);
             CHECK_DATA_SIZE();
 
-            gsl::span<const float> scales = {
+            std::span<const float> scales = {
                 (const float*)(feature_table_bin_data.data() + byte_offset),
                 content.instances_length};
             for (uint32_t i = 0; i < content.instances_length; ++i)
@@ -2395,7 +2398,7 @@ struct ThreeDTilesSystem
     static bool _decode_pnts_feature_table(
         const ThreeDTile& tile,
         ThreeDTile::Subtile* subtile,
-        gsl::span<const std::byte> feature_table_json_data,
+        std::span<const std::byte> feature_table_json_data,
         hrz::blobs::BlobHandle feature_table_bin_blob,
         const hrz::monitoring::ResourceOwner& owner,
         hrz::BlobAllocator* ba)
@@ -2442,7 +2445,7 @@ struct ThreeDTilesSystem
         {
             lm::dvec3 rtc_center;
             if (hrz::json::copy_array_values(
-                    gsl::span<double>(rtc_center.m), document["RTC_CENTER"])
+                    std::span<double>(rtc_center.m), document["RTC_CENTER"])
                 != 3)
             {
                 HRZ_LOG_ERROR("Unexpected number of values in the \"RTC_CENTER\" array.");
@@ -2489,10 +2492,10 @@ struct ThreeDTilesSystem
             CHECK_DATA_SIZE();
 
             hrz::json::copy_array_values(
-                gsl::span<double>(geometry.quantized_volume_offset.m),
+                std::span<double>(geometry.quantized_volume_offset.m),
                 document["QUANTIZED_VOLUME_OFFSET"], 0.0);
             hrz::json::copy_array_values(
-                gsl::span<double>(geometry.quantized_volume_scale.m),
+                std::span<double>(geometry.quantized_volume_scale.m),
                 document["QUANTIZED_VOLUME_SCALE"], 1.0);
 
             geometry.positions = feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
@@ -2518,8 +2521,11 @@ struct ThreeDTilesSystem
             geometry.colors_format = my::VertexFormat::UInt8Norm_4;
 
             auto colors_data = std::get<hrz::blobs::BlobHandle>(geometry.colors).get_data();
-            for (const auto& c : colors_data.as_span().as_span<const lm::ubvec4>())
+            for (size_t i = 0; i < colors_data.size() * 4; i += 4)
             {
+                lm::ubvec4 c;
+                std::memcpy(&c, colors_data.data() + i, sizeof(lm::ubvec4));
+
                 if (c.a > 0 && c.a < 255)
                 {
                     geometry.has_transparent_color = true;
@@ -2548,8 +2554,14 @@ struct ThreeDTilesSystem
             size_t data_size = geometry.point_count * sizeof(uint16_t);
             CHECK_DATA_SIZE();
 
-            auto compressed_colors_data =
-                feature_table_bin_data.subspan(byte_offset, data_size).as_span<const uint16_t>();
+            // The specification guarantees that the data is correctly aligned.
+            // https://docs.ogc.org/cs/22-025r4/22-025r4.html#toc26
+            assert(byte_offset % alignof(uint16_t) == 0);
+            auto compressed_colors_bin_data =
+                feature_table_bin_data.subspan(byte_offset, data_size);
+            auto compressed_colors_data = std::span<const uint16_t>{
+                (const uint16_t*)compressed_colors_bin_data.data(),
+                compressed_colors_bin_data.size_bytes() / sizeof(uint16_t)};
 
             auto colors_blob = hrz::BlobVector<lm::ubvec3>(ba, geometry.point_count);
             colors_blob.resize(geometry.point_count);
@@ -2588,7 +2600,7 @@ struct ThreeDTilesSystem
             lm::vec4 default_color(1.0f);
 
             hrz::json::copy_array_values(
-                gsl::span<float>(default_color.m),
+                std::span<float>(default_color.m),
                 hrz::json::get_member_or_null(document, "CONSTANT_RGBA"), 1.0f);
 
             geometry.has_transparent_color = default_color.a < 1.0f;
@@ -2605,8 +2617,13 @@ struct ThreeDTilesSystem
             size_t data_size = geometry.point_count * sizeof(lm::vec3);
             CHECK_DATA_SIZE();
 
-            auto normals_data =
-                feature_table_bin_data.subspan(byte_offset, data_size).as_span<const lm::vec3>();
+            // The specification guarantees that the data is correctly aligned.
+            // https://docs.ogc.org/cs/22-025r4/22-025r4.html#toc26
+            assert(byte_offset % alignof(lm::vec3) == 0);
+            auto normals_bin_data = feature_table_bin_data.subspan(byte_offset, data_size);
+            auto normals_data = std::span<const lm::vec3>{
+                (const lm::vec3*)normals_bin_data.data(),
+                normals_bin_data.size_bytes() / sizeof(lm::vec3)};
 
             auto compressed_normals_blob = hrz::BlobVector<uint16_t>(ba, geometry.point_count);
             compressed_normals_blob.resize(geometry.point_count);
@@ -3480,8 +3497,8 @@ struct ThreeDTilesSystem
     static hrz::StaticVector<double, hrz::SCENE_VIEW_COUNT> _compute_root_screen_space_errors(
         const ThreeDTile& root_tile,
         double root_geometric_error,
-        gsl::span<const hrz::RenderViewInfo> views_info,
-        gsl::span<const hrz::render::ScreenSpaceError> sses,
+        std::span<const hrz::RenderViewInfo> views_info,
+        std::span<const hrz::render::ScreenSpaceError> sses,
         double max_screen_space_error)
     {
         HRZ_SCOPED_SAMPLE_A("compute root screen space error");
@@ -3508,8 +3525,8 @@ struct ThreeDTilesSystem
      */
     hrz::StaticVector<double, hrz::SCENE_VIEW_COUNT> _compute_tile_screen_space_errors(
         const ThreeDTile& tile,
-        gsl::span<const hrz::RenderViewInfo> views_info,
-        gsl::span<const hrz::render::ScreenSpaceError> sses,
+        std::span<const hrz::RenderViewInfo> views_info,
+        std::span<const hrz::render::ScreenSpaceError> sses,
         double max_screen_space_error)
     {
         HRZ_SCOPED_SAMPLE_A("compute tile screen space error");
@@ -3597,7 +3614,7 @@ struct ThreeDTilesSystem
 
     hrz::RenderRequest _update_visibility_constraints(
         TilesetConfig* config,
-        gsl::span<const hrz::RenderViewInfo> views_info)
+        std::span<const hrz::RenderViewInfo> views_info)
     {
         hrz::RenderRequest render_request;
 
@@ -3618,7 +3635,7 @@ struct ThreeDTilesSystem
         hrz::AssetsLoader* al,
         hrz::JobScheduler* js,
         hrz::BlobAllocator* ba,
-        gsl::span<const hrz::RenderViewInfo> views_info)
+        std::span<const hrz::RenderViewInfo> views_info)
     {
         HRZ_SCOPED_SAMPLE("work loading tilesets");
 
@@ -3801,7 +3818,7 @@ struct ThreeDTilesSystem
     }
 
     static hrz::StaticVector<std::array<lm::dvec4, 4>, hrz::SCENE_VIEW_COUNT> _compute_views_planes(
-        gsl::span<const hrz::RenderViewInfo> views_info)
+        std::span<const hrz::RenderViewInfo> views_info)
     {
         // Compute planes for the view.
         // See https://fgiesen.wordpress.com/2012/08/31/frustum-planes-from-the-projection-matrix/
@@ -3833,7 +3850,7 @@ struct ThreeDTilesSystem
     }
 
     static hrz::StaticVector<std::array<lm::dvec3, 5>, hrz::SCENE_VIEW_COUNT>
-    _compute_views_vertices(gsl::span<const hrz::RenderViewInfo> views_info)
+    _compute_views_vertices(std::span<const hrz::RenderViewInfo> views_info)
     {
         hrz::StaticVector<std::array<lm::dvec3, 5>, hrz::SCENE_VIEW_COUNT> vertices;
 
@@ -3861,10 +3878,10 @@ struct ThreeDTilesSystem
     }
 
     static hrz::SceneViewBitset compute_space_subset_intersections(
-        gsl::span<const hrz::RenderViewInfo> views_info,
+        std::span<const hrz::RenderViewInfo> views_info,
         const BoundingVolume& volume,
-        gsl::span<const std::array<lm::dvec4, 4>> views_planes,
-        gsl::span<const std::array<lm::dvec3, 5>> views_vertices)
+        std::span<const std::array<lm::dvec4, 4>> views_planes,
+        std::span<const std::array<lm::dvec3, 5>> views_vertices)
     {
         hrz::SceneViewBitset bitset;
 
@@ -3890,8 +3907,8 @@ struct ThreeDTilesSystem
     }
 
     static void threshold_screen_space_error(
-        gsl::span<const hrz::RenderViewInfo> views_info,
-        gsl::span<const double> sses,
+        std::span<const hrz::RenderViewInfo> views_info,
+        std::span<const double> sses,
         hrz::SceneViewBitset* below_min_screen_space_error_in,
         hrz::SceneViewBitset* above_max_screen_space_error_in,
         TilesetConfig::ScreenSpaceErrorHysteresis screen_space_error_hysteresis)
@@ -3915,8 +3932,8 @@ struct ThreeDTilesSystem
     }
 
     static void test_horizon_occlusion(
-        gsl::span<const hrz::RenderViewInfo> views_info,
-        gsl::span<const hrz::HorizonCuller> cullers,
+        std::span<const hrz::RenderViewInfo> views_info,
+        std::span<const hrz::HorizonCuller> cullers,
         const std::optional<lm::dvec3>& horizon_occlusion_point,
         hrz::SceneViewBitset* occluded_by_horizon_in)
     {
@@ -4110,9 +4127,9 @@ struct ThreeDTilesSystem
         // This scratch buffer can be used by to temporarily store per batch colors.
         std::vector<lm::ubvec4> scratch;
 
-        gsl::span<lm::ubvec4> per_batch_color;
-        gsl::span<lm::ubvec4> per_instance_color;
-        gsl::span<const uint32_t> instance_to_batch;
+        std::span<lm::ubvec4> per_batch_color;
+        std::span<lm::ubvec4> per_instance_color;
+        std::span<const uint32_t> instance_to_batch;
 
         bool* has_transparency_ptr = nullptr;
 
@@ -4213,17 +4230,17 @@ struct ThreeDTilesSystem
         hrz::BlobAllocator* ba;
         hrz::ImageDecoder* imgdec;
         hrz::AttributionRegistry* attributions;
-        gsl::span<const hrz::RenderViewInfo> views_info;
+        std::span<const hrz::RenderViewInfo> views_info;
     };
 
     struct TilesetWorkContext : public WorkContext
     {
         explicit TilesetWorkContext(const WorkContext& ctx) : WorkContext(ctx) {}
 
-        gsl::span<const hrz::render::ScreenSpaceError> sses;
-        gsl::span<const hrz::HorizonCuller> horizon_cullers;
-        gsl::span<const std::array<lm::dvec4, 4>> views_planes;
-        gsl::span<const std::array<lm::dvec3, 5>> views_vertices;
+        std::span<const hrz::render::ScreenSpaceError> sses;
+        std::span<const hrz::HorizonCuller> horizon_cullers;
+        std::span<const std::array<lm::dvec4, 4>> views_planes;
+        std::span<const std::array<lm::dvec3, 5>> views_vertices;
         hrz::SceneViewBitset visiting_in;
         bool should_update_priorities;
     };
@@ -4231,7 +4248,7 @@ struct ThreeDTilesSystem
     static uint32_t _compute_request_priority(
         const ThreeDTile& tile,
         const TilesetConfig& config,
-        gsl::span<const hrz::RenderViewInfo> views_info,
+        std::span<const hrz::RenderViewInfo> views_info,
         hrz::SceneViewBitset visiting_in)
     {
         double distance_to_view = DBL_MAX;
@@ -5856,7 +5873,7 @@ struct ThreeDTilesSystem
         hrz::BlobAllocator* ba,
         hrz::ImageDecoder* imgdec,
         hrz::AttributionRegistry* attributions,
-        gsl::span<const hrz::RenderViewInfo> views_info)
+        std::span<const hrz::RenderViewInfo> views_info)
     {
         HRZ_SCOPED_SAMPLE("3D tiles system work");
 
@@ -7035,7 +7052,7 @@ RenderRequest _update_layer(
 
         system->three_d_tiles.recreate_all_materials(
             layer->tileset,
-            gsl::span<const hrz_proto::Material* const>(
+            std::span<const hrz_proto::Material* const>(
                 layer_proto.materials().data(), layer_proto.materials().size()));
 
         reload_subtiles_content = true;
@@ -7168,7 +7185,7 @@ RenderRequest _update_layer(
         std::vector<vector_data::FeatureIdHash> selected_feature_ids(count);
         hrz::selection::get_selected_objects(
             selection, global_layer_id,
-            gsl::span<vector_data::FeatureIdHash>(selected_feature_ids));
+            std::span<vector_data::FeatureIdHash>(selected_feature_ids));
 
         system->three_d_tiles.clear_selected_features(layer->tileset);
         system->three_d_tiles.add_selected_features(layer->tileset, selected_feature_ids);
@@ -7342,7 +7359,7 @@ RenderRequest work(
     BlobAllocator* ba,
     ImageDecoder* imgdec,
     AttributionRegistry* attributions,
-    gsl::span<const RenderViewInfo> views_info)
+    std::span<const RenderViewInfo> views_info)
 {
     assert(system && model && selection && al && js && ba && imgdec);
 
@@ -7461,8 +7478,8 @@ void pick(
 
 std::pair<size_t, size_t> make_typed_object_references(
     ThreeDTilesLayerSystem* system,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output)
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output)
 {
     assert(objs.size() <= output.size());
 

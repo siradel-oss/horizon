@@ -162,7 +162,7 @@ RenderRequest ReprRegistry::work(
     FontRasterizer* fr,
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry* attributions,
-    gsl::span<const RenderViewInfo> views_info)
+    std::span<const RenderViewInfo> views_info)
 {
     assert(al && ba && js && heatreg && imgdec && il && fr && symbol_culling);
 

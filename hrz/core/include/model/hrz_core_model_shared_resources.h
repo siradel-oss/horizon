@@ -7,11 +7,8 @@
 
 namespace hrz::model
 {
-enum
-{
-    CompressedStreamOffset = 1,
-    UvStreamOffset = 2,
-};
+constexpr uint32_t CompressedStreamOffset = 1;
+constexpr uint32_t UvStreamOffset = 2;
 
 // @Note The indices of the compressed vertex streams are offset by
 // CompressedStreamOffset based on their uncompressed counterpart. Make sure to

@@ -1027,7 +1027,7 @@ public:
 
         {
             uint32_t data[] = {0, 0};
-            gsl::span<const std::byte> data_span = {(const std::byte*)&data, sizeof(data)};
+            std::span<const std::byte> data_span = {(const std::byte*)&data, sizeof(data)};
 
             my::TextureResource texture;
             texture.layout.type = my::TextureLayout::Type2D;
@@ -1538,7 +1538,7 @@ public:
                 hrz::web_mercator_to_ecef(lm::corner(wmerc_bounds, i), tile->max_elevation);
         }
 
-        auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(points));
+        auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(points));
 
         if (tile->geometry.has_value())
         {

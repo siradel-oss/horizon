@@ -3,11 +3,11 @@
 #include "hrz_fnd_maths.h"
 
 #include <assert.h>
-#include <gsl/gsl-lite.hpp>
 #include <string.h>
 
 #include <algorithm>
 #include <memory>
+#include <span>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -233,7 +233,7 @@ public:
     }
 
     // The span does not contain the terminating null character, but it's there.
-    gsl::span<char> zstr_span(std::string_view str)
+    std::span<char> zstr_span(std::string_view str)
     {
         auto* copy = (char*)alloc_raw(str.size() + 1, 1);
         memcpy(copy, str.data(), str.size());

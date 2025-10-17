@@ -13,8 +13,9 @@
 #include <hrz_common_vector_data.h>
 #include <hrz_fnd_flat_hash_set.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
+
+#include <span>
 
 /**
  * In Horizon, a 3D model comes from a glTF file and is made of multiple parts:
@@ -157,7 +158,7 @@ BatchedModelGeometryH create_batched_model_geometry(
     const picking::FeatureReference& feature_ref,
     uint32_t batch_id_offset,
     size_t batch_length,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes);
 void destroy(ModelPrototype*, ModelGeometryH);
 
 BSphere<double> compute_model_bsphere(ModelPrototype*, ModelGeometryH, const lm::dmat4& transform);
@@ -167,7 +168,7 @@ void set_batched_selection(
     BatchedModelGeometryH,
     const hrz::flat_hash_set<vector_data::FeatureIdHash>& selected_objects);
 
-void set_batched_colors(ModelPrototype*, BatchedModelGeometryH, gsl::span<const lm::ubvec4>);
+void set_batched_colors(ModelPrototype*, BatchedModelGeometryH, std::span<const lm::ubvec4>);
 
 struct ModelMaterialH
 {
@@ -184,22 +185,22 @@ struct InstanceGroupData
 
     lm::dmat4 transform;
     my::CullModifier cull_modifier;
-    gsl::span<const lm::vec3> positions;
-    gsl::span<const lm::usvec3> compressed_positions;
-    gsl::span<const lm::vec3> normals;
-    gsl::span<const lm::usvec4> compressed_normals;
-    gsl::span<const lm::vec3> scales;
-    gsl::span<const lm::ubvec4> colors;
+    std::span<const lm::vec3> positions;
+    std::span<const lm::usvec3> compressed_positions;
+    std::span<const lm::vec3> normals;
+    std::span<const lm::usvec4> compressed_normals;
+    std::span<const lm::vec3> scales;
+    std::span<const lm::ubvec4> colors;
 
-    gsl::span<const uint32_t> object_ids; // Used in the objet reference for picking.
+    std::span<const uint32_t> object_ids; // Used in the objet reference for picking.
 
     // Fill only one of them. If per object, we'll do the indirection with object_ids
     // during baking. If per instance, we just copy everything, no need for
     // any processing.
     // Those two methods are available so that upstream systems don't have to
     // allocate memory for the indirection if they don't have per instance IDs.
-    gsl::span<const vector_data::FeatureIdHash> feature_id_per_object;
-    gsl::span<const vector_data::FeatureIdHash> feature_id_per_instance;
+    std::span<const vector_data::FeatureIdHash> feature_id_per_object;
+    std::span<const vector_data::FeatureIdHash> feature_id_per_instance;
 
     VertexCompressionParamsUniformData position_compression;
     VertexCompressionParamsUniformData normal_compression;
@@ -225,7 +226,7 @@ InstanceGroupH create_instance_group(
     const InstanceGroupData&);
 void destroy(ModelPrototype*, InstanceGroupH);
 
-void set_instance_group_colors(ModelPrototype*, InstanceGroupH, gsl::span<const lm::ubvec4>);
+void set_instance_group_colors(ModelPrototype*, InstanceGroupH, std::span<const lm::ubvec4>);
 void set_instance_group_selection(
     ModelPrototype*,
     InstanceGroupH,

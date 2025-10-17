@@ -22,7 +22,7 @@ namespace
 {
 struct ParsedFont
 {
-    std::variant<gsl::span<const std::byte>, blobs::BlobData> raw_data;
+    std::variant<std::span<const std::byte>, blobs::BlobData> raw_data;
     stbtt_fontinfo stbtt_font;
     hb_font_t* hb_font;
 };
@@ -31,7 +31,7 @@ struct RasterizedFont
 {
     using GlyphMap = hrz::flat_hash_map<uint32_t, Glyph>;
 
-    std::variant<gsl::span<const std::byte>, blobs::BlobHandle> raw_data;
+    std::variant<std::span<const std::byte>, blobs::BlobHandle> raw_data;
     FontInfo info;
 
     // In order to allow retrieving info on an already rasterised glyph (which
@@ -99,7 +99,7 @@ namespace
 
 std::optional<ParsedFont> parse_font(
     BlobAllocator* ba,
-    std::variant<gsl::span<const std::byte>, blobs::BlobHandle>& raw_data)
+    std::variant<std::span<const std::byte>, blobs::BlobHandle>& raw_data)
 {
     HRZ_SCOPED_SAMPLE("parse font");
 
@@ -116,14 +116,14 @@ std::optional<ParsedFont> parse_font(
     }
     else
     {
-        parsed_font.raw_data = {std::get<gsl::span<const std::byte>>(raw_data)};
-        font_data = std::get<gsl::span<const std::byte>>(parsed_font.raw_data).data();
-        font_data_size = std::get<gsl::span<const std::byte>>(parsed_font.raw_data).size();
+        parsed_font.raw_data = {std::get<std::span<const std::byte>>(raw_data)};
+        font_data = std::get<std::span<const std::byte>>(parsed_font.raw_data).data();
+        font_data_size = std::get<std::span<const std::byte>>(parsed_font.raw_data).size();
     }
 
-    if (hrz::is_woff_or_woff2(gsl::span{font_data, font_data_size}))
+    if (hrz::is_woff_or_woff2(std::span{font_data, font_data_size}))
     {
-        auto blob_opt = hrz::woff_or_woff2_to_ttf(ba, gsl::span{font_data, font_data_size});
+        auto blob_opt = hrz::woff_or_woff2_to_ttf(ba, std::span{font_data, font_data_size});
         if (!blob_opt.has_value())
         {
             HRZ_LOG_ERROR("Could not convert WOFF/2 to TTF");
@@ -366,11 +366,11 @@ void destroy(FontRasterizer* rasterizer)
 std::optional<FontHandle> add_font(
     FontRasterizer* rasterizer,
     BlobAllocator* ba,
-    gsl::span<const std::byte> raw_data_in)
+    std::span<const std::byte> raw_data_in)
 {
     assert(rasterizer);
 
-    std::variant<gsl::span<const std::byte>, blobs::BlobHandle> raw_data = raw_data_in;
+    std::variant<std::span<const std::byte>, blobs::BlobHandle> raw_data = raw_data_in;
     auto parsed_font_opt = parse_font(ba, raw_data);
     if (!parsed_font_opt.has_value())
     {
@@ -396,7 +396,7 @@ std::optional<FontHandle> add_font(
 {
     assert(rasterizer);
 
-    std::variant<gsl::span<const std::byte>, blobs::BlobHandle> raw_data = blob_in;
+    std::variant<std::span<const std::byte>, blobs::BlobHandle> raw_data = blob_in;
     auto parsed_font_opt = parse_font(ba, raw_data);
     if (!parsed_font_opt.has_value())
     {

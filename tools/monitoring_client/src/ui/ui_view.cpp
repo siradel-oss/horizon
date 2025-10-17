@@ -409,7 +409,8 @@ void Ruler::draw_horizontal(
             auto& buffer = static_fmt_memory_buffer();
             _format_metric_value(buffer, x * grad_step);
 
-            helpers::draw_text_centered(draw_list, text_center, text_color, buffer.data());
+            helpers::draw_text_centered(
+                draw_list, text_center, text_color, fmt::runtime(buffer.data()));
         }
     }
 }
@@ -473,7 +474,8 @@ void Ruler::draw_vertical(const Layout& layout, const View& view, bool with_rule
             auto& buffer = static_fmt_memory_buffer();
             _format_metric_value(buffer, y * grad_step);
 
-            helpers::draw_text_right_aligned(draw_list, text_edge, text_color, buffer.data());
+            helpers::draw_text_right_aligned(
+                draw_list, text_edge, text_color, fmt::runtime(buffer.data()));
         }
     }
 }

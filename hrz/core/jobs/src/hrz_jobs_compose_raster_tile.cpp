@@ -80,7 +80,7 @@ struct SamplingBlendingFunctionAdapter : public rasterizer::SampleAndComposeFunc
 void _rasterize_tile(
     const ImageView& input,
     MutImageView& output,
-    gsl::span<const float> coords,
+    std::span<const float> coords,
     unsigned int quad_count_x,
     unsigned int quad_count_y,
     lm::bbox2 clip_uv,

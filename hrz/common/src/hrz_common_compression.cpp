@@ -7,9 +7,12 @@
 #include <zlib.h>
 #include <zstd.h>
 
+#include <array>
+#include <memory>
+
 bool hrz::decompress_gzip(
-    gsl::span<const std::byte> compressed,
-    const std::function<void(gsl::span<const std::byte>)>& callback)
+    std::span<const std::byte> compressed,
+    const std::function<void(std::span<const std::byte>)>& callback)
 {
     z_stream stream{};
     stream.next_in = (Bytef*)compressed.data();
@@ -37,7 +40,7 @@ bool hrz::decompress_gzip(
         stream.avail_out = buffer.size();
 
         auto status = inflate(&stream, Z_NO_FLUSH);
-        callback(gsl::span<const std::byte>(buffer.data(), buffer.size() - stream.avail_out));
+        callback(std::span<const std::byte>(buffer.data(), buffer.size() - stream.avail_out));
 
         if (status == Z_STREAM_END)
         {
@@ -55,8 +58,8 @@ bool hrz::decompress_gzip(
 }
 
 bool hrz::decompress_zlib_uncompress(
-    gsl::span<const std::byte> compressed,
-    gsl::span<std::byte>* decompressed)
+    std::span<const std::byte> compressed,
+    std::span<std::byte>* decompressed)
 {
     uLongf decompressed_len = decompressed->size_bytes();
     int status = uncompress(
@@ -67,13 +70,13 @@ bool hrz::decompress_zlib_uncompress(
         HRZ_LOG_ERROR("Couldn't decompress zlib stream: {}", zError(status));
         return false;
     }
-    *decompressed = gsl::span<std::byte>(decompressed->data(), decompressed_len);
+    *decompressed = std::span<std::byte>(decompressed->data(), decompressed_len);
     return true;
 }
 
 bool hrz::decompress_brotli(
-    gsl::span<const std::byte> compressed,
-    const std::function<void(gsl::span<const std::byte>)>& callback)
+    std::span<const std::byte> compressed,
+    const std::function<void(std::span<const std::byte>)>& callback)
 {
     std::unique_ptr<BrotliDecoderState, decltype(BrotliDecoderDestroyInstance)*> decoder_state(
         BrotliDecoderCreateInstance(nullptr, nullptr, nullptr), &BrotliDecoderDestroyInstance);
@@ -96,7 +99,7 @@ bool hrz::decompress_brotli(
         auto status = BrotliDecoderDecompressStream(
             decoder_state.get(), &available_in, &next_in, &available_out, &next_out, nullptr);
 
-        callback(gsl::span<const std::byte>(buffer.data(), buffer.size() - available_out));
+        callback(std::span<const std::byte>(buffer.data(), buffer.size() - available_out));
 
         if (status == BROTLI_DECODER_RESULT_SUCCESS)
         {
@@ -115,8 +118,8 @@ bool hrz::decompress_brotli(
 }
 
 bool hrz::decompress_zstd(
-    gsl::span<const std::byte> compressed,
-    const std::function<void(gsl::span<const std::byte>)>& callback)
+    std::span<const std::byte> compressed,
+    const std::function<void(std::span<const std::byte>)>& callback)
 {
     // Decompress zstd stream using streaming.
     std::unique_ptr<ZSTD_DStream, decltype(ZSTD_freeDStream)*> stream(
@@ -142,7 +145,7 @@ bool hrz::decompress_zstd(
         ZSTD_outBuffer output = {buffer.data(), buffer.size(), 0};
 
         ret = ZSTD_decompressStream(stream.get(), &output, &input);
-        callback(gsl::span<const std::byte>(buffer.data(), output.pos));
+        callback(std::span<const std::byte>(buffer.data(), output.pos));
 
         if (ZSTD_isError(ret))
         {

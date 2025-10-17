@@ -39,7 +39,6 @@
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_format.h>
 #include <hrz_fnd_gen_object_pool.h>
-#include <hrz_fnd_mem.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_time.h>
 #include <hrz_protocol_path_builder.h>
@@ -54,7 +53,7 @@ extern "C"
 
 #include <hrz_common_profiling.h>
 
-#include <gsl/gsl-lite.hpp>
+#include <span>
 
 namespace
 {
@@ -1316,7 +1315,7 @@ void work(
         bool camera_has_moved = camera->work(
             scene->model, view_to_viewport_info[center_view_index],
             view_to_height_above_terrain[center_view_index], picking_systems, scene->planet,
-            [&](gsl::span<const hrz_proto::CameraNotification> notifications)
+            [&](std::span<const hrz_proto::CameraNotification> notifications)
             {
                 for (const auto& notification : notifications)
                 {
@@ -1597,7 +1596,7 @@ void enqueue_attribution_message(
     std::optional<hrz::uint128>* last_hash)
 {
     auto attributions = attribution::get_frame_attributions(scene->attributions);
-    hrz::uint128 current_hash = hrz::murmur3_x64_128(hrz::as_bytes(attributions));
+    hrz::uint128 current_hash = hrz::murmur3_x64_128(std::as_bytes(attributions));
 
     if (last_hash->has_value() && last_hash->value() == current_hash) return;
 
@@ -2047,7 +2046,7 @@ uint32_t count_model(const Scene* scene, const hrz_proto::Path& path)
 std::optional<PositionPickingTicket> schedule_pick(
     Scene* scene,
     lm::ivec2 mouse_position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters)
+    std::span<const hrz_proto::LayerHandle> included_rasters)
 {
     for (auto& entry : scene->views)
     {
@@ -2080,7 +2079,7 @@ std::optional<AreaPickingTicket> schedule_pick(Scene* scene, lm::ibbox2 rect)
 RasterDataFetchTicket schedule_raster_data_fetch(
     Scene* scene,
     const hrz::GeoPosition2& position,
-    gsl::span<const hrz_proto::LayerHandle> raster_layers)
+    std::span<const hrz_proto::LayerHandle> raster_layers)
 {
     auto ticket = hrz::planet::schedule_raster_data_fetch(scene->planet, position, raster_layers);
     return {ticket};
@@ -2124,8 +2123,8 @@ static void pick(
  */
 static std::pair<size_t, size_t> make_typed_object_references(
     Scene* scene,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output)
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output)
 {
     assert(objs.size() <= output.size());
 
@@ -2288,7 +2287,7 @@ bool retrieve_pick_area_result(
 
     // AreaResult only contains ObjectReference, so we can safely cast its
     // pointer directly. The static asserts above check this.
-    gsl::span<const picking::ObjectReference> refs_span(
+    std::span<const picking::ObjectReference> refs_span(
         (const picking::ObjectReference*)result.data(), result.size());
 
     typed_refs.resize(refs_span.size());
@@ -2318,7 +2317,7 @@ bool retrieve_raster_data_fetch_results(
 size_t select(
     Scene* scene,
     uint64_t layer_id,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes)
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes)
 {
     if (!feature_id_hashes.empty())
     {
@@ -2334,7 +2333,7 @@ size_t select(
 size_t deselect(
     Scene* scene,
     uint64_t layer_id,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes)
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes)
 {
     if (!feature_id_hashes.empty())
     {

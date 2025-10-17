@@ -376,7 +376,7 @@ public:
     }
 
     void update_requested_tiles(
-        gsl::span<const gsl::span<const RequestedTileCoords>> requested_tiles,
+        std::span<const std::span<const RequestedTileCoords>> requested_tiles,
         size_t requested_tiles_hash,
         AssetsLoader* al,
         JobScheduler* js)
@@ -393,7 +393,7 @@ public:
         BlobAllocator* ba,
         JobScheduler* js,
         AttributionRegistry* attributions,
-        gsl::span<const RenderViewInfo> views_info)
+        std::span<const RenderViewInfo> views_info)
     {
         uint32_t merge_groups_restart_needed_bitset = 0;
 
@@ -769,7 +769,7 @@ public:
 
     void pick(
         const lm::dvec3& position,
-        gsl::span<const hrz_proto::LayerHandle> included_rasters,
+        std::span<const hrz_proto::LayerHandle> included_rasters,
         hrz_proto::SceneViewIndex scene_view,
         hrz_proto::PickResults& pick_results)
     {
@@ -785,7 +785,7 @@ public:
 
     std::vector<RasterDataFetchMergeGroupTicket> schedule_raster_data_fetch(
         const GeoPosition2& position,
-        gsl::span<const hrz_proto::LayerHandle> layers)
+        std::span<const hrz_proto::LayerHandle> layers)
     {
         std::vector<RasterDataFetchMergeGroupTicket> tickets;
 

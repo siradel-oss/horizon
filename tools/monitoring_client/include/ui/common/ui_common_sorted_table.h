@@ -78,7 +78,7 @@ public:
     void scroll_to_entry(size_t index) { _should_scroll_to_entry = index; }
 
     void draw(
-        gsl::span<const Entry> entries,
+        std::span<const Entry> entries,
         bool data_is_dirty,
         std::optional<hrz::flat_hash_set<size_t>> filter = std::nullopt,
         lm::dvec2 outer_size = {0.0, 0.0})
@@ -193,7 +193,7 @@ private:
     std::optional<size_t> _selected_entry_index;
     std::optional<size_t> _should_scroll_to_entry;
 
-    void _sort_entries(gsl::span<const Entry> entries, ImGuiTableSortSpecs* sort_specs)
+    void _sort_entries(std::span<const Entry> entries, ImGuiTableSortSpecs* sort_specs)
     {
         _sorted_entries.resize(entries.size());
         for (size_t i = 0; i < entries.size(); i++)

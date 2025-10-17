@@ -4,7 +4,6 @@
 #include <hrz_common_profiling.h>
 #include <hrz_common_three_d_tiles.h>
 #include <hrz_fnd_array_view.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_inlined_vector.h>
 #include <hrz_fnd_json_utils.h>
@@ -13,6 +12,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
+#include <bit>
 #include <cstdint>
 #include <string_view>
 #include <type_traits>
@@ -174,7 +174,7 @@ std::optional<AttributeValues> _convert_attribute_binary_values(
 std::optional<AttributeValues> _decode_attribute_values_from_binary(
     uint32_t attribute_id,
     hrz_proto::AttributeTransform transform,
-    gsl::span<const std::byte> bin_data,
+    std::span<const std::byte> bin_data,
     size_t byte_offset,
     AttributeComponentType component_type,
     uint8_t component_count,
@@ -237,7 +237,7 @@ std::optional<AttributeValues> _decode_attribute_values_from_blob(
     uint32_t attribute_id,
     hrz_proto::AttributeTransform transform,
     const rapidjson::Value& attribute_json_value,
-    gsl::span<const std::byte> batch_table_bin_data,
+    std::span<const std::byte> batch_table_bin_data,
     uint32_t expected_length,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
@@ -283,7 +283,7 @@ std::optional<AttributeValues> _decode_attribute_values(
     uint32_t attribute_id,
     hrz_proto::AttributeTransform transform,
     const rapidjson::Value& attribute_json_value,
-    gsl::span<const std::byte> batch_table_bin_data,
+    std::span<const std::byte> batch_table_bin_data,
     uint32_t expected_length,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
@@ -313,7 +313,7 @@ std::optional<AttributeValues> _decode_u64_attribute_values(
     uint32_t attribute_id,
     hrz_proto::AttributeTransform transform,
     const rapidjson::Value& attribute_json_value,
-    gsl::span<const std::byte> batch_table_bin_data,
+    std::span<const std::byte> batch_table_bin_data,
     uint32_t expected_length,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
@@ -345,9 +345,9 @@ struct BatchClass
 bool _decode_batch_table_hierarchy(
     const uint32_t batch_length,
     const rapidjson::Value& bth_json,
-    gsl::span<const std::byte> batch_table_bin_data,
-    gsl::span<const hrz::three_d_tiles::AttributeConfig> attributes,
-    gsl::span<std::optional<AttributeValues>> attribute_values,
+    std::span<const std::byte> batch_table_bin_data,
+    std::span<const hrz::three_d_tiles::AttributeConfig> attributes,
+    std::span<std::optional<AttributeValues>> attribute_values,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
 {

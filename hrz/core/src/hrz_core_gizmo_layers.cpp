@@ -1909,7 +1909,7 @@ public:
     }
 
     hrz::CameraViewInfo find_cam_view_info(
-        gsl::span<const hrz::RenderViewInfo> views_infos,
+        std::span<const hrz::RenderViewInfo> views_infos,
         hrz_proto::SceneViewIndex view)
     {
         for (const auto& view_info : views_infos)
@@ -1929,7 +1929,7 @@ public:
         hrz::SceneModel* scene_model,
         uint64_t layer_id,
         hrz_proto::SceneViewIndex main_view_index,
-        gsl::span<const hrz::RenderViewInfo> views_infos)
+        std::span<const hrz::RenderViewInfo> views_infos)
     {
         HRZ_SCOPED_SAMPLE("gizmo work");
 
@@ -2082,7 +2082,7 @@ public:
 
     void draw(
         hrz::Render* render,
-        gsl::span<const hrz::RenderViewInfo> views_info,
+        std::span<const hrz::RenderViewInfo> views_info,
         GizmoRenderable<GizmoCircleUniformData>& circle_renderable,
         GizmoRenderable<GizmoMeshUniformData>& torus_renderable,
         GizmoRenderable<GizmoMeshUniformData>& square_renderable,
@@ -2588,7 +2588,7 @@ RenderRequest work(
     SceneModel* scene_model,
     ClientMessageQueue* mq,
     hrz_proto::SceneViewIndex main_view_index,
-    gsl::span<const RenderViewInfo> views_infos)
+    std::span<const RenderViewInfo> views_infos)
 {
     assert(system);
 
@@ -2629,7 +2629,7 @@ RenderRequest work(
 
 void work_gpu(GizmoLayerSystem*, Render*) {}
 
-void draw(GizmoLayerSystem* system, Render* render, gsl::span<const RenderViewInfo> views_info)
+void draw(GizmoLayerSystem* system, Render* render, std::span<const RenderViewInfo> views_info)
 {
     assert(system && render);
 

@@ -99,7 +99,7 @@ void append_messages(MessageBuffer* buffer, const MessageBuffer* appended)
     buffer->cos->WriteRaw(appended_span.data(), appended_span.size());
 }
 
-void parse_messages(gsl::span<const std::byte> data, const MessageCallback& callback)
+void parse_messages(std::span<const std::byte> data, const MessageCallback& callback)
 {
     google::protobuf::io::CodedInputStream coded_istream(
         (const unsigned char*)data.data(), data.size());
@@ -135,13 +135,13 @@ void parse_messages(gsl::span<const std::byte> data, const MessageCallback& call
     }
 }
 
-gsl::span<const std::byte> get_written_data(const MessageBuffer* buffer)
+std::span<const std::byte> get_written_data(const MessageBuffer* buffer)
 {
     // While a StringOutputStream exists, the data of its destination string is invalid and
     // arbitrary, which is why we must destroy a buffer's string before reading into it.
     buffer->destroy_streams();
 
-    return gsl::make_span((const std::byte*)buffer->string.data(), buffer->string.size());
+    return std::span{(const std::byte*)buffer->string.data(), buffer->string.size()};
 }
 
 uint32_t get_message_encoding_version()

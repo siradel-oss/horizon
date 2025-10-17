@@ -1,10 +1,9 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <vector>
 
@@ -46,7 +45,7 @@ class ActionBus
     friend struct ActionBusOwner;
 
 public:
-    ActionBus(gsl::not_null<std::vector<std::unique_ptr<Action>>*> target) : _actions(target) {}
+    ActionBus(std::vector<std::unique_ptr<Action>>& target) : _actions(&target) {}
 
     void push_back(std::unique_ptr<Action>&& action) { _actions->push_back(std::move(action)); }
 
@@ -59,7 +58,7 @@ class ActionBusOwner
 public:
     ActionBus action_bus;
 
-    ActionBusOwner() : action_bus(&_actions) {}
+    ActionBusOwner() : action_bus(_actions) {}
 
     void execute_actions()
     {

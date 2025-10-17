@@ -54,7 +54,7 @@ inline double point_to_segment_squared_distance(
 }
 
 // Douglas–Peucker simplification
-void compute_linestring_deviations(gsl::span<const lm::dvec3> points, gsl::span<double> deviations)
+void compute_linestring_deviations(std::span<const lm::dvec3> points, std::span<double> deviations)
 {
     if (points.size() <= 2) return;
 
@@ -180,7 +180,7 @@ void clip_feature(
         }
 
         const auto points =
-            gsl::span<const lm::dvec3>(&in.points[linestring_first_point], linestring_size);
+            std::span<const lm::dvec3>(&in.points[linestring_first_point], linestring_size);
         const auto segment_count = (polygon) ? points.size() : (points.size() - 1);
 
         for (size_t i0 = 0; i0 < segment_count; i0++)
@@ -373,7 +373,7 @@ hrz::JobResult run(
                     auto src_linestring_size =
                         src_linestring_sizes[src_feature.first_linestring_size + j];
 
-                    const gsl::span<const lm::dvec3> src_linestring_points_span =
+                    const std::span<const lm::dvec3> src_linestring_points_span =
                         src_points.as_span().subspan(
                             src_linestring_first_point, src_linestring_size);
 

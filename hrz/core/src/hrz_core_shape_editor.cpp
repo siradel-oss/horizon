@@ -29,12 +29,12 @@
 #include <hrz_protocol_path_builder.h>
 
 #include <earcut.hpp>
-#include <gsl/gsl-lite.hpp>
 
 #include <cassert>
 #include <cmath>
 #include <deque>
 #include <limits>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -269,7 +269,7 @@ Mesh generate_point_mesh(const hrz::GeoPosition2& position)
     }
 
     lm::dvec3 ecef_positions[] = {ecef_center_bottom, ecef_center_top};
-    auto b_sphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>{ecef_positions, 2});
+    auto b_sphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>{ecef_positions, 2});
 
     Mesh mesh;
     mesh.vertex_data = std::move(vbo_data);
@@ -368,7 +368,7 @@ struct GeoPositionVectorCollector
 };
 
 Mesh generate_polyline_mesh(
-    gsl::span<const hrz::GeoPosition2> input_positions,
+    std::span<const hrz::GeoPosition2> input_positions,
     bool loop,
     LineType line_type)
 {
@@ -745,7 +745,7 @@ Mesh generate_polyline_mesh(
     }
 
     auto b_sphere = hrz::compute_bounding_sphere(
-        gsl::span<const lm::dvec3>{ecef_positions.data(), ecef_positions.size()});
+        std::span<const lm::dvec3>{ecef_positions.data(), ecef_positions.size()});
 
     mesh.vertex_data = std::move(vbo_data);
     mesh.indices = std::move(indices);
@@ -762,9 +762,9 @@ Mesh generate_polyline_mesh(
 // uses the input positions as expected, usually because they describe a degenerate
 // polygon.
 bool check_triangulation(
-    gsl::span<uint32_t> triangulation_indices,
+    std::span<uint32_t> triangulation_indices,
     uint32_t position_count,
-    gsl::span<const size_t> linestring_sizes)
+    std::span<const size_t> linestring_sizes)
 {
     HRZ_SCOPED_SAMPLE("check triangulation");
 
@@ -882,8 +882,8 @@ void make_wall_segments(
 }
 
 Mesh generate_polygon_mesh(
-    gsl::span<const hrz::GeoPosition2> input_positions_geo,
-    gsl::span<const size_t> input_linestring_sizes,
+    std::span<const hrz::GeoPosition2> input_positions_geo,
+    std::span<const size_t> input_linestring_sizes,
     LineType line_type)
 {
     HRZ_SCOPED_SAMPLE("generate polygon mesh");
@@ -943,7 +943,7 @@ Mesh generate_polygon_mesh(
 
     // Triangulate
 
-    std::vector<gsl::span<const hrz::GeoPosition2>> linestrings;
+    std::vector<std::span<const hrz::GeoPosition2>> linestrings;
     {
         size_t current_position = 0;
         for (size_t i = 0; i < linestring_sizes.size(); ++i)
@@ -952,7 +952,7 @@ Mesh generate_polygon_mesh(
 
             if (linestring_size < 3) continue;
 
-            linestrings.push_back(gsl::span<const hrz::GeoPosition2>(positions_geo)
+            linestrings.push_back(std::span<const hrz::GeoPosition2>(positions_geo)
                                       .subspan(current_position, linestring_size));
             current_position += linestring_size;
         }
@@ -960,7 +960,7 @@ Mesh generate_polygon_mesh(
 
     // Whatever the winding order of the input positions, Earcut always returns
     // indices for counter-clockwise triangles.
-    gsl::span<const gsl::span<const hrz::GeoPosition2>> linestring_span = {
+    std::span<const std::span<const hrz::GeoPosition2>> linestring_span = {
         linestrings.data(), linestrings.size()};
     auto triangulation_indices = mapbox::earcut<uint32_t>(linestring_span);
 
@@ -1201,7 +1201,7 @@ Mesh generate_polygon_mesh(
     }
 
     auto b_sphere = hrz::compute_bounding_sphere(
-        gsl::span<const lm::dvec3>{ecef_positions.data(), ecef_positions.size()});
+        std::span<const lm::dvec3>{ecef_positions.data(), ecef_positions.size()});
 
     Mesh mesh;
     mesh.vertex_data = std::move(split_positions);
@@ -2397,8 +2397,8 @@ void pick(
 
 std::pair<size_t, size_t> make_typed_object_references(
     const ShapeEditor* editor,
-    gsl::span<const picking::ObjectReference> refs,
-    gsl::span<hrz_proto::TypedObjectReference> output)
+    std::span<const picking::ObjectReference> refs,
+    std::span<hrz_proto::TypedObjectReference> output)
 {
     assert(refs.size() <= output.size());
 
@@ -4061,7 +4061,7 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
     };
 
     auto compute_polyline_length =
-        [&](gsl::span<const hrz::GeoPosition2> points, bool closed, LineType line_type)
+        [&](std::span<const hrz::GeoPosition2> points, bool closed, LineType line_type)
     {
         if (points.size() <= 1)
         {
@@ -4152,7 +4152,7 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
     else if (shape.kind == Shape::Kind::Polygon)
     {
         // See https://stackoverflow.com/a/451482
-        auto compute_polygon_area = [](gsl::span<const lm::dvec2> points)
+        auto compute_polygon_area = [](std::span<const lm::dvec2> points)
         {
             double area = 0;
             size_t point_count = points.size();
@@ -4174,7 +4174,7 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
             {
                 // Perimeter
 
-                gsl::span<const hrz::GeoPosition2> points_span = {
+                std::span<const hrz::GeoPosition2> points_span = {
                     shape.points.data(), shape.points.size()};
 
                 size_t outer_linestring_size = shape.linestring_sizes.front();
@@ -4211,7 +4211,7 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
                 sinusoidal_points.reserve(shape.points.size());
 
                 std::optional<std::vector<size_t>> linestring_sizes_opt;
-                gsl::span<const size_t> linestring_sizes_span;
+                std::span<const size_t> linestring_sizes_span;
 
                 if (shape.line_type == LineType::RhumbLines
                     || shape.line_type == LineType::RhumbLinesNotAcrossAntimeridian)
@@ -4251,7 +4251,7 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
                         current_linestring_start += linestring_size;
                     }
 
-                    linestring_sizes_span = gsl::span<const size_t>{
+                    linestring_sizes_span = std::span<const size_t>{
                         linestring_sizes_opt.value().data(), linestring_sizes_opt.value().size()};
                 }
                 else
@@ -4283,11 +4283,11 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
                         current_linestring_start += linestring_size;
                     }
 
-                    linestring_sizes_span = gsl::span<const size_t>{
+                    linestring_sizes_span = std::span<const size_t>{
                         shape.linestring_sizes.data(), shape.linestring_sizes.size()};
                 }
 
-                gsl::span<const lm::dvec2> sinusoidal_points_span = {
+                std::span<const lm::dvec2> sinusoidal_points_span = {
                     sinusoidal_points.data(), sinusoidal_points.size()};
 
                 size_t outer_linestring_size = linestring_sizes_span.front();
@@ -4401,7 +4401,7 @@ ControlUniformData make_control_uniforms(const Shape& shape, const ShapeEditor* 
 
 void generate_polyline_renderable(
     uint64_t shape_layer_id,
-    gsl::span<const hrz::GeoPosition2> points,
+    std::span<const hrz::GeoPosition2> points,
     bool loop,
     LineType line_type,
     uint32_t z_index,
@@ -4484,7 +4484,7 @@ void generate_polyline_renderable(Shape& shape, ShapeEditor* editor, Render* ren
 {
     assert(shape.kind == Shape::Kind::Polyline);
 
-    gsl::span<const hrz::GeoPosition2> points = {
+    std::span<const hrz::GeoPosition2> points = {
         shape.points.data(), std::min(shape.points.size(), shape.max_point_count)};
     generate_polyline_renderable(
         shape.global_layer_id, points, false, shape.line_type, shape.z_index << 1,
@@ -4493,7 +4493,7 @@ void generate_polyline_renderable(Shape& shape, ShapeEditor* editor, Render* ren
 }
 
 void regenerate_polyline_renderable(
-    gsl::span<const hrz::GeoPosition2> points,
+    std::span<const hrz::GeoPosition2> points,
     bool loop,
     LineType line_type,
     RenderableShape& renderable,
@@ -4529,7 +4529,7 @@ void regenerate_polyline_renderable(Shape& shape, Render* render)
 {
     assert(shape.kind == Shape::Kind::Polyline);
 
-    gsl::span<const hrz::GeoPosition2> points = {
+    std::span<const hrz::GeoPosition2> points = {
         shape.points.data(), std::min(shape.points.size(), shape.max_point_count)};
 
     regenerate_polyline_renderable(points, false, shape.line_type, shape.renderable, render);
@@ -4619,7 +4619,7 @@ void generate_polygon_renderables(Shape& shape, ShapeEditor* editor, Render* ren
     generate_polygon_renderable(shape, shape.z_index << 1, editor, render);
     shape.renderable.data.fullscreen_vertex_input = editor->fullscreen_vertex_input;
 
-    gsl::span<hrz::GeoPosition2> points = {shape.points.data(), shape.points.size()};
+    std::span<hrz::GeoPosition2> points = {shape.points.data(), shape.points.size()};
 
     auto outline_uniforms = make_outline_uniforms(shape, editor);
 
@@ -4677,7 +4677,7 @@ void regenerate_polygon_renderables(Shape& shape, ShapeEditor* editor, Render* r
 
     regenerate_polygon_renderable(shape, render);
 
-    gsl::span<hrz::GeoPosition2> points = {shape.points.data(), shape.points.size()};
+    std::span<hrz::GeoPosition2> points = {shape.points.data(), shape.points.size()};
 
     // Update existing outline renderables
     size_t current_linestring_start = 0;
@@ -4794,7 +4794,7 @@ std::vector<lm::vec3> generate_control_points_instance_buffer(
     }
 
     auto b_sphere = hrz::compute_bounding_sphere(
-        gsl::span<const lm::dvec3>{bbox_ecef_positions.data(), bbox_ecef_positions.size()});
+        std::span<const lm::dvec3>{bbox_ecef_positions.data(), bbox_ecef_positions.size()});
 
     out_center = b_sphere.center;
     out_radius = b_sphere.radius;

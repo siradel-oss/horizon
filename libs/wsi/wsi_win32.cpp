@@ -8,6 +8,7 @@
 #    include <stb_image.h>
 #    include <windows.h>
 
+#    include <memory>
 #    include <stdio.h>
 
 #    define HRZ_VERSION_STR3(X) #X

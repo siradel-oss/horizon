@@ -1,8 +1,7 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
+#include <span>
 
 // See https://protobuf.dev/programming-guides/encoding/#varints
 
@@ -79,7 +78,7 @@ static uint64_t decode_varint_u64(const std::byte** it, const std::byte* end)
     }
 }
 
-static uint64_t decode_varint_u64(gsl::span<const std::byte> span)
+static uint64_t decode_varint_u64(std::span<const std::byte> span)
 {
     const auto* it = span.data();
     return decode_varint_u64(&it, span.data() + span.size_bytes());

@@ -63,7 +63,7 @@ BSphere<double> ModelGeometry::compute_bsphere(const lm::dmat4& transform) const
 
 void ModelGeometry::initialize(
     ModelPrototype* proto,
-    gsl::span<const char* const> additional_streams)
+    std::span<const char* const> additional_streams)
 {
     assert(_status == InternalStatus::Uninitialized);
 
@@ -483,7 +483,7 @@ bool ModelGeometry::ready_to_build() const
         && _used_index_buffers.all_ready() && _used_vertex_buffers.all_ready();
 }
 
-gsl::span<const my::VertexInputStream> ModelGeometry::get_streams(const Primitive& prim)
+std::span<const my::VertexInputStream> ModelGeometry::get_streams(const Primitive& prim)
 {
     return {_streams.data() + prim.first_stream, prim.stream_count};
 }
@@ -504,7 +504,7 @@ BatchedModelGeometry::BatchedModelGeometry(
     const picking::ObjectReference& object_reference,
     const picking::FeatureReference& feature_reference,
     size_t batch_length,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes) :
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes) :
     ModelGeometry(object_id_offset, object_reference, feature_reference),
     _feature_ids_texture(
         proto->resource_owner,
@@ -528,7 +528,7 @@ BatchedModelGeometry::BatchedModelGeometry(
 
     // Minimum 1 color (so that it's not invisible when we have batch length = 0)
     size_t colors_count = std::max((size_t)1, batch_length);
-    gsl::span<lm::ubvec4> colors = _colors_texture.resize_and_get_data(colors_count);
+    std::span<lm::ubvec4> colors = _colors_texture.resize_and_get_data(colors_count);
     std::fill_n(colors.data(), colors.size(), lm::ubvec4(0xffu)); // All white
 }
 
@@ -542,7 +542,7 @@ void BatchedModelGeometry::destroy(ModelPrototype* proto)
 
 void BatchedModelGeometry::initialize(
     ModelPrototype* proto,
-    gsl::span<const char* const> additional_streams)
+    std::span<const char* const> additional_streams)
 {
     assert(additional_streams.size() == 0);
     static constexpr const char* names[] = {"_BATCHID"};
@@ -603,7 +603,7 @@ void BatchedModelGeometry::set_selection(
     _selection_storage.update_selection(selected_objects);
 }
 
-void BatchedModelGeometry::set_colors(gsl::span<const lm::ubvec4> colors)
+void BatchedModelGeometry::set_colors(std::span<const lm::ubvec4> colors)
 {
     _colors_texture.set(colors);
 
@@ -680,7 +680,7 @@ void set_batched_selection(
 void set_batched_colors(
     ModelPrototype* proto,
     BatchedModelGeometryH handle,
-    gsl::span<const lm::ubvec4> colors)
+    std::span<const lm::ubvec4> colors)
 {
     auto* model = (BatchedModelGeometry*)_get_model_geometry(proto, handle);
     if (model)
@@ -695,7 +695,7 @@ BatchedModelGeometryH create_batched_model_geometry(
     const picking::FeatureReference& feature_ref,
     uint32_t batch_id_offset,
     size_t batch_length,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes)
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes)
 {
     std::unique_ptr<ModelGeometry> geometry(new BatchedModelGeometry(
         proto, batch_id_offset, obj_ref, feature_ref, batch_length, feature_id_hashes));

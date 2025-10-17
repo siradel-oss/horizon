@@ -50,7 +50,7 @@ public:
     my::ResourceHandle alloc(
         const my::Resource* res,
         const monitoring::ResourceOwner& resource_owner,
-        gsl::span<std::pair<MetadataString, MetadataString>> metadata);
+        std::span<std::pair<MetadataString, MetadataString>> metadata);
 
     void dealloc(my::ResourceHandle handle) override { rc->dealloc(handle); }
 
@@ -475,7 +475,7 @@ struct VertexInputBuilder
 
     void add_input_stream_raw(
         int index,
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         my::VertexFormat format,
         my::VertexRate rate);
 
@@ -492,17 +492,17 @@ struct VertexInputBuilder
         my::VertexFormat format,
         my::VertexRate rate = my::VertexRate::Constant)
     {
-        add_input_stream_raw(index, hrz::as_bytes(gsl::span<const T>(&v, 1)), format, rate);
+        add_input_stream_raw(index, std::as_bytes(std::span<const T>(&v, 1)), format, rate);
     }
 
     template<typename T>
     inline void add_input_stream(
         int index,
-        gsl::span<const T> data,
+        std::span<const T> data,
         my::VertexFormat format,
         my::VertexRate rate)
     {
-        add_input_stream_raw(index, hrz::as_bytes(data), format, rate);
+        add_input_stream_raw(index, std::as_bytes(data), format, rate);
     }
 
     template<typename T>
@@ -522,7 +522,7 @@ struct VertexInputBuilder
                 }
                 else if constexpr (std::is_same_v<ArgType, T>)
                 {
-                    add_input_stream(index, gsl::span<const T>(&arg, 1), format, rate);
+                    add_input_stream(index, std::span<const T>(&arg, 1), format, rate);
                 }
                 else
                 {

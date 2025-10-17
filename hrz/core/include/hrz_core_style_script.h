@@ -220,7 +220,7 @@ struct Parser
 
 struct Optimizer
 {
-    static std::unique_ptr<Optimizer> create(gsl::span<const hrz::Palette> palettes);
+    static std::unique_ptr<Optimizer> create(std::span<const hrz::Palette> palettes);
 
     virtual ~Optimizer() = default;
 

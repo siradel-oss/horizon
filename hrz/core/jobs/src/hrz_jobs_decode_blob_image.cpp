@@ -6,10 +6,10 @@
 #include <hrz_common_blob_malloc_adapter.h>
 #include <hrz_common_image_processing.h>
 #include <hrz_common_profiling.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_defer.h>
 #include <hrz_fnd_inlined_vector.h>
 #include <hrz_fnd_log.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_mime.h>
 #include <hrz_fnd_string_utils.h>
 
@@ -18,6 +18,7 @@
 #include <stb_image.h>
 #include <webp/decode.h>
 
+#include <bit>
 #include <optional>
 
 namespace
@@ -108,7 +109,7 @@ void stbi_free(void* ptr)
 
 namespace
 {
-bool is_data_ktx2(gsl::span<const std::byte> data)
+bool is_data_ktx2(std::span<const std::byte> data)
 {
     // See https://registry.khronos.org/KTX/specs/2.0/ktxspec.v2.html
     static constexpr std::byte ktx2_identifier[] = {0xAB_b, 0x4B_b, 0x54_b, 0x58_b, 0x20_b, 0x32_b,
@@ -116,12 +117,20 @@ bool is_data_ktx2(gsl::span<const std::byte> data)
 
     if (data.size_bytes() < 12) return false;
 
-    return data.subspan(0, 12) == gsl::span<const std::byte>{ktx2_identifier};
+    for (size_t i = 0; i < 12; ++i)
+    {
+        if (data[i] != ktx2_identifier[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
-// @Todo(C++20) Replace this enable_if_t with a requires clause.
-template<typename F, std::enable_if_t<std::is_invocable_r_v<uint32_t, F, uint32_t>, int> = 0>
+template<typename F>
 void transform_32bit_image_data(std::byte* data, size_t pixel_count, F transform_function)
+    requires std::is_invocable_r_v<uint32_t, F, uint32_t>
 {
     uint32_t value{};
     for (const auto* end_ptr = data + pixel_count * sizeof(uint32_t); data < end_ptr;
@@ -153,8 +162,8 @@ std::optional<hrz::BlobImage> finalize_image(
             transform_32bit_image_data(
                 decoded_image_data.data(), width * height,
                 [](uint32_t v) {
-                    return hrz::bit_cast<uint32_t>(
-                        hrz::premultiply_alpha(hrz::bit_cast<lm::ubvec4>(v)));
+                    return std::bit_cast<uint32_t>(
+                        hrz::premultiply_alpha(std::bit_cast<lm::ubvec4>(v)));
                 });
         }
         else
@@ -175,7 +184,7 @@ std::optional<hrz::BlobImage> finalize_image(
             transform_32bit_image_data(
                 decoded_image_data.data(), width * height,
                 [decode_func = decode_func](uint32_t v)
-                { return hrz::bit_cast<uint32_t>(decode_func(v)); });
+                { return std::bit_cast<uint32_t>(decode_func(v)); });
 
             encoded_image_format = hrz_proto::ImageFormat::R_F32;
         };
@@ -302,7 +311,7 @@ my::TextureFormat convert_basisu_texture_format(basist::transcoder_texture_forma
 // Based partly on
 // https://github.com/BinomialLLC/basis_universal/blob/9c5da86dbebf5f6eaf5fe42168d93f46566d8d5a/contrib/single_file_transcoder/examples/emscripten.cpp#L352
 hrz::JobResult decode_ktx2(
-    gsl::span<const std::byte> encoded_image_data,
+    std::span<const std::byte> encoded_image_data,
     hrz_proto::ImageFormat encoded_image_format,
     bool allow_decoding_to_compressed_image,
     const hrz::PlatformInfo& platform_info,
@@ -338,7 +347,8 @@ hrz::JobResult decode_ktx2(
 
     auto target_texture_format = allow_decoding_to_compressed_image
         ? select_target_compressed_texture_format(
-            transcoder.get_format(), transcoder.get_has_alpha(), platform_info, my_instance_info)
+            transcoder.get_basis_tex_format(), transcoder.get_has_alpha(), platform_info,
+            my_instance_info)
         : basist::transcoder_texture_format::cTFRGBA32;
 
     my::TextureLayout texture_layout{};
@@ -421,7 +431,7 @@ hrz::JobResult decode_ktx2(
 }
 
 std::optional<hrz::blobs::BlobHandle> decode_webp(
-    gsl::span<const std::byte> encoded_image_data,
+    std::span<const std::byte> encoded_image_data,
     int width,
     int height,
     int desired_channels,
@@ -471,7 +481,7 @@ std::optional<hrz::blobs::BlobHandle> decode_webp(
 }
 
 std::optional<hrz::blobs::BlobHandle> decode_stbi(
-    gsl::span<const std::byte> encoded_image_data,
+    std::span<const std::byte> encoded_image_data,
     int* width,
     int* height,
     int desired_channels,
@@ -577,7 +587,7 @@ void copy_raw_image_data(
 }
 
 std::optional<hrz::blobs::BlobHandle> decode_raw(
-    gsl::span<const std::byte> encoded_image_data,
+    std::span<const std::byte> encoded_image_data,
     int* width,
     int* height,
     int* byte_per_pixel,
@@ -723,7 +733,7 @@ std::optional<hrz::blobs::BlobHandle> decode_raw(
     if (use_srgb_alpha_fallback)
     {
         static_assert(alignof(lm::ubvec4) == 1);
-        auto decoded_image_data_ptr = gsl::span<lm::ubvec4>(
+        auto decoded_image_data_ptr = std::span<lm::ubvec4>(
             reinterpret_cast<lm::ubvec4*>(decoded_image_data.data()), *width * *height);
         for (auto& pixel : decoded_image_data_ptr)
         {

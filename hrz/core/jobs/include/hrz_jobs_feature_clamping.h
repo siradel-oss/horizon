@@ -2,20 +2,20 @@
 
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
+#include <span>
 
 namespace hrz
 {
 class PointClampingGenerator
 {
-    gsl::span<const float> _clamps;
+    std::span<const float> _clamps;
     float _feature_clamp;
     bool _per_vertex;
     bool _use_z;
 
 public:
     PointClampingGenerator(
-        gsl::span<const float> clamps,
+        std::span<const float> clamps,
         float feature_clamp,
         bool per_vertex,
         bool use_z) :
@@ -51,13 +51,13 @@ public:
 
 class FeatureClampingGenerator
 {
-    gsl::span<const float> _clamps;
+    std::span<const float> _clamps;
     hrz_proto::VectorClampMode _mode;
     bool _use_z;
 
 public:
     FeatureClampingGenerator(
-        gsl::span<const float> clamps,
+        std::span<const float> clamps,
         const hrz_proto::VectorClamping& config) :
         _clamps(clamps), _mode(config.method()), _use_z(config.use_z())
     {

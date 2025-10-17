@@ -4,7 +4,6 @@
 #include <hrz_common_attributes.h>
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_style.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_defines.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_log.h>
@@ -12,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include <bit>
 #include <limits>
 
 namespace

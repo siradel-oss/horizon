@@ -2,9 +2,8 @@
 
 #include <hrz_common_monitoring_defs.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
+#include <span>
 
 namespace hrz
 {

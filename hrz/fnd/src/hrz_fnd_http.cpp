@@ -27,7 +27,7 @@ hrz::uint128 get_header_key(std::string_view name)
     if (name.size() > 64) name = name.substr(0, 64);
 
     normalize_header_name(name.data(), name.data() + name.size(), buffer);
-    return hrz::murmur3_x64_128(gsl::span<const std::byte>((const std::byte*)buffer, name.size()));
+    return hrz::murmur3_x64_128(std::span<const std::byte>((const std::byte*)buffer, name.size()));
 }
 } // namespace
 
@@ -66,7 +66,7 @@ void hrz::HttpHeaders::set_header(std::string_view name, std::string_view value)
             char* dst = it->second.value.data();
             memcpy(dst, value.data(), value.size());
             dst[value.size()] = '\0';
-            it->second.value = gsl::span<char>(dst, value.size());
+            it->second.value = std::span<char>(dst, value.size());
         }
         else
         {
@@ -300,7 +300,7 @@ hrz::HttpTime hrz::HttpDefaultClock::now() const
 
 // https://www.rfc-editor.org/rfc/rfc9110.html#section-5.6.7-10
 // Example "Fri, 10 Dec 1982 22:03:11 GMT"
-void hrz::HttpTime::write_imf_fixdate(gsl::span<char> buffer) const
+void hrz::HttpTime::write_imf_fixdate(std::span<char> buffer) const
 {
     assert(buffer.size() >= 30);
     if (buffer.size() < 30) return;

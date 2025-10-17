@@ -355,8 +355,8 @@ double distance(const BoundingVolume& volume, const lm::dvec3& ecef_pos)
 
 bool intersects_space_subset(
     const BoundingVolume& volume,
-    gsl::span<const lm::dvec4> planes,
-    gsl::span<const lm::dvec3> vertices)
+    std::span<const lm::dvec4> planes,
+    std::span<const lm::dvec3> vertices)
 {
     HRZ_SCOPED_SAMPLE_A("3D tiles bounding volume intersects space subset");
 

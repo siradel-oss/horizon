@@ -40,7 +40,6 @@ cc_library(
     deps = [
         "//hrz/cpp_protocol:hrz_cpp_protocol",
         "//hrz/fnd:hrz_fnd",
-        "//third_party:gsl",
     ],
 )
 

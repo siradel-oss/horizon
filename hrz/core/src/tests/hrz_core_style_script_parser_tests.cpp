@@ -2,8 +2,9 @@
 
 #include <hrz_fnd_defines.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <gtest/gtest.h>
+
+#include <span>
 
 namespace
 {

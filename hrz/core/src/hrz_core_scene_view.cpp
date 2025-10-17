@@ -622,7 +622,7 @@ public:
 
         {
             static const float data[] = {1.0f};
-            gsl::span<const std::byte> data_span = {(const std::byte*)data, sizeof(float)};
+            std::span<const std::byte> data_span = {(const std::byte*)data, sizeof(float)};
 
             my::TextureResource res;
             res.layout.type = my::TextureLayout::Type2D;
@@ -1822,7 +1822,7 @@ public:
         _iteration += 1;
     }
 
-    void process_data(gsl::span<const lm::vec4> data)
+    void process_data(std::span<const lm::vec4> data)
     {
         double near = 1.0;
         double far = 0.0;
@@ -1858,7 +1858,7 @@ public:
                     ctx->my->retrieve_texture_download(_download_ids[_iteration % 2].value());
                 hrz::render::release_texture_download_id(_download_ids[_iteration % 2].value());
 
-                gsl::span<lm::vec4> data_typed(
+                std::span<lm::vec4> data_typed(
                     (lm::vec4*)data.data.get(), MinBufferSize * MinBufferSize);
 
                 process_data(data_typed);
@@ -3141,7 +3141,7 @@ bool retrieve_picking_result(
 std::optional<picking::PositionTicket> schedule_pick(
     SceneView* view,
     lm::ivec2 mouse_position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters)
+    std::span<const hrz_proto::LayerHandle> included_rasters)
 {
     if (lm::contains(view->events_viewport_on_canvas, mouse_position))
     {

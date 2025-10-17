@@ -31,8 +31,8 @@ struct BaseSelectorResult
 BaseSelectorResult _base_filtered_selector(
     const char* modal_title,
     bool open_now,
-    gsl::span<const data::Metric> metrics,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Metric> metrics,
+    std::span<const data::Thread> threads,
     const char* null_option = nullptr,
     std::vector<bool>* selected = nullptr,
     bool force_same_unit = false)
@@ -436,7 +436,7 @@ Rect available_rect()
     return Rect(position, position + size);
 }
 
-const char* get_thread_name(uint32_t thread_id, gsl::span<const data::Thread> threads)
+const char* get_thread_name(uint32_t thread_id, std::span<const data::Thread> threads)
 {
     if (thread_id < threads.size()) return threads[thread_id].name.c_str();
 
@@ -532,8 +532,8 @@ void short_text_right_aligned(
 bool filtered_metric_selector(
     const char* title,
     bool is_open,
-    gsl::span<const data::Metric> metrics,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Metric> metrics,
+    std::span<const data::Thread> threads,
     std::optional<data::Metric>& selected,
     const char* null_option)
 {
@@ -552,8 +552,8 @@ bool filtered_metric_selector(
 bool filtered_metric_multiselector(
     const char* title,
     bool is_open,
-    gsl::span<const data::Metric> metrics,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Metric> metrics,
+    std::span<const data::Thread> threads,
     std::vector<bool>& selected,
     bool force_same_unit)
 {

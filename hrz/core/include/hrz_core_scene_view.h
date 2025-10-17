@@ -115,7 +115,7 @@ void notify_model_update(
 std::optional<picking::PositionTicket> schedule_pick(
     SceneView*,
     lm::ivec2 mouse_position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters);
+    std::span<const hrz_proto::LayerHandle> included_rasters);
 
 std::optional<picking::AreaTicket> schedule_pick(SceneView*, lm::ibbox2 rect);
 

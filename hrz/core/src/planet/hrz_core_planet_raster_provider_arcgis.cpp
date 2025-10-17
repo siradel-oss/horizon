@@ -600,7 +600,7 @@ private:
 
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
+            geometry.projection.set_descriptor_(hrz_proj::wmerc_proj_str);
 
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
             auto tiling = geometry.tiling_scheme.mutable_global_tiling();
@@ -618,7 +618,7 @@ private:
 
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.projection.set_descriptor(hrz_proj::lonlat_deg_proj_str);
+            geometry.projection.set_descriptor_(hrz_proj::lonlat_deg_proj_str);
 
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
             auto tiling = geometry.tiling_scheme.mutable_global_tiling();
@@ -661,7 +661,7 @@ private:
 
             geometry.projection.set_descriptor_type(
                 HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
-            geometry.projection.set_descriptor(srid_descriptor);
+            geometry.projection.set_descriptor_(srid_descriptor);
 
             geometry.tiling_scheme.set_type(HrzProtocol::TilingSchemeType::LOCAL);
             auto tiling = geometry.tiling_scheme.mutable_local_tiling();
@@ -712,7 +712,7 @@ private:
         return true;
     }
 
-    bool setup_provider(AttributionRegistry* attributions, gsl::span<const std::byte> raw_data)
+    bool setup_provider(AttributionRegistry* attributions, std::span<const std::byte> raw_data)
     {
         HRZ_SCOPED_SAMPLE("parse arcgis json data");
 
@@ -900,7 +900,7 @@ private:
         }
 
         geometry.projection.set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
-        geometry.projection.set_descriptor(fmt::format("EPSG:{}", srid));
+        geometry.projection.set_descriptor_(fmt::format("EPSG:{}", srid));
 
         std::optional<Extent> full_extent = std::nullopt;
         if (doc.HasMember("fullExtent"))
@@ -948,7 +948,7 @@ private:
         }
 
         geometry.projection.set_descriptor_type(HrzProtocol::SrsDescriptorType::SRID_DESCRIPTOR);
-        geometry.projection.set_descriptor(fmt::format("EPSG:{}", srid));
+        geometry.projection.set_descriptor_(fmt::format("EPSG:{}", srid));
 
         if (!ignore_extent)
         {

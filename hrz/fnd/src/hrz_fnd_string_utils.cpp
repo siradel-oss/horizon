@@ -258,13 +258,13 @@ size_t decode_base64(
     size_t size = decode_base64_size_hint(str, variant);
     data->resize(data->size() + size);
 
-    gsl::span<std::byte> data_span(*data);
+    std::span<std::byte> data_span(*data);
     return decode_base64_s(str, data_span, variant);
 }
 
 size_t decode_base64_s(
     std::string_view str,
-    gsl::span<std::byte> data,
+    std::span<std::byte> data,
     Base64DecodingVariant variant)
 {
     size_t size = decode_base64_size_hint(str, variant);
@@ -320,7 +320,7 @@ size_t decode_base64_s(
 }
 
 size_t encode_base64(
-    gsl::span<const std::byte> data,
+    std::span<const std::byte> data,
     std::string* str,
     Base64EncodingVariant variant)
 {
@@ -372,7 +372,7 @@ size_t encode_base64(
     return str->size() - initial_string_size;
 }
 
-size_t encode_code_point_to_utf8(uint32_t code_point, gsl::span<char> buffer)
+size_t encode_code_point_to_utf8(uint32_t code_point, std::span<char> buffer)
 {
 #define CHECK_BUFFER_SIZE(N)                           \
     if (buffer.size() < N)                             \
@@ -438,7 +438,7 @@ size_t encode_code_point_to_utf8(uint32_t code_point, gsl::span<char> buffer)
 
 std::string sanitize_named_fmt_arguments(
     std::string fmt_string,
-    gsl::span<const std::string_view> valid_args)
+    std::span<const std::string_view> valid_args)
 {
     size_t start = 0;
     while (true)

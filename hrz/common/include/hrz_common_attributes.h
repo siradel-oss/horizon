@@ -6,19 +6,19 @@
 #include "hrz_common_color.h"
 
 #include <hrz_fnd_arena.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_meta.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_unsafe.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <rapidjson/fwd.h>
 
+#include <bit>
 #include <cstddef>
 #include <limits>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <type_traits>
 
@@ -257,9 +257,9 @@ struct OwnedAttributeValueTraits
 struct CharSpanWriter
 {
     size_t offset = 0;
-    gsl::span<char> span;
+    std::span<char> span;
 
-    explicit CharSpanWriter(gsl::span<char> span) : span(span) {}
+    explicit CharSpanWriter(std::span<char> span) : span(span) {}
 };
 
 // This type stores attribute values of any type (int, uint, bool, double, string, color).
@@ -288,7 +288,7 @@ template<typename VectorChar = hrz::BlobVector<char>>
 struct PackedAttributeValueTraits
 {
     using Type = uint64_t;
-    using ReadContext = gsl::span<const char>;
+    using ReadContext = std::span<const char>;
     using WriteContext = VectorChar;
 
     static constexpr uint64_t kStringMaxLength = 0x0000'ffff;
@@ -345,7 +345,7 @@ private:
     }
 
     static std::optional<off_t> append_out_of_line_data(
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         std::vector<char>& ctx)
     {
         auto size_before = ctx.size();
@@ -355,7 +355,7 @@ private:
     }
 
     static std::optional<off_t> append_out_of_line_data(
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         CharSpanWriter& ctx)
     {
         if (ctx.offset + data.size() > ctx.span.size()) return std::nullopt;
@@ -366,7 +366,7 @@ private:
     }
 
     static std::optional<off_t> append_out_of_line_data(
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         hrz::BlobVector<char>& ctx)
     {
         auto size_before_opt = ctx.size();
@@ -385,12 +385,12 @@ private:
     static std::optional<off_t> append_out_of_line_string(std::string_view str, WriteContext& ctx)
     {
         return append_out_of_line_data(
-            hrz::as_bytes(gsl::span<const char>(str.data(), str.size())), ctx);
+            std::as_bytes(std::span<const char>(str.data(), str.size())), ctx);
     }
 
     static std::optional<off_t> append_out_of_line_uint64(uint64_t value, WriteContext& ctx)
     {
-        auto buffer = hrz::bit_cast<std::array<std::byte, 8>>(value);
+        auto buffer = std::bit_cast<std::array<std::byte, 8>>(value);
         return append_out_of_line_data(buffer, ctx);
     }
 
@@ -423,7 +423,7 @@ public:
 
     static inline Type from_number(double value)
     {
-        return std::isnan(value) ? kNaN : hrz::bit_cast<uint64_t>(value);
+        return std::isnan(value) ? kNaN : std::bit_cast<uint64_t>(value);
     }
 
     // @Safety: value must not be a safe integer. Otherwise use from_number.
@@ -480,21 +480,21 @@ public:
     // @Safety: type must be checked to be kNumber
     static inline double get_number(unsafe, const Type& value, const ReadContext&)
     {
-        return hrz::bit_cast<double>(value);
+        return std::bit_cast<double>(value);
     }
 
     // @Safety: type must be checked to be kUint64
     static inline uint64_t get_uint64(unsafe, const Type& value, const ReadContext& data)
     {
         auto* buffer = (const std::array<char, 8>*)(data.data() + (value & kIntegerOffsetMask));
-        return hrz::bit_cast<uint64_t>(*buffer);
+        return std::bit_cast<uint64_t>(*buffer);
     }
 
     // @Safety: type must be checked to be kInt64
     static inline int64_t get_int64(unsafe, const Type& value, const ReadContext& data)
     {
         auto* buffer = (const std::array<char, 8>*)(data.data() + (value & kIntegerOffsetMask));
-        return hrz::bit_cast<int64_t>(*buffer);
+        return std::bit_cast<int64_t>(*buffer);
     }
 
     // @Safety: type must be checked to be kString
@@ -837,7 +837,7 @@ constexpr bool attr_is_string(const T& value)
 // Now we get into read and write methods. These methods do require context,
 // hence the slight complication. This is because we want these methods to be
 // usable on types that don't require context without having to provide a void
-// or empty type every time. Hence why we need all this enable_if_t wizardry.
+// or empty type every time. Hence why we need all the `requires` clauses.
 
 template<typename T, typename Traits = AttributeValueTraits<T>>
 inline T attr_null()
@@ -857,11 +857,9 @@ RefAttributeValue attr_as_ref(const T& value, const devoid_t<typename Traits::Re
     return Traits::as_ref(value, ctx);
 }
 
-template<
-    typename T,
-    typename Traits = AttributeValueTraits<T>,
-    std::enable_if_t<std::is_void_v<typename Traits::ReadContext>, int> = 0>
+template<typename T, typename Traits = AttributeValueTraits<T>>
 inline RefAttributeValue attr_as_ref(const T& value)
+    requires std::is_void_v<typename Traits::ReadContext>
 {
     return Traits::as_ref(value, empty{});
 }
@@ -880,10 +878,9 @@ inline RefAttributeValue attr_as_ref(const T& value)
             return {};                                                                      \
         }                                                                                   \
     }                                                                                       \
-    template<                                                                               \
-        typename T, typename Traits = AttributeValueTraits<T>,                              \
-        std::enable_if_t<std::is_void_v<typename Traits::ReadContext>, int> = 0>            \
+    template<typename T, typename Traits = AttributeValueTraits<T>>                         \
     inline TYPE attr_get_##NAME(const T& value)                                             \
+        requires std::is_void_v<typename Traits::ReadContext>                               \
     {                                                                                       \
         return attr_get_##NAME<T, Traits>(value, empty{});                                  \
     }
@@ -897,10 +894,9 @@ ATTR_READ_IMPL(string, std::string_view, kString);
 #define ATTR_AS_IMPL(NAME, TYPE)                                                            \
     template<typename T, typename Traits = AttributeValueTraits<T>>                         \
     TYPE attr_as_##NAME(const T& value, const devoid_t<typename Traits::ReadContext>& ctx); \
-    template<                                                                               \
-        typename T, typename Traits = AttributeValueTraits<T>,                              \
-        std::enable_if_t<std::is_void_v<typename Traits::ReadContext>, int> = 0>            \
+    template<typename T, typename Traits = AttributeValueTraits<T>>                         \
     inline TYPE attr_as_##NAME(const T& value)                                              \
+        requires std::is_void_v<typename Traits::ReadContext>                               \
     {                                                                                       \
         return attr_as_##NAME<T, Traits>(value, empty{});                                   \
     }                                                                                       \
@@ -1000,17 +996,16 @@ ATTR_AS_IMPL(color, lm::ubvec4)
     return convert_uint_color_to_bytes((uint32_t)attr_as_uint64<T, Traits>(value, ctx));
 }
 
-#define ATTR_WRITE_IMPL_(FN_NAME, TYPE)                                           \
-    template<typename T, typename Traits = AttributeValueTraits<T>>               \
-    T FN_NAME(TYPE, devoid_t<typename Traits::WriteContext>& ctx);                \
-    template<                                                                     \
-        typename T, typename Traits = AttributeValueTraits<T>,                    \
-        std::enable_if_t<std::is_void_v<typename Traits::WriteContext>, int> = 0> \
-    inline T FN_NAME(TYPE)                                                        \
-    {                                                                             \
-        return FN_NAME<T, Traits>(value, empty{});                                \
-    }                                                                             \
-    template<typename T, typename Traits>                                         \
+#define ATTR_WRITE_IMPL_(FN_NAME, TYPE)                             \
+    template<typename T, typename Traits = AttributeValueTraits<T>> \
+    T FN_NAME(TYPE, devoid_t<typename Traits::WriteContext>& ctx);  \
+    template<typename T, typename Traits = AttributeValueTraits<T>> \
+    inline T FN_NAME(TYPE)                                          \
+        requires std::is_void_v<typename Traits::WriteContext>      \
+    {                                                               \
+        return FN_NAME<T, Traits>(value, empty{});                  \
+    }                                                               \
+    template<typename T, typename Traits>                           \
     T FN_NAME(TYPE, devoid_t<typename Traits::WriteContext>& ctx)
 
 #define ATTR_FROM_IMPL(TYPE) ATTR_WRITE_IMPL_(attr_from, TYPE)
@@ -1112,7 +1107,7 @@ ATTR_FROM_COLOR_IMPL(const lm::vec4& value)
 
 ATTR_FROM_COLOR_IMPL(const lm::ubvec4& value)
 {
-    return Traits::from_number((double)hrz::bit_cast<uint32_t>(value));
+    return Traits::from_number((double)std::bit_cast<uint32_t>(value));
 }
 
 #undef ATTR_FROM_COLOR_IMPL
@@ -1129,18 +1124,16 @@ inline uint64_t attr_hashed(const T& value, const devoid_t<typename Traits::Read
     return attr_hashed_inner(attr_as_ref(value, ctx));
 }
 
-template<
-    typename T,
-    typename Traits = AttributeValueTraits<T>,
-    std::enable_if_t<std::is_void_v<typename Traits::ReadContext>, int> = 0>
+template<typename T, typename Traits = AttributeValueTraits<T>>
 inline uint64_t attr_hashed(const T& value)
+    requires std::is_void_v<typename Traits::ReadContext>
 {
     return attr_hashed_inner(attr_as_ref(value));
 }
 
 std::string_view attr_to_string_from_non_string(
     const RefAttributeValue& value,
-    gsl::span<char> buffer);
+    std::span<char> buffer);
 
 template<typename T, typename Traits = AttributeValueTraits<T>>
 inline T attr_to_string_from_string(
@@ -1249,11 +1242,9 @@ T attr_transform(
     }
 }
 
-template<
-    typename T,
-    typename Traits = AttributeValueTraits<T>,
-    std::enable_if_t<std::is_void_v<typename Traits::WriteContext>, int> = 0>
+template<typename T, typename Traits = AttributeValueTraits<T>>
 inline T attr_transform(hrz_proto::AttributeTransform transform, const RefAttributeValue& value)
+    requires std::is_void_v<typename Traits::WriteContext>
 {
     empty ctx;
     return attr_transform<T, Traits>(transform, value, ctx);
@@ -1290,7 +1281,7 @@ RefAttributeValue PackedAttributeValueTraits<VectorChar>::as_ref(
             return attr_from<RefAttributeValue>(
                 get_bool(unsafe{"type has been checked"}, value, ctx));
         case AttributeValueType::kNumber:
-            return attr_from<RefAttributeValue>(hrz::bit_cast<double>(value));
+            return attr_from<RefAttributeValue>(std::bit_cast<double>(value));
         case AttributeValueType::kUint64:
             return attr_from<RefAttributeValue>(
                 get_uint64(unsafe{"type has been checked"}, value, ctx));
@@ -1412,7 +1403,7 @@ public:
         }
     }
 
-    std::optional<gsl::span<const char>> get_out_of_line_data() const
+    std::optional<std::span<const char>> get_out_of_line_data() const
     {
         return _out_of_line_data.data();
     }

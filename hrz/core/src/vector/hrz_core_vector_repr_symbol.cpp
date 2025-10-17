@@ -1138,7 +1138,7 @@ public:
                 }
 
                 auto alloc_data_texture =
-                    [&](gsl::span<const std::byte> data_buffer, my::TextureFormat format,
+                    [&](std::span<const std::byte> data_buffer, my::TextureFormat format,
                         unsigned int pixels_per_entry, hrz::MetadataString contents_metadata)
                 {
                     assert(!my::is_format_compressed(format));
@@ -1174,7 +1174,7 @@ public:
                         constexpr unsigned int pixels_per_anchor =
                             sizeof(BakedSymbols::AnchorGpu) / sizeof(lm::uvec4);
                         tile->anchor_data_texture = alloc_data_texture(
-                            hrz::as_bytes(anchor_data.as_span()), my::TextureFormat::RGBA32UI,
+                            std::as_bytes(anchor_data.as_span()), my::TextureFormat::RGBA32UI,
                             pixels_per_anchor, "anchors"_ss);
                         CHECK_RESOURCE_UPLOAD(tile->anchor_data_texture, "anchors");
                     }

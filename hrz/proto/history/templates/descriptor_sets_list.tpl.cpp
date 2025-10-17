@@ -1,4 +1,4 @@
-#include <gsl/gsl-lite.hpp>
+#include <span>
 
 #include "hrz_descriptor_sets_list.h"
 
@@ -21,7 +21,7 @@ void initialize_descriptor_sets()
     {% for id, descriptor_set in descriptor_sets.items() -%}
     DescriptorSets[index++] = {
         0x{{ id }}u,
-        gsl::span<const std::byte>((const std::byte*)DescriptorSetData_{{ id }}, {{ descriptor_set["size"] }})
+        std::span<const std::byte>((const std::byte*)DescriptorSetData_{{ id }}, {{ descriptor_set["size"] }})
     };
     {% endfor %}
 }

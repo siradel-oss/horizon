@@ -9,6 +9,7 @@
 
 #include <hrz_common_geo.h>
 #include <hrz_fnd_log.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_static_vector.h>
 
 namespace
@@ -266,7 +267,7 @@ public:
         _selection_texture.update_selection(selected_features);
     }
 
-    void update_feature_colors(gsl::span<const lm::ubvec4> colors, bool has_transparent_color)
+    void update_feature_colors(std::span<const lm::ubvec4> colors, bool has_transparent_color)
         override
     {
         _has_transparent_feature = has_transparent_color;

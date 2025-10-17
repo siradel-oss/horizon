@@ -7,11 +7,11 @@
 #include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <cstdint>
 #include <optional>
+#include <span>
 
 namespace hrz
 {
@@ -88,8 +88,8 @@ void pick(SingleModelLayerSystem*, const picking::PositionResult& result, hrz_pr
 
 std::pair<size_t, size_t> make_typed_object_references(
     SingleModelLayerSystem*,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output);
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output);
 
 std::optional<picking::FeatureReference> make_feature_reference(
     SingleModelLayerSystem*,
@@ -109,7 +109,7 @@ RenderRequest work(
     const SelectionSystem*,
     AttributionRegistry*,
     PlanetSurface*,
-    gsl::span<const RenderViewInfo> views_info);
+    std::span<const RenderViewInfo> views_info);
 
 RenderRequest work_gpu(SingleModelLayerSystem*, Render*, BlobAllocator*);
 

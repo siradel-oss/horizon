@@ -18,6 +18,7 @@
 #include "pool.h"
 
 #include <limits>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -283,7 +284,7 @@ struct GLInstance : public Instance
         uint32_t w,
         uint32_t h,
         uint32_t d,
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         TextureUpdateDataLayout data_layout) override;
 
     void draw(

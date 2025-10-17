@@ -1,7 +1,6 @@
 #include "hrz_core_attribution.h"
 
 #include <hrz_fnd_arena.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_hash.h>
 #include <hrz_fnd_inlined_vector.h>
@@ -9,6 +8,7 @@
 #include <hrz_fnd_thread.h>
 
 #include <algorithm>
+#include <bit>
 #include <mutex>
 
 namespace hrz
@@ -67,7 +67,7 @@ struct AttributionGroup
 
     static AttributionGroup* alloc_group(
         Arena* arena,
-        gsl::span<const AttributionHandle> handles,
+        std::span<const AttributionHandle> handles,
         hrz::uint128 hash)
     {
         assert(handles.size() > 0);
@@ -99,8 +99,8 @@ H AbslHashValue(H h, const AttributionGroup* a)
     if (a->size == 0)
     {
         return H::combine(
-            std::move(h), a->size, hrz::bit_cast<uintptr_t>(a->simple.title.data()),
-            hrz::bit_cast<uintptr_t>(a->simple.logo.data()));
+            std::move(h), a->size, std::bit_cast<uintptr_t>(a->simple.title.data()),
+            std::bit_cast<uintptr_t>(a->simple.logo.data()));
     }
     else
     {
@@ -183,20 +183,20 @@ AttributionHandle register_attribution(AttributionRegistry* registry, const Attr
     auto it = registry->attribution_groups.find(&group_proto);
     if (it != registry->attribution_groups.end())
     {
-        return AttributionHandle{hrz::bit_cast<uintptr_t>(*it)};
+        return AttributionHandle{std::bit_cast<uintptr_t>(*it)};
     }
     else
     {
         AttributionGroup* attrib_to_insert =
             AttributionGroup::alloc_simple(&registry->arena, group_proto.simple);
         registry->attribution_groups.insert(attrib_to_insert);
-        return AttributionHandle{hrz::bit_cast<uintptr_t>(attrib_to_insert)};
+        return AttributionHandle{std::bit_cast<uintptr_t>(attrib_to_insert)};
     }
 }
 
 AttributionHandle register_attribution_group(
     AttributionRegistry* registry,
-    gsl::span<const AttributionHandle> source_group)
+    std::span<const AttributionHandle> source_group)
 {
     HRZ_SCOPED_LOCK(registry->registration_mutex);
 
@@ -224,21 +224,21 @@ AttributionHandle register_attribution_group(
     hrz::InlinedVector<AttributionHandle, 8> sorted = deduplicated_in_source_order;
     std::sort(sorted.begin(), sorted.end());
 
-    gsl::span<const AttributionHandle> sorted_span = sorted;
-    hrz::uint128 hash = hrz::murmur3_x64_128(hrz::as_bytes(sorted_span));
+    std::span<const AttributionHandle> sorted_span = sorted;
+    hrz::uint128 hash = hrz::murmur3_x64_128(std::as_bytes(sorted_span));
 
     auto group_proto = AttributionGroup::make_group_proto(sorted.size(), hash);
     auto it = registry->attribution_groups.find(&group_proto);
     if (it != registry->attribution_groups.end())
     {
-        return AttributionHandle{hrz::bit_cast<uintptr_t>(*it)};
+        return AttributionHandle{std::bit_cast<uintptr_t>(*it)};
     }
     else
     {
         AttributionGroup* attrib_to_insert =
             AttributionGroup::alloc_group(&registry->arena, deduplicated_in_source_order, hash);
         registry->attribution_groups.insert(attrib_to_insert);
-        return AttributionHandle{hrz::bit_cast<uintptr_t>(attrib_to_insert)};
+        return AttributionHandle{std::bit_cast<uintptr_t>(attrib_to_insert)};
     }
 }
 
@@ -248,7 +248,7 @@ void use_this_frame(AttributionRegistry* registry, AttributionHandle handle)
 
     if (registry->used_this_frame.insert(handle.o).second)
     {
-        const auto* ptr = hrz::bit_cast<const AttributionGroup*>(handle.o);
+        const auto* ptr = std::bit_cast<const AttributionGroup*>(handle.o);
         if (ptr->size == 0)
         {
             registry->used_this_frame_in_order.push_back(ptr->simple);
@@ -263,7 +263,7 @@ void use_this_frame(AttributionRegistry* registry, AttributionHandle handle)
     }
 }
 
-void use_this_frame(AttributionRegistry* registry, gsl::span<const AttributionHandle> handles)
+void use_this_frame(AttributionRegistry* registry, std::span<const AttributionHandle> handles)
 {
     for (auto attrib : handles)
     {
@@ -277,7 +277,7 @@ void reset_used_attributions(AttributionRegistry* registry)
     registry->used_this_frame.clear();
 }
 
-gsl::span<const Attribution> get_frame_attributions(const AttributionRegistry* registry)
+std::span<const Attribution> get_frame_attributions(const AttributionRegistry* registry)
 {
     return registry->used_this_frame_in_order;
 }

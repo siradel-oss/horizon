@@ -89,7 +89,4 @@ cc_library(
     hdrs = ["hrz_descriptor_sets_list.h"],
     includes = ["."],
     visibility = ["//visibility:public"],
-    deps = [
-        "//third_party:gsl",
-    ],
 )

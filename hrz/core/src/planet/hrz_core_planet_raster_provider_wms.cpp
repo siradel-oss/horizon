@@ -34,7 +34,7 @@ struct UrlGenerator : public hrz::TileUrlGenerator
         double west, south, east, north;
 
         if (geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::GLOBAL
-            && geometry.projection.descriptor() == hrz_proj::wmerc_proj_str)
+            && geometry.projection.descriptor_() == hrz_proj::wmerc_proj_str)
         {
             uint64_t tile_count = (uint64_t)1 << z;
             double tile_size = hrz::MERCATOR_RANGE / tile_count;
@@ -45,7 +45,7 @@ struct UrlGenerator : public hrz::TileUrlGenerator
         }
         else if (
             geometry.tiling_scheme.type() == hrz_proto::TilingSchemeType::GLOBAL
-            && geometry.projection.descriptor() == hrz_proj::lonlat_deg_proj_str)
+            && geometry.projection.descriptor_() == hrz_proj::lonlat_deg_proj_str)
         {
             uint64_t tile_count = (uint64_t)1 << z;
             double tile_size = 180.0 / tile_count;
@@ -82,8 +82,8 @@ struct UrlGenerator : public hrz::TileUrlGenerator
         }
 
         return fmt::format(
-            url_template, fmt::arg("west", west), fmt::arg("south", south), fmt::arg("east", east),
-            fmt::arg("north", north));
+            fmt::runtime(url_template), fmt::arg("west", west), fmt::arg("south", south),
+            fmt::arg("east", east), fmt::arg("north", north));
     }
 
 private:

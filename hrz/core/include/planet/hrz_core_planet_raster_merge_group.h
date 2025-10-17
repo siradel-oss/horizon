@@ -20,11 +20,10 @@
 #include <hrz_jobs_protocol.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <span>
 #include <vector>
 
 extern "C"
@@ -211,7 +210,7 @@ class RasterMergeGroup
     uint32_t _num_slots_in_atlas;
 
     std::unique_ptr<vtex::PageCacheManager> _page_cache;
-    gsl::span<const hrz_proto::ImageFormat> _source_image_formats;
+    std::span<const hrz_proto::ImageFormat> _source_image_formats;
     hrz_proto::ImageFormat _composed_image_format;
     my::TextureFormat _atlas_image_format;
 
@@ -245,7 +244,7 @@ public:
     RasterMergeGroup(
         uint32_t atlas_size,
         std::unique_ptr<vtex::PageCacheManager> page_cache,
-        gsl::span<const hrz_proto::ImageFormat> source_image_formats,
+        std::span<const hrz_proto::ImageFormat> source_image_formats,
         hrz_proto::ImageFormat composed_image_format,
         std::optional<TileBoundsTracker>&& bounds_tracker,
         std::string_view name);
@@ -256,7 +255,7 @@ public:
 
     bool is_empty() const { return _rasters.empty(); }
 
-    gsl::span<const CollectionRasterReference> get_raster() const { return _rasters; }
+    std::span<const CollectionRasterReference> get_raster() const { return _rasters; }
 
     my::ResourceHandle get_clipmap_texture() const { return _page_cache->get_clipmap_texture(); }
 
@@ -277,7 +276,7 @@ public:
     void get_attributions(hrz::InlinedUniqueVector<AttributionHandle, 8>* attributions) const;
 
     void update_requested_tiles(
-        gsl::span<const gsl::span<const RequestedTileCoords>> requested_tiles,
+        std::span<const std::span<const RequestedTileCoords>> requested_tiles,
         size_t requested_tiles_hash,
         TileRequestOrigin
             allowed_tile_request_origins, // union of hrz_proto::TileRequestOrigin values
@@ -290,7 +289,7 @@ public:
     void set_rasters(
         IRasterCollection* collection,
         JobScheduler* js,
-        gsl::span<const CollectionRasterReference> rasters,
+        std::span<const CollectionRasterReference> rasters,
         uint32_t scene_views_bitset);
 
     void invalidate_raster_tiles(
@@ -305,13 +304,13 @@ public:
     void pick(
         IRasterCollection* collection,
         const lm::dvec3& position,
-        gsl::span<const hrz_proto::LayerHandle> included_rasters,
+        std::span<const hrz_proto::LayerHandle> included_rasters,
         hrz_proto::PickResults&);
 
     void schedule_raster_data_fetch(
         IRasterCollection* collection,
         const GeoPosition2& position,
-        gsl::span<const hrz_proto::LayerHandle> layers,
+        std::span<const hrz_proto::LayerHandle> layers,
         std::vector<RasterDataFetchMergeGroupTicket>& out_tickets);
 
     bool is_data_fetch_ready(RasterDataFetchMergeGroupTicket ticket) const;
@@ -350,7 +349,7 @@ private:
         TileCoords tile_coords,
         const Raster* raster,
         JobScheduler* js);
-    uint128 compute_rasters_hash(gsl::span<const CollectionRasterReference> rasters) const;
+    uint128 compute_rasters_hash(std::span<const CollectionRasterReference> rasters) const;
 
     inline bool is_visible_in(const layers::MultiviewVisibilityConstraints& visibility) const
     {

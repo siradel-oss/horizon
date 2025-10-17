@@ -6,9 +6,8 @@
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <optional>
+#include <span>
 
 namespace hrz
 {

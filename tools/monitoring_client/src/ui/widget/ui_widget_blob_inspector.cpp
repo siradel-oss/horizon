@@ -375,7 +375,7 @@ void BlobInspector::draw(
 
         text_pos.x = gauge_p1.x;
         format_buffer(buffer, "{}", (MemorySize)gauge_max_offset);
-        draw_text_right_aligned(draw_list, text_pos, text_color, buffer.data());
+        draw_text_right_aligned(draw_list, text_pos, text_color, fmt::runtime(buffer.data()));
     }
 
     // Blob tooltip

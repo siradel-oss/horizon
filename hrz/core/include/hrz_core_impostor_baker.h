@@ -4,10 +4,9 @@
 #include "hrz_protocol_all.h"
 #include "model/hrz_core_model.h"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
 #include <optional>
+#include <span>
 
 namespace hrz
 {

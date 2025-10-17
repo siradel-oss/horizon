@@ -188,22 +188,22 @@ void InstanceGroup::set_data(ModelPrototype* proto, const InstanceGroupData& gro
         _instance_count, proto->resource_owner, {{"model URI"_ss, proto->descriptor_uri}});
 
     // @Todo Handle group resize
-    gsl::span<lm::vec3> instance_positions =
+    std::span<lm::vec3> instance_positions =
         _positions_texture.resize_and_get_data(use_compressed_positions ? 0 : _instance_count);
-    gsl::span<lm::usvec3> instance_compressed_positions =
+    std::span<lm::usvec3> instance_compressed_positions =
         _compressed_positions_texture.resize_and_get_data(
             use_compressed_positions ? _instance_count : 0);
-    gsl::span<lm::vec3> instance_normals =
+    std::span<lm::vec3> instance_normals =
         _normals_texture.resize_and_get_data(use_compressed_normals ? 0 : 2 * _instance_count);
-    gsl::span<lm::usvec4> instance_compressed_normals =
+    std::span<lm::usvec4> instance_compressed_normals =
         _compressed_normals_texture.resize_and_get_data(
             use_compressed_normals ? _instance_count : 0);
-    gsl::span<lm::vec3> instance_scales = _scales_texture.resize_and_get_data(
+    std::span<lm::vec3> instance_scales = _scales_texture.resize_and_get_data(
         std::min(_instance_count, (uint32_t)group_data.scales.size()));
-    gsl::span<lm::ubvec4> instance_colors = _colors_texture.resize_and_get_data(
+    std::span<lm::ubvec4> instance_colors = _colors_texture.resize_and_get_data(
         std::min(_instance_count, (uint32_t)group_data.colors.size()));
-    gsl::span<uint32_t> picking_ids = _picking_ids_texture.resize_and_get_data(_instance_count);
-    gsl::span<uint64_t> feature_ids = _feature_ids_texture.resize_and_get_data(_instance_count);
+    std::span<uint32_t> picking_ids = _picking_ids_texture.resize_and_get_data(_instance_count);
+    std::span<uint64_t> feature_ids = _feature_ids_texture.resize_and_get_data(_instance_count);
 
     // @Todo Reset selection indirection on resize maybe
 
@@ -329,7 +329,7 @@ void InstanceGroup::set_data(ModelPrototype* proto, const InstanceGroupData& gro
     _needs_to_upload_data = true;
 }
 
-void InstanceGroup::set_colors(ModelPrototype*, gsl::span<const lm::ubvec4> instance_colors)
+void InstanceGroup::set_colors(ModelPrototype*, std::span<const lm::ubvec4> instance_colors)
 {
     _colors_texture.set(instance_colors);
 
@@ -350,13 +350,13 @@ void InstanceGroup::set_selection(const hrz::flat_hash_set<uint64_t>& selected_o
     _selection_storage.update_selection(selected_objects);
 }
 
-gsl::span<const my::UboBinding> InstanceGroup::write_ubo_bindings(Render* render, SharedResources*)
+std::span<const my::UboBinding> InstanceGroup::write_ubo_bindings(Render* render, SharedResources*)
 {
     my::UboBinding binding = {UboGroupParams, _ubo, 0, sizeof(InstanceGroupUniformData)};
     return {render->rd->as_queue().write(binding), 1};
 }
 
-gsl::span<const my::TextureBinding> InstanceGroup::write_texture_bindings(
+std::span<const my::TextureBinding> InstanceGroup::write_texture_bindings(
     Render* render,
     SharedResources* sr)
 {
@@ -415,7 +415,7 @@ void destroy(ModelPrototype* proto, InstanceGroupH handle)
 void set_instance_group_colors(
     ModelPrototype* proto,
     InstanceGroupH handle,
-    gsl::span<const lm::ubvec4> instance_colors)
+    std::span<const lm::ubvec4> instance_colors)
 {
     InstanceGroup* group = proto->instance_group_pool.get_object(handle.o);
     if (group)

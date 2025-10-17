@@ -22,12 +22,15 @@ http_archive(
 http_archive(
     name = "basisu",
     urls = [
-        "https://github.com/BinomialLLC/basis_universal/archive/1.16.4.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/basisu/e5740fd6_1.16.4.tar.gz",
+        "https://github.com/BinomialLLC/basis_universal/archive/v1_60.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/basisu/64ac9363_v1_60.tar.gz",
     ],
-    sha256 = "e5740fd623a2f8472c9700b9447a8725a6f27d65b0b47c3e3926a60db41b8a64",
+    sha256 = "64ac9363656dc3eb41c59ee52af7e939abe574a92c85fd0ba27008c4a7ec9f40",
     build_file = "//third_party:basisu.BUILD.bazel",
-    strip_prefix = "basis_universal-1.16.4",
+    strip_prefix = "basis_universal-1_60",
+    patches = [
+        "//third_party:patches/basisu_build_fix.patch",
+    ],
 )
 http_archive(
     name = "brotli",
@@ -59,12 +62,12 @@ http_file(
 http_archive(
     name = "cdt",
     urls = [
-        "https://github.com/artem-ogre/CDT/archive/1.4.0.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/cdt/cb5a95a3_1.4.0.tar.gz",
+        "https://github.com/artem-ogre/CDT/archive/1.4.4.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/cdt/97e57bdd_1.4.4.tar.gz",
     ],
-    sha256 = "cb5a95a39b417f5a4d170c7ebe97232d0ed36ea64069339b14964dd52dea95ab",
+    sha256 = "97e57bdd1cf8219dcc81634236a502390a20dda3599dd3414a74343b7f03427f",
     build_file = "//third_party:cdt.BUILD.bazel",
-    strip_prefix = "CDT-1.4.0",
+    strip_prefix = "CDT-1.4.4",
 )
 local_archive(
     name = "clang-format_linux",
@@ -149,22 +152,22 @@ local_archive(
 http_archive(
     name = "earcut",
     urls = [
-        "https://github.com/mapbox/earcut.hpp/archive/v2.2.3.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/earcut/f382616d_v2.2.3.tar.gz",
+        "https://github.com/mapbox/earcut.hpp/archive/v2.2.4.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/earcut/fcfa6a47_v2.2.4.tar.gz",
     ],
-    sha256 = "f382616de763289c698f37ec3a5b9fcd3d6d821cbef0b3c72e43bdd909c81b5a",
+    sha256 = "fcfa6a47a52d4c94dc960bdb747f17e077609235517b0bb5ce8097d6b747695a",
     build_file = "//third_party:earcut.BUILD.bazel",
-    strip_prefix = "earcut.hpp-2.2.3",
+    strip_prefix = "earcut.hpp-2.2.4",
 )
 http_archive(
     name = "fmtlib",
     urls = [
-        "https://github.com/fmtlib/fmt/archive/11.0.2.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/fmtlib/6cb1e6d3_11.0.2.tar.gz",
+        "https://github.com/fmtlib/fmt/archive/12.0.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/fmtlib/aa3e8fbb_12.0.0.tar.gz",
     ],
-    sha256 = "6cb1e6d37bdcb756dbbe59be438790db409cdb4868c66e888d5df9f13f7c027f",
+    sha256 = "aa3e8fbb6a0066c03454434add1f1fc23299e85758ceec0d7d2d974431481e40",
     build_file = "//third_party:fmtlib.BUILD.bazel",
-    strip_prefix = "fmt-11.0.2",
+    strip_prefix = "fmt-12.0.0",
 )
 local_archive(
     name = "glslang_linux",
@@ -183,69 +186,54 @@ local_archive(
 http_archive(
     name = "googletest",
     urls = [
-        "https://github.com/google/googletest/archive/v1.15.2.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/googletest/7b42b4d6_v1.15.2.tar.gz",
+        "https://github.com/google/googletest/archive/v1.17.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/googletest/65fab701_v1.17.0.tar.gz",
     ],
-    sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
-    strip_prefix = "googletest-1.15.2",
-)
-http_archive(
-    name = "gsl",
-    urls = [
-        "https://github.com/gsl-lite/gsl-lite/archive/v0.42.0.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/gsl/54a1b6f9_v0.42.0.tar.gz",
-    ],
-    sha256 = "54a1b6f9db72eab5d8dcaf06b36d32d4f5da3471d91dac71aba19fe15291a773",
-    build_file = "//third_party:gsl.BUILD.bazel",
-    strip_prefix = "gsl-lite-0.42.0",
+    sha256 = "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c",
+    strip_prefix = "googletest-1.17.0",
 )
 http_archive(
     name = "harfbuzz",
     urls = [
-        "https://github.com/harfbuzz/harfbuzz/archive/10.0.1.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/harfbuzz/e7358ea8_10.0.1.tar.gz",
+        "https://github.com/harfbuzz/harfbuzz/archive/12.1.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/harfbuzz/0238bf7a_12.1.0.tar.gz",
     ],
-    sha256 = "e7358ea86fe10fb9261931af6f010d4358dac64f7074420ca9bc94aae2bdd542",
+    sha256 = "0238bf7ada6b1fb92984f69f8b9cd66518af83cf24f7db1cfe60c772c42312d3",
     build_file = "//third_party:harfbuzz.BUILD.bazel",
-    strip_prefix = "harfbuzz-10.0.1",
+    strip_prefix = "harfbuzz-12.1.0",
 )
 http_archive(
     name = "libwebp",
     urls = [
-        "https://github.com/webmproject/libwebp/archive/v1.2.2.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/libwebp/51e9297a_v1.2.2.tar.gz",
+        "https://github.com/webmproject/libwebp/archive/v1.6.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/libwebp/93a852c2_v1.6.0.tar.gz",
     ],
-    sha256 = "51e9297aadb7d9eb99129fe0050f53a11fcce38a0848fb2b0389e385ad93695e",
+    sha256 = "93a852c2b3efafee3723efd4636de855b46f9fe1efddd607e1f42f60fc8f2136",
     build_file = "//third_party:libwebp.BUILD.bazel",
-    strip_prefix = "libwebp-1.2.2",
+    strip_prefix = "libwebp-1.6.0",
     patches = [
-        "//third_party:patches/libwebp_vp8getcpuinfo_extern.diff",
         "//third_party:patches/libwebp_custom_malloc.diff",
-        "//third_party:patches/libwebp_license.diff",
     ],
 )
 http_archive(
     name = "lz4",
     urls = [
-        "https://github.com/lz4/lz4/archive/v1.9.4.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/lz4/0b0e3aa0_v1.9.4.tar.gz",
+        "https://github.com/lz4/lz4/archive/v1.10.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/lz4/53751290_v1.10.0.tar.gz",
     ],
-    sha256 = "0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b",
+    sha256 = "537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b",
     build_file = "//third_party:lz4.BUILD.bazel",
-    strip_prefix = "lz4-1.9.4",
-    patches = [
-        "//third_party:patches/lz4_clang_tzcnt.diff",
-    ],
+    strip_prefix = "lz4-1.10.0",
 )
 http_archive(
     name = "microui",
     urls = [
-        "https://github.com/rxi/microui/archive/05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/microui/edafc975_05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5.tar.gz",
+        "https://github.com/rxi/microui/archive/0850aba860959c3e75fb3e97120ca92957f9d057.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/microui/9e20a618_0850aba860959c3e75fb3e97120ca92957f9d057.tar.gz",
     ],
-    sha256 = "edafc97524a68239c81fda6d849372c1b9359a3cb651d20a6ba02f8ebc67da79",
+    sha256 = "9e20a6185d6b36c77f450954ae4a7f238f5b422883dbb79aaf11dbb4ce107936",
     build_file = "//third_party:microui.BUILD.bazel",
-    strip_prefix = "microui-05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5",
+    strip_prefix = "microui-0850aba860959c3e75fb3e97120ca92957f9d057",
     patches = [
         "//third_party:patches/microui_text_color.patch",
         "//third_party:patches/microui_unique_header_label.patch",
@@ -286,12 +274,12 @@ http_archive(
 http_archive(
     name = "rapidjson",
     urls = [
-        "https://github.com/Tencent/rapidjson/archive/58c6938b73c8685d82905ed55ec5b59e8f163687.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/rapidjson/c2f93c9f_58c6938b73c8685d82905ed55ec5b59e8f163687.tar.gz",
+        "https://github.com/jcelerier/rapidjson/archive/v1.2.1.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/rapidjson/fff42e07_v1.2.1.tar.gz",
     ],
-    sha256 = "c2f93c9fb4badd47697e100f52e0ea9a552a2d74ce827367a0f9b24dcb644bcf",
+    sha256 = "fff42e07e9506e925dfbe725da95f49f327b2a40420ccf3d952af26600ad765e",
     build_file = "//third_party:rapidjson.BUILD.bazel",
-    strip_prefix = "rapidjson-58c6938b73c8685d82905ed55ec5b59e8f163687",
+    strip_prefix = "rapidjson-1.2.1",
 )
 http_archive(
     name = "sokol",
@@ -309,12 +297,12 @@ http_archive(
 http_archive(
     name = "stb",
     urls = [
-        "https://github.com/nothings/stb/archive/af1a5bc352164740c1cc1354942b1c6b72eacb8a.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/stb/936b4e50_af1a5bc352164740c1cc1354942b1c6b72eacb8a.tar.gz",
+        "https://github.com/nothings/stb/archive/fede005abaf93d9d7f3a679d1999b2db341b360f.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/stb/3c45e9ab_fede005abaf93d9d7f3a679d1999b2db341b360f.tar.gz",
     ],
-    sha256 = "936b4e506b5f55db178207e528ecdf5a411f67431447767d06c9b7061765cd7e",
+    sha256 = "3c45e9ab123933274ad782e19fc4029444bfe26e0a5eea483c30a82b880b8a42",
     build_file = "//third_party:stb.BUILD.bazel",
-    strip_prefix = "stb-af1a5bc352164740c1cc1354942b1c6b72eacb8a",
+    strip_prefix = "stb-fede005abaf93d9d7f3a679d1999b2db341b360f",
 )
 http_archive(
     name = "websocketpp",
@@ -325,6 +313,9 @@ http_archive(
     sha256 = "6ce889d85ecdc2d8fa07408d6787e7352510750daa66b5ad44aacb47bea76755",
     build_file = "//third_party:websocketpp.BUILD.bazel",
     strip_prefix = "websocketpp-0.8.2",
+    patches = [
+        "//third_party:patches/websocketpp_build_fix.patch",
+    ],
 )
 http_archive(
     name = "woff2",

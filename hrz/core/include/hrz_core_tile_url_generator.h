@@ -1,8 +1,7 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -61,7 +60,7 @@ struct MultiPatternTileUrlGenerator : public TileUrlGenerator
     // Constructs a TileUrl from a list of URL patterns.
     // See parse_tile_url() for supported patterns.
     MultiPatternTileUrlGenerator(
-        gsl::span<const std::string> urls,
+        std::span<const std::string> urls,
         unsigned int tile_count_at_level_0_y);
 
     std::string make_url(uint32_t x, uint32_t y, uint32_t z) override

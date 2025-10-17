@@ -26,11 +26,11 @@
 
 namespace
 {
+constexpr uint32_t CircleResolution = 12;
+
 enum
 {
     UboTileParams = hrz::UboCustomStart,
-
-    CircleResolution = 12,
 
     InputStreamVertexPos = 0,
     InputStreamColor = 1,
@@ -452,7 +452,7 @@ public:
         points.reserve(CircleResolution * 2);
         indices.reserve(CircleResolution * 6);
 
-        for (int i = 0; i < CircleResolution; ++i)
+        for (uint32_t i = 0; i < CircleResolution; ++i)
         {
             float x = (float)std::cos((double)i * 2.0 * lm::PI / CircleResolution);
             float y = (float)std::sin((double)i * 2.0 * lm::PI / CircleResolution);
@@ -461,7 +461,7 @@ public:
             points.push_back(lm::vec3(x, y, 1.0f));
         }
 
-        for (int i = 0; i < CircleResolution; ++i)
+        for (uint32_t i = 0; i < CircleResolution; ++i)
         {
             int p0 = i;
             int p1 = (i + 1) % CircleResolution;

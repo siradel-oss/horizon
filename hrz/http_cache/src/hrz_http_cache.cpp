@@ -6,9 +6,11 @@
 #include <hrz_fnd_hash.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_lru.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_string_utils.h>
 
 #include <optional>
+#include <span>
 
 extern "C"
 {
@@ -55,7 +57,7 @@ void set_header_int(hrz::HttpHeaders& headers, std::string_view name, int64_t va
 hrz::uint128 build_cache_key(
     std::string_view url,
     const hrz::HttpHeaders& request_headers,
-    gsl::span<const std::string> vary_header_names,
+    std::span<const std::string> vary_header_names,
     uint64_t range_start,
     uint64_t range_size)
 {
@@ -77,7 +79,7 @@ hrz::uint128 build_cache_key(
     }
 
     uint64_t data[] = {url_hash.high, url_hash.low, headers_hash, range_start, range_size};
-    return hrz::murmur3_x64_128(hrz::as_bytes(gsl::span<const uint64_t>(data)));
+    return hrz::murmur3_x64_128(std::as_bytes(std::span<const uint64_t>(data)));
 }
 
 struct ResourceAge
@@ -318,7 +320,7 @@ class HttpCacheLoader : public hrz::IHttpLoader
 
         ResponseMetadata response;
         std::vector<std::byte> response_data;
-        std::optional<gsl::span<std::byte>> data_dst;
+        std::optional<std::span<std::byte>> data_dst;
     };
 
     hrz::flat_hash_map<hrz::HttpTicket, Request> _requests;
@@ -472,7 +474,7 @@ public:
         return values;
     }
 
-    gsl::span<const std::string> process_and_get_vary_headers(
+    std::span<const std::string> process_and_get_vary_headers(
         const Request& request,
         ResourceAge age)
     {
@@ -631,7 +633,7 @@ public:
 
     hrz::uint128 build_response_cache_key(const Request& request, ResourceAge resource_age)
     {
-        gsl::span<const std::string> vary_headers =
+        std::span<const std::string> vary_headers =
             process_and_get_vary_headers(request, resource_age);
 
         // We don't implement the no-cache="Header1,Header2" form of no-cache
@@ -869,7 +871,7 @@ public:
         }
     }
 
-    bool copy_data(hrz::HttpTicket ticket, gsl::span<std::byte> dst) override
+    bool copy_data(hrz::HttpTicket ticket, std::span<std::byte> dst) override
     {
         auto it = _requests.find(ticket);
         if (it == _requests.end()) return false;

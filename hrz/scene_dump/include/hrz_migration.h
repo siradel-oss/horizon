@@ -2,8 +2,7 @@
 
 #include "dynamic_message.h"
 
-#include <gsl/gsl-lite.hpp>
-
+#include <span>
 #include <vector>
 
 namespace hrz::migration

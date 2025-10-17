@@ -2495,7 +2495,7 @@ void dev_ui(
             [](const Blob& a, const Blob& b) { return a.size > b.size; });
 
         auto draw_resource_tree =
-            [&](uint64_t tree_id, gsl::span<const BlobId> ids,
+            [&](uint64_t tree_id, std::span<const BlobId> ids,
                 const std::function<uint64_t(const Blob&)>& get_first_value,
                 const std::function<const char*(uint64_t)>& print_first_value,
                 const mu_Color& first_bar_color,
@@ -2859,7 +2859,7 @@ void BlobHandle::release()
     }
 }
 
-gsl::span<std::byte> BlobHandle::get_data(bool mutable_data) const
+std::span<std::byte> BlobHandle::get_data(bool mutable_data) const
 {
     auto blob = allocator->blob_pool.get_object(blob_id);
 

@@ -178,7 +178,7 @@ Also, do not test too much. Testing everything makes is very hard to change publ
 
 ### Writing C++
 
-We use C++17, but not all of it. Generally if a language feature or library is never used, ask yourself and others why before introducing it in the code.
+We use C++20, but not all of it. Generally if a language feature or library is never used, ask yourself and others why before introducing it in the code.
 
 - Do not use `std::shared_ptr` to design around ownership issues.
 - Strive for const-correctness.
@@ -188,8 +188,8 @@ We use C++17, but not all of it. Generally if a language feature or library is n
 - Use `#pragma once`.
 - Private field names start with an underscore.
 - Prefer `std::string_view` to `const char*` and to `std::string`, where possible.
-- Prefer `gsl::span` for passing contiguous sequences instead of arrays or vectors.
+- Prefer `std::span` for passing contiguous sequences instead of arrays or vectors.
 - Runtime strings are UTF-8.
 - No exceptions.
 - Prefer `hrz::flat_hash_(map|set)` to `std::unordered_(map|set)`. More info [here](https://abseil.io/docs/cpp/guides/container).
-- Some C++ standard library features that are only included in later C++ versions are made available through `hrz_fnd` thanks to abseil. This includes for example `bit_cast`.
+- Some C++ standard library features that are only included in later C++ versions are made available through `hrz_fnd` thanks to abseil.

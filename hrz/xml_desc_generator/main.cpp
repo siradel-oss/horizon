@@ -180,7 +180,7 @@ void print_service(
     {
         auto method = s->method(i);
         printer.Print("        <method>\n");
-        printer.Print("            <name>$name$</name>\n", "name", method->name().c_str());
+        printer.Print("            <name>$name$</name>\n", "name", method->name());
         printer.Print(
             "            <input>$type$</input>\n", "type", method->input_type()->full_name());
         printer.Print(
@@ -228,13 +228,12 @@ void print_service(
             documentation += loc.trailing_comments;
         }
         printer.Print(
-            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
-            method_doc.c_str());
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", method_doc);
         printer.Print("        </method>\n");
     }
 
     printer.Print(
-        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation.c_str());
+        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
     printer.Print("    </service>\n");
 }
 
@@ -276,8 +275,8 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
         }
 
         printer.Print("        <value>\n");
-        printer.Print("            <name>$name$</name>\n", "name", value->name().c_str());
-        printer.Print("            <id>$id$</id>\n", "id", std::to_string(value->number()).c_str());
+        printer.Print("            <name>$name$</name>\n", "name", value->name());
+        printer.Print("            <id>$id$</id>\n", "id", std::to_string(value->number()));
 
         if (value->options().has_deprecated() && value->options().deprecated())
         {
@@ -291,50 +290,46 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
         std::string attribute;
         if (parse_attribute_string(value_doc, "label", &attribute))
         {
-            printer.Print("            <label>$name$</label>\n", "name", attribute.c_str());
+            printer.Print("            <label>$name$</label>\n", "name", attribute);
         }
 
         if (parse_attribute_string(value_doc, "params_field_name", &attribute))
         {
             printer.Print(
-                "            <params_field_name>$name$</params_field_name>\n", "name",
-                attribute.c_str());
+                "            <params_field_name>$name$</params_field_name>\n", "name", attribute);
         }
 
         if (parse_attribute_string(value_doc, "response_field_name", &attribute))
         {
             printer.Print(
                 "            <response_field_name>$name$</response_field_name>\n", "name",
-                attribute.c_str());
+                attribute);
         }
 
         if (parse_attribute_string(value_doc, "params_type", &attribute))
         {
-            printer.Print(
-                "            <params_type>$name$</params_type>\n", "name", attribute.c_str());
+            printer.Print("            <params_type>$name$</params_type>\n", "name", attribute);
         }
 
         if (parse_attribute_string(value_doc, "response_type", &attribute))
         {
-            printer.Print(
-                "            <response_type>$name$</response_type>\n", "name", attribute.c_str());
+            printer.Print("            <response_type>$name$</response_type>\n", "name", attribute);
         }
 
         printer.Print(
-            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
-            value_doc.c_str());
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", value_doc);
         printer.Print("        </value>\n");
     }
 
     printer.Print(
-        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation.c_str());
+        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
     printer.Print("    </enum>\n");
 }
 
 void print_message(google::protobuf::io::Printer& printer, const google::protobuf::Descriptor* msg)
 {
     printer.Print("    <message>\n");
-    printer.Print("        <full_name>$name$</full_name>\n", "name", msg->full_name().c_str());
+    printer.Print("        <full_name>$name$</full_name>\n", "name", msg->full_name());
 
     std::string documentation;
     google::protobuf::SourceLocation loc;
@@ -347,7 +342,7 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
 
     if (std::string path_root; parse_attribute_string(documentation, "path_root", &path_root))
     {
-        printer.Print("        <path_root>$root$</path_root>\n", "root", path_root.c_str());
+        printer.Print("        <path_root>$root$</path_root>\n", "root", path_root);
     }
 
     if (std::string is_path_leaf;
@@ -365,8 +360,8 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
         auto value = msg->field(i);
 
         printer.Print("        <field>\n");
-        printer.Print("            <name>$name$</name>\n", "name", value->name().c_str());
-        printer.Print("            <id>$id$</id>\n", "id", std::to_string(value->number()).c_str());
+        printer.Print("            <name>$name$</name>\n", "name", value->name());
+        printer.Print("            <id>$id$</id>\n", "id", std::to_string(value->number()));
 
         // Optional for primitive types is implemented as a oneof with only one field.
         if (value->containing_oneof() && !value->real_containing_oneof())
@@ -381,8 +376,7 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
         if (value->real_containing_oneof())
         {
             printer.Print(
-                "            <union>$union$</union>\n", "union",
-                value->containing_oneof()->name().c_str());
+                "            <union>$union$</union>\n", "union", value->containing_oneof()->name());
         }
         else
         {
@@ -401,14 +395,12 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
         if (value->type() == google::protobuf::FieldDescriptor::Type::TYPE_MESSAGE)
         {
             printer.Print(
-                "            <type>$type$</type>\n", "type",
-                value->message_type()->full_name().c_str());
+                "            <type>$type$</type>\n", "type", value->message_type()->full_name());
         }
         else if (value->type() == google::protobuf::FieldDescriptor::Type::TYPE_ENUM)
         {
             printer.Print(
-                "            <type>$type$</type>\n", "type",
-                value->enum_type()->full_name().c_str());
+                "            <type>$type$</type>\n", "type", value->enum_type()->full_name());
         }
         else
         {
@@ -433,14 +425,13 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
             documentation += loc.trailing_comments;
         }
         printer.Print(
-            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
-            documentation.c_str());
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
 
         printer.Print("        </field>\n");
     }
 
     printer.Print(
-        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation.c_str());
+        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
     printer.Print("    </message>\n");
 
     for (int i = 0; i < msg->nested_type_count(); ++i)
@@ -485,10 +476,8 @@ class Generator : public google::protobuf::compiler::CodeGenerator
         for (const auto file : files)
         {
             printer.Print("    <file>\n");
-            printer.Print(
-                "        <filename>$filename$</filename>\n", "filename", file->name().c_str());
-            printer.Print(
-                "        <package>$package$</package>\n", "package", file->package().c_str());
+            printer.Print("        <filename>$filename$</filename>\n", "filename", file->name());
+            printer.Print("        <package>$package$</package>\n", "package", file->package());
 
             for (int i = 0; i < file->service_count(); ++i)
             {

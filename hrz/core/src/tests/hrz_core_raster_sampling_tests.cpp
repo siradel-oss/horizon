@@ -601,7 +601,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(hrz::bit_cast<uint32_t>(-9999.9f));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(-9999.9f));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO, hrz_proto::ImageFormat::R_F32);
 
@@ -758,7 +758,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(hrz::bit_cast<uint32_t>(to_silicium(-9999.9f)));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_silicium(-9999.9f)));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::R_F32_SILICIUM);
@@ -917,7 +917,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(hrz::bit_cast<uint32_t>(to_terrarium(-9999.0f)));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_terrarium(-9999.0f)));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::TERRARIUM);
@@ -957,7 +957,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(hrz::bit_cast<uint32_t>(to_terrarium(-9999.0f)) + 0xff000000);
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_terrarium(-9999.0f)) + 0xff000000);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::TERRARIUM);

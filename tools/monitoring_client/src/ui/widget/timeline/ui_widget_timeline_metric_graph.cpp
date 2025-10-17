@@ -19,7 +19,7 @@ struct Marker
 bool _process_marker(
     const Marker& marker,
     const Rect& main_area,
-    gsl::span<const data::Thread> threads)
+    std::span<const data::Thread> threads)
 {
     Rect button_rect = {
         {marker.position.x - MARKER_RADIUS, main_area.p0.y},

@@ -11,6 +11,8 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/memorystream.h>
 
+#include <bit>
+
 namespace
 {
 
@@ -74,7 +76,7 @@ void _parse_gltf_node(
     // Extract the transform
     if (matrix_json.IsArray())
     {
-        json::copy_array_values(gsl::span<double>(local_transform.e), matrix_json);
+        json::copy_array_values(std::span<double>(local_transform.e), matrix_json);
     }
     else
     {
@@ -84,17 +86,17 @@ void _parse_gltf_node(
 
         if (scale_json.IsArray())
         {
-            json::copy_array_values(gsl::span<double>(scale.m), scale_json);
+            json::copy_array_values(std::span<double>(scale.m), scale_json);
         }
 
         if (translation_json.IsArray())
         {
-            json::copy_array_values(gsl::span<double>(translation.m), translation_json);
+            json::copy_array_values(std::span<double>(translation.m), translation_json);
         }
 
         if (rotation_json.IsArray())
         {
-            json::copy_array_values(gsl::span<double>(rotation.m), rotation_json);
+            json::copy_array_values(std::span<double>(rotation.m), rotation_json);
         }
 
         local_transform =
@@ -388,10 +390,10 @@ void _parse_gltf_accessor(const rapidjson::Value& accessor_json, ModelDescriptor
             json::get_bool_or(accessor_json, "normalized", false));
 
         json::copy_array_values(
-            gsl::span<double>(accessor.min.m), json::get_member_or_null(accessor_json, "min"));
+            std::span<double>(accessor.min.m), json::get_member_or_null(accessor_json, "min"));
 
         json::copy_array_values(
-            gsl::span<double>(accessor.max.m), json::get_member_or_null(accessor_json, "max"));
+            std::span<double>(accessor.max.m), json::get_member_or_null(accessor_json, "max"));
     }
 
     descriptor->accessors.push_back(accessor);
@@ -673,7 +675,7 @@ void _parse_gltf_material(const rapidjson::Value& material_json, ModelDescriptor
             ModelDescriptor::DiffuseMaterial diffuse_material;
 
             json::copy_array_values(
-                gsl::span<float>(diffuse_material.color_factor.m),
+                std::span<float>(diffuse_material.color_factor.m),
                 json::get_member_or_null(pbr_json, "baseColorFactor"), 1.0F);
 
             const auto& texture_info_json = json::get_member_or_null(pbr_json, "baseColorTexture");
@@ -837,7 +839,7 @@ bool _parse_gltf_json(
         if (center_json.IsArray())
         {
             lm::dvec3 rtc_center;
-            json::copy_array_values(gsl::span<double>(rtc_center.m), center_json);
+            json::copy_array_values(std::span<double>(rtc_center.m), center_json);
             root_transform = lm::translation(lm::dvec3{rtc_center.x, rtc_center.z, -rtc_center.y});
         }
     }
@@ -945,14 +947,15 @@ bool _parse_gltf_json(
 namespace hrz::model
 {
 
-uint32_t fetch_glb_declared_size(gsl::span<const std::byte> gltf_data)
+uint32_t fetch_glb_declared_size(std::span<const std::byte> gltf_data)
 {
-    // @Endianness UInt32 reads are little-endian only.
+    static_assert(
+        std::endian::native == std::endian::little, "UInt32 reads are little-endian only");
 
     if (gltf_data.size() >= 12) // Enough room for the glb header
     {
-        const gsl::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
-        const gsl::span<const std::byte> magic = gltf_header.first(4);
+        const std::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
+        const std::span<const std::byte> magic = gltf_header.first(4);
 
         uint32_t version = 0;
         memcpy(&version, gltf_header.data() + 4, 4);
@@ -983,14 +986,15 @@ bool parse_gltf_descriptor(
     uint32_t textures_priority,
     ModelDescriptor* descriptor)
 {
-    // @Endianness UInt32 reads are little-endian only.
+    static_assert(
+        std::endian::native == std::endian::little, "UInt32 reads are little-endian only");
 
     auto gltf_size = gltf_blob.data_size();
     if (gltf_size >= 12) // Enough room for the glb header
     {
         auto gltf_data = gltf_blob.get_data();
-        const gsl::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
-        const gsl::span<const std::byte> magic = gltf_header.first(4);
+        const std::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
+        const std::span<const std::byte> magic = gltf_header.first(4);
 
         uint32_t version = 0;
         memcpy(&version, gltf_header.data() + 4, 4);

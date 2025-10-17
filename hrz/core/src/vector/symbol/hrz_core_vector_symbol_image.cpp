@@ -7,6 +7,7 @@
 #include <hrz_common_profiling.h>
 #include <hrz_common_proto_maths.h>
 #include <hrz_fnd_inlined_vector.h>
+#include <hrz_fnd_mem.h>
 
 #include <numeric>
 
@@ -262,7 +263,7 @@ struct SpriteCuts
 
     void make_cuts_from_stretches(
         int sprite_size,
-        gsl::span<const hrz_proto::Rangei* const> stretches)
+        std::span<const hrz_proto::Rangei* const> stretches)
     {
         cuts.clear();
 
@@ -402,7 +403,7 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
                 sprite_geometry_identity.push_back(s.size());
             }
 
-            hrz::uint128 identity_hash = murmur3_x64_128(gsl::span<const std::byte>(
+            hrz::uint128 identity_hash = murmur3_x64_128(std::span<const std::byte>(
                 (const std::byte*)sprite_geometry_identity.data(),
                 sprite_geometry_identity.size() * 4));
 

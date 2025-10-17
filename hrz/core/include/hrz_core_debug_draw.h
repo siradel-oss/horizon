@@ -4,10 +4,10 @@
 
 #include <hrz_common_geo.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <initializer_list>
+#include <span>
 
 namespace hrz
 {
@@ -59,19 +59,19 @@ void draw(DebugDrawSystem*, Render*);
 void draw_display(DebugDrawSystem*, my::RenderContext*);
 
 void polyline(
-    gsl::span<const double> coords,
+    std::span<const double> coords,
     const lm::vec4& color = {1, 1, 1, 1},
     Space space = Space::LatLonAltRad,
     Group group = Group_Default);
 
 void points(
-    gsl::span<const double> coords,
+    std::span<const double> coords,
     const lm::vec4& color = {1, 1, 1, 1},
     Space space = Space::LatLonAltRad,
     Group group = Group_Default);
 
 void triangles(
-    gsl::span<const double> coords,
+    std::span<const double> coords,
     const lm::vec4& color = {1, 1, 1, 1},
     Space space = Space::LatLonAltRad,
     Group group = Group_Default);
@@ -92,22 +92,22 @@ void texture(my::ResourceHandle texture_handle);
 struct DebugDraw
 {
     void polyline(std::initializer_list<lm::dvec3> positions) const;
-    void polyline(gsl::span<const lm::dvec3> positions) const;
+    void polyline(std::span<const lm::dvec3> positions) const;
 
     void polyline_geo(std::initializer_list<GeoPosition3> positions) const;
-    void polyline_geo(gsl::span<const GeoPosition3> positions) const;
+    void polyline_geo(std::span<const GeoPosition3> positions) const;
 
     void points(std::initializer_list<lm::dvec3> positions) const;
-    void points(gsl::span<const lm::dvec3> positions) const;
+    void points(std::span<const lm::dvec3> positions) const;
 
     void points_geo(std::initializer_list<GeoPosition3> positions) const;
-    void points_geo(gsl::span<const GeoPosition3> positions) const;
+    void points_geo(std::span<const GeoPosition3> positions) const;
 
     void triangles(std::initializer_list<lm::dvec3> positions) const;
-    void triangles(gsl::span<const lm::dvec3> positions) const;
+    void triangles(std::span<const lm::dvec3> positions) const;
 
     void triangles_geo(std::initializer_list<GeoPosition3> positions) const;
-    void triangles_geo(gsl::span<const GeoPosition3> positions) const;
+    void triangles_geo(std::span<const GeoPosition3> positions) const;
 
     void wgs84_box(const hrz::GeoVolumeBounds& bounds) const;
 

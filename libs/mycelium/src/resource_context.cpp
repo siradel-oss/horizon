@@ -12,10 +12,11 @@
 #include <string.h>
 
 #include <cassert>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <memory>
-#include <stdio.h>
-#include <stdlib.h>
+#include <span>
 
 namespace my
 {
@@ -592,7 +593,7 @@ static size_t alloc_image(
     const TextureLayout& layout,
     GLenum target,
     int level,
-    gsl::span<const std::byte> data)
+    std::span<const std::byte> data)
 {
     int dimension = 0;
     switch (layout.type)
@@ -740,7 +741,7 @@ static my::ResourceHandle create_texture(GLInstance* my, const TextureResource& 
 
     for (uint32_t level = 0; level < level_count; ++level)
     {
-        auto data = res.data.size() > level ? res.data[level] : gsl::span<const std::byte>{};
+        auto data = res.data.size() > level ? res.data[level] : std::span<const std::byte>{};
         alloc_image(res.layout, target, level, data);
     }
 

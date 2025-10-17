@@ -10,7 +10,6 @@
 #include <hrz_common_blob_image.h>
 #include <hrz_common_geo.h>
 #include <hrz_common_metrics.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_class.h>
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_flat_hash_set.h>
@@ -19,7 +18,8 @@
 #include <hrz_fnd_variant.h>
 #include <hrz_jobs_tickets.h>
 
-#include <gsl/gsl-lite.hpp>
+#include <bit>
+#include <span>
 
 namespace hrz::planet
 {
@@ -220,23 +220,23 @@ public:
     {
         std::string target_url =
             _tile_url_generator->make_url(tile_coords.x, tile_coords.y, tile_coords.lod);
-        return hrz::bit_cast<Ticket>(
+        return std::bit_cast<Ticket>(
             assets_loader::begin(al, target_url, _headers, queue, priority, owner));
     }
 
     void cancel(Ticket ticket, AssetsLoader* al, JobScheduler*) override
     {
-        assets_loader::end(al, hrz::bit_cast<assets_loader::Ticket>(ticket));
+        assets_loader::end(al, std::bit_cast<assets_loader::Ticket>(ticket));
     }
 
     bool is_finished(Ticket ticket, AssetsLoader* al) override
     {
-        return assets_loader::is_finished(al, hrz::bit_cast<assets_loader::Ticket>(ticket));
+        return assets_loader::is_finished(al, std::bit_cast<assets_loader::Ticket>(ticket));
     }
 
     bool is_success(Ticket ticket, AssetsLoader* al) override
     {
-        return assets_loader::get_status(al, hrz::bit_cast<assets_loader::Ticket>(ticket))
+        return assets_loader::get_status(al, std::bit_cast<assets_loader::Ticket>(ticket))
             == assets_loader::RequestStatus::Loaded;
     }
 
@@ -253,10 +253,10 @@ public:
         else
         {
             mime_type =
-                assets_loader::get_content_type(al, hrz::bit_cast<assets_loader::Ticket>(ticket));
+                assets_loader::get_content_type(al, std::bit_cast<assets_loader::Ticket>(ticket));
         }
         return {
-            assets_loader::get_blob(al, ba, hrz::bit_cast<assets_loader::Ticket>(ticket)),
+            assets_loader::get_blob(al, ba, std::bit_cast<assets_loader::Ticket>(ticket)),
             std::string(mime_type)};
     }
 

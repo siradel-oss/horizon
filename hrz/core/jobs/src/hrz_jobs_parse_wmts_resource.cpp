@@ -10,7 +10,6 @@
 #include <hrz_protocol_all.h>
 
 #include <fmt/format.h>
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 #include <proj_lite.h>
 #include <pugixml/pugixml.hpp>
@@ -20,6 +19,7 @@
 #include <cmath>
 #include <cstring>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -643,7 +643,7 @@ hrz::JobResult run(
                     std::string url_template =
                         hrz::str::sanitize_named_fmt_arguments(layer_url_template, kValidArgs);
                     url_template = fmt::format(
-                        layer_url_template, fmt::arg("Style", style_name),
+                        fmt::runtime(layer_url_template), fmt::arg("Style", style_name),
                         fmt::arg("TileMatrixSet", matrix_set.identifier),
                         fmt::arg("TileMatrix", "{z}"), fmt::arg("TileRow", "{y}"),
                         fmt::arg("TileCol", "{x}"));
@@ -705,7 +705,7 @@ hrz::JobResult run(
 
             if (is_global_web_mercator(matrix_set))
             {
-                geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
+                geometry.projection.set_descriptor_(hrz_proj::wmerc_proj_str);
                 geometry.projection.set_descriptor_type(
                     hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
                 geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
@@ -720,7 +720,7 @@ hrz::JobResult run(
             }
             else
             {
-                geometry.projection.set_descriptor(matrix_set.crs_string);
+                geometry.projection.set_descriptor_(matrix_set.crs_string);
                 geometry.projection.set_descriptor_type(
                     hrz_proto::SrsDescriptorType::SRID_DESCRIPTOR);
                 geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::LOCAL);

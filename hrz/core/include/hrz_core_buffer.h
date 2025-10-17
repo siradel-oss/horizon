@@ -1,9 +1,8 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cassert>
 #include <memory>
+#include <span>
 
 namespace hrz
 {
@@ -51,16 +50,16 @@ public:
 
     T* data(int x, int y, int z = 0) { return _data.get() + offset(x, y, z); }
 
-    gsl::span<const T> as_span() const { return {data(), (size_t)(_width * _height * _depth)}; }
+    std::span<const T> as_span() const { return {data(), (size_t)(_width * _height * _depth)}; }
 
-    gsl::span<T> as_span() { return {data(), (size_t)(_width * _height * _depth)}; }
+    std::span<T> as_span() { return {data(), (size_t)(_width * _height * _depth)}; }
 
-    gsl::span<const T> as_span(int x, int y, int z = 0) const
+    std::span<const T> as_span(int x, int y, int z = 0) const
     {
         return {data(x, y, z), (size_t)(_width * _height * _depth - offset(x, y, z))};
     }
 
-    gsl::span<T> as_span(int x, int y, int z = 0)
+    std::span<T> as_span(int x, int y, int z = 0)
     {
         return {data(x, y, z), (size_t)(_width * _height * _depth - offset(x, y, z))};
     }

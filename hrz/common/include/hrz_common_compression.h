@@ -1,8 +1,7 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <functional>
+#include <span>
 
 namespace hrz
 {
@@ -11,19 +10,19 @@ namespace hrz
 // The functions returns true or false depending on whether decompression was successful.
 
 bool decompress_gzip(
-    gsl::span<const std::byte> compressed,
-    const std::function<void(gsl::span<const std::byte>)>& callback);
+    std::span<const std::byte> compressed,
+    const std::function<void(std::span<const std::byte>)>& callback);
 
 bool decompress_zlib_uncompress(
-    gsl::span<const std::byte> compressed,
-    gsl::span<std::byte>* decompressed);
+    std::span<const std::byte> compressed,
+    std::span<std::byte>* decompressed);
 
 bool decompress_zstd(
-    gsl::span<const std::byte> compressed,
-    const std::function<void(gsl::span<const std::byte>)>& callback);
+    std::span<const std::byte> compressed,
+    const std::function<void(std::span<const std::byte>)>& callback);
 
 bool decompress_brotli(
-    gsl::span<const std::byte> compressed,
-    const std::function<void(gsl::span<const std::byte>)>& callback);
+    std::span<const std::byte> compressed,
+    const std::function<void(std::span<const std::byte>)>& callback);
 
 } // namespace hrz

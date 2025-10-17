@@ -205,7 +205,7 @@ void IndirectionClipmap::bake()
     for (uint8_t lod = _updated_lod_min; lod <= _updated_lod_max; ++lod)
     {
         const uint32_t level_size = _clipmap_params.compute_level_size(lod);
-        gsl::span<const TileSlot> slots = _slots[lod];
+        std::span<const TileSlot> slots = _slots[lod];
 
         assert(slots.size() == level_size * level_size);
 
@@ -248,7 +248,7 @@ void IndirectionClipmap::work_gpu(Render* render)
         HRZ_SCOPED_SAMPLE("indirection clipmap texture upload");
         render->my->update_texture(
             _texture, my::TextureFormat::RGBA8UI, 0, 0, 0, _to_upload_lod_min, clip_size, clip_size,
-            to_upload_depth, hrz::as_bytes(_data.as_span(0, 0, _to_upload_lod_min)));
+            to_upload_depth, std::as_bytes(_data.as_span(0, 0, _to_upload_lod_min)));
     }
 
     _need_to_upload = false;
@@ -282,7 +282,7 @@ void IndirectionClipmap::recenter(const ClipmapParams& clipmap_params)
         int32_t dy = (int32_t)new_offset.y - (int32_t)old_offset.y;
 
         std::vector<TileSlot> new_slots(clip_size * clip_size);
-        gsl::span<TileSlot> slots = _slots[lod];
+        std::span<TileSlot> slots = _slots[lod];
 
         // Then we can move the pyramid
 

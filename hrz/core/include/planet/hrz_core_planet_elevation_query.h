@@ -209,23 +209,23 @@ private:
     void _start_culling(
         JobScheduler* js,
         uint64_t raster_ids_hash,
-        gsl::span<const Raster*> rasters,
-        gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
+        std::span<const Raster*> rasters,
+        std::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
         Ticket ticket);
 
     void _start_waiting_for_tiles(
         JobScheduler* js,
         AssetsLoader* al,
         Ticket ticket,
-        gsl::span<const Raster*> rasters);
+        std::span<const Raster*> rasters);
 
-    bool _all_tiles_available(const Batch* batch, gsl::span<const Raster*> rasters);
+    bool _all_tiles_available(const Batch* batch, std::span<const Raster*> rasters);
 
     void _start_sampling(
         JobScheduler* js,
         BlobAllocator* ba,
-        gsl::span<const Raster*> rasters,
-        gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
+        std::span<const Raster*> rasters,
+        std::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
         Ticket ticket,
         Batch* batch);
 

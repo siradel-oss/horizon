@@ -347,7 +347,7 @@ hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
     }
 
     hrz::BSphere<double> bsphere =
-        hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(anchor_position_data_opt.value()));
+        hrz::compute_bounding_sphere(std::span<const lm::dvec3>(anchor_position_data_opt.value()));
 
     baked_symbols.anchor_gpu_data = std::move(anchor_gpu_data_array_opt.value());
     baked_symbols.anchor_culling_data = std::move(anchor_culling_data_array_opt.value());

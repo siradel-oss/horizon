@@ -300,7 +300,7 @@ RenderRequest work(ClippingPlaneLayerSystem* system, SceneModel* model)
 void draw(
     ClippingPlaneLayerSystem* system,
     hrz::Render* render,
-    gsl::span<const hrz::RenderViewInfo> views_info)
+    std::span<const hrz::RenderViewInfo> views_info)
 {
     if (system->to_render.empty()) return;
 

@@ -516,7 +516,7 @@ std::string add_slash(std::string_view url)
     }
 }
 
-std::string join(gsl::span<const std::string_view> parts)
+std::string join(std::span<const std::string_view> parts)
 {
     if (parts.empty()) return {};
 
@@ -680,7 +680,7 @@ std::string join(gsl::span<const std::string_view> parts)
 
 std::string join(std::initializer_list<std::string_view> parts)
 {
-    return join((gsl::span<const std::string_view>)parts);
+    return join((std::span<const std::string_view>)parts);
 }
 
 std::string percent_encode(std::string_view str)

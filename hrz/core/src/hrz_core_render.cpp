@@ -59,7 +59,7 @@ my::ResourceHandle GpuResourceContext::alloc(
 my::ResourceHandle GpuResourceContext::alloc(
     const my::Resource* res,
     const monitoring::ResourceOwner& resource_owner,
-    gsl::span<std::pair<MetadataString, MetadataString>> metadata)
+    std::span<std::pair<MetadataString, MetadataString>> metadata)
 {
     auto handle = rc->alloc(res);
     if (handle.is_null()) return handle;
@@ -363,7 +363,7 @@ double compute_logical_pixel_size_in_meters(const hrz::CameraViewInfo& view_info
 
 void VertexInputBuilder::add_input_stream_raw(
     int index,
-    gsl::span<const std::byte> data,
+    std::span<const std::byte> data,
     my::VertexFormat format,
     my::VertexRate rate)
 {
@@ -417,7 +417,7 @@ void VertexInputBuilder::add_input_stream(
 {
     auto data = blob.get_data();
 
-    gsl::span<const std::byte> raw_data = data.as_bytes();
+    std::span<const std::byte> raw_data = data.as_bytes();
     add_input_stream_raw(index, raw_data, format, rate);
 
     pinned_blobs.push_back(std::move(data));

@@ -8,8 +8,8 @@ static constexpr double MARKER_HALF_SIZE = 8.0;
 
 struct Snapshots
 {
-    gsl::span<const data::GpuResourceSnapshot> gpu;
-    gsl::span<const data::BlobSnapshot> blobs;
+    std::span<const data::GpuResourceSnapshot> gpu;
+    std::span<const data::BlobSnapshot> blobs;
 };
 
 std::optional<int64_t> get_last_snapshot_timestamp_before(

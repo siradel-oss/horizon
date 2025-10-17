@@ -28,7 +28,7 @@ std::optional<google::protobuf::FileDescriptorSet> find_descriptor_set(uint32_t 
 
 std::unique_ptr<google::protobuf::Message> create_scene_dump(
     hrz::migration::MessageFactory* factory,
-    gsl::span<const std::byte> data = {})
+    std::span<const std::byte> data = {})
 {
     const auto* descriptor = factory->pool.FindMessageTypeByName("HrzProtocol.SceneDump");
     assert(descriptor);

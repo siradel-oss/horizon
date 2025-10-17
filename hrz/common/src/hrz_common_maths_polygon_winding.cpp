@@ -40,7 +40,7 @@ double det<hrz::GeoPosition2>(
 namespace hrz
 {
 template<typename T>
-bool is_clockwise(gsl::span<const T> pts)
+bool is_clockwise(std::span<const T> pts)
 {
     if (pts.size() < 3)
     {
@@ -60,10 +60,10 @@ bool is_clockwise(gsl::span<const T> pts)
     return det(a, b, c) < 0;
 }
 
-template bool is_clockwise<lm::vec3>(gsl::span<const lm::vec3> pts);
-template bool is_clockwise<lm::vec2>(gsl::span<const lm::vec2> pts);
-template bool is_clockwise<lm::dvec3>(gsl::span<const lm::dvec3> pts);
-template bool is_clockwise<lm::dvec2>(gsl::span<const lm::dvec2> pts);
-template bool is_clockwise<hrz::GeoPosition2>(gsl::span<const hrz::GeoPosition2> pts);
+template bool is_clockwise<lm::vec3>(std::span<const lm::vec3> pts);
+template bool is_clockwise<lm::vec2>(std::span<const lm::vec2> pts);
+template bool is_clockwise<lm::dvec3>(std::span<const lm::dvec3> pts);
+template bool is_clockwise<lm::dvec2>(std::span<const lm::dvec2> pts);
+template bool is_clockwise<hrz::GeoPosition2>(std::span<const hrz::GeoPosition2> pts);
 
 } // namespace hrz

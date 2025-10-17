@@ -208,8 +208,8 @@ struct CeilOp
 template<typename Op>
 bool execute_op_functor_two_operands(
     const Op& op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == 2);
     auto lhs_buffer = arg_buffers[0];
@@ -227,8 +227,8 @@ bool execute_op_functor_two_operands(
 template<typename Op>
 bool execute_op_functor_one_operand(
     const Op& op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == 1);
     auto rhs_buffer = arg_buffers[0];
@@ -245,8 +245,8 @@ bool execute_op_functor_one_operand(
 bool execute_random_functions(
     OperatorEvaluator::Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == get_func_operand_count(op));
 
@@ -315,8 +315,8 @@ bool execute_random_functions(
 bool execute_color_functions(
     OperatorEvaluator::Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == get_func_operand_count(op));
 
@@ -404,8 +404,8 @@ template<typename Modifier>
 bool execute_modify_color(
     OperatorEvaluator::Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == get_func_operand_count(op));
     Modifier modifier{};
@@ -424,8 +424,8 @@ bool execute_modify_color(
 bool execute_invert_color(
     OperatorEvaluator::Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::InvertColor);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -442,8 +442,8 @@ bool execute_invert_color(
 bool execute_lerp(
     OperatorEvaluator::Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::Lerp);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -462,8 +462,8 @@ bool execute_lerp(
 bool execute_mix_colors(
     OperatorEvaluator::Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::MixColors);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -484,8 +484,8 @@ bool execute_mix_colors(
 bool execute_mapbox_typeof(
     OperatorEvaluator::Context&,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::MapboxTypeof);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -502,8 +502,8 @@ bool execute_transform(
     OperatorEvaluator::Context& ctx,
     Operator op,
     hrz_proto::AttributeTransform transform,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == get_func_operand_count(op));
 
@@ -519,8 +519,8 @@ bool execute_transform(
 bool execute_is_null(
     OperatorEvaluator::Context&,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::IsNull);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -536,8 +536,8 @@ bool execute_is_null(
 bool execute_is_nan(
     OperatorEvaluator::Context&,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::IsNan);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -555,8 +555,8 @@ bool execute_is_nan(
 bool execute_value_or(
     OperatorEvaluator::Context&,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(op == Operator::ValueOr);
     assert(arg_buffers.size() == get_func_operand_count(op));
@@ -573,8 +573,8 @@ bool execute_value_or(
 
 bool execute_colorize(
     OperatorEvaluator::Context& ctx,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == 2);
 
@@ -615,8 +615,8 @@ bool execute_colorize(
 
 template<template<class> class Op>
 bool execute_cmp_op(
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     assert(arg_buffers.size() == 2);
     auto lhs_buffer = arg_buffers[0];
@@ -662,8 +662,8 @@ bool execute_cmp_op(
 
 bool execute_op(
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer)
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer)
 {
     switch (op)
     {
@@ -806,8 +806,8 @@ namespace hrz::style
 bool OperatorEvaluator::operator()(
     Context& ctx,
     Operator op,
-    gsl::span<const gsl::span<const RawValue>> arg_buffers,
-    gsl::span<RawValue> res_buffer) const
+    std::span<const std::span<const RawValue>> arg_buffers,
+    std::span<RawValue> res_buffer) const
 {
     HRZ_SCOPED_SAMPLE_A("Evaluate style operator");
 

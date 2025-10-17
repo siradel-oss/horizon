@@ -68,11 +68,6 @@ alias(
 )
 
 alias(
-    name = "gsl",
-    actual = "@gsl//:gsl",
-)
-
-alias(
     name = "earcut",
     actual = "@earcut//:earcut",
 )
@@ -209,7 +204,6 @@ LICENSES_DICT = {
     "//third_party/etcpak:LICENSE.txt": "etcpak",
     "@fmtlib//:LICENSE": "{fmt}",
     "//third_party/glad:LICENSE.txt": "Glad",
-    "@gsl//:LICENSE": "gsl-lite",
     "@harfbuzz//:COPYING": "HarfBuzz",
     "licenses/libcurl.txt": "libcurl",
     "@lz4//:LICENSE": "LZ4",

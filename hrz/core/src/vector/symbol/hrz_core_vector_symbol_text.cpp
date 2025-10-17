@@ -6,6 +6,7 @@
 #include <hrz_common_fmt.h>
 #include <hrz_common_profiling.h>
 #include <hrz_core_resources.h>
+#include <hrz_fnd_mem.h>
 
 namespace hrz::vt::symbol
 {
@@ -644,7 +645,7 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
             {{"tile coords"_ss, tile_coords_str}, {"contents"_ss, "text vertex input"_ss}});
     }
 
-    auto alloc_data_texture = [&](gsl::span<const std::byte> data_buffer, my::TextureFormat format,
+    auto alloc_data_texture = [&](std::span<const std::byte> data_buffer, my::TextureFormat format,
                                   unsigned int pixels_per_feature,
                                   hrz::MetadataString contents_metadata)
     {
@@ -674,35 +675,35 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
     {
         auto data = instance_data.anchor_indices.get_data();
         renderable.data.anchor_index_texture = alloc_data_texture(
-            hrz::as_bytes(data.as_span()), my::TextureFormat::R32UI, 1,
+            std::as_bytes(data.as_span()), my::TextureFormat::R32UI, 1,
             "text anchor index texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.anchor_index_texture, "text anchor index texture");
     }
     {
         auto data = instance_data.transforms.get_data();
         renderable.data.transform_texture = alloc_data_texture(
-            hrz::as_bytes(data.as_span()), my::TextureFormat::RGBA32F, 4,
+            std::as_bytes(data.as_span()), my::TextureFormat::RGBA32F, 4,
             "text transform texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.transform_texture, "text transform texture");
     }
     {
         auto data = instance_data.outline_widths.get_data();
         renderable.data.outline_width_texture = alloc_data_texture(
-            hrz::as_bytes(data.as_span()), my::TextureFormat::R32F, 1,
+            std::as_bytes(data.as_span()), my::TextureFormat::R32F, 1,
             "text outline width texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.outline_width_texture, "text outline width texture");
     }
     {
         auto data = instance_data.fill_colors.get_data();
         renderable.data.fill_color_texture = alloc_data_texture(
-            hrz::as_bytes(data.as_span()), my::TextureFormat::RGBA8, 1,
+            std::as_bytes(data.as_span()), my::TextureFormat::RGBA8, 1,
             "text fill color texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.fill_color_texture, "text fill color texture");
     }
     {
         auto data = instance_data.outline_colors.get_data();
         renderable.data.outline_color_texture = alloc_data_texture(
-            hrz::as_bytes(data.as_span()), my::TextureFormat::RGBA8, 1,
+            std::as_bytes(data.as_span()), my::TextureFormat::RGBA8, 1,
             "text outline color texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.outline_color_texture, "text outline color texture");
     }
@@ -993,7 +994,7 @@ void TextElementSystem::work_gpu(Render* render)
             // The best way to decrease the magnitude of the discontinuity is
             // to set the value of empty pixels to the medium value.
 
-            auto alloc_texture = [&](gsl::span<const std::byte> data_span)
+            auto alloc_texture = [&](std::span<const std::byte> data_span)
             {
                 my::TextureResource res;
                 res.layout.type = my::TextureLayout::Type2D;
@@ -1033,7 +1034,7 @@ void TextElementSystem::work_gpu(Render* render)
             }
             else
             {
-                alloc_texture({nullptr, 0});
+                alloc_texture({});
             }
 
             font->new_glyphs.clear();
@@ -1055,7 +1056,7 @@ void TextElementSystem::work_gpu(Render* render)
                 render->my->update_texture(
                     font->texture, my::TextureFormat::RGB8, 0, glyph_x * slot_size,
                     glyph_y * slot_size, 0, slot_size, slot_size, 1,
-                    hrz::as_bytes(glyph.raster_span()));
+                    std::as_bytes(glyph.raster_span()));
             }
 
             font->new_glyphs.clear();

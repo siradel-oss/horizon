@@ -47,12 +47,12 @@ private:
         ReferenceSize
     };
 
-    void _compute_cells(gsl::span<const data::GpuResourceSnapshot> snapshots);
+    void _compute_cells(std::span<const data::GpuResourceSnapshot> snapshots);
     void _recursive_compute_cell_children(
         size_t parent_cell,
-        gsl::span<const data::GpuResourceBucket*> buckets,
-        gsl::span<const data::GpuResourceBucket*> reference_buckets,
-        gsl::span<const data::GpuResourceBucketGroupingFunction>);
+        std::span<const data::GpuResourceBucket*> buckets,
+        std::span<const data::GpuResourceBucket*> reference_buckets,
+        std::span<const data::GpuResourceBucketGroupingFunction>);
 
     bool _setup_table() const;
     void _draw_cell_table();
@@ -60,7 +60,7 @@ private:
 
     void _sort_cells(const ImGuiTableSortSpecs*);
 
-    void _draw_header(lm::dvec2 position, gsl::span<const data::GpuResourceSnapshot>);
+    void _draw_header(lm::dvec2 position, std::span<const data::GpuResourceSnapshot>);
 };
 
 } // namespace ui::widget

@@ -3,9 +3,9 @@
 #include "mycelium_types.h"
 
 #include <assert.h>
-#include <gsl/gsl-lite.hpp>
 
 #include <memory>
+#include <span>
 #include <string>
 
 namespace my
@@ -870,7 +870,7 @@ struct TextureResource : public Resource
     // The data for any level can be empty, in which case the
     // level get filled with zeros.
     // The whole data span can be empty if all levels are empty.
-    gsl::span<gsl::span<const std::byte>> data;
+    std::span<std::span<const std::byte>> data;
 
     bool generate_mipmaps;
     bool is_render_graph_texture = false;
@@ -1262,7 +1262,7 @@ public:
         uint32_t w,
         uint32_t h,
         uint32_t d,
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         TextureUpdateDataLayout data_layout = TextureUpdateDataLayout::DataHasUpdateRegionSize) = 0;
 
     virtual void draw(

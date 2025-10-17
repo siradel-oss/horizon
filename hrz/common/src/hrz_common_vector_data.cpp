@@ -4,11 +4,11 @@
 #include "hrz_common_profiling.h"
 
 #include <hrz_common_geo.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_hash.h>
 #include <hrz_fnd_log.h>
 
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <limits>
 
@@ -110,7 +110,7 @@ void FeatureIds::to_proto(google::protobuf::RepeatedPtrField<hrz_proto::FeatureI
 }
 
 std::optional<FeatureIds> FeatureIds::make(
-    gsl::span<AttributeValues> attribute_values,
+    std::span<AttributeValues> attribute_values,
     BlobArray<FeatureIdHash> hashes)
 {
     HRZ_SCOPED_SAMPLE("make feature ids");
@@ -364,7 +364,7 @@ FeatureId FeatureIds::at(size_t i) const
     return feature_id;
 }
 
-lm::dvec3 compute_ring_average(gsl::span<const lm::dvec3> linestring)
+lm::dvec3 compute_ring_average(std::span<const lm::dvec3> linestring)
 {
     lm::dvec3 centroid(0.0);
 
@@ -378,8 +378,8 @@ lm::dvec3 compute_ring_average(gsl::span<const lm::dvec3> linestring)
 }
 
 void compute_linestring_middle_and_angle(
-    gsl::span<const lm::dvec3> points,
-    gsl::span<const uint32_t> linestring_sizes,
+    std::span<const lm::dvec3> points,
+    std::span<const uint32_t> linestring_sizes,
     lm::dvec3* middle,
     float* angle)
 {

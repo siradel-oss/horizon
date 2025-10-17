@@ -25,6 +25,7 @@
 
 #include <rapidjson/document.h>
 
+#include <bit>
 #include <string>
 
 namespace hrz
@@ -61,8 +62,8 @@ std::optional<hrz::DecompressBlobParams::CompressionType> convert_compression_ty
 
 #pragma pack(push, 1)
 
-// @Endianness The PMTiles file format is little-endian.
-// @Todo(C++20) Check this at compile-time with std::endian.
+static_assert(std::endian::native == std::endian::little, "PMTiles file format is little-endian");
+
 struct RawHeader
 {
     char magic[7];
@@ -317,11 +318,11 @@ public:
 };
 
 std::optional<std::vector<std::byte>> decompress(
-    gsl::span<const std::byte> compressed,
+    std::span<const std::byte> compressed,
     Compression compression)
 {
     std::vector<std::byte> decompressed;
-    auto callback = [&decompressed](gsl::span<const std::byte> chunk)
+    auto callback = [&decompressed](std::span<const std::byte> chunk)
     { decompressed.insert(decompressed.end(), chunk.begin(), chunk.end()); };
 
     switch (compression)
@@ -460,7 +461,7 @@ public:
         return {lm::radians(lat / 10'000'000.0), lm::radians(lon / 10'000'000.0)};
     }
 
-    void handle_metadata(gsl::span<const std::byte> metadata)
+    void handle_metadata(std::span<const std::byte> metadata)
     {
         rapidjson::Document doc;
         doc.Parse((const char*)metadata.data(), metadata.size_bytes());
@@ -480,7 +481,7 @@ public:
         _status = kReady;
     }
 
-    void handle_raw_metadata(gsl::span<const std::byte> metadata_data)
+    void handle_raw_metadata(std::span<const std::byte> metadata_data)
     {
         if (_internal_compression != Compression::kNone)
         {
@@ -501,7 +502,7 @@ public:
     }
 
     std::optional<std::vector<DirectoryEntry>> decode_dir_entries(
-        gsl::span<const std::byte> dir_data)
+        std::span<const std::byte> dir_data)
     {
         const auto* it = dir_data.data();
         const auto* end = dir_data.data() + dir_data.size_bytes();
@@ -582,7 +583,7 @@ public:
     }
 
     std::optional<std::vector<DirectoryEntry>> decode_raw_dir_entries(
-        gsl::span<const std::byte> raw_dir_data)
+        std::span<const std::byte> raw_dir_data)
     {
         if (_internal_compression != Compression::kNone)
         {
@@ -601,7 +602,7 @@ public:
         }
     }
 
-    void handle_initial_data(gsl::span<const std::byte> raw_data)
+    void handle_initial_data(std::span<const std::byte> raw_data)
     {
         if (raw_data.size_bytes() < sizeof(RawHeader))
         {
@@ -1123,7 +1124,7 @@ public:
 
         auto& projection = geometry.projection;
         projection.set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-        projection.set_descriptor(hrz_proj::wmerc_proj_str);
+        projection.set_descriptor_(hrz_proj::wmerc_proj_str);
 
         geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
         auto tiling = geometry.tiling_scheme.mutable_global_tiling();

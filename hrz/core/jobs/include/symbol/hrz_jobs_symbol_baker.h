@@ -368,7 +368,7 @@ private:
             // This points to the job baking data. Used in finalize.
             // The baking data is retained during the whole job, so it has a longer lifetime than
             // the baker. So this is fine. If this becomes untrue someday, sorry for the headache.
-            gsl::span<const hrz::vt::SymbolBakingData::Image::SpriteGeometry> sprite_geometries;
+            std::span<const hrz::vt::SymbolBakingData::Image::SpriteGeometry> sprite_geometries;
             std::vector<std::pair<uint32_t, int>> instance_index_geometry_index;
             hrz::BlobVector<ImageInstance> gpu_instances;
         };

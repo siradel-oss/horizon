@@ -6,11 +6,11 @@
 
 #    include <X11/Xlib.h>
 #    include <X11/Xutil.h>
-#    include <assert.h>
-#    include <gsl/gsl-lite.hpp>
 #    include <stb_image.h>
 #    include <unistd.h>
 
+#    include <cassert>
+#    include <span>
 #    include <stdio.h>
 
 #    define RES_NAME "horizon-test-client"
@@ -27,7 +27,7 @@ int screen;
 Window window = {};
 
 // https://stackoverflow.com/a/15595582
-gsl::span<unsigned long> create_icon_from_bytes(int width, int height, const unsigned char* bytes)
+std::span<unsigned long> create_icon_from_bytes(int width, int height, const unsigned char* bytes)
 {
     size_t data_size = 2 + width * height;
     auto data = (unsigned long*)malloc(data_size * sizeof(unsigned long));

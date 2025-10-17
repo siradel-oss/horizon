@@ -330,7 +330,7 @@ TEST(String, encode_code_point_to_utf8)
         int n = str::encode_code_point_to_utf8(0x007e, utf8_bytes);
         ASSERT_EQ(n, 1);
         utf8_bytes[n] = 0;
-        EXPECT_STREQ(gsl::span<const char>(utf8_bytes, n).data(), expected);
+        EXPECT_STREQ(std::span<const char>(utf8_bytes, n).data(), expected);
     }
 
     // [U+0080, U+07FF]
@@ -339,7 +339,7 @@ TEST(String, encode_code_point_to_utf8)
         int n = str::encode_code_point_to_utf8(0x00e9, utf8_bytes);
         ASSERT_EQ(n, 2);
         utf8_bytes[n] = 0;
-        EXPECT_STREQ(gsl::span<const char>(utf8_bytes, n).data(), expected);
+        EXPECT_STREQ(std::span<const char>(utf8_bytes, n).data(), expected);
     }
 
     // [U+00800, U+FFFF]
@@ -348,7 +348,7 @@ TEST(String, encode_code_point_to_utf8)
         int n = str::encode_code_point_to_utf8(0x0920, utf8_bytes);
         ASSERT_EQ(n, 3);
         utf8_bytes[n] = 0;
-        EXPECT_STREQ(gsl::span<const char>(utf8_bytes, n).data(), expected);
+        EXPECT_STREQ(std::span<const char>(utf8_bytes, n).data(), expected);
     }
 
     // [U+10000, U+10FFFF]
@@ -357,7 +357,7 @@ TEST(String, encode_code_point_to_utf8)
         int n = str::encode_code_point_to_utf8(0x1d11e, utf8_bytes);
         ASSERT_EQ(n, 4);
         utf8_bytes[n] = 0;
-        EXPECT_STREQ(gsl::span<const char>(utf8_bytes, n).data(), expected);
+        EXPECT_STREQ(std::span<const char>(utf8_bytes, n).data(), expected);
     }
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
+#include <cstdint>
+#include <span>
 #include <string_view>
 
 namespace hrz
@@ -47,17 +47,17 @@ AttributionHandle register_attribution(AttributionRegistry*, const Attribution&)
 // used together.
 AttributionHandle register_attribution_group(
     AttributionRegistry*,
-    gsl::span<const AttributionHandle>);
+    std::span<const AttributionHandle>);
 
 void use_this_frame(AttributionRegistry*, AttributionHandle);
-void use_this_frame(AttributionRegistry*, gsl::span<const AttributionHandle>);
+void use_this_frame(AttributionRegistry*, std::span<const AttributionHandle>);
 
 void reset_used_attributions(AttributionRegistry*);
 
 // Use the result before any other method is called.
 // The std::string_views in the Attribution objects are guaranteed to be stable until the registry
 // is destroyed. However the array itself might not.
-gsl::span<const Attribution> get_frame_attributions(const AttributionRegistry*);
+std::span<const Attribution> get_frame_attributions(const AttributionRegistry*);
 
 } // namespace attribution
 } // namespace hrz

@@ -182,7 +182,7 @@ void SelectionStorageUint32Texture<Indirection>::work_gpu(Render* render)
 
     if (!_texture)
     {
-        auto data = hrz::as_bytes(gsl::span<const uint32_t>(_bitmask));
+        auto data = std::as_bytes(std::span<const uint32_t>(_bitmask));
 
         assert(_texture_size.x > 0 && _texture_size.y > 0);
 
@@ -205,7 +205,7 @@ void SelectionStorageUint32Texture<Indirection>::work_gpu(Render* render)
     {
         render->my->update_texture(
             _texture, my::TextureFormat::R32UI, 0, 0, 0, 0, _texture_size.x, _texture_size.y, 1,
-            hrz::as_bytes(gsl::span<const uint32_t>(_bitmask)));
+            std::as_bytes(std::span<const uint32_t>(_bitmask)));
         _need_to_update_texture = false;
     }
 }

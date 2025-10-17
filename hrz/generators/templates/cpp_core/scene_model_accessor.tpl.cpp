@@ -17,7 +17,7 @@ namespace hrz::scene_model
 
 std::string get_message_part_raw(
     const {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path)
+    std::span<const uint32_t> path)
 {
     if (path.empty())
     {
@@ -34,7 +34,7 @@ std::string get_message_part_raw(
         {% if not f.is_primitive and not f.is_enum %}
         {% if not f.repeated %}
         case {{ f.id }}:
-            return get_message_part_raw(obj.{{ f.name }}(), path);
+            return get_message_part_raw(obj.{{ f.name|to_cpp_field_name }}(), path);
         {% else %}
         case {{ f.id }}:
         {
@@ -42,9 +42,9 @@ std::string get_message_part_raw(
             if (!path.empty())
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
-                    return get_message_part_raw(obj.{{ f.name }}(element_index), path.subspan(1));
+                    return get_message_part_raw(obj.{{ f.name|to_cpp_field_name }}(element_index), path.subspan(1));
                 }
                 else
                 {
@@ -64,7 +64,7 @@ std::string get_message_part_raw(
         case {{ f.id }}:
         {
             ::HrzProtocol::{{ f.type|to_wrapper }} wrapper;
-            wrapper.set_value(obj.{{ f.name }}());
+            wrapper.set_value(obj.{{ f.name|to_cpp_field_name }}());
             return wrapper.SerializeAsString();
         }
         {% else %}
@@ -74,10 +74,10 @@ std::string get_message_part_raw(
             if (!path.empty())
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
                     ::HrzProtocol::{{ f.type|to_wrapper }} wrapper;
-                    wrapper.set_value(obj.{{ f.name }}(element_index));
+                    wrapper.set_value(obj.{{ f.name|to_cpp_field_name }}(element_index));
                     return wrapper.SerializeAsString();
                 }
                 else
@@ -107,7 +107,7 @@ std::string get_message_part_raw(
 
 void set_message_part_raw(
     {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     std::string_view raw)
 {
     if (path.empty())
@@ -126,7 +126,7 @@ void set_message_part_raw(
         {% if not f.is_primitive and not f.is_enum %}
         {% if not f.repeated %}
         case {{ f.id }}:
-            set_message_part_raw(*obj.mutable_{{ f.name }}(), path, raw);
+            set_message_part_raw(*obj.mutable_{{ f.name|to_cpp_field_name }}(), path, raw);
             break;
         {% else %}
         case {{ f.id }}:
@@ -134,9 +134,9 @@ void set_message_part_raw(
             if (!path.empty())
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
-                    set_message_part_raw(*obj.mutable_{{ f.name }}(element_index), path.subspan(1), raw);
+                    set_message_part_raw(*obj.mutable_{{ f.name|to_cpp_field_name }}(element_index), path.subspan(1), raw);
                 }
                 else
                 {
@@ -156,9 +156,9 @@ void set_message_part_raw(
             ::HrzProtocol::{{ f.type|to_wrapper }} wrapper;
             wrapper.ParseFromArray(raw.data(), raw.size());
             {% if f.is_enum %}
-            obj.set_{{ f.name }}(({{ f.type|to_cpp_qualified_name }})wrapper.value());
+            obj.set_{{ f.name|to_cpp_field_name }}(({{ f.type|to_cpp_qualified_name }})wrapper.value());
             {% else %}
-            obj.set_{{ f.name }}(wrapper.value());
+            obj.set_{{ f.name|to_cpp_field_name }}(wrapper.value());
             {% endif %}
             break;
         }
@@ -169,14 +169,14 @@ void set_message_part_raw(
             if (!path.empty())
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
                     ::HrzProtocol::{{ f.type|to_wrapper }} wrapper;
                     wrapper.ParseFromArray(raw.data(), raw.size());
                     {% if f.is_enum %}
-                    obj.set_{{ f.name }}(element_index, ({{ f.type|to_cpp_qualified_name }})wrapper.value());
+                    obj.set_{{ f.name|to_cpp_field_name }}(element_index, ({{ f.type|to_cpp_qualified_name }})wrapper.value());
                     {% else %}
-                    obj.set_{{ f.name }}(element_index, wrapper.value());
+                    obj.set_{{ f.name|to_cpp_field_name }}(element_index, wrapper.value());
                     {% endif %}
                 }
                 else
@@ -205,7 +205,7 @@ void set_message_part_raw(
 
 uint32_t count_message_part(
     const {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path)
+    std::span<const uint32_t> path)
 {
     if (path.empty())
     {
@@ -222,24 +222,24 @@ uint32_t count_message_part(
         {% if not f.is_primitive and not f.is_enum %}
         {% if not f.repeated %}
         case {{ f.id }}:
-            return count_message_part(obj.{{ f.name }}(), path);
+            return count_message_part(obj.{{ f.name|to_cpp_field_name }}(), path);
         {% else %}
         case {{ f.id }}:
             if (path.empty())
             {
-                return (uint32_t)obj.{{ f.name }}_size();
+                return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
             }
             else
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
-                    return count_message_part(obj.{{ f.name }}(element_index), path.subspan(1));
+                    return count_message_part(obj.{{ f.name|to_cpp_field_name }}(element_index), path.subspan(1));
                 }
                 else
                 {
                     HRZ_LOG_ERROR("Invalid \"{{ f.name }}\" index in \"{{ type.full_name }}\": {}", element_index);
-                    return (uint32_t)obj.{{ f.name }}_size();
+                    return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
                 }
             }
         {% endif %}
@@ -251,7 +251,7 @@ uint32_t count_message_part(
         case {{ f.id }}:
             if (path.empty())
             {
-                return (uint32_t)obj.{{ f.name }}_size();
+                return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
             }
         {% endif %}
         {% endif %}
@@ -268,7 +268,7 @@ uint32_t count_message_part(
 
 uint32_t add_message_part_raw(
     {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     std::string_view raw)
 {
     if (path.empty())
@@ -286,26 +286,26 @@ uint32_t add_message_part_raw(
         {% if not f.is_primitive and not f.is_enum %}
         {% if not f.repeated %}
         case {{ f.id }}:
-            return add_message_part_raw(*obj.mutable_{{ f.name }}(), path, raw);
+            return add_message_part_raw(*obj.mutable_{{ f.name|to_cpp_field_name }}(), path, raw);
         {% else %}
         case {{ f.id }}:
             if (path.empty())
             {
-                auto new_obj = obj.add_{{ f.name }}();
+                auto new_obj = obj.add_{{ f.name|to_cpp_field_name }}();
                 new_obj->ParseFromArray(raw.data(), raw.size());
-                return (uint32_t)obj.{{ f.name }}_size();
+                return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
             }
             else
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
-                    return add_message_part_raw(*obj.mutable_{{ f.name }}(element_index), path.subspan(1), raw);
+                    return add_message_part_raw(*obj.mutable_{{ f.name|to_cpp_field_name }}(element_index), path.subspan(1), raw);
                 }
                 else
                 {
                     HRZ_LOG_ERROR("Invalid \"{{ f.name }}\" index in \"{{ type.full_name }}\": {}", element_index);
-                    return (uint32_t)obj.{{ f.name }}_size();
+                    return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
                 }
             }
         {% endif %}
@@ -320,11 +320,11 @@ uint32_t add_message_part_raw(
                 ::HrzProtocol::{{ f.type|to_wrapper }} wrapper;
                 wrapper.ParseFromArray(raw.data(), raw.size());
                 {% if f.is_enum %}
-                obj.add_{{ f.name }}(({{ f.type|to_cpp_qualified_name }})wrapper.value());
+                obj.add_{{ f.name|to_cpp_field_name }}(({{ f.type|to_cpp_qualified_name }})wrapper.value());
                 {% else %}
-                obj.add_{{ f.name }}(wrapper.value());
+                obj.add_{{ f.name|to_cpp_field_name }}(wrapper.value());
                 {% endif %}
-                return (uint32_t)obj.{{ f.name }}_size();
+                return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
             }
         {% endif %}
         {% endif %}
@@ -341,7 +341,7 @@ uint32_t add_message_part_raw(
 
 uint32_t remove_message_part(
     {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path)
+    std::span<const uint32_t> path)
 {
     if (path.empty())
     {
@@ -358,7 +358,7 @@ uint32_t remove_message_part(
         {% if not f.is_primitive and not f.is_enum %}
         {% if not f.repeated %}
         case {{ f.id }}:
-            return remove_message_part(*obj.mutable_{{ f.name }}(), path);
+            return remove_message_part(*obj.mutable_{{ f.name|to_cpp_field_name }}(), path);
         {% else %}
         case {{ f.id }}:
         {
@@ -366,11 +366,11 @@ uint32_t remove_message_part(
             if (!path.empty())
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
                     if (path.size() == 1)
                     {
-                        auto field = obj.mutable_{{ f.name }}();
+                        auto field = obj.mutable_{{ f.name|to_cpp_field_name }}();
                         if (element_index < (uint32_t)field->size())
                         {
                             field->erase(field->begin() + element_index);
@@ -381,19 +381,19 @@ uint32_t remove_message_part(
                     else
                     {
                         uint32_t element_index = path[0];
-                        return remove_message_part(*obj.mutable_{{ f.name }}(element_index), path.subspan(1));
+                        return remove_message_part(*obj.mutable_{{ f.name|to_cpp_field_name }}(element_index), path.subspan(1));
                     }
                 }
                 else
                 {
                     HRZ_LOG_ERROR("Invalid \"{{ f.name }}\" index in \"{{ type.full_name }}\": {}", element_index);
-                    return (uint32_t)obj.{{ f.name }}_size();
+                    return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
                 }
             }
             else
             {
                 HRZ_LOG_ERROR("Missing \"{{ f.name }}\" index in \"{{ type.full_name }}\"");
-                return (uint32_t)obj.{{ f.name }}_size();
+                return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
             }
         }
         {% endif %}
@@ -408,11 +408,11 @@ uint32_t remove_message_part(
             if (!path.empty())
             {
                 uint32_t element_index = path[0];
-                if (element_index < (uint32_t)obj.{{ f.name }}_size())
+                if (element_index < (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size())
                 {
                     if (path.size() == 1)
                     {
-                        auto field = obj.mutable_{{ f.name }}();
+                        auto field = obj.mutable_{{ f.name|to_cpp_field_name }}();
                         if (element_index < (uint32_t)field->size())
                         {
                             field->erase(field->begin() + element_index);
@@ -423,19 +423,19 @@ uint32_t remove_message_part(
                     else
                     {
                         HRZ_LOG_ERROR("Invalid path in \"{{ type.full_name }}\": {}", this_root);
-                        return (uint32_t)obj.{{ f.name }}_size();
+                        return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
                     }
                 }
                 else
                 {
                     HRZ_LOG_ERROR("Invalid \"{{ f.name }}\" index in \"{{ type.full_name }}\": {}", element_index);
-                    return (uint32_t)obj.{{ f.name }}_size();
+                    return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
                 }
             }
             else
             {
                 HRZ_LOG_ERROR("Missing \"{{ f.name }}\" index in \"{{ type.full_name }}\"");
-                return (uint32_t)obj.{{ f.name }}_size();
+                return (uint32_t)obj.{{ f.name|to_cpp_field_name }}_size();
             }
         }
         {% endif %}

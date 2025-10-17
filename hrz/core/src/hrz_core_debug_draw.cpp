@@ -158,7 +158,7 @@ struct TextCommand
 };
 
 TextVertexData generate_text_vertex_data(
-    gsl::span<const TextCommand> commands,
+    std::span<const TextCommand> commands,
     const FontData& font_data)
 {
     TextVertexData data;
@@ -257,7 +257,7 @@ TextVertexData generate_text_vertex_data(
 }
 
 void generate_text_instance_data(
-    gsl::span<TextCommand> consumable_commands,
+    std::span<TextCommand> consumable_commands,
     std::vector<TextInstanceData>& instance_data)
 {
     for (auto& command : consumable_commands)
@@ -365,7 +365,7 @@ struct PrimitiveCommand
 };
 
 std::vector<PrimitiveVertex> generate_primitive_vertex_data(
-    gsl::span<PrimitiveCommand> consumable_commands)
+    std::span<PrimitiveCommand> consumable_commands)
 {
     size_t vertex_count = 0;
     for (auto& command : consumable_commands)
@@ -709,7 +709,7 @@ namespace debug_draw
 namespace
 {
 void init_text_renderable(
-    gsl::span<TextCommand> consumable_commands,
+    std::span<TextCommand> consumable_commands,
     TextRenderable& renderable,
     DebugDrawSystem* dd,
     Render* render)
@@ -773,7 +773,7 @@ void init_text_renderable(
 }
 
 void update_text_renderable(
-    gsl::span<TextCommand> consumable_commands,
+    std::span<TextCommand> consumable_commands,
     TextRenderable& renderable,
     const FontData& font_data,
     Render* render)
@@ -864,7 +864,7 @@ void update_text_renderable(
     assert(
         instance_bytes <= TextDataTextureWidth * TextDataTextureHeight * TextDataTexturePixelSize);
 
-    gsl::span<const std::byte> instance_data(
+    std::span<const std::byte> instance_data(
         (std::byte*)renderable.instance_data.data(), instance_bytes);
 
     // Do the update in two blocks: one for the rows that are full and one for the last row
@@ -893,7 +893,7 @@ void clean_text_renderable(TextRenderable& renderable, Render* render)
 }
 
 void init_primitive_renderable(
-    gsl::span<PrimitiveCommand> consumable_commands,
+    std::span<PrimitiveCommand> consumable_commands,
     my::PrimitiveType primitive_type,
     PrimitiveRenderable& renderable,
     DebugDrawSystem* dd,
@@ -934,7 +934,7 @@ void init_primitive_renderable(
 }
 
 void update_primitive_renderable(
-    gsl::span<PrimitiveCommand> consumable_commands,
+    std::span<PrimitiveCommand> consumable_commands,
     PrimitiveRenderable& renderable,
     Render* render)
 {
@@ -1094,7 +1094,7 @@ void init_render(DebugDrawSystem* dd, Render* render)
         t_res.layout.width = texture_size;
         t_res.layout.height = texture_size;
 
-        auto upload_data = gsl::span<const std::byte>{pixels, pixel_count};
+        auto upload_data = std::span<const std::byte>{pixels, pixel_count};
         t_res.data = {&upload_data, 1};
 
         dd->font_data.atlas_texture = render->rc->alloc(
@@ -1213,7 +1213,7 @@ inline bool is_visible(Group group)
     return g_visibility_mask.test((size_t)group);
 }
 
-void polyline(gsl::span<const double> coords, const lm::vec4& color, Space space, Group group)
+void polyline(std::span<const double> coords, const lm::vec4& color, Space space, Group group)
 {
     if (!is_visible(group)) return;
 
@@ -1231,7 +1231,7 @@ void polyline(gsl::span<const double> coords, const lm::vec4& color, Space space
     }
 }
 
-void points(gsl::span<const double> coords, const lm::vec4& color, Space space, Group group)
+void points(std::span<const double> coords, const lm::vec4& color, Space space, Group group)
 {
     if (!is_visible(group)) return;
 
@@ -1248,7 +1248,7 @@ void points(gsl::span<const double> coords, const lm::vec4& color, Space space, 
     }
 }
 
-void triangles(gsl::span<const double> coords, const lm::vec4& color, Space space, Group group)
+void triangles(std::span<const double> coords, const lm::vec4& color, Space space, Group group)
 {
     if (!is_visible(group)) return;
 
@@ -1383,7 +1383,7 @@ void dev_ui(DebugDrawSystem* dd, mu_Context* ctx, const char* window_name)
 
 } // namespace debug_draw
 
-void DebugDraw::polyline(gsl::span<const lm::dvec3> points) const
+void DebugDraw::polyline(std::span<const lm::dvec3> points) const
 {
     dd::polyline({(const double*)points.data(), points.size() * 3}, color, space, group);
 }
@@ -1393,7 +1393,7 @@ void DebugDraw::polyline(std::initializer_list<lm::dvec3> points) const
     dd::polyline({(const double*)points.begin(), points.size() * 3}, color, space, group);
 }
 
-void DebugDraw::polyline_geo(gsl::span<const GeoPosition3> points) const
+void DebugDraw::polyline_geo(std::span<const GeoPosition3> points) const
 {
     dd::polyline(
         {(const double*)points.data(), points.size() * 3}, color, dd::Space::LatLonAltRad, group);
@@ -1405,7 +1405,7 @@ void DebugDraw::polyline_geo(std::initializer_list<GeoPosition3> points) const
         {(const double*)points.begin(), points.size() * 3}, color, dd::Space::LatLonAltRad, group);
 }
 
-void DebugDraw::points(gsl::span<const lm::dvec3> points) const
+void DebugDraw::points(std::span<const lm::dvec3> points) const
 {
     dd::points({(const double*)points.data(), points.size() * 3}, color, space, group);
 }
@@ -1415,7 +1415,7 @@ void DebugDraw::points(std::initializer_list<lm::dvec3> points) const
     dd::points({(const double*)points.begin(), points.size() * 3}, color, space, group);
 }
 
-void DebugDraw::points_geo(gsl::span<const GeoPosition3> points) const
+void DebugDraw::points_geo(std::span<const GeoPosition3> points) const
 {
     dd::points(
         {(const double*)points.data(), points.size() * 3}, color, dd::Space::LatLonAltRad, group);
@@ -1427,7 +1427,7 @@ void DebugDraw::points_geo(std::initializer_list<GeoPosition3> points) const
         {(const double*)points.begin(), points.size() * 3}, color, dd::Space::LatLonAltRad, group);
 }
 
-void DebugDraw::triangles(gsl::span<const lm::dvec3> points) const
+void DebugDraw::triangles(std::span<const lm::dvec3> points) const
 {
     dd::triangles({(const double*)points.data(), points.size() * 3}, color, space, group);
 }
@@ -1437,7 +1437,7 @@ void DebugDraw::triangles(std::initializer_list<lm::dvec3> points) const
     dd::triangles({(const double*)points.begin(), points.size() * 3}, color, space, group);
 }
 
-void DebugDraw::triangles_geo(gsl::span<const GeoPosition3> points) const
+void DebugDraw::triangles_geo(std::span<const GeoPosition3> points) const
 {
     dd::triangles(
         {(const double*)points.data(), points.size() * 3}, color, dd::Space::LatLonAltRad, group);

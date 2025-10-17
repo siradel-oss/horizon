@@ -57,7 +57,7 @@ private:
         const std::vector<data::Metadata>* metadata;
 
         helpers::Rect approximate_global_unit_rect(
-            gsl::span<const Cell>,
+            std::span<const Cell>,
             const helpers::Rect& unit_bounds) const;
     };
 
@@ -92,7 +92,7 @@ private:
 
     void _initialize_cells(
         const data::GpuResourceSnapshot& snapshot,
-        gsl::span<const data::GpuResourceBucketGroupingFunction> grouping_functions);
+        std::span<const data::GpuResourceBucketGroupingFunction> grouping_functions);
 
     // For each associated bucket in a cell, creates a new child cell per resource
     // in the bucket.
@@ -117,7 +117,7 @@ private:
 
     // Performs the "split" treemap algorithm, to compute the dimensions of
     // the given cells in order to fit them into the given rect.
-    void _compute_treemap(gsl::span<Cell> cells, const ui::helpers::Rect& base_rect);
+    void _compute_treemap(std::span<Cell> cells, const ui::helpers::Rect& base_rect);
 
     void _recursive_draw(size_t cell_id, const helpers::Rect& rect);
     void _recursive_dropdown(size_t cell_id);
@@ -125,7 +125,7 @@ private:
     void _cell_metadata_window(size_t cell_id, bool open);
 
     std::vector<size_t> _build_navigation_bar_cell_path() const;
-    void _recursive_navigation_bar(gsl::span<size_t> ids, lm::dvec2 position);
+    void _recursive_navigation_bar(std::span<size_t> ids, lm::dvec2 position);
 
     void _snapshot_selector(const data::Database&);
 
@@ -145,7 +145,7 @@ private:
     // Returns a rect which, from a cell's point of view, is its parent's rect
     helpers::Rect _get_cell_unit_bounds() const { return _cells.at(0).unit_rect; };
 
-    size_t _total_size(gsl::span<const Cell> cells) const;
+    size_t _total_size(std::span<const Cell> cells) const;
 };
 
 } // namespace ui::widget

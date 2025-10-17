@@ -220,7 +220,7 @@ uint64_t attr_hashed_inner(const RefAttributeValue& value)
         case AttributeValueType::kNumber:
             return hrz::hash_mix<uint64_t>(
                 0,
-                hrz::bit_cast<uint64_t>(RefAttributeValueTraits::get_number(
+                std::bit_cast<uint64_t>(RefAttributeValueTraits::get_number(
                     unsafe{"type has been checked"}, value, empty{})));
         case AttributeValueType::kUint64:
             return hrz::hash_mix<uint64_t>(
@@ -230,7 +230,7 @@ uint64_t attr_hashed_inner(const RefAttributeValue& value)
         case AttributeValueType::kInt64:
             return hrz::hash_mix<uint64_t>(
                 0,
-                hrz::bit_cast<uint64_t>(RefAttributeValueTraits::get_int64(
+                std::bit_cast<uint64_t>(RefAttributeValueTraits::get_int64(
                     unsafe{"type has been checked"}, value, empty{})));
         case AttributeValueType::kString:
             return hrz::murmur3_x64_64(RefAttributeValueTraits::get_string(
@@ -241,7 +241,7 @@ uint64_t attr_hashed_inner(const RefAttributeValue& value)
 
 std::string_view attr_to_string_from_non_string(
     const RefAttributeValue& value,
-    gsl::span<char> buffer)
+    std::span<char> buffer)
 {
     switch (attr_type(value))
     {

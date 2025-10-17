@@ -17,6 +17,7 @@
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_gen_index_pool.h>
 #include <hrz_fnd_gen_object_pool.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_meta.h>
 #include <hrz_fnd_thread.h>
 #include <hrz_fnd_time.h>
@@ -524,7 +525,7 @@ struct TileNode
         pl_transform_in_place_canonical(
             &hrz_proj::lonlat_rad_to_ecef, HRZ_ARRAY_COUNT(points), &points[0].x);
 
-        bsphere_ecef = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(points));
+        bsphere_ecef = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(points));
 
         horizon_occlusion_point = hrz::horizon_culling::compute_occlusion_point(bounds);
     }
@@ -2924,7 +2925,7 @@ struct VectorTilesActor : public Actor
 
     std::pair<SceneViewBitset, SceneViewBitset> traverse_tile_node_for_visibility_set(
         TileId tile_id,
-        gsl::span<const VectorTilesCuller> view_cullers,
+        std::span<const VectorTilesCuller> view_cullers,
         VisibilitySetBuilder& visibility_set,
         SceneViewBitset visiting_in,
         SceneViewBitset refining_in,

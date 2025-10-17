@@ -101,7 +101,6 @@ cc_library(
         "//libs/proj_lite",
         "//third_party:brotlidec",
         "//third_party:fmtlib",
-        "//third_party:gsl",
         "//third_party:harfbuzz",
         "//third_party:microui",
         "//third_party:pcg_basic",

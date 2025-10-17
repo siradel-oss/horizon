@@ -639,7 +639,7 @@ RenderRequest work(
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry* attributions,
     ActorRunner* ar,
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     PlanetSurface* planet,
     const SelectionSystem* selection)
 {
@@ -723,7 +723,7 @@ static Layer* _get_layer_from_object(
 void pick(
     VectorTilesLayerSystem* system,
     const picking::ObjectReference& obj,
-    gsl::span<const std::pair<uint32_t, float>> heatmap_values,
+    std::span<const std::pair<uint32_t, float>> heatmap_values,
     hrz_proto::PickResults& picking_results)
 {
     hrz::flat_hash_map<uint64_t, hrz_proto::PickLayerResult*> layer_results;
@@ -767,8 +767,8 @@ void pick(
 
 std::pair<size_t, size_t> make_typed_object_references(
     VectorTilesLayerSystem* system,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output)
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output)
 {
     assert(objs.size() <= output.size());
 
@@ -844,7 +844,7 @@ RenderRequest work_gpu(
     Render* render,
     BlobAllocator* ba,
     SymbolCullingSystem* culling,
-    gsl::span<const RenderViewInfo> views_info)
+    std::span<const RenderViewInfo> views_info)
 {
     assert(system && ba && render);
 
@@ -865,7 +865,7 @@ void draw(
     VectorTilesLayerSystem* system,
     Render* render,
     const RenderRequest& render_request,
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry* attributions)
 {

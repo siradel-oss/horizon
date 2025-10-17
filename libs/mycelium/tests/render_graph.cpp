@@ -2,6 +2,7 @@
 #include <mycelium.h>
 
 #include <memory>
+#include <span>
 
 class DummyInstance : public my::Instance
 {
@@ -97,7 +98,7 @@ public:
         uint32_t w,
         uint32_t h,
         uint32_t d,
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         TextureUpdateDataLayout) override
     {
     }

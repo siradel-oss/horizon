@@ -1,9 +1,9 @@
 #pragma once
 
 #include <assert.h>
-#include <gsl/gsl-lite.hpp>
 
 #include <array>
+#include <span>
 
 namespace hrz
 {
@@ -75,9 +75,9 @@ public:
         return _data[i];
     }
 
-    inline operator gsl::span<T>() { return gsl::span<T>(_data.data(), _size); }
+    inline operator std::span<T>() { return std::span<T>(_data.data(), _size); }
 
-    inline operator gsl::span<const T>() const { return gsl::span<const T>(_data.data(), _size); }
+    inline operator std::span<const T>() const { return std::span<const T>(_data.data(), _size); }
 
     inline bool operator==(const StaticVector& other) const
     {

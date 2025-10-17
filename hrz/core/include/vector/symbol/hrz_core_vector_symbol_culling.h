@@ -34,7 +34,7 @@ struct GroupHandle
 SymbolCullingSystem* create();
 void destroy(SymbolCullingSystem*);
 
-RenderRequest work(SymbolCullingSystem*, JobScheduler*, gsl::span<const RenderViewInfo> views_info);
+RenderRequest work(SymbolCullingSystem*, JobScheduler*, std::span<const RenderViewInfo> views_info);
 void work_gpu(SymbolCullingSystem*, Render* render);
 void draw(SymbolCullingSystem*, const RenderRequest&);
 

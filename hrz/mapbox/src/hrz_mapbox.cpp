@@ -6,7 +6,6 @@
 #include <hrz_common_color.h>
 #include <hrz_common_geo.h>
 #include <hrz_common_proto_settings.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_hash.h>
@@ -24,6 +23,7 @@
 #include <rapidjson/writer.h>
 #include <string.h>
 
+#include <bit>
 #include <string>
 
 #define CHECK_ERR_M(MSG, ...)   \
@@ -213,7 +213,7 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
 
         auto* projection = geometry->mutable_projection();
         projection->set_descriptor_type(hrz_proto::SrsDescriptorType::SRID_DESCRIPTOR);
-        projection->set_descriptor("EPSG:3857");
+        projection->set_descriptor_("EPSG:3857");
 
         auto* tiling_scheme = tiled_provider->mutable_tiling_scheme();
         tiling_scheme->set_type(hrz_proto::GLOBAL);
@@ -366,7 +366,7 @@ bool parse_geojson_source(
 
         provider->set_url("data:;base64,");
         hrz::str::encode_base64(
-            hrz::as_bytes(gsl::span<const char>(geojson_str, buffer.GetSize())),
+            std::as_bytes(std::span<const char>(geojson_str, buffer.GetSize())),
             provider->mutable_url());
     }
 

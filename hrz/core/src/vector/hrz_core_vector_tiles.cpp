@@ -261,7 +261,7 @@ struct VectorTiles
 
             std::vector<vector_data::FeatureIdHash> selected_object_ids(count);
             selection::get_selected_objects(
-                selection, _layer_id, gsl::span<vector_data::FeatureIdHash>(selected_object_ids));
+                selection, _layer_id, std::span<vector_data::FeatureIdHash>(selected_object_ids));
 
             hrz::flat_hash_set<vector_data::FeatureIdHash> selected_features;
             for (auto id : selected_object_ids)
@@ -333,7 +333,7 @@ struct VectorTiles
         _actor_channel.send(to_actor::SetMaxScreenSpaceError{sse});
     }
 
-    void set_attributes(gsl::span<const hrz_proto::StylingAttributeRef* const> attribs)
+    void set_attributes(std::span<const hrz_proto::StylingAttributeRef* const> attribs)
     {
         to_actor::SetAttributes set_attributes;
         set_attributes.attributes.reserve(attribs.size());
@@ -345,7 +345,7 @@ struct VectorTiles
         _actor_channel.send(std::move(set_attributes));
     }
 
-    void set_palettes(gsl::span<const hrz_proto::Palette* const> palettes)
+    void set_palettes(std::span<const hrz_proto::Palette* const> palettes)
     {
         to_actor::SetPalettes set_palettes;
         set_palettes.palettes.reserve(palettes.size());
@@ -476,7 +476,7 @@ struct VectorTiles
 
     void set_all_representations(
         ReprRegistry* repr_reg,
-        gsl::span<const hrz_proto::VectorRepr* const> new_reprs)
+        std::span<const hrz_proto::VectorRepr* const> new_reprs)
     {
         _repr_types.clear();
 
@@ -530,7 +530,7 @@ struct VectorTiles
         _actor_channel.send(to_actor::SetLighting{settings});
     }
 
-    void work_gpu(Render* render, gsl::span<const RenderViewInfo> views_info)
+    void work_gpu(Render* render, std::span<const RenderViewInfo> views_info)
     {
         HRZ_SCOPED_SAMPLE("vector tiles work_gpu");
 
@@ -570,7 +570,7 @@ struct VectorTiles
         Render* render,
         const RenderRequest& render_request,
         ReprRegistry* repr_reg,
-        gsl::span<const RenderViewInfo> views_info,
+        std::span<const RenderViewInfo> views_info,
         SymbolCullingSystem* symbol_culling,
         AttributionRegistry* attributions)
     {
@@ -791,7 +791,7 @@ bool is_working(VectorTiles* vt)
     return vt->is_working();
 }
 
-void work_gpu(VectorTiles* vt, Render* render, gsl::span<const RenderViewInfo> views_info)
+void work_gpu(VectorTiles* vt, Render* render, std::span<const RenderViewInfo> views_info)
 {
     vt->work_gpu(render, views_info);
 }
@@ -801,7 +801,7 @@ void draw(
     Render* render,
     const RenderRequest& render_request,
     ReprRegistry* repr_reg,
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     SymbolCullingSystem* symbol_culling,
     AttributionRegistry* attributions)
 {
@@ -824,7 +824,7 @@ void set_clamping(VectorTiles* vt, const hrz_proto::VectorClamping& clamping)
 
 void set_attributes(
     VectorTiles* vt,
-    gsl::span<const hrz_proto::StylingAttributeRef* const> attributes)
+    std::span<const hrz_proto::StylingAttributeRef* const> attributes)
 {
     vt->set_attributes(attributes);
 }
@@ -834,7 +834,7 @@ void set_max_screen_space_error(VectorTiles* vt, unsigned int sse)
     vt->set_max_screen_space_error(sse);
 }
 
-void set_palettes(VectorTiles* vt, gsl::span<const hrz_proto::Palette* const> palettes)
+void set_palettes(VectorTiles* vt, std::span<const hrz_proto::Palette* const> palettes)
 {
     vt->set_palettes(palettes);
 }
@@ -867,7 +867,7 @@ void add_representation(VectorTiles* vt, ReprRegistry* repr_reg, hrz_proto::Vect
 void set_all_representations(
     VectorTiles* vt,
     ReprRegistry* repr_reg,
-    gsl::span<const hrz_proto::VectorRepr* const> reprs)
+    std::span<const hrz_proto::VectorRepr* const> reprs)
 {
     vt->set_all_representations(repr_reg, reprs);
 }

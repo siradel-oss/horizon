@@ -4,8 +4,8 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <gsl/gsl-lite.hpp>
 
+#include <span>
 #include <string_view>
 
 namespace hrz::log
@@ -47,7 +47,7 @@ void message(
  * for systems that don't need to call this too often but want to hold on to
  * the returned data.
  */
-uint32_t get_history(gsl::span<LogLineView> history);
+uint32_t get_history(std::span<LogLineView> history);
 
 void clear_history();
 

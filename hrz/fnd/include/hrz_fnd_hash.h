@@ -1,22 +1,21 @@
 #pragma once
 
 #include "hrz_fnd_int128.h"
-#include "hrz_fnd_mem.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <functional>
+#include <span>
 #include <stdint.h>
 #include <string_view>
 
 namespace hrz
 {
-uint128 murmur3_x64_128(gsl::span<const std::byte> s);
+uint128 murmur3_x64_128(std::span<const std::byte> s);
 
 inline uint128 murmur3_x64_128(std::string_view s)
 {
-    return murmur3_x64_128(gsl::span<const std::byte>((const std::byte*)s.data(), s.size()));
+    return murmur3_x64_128(std::span<const std::byte>((const std::byte*)s.data(), s.size()));
 }
 
 // From CityHash and Murmur
@@ -33,7 +32,7 @@ constexpr T hash_mix(T x_high, T x_low)
     return (T)b;
 }
 
-inline uint64_t murmur3_x64_64(gsl::span<const std::byte> s)
+inline uint64_t murmur3_x64_64(std::span<const std::byte> s)
 {
     uint128 res = murmur3_x64_128(s);
     return hrz::hash_mix(low(res), high(res));
@@ -47,7 +46,7 @@ inline uint64_t murmur3_x64_64(std::string_view s)
 
 // Mixes multiples hashes together __in place__.
 template<typename T>
-constexpr T hash_mix(gsl::span<T> hashes)
+constexpr T hash_mix(std::span<T> hashes)
 {
     size_t step = 1;
 
@@ -76,13 +75,13 @@ template<typename... Args>
 constexpr size_t hash_values(const Args&... value)
 {
     size_t hashes[] = {hash_value(value)...};
-    return hash_mix(gsl::span<size_t>(hashes));
+    return hash_mix(std::span<size_t>(hashes));
 }
 
 // This computes a hash for a set of key value pairs.
 // The keys are ordered because we don't want their order to be significant obviously.
 // However duplicate keys with different values has undefined behaviour. So be careful.
-uint64_t hash_kv(gsl::span<const std::pair<std::string_view, std::string_view>>);
+uint64_t hash_kv(std::span<const std::pair<std::string_view, std::string_view>>);
 
 } // namespace hrz
 
@@ -112,8 +111,8 @@ struct hash<lm::Vector<T, N>>
 {
     size_t operator()(const lm::Vector<T, N>& other) const
     {
-        gsl::span<const T> span(other.m);
-        return (size_t)hrz::murmur3_x64_64(hrz::as_bytes(span));
+        std::span<const T> span(other.m);
+        return (size_t)hrz::murmur3_x64_64(std::as_bytes(span));
     }
 };
 
@@ -122,8 +121,8 @@ struct hash<lm::Matrix<T, N>>
 {
     size_t operator()(const lm::Matrix<T, N>& other) const
     {
-        gsl::span<const T> span(other.e);
-        return (size_t)hrz::murmur3_x64_64(hrz::as_bytes(span));
+        std::span<const T> span(other.e);
+        return (size_t)hrz::murmur3_x64_64(std::as_bytes(span));
     }
 };
 

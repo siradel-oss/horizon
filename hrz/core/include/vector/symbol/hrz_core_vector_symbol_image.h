@@ -33,7 +33,7 @@ struct ImageRenderable : public my::Renderer::Renderable
 
     struct RenderData
     {
-        gsl::span<Batch> batches;
+        std::span<Batch> batches;
 
         my::ResourceHandle anchor_ubo = my::ResourceHandle::null();
         my::ResourceHandle anchor_data_texture = my::ResourceHandle::null();

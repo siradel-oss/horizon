@@ -132,7 +132,7 @@ std::optional<hrz_proto::RasterPickResult> get_tile_image_pixel(
 RasterMergeGroup::RasterMergeGroup(
     uint32_t atlas_size,
     std::unique_ptr<vtex::PageCacheManager> page_cache,
-    gsl::span<const hrz_proto::ImageFormat> source_image_formats,
+    std::span<const hrz_proto::ImageFormat> source_image_formats,
     hrz_proto::ImageFormat composed_image_format,
     std::optional<TileBoundsTracker>&& bounds_tracker,
     std::string_view name) :
@@ -146,7 +146,7 @@ RasterMergeGroup::RasterMergeGroup(
 {
     _atlas_image_format = _page_cache->get_page_table()->get_format();
 
-    _rasters_hash = compute_rasters_hash({nullptr, 0});
+    _rasters_hash = compute_rasters_hash({});
     _requested_tile_list_hashes.clear();
 
     if (_bounds_tracker.has_value())
@@ -338,7 +338,7 @@ void RasterMergeGroup::get_attributions(
 }
 
 void RasterMergeGroup::update_requested_tiles(
-    gsl::span<const gsl::span<const RequestedTileCoords>> requested_tiles,
+    std::span<const std::span<const RequestedTileCoords>> requested_tiles,
     size_t requested_tiles_hash,
     TileRequestOrigin allowed_tile_request_origins,
     IRasterCollection* collection,
@@ -474,15 +474,15 @@ void RasterMergeGroup::update_requested_tiles(
 }
 
 uint128 RasterMergeGroup::compute_rasters_hash(
-    gsl::span<const CollectionRasterReference> rasters) const
+    std::span<const CollectionRasterReference> rasters) const
 {
-    return murmur3_x64_128(hrz::as_bytes(rasters));
+    return murmur3_x64_128(std::as_bytes(rasters));
 }
 
 void RasterMergeGroup::set_rasters(
     IRasterCollection* collection,
     JobScheduler* js,
-    gsl::span<const CollectionRasterReference> new_rasters,
+    std::span<const CollectionRasterReference> new_rasters,
     uint32_t scene_views_bitset)
 {
     _scene_views_bitset = scene_views_bitset;
@@ -1604,7 +1604,7 @@ std::pair<TileCoords, RasterProvider::SourceLockTicket> find_most_detailed_tile_
 void RasterMergeGroup::pick(
     IRasterCollection* collection,
     const lm::dvec3& position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters,
+    std::span<const hrz_proto::LayerHandle> included_rasters,
     hrz_proto::PickResults& pick_results)
 {
     // Picking tries to gather as much results as it can from loaded tiles that are still in
@@ -1701,7 +1701,7 @@ void RasterMergeGroup::pick(
 void RasterMergeGroup::schedule_raster_data_fetch(
     IRasterCollection* collection,
     const GeoPosition2& position,
-    gsl::span<const hrz_proto::LayerHandle> layers,
+    std::span<const hrz_proto::LayerHandle> layers,
     std::vector<RasterDataFetchMergeGroupTicket>& out_tickets)
 {
     for (const auto& raster_pair : _rasters)

@@ -67,15 +67,15 @@ public:
 
     void work_gpu(ModelPrototype*, Render*);
     void set_data(ModelPrototype*, const InstanceGroupData&);
-    void set_colors(ModelPrototype*, gsl::span<const lm::ubvec4> instance_colors);
+    void set_colors(ModelPrototype*, std::span<const lm::ubvec4> instance_colors);
     void set_selection(const hrz::flat_hash_set<uint64_t>& selected_objects);
 
     constexpr bool has_selected_features() const { return _selection_storage.has_any_selected(); }
 
     void patch_primitive(RenderablePrimitive* prim) const;
 
-    gsl::span<const my::UboBinding> write_ubo_bindings(Render*, SharedResources*);
-    gsl::span<const my::TextureBinding> write_texture_bindings(Render*, SharedResources*);
+    std::span<const my::UboBinding> write_ubo_bindings(Render*, SharedResources*);
+    std::span<const my::TextureBinding> write_texture_bindings(Render*, SharedResources*);
 };
 
 } // namespace hrz::model

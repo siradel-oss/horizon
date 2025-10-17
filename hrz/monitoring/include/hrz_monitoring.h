@@ -2,9 +2,8 @@
 
 #include "hrz_monitoring_protocol.h"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <functional>
+#include <span>
 
 namespace hrz_monitoring
 {
@@ -24,9 +23,9 @@ bool push_messages(MessageBuffer* buffer, const hrz_monitoring_proto::Monitoring
 
 void append_messages(MessageBuffer* buffer, const MessageBuffer* appended);
 
-void parse_messages(gsl::span<const std::byte> data, const MessageCallback& callback);
+void parse_messages(std::span<const std::byte> data, const MessageCallback& callback);
 
-gsl::span<const std::byte> get_written_data(const MessageBuffer* buffer);
+std::span<const std::byte> get_written_data(const MessageBuffer* buffer);
 
 uint32_t get_message_encoding_version();
 

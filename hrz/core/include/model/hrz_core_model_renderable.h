@@ -42,8 +42,8 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
 
         // Only filled when written to the renderer queue.
         // This points to memory in the renderer queue.
-        gsl::span<const my::UboBinding> ubo_bindings;
-        gsl::span<const my::TextureBinding> texture_bindings;
+        std::span<const my::UboBinding> ubo_bindings;
+        std::span<const my::TextureBinding> texture_bindings;
     };
 
     struct PrimitiveRenderData

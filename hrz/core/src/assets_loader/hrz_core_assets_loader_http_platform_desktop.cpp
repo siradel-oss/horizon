@@ -126,7 +126,7 @@ class DesktopHttpLoader : public IHttpLoader
     struct RequestData
     {
         std::vector<std::byte> data;
-        std::optional<gsl::span<std::byte>> data_dst;
+        std::optional<std::span<std::byte>> data_dst;
     };
 
     using Message = std::variant<AddRequestMsg, CancelRequestMsg>;
@@ -698,7 +698,7 @@ public:
         }
     }
 
-    bool copy_data(HttpTicket ticket, gsl::span<std::byte> dst) override
+    bool copy_data(HttpTicket ticket, std::span<std::byte> dst) override
     {
         auto it = _finished_requests_data.find(ticket);
         if (it != _finished_requests_data.end())

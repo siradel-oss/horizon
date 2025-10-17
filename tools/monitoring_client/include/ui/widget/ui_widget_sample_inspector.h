@@ -64,13 +64,13 @@ private:
     void _draw_sample_table_row(
         const data::SampleId&,
         const data::SampleSystem&,
-        gsl::span<const data::Thread>,
+        std::span<const data::Thread>,
         context::ActionBus&);
 
     void _draw_inspector(
         uint64_t record_hash,
         const data::SampleSystem&,
-        gsl::span<const data::Thread>,
+        std::span<const data::Thread>,
         context::ActionBus&);
     void _draw_separator_line();
 
@@ -78,7 +78,7 @@ private:
         const hrz::flat_hash_map<uint64_t, data::SampleRecord>& records,
         const ImGuiTableSortSpecs*);
     void _sort_and_insert_samples(
-        gsl::span<const data::SampleId>,
+        std::span<const data::SampleId>,
         const data::SampleSystem&,
         const ImGuiTableSortSpecs*);
 

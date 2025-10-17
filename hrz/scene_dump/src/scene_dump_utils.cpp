@@ -6,7 +6,7 @@
 #include <google/protobuf/dynamic_message.h>
 #include <lz4.h>
 
-std::vector<std::byte> hrz::scene_dump::decompress(gsl::span<const std::byte> data)
+std::vector<std::byte> hrz::scene_dump::decompress(std::span<const std::byte> data)
 {
     std::vector<std::byte> buffer(data.size() * 3);
 
@@ -47,7 +47,7 @@ std::vector<std::byte> hrz::scene_dump::read_file(const char* file_path)
     return buffer;
 }
 
-bool hrz::scene_dump::write_file(const char* file, gsl::span<const std::byte> data)
+bool hrz::scene_dump::write_file(const char* file, std::span<const std::byte> data)
 {
     FILE* fp = fopen(file, "wb+");
     if (!fp) return false;
@@ -75,7 +75,7 @@ static google::protobuf::FileDescriptorProto make_minimal_descriptor()
     return descriptor;
 }
 
-uint32_t hrz::scene_dump::get_scene_dump_version(gsl::span<const std::byte> data)
+uint32_t hrz::scene_dump::get_scene_dump_version(std::span<const std::byte> data)
 {
     google::protobuf::SimpleDescriptorDatabase database;
     database.Add(make_minimal_descriptor());
@@ -90,7 +90,7 @@ uint32_t hrz::scene_dump::get_scene_dump_version(gsl::span<const std::byte> data
 }
 
 std::vector<std::byte> hrz::scene_dump::set_scene_dump_version(
-    gsl::span<const std::byte> data,
+    std::span<const std::byte> data,
     uint32_t version)
 {
     google::protobuf::SimpleDescriptorDatabase database;

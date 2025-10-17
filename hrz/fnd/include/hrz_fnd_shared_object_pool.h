@@ -3,13 +3,12 @@
 #include <hrz_fnd_class.h>
 #include <hrz_fnd_hash.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cassert>
 #include <cstdint>
 #include <functional>
 #include <iterator>
 #include <limits>
+#include <span>
 #include <utility>
 #include <vector>
 

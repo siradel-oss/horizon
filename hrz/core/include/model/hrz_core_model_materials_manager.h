@@ -161,7 +161,7 @@ public:
 
     void recreate_all_materials(
         ModelPrototype* proto,
-        gsl::span<const hrz_proto::Material> materials)
+        std::span<const hrz_proto::Material> materials)
     {
         recreate_all_materials_inner(proto);
 
@@ -173,7 +173,7 @@ public:
 
     void recreate_all_materials(
         ModelPrototype* proto,
-        gsl::span<const hrz_proto::Material* const> materials)
+        std::span<const hrz_proto::Material* const> materials)
     {
         recreate_all_materials_inner(proto);
 

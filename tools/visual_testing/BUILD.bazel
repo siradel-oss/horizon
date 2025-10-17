@@ -29,7 +29,6 @@ cc_binary(
         "//hrz/scene_dump:migration",
         "//libs/argparser",
         "//libs/wsi",
-        "//third_party:gsl",
         "//third_party/stb_image_write",
     ],
 )

@@ -7,7 +7,6 @@
 
 #include <hrz_common_blob_array.h>
 #include <hrz_fnd_arena.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_class.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_intern_string.h>
@@ -15,6 +14,7 @@
 #include <hrz_fnd_maths.h>
 #include <hrz_protocol_all.h>
 
+#include <bit>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -305,16 +305,16 @@ struct OperatorEvaluator
 {
     struct Context
     {
-        gsl::span<const hrz::Palette> palettes;
-        gsl::span<hrz::RngState> rng_states;
+        std::span<const hrz::Palette> palettes;
+        std::span<hrz::RngState> rng_states;
         hrz::Arena* arena;
     };
 
     bool operator()(
         Context& ctx,
         Operator op,
-        gsl::span<const gsl::span<const RawValue>> arg_buffers,
-        gsl::span<RawValue> res_buffer) const;
+        std::span<const std::span<const RawValue>> arg_buffers,
+        std::span<RawValue> res_buffer) const;
 };
 
 static bool is_random_function(Operator kind)

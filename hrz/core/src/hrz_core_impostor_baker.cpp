@@ -476,7 +476,7 @@ void advance_baking(
             process->baked_resources.model_bsphere = process->model_bsphere;
 
             {
-                gsl::span<const std::byte> scale_coefficients_data(
+                std::span<const std::byte> scale_coefficients_data(
                     (std::byte*)process->scale_coefficients.data(),
                     process->scale_coefficients.size() * sizeof(lm::vec3));
 

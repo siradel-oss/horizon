@@ -142,7 +142,7 @@ public:
     }
 
 private:
-    bool setup_provider(AttributionRegistry* attributions, gsl::span<const std::byte> raw_data)
+    bool setup_provider(AttributionRegistry* attributions, std::span<const std::byte> raw_data)
     {
         HRZ_SCOPED_SAMPLE("setup provider");
 
@@ -154,7 +154,7 @@ private:
 
         geometry.projection.set_descriptor_type(
             hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-        geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
+        geometry.projection.set_descriptor_(hrz_proj::wmerc_proj_str);
 
         // The spec says "The global-mercator (aka Spherical Mercator) profile is assumed".
         geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
@@ -189,7 +189,7 @@ private:
         fetcher.emplace(
             std::make_unique<UrlTileRequester>(
                 std::make_unique<MultiPatternTileUrlGenerator>(
-                    gsl::span<const std::string>(tilejson.url_patterns), 1),
+                    std::span<const std::string>(tilejson.url_patterns), 1),
                 mime_type_override, headers),
             0, missing_tile_policy == hrz_proto::MissingTilePolicy::USE_LOWER_RESOLUTION,
             std::make_unique<ImageTileDecoder>(image_format, raster_id),

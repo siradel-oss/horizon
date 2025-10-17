@@ -304,7 +304,7 @@ bool Treemap::Filter::load_from_json_string(const char* json)
 
 void Treemap::_initialize_cells(
     const data::GpuResourceSnapshot& snapshot,
-    gsl::span<const data::GpuResourceBucketGroupingFunction> grouping_functions)
+    std::span<const data::GpuResourceBucketGroupingFunction> grouping_functions)
 {
     _cells.clear();
 
@@ -467,7 +467,7 @@ void Treemap::_compute_filtered_sizes(size_t cell_id)
     }
 }
 
-void Treemap::_compute_treemap(gsl::span<Cell> cells, const Rect& base_rect)
+void Treemap::_compute_treemap(std::span<Cell> cells, const Rect& base_rect)
 {
     // Trivial cases
     if (cells.empty())
@@ -478,7 +478,7 @@ void Treemap::_compute_treemap(gsl::span<Cell> cells, const Rect& base_rect)
     if (cells.size() == 1)
     {
         auto& cell = cells[0];
-        auto children = gsl::span<Cell>(&_cells[cell.first_child_id], cell.child_count);
+        auto children = std::span<Cell>(&_cells[cell.first_child_id], cell.child_count);
 
         cell.unit_rect = base_rect;
         _compute_treemap(children, _get_cell_unit_bounds());
@@ -489,7 +489,7 @@ void Treemap::_compute_treemap(gsl::span<Cell> cells, const Rect& base_rect)
     // Split the list of cells into two lists L1 and L2
     // Where all indices of cells inside L1 are lower than those of L2
     // And the total size of L1 is as close as L2 as possible
-    gsl::span<Cell> L1, L2;
+    std::span<Cell> L1, L2;
     Rect R1, R2;
 
     size_t total_size = _total_size(cells);
@@ -798,7 +798,7 @@ std::vector<size_t> Treemap::_build_navigation_bar_cell_path() const
     return cell_path;
 }
 
-void Treemap::_recursive_navigation_bar(gsl::span<size_t> ids, lm::dvec2 position)
+void Treemap::_recursive_navigation_bar(std::span<size_t> ids, lm::dvec2 position)
 {
     if (ids.empty() || _cells.empty())
     {
@@ -1053,8 +1053,8 @@ void Treemap::_filter_selector_parse_json_error_popup(bool open)
 
 void Treemap::_tree_viewer()
 {
-    static std::function<void(gsl::span<const Cell>, size_t)> table_row =
-        [&](gsl::span<const Cell> cells, size_t cell_id)
+    static std::function<void(std::span<const Cell>, size_t)> table_row =
+        [&](std::span<const Cell> cells, size_t cell_id)
     {
         ImGui::PushID(cell_id);
 
@@ -1130,7 +1130,7 @@ Rect Treemap::_compute_subcell_rect(const Rect& main_rect) const
     return rect;
 }
 
-size_t Treemap::_total_size(gsl::span<const Cell> cells) const
+size_t Treemap::_total_size(std::span<const Cell> cells) const
 {
     size_t sum = 0;
     for (const auto& cell : cells)
@@ -1141,7 +1141,7 @@ size_t Treemap::_total_size(gsl::span<const Cell> cells) const
 }
 
 Rect Treemap::Cell::approximate_global_unit_rect(
-    gsl::span<const Cell> cells,
+    std::span<const Cell> cells,
     const Rect& unit_bounds) const
 {
     // Because the rect into which a cell's children are drawn is computed

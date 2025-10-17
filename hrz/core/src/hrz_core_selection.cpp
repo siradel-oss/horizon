@@ -155,7 +155,7 @@ size_t selected_objects_count(const SelectionSystem* sys)
 size_t get_selected_objects(
     const SelectionSystem* sys,
     uint64_t layer_id,
-    gsl::span<uint64_t> out_object_ids)
+    std::span<uint64_t> out_object_ids)
 {
     assert(sys);
     auto it = sys->selected_count_per_layer.find(layer_id);

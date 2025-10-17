@@ -4,10 +4,10 @@
 
 #include <hrz_fnd_format.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <optional>
+#include <span>
 #include <string_view>
 
 #define IM_VEC2_CLASS_EXTRA      \
@@ -161,7 +161,7 @@ Rect available_rect();
 // Returns the thread name as defined in the given span if it is there, or a generic "Thread #X"
 // if it is not.
 // Do not hold on to the result.
-const char* get_thread_name(uint32_t thread_id, gsl::span<const data::Thread> threads);
+const char* get_thread_name(uint32_t thread_id, std::span<const data::Thread> threads);
 
 struct Duration
 {
@@ -201,18 +201,18 @@ fmt::memory_buffer& static_fmt_memory_buffer();
 
 // Clears the buffer and formats it as a null terminated string.
 template<typename... Args>
-void format_buffer(fmt::memory_buffer& buffer, std::string_view fmt, Args&&... args)
+void format_buffer(fmt::memory_buffer& buffer, fmt::format_string<Args...> fmt, Args&&... args)
 {
     buffer.clear();
-    fmt::format_to(std::back_inserter(buffer), fmt.data(), args...);
+    fmt::format_to(std::back_inserter(buffer), fmt, std::forward<Args>(args)...);
     buffer.push_back(0);
 }
 
 template<typename... Args>
-lm::dvec2 compute_text_size(std::string_view str, Args&&... args)
+lm::dvec2 compute_text_size(fmt::format_string<Args...> fmt, Args&&... args)
 {
     auto& buffer = static_fmt_memory_buffer();
-    format_buffer(buffer, str, args...);
+    format_buffer(buffer, fmt, std::forward<Args>(args)...);
 
     return ImGui::CalcTextSize(buffer.data());
 }
@@ -222,11 +222,11 @@ void draw_text_centered(
     ImDrawList* draw_list,
     lm::dvec2 center,
     uint32_t col,
-    std::string_view str,
+    fmt::format_string<Args...> fmt,
     Args&&... args)
 {
     auto& buffer = static_fmt_memory_buffer();
-    format_buffer(buffer, str, args...);
+    format_buffer(buffer, fmt, std::forward<Args>(args)...);
 
     lm::dvec2 text_size = ImGui::CalcTextSize(buffer.data());
     draw_list->AddText(center - text_size / 2.0f, col, buffer.data());
@@ -237,11 +237,11 @@ void draw_text_right_aligned(
     ImDrawList* draw_list,
     lm::dvec2 right_edge,
     uint32_t col,
-    std::string_view str,
+    fmt::format_string<Args...> fmt,
     Args&&... args)
 {
     auto& buffer = static_fmt_memory_buffer();
-    format_buffer(buffer, str, args...);
+    format_buffer(buffer, fmt, std::forward<Args>(args)...);
 
     lm::dvec2 text_size = ImGui::CalcTextSize(buffer.data());
     draw_list->AddText(right_edge - lm::dvec2{text_size.x, 0.0}, col, buffer.data());
@@ -252,16 +252,16 @@ void help_marker(const char* text);
 bool filtered_metric_selector(
     const char* title,
     bool is_open,
-    gsl::span<const data::Metric> metrics,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Metric> metrics,
+    std::span<const data::Thread> threads,
     std::optional<data::Metric>& selected,
     const char* null_option = nullptr);
 
 bool filtered_metric_multiselector(
     const char* title,
     bool is_open,
-    gsl::span<const data::Metric> metrics,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Metric> metrics,
+    std::span<const data::Thread> threads,
     std::vector<bool>& selected,
     bool force_same_unit = false);
 

@@ -9,11 +9,11 @@
 #include <hrz_common_tile_coords.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <mycelium_backend.h>
 #include <mycelium_render_graph.h>
 #include <mycelium_renderer.h>
 
+#include <span>
 #include <utility>
 
 namespace hrz
@@ -47,7 +47,7 @@ struct GeometryResources
 
 struct RequestedTiles
 {
-    gsl::span<const planet::RequestedTileCoords> tiles;
+    std::span<const planet::RequestedTileCoords> tiles;
     size_t hash;
     bool was_updated;
 };

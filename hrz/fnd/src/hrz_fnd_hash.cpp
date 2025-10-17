@@ -5,7 +5,7 @@
 namespace hrz
 {
 
-uint64_t hash_kv(gsl::span<const std::pair<std::string_view, std::string_view>> kvs)
+uint64_t hash_kv(std::span<const std::pair<std::string_view, std::string_view>> kvs)
 {
     if (kvs.empty())
     {
@@ -35,7 +35,7 @@ uint64_t hash_kv(gsl::span<const std::pair<std::string_view, std::string_view>> 
         hashes.push_back(pair.second);
     }
 
-    return hash_mix(gsl::span<uint64_t>(hashes.data(), hashes.size()));
+    return hash_mix(std::span<uint64_t>(hashes.data(), hashes.size()));
 }
 
 } // namespace hrz

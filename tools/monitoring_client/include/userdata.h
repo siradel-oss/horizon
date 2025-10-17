@@ -1,11 +1,11 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
 #include <rapidjson/fwd.h>
 
 #include <list>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -59,7 +59,7 @@ public:
         _views.clear();
     }
 
-    gsl::span<const char* const> get_elements() const { return _views; };
+    std::span<const char* const> get_elements() const { return _views; };
 
     RecentElementSystem(size_t max_elements = 12);
 

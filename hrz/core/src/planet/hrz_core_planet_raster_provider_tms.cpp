@@ -7,11 +7,11 @@
 #include <hrz_common_tickets.h>
 #include <hrz_fnd_url_utils.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <pugixml/pugixml.hpp>
 
 #include <cassert>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace
@@ -19,7 +19,7 @@ namespace
 
 struct TilesetTileUrlGenerator : public hrz::TileUrlGenerator
 {
-    TilesetTileUrlGenerator(const hrz::BaseUrl& base_url, gsl::span<const std::string> tileset_urls)
+    TilesetTileUrlGenerator(const hrz::BaseUrl& base_url, std::span<const std::string> tileset_urls)
     {
         assert(tileset_urls.size() > 0);
 
@@ -42,7 +42,8 @@ struct TilesetTileUrlGenerator : public hrz::TileUrlGenerator
         const uint32_t tile_count = 1 << z;
         const uint32_t ry = tile_count - y - 1;
 
-        return fmt::format(pattern, fmt::arg("x", x), fmt::arg("y", y), fmt::arg("ry", ry));
+        return fmt::format(
+            fmt::runtime(pattern), fmt::arg("x", x), fmt::arg("y", y), fmt::arg("ry", ry));
     }
 
 private:

@@ -4,6 +4,7 @@
 
 #include <bitset>
 #include <cinttypes>
+#include <span>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -161,7 +162,7 @@ void GLInstance::update_texture(
     uint32_t w,
     uint32_t h,
     uint32_t d,
-    gsl::span<const std::byte> data,
+    std::span<const std::byte> data,
     TextureUpdateDataLayout data_layout)
 {
     if (get_resource_type(texture_handle) != Resource::Texture)

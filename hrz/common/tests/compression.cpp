@@ -48,7 +48,7 @@ TEST_F(Compression, DecompressGzip)
         read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt.gz").c_str());
 
     std::vector<std::byte> decompressed;
-    auto callback = [&](gsl::span<const std::byte> chunk)
+    auto callback = [&](std::span<const std::byte> chunk)
     { decompressed.insert(decompressed.end(), chunk.begin(), chunk.end()); };
 
     ASSERT_TRUE(reference.has_value());
@@ -67,7 +67,7 @@ TEST_F(Compression, DecompressBrotli)
         read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt.br").c_str());
 
     std::vector<std::byte> decompressed;
-    auto callback = [&](gsl::span<const std::byte> chunk)
+    auto callback = [&](std::span<const std::byte> chunk)
     { decompressed.insert(decompressed.end(), chunk.begin(), chunk.end()); };
 
     ASSERT_TRUE(reference.has_value());
@@ -86,7 +86,7 @@ TEST_F(Compression, DecompressZstd)
         read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt.zst").c_str());
 
     std::vector<std::byte> decompressed;
-    auto callback = [&](gsl::span<const std::byte> chunk)
+    auto callback = [&](std::span<const std::byte> chunk)
     { decompressed.insert(decompressed.end(), chunk.begin(), chunk.end()); };
 
     ASSERT_TRUE(reference.has_value());

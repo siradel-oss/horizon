@@ -38,22 +38,22 @@ public:
         uint32_t priority,
         const monitoring::ResourceOwner& owner) override
     {
-        return hrz::bit_cast<Ticket>(_pmtiles->request_tile(tile_coords, queue, priority, owner));
+        return std::bit_cast<Ticket>(_pmtiles->request_tile(tile_coords, queue, priority, owner));
     }
 
     void cancel(Ticket ticket, AssetsLoader*, JobScheduler* js) override
     {
-        _pmtiles->cancel(hrz::bit_cast<PmTiles::QueryHandle>(ticket), js);
+        _pmtiles->cancel(std::bit_cast<PmTiles::QueryHandle>(ticket), js);
     }
 
     bool is_finished(Ticket ticket, AssetsLoader*) override
     {
-        return _pmtiles->is_finished(hrz::bit_cast<PmTiles::QueryHandle>(ticket));
+        return _pmtiles->is_finished(std::bit_cast<PmTiles::QueryHandle>(ticket));
     }
 
     bool is_success(Ticket ticket, AssetsLoader*) override
     {
-        return _pmtiles->is_success(hrz::bit_cast<PmTiles::QueryHandle>(ticket));
+        return _pmtiles->is_success(std::bit_cast<PmTiles::QueryHandle>(ticket));
     }
 
     std::pair<blobs::BlobHandle, std::string> retrieve_blob(
@@ -62,7 +62,7 @@ public:
         BlobAllocator*) override
     {
         return std::make_pair(
-            _pmtiles->retrieve_blob(hrz::bit_cast<PmTiles::QueryHandle>(ticket)),
+            _pmtiles->retrieve_blob(std::bit_cast<PmTiles::QueryHandle>(ticket)),
             _mime_type_override);
     }
 

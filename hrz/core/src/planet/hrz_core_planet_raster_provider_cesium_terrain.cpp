@@ -53,7 +53,8 @@ struct TileUrlGenerator : public hrz::TileUrlGenerator
             y = tile_count - y - 1;
         }
 
-        return fmt::format(url_pattern, fmt::arg("x", x), fmt::arg("y", y), fmt::arg("z", z));
+        return fmt::format(
+            fmt::runtime(url_pattern), fmt::arg("x", x), fmt::arg("y", y), fmt::arg("z", z));
     }
 };
 
@@ -312,7 +313,7 @@ private:
     // files erroneously includes some fields from the TileJSON specification, and also
     // names the `scheme` property `schema`.
     // Cesium's source code for its terrain provider is the actual source of truth.
-    bool setup_provider(AttributionRegistry* attributions, gsl::span<const std::byte> raw_data)
+    bool setup_provider(AttributionRegistry* attributions, std::span<const std::byte> raw_data)
     {
         HRZ_SCOPED_SAMPLE("parse cesium terrain tile json");
 
@@ -346,7 +347,8 @@ private:
                 {
                     static constexpr std::string_view kValidArgs[] = {"x", "y", "z", "version"};
                     url_patterns.push_back(base_url.derive(fmt::format(
-                        hrz::str::sanitize_named_fmt_arguments(pattern.GetString(), kValidArgs),
+                        fmt::runtime(hrz::str::sanitize_named_fmt_arguments(
+                            pattern.GetString(), kValidArgs)),
                         fmt::arg("x", "{x}"), fmt::arg("y", "{y}"), fmt::arg("z", "{z}"),
                         fmt::arg("version", version))));
                 }
@@ -413,7 +415,7 @@ private:
         {
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.projection.set_descriptor(hrz_proj::lonlat_deg_proj_str);
+            geometry.projection.set_descriptor_(hrz_proj::lonlat_deg_proj_str);
 
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
             auto tiling = geometry.tiling_scheme.mutable_global_tiling();
@@ -451,7 +453,7 @@ private:
         {
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-            geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
+            geometry.projection.set_descriptor_(hrz_proj::wmerc_proj_str);
 
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
             auto tiling = geometry.tiling_scheme.mutable_global_tiling();

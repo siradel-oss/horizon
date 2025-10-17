@@ -349,7 +349,6 @@ cc_library(
         "//libs/ws:ws_client",
         "//third_party:basisu",
         "//third_party:earcut",
-        "//third_party:gsl",
         "//third_party:microui",
         "//third_party:pugixml",
         "//third_party:rapidjson",

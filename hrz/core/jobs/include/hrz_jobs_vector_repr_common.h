@@ -9,8 +9,9 @@
 #include <hrz_jobs_protocol.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
+
+#include <span>
 
 namespace hrz::vector_repr
 {

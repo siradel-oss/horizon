@@ -4,12 +4,12 @@
 #include "hrz_common_text.h"
 #include "hrz_fnd_variant.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <hb.h>
 #include <stb_truetype.h>
 
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace hrz
@@ -71,7 +71,7 @@ struct Font
     // a pinned blob forever.
     // @Todo Investigate font memory being pinned.
     FontHandle font_handle;
-    std::variant<gsl::span<const std::byte>, blobs::BlobData> raw_data;
+    std::variant<std::span<const std::byte>, blobs::BlobData> raw_data;
     stbtt_fontinfo stbtt_font;
     hb_font_t* hb_font = nullptr;
     FontInfo info;
@@ -80,7 +80,7 @@ struct Font
 
     Font(
         FontHandle font_handle,
-        std::variant<gsl::span<const std::byte>, blobs::BlobData> raw_data,
+        std::variant<std::span<const std::byte>, blobs::BlobData> raw_data,
         const stbtt_fontinfo& stbtt_font,
         hb_font_t* hb_font,
         const FontInfo& info) :
@@ -146,16 +146,16 @@ struct RasterizedGlyph
     Glyph info;
     lm::ubvec3 raster[RASTER_SIZE];
 
-    gsl::span<lm::ubvec3> raster_span() { return {raster, RASTER_SIZE}; }
+    std::span<lm::ubvec3> raster_span() { return {raster, RASTER_SIZE}; }
 
-    gsl::span<const lm::ubvec3> raster_span() const { return {raster, RASTER_SIZE}; }
+    std::span<const lm::ubvec3> raster_span() const { return {raster, RASTER_SIZE}; }
 };
 
 FontRasterizer* create();
 
 void destroy(FontRasterizer*);
 
-std::optional<FontHandle> add_font(FontRasterizer*, BlobAllocator* ba, gsl::span<const std::byte>);
+std::optional<FontHandle> add_font(FontRasterizer*, BlobAllocator* ba, std::span<const std::byte>);
 std::optional<FontHandle> add_font(FontRasterizer*, BlobAllocator* ba, blobs::BlobHandle);
 
 void remove_font(FontRasterizer*, FontHandle);

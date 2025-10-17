@@ -4,7 +4,7 @@
 #include "hrz_fnd_class.h"
 #include "hrz_fnd_defines.h"
 
-#include <gsl/gsl-lite.hpp>
+#include <span>
 
 namespace hrz
 {

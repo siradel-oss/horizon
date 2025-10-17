@@ -11,7 +11,6 @@
 #include <hrz_common_proj.h>
 #include <hrz_common_proto_geo.h>
 #include <hrz_common_vector_data.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_inlined_vector.h>
@@ -20,6 +19,7 @@
 
 #include <rapidjson/document.h>
 
+#include <bit>
 #include <limits>
 #include <optional>
 
@@ -90,7 +90,7 @@ inline int32_t zigzag_decode(uint32_t value)
 
 // Compute area of simple polygons usings surveyor's formula
 // ref: https://en.wikipedia.org/wiki/Shoelace_formula
-double polygon_area(gsl::span<const lm::dvec3> linestring)
+double polygon_area(std::span<const lm::dvec3> linestring)
 {
     const size_t n = linestring.size() - 1;
     double area = 0.0;
@@ -244,9 +244,9 @@ void compute_polyline_anchor(
     auto linestring_sizes_data = tile.geometry.linestring_sizes.data();
     if (!linestring_sizes_data.has_value()) return;
 
-    auto points = points_data->as_span<const lm::dvec3>().subspan(f.first_point, f.point_count);
-    auto linestring_sizes = linestring_sizes_data->as_span<const uint32_t>().subspan(
-        f.first_linestring_size, f.linestring_count);
+    auto points = points_data->subspan(f.first_point, f.point_count);
+    auto linestring_sizes =
+        linestring_sizes_data->subspan(f.first_linestring_size, f.linestring_count);
 
     lm::dvec3 anchor;
     float anchor_angle{};
@@ -403,8 +403,8 @@ void mvt_parse_polygons(
                 return;
             }
 
-            auto linestring = points_data_opt->as_span<const lm::dvec3>().subspan(
-                current_ring_first_point, current_ring_point_count);
+            auto linestring =
+                points_data_opt->subspan(current_ring_first_point, current_ring_point_count);
 
             // Exterior linestring => new polygon
             if (polygon_area(linestring) >= 0)

@@ -4,11 +4,10 @@
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_monitoring.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <functional>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -151,7 +150,7 @@ public:
     std::string system;
     std::string type;
 
-    gsl::span<const GpuResource> get_resources() const { return _resources; }
+    std::span<const GpuResource> get_resources() const { return _resources; }
 
     size_t get_total_size() const { return _total_size; }
 
@@ -173,7 +172,7 @@ struct GpuResourceBucketGroup
 };
 
 std::vector<GpuResourceBucketGroup> group_gpu_resource_buckets(
-    gsl::span<const data::GpuResourceBucket*> buckets,
+    std::span<const data::GpuResourceBucket*> buckets,
     const GpuResourceBucketGroupingFunction& grouping_function);
 
 class GpuResourceSnapshot
@@ -182,7 +181,7 @@ public:
     size_t id;
     int64_t timestamp;
 
-    gsl::span<const GpuResourceBucket> get_buckets() const { return _buckets; }
+    std::span<const GpuResourceBucket> get_buckets() const { return _buckets; }
 
     const hrz::flat_hash_set<std::string>& get_known_resource_types() const
     {
@@ -270,7 +269,7 @@ struct MetricHash
 class Histogram
 {
 public:
-    Histogram(gsl::span<const double> max_values, gsl::span<const int64_t> counts);
+    Histogram(std::span<const double> max_values, std::span<const int64_t> counts);
 
     struct Bucket
     {
@@ -278,7 +277,7 @@ public:
         double max_value;
     };
 
-    gsl::span<const Bucket> get_buckets() const { return _buckets; }
+    std::span<const Bucket> get_buckets() const { return _buckets; }
 
     constexpr size_t get_max_index() const { return _max_index; }
 
@@ -315,7 +314,7 @@ struct MetricUpdateSystemBase
         return _updates;
     }
 
-    gsl::span<const Metric> get_known_metrics() const { return _known_metrics; }
+    std::span<const Metric> get_known_metrics() const { return _known_metrics; }
 
     std::optional<MetricUpdateId> find_update_at(const Metric& metric, int64_t timestamp) const
     {
@@ -441,13 +440,13 @@ public:
 
     ~Database() { hrz_monitoring::destroy_buffer(_message_buffer); }
 
-    gsl::span<const Frame> get_frames() const { return _frames; }
+    std::span<const Frame> get_frames() const { return _frames; }
 
-    gsl::span<const GpuResourceSnapshot> get_gpu_snapshots() const { return _gpu_snapshots; }
+    std::span<const GpuResourceSnapshot> get_gpu_snapshots() const { return _gpu_snapshots; }
 
-    gsl::span<const BlobSnapshot> get_blob_snapshots() const { return _blob_snapshots; }
+    std::span<const BlobSnapshot> get_blob_snapshots() const { return _blob_snapshots; }
 
-    gsl::span<const Thread> get_threads() const { return _threads; }
+    std::span<const Thread> get_threads() const { return _threads; }
 
     const SampleSystem& get_samples() const { return _samples; }
 

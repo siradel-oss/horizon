@@ -49,7 +49,7 @@ Severity g_log_filter_level = Severity::Debug;
 History g_history = {};
 std::mutex g_history_mutex;
 
-uint32_t get_history(gsl::span<LogLineView> history)
+uint32_t get_history(std::span<LogLineView> history)
 {
     const std::lock_guard<std::mutex> lock(g_history_mutex);
 

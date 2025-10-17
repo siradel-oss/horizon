@@ -21,14 +21,14 @@ static bool is_woff2(const std::byte* data, size_t size)
     return size >= sizeof(woff2_magic) && std::memcmp(data, woff2_magic, sizeof(woff2_magic)) == 0;
 }
 
-bool hrz::is_woff_or_woff2(gsl::span<const std::byte> data)
+bool hrz::is_woff_or_woff2(std::span<const std::byte> data)
 {
     return is_woff(data.data(), data.size()) || is_woff2(data.data(), data.size());
 }
 
 static std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
     hrz::BlobAllocator* ba,
-    gsl::span<const std::byte> woff_data)
+    std::span<const std::byte> woff_data)
 {
     auto size = woff2::ComputeWOFF2FinalSize((const uint8_t*)woff_data.data(), woff_data.size());
     hrz::blobs::BlobHandle blob{};
@@ -67,19 +67,19 @@ static std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
     return blob;
 }
 
-static uint32_t read_be_uint32(gsl::span<const std::byte> data, size_t offset)
+static uint32_t read_be_uint32(std::span<const std::byte> data, size_t offset)
 {
     return (static_cast<uint32_t>(data[offset]) << 24)
         | (static_cast<uint32_t>(data[offset + 1]) << 16)
         | (static_cast<uint32_t>(data[offset + 2]) << 8) | static_cast<uint32_t>(data[offset + 3]);
 }
 
-static uint16_t read_be_uint16(gsl::span<const std::byte> data, size_t offset)
+static uint16_t read_be_uint16(std::span<const std::byte> data, size_t offset)
 {
     return (static_cast<uint16_t>(data[offset]) << 8) | static_cast<uint16_t>(data[offset + 1]);
 }
 
-static void write_be_uint32(gsl::span<std::byte> data, size_t offset, uint32_t value)
+static void write_be_uint32(std::span<std::byte> data, size_t offset, uint32_t value)
 {
     data[offset] = static_cast<std::byte>((value >> 24) & 0xFF);
     data[offset + 1] = static_cast<std::byte>((value >> 16) & 0xFF);
@@ -87,7 +87,7 @@ static void write_be_uint32(gsl::span<std::byte> data, size_t offset, uint32_t v
     data[offset + 3] = static_cast<std::byte>(value & 0xFF);
 }
 
-static void write_be_uint16(gsl::span<std::byte> data, size_t offset, uint16_t value)
+static void write_be_uint16(std::span<std::byte> data, size_t offset, uint16_t value)
 {
     data[offset] = static_cast<std::byte>((value >> 8) & 0xFF);
     data[offset + 1] = static_cast<std::byte>(value & 0xFF);
@@ -100,7 +100,7 @@ static uint32_t round_up_4(uint32_t value)
 
 static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
     hrz::BlobAllocator* ba,
-    gsl::span<const std::byte> woff_data)
+    std::span<const std::byte> woff_data)
 {
     static constexpr size_t kWoffHeaderSize = 44;
     static constexpr size_t kWoffTableEntrySize = 20;
@@ -150,7 +150,7 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
         return std::nullopt;
     }
 
-    gsl::span<std::byte> sfnt_data{sfnt_data_blob.data(), sfnt_data_blob.size()};
+    std::span<std::byte> sfnt_data{sfnt_data_blob.data(), sfnt_data_blob.size()};
     memset(sfnt_data.data(), 0, sfnt_data.size_bytes());
 
     // Compute some stuff for sfnt header
@@ -199,7 +199,7 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
             return std::nullopt;
         }
 
-        gsl::span<std::byte> table_entry =
+        std::span<std::byte> table_entry =
             sfnt_data.subspan(kSfntHeaderSize + i * kSfntTableEntrySize, kSfntTableEntrySize);
         write_be_uint32(table_entry, 0, tag);
         write_be_uint32(table_entry, 4, orig_checksum);
@@ -214,7 +214,7 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
 
 std::optional<hrz::blobs::BlobHandle> hrz::woff_or_woff2_to_ttf(
     BlobAllocator* ba,
-    gsl::span<const std::byte> woff_data)
+    std::span<const std::byte> woff_data)
 {
     if (is_woff(woff_data.data(), woff_data.size()))
     {

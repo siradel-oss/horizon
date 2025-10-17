@@ -20,7 +20,7 @@ static hrz::BSphere<double> compute_bsphere_from_bbox(
     {
         corners[i] = (transform * lm::dvec4(lm::corner(prim_bbox, i), 1.0)).xyz;
     }
-    return hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(corners));
+    return hrz::compute_bounding_sphere(std::span<const lm::dvec3>(corners));
 }
 
 struct AdditionalVertexInputStream

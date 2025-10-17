@@ -181,7 +181,7 @@ public:
         ReprRegistry* repr_reg;
         SymbolCullingSystem* symbol_culling;
         AttributionRegistry* attributions;
-        gsl::span<const RenderViewInfo> views_info;
+        std::span<const RenderViewInfo> views_info;
     };
 
     struct WorkGpuCtx
@@ -300,7 +300,7 @@ public:
         FontRasterizer*,
         SymbolCullingSystem*,
         AttributionRegistry*,
-        gsl::span<const RenderViewInfo> views_info);
+        std::span<const RenderViewInfo> views_info);
 
     RenderRequest work_gpu(Render* render, BlobAllocator*, ImageLoader*, SymbolCullingSystem*);
 

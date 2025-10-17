@@ -267,7 +267,7 @@ void SampleInspector::_draw_record_table_row(
 void SampleInspector::_draw_sample_table_row(
     const data::SampleId& id,
     const data::SampleSystem& system,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Thread> threads,
     context::ActionBus& action_bus)
 {
     const auto& sample = system.get_sample(id);
@@ -345,7 +345,7 @@ void SampleInspector::_draw_sample_table_row(
 void SampleInspector::_draw_inspector(
     uint64_t record_hash,
     const data::SampleSystem& system,
-    gsl::span<const data::Thread> threads,
+    std::span<const data::Thread> threads,
     context::ActionBus& action_bus)
 {
     std::unique_ptr<context::Action> returned_action = nullptr;
@@ -443,7 +443,7 @@ void SampleInspector::_extract_sorted_records(
 }
 
 void SampleInspector::_sort_and_insert_samples(
-    gsl::span<const data::SampleId> ids,
+    std::span<const data::SampleId> ids,
     const data::SampleSystem& system,
     const ImGuiTableSortSpecs* sort_specs)
 {

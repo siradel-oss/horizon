@@ -52,7 +52,6 @@ cc_library(
     deps = [
         ":hrz_monitoring_proto",
         "//hrz/fnd:hrz_fnd",
-        "//third_party:gsl",
     ],
 )
 

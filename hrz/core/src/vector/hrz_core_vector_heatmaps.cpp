@@ -12,6 +12,7 @@
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_gen_object_pool.h>
 #include <hrz_fnd_log.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_time.h>
 #include <hrz_protocol_path_builder.h>
 

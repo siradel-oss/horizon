@@ -35,21 +35,18 @@
 
 namespace
 {
-enum
-{
-    SubdivisionCount = 5,
-    VerticesPerSide = (1 << SubdivisionCount) + 1,
-    RootPatchCount = 20,
-    MaxPatchCount = 512,
-    MaxGeometryCacheCount = MaxPatchCount + MaxPatchCount / 4,
-    MaxPatchDepth = 24,
-    FeedbackDelayMs = 500,
-    FeedbackSubsample = HRZ_S_PLANET_FEEDBACK_SUBSAMPLE,
+constexpr uint32_t SubdivisionCount = 5;
+constexpr uint32_t VerticesPerSide = (1 << SubdivisionCount) + 1;
+constexpr uint32_t RootPatchCount = 20;
+constexpr uint32_t MaxPatchCount = 512;
+constexpr uint32_t MaxGeometryCacheCount = MaxPatchCount + MaxPatchCount / 4;
+constexpr uint32_t MaxPatchDepth = 24;
+constexpr uint32_t FeedbackDelayMs = 500;
+constexpr uint32_t FeedbackSubsample = HRZ_S_PLANET_FEEDBACK_SUBSAMPLE;
 
-    // Bins are groups of patches
-    MaxBinCount = 24,
-    BinSize = HRZ_S_PLANET_BIN_SIZE,
-};
+// Bins are groups of patches
+constexpr uint32_t MaxBinCount = 24;
+constexpr uint32_t BinSize = HRZ_S_PLANET_BIN_SIZE;
 
 enum
 {
@@ -629,7 +626,7 @@ struct TreeTraverseCtx
     lm::dvec2 horizon_cone_half_angle_cos_sin;
     uint32_t reserved_instance_count;
     double terrain_res;
-    gsl::span<const std::pair<uint16_t, uint16_t>> subdivision;
+    std::span<const std::pair<uint16_t, uint16_t>> subdivision;
     my::Renderer::ViewMask main_views;
 };
 
@@ -988,7 +985,7 @@ struct PatchTree
 
             render->my->update_texture(
                 texture.handle, F, 0, 0, y, 0, _data.width() * ColumnsPerEntry, h, 1,
-                hrz::as_bytes(_data.as_span(0, y)));
+                std::as_bytes(_data.as_span(0, y)));
 
             texture.reset_dirty_rows();
             return true;
@@ -1410,7 +1407,7 @@ struct PatchTree
         else
         {
             if (patch.distance < ctx.terrain_res * patch.compute_average_edge_length()
-                && patch.level < MaxPatchDepth - 1)
+                && patch.level < (int32_t)MaxPatchDepth - 1)
             {
                 should_visit_children = true;
             }
@@ -1481,7 +1478,7 @@ struct PatchTree
             to_render_reserved_count -= 1;
             render = false;
         }
-        else if (patch.has_children() && to_render_reserved_count + 3 <= MaxPatchCount)
+        else if (patch.has_children() && to_render_reserved_count + 3 <= (int32_t)MaxPatchCount)
         {
             to_render_reserved_count += 3; // +4 children - 1 current
 
@@ -1554,7 +1551,7 @@ struct PatchTree
 
         patch.geometry_slot = get_free_geometry_slot();
 
-        gsl::span<PatchVertex> slice(
+        std::span<PatchVertex> slice(
             geometry.data() + patch.geometry_slot * vertices_per_patch, vertices_per_patch);
 
         slice[0] = patch.a;
@@ -1652,7 +1649,7 @@ struct PatchTree
                 bin_index_for_patch_type[patch_type] = bin_index;
             }
 
-            assert(bin_index >= 0 && bin_index < MaxBinCount);
+            assert(bin_index >= 0 && bin_index < (int32_t)MaxBinCount);
             return &patch_bins[bin_index];
         };
 
@@ -1670,7 +1667,7 @@ struct PatchTree
             {
                 tessellate_patch(ctx, patch_id);
 
-                gsl::span<const PatchVertex> vertices(
+                std::span<const PatchVertex> vertices(
                     geometry.data() + patch.geometry_slot * vertices_per_patch, vertices_per_patch);
 
                 const PatchVertex& first_vertex = vertices[0];
@@ -2115,7 +2112,7 @@ struct HeightPrecomputation
         const my::TextureBinding& tessellation,
         const my::TextureBinding& patches,
         const my::UboBinding& planet_params,
-        gsl::span<const PatchTree::PatchBin> bins,
+        std::span<const PatchTree::PatchBin> bins,
         my::ResourceHandle precompute_bin_ubo)
     {
         HRZ_SCOPED_SAMPLE("height precomputation draw");

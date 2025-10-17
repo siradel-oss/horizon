@@ -2,7 +2,6 @@
 
 #include "hrz_types.pb.h"
 
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_defines.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_maths.h>
@@ -10,6 +9,7 @@
 #include <lin_maths.h>
 #include <mycelium_backend.h>
 
+#include <bit>
 #include <optional>
 #include <stdint.h>
 
@@ -127,12 +127,12 @@ static inline float decode_r_f32_silicium_value_to_float(uint32_t rgba)
 {
     const uint32_t res =
         (rgba & 0x007fffff) | ((rgba >> 1) & 0x7f800000) | ((rgba << 8) & 0x80000000);
-    return hrz::bit_cast<float>(res);
+    return std::bit_cast<float>(res);
 }
 
 static inline uint32_t encode_float_to_r_f32_silicium(float value)
 {
-    const auto bits = hrz::bit_cast<uint32_t>(value);
+    const auto bits = std::bit_cast<uint32_t>(value);
     return (bits & 0x007fffff) | ((bits & 0x80000000) >> 8) | ((bits & 0x7f800000) << 1);
 }
 
@@ -152,7 +152,7 @@ static inline uint32_t encode_float_to_signed_fixed_24_8(float value)
 //     https://github.com/tilezen/joerd/blob/master/docs/formats.md
 static inline float decode_terrarium_value_to_float(uint32_t rgba)
 {
-    auto v = lm::vec4(hrz::bit_cast<lm::ubvec4>(rgba));
+    auto v = lm::vec4(std::bit_cast<lm::ubvec4>(rgba));
     return (v.r * 256.0F + v.g + v.b / 256.0F) - 32768.0F;
 }
 
@@ -163,7 +163,7 @@ static inline uint32_t encode_float_to_terrarium(float value)
     const lm::ubvec4 rgba = {
         (uint8_t)(int_value / (256 * 256)), (uint8_t)((int_value % (256 * 256)) / 256),
         (uint8_t)(int_value % 256), 0};
-    return hrz::bit_cast<uint32_t>(rgba);
+    return std::bit_cast<uint32_t>(rgba);
 }
 
 // value = -10000 + (red * 256 * 256 + green * 256 + blue) * 0.1
@@ -171,7 +171,7 @@ static inline uint32_t encode_float_to_terrarium(float value)
 // See https://docs.mapbox.com/data/tilesets/guides/access-elevation-data/#decode-data
 static inline float decode_terrain_rgb_value_to_float(uint32_t rgba)
 {
-    auto v = lm::vec4(hrz::bit_cast<lm::ubvec4>(rgba));
+    auto v = lm::vec4(std::bit_cast<lm::ubvec4>(rgba));
     return -10000.0F + (v.r * 256.0F * 256.0F + v.g * 256.0F + v.b) * 0.1F;
 }
 
@@ -182,6 +182,6 @@ static inline uint32_t encode_float_to_terrain_rgb(float value)
     const lm::ubvec4 rgba = {
         (uint8_t)(int_value / (256 * 256)), (uint8_t)((int_value % (256 * 256)) / 256),
         (uint8_t)(int_value % 256), 0};
-    return hrz::bit_cast<uint32_t>(rgba);
+    return std::bit_cast<uint32_t>(rgba);
 }
 } // namespace hrz

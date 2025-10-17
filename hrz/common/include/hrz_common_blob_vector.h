@@ -4,10 +4,9 @@
 #include "hrz_common_blob_array.h"
 #include "hrz_common_metadata.h"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cassert>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <type_traits>
 
@@ -211,17 +210,17 @@ public:
         }
     }
 
-    std::optional<gsl::span<T>> data()
+    std::optional<std::span<T>> data()
     {
         if (!is_valid()) return std::nullopt;
-        if (_size == 0) return {gsl::span<T>{}};
+        if (_size == 0) return {std::span<T>{}};
         return {{(T*)_blob_data->data(), _size}};
     }
 
-    std::optional<gsl::span<const T>> data() const
+    std::optional<std::span<const T>> data() const
     {
         if (!is_valid()) return std::nullopt;
-        if (_size == 0) return {gsl::span<const T>{}};
+        if (_size == 0) return {std::span<const T>{}};
         return {{(const T*)_blob_data->data(), _size}};
     }
 
@@ -302,8 +301,8 @@ private:
             }
             else
             {
-                auto from = gsl::span<T>{(T*)_blob_data->data(), _size};
-                auto to = gsl::span<T>{(T*)new_blob_data.data(), _size};
+                auto from = std::span<T>{(T*)_blob_data->data(), _size};
+                auto to = std::span<T>{(T*)new_blob_data.data(), _size};
                 for (size_t i = 0; i < _size; ++i)
                 {
                     new (&to[i]) T{};

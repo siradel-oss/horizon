@@ -11,10 +11,10 @@
 #include <hrz_common_geo.h>
 #include <hrz_common_picking_types.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <mycelium_render_graph.h>
 
 #include <optional>
+#include <span>
 #include <variant>
 
 namespace hrz
@@ -62,8 +62,8 @@ void work(
     JobScheduler*,
     SceneModel*,
     AttributionRegistry*,
-    gsl::span<const RenderViewInfo> views_info,
-    gsl::span<PlanetGeometry*> geometries);
+    std::span<const RenderViewInfo> views_info,
+    std::span<PlanetGeometry*> geometries);
 
 RenderRequest work_gpu(PlanetSurface*, Render*, BlobAllocator*);
 
@@ -97,14 +97,14 @@ void pick(
     PlanetSurface*,
     const picking::ObjectReference&,
     const lm::dvec3& position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters,
+    std::span<const hrz_proto::LayerHandle> included_rasters,
     hrz_proto::SceneViewIndex scene_view,
     hrz_proto::PickResults&);
 
 RasterDataFetchTicket schedule_raster_data_fetch(
     PlanetSurface*,
     const GeoPosition2& position,
-    gsl::span<const hrz_proto::LayerHandle> layers);
+    std::span<const hrz_proto::LayerHandle> layers);
 
 std::optional<RasterDataFetchResult> retrieve_raster_data_fetch_results(
     PlanetSurface*,
@@ -112,8 +112,8 @@ std::optional<RasterDataFetchResult> retrieve_raster_data_fetch_results(
 
 std::pair<size_t, size_t> make_typed_object_references(
     PlanetSurface*,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output);
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output);
 
 /**
  * Returns true if the rasters' configs have been modified
@@ -156,7 +156,7 @@ bool get_tile_elevation_bounds(
     double* min_elevation,
     double* max_elevation);
 
-bool is_working(const PlanetSurface*, gsl::span<const PlanetGeometry*> geometries);
+bool is_working(const PlanetSurface*, std::span<const PlanetGeometry*> geometries);
 
 namespace surface::messages
 {

@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <iterator>
 
 namespace
 {
@@ -18,7 +19,7 @@ inline T _dist(
 // See https://en.wikipedia.org/wiki/Quickhull
 template<typename T>
 void _quickhull_inner(
-    gsl::span<lm::Vector<T, 2>> pts,
+    std::span<lm::Vector<T, 2>> pts,
     const lm::Vector<T, 2>& p,
     const lm::Vector<T, 2>& q,
     std::vector<lm::Vector<T, 2>>& hull)
@@ -56,7 +57,7 @@ void _quickhull_inner(
         [&](const lm::Vector<T, 2>& v) -> bool { return _dist(v, p, pc_normal) > (T)0; });
 
     size_t pivot_pc_index = std::distance(pts.begin(), pivot_pc);
-    gsl::span<lm::Vector<T, 2>> above_pc = pts.subspan(0, pivot_pc_index);
+    std::span<lm::Vector<T, 2>> above_pc = pts.subspan(0, pivot_pc_index);
     pts = pts.subspan(pivot_pc_index);
 
     auto pivot_cq = std::partition(
@@ -64,7 +65,7 @@ void _quickhull_inner(
         [&](const lm::Vector<T, 2>& v) -> bool { return _dist(v, c, cq_normal) > (T)0; });
 
     size_t pivot_cq_index = std::distance(pts.begin(), pivot_cq);
-    gsl::span<lm::Vector<T, 2>> above_cq = pts.subspan(0, pivot_cq_index);
+    std::span<lm::Vector<T, 2>> above_cq = pts.subspan(0, pivot_cq_index);
 
     _quickhull_inner(above_pc, p, c, hull);
     hull.push_back(c);
@@ -76,7 +77,7 @@ void _quickhull_inner(
 namespace hrz
 {
 template<typename T>
-void compute_convex_hull(gsl::span<const lm::Vector<T, 2>> pts, std::vector<lm::Vector<T, 2>>& hull)
+void compute_convex_hull(std::span<const lm::Vector<T, 2>> pts, std::vector<lm::Vector<T, 2>>& hull)
 {
     hull.clear();
 
@@ -108,9 +109,9 @@ void compute_convex_hull(gsl::span<const lm::Vector<T, 2>> pts, std::vector<lm::
         [&](const lm::Vector<T, 2>& v) -> bool { return _dist(v, pt_a, ab_normal) > (T)0; });
 
     size_t pivot_index = std::distance(working_pts.begin(), pivot);
-    gsl::span<lm::Vector<T, 2>> working_pts_span(working_pts);
-    gsl::span<lm::Vector<T, 2>> positive_span = working_pts_span.subspan(0, pivot_index);
-    gsl::span<lm::Vector<T, 2>> negative_span = working_pts_span.subspan(pivot_index);
+    std::span<lm::Vector<T, 2>> working_pts_span(working_pts);
+    std::span<lm::Vector<T, 2>> positive_span = working_pts_span.subspan(0, pivot_index);
+    std::span<lm::Vector<T, 2>> negative_span = working_pts_span.subspan(pivot_index);
 
     assert(positive_span.size() + negative_span.size() == working_pts.size());
 
@@ -120,8 +121,8 @@ void compute_convex_hull(gsl::span<const lm::Vector<T, 2>> pts, std::vector<lm::
     _quickhull_inner(negative_span, pt_b, pt_a, hull);
 }
 
-template void compute_convex_hull(gsl::span<const lm::vec2> pts, std::vector<lm::vec2>& hull);
+template void compute_convex_hull(std::span<const lm::vec2> pts, std::vector<lm::vec2>& hull);
 
-template void compute_convex_hull(gsl::span<const lm::dvec2> pts, std::vector<lm::dvec2>& hull);
+template void compute_convex_hull(std::span<const lm::dvec2> pts, std::vector<lm::dvec2>& hull);
 
 } // namespace hrz

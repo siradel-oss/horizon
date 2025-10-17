@@ -4,8 +4,7 @@
 #include "hrz_fnd_defines.h"
 #include "hrz_fnd_gen_index_pool.h"
 
-#include <gsl/gsl-lite.hpp>
-
+#include <span>
 #include <stdlib.h>
 
 // This checks that all allocated objects have been released when the stored

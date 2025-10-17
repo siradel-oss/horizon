@@ -667,7 +667,7 @@ static SharedResources* create_shared_resources_common(Render* render)
 
     {
         uint8_t image_data[] = {0xff, 0xff, 0xff, 0xff};
-        gsl::span<const std::byte> res_data = {(const std::byte*)image_data, sizeof(uint8_t) * 4};
+        std::span<const std::byte> res_data = {(const std::byte*)image_data, sizeof(uint8_t) * 4};
 
         my::TextureResource res;
         res.layout.type = my::TextureLayout::Type2D;

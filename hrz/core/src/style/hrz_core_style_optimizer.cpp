@@ -25,7 +25,7 @@ struct OptimizerImpl : public Optimizer
     OperatorEvaluator::Context operator_evaluator_context;
     OperatorEvaluator operator_evaluator;
 
-    explicit OptimizerImpl(gsl::span<const hrz::Palette> palettes)
+    explicit OptimizerImpl(std::span<const hrz::Palette> palettes)
     {
         operator_evaluator_context.palettes = palettes;
     }
@@ -90,7 +90,7 @@ struct OptimizerImpl : public Optimizer
             assert(operand_count <= kMaxFunctionParameters && "Increase kMaxFunctionParameters");
 
             StaticVector<RawValue, kMaxFunctionParameters> values;
-            StaticVector<gsl::span<const RawValue>, kMaxFunctionParameters> spans;
+            StaticVector<std::span<const RawValue>, kMaxFunctionParameters> spans;
 
             values.set_size(operand_count);
             spans.set_size(operand_count);
@@ -369,7 +369,7 @@ struct OptimizerImpl : public Optimizer
 
 namespace hrz::style
 {
-std::unique_ptr<Optimizer> Optimizer::create(gsl::span<const hrz::Palette> palettes)
+std::unique_ptr<Optimizer> Optimizer::create(std::span<const hrz::Palette> palettes)
 {
     return std::make_unique<OptimizerImpl>(palettes);
 }

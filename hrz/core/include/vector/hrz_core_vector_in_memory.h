@@ -10,9 +10,8 @@
 #include <hrz_common_vector_data.h>
 #include <hrz_jobs_protocol.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
+#include <span>
 #include <variant>
 
 namespace hrz

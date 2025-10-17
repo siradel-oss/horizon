@@ -4,12 +4,11 @@
 
 #include <hrz_common_monitoring_defs.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <any>
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <span>
 
 namespace hrz_monitoring
 {

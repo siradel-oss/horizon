@@ -3,14 +3,12 @@
 #include "hrz_common_metadata.h"
 #include "hrz_common_monitoring_defs.h"
 
-#include <hrz_fnd_mem.h>
 #include <hrz_monitoring.h>
-
-#include <gsl/gsl-lite.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string_view>
 
 namespace hrz
@@ -49,7 +47,7 @@ struct BlobHandle;
 struct MutableBlobData
 {
 private:
-    MutableBlobData(BlobAllocator* allocator, BlobId blob_id, gsl::span<std::byte> data_span) :
+    MutableBlobData(BlobAllocator* allocator, BlobId blob_id, std::span<std::byte> data_span) :
         allocator(allocator), blob_id(blob_id), data_span(data_span)
     {
     }
@@ -80,42 +78,38 @@ public:
 
     const std::byte* data() const& { return data_span.data(); }
 
-    gsl::span<const std::byte> as_span() && = delete;
+    std::span<const std::byte> as_span() && = delete;
 
-    gsl::span<const std::byte> as_span() const& { return data_span; }
+    std::span<const std::byte> as_span() const& { return data_span; }
 
-    gsl::span<std::byte> as_span() & { return data_span; }
+    std::span<std::byte> as_span() & { return data_span; }
 
-    gsl::span<const std::byte> subspan(size_t offset, size_t count) && = delete;
+    std::span<const std::byte> subspan(size_t offset, size_t count) && = delete;
 
-    gsl::span<const std::byte> subspan(size_t offset, size_t count) const&
+    std::span<const std::byte> subspan(size_t offset, size_t count) const&
     {
         return data_span.subspan(offset, count);
     }
 
-    gsl::span<std::byte> subspan(size_t offset, size_t count) &
+    std::span<std::byte> subspan(size_t offset, size_t count) &
     {
         return data_span.subspan(offset, count);
     }
 
-    gsl::span<const std::byte> as_bytes() && = delete;
+    std::span<const std::byte> as_bytes() && = delete;
 
-    gsl::span<const std::byte> as_bytes() const& { return hrz::as_bytes(data_span); }
+    std::span<const std::byte> as_bytes() const& { return std::as_bytes(data_span); }
 
-    gsl::span<std::byte> as_writable_bytes() & { return hrz::as_writable_bytes(data_span); }
+    std::span<std::byte> as_writable_bytes() & { return std::as_writable_bytes(data_span); }
 
-    gsl::span<const std::byte>::const_iterator cbegin() && = delete;
+    std::span<std::byte>::iterator begin() & { return data_span.begin(); }
 
-    gsl::span<const std::byte>::const_iterator cbegin() const& { return data_span.cbegin(); }
-
-    gsl::span<const std::byte>::const_iterator cend() && = delete;
-
-    gsl::span<const std::byte>::const_iterator cend() const& { return data_span.cend(); }
+    std::span<std::byte>::iterator end() & { return data_span.end(); }
 
 private:
     BlobAllocator* allocator;
     BlobId blob_id;
-    gsl::span<std::byte> data_span;
+    std::span<std::byte> data_span;
 
     friend BlobHandle;
 };
@@ -133,7 +127,7 @@ private:
 struct BlobData
 {
 private:
-    BlobData(BlobAllocator* allocator, BlobId blob_id, gsl::span<const std::byte> data_span) :
+    BlobData(BlobAllocator* allocator, BlobId blob_id, std::span<const std::byte> data_span) :
         allocator(allocator), blob_id(blob_id), data_span(data_span)
     {
     }
@@ -162,45 +156,45 @@ public:
 
     const std::byte* data() const& { return data_span.data(); }
 
-    gsl::span<const std::byte> as_span() && = delete;
+    std::span<const std::byte> as_span() && = delete;
 
-    gsl::span<const std::byte> as_span() const& { return data_span; }
+    std::span<const std::byte> as_span() const& { return data_span; }
 
-    gsl::span<const std::byte> subspan(size_t offset, size_t count) && = delete;
+    std::span<const std::byte> subspan(size_t offset, size_t count) && = delete;
 
-    gsl::span<const std::byte> subspan(size_t offset, size_t count) const&
+    std::span<const std::byte> subspan(size_t offset, size_t count) const&
     {
         return data_span.subspan(offset, count);
     }
 
-    gsl::span<const std::byte> subspan(size_t offset) && = delete;
+    std::span<const std::byte> subspan(size_t offset) && = delete;
 
-    gsl::span<const std::byte> subspan(size_t offset) const& { return data_span.subspan(offset); }
+    std::span<const std::byte> subspan(size_t offset) const& { return data_span.subspan(offset); }
 
-    gsl::span<const std::byte> as_bytes() && = delete;
+    std::span<const std::byte> as_bytes() && = delete;
 
-    gsl::span<const std::byte> as_bytes() const& { return hrz::as_bytes(data_span); }
+    std::span<const std::byte> as_bytes() const& { return std::as_bytes(data_span); }
 
-    gsl::span<std::byte>::const_iterator begin() && = delete;
+    std::span<const std::byte>::iterator begin() && = delete;
 
-    gsl::span<std::byte>::const_iterator begin() const& { return data_span.begin(); }
+    std::span<const std::byte>::iterator begin() const& { return data_span.begin(); }
 
-    gsl::span<std::byte>::const_iterator end() && = delete;
+    std::span<const std::byte>::iterator end() && = delete;
 
-    gsl::span<std::byte>::const_iterator end() const& { return data_span.end(); }
+    std::span<const std::byte>::iterator end() const& { return data_span.end(); }
 
-    gsl::span<const std::byte>::const_iterator cbegin() && = delete;
+    std::span<const std::byte>::iterator cbegin() && = delete;
 
-    gsl::span<const std::byte>::const_iterator cbegin() const& { return data_span.cbegin(); }
+    std::span<const std::byte>::iterator cbegin() const& { return data_span.begin(); }
 
-    gsl::span<const std::byte>::const_iterator cend() && = delete;
+    std::span<const std::byte>::iterator cend() && = delete;
 
-    gsl::span<const std::byte>::const_iterator cend() const& { return data_span.cend(); }
+    std::span<const std::byte>::iterator cend() const& { return data_span.end(); }
 
 private:
     BlobAllocator* allocator;
     BlobId blob_id;
-    gsl::span<const std::byte> data_span;
+    std::span<const std::byte> data_span;
 
     friend BlobHandle;
 };
@@ -255,7 +249,7 @@ public:
 
 private:
     void acquire();
-    gsl::span<std::byte> get_data(bool mutable_data) const;
+    std::span<std::byte> get_data(bool mutable_data) const;
 
     BlobAllocator* allocator;
     BlobId blob_id;
@@ -296,7 +290,7 @@ struct RawBlobHandle
 struct RawBlob
 {
     RawBlobHandle handle;
-    gsl::span<std::byte> data;
+    std::span<std::byte> data;
 };
 
 /**

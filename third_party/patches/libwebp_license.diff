@@ -1,4 +1,0 @@
---- BUILD.bazel
-+++ BUILD.bazel
-@@ -34,0 +34,1 @@
-+exports_files(["COPYING"])

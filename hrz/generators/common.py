@@ -60,6 +60,11 @@ def to_cpp_enum_value_name(value, enum_full_name):
         return enum_name + "_" + value
     return value
 
+def to_cpp_field_name(value):
+    if value == "descriptor":
+        return "descriptor_"
+    return value
+
 def to_cpp_qualified_name(value):
     if value in PB_PRIMITIVE_TYPES:
         return CPP_PRIMITIVE_TYPES[value]
@@ -138,6 +143,7 @@ def prepare_env():
     tpl_env.filters["without_first"] = without_first
     tpl_env.filters["to_short_type_name"] = to_short_type_name
     tpl_env.filters["to_cpp_enum_value_name"] = to_cpp_enum_value_name
+    tpl_env.filters["to_cpp_field_name"] = to_cpp_field_name
     tpl_env.filters["to_cpp_qualified_name"] = to_cpp_qualified_name
     tpl_env.filters["to_cpp_forward_declaration"] = to_cpp_forward_declaration
     tpl_env.filters["to_ts_type"] = to_ts_type

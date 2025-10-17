@@ -43,7 +43,7 @@ public:
         double height_above_terrain,
         const std::array<PickingSystem*, hrz::SCENE_VIEW_COUNT>&,
         PlanetSurface*,
-        const std::function<void(gsl::span<const hrz_proto::CameraNotification>)>&
+        const std::function<void(std::span<const hrz_proto::CameraNotification>)>&
             notifications_cb) = 0;
 
     virtual const CameraInfo& get_info() const = 0;

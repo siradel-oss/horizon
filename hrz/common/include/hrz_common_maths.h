@@ -2,9 +2,9 @@
 
 #include <hrz_fnd_maths.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
+#include <span>
 #include <vector>
 
 namespace hrz
@@ -109,21 +109,21 @@ struct BSphere
 };
 
 template<typename T>
-BSphere<T> compute_bounding_sphere(gsl::span<const lm::Vector<T, 3>> pts);
+BSphere<T> compute_bounding_sphere(std::span<const lm::Vector<T, 3>> pts);
 
 template<typename T>
 BSphere<T> merge_bounding_spheres(const BSphere<T>& a, const BSphere<T>& b);
 
 template<typename T>
-BSphere<T> merge_bounding_spheres(gsl::span<const BSphere<T>> bspheres);
+BSphere<T> merge_bounding_spheres(std::span<const BSphere<T>> bspheres);
 
 template<typename T>
 void compute_convex_hull(
-    gsl::span<const lm::Vector<T, 2>> pts,
+    std::span<const lm::Vector<T, 2>> pts,
     std::vector<lm::Vector<T, 2>>& hull);
 
 template<typename T>
-OrientedBBox2<T> compute_minimum_bbox(gsl::span<const lm::Vector<T, 2>> pts);
+OrientedBBox2<T> compute_minimum_bbox(std::span<const lm::Vector<T, 2>> pts);
 
 template<typename T>
 static lm::Matrix<T, 3> compute_normal_transform_matrix(const lm::Matrix<T, 4>& m)
@@ -195,7 +195,7 @@ static lm::mat4 euler_angles_xyz_to_mat4(lm::vec3 angles)
 }
 
 template<typename T>
-bool is_clockwise(gsl::span<const T> pts);
+bool is_clockwise(std::span<const T> pts);
 
 template<typename T>
 inline lm::Vector<T, 3> srgb_to_linear(lm::Vector<T, 3> color)

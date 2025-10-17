@@ -58,8 +58,7 @@ TEST(SceneModelAccessor, get)
     EXPECT_EQ(mat_name.value(), "Mat 1");
 
     hrz_proto::SingleModelLayer layer2;
-    ASSERT_TRUE(
-        scene_model::get_message_part(layer, gsl::span<const uint32_t>(nullptr, 0), layer2));
+    ASSERT_TRUE(scene_model::get_message_part(layer, std::span<const uint32_t>{}, layer2));
 }
 
 TEST(SceneModelAccessor, set)

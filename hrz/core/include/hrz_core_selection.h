@@ -1,7 +1,6 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
+#include <span>
 #include <stdint.h>
 
 namespace hrz
@@ -37,7 +36,7 @@ size_t selected_objects_count(const SelectionSystem*, uint64_t layer_id);
 size_t get_selected_objects(
     const SelectionSystem*,
     uint64_t layer_id,
-    gsl::span<uint64_t> out_object_ids);
+    std::span<uint64_t> out_object_ids);
 
 } // namespace selection
 } // namespace hrz

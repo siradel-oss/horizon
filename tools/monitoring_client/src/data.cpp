@@ -16,7 +16,7 @@ using identifier = std::function<int64_t(const T&)>;
 
 template<typename T>
 std::optional<size_t> binary_find_at(
-    gsl::span<const T> elements,
+    std::span<const T> elements,
     int64_t timestamp,
     const identifier<T>& entry,
     const identifier<T>& exit)
@@ -42,7 +42,7 @@ std::optional<size_t> binary_find_at(
 
 template<typename T>
 std::optional<size_t> binary_find_first_before(
-    gsl::span<const T> elements,
+    std::span<const T> elements,
     int64_t timestamp,
     const identifier<T>& entry,
     const identifier<T>& exit)
@@ -73,7 +73,7 @@ std::optional<size_t> binary_find_first_before(
 
 template<typename T>
 std::optional<size_t> binary_find_first_after(
-    gsl::span<const T> elements,
+    std::span<const T> elements,
     int64_t timestamp,
     const identifier<T>& entry,
     const identifier<T>& exit)
@@ -99,7 +99,7 @@ std::optional<size_t> binary_find_first_after(
 
 template<typename T>
 data::Range binary_find_range(
-    gsl::span<const T> elements,
+    std::span<const T> elements,
     int64_t from,
     int64_t to,
     const identifier<T>& entry,
@@ -223,7 +223,7 @@ std::vector<const hrz_monitoring_proto::Sample*> _copy_sample_tree(
     }
 
     // Locations in memory available for hosting child samples.
-    gsl::span<data::Sample> available_slots(tree->samples.data() + 1, sample_count);
+    std::span<data::Sample> available_slots(tree->samples.data() + 1, sample_count);
     size_t first_available_slot_index = 1;
 
     struct SamplePack
@@ -369,7 +369,7 @@ void _copy_gpu_snapshot(
     }
 }
 
-size_t _gpu_buckets_total_size(gsl::span<const data::GpuResourceBucket*> buckets)
+size_t _gpu_buckets_total_size(std::span<const data::GpuResourceBucket*> buckets)
 {
     size_t total = 0;
     for (const auto* bucket : buckets)
@@ -435,10 +435,10 @@ void Database::_process_metric_message(const hrz_monitoring_proto::Metric& metri
             case hrz_monitoring_proto::MetricUpdate::kHistogram:
             {
                 const auto& hist = update_message.histogram();
-                auto counts = gsl::span<const int64_t>(
+                auto counts = std::span<const int64_t>(
                     hist.bucket_counts().data(), hist.bucket_counts_size());
                 auto values =
-                    gsl::span<const double>(hist.bucket_values().data(), hist.bucket_values_size());
+                    std::span<const double>(hist.bucket_values().data(), hist.bucket_values_size());
                 _histograms.push_update(
                     std::move(metric), {update_message.timestamp(), {values, counts}});
 
@@ -675,7 +675,7 @@ void SampleSystem::clear()
 }
 
 std::vector<GpuResourceBucketGroup> group_gpu_resource_buckets(
-    gsl::span<const data::GpuResourceBucket*> buckets,
+    std::span<const data::GpuResourceBucket*> buckets,
     const GpuResourceBucketGroupingFunction& grouping_function)
 {
     std::vector<GpuResourceBucketGroup> result;
@@ -767,7 +767,7 @@ size_t MetricHash::operator()(const Metric& metric) const
     return res;
 }
 
-Histogram::Histogram(gsl::span<const double> max_values, gsl::span<const int64_t> counts)
+Histogram::Histogram(std::span<const double> max_values, std::span<const int64_t> counts)
 {
     size_t size = std::min(max_values.size(), counts.size());
 

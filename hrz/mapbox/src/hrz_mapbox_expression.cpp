@@ -1785,7 +1785,7 @@ void finalize_expression(NodeIndex root, ExpressionContext& ctx)
 }
 
 void generate_sub_expression_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     NodeIndex current,
     std::string& script)
 {

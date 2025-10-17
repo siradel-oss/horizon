@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="gsl::span&lt;*&gt;">
-		<DisplayString>{{ size={last_ - first_} }}</DisplayString>
-		<Expand>
-      <ArrayItems>
-        <Size>last_ - first_</Size>
-        <ValuePointer>first_</ValuePointer>
-      </ArrayItems>
-		</Expand>
-  </Type>
-
 	<Type Name="absl::InlinedVector&lt;*&gt;">
 		<AlternativeType Name="absl::lts_20240722::InlinedVector&lt;*&gt;" />
 		<Intrinsic Name="i_size" Expression="storage_.metadata_.value &gt;&gt; 1" />

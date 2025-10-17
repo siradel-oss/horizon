@@ -11,7 +11,6 @@
 
 #define SOKOL_IMPL
 #define SOKOL_GLCORE33
-#include <gsl/gsl-lite.hpp>
 #include <imgui.h>
 #include <portable-file-dialogs.h>
 #include <sokol_app.h>
@@ -24,6 +23,7 @@
 #include <iostream>
 #include <limits>
 #include <locale>
+#include <span>
 
 constexpr const char* WINDOW_TITLE = "Horizon Monitoring";
 constexpr const char* WINDOW_TITLE_UNSAVED = "(*)Horizon Monitoring";

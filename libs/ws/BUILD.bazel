@@ -43,7 +43,6 @@ cc_library(
         "//conditions:default": [],
     }) + [
         ":ws_common",
-        "//third_party:gsl",
     ],
 )
 

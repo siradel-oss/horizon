@@ -1,9 +1,9 @@
 #include "ws_client.h"
 
 #include <emscripten/websocket.h>
-#include <gsl/gsl-lite.hpp>
 
 #include <memory>
+#include <span>
 #include <stdint.h>
 #include <vector>
 

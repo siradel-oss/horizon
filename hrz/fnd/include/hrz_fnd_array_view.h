@@ -1,9 +1,8 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cassert>
 #include <cstddef>
+#include <span>
 
 namespace hrz
 {
@@ -40,7 +39,7 @@ public:
     {
     }
 
-    ArrayView(gsl::span<T> span) :
+    ArrayView(std::span<T> span) :
         _data((BackingType*)span.data()), _length(span.size()), _stride(sizeof(T))
     {
     }

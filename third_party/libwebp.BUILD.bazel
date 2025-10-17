@@ -31,3 +31,5 @@ cc_library(
         "src",
     ],
 )
+
+exports_files(["COPYING"])

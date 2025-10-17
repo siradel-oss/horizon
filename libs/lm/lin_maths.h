@@ -21,6 +21,10 @@
 
 namespace lm
 {
+
+template<typename T>
+concept Arithmetic = std::is_arithmetic_v<T>;
+
 template<typename T>
 T sign(T v)
 {
@@ -739,24 +743,14 @@ Vector<R, N> operator*(const Vector<U, N>& a, const Vector<V, N>& b)
     return apply(MulOp<U, V>{}, a, b);
 }
 
-template<
-    typename U,
-    typename V,
-    size_t N,
-    typename _ = typename std::enable_if_t<std::is_arithmetic_v<V>>,
-    typename R = typename MulOp<U, V>::ResultType>
-Vector<R, N> operator*(const Vector<U, N>& a, const V& b)
+template<typename U, Arithmetic V, size_t N>
+auto operator*(const Vector<U, N>& a, V b)
 {
     return apply(MulOp<U, V>{}, a, Vector<V, N>(b));
 }
 
-template<
-    typename U,
-    typename V,
-    size_t N,
-    typename _ = typename std::enable_if_t<std::is_arithmetic_v<U>>,
-    typename R = typename MulOp<U, V>::ResultType>
-Vector<R, N> operator*(const U& a, const Vector<V, N>& b)
+template<Arithmetic U, typename V, size_t N>
+auto operator*(U a, const Vector<V, N>& b)
 {
     return apply(MulOp<U, V>{}, Vector<U, N>(a), b);
 }
@@ -781,14 +775,14 @@ Vector<R, N> operator/(const Vector<U, N>& a, const Vector<V, N>& b)
     return apply(DivOp<U, V>{}, a, b);
 }
 
-template<typename U, typename V, size_t N, typename R = typename DivOp<U, V>::ResultType>
-Vector<R, N> operator/(const Vector<U, N>& a, const V& b)
+template<typename U, Arithmetic V, size_t N>
+auto operator/(const Vector<U, N>& a, V b)
 {
     return apply(DivOp<U, V>{}, a, Vector<V, N>(b));
 }
 
-template<typename U, typename V, size_t N, typename R = typename DivOp<U, V>::ResultType>
-Vector<R, N> operator/(const U& a, const Vector<V, N>& b)
+template<Arithmetic U, typename V, size_t N>
+auto operator/(U a, const Vector<V, N>& b)
 {
     return apply(DivOp<U, V>{}, Vector<U, N>(a), b);
 }
@@ -839,14 +833,14 @@ Matrix<T, N> operator-(const Matrix<T, N>& a)
     return apply(NegOp<T>{}, a);
 }
 
-template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-Matrix<R, N> operator*(const Matrix<U, N>& a, const V& b)
+template<typename U, Arithmetic V, size_t N>
+auto operator*(const Matrix<U, N>& a, V b)
 {
     return apply(MulOp<U, V>{}, a, Matrix<V, N>(b));
 }
 
-template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-Matrix<R, N> operator*(const U& a, const Matrix<V, N>& b)
+template<Arithmetic U, typename V, size_t N>
+auto operator*(U a, const Matrix<V, N>& b)
 {
     return apply(MulOp<U, V>{}, Matrix<U, N>(a), b);
 }
@@ -858,14 +852,14 @@ Matrix<T, N>& operator*=(Matrix<T, N>& a, const T& b)
     return a;
 }
 
-template<typename U, typename V, size_t N, typename R = typename DivOp<U, V>::ResultType>
-Matrix<R, N> operator/(const Matrix<U, N>& a, const V& b)
+template<typename U, Arithmetic V, size_t N>
+auto operator/(const Matrix<U, N>& a, V b)
 {
     return apply(DivOp<U, V>{}, a, Matrix<V, N>(b));
 }
 
-template<typename U, typename V, size_t N, typename R = typename DivOp<U, V>::ResultType>
-Matrix<R, N> operator/(const U& a, const Matrix<V, N>& b)
+template<Arithmetic U, typename V, size_t N>
+auto operator/(U a, const Matrix<V, N>& b)
 {
     return apply(DivOp<U, V>{}, Matrix<U, N>(a), b);
 }
@@ -883,13 +877,13 @@ Matrix<T, N>& operator/=(Matrix<T, N>& a, const T& b)
     {                                                                  \
         return apply(OP<U, V>{}, a, b);                                \
     }                                                                  \
-    template<typename U, typename V, size_t N>                         \
-    Vector<bool, N> NAME(const Vector<U, N>& a, const V& b)            \
+    template<typename U, Arithmetic V, size_t N>                       \
+    Vector<bool, N> NAME(const Vector<U, N>& a, V b)                   \
     {                                                                  \
         return apply(OP<U, V>{}, a, Vector<V, N>(b));                  \
     }                                                                  \
-    template<typename U, typename V, size_t N>                         \
-    Vector<bool, N> NAME(const U& a, const Vector<V, N>& b)            \
+    template<Arithmetic U, typename V, size_t N>                       \
+    Vector<bool, N> NAME(U a, const Vector<V, N>& b)                   \
     {                                                                  \
         return apply(OP<U, V>{}, Vector<U, N>(a), b);                  \
     }

@@ -9,6 +9,7 @@
 #include <hrz_protocol_all.h>
 
 #include <optional>
+#include <span>
 #include <string_view>
 
 namespace hrz_mapbox
@@ -587,9 +588,9 @@ struct Property
 };
 
 void generate_representations_script(
-    gsl::span<const Node> nodes,
-    gsl::span<const Property> properties,
-    gsl::span<const std::string_view> representation_names,
+    std::span<const Node> nodes,
+    std::span<const Property> properties,
+    std::span<const std::string_view> representation_names,
     uint32_t first_representation_id,
     NodeIndex filter_node,
     std::string& script);

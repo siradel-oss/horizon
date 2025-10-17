@@ -310,7 +310,7 @@ void _compute_feature_id(Layer* layer, Feature* feature)
     feature->id = builder.build();
 }
 
-void _project_positions(Layer* layer, gsl::span<lm::dvec3> positions)
+void _project_positions(Layer* layer, std::span<lm::dvec3> positions)
 {
     if (positions.empty()) return;
 
@@ -515,15 +515,15 @@ void _generate_root_tile(
             uint32_t count = tile->sizes[feature.first_linestring_size];
             uint32_t first_point = feature.first_point;
             feature.anchor = vector_data::compute_ring_average(
-                gsl::span<const lm::dvec3>(tile->positions).subspan(first_point, count));
+                std::span<const lm::dvec3>(tile->positions).subspan(first_point, count));
             feature.anchor_angle = 0.0f;
         }
         else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
         {
-            auto points = gsl::span<const lm::dvec3>(tile->positions)
+            auto points = std::span<const lm::dvec3>(tile->positions)
                               .subspan(feature.first_point, feature.point_count);
             auto linestring_sizes =
-                gsl::span<const uint32_t>(tile->sizes)
+                std::span<const uint32_t>(tile->sizes)
                     .subspan(feature.first_linestring_size, feature.linestring_count);
             vector_data::compute_linestring_middle_and_angle(
                 points, linestring_sizes, &feature.anchor, &feature.anchor_angle);
@@ -979,7 +979,7 @@ void register_layer(InMemoryVectorDataBase* system, SceneModel* model, uint64_t 
         data.set_id(0);
         data.mutable_projection()->set_descriptor_type(
             hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-        data.mutable_projection()->set_descriptor(hrz_proj::lonlat_deg_proj_str);
+        data.mutable_projection()->set_descriptor_(hrz_proj::lonlat_deg_proj_str);
 
         hrz::SceneModelAccessor accessor(model);
         hrz_proto::InMemoryVectorSourceLayerPathBuilder<hrz::SceneModelAccessor> builder(

@@ -263,42 +263,42 @@ TEST_F(Selection, layer_get_selected_objects)
     select(sys, 1, 1);
     select(sys, 1, 2);
     select(sys, 2, 1);
-    EXPECT_EQ(1, get_selected_objects(sys, 0, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 0, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
-    EXPECT_EQ(2, get_selected_objects(sys, 1, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(2, get_selected_objects(sys, 1, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 2));
     ASSERT_TRUE(contains(2, 2));
-    EXPECT_EQ(1, get_selected_objects(sys, 2, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 2, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
 
     deselect(sys, 0, 1);
-    EXPECT_EQ(2, get_selected_objects(sys, 1, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(2, get_selected_objects(sys, 1, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 2));
     ASSERT_TRUE(contains(2, 2));
-    EXPECT_EQ(1, get_selected_objects(sys, 2, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 2, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
 
     deselect(sys, 2, 2);
-    EXPECT_EQ(2, get_selected_objects(sys, 1, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(2, get_selected_objects(sys, 1, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 2));
     ASSERT_TRUE(contains(2, 2));
-    EXPECT_EQ(1, get_selected_objects(sys, 2, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 2, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
 
     deselect(sys, 3, 2);
-    EXPECT_EQ(2, get_selected_objects(sys, 1, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(2, get_selected_objects(sys, 1, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 2));
     ASSERT_TRUE(contains(2, 2));
-    EXPECT_EQ(1, get_selected_objects(sys, 2, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 2, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
 
     deselect(sys, 1, 1);
-    EXPECT_EQ(1, get_selected_objects(sys, 1, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 1, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(2, 1));
-    EXPECT_EQ(1, get_selected_objects(sys, 2, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 2, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
 
     deselect(sys, 1, 2);
-    EXPECT_EQ(1, get_selected_objects(sys, 2, gsl::span<uint64_t>(selected_objects)));
+    EXPECT_EQ(1, get_selected_objects(sys, 2, std::span<uint64_t>(selected_objects)));
     ASSERT_TRUE(contains(1, 1));
 }

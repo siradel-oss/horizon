@@ -70,11 +70,18 @@ hrz::JobResult run(
     }
 
     {
+        static_assert(hrz::blobs::BLOB_ALIGNMENT >= alignof(uint32_t));
+        static_assert(hrz::blobs::BLOB_ALIGNMENT >= alignof(uint64_t));
+
         auto uncompressed_image_data = params.image.blob().get_mutable_data();
-        auto rgba_data = uncompressed_image_data.as_span().as_span<uint32_t>();
+        auto rgba_data = std::span<uint32_t>{
+            (uint32_t*)uncompressed_image_data.data(),
+            uncompressed_image_data.size() / sizeof(uint32_t)};
 
         auto compressed_image_data = compressed_image_blob->get_mutable_data();
-        auto block_data = compressed_image_data.as_span().as_span<uint64_t>();
+        auto block_data = std::span<uint64_t>{
+            (uint64_t*)compressed_image_data.data(),
+            compressed_image_data.size() / sizeof(uint64_t)};
 
         auto block_count_width = layout.get_level_data_width(0) / 4;
         auto block_count_height = layout.get_level_data_height(0) / 4;

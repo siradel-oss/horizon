@@ -55,10 +55,10 @@ struct ArenaMessage
     }
 };
 
-gsl::span<const uint32_t> _path_to_span(const hrz_proto::Path& path)
+std::span<const uint32_t> _path_to_span(const hrz_proto::Path& path)
 {
     auto& field = path.parts();
-    return gsl::span<const uint32_t>(field.data(), field.size());
+    return std::span<const uint32_t>(field.data(), field.size());
 }
 
 const char* path_root_name(hrz_proto::PathRoot::KindCase kind)

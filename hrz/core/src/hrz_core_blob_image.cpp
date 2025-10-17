@@ -23,7 +23,7 @@ my::ResourceHandle to_gpu(
 
     auto blob_data = image.blob().get_data();
 
-    hrz::InlinedVector<gsl::span<const std::byte>, 16> data_spans;
+    hrz::InlinedVector<std::span<const std::byte>, 16> data_spans;
     const std::byte* data_ptr = blob_data.data();
     for (uint32_t level = 0; level < image.levels(); ++level)
     {

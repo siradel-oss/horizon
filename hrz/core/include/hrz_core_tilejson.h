@@ -4,10 +4,9 @@
 
 #include <hrz_common_geo.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -23,6 +22,6 @@ struct TileJsonInfo
 };
 
 std::optional<TileJsonInfo> parse_tilejson(
-    gsl::span<const std::byte> raw_data,
+    std::span<const std::byte> raw_data,
     const BaseUrl& base_url);
 } // namespace hrz::tilejson

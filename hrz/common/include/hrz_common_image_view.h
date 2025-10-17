@@ -2,7 +2,7 @@
 
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
+#include <span>
 
 namespace hrz
 {
@@ -10,13 +10,13 @@ namespace hrz
 template<typename Backing>
 struct ImageViewBase
 {
-    gsl::span<Backing> data;
+    std::span<Backing> data;
     hrz_proto::ImageFormat format;
     uint32_t width;
     uint32_t height;
 
     ImageViewBase(
-        gsl::span<Backing> data,
+        std::span<Backing> data,
         hrz_proto::ImageFormat format,
         uint32_t width,
         uint32_t height) :
@@ -42,7 +42,7 @@ struct ImageViewBase
 struct ImageView : public ImageViewBase<const std::byte>
 {
     ImageView(
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         hrz_proto::ImageFormat format,
         uint32_t width,
         uint32_t height) :
@@ -61,7 +61,7 @@ struct ImageView : public ImageViewBase<const std::byte>
 struct MutImageView : public ImageViewBase<std::byte>
 {
     MutImageView(
-        gsl::span<std::byte> data,
+        std::span<std::byte> data,
         hrz_proto::ImageFormat format,
         uint32_t width,
         uint32_t height) :

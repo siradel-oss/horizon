@@ -9,10 +9,10 @@
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_tile_coords.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 #include <mycelium_backend.h>
 
+#include <span>
 #include <string_view>
 
 namespace hrz::vtex

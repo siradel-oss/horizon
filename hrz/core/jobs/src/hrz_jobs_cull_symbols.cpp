@@ -165,7 +165,7 @@ TransformedAnchor transform_anchor(
 }
 
 bool cull_one_view(
-    gsl::span<const hrz::vt::SymbolCullingParams::Group> groups,
+    std::span<const hrz::vt::SymbolCullingParams::Group> groups,
     const hrz::vt::SymbolCullingParams::ViewInfo& view_info,
     hrz::vt::SymbolCullingResponse& response,
     const JobContext& context)

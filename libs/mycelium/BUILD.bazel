@@ -28,7 +28,6 @@ DEPS = [
     "@abseil-cpp//absl/container:flat_hash_set",
     "@abseil-cpp//absl/container:flat_hash_map",
     "@abseil-cpp//absl/container:node_hash_map",
-    "//third_party:gsl",
     "//third_party:fmtlib",
 ]
 

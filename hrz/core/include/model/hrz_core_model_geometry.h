@@ -74,7 +74,7 @@ private:
         const ModelDescriptor::Primitive& desc_prim);
 
 protected:
-    virtual void initialize(ModelPrototype*, gsl::span<const char* const> additional_streams = {});
+    virtual void initialize(ModelPrototype*, std::span<const char* const> additional_streams = {});
 
     virtual void build(ModelPrototype*, SharedResources*, Render*);
 
@@ -96,7 +96,7 @@ public:
 
     Primitive& get_primitive(size_t i) { return _primitives[i]; }
 
-    gsl::span<const my::VertexInputStream> get_streams(const Primitive&);
+    std::span<const my::VertexInputStream> get_streams(const Primitive&);
     BSphere<double> compute_bsphere(const lm::dmat4& transform) const;
 
     void fill_ubo_data(MeshGeometryUniformData*);
@@ -123,7 +123,7 @@ class BatchedModelGeometry : public ModelGeometry
     FeatureColorsTextureResource _colors_texture;
     bool _has_transparent_feature_colors = false;
 
-    void initialize(ModelPrototype*, gsl::span<const char* const> additional_streams = {}) override;
+    void initialize(ModelPrototype*, std::span<const char* const> additional_streams = {}) override;
     void build(ModelPrototype*, SharedResources*, Render*) override;
 
 public:
@@ -133,7 +133,7 @@ public:
         const picking::ObjectReference& object_reference,
         const picking::FeatureReference& feature_reference,
         size_t batch_length,
-        gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
+        std::span<const vector_data::FeatureIdHash> feature_id_hashes);
 
     void destroy(ModelPrototype*) override;
 
@@ -143,7 +143,7 @@ public:
     void on_add_stream(size_t primitive_index, const my::VertexInputStream& stream) override;
 
     void set_selection(const hrz::flat_hash_set<vector_data::FeatureIdHash>& selected_objects);
-    void set_colors(gsl::span<const lm::ubvec4>);
+    void set_colors(std::span<const lm::ubvec4>);
 
     void update_gpu_data(Render*);
 

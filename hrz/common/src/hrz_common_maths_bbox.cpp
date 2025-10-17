@@ -5,7 +5,7 @@
 namespace hrz
 {
 template<typename T>
-OrientedBBox2<T> compute_minimum_bbox(gsl::span<const lm::Vector<T, 2>> pts)
+OrientedBBox2<T> compute_minimum_bbox(std::span<const lm::Vector<T, 2>> pts)
 {
     std::vector<lm::Vector<T, 2>> hull;
     compute_convex_hull(pts, hull);
@@ -80,7 +80,7 @@ OrientedBBox2<T> compute_minimum_bbox(gsl::span<const lm::Vector<T, 2>> pts)
     return obb;
 }
 
-template OrientedBBox2<float> compute_minimum_bbox(gsl::span<const lm::vec2> pts);
-template OrientedBBox2<double> compute_minimum_bbox(gsl::span<const lm::dvec2> pts);
+template OrientedBBox2<float> compute_minimum_bbox(std::span<const lm::vec2> pts);
+template OrientedBBox2<double> compute_minimum_bbox(std::span<const lm::dvec2> pts);
 
 } // namespace hrz

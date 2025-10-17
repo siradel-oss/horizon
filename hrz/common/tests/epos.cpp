@@ -7,7 +7,7 @@
 TEST(BoundingSphere, one_point)
 {
     lm::dvec3 pts[1] = {{1, 5, 6}};
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
     EXPECT_DOUBLE_EQ(bsphere.center.x, 1);
     EXPECT_DOUBLE_EQ(bsphere.center.y, 5);
     EXPECT_DOUBLE_EQ(bsphere.center.z, 6);
@@ -17,7 +17,7 @@ TEST(BoundingSphere, one_point)
 TEST(BoundingSphere, two_points)
 {
     lm::dvec3 pts[2] = {{1, 5, 6}, {2, 7, 10}};
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
     EXPECT_DOUBLE_EQ(bsphere.center.x, 1.5);
     EXPECT_DOUBLE_EQ(bsphere.center.y, 6);
     EXPECT_DOUBLE_EQ(bsphere.center.z, 8);
@@ -27,7 +27,7 @@ TEST(BoundingSphere, two_points)
 TEST(BoundingSphere, three_points)
 {
     lm::dvec3 pts[3] = {{-2, 3, 5}, {2, 3, 5}, {-2, 6, 5}};
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
     EXPECT_DOUBLE_EQ(bsphere.center.x, 0);
     EXPECT_DOUBLE_EQ(bsphere.center.y, 4.5);
     EXPECT_DOUBLE_EQ(bsphere.center.z, 5);
@@ -42,7 +42,7 @@ TEST(BoundingSphere, four_points)
         {-sqrt(2.0 / 9.0), -sqrt(2.0 / 3.0) + 5.0, -1.0 / 3.0},
         {0, 5.0, 1.0},
     };
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
     EXPECT_NEAR(bsphere.center.x, 0, 1e-8);
     EXPECT_NEAR(bsphere.center.y, 5.0, 1e-8);
     EXPECT_NEAR(bsphere.center.z, 0, 1e-8);
@@ -57,7 +57,7 @@ TEST(BoundingSphere, four_points_coplanar)
         {-sqrt(2.0 / 9.0), -sqrt(2.0 / 3.0) + 5.0, 1.0},
         {0, 5.0, 1.0},
     };
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
     EXPECT_NEAR(bsphere.center.x, 0.235702260396, 1e-8);
     EXPECT_NEAR(bsphere.center.y, 5.0, 1e-8);
     EXPECT_NEAR(bsphere.center.z, 1, 1e-8);
@@ -71,7 +71,7 @@ TEST(BoundingSphere, six_points)
         {sqrt2, sqrt2, 1},  {-sqrt2, sqrt2, 1}, {-sqrt2, -sqrt2, 1},
         {sqrt2, -sqrt2, 1}, {0, 0, 2},          {0, 0, 0},
     };
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
     EXPECT_NEAR(bsphere.center.x, 0, 1e-8);
     EXPECT_NEAR(bsphere.center.y, 0, 1e-8);
     EXPECT_NEAR(bsphere.center.z, 1, 1e-8);
@@ -87,7 +87,7 @@ TEST(BoundingSphere, cube)
         {sqrt2 + 2.0, sqrt2 - 3.0, -sqrt2 + 1.5},  {-sqrt2 + 2.0, sqrt2 - 3.0, -sqrt2 + 1.5},
         {sqrt2 + 2.0, -sqrt2 - 3.0, -sqrt2 + 1.5}, {-sqrt2 + 2.0, -sqrt2 - 3.0, -sqrt2 + 1.5},
     };
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
 
     for (const auto& p : pts)
     {
@@ -110,7 +110,7 @@ TEST(BoundingSphere, random)
         pts.push_back(p);
     }
 
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
 
     for (const auto& p : pts)
     {
@@ -136,7 +136,7 @@ TEST(BoundingSphere, regression_1)
         {4196294.468, 170805.2497, 4784225.482}, {4196307.589, 170818.4413, 4784213.623},
     };
 
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
 
     for (const auto& p : pts)
     {
@@ -156,7 +156,7 @@ TEST(BoundingSphere, regression_2)
         {4196317.564, 170770.8446, 4784215.881}, {4196329.85, 170783.1965, 4784204.777},
     };
 
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
 
     for (const auto& p : pts)
     {
@@ -176,7 +176,7 @@ TEST(BoundingSphere, regression_3)
         {4196295.187, 170813.3076, 4784215.95},  {4196295.304, 170811.8934, 4784215.892},
     };
 
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
 
     for (const auto& p : pts)
     {
@@ -196,7 +196,7 @@ TEST(BoundingSphere, regression_4)
         {4196293.158, 170815.8609, 4784217.622}, {4196293.275, 170814.4468, 4784217.563},
     };
 
-    auto bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(pts));
+    auto bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(pts));
 
     for (const auto& p : pts)
     {

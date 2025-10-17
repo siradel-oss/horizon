@@ -106,7 +106,7 @@ void _tetrahedron_circumsphere(
 
 template<typename T>
 void _naive_bounding_sphere(
-    gsl::span<const lm::Vector<T, 3>> pts,
+    std::span<const lm::Vector<T, 3>> pts,
     lm::Vector<T, 3>* out_center,
     T* out_radius)
 {
@@ -178,7 +178,7 @@ void _compute_exact_bounding_sphere_inner(
             T naive_radius;
             lm::Vector<T, 3> naive_center;
             _naive_bounding_sphere(
-                gsl::span<const lm::Vector<T, 3>>(boundary), &naive_center, &naive_radius);
+                std::span<const lm::Vector<T, 3>>(boundary), &naive_center, &naive_radius);
 
             if (naive_radius < *out_radius || std::isnan(out_center->x) || std::isnan(out_center->y)
                 || std::isnan(out_center->z) || std::isnan(*out_radius))
@@ -213,7 +213,7 @@ void _compute_exact_bounding_sphere_inner(
 
 template<typename T>
 void _compute_exact_bounding_sphere(
-    gsl::span<const lm::Vector<T, 3>> in_pts,
+    std::span<const lm::Vector<T, 3>> in_pts,
     lm::Vector<T, 3>* out_center,
     T* out_radius)
 {
@@ -255,7 +255,7 @@ void _compute_exact_bounding_sphere(
 namespace hrz
 {
 template<typename T>
-BSphere<T> compute_bounding_sphere(gsl::span<const lm::Vector<T, 3>> pts)
+BSphere<T> compute_bounding_sphere(std::span<const lm::Vector<T, 3>> pts)
 {
     if (pts.size() == 0)
     {
@@ -321,7 +321,7 @@ BSphere<T> compute_bounding_sphere(gsl::span<const lm::Vector<T, 3>> pts)
 
     // Compute the exact bounding sphere for the extremum points
     _compute_exact_bounding_sphere(
-        gsl::span<const lm::Vector<T, 3>>(extremum), &out_center, &out_radius);
+        std::span<const lm::Vector<T, 3>>(extremum), &out_center, &out_radius);
 
     double max_radius_squared = 0;
 
@@ -340,8 +340,8 @@ BSphere<T> compute_bounding_sphere(gsl::span<const lm::Vector<T, 3>> pts)
     return BSphere<T>{out_center, out_radius};
 }
 
-template BSphere<float> compute_bounding_sphere<float>(gsl::span<const lm::vec3> pts);
-template BSphere<double> compute_bounding_sphere<double>(gsl::span<const lm::dvec3> pts);
+template BSphere<float> compute_bounding_sphere<float>(std::span<const lm::vec3> pts);
+template BSphere<double> compute_bounding_sphere<double>(std::span<const lm::dvec3> pts);
 
 // Based on this https://stackoverflow.com/a/33535438
 // I checked the maths so no need to use a PhD's code ;) ;) ;)
@@ -373,7 +373,7 @@ BSphere<T> merge_bounding_spheres(const BSphere<T>& a, const BSphere<T>& b)
 }
 
 template<typename T>
-BSphere<T> merge_bounding_spheres(gsl::span<const BSphere<T>> bspheres)
+BSphere<T> merge_bounding_spheres(std::span<const BSphere<T>> bspheres)
 {
     if (bspheres.size() == 0) return BSphere<T>();
 
@@ -388,7 +388,7 @@ BSphere<T> merge_bounding_spheres(gsl::span<const BSphere<T>> bspheres)
 
 template BSphere<float> merge_bounding_spheres(const BSphere<float>& a, const BSphere<float>& b);
 template BSphere<double> merge_bounding_spheres(const BSphere<double>& a, const BSphere<double>& b);
-template BSphere<float> merge_bounding_spheres(gsl::span<const BSphere<float>> bspheres);
-template BSphere<double> merge_bounding_spheres(gsl::span<const BSphere<double>> bspheres);
+template BSphere<float> merge_bounding_spheres(std::span<const BSphere<float>> bspheres);
+template BSphere<double> merge_bounding_spheres(std::span<const BSphere<double>> bspheres);
 
 } // namespace hrz

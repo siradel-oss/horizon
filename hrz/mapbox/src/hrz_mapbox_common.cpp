@@ -29,10 +29,10 @@ public:
     }
 
     template<typename... T>
-    void new_line(T&&... args)
+    void new_line(fmt::format_string<T...> fmt, T&&... args)
     {
         new_line();
-        append(args...);
+        append(fmt, std::forward<T>(args)...);
     }
 
     void indent() { _indentation += '\t'; }
@@ -45,10 +45,10 @@ public:
 
     void append(const char* str) { *_script += str; }
 
-    template<typename FormatString, typename... T>
-    void append(const FormatString& str, T&&... args)
+    template<typename... T>
+    void append(fmt::format_string<T...> fmt, T&&... args)
     {
-        *_script += fmt::format(str, args...);
+        *_script += fmt::format(fmt, std::forward<T>(args)...);
     }
 
     std::string* mutable_string() { return _script; }
@@ -56,33 +56,33 @@ public:
     const std::string& indentation() const { return _indentation; }
 };
 
-using GenerationFn = std::function<void(gsl::span<const Node>, NodeIndex node, Script& script)>;
+using GenerationFn = std::function<void(std::span<const Node>, NodeIndex node, Script& script)>;
 
 void generate_script_for_node(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     NodeIndex root,
     Script& script,
     const GenerationFn& generation);
 
 void generate_script_block(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     NodeIndex root,
     Script& script,
     const GenerationFn& generation)
 {
-    script.new_line("{");
+    script.new_line("{}", "{");
     script.indent();
 
     generate_script_for_node(nodes, root, script, generation);
 
     script.unindent();
-    script.new_line("}");
+    script.new_line("{}", "}");
 }
 
 // Returns whether a branch was actually created (if the condition node is a boolean literal,
 // we don't create the branch and just generate the code or not, based on the literal value).
 bool generate_script_branch(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     NodeIndex condition,
     NodeIndex output,
     const char* branch_kind,
@@ -107,7 +107,7 @@ bool generate_script_branch(
     }
     else
     {
-        script.new_line(branch_kind);
+        script.new_line("{}", branch_kind);
     }
 
     generate_script_block(nodes, output, script, generation);
@@ -116,7 +116,7 @@ bool generate_script_branch(
 }
 
 void generate_script_for_node(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     NodeIndex root,
     Script& script,
     const GenerationFn& generation)
@@ -154,7 +154,7 @@ void generate_script_for_node(
 };
 
 void generate_color_expr(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Value& color_default_value,
     NodeIndex color_node,
     const Value& opacity_default_value,
@@ -195,7 +195,7 @@ void generate_color_expr(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::Generic& generic,
     std::string_view property_name,
     Script& script)
@@ -207,7 +207,7 @@ void generate_internal_property_script(
 
     generate_script_for_node(
         nodes, generic.node, script,
-        [&](gsl::span<const Node> nodes, NodeIndex node, Script& script)
+        [&](std::span<const Node> nodes, NodeIndex node, Script& script)
         {
             script.new_line("set \"{}\" = ", property_name);
             generate_sub_expression_script(nodes, node, *script.mutable_string());
@@ -216,7 +216,7 @@ void generate_internal_property_script(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::Vec2& vec2,
     std::string_view property_name,
     Script& script)
@@ -229,7 +229,7 @@ void generate_internal_property_script(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::Vec3& vec3,
     std::string_view property_name,
     Script& script)
@@ -244,7 +244,7 @@ void generate_internal_property_script(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::ColorWithOpacity& color_with_opacity,
     std::string_view property_name,
     Script& script)
@@ -256,11 +256,11 @@ void generate_internal_property_script(
 
     generate_script_for_node(
         nodes, color_with_opacity.color.node, script,
-        [&](gsl::span<const Node> nodes, NodeIndex color_index, Script& script)
+        [&](std::span<const Node> nodes, NodeIndex color_index, Script& script)
         {
             generate_script_for_node(
                 nodes, color_with_opacity.opacity.node, script,
-                [&](gsl::span<const Node> nodes, NodeIndex opacity_index, Script& script)
+                [&](std::span<const Node> nodes, NodeIndex opacity_index, Script& script)
                 {
                     std::string color_expr;
                     generate_color_expr(
@@ -273,7 +273,7 @@ void generate_internal_property_script(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::ExtrudedVectorColor& extruded_color,
     std::string_view property_name,
     Script& script)
@@ -289,15 +289,15 @@ void generate_internal_property_script(
 
     generate_script_for_node(
         nodes, extruded_color.color.node, script,
-        [&](gsl::span<const Node>, NodeIndex color_index, Script& script)
+        [&](std::span<const Node>, NodeIndex color_index, Script& script)
         {
             generate_script_for_node(
                 nodes, extruded_color.opacity.node, script,
-                [&](gsl::span<const Node>, NodeIndex opacity_index, Script& script)
+                [&](std::span<const Node>, NodeIndex opacity_index, Script& script)
                 {
                     generate_script_for_node(
                         nodes, extruded_color.gradient.node, script,
-                        [&](gsl::span<const Node>, NodeIndex gradient_index, Script& script)
+                        [&](std::span<const Node>, NodeIndex gradient_index, Script& script)
                         {
                             std::string color_expr;
                             generate_color_expr(
@@ -379,7 +379,7 @@ void generate_internal_property_script(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::SymbolAnchorAlignment& anchor_alignment,
     std::string_view property_name,
     Script& script)
@@ -391,7 +391,7 @@ void generate_internal_property_script(
 
     generate_script_for_node(
         nodes, anchor_alignment.anchor.node, script,
-        [&](gsl::span<const Node> nodes, NodeIndex node, Script& script)
+        [&](std::span<const Node> nodes, NodeIndex node, Script& script)
         {
             // If the node is a literal, then there is no need to wait for styling to check its
             // value. We can do it now, so we just have to set the correct alignment during styling.
@@ -451,7 +451,7 @@ void generate_internal_property_script(
 }
 
 void generate_internal_property_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     const Property::TextAlignment& text_alignment,
     std::string_view property_name,
     Script& script)
@@ -463,11 +463,11 @@ void generate_internal_property_script(
 
     generate_script_for_node(
         nodes, text_alignment.text_justify.node, script,
-        [&](gsl::span<const Node>, NodeIndex justify_index, Script& script)
+        [&](std::span<const Node>, NodeIndex justify_index, Script& script)
         {
             generate_script_for_node(
                 nodes, text_alignment.text_anchor.node, script,
-                [&](gsl::span<const Node>, NodeIndex anchor_index, Script& script)
+                [&](std::span<const Node>, NodeIndex anchor_index, Script& script)
                 {
                     std::string alignment_from_anchor_expr;
                     if (text_alignment.text_anchor.is_literal())
@@ -532,7 +532,7 @@ void generate_internal_property_script(
         });
 }
 
-void generate_property_script(gsl::span<const Node> nodes, const Property& prp, Script& script)
+void generate_property_script(std::span<const Node> nodes, const Property& prp, Script& script)
 {
     switch (prp.type)
     {
@@ -573,9 +573,9 @@ void generate_property_script(gsl::span<const Node> nodes, const Property& prp, 
 } // namespace
 
 void generate_representations_script(
-    gsl::span<const Node> nodes,
-    gsl::span<const Property> properties,
-    gsl::span<const std::string_view> representation_names,
+    std::span<const Node> nodes,
+    std::span<const Property> properties,
+    std::span<const std::string_view> representation_names,
     uint32_t first_representation_id,
     NodeIndex filter_node,
     std::string& string)
@@ -620,11 +620,11 @@ void generate_representations_script(
     {
         generate_script_for_node(
             nodes, filter_node, script,
-            [&](gsl::span<const Node> nodes, NodeIndex node, Script& script)
+            [&](std::span<const Node> nodes, NodeIndex node, Script& script)
             {
                 generate_script_branch(
                     nodes, node, 0, "if", script,
-                    [&](gsl::span<const Node>, NodeIndex, Script&)
+                    [&](std::span<const Node>, NodeIndex, Script&)
                     { generate_properties_script(); });
             });
     }

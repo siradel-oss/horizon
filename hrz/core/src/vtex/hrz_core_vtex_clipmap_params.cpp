@@ -164,7 +164,7 @@ TileCoords ClipmapParams::source_tile_to_clipmap(TileCoords tile) const
     }
 }
 
-void ClipmapParams::write_offsets(gsl::span<lm::vec4> data) const
+void ClipmapParams::write_offsets(std::span<lm::vec4> data) const
 {
     HRZ_SCOPED_SAMPLE("clipmap write ubo data");
     assert(data.size() == _lod_count);

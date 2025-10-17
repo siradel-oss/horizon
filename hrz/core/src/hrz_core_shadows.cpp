@@ -213,7 +213,7 @@ void update(
 
             // This is the minimum oriented bounding box of the corners of the
             // view frustum, in the shadow map space.
-            OrientedBBox2<double> obb = compute_minimum_bbox(gsl::span<const lm::dvec2>(corners));
+            OrientedBBox2<double> obb = compute_minimum_bbox(std::span<const lm::dvec2>(corners));
 
             lm::dvec3 sm_eye =
                 sm_z_axis * max_z + sm_x_axis * obb.center.x + sm_y_axis * obb.center.y;

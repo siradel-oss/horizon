@@ -2,10 +2,10 @@
 
 #include <hrz_fnd_flat_hash_set.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <rapidjson/document.h>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -58,5 +58,5 @@ bool draw_editable_filter_row(
     const hrz::flat_hash_set<std::string>& metadata_labels);
 
 // Draws a table with all the given metadata with buttons to copy any value to the clipboard
-void draw_metadata_table(gsl::span<const data::Metadata>, const char* table_id = "##Metadata");
+void draw_metadata_table(std::span<const data::Metadata>, const char* table_id = "##Metadata");
 } // namespace metadata

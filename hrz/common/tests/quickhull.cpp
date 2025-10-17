@@ -13,7 +13,7 @@ TEST(Quickhull, two_points)
     };
 
     std::vector<lm::vec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::vec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::vec2>(pts), hull);
 
     EXPECT_EQ(pts[1], hull[0]);
     EXPECT_EQ(pts[0], hull[1]);
@@ -28,7 +28,7 @@ TEST(Quickhull, triangle_1)
     };
 
     std::vector<lm::vec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::vec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::vec2>(pts), hull);
 
     EXPECT_EQ(pts[1], hull[0]);
     EXPECT_EQ(pts[2], hull[1]);
@@ -44,7 +44,7 @@ TEST(Quickhull, triangle_2)
     };
 
     std::vector<lm::vec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::vec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::vec2>(pts), hull);
 
     EXPECT_EQ(pts[1], hull[0]);
     EXPECT_EQ(pts[0], hull[1]);
@@ -58,7 +58,7 @@ TEST(Quickhull, quad_with_points_inside)
     };
 
     std::vector<lm::vec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::vec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::vec2>(pts), hull);
 
     EXPECT_EQ(pts[3], hull[0]);
     EXPECT_EQ(pts[1], hull[1]);
@@ -76,7 +76,7 @@ TEST(Quickhull, quad)
     };
 
     std::vector<lm::vec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::vec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::vec2>(pts), hull);
 
     EXPECT_EQ(pts[3], hull[0]);
     EXPECT_EQ(pts[1], hull[1]);
@@ -94,7 +94,7 @@ TEST(Quickhull, quad_2)
     };
 
     std::vector<lm::vec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::vec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::vec2>(pts), hull);
 
     ASSERT_EQ(hull.size(), 4);
     EXPECT_EQ(pts[0], hull[0]);
@@ -122,7 +122,7 @@ TEST(Quickhull, random_points_inside_a_quad)
     pts[51] = lm::dvec2(-50, -10);
 
     std::vector<lm::dvec2> hull;
-    hrz::compute_convex_hull(gsl::span<const lm::dvec2>(pts), hull);
+    hrz::compute_convex_hull(std::span<const lm::dvec2>(pts), hull);
 
     ASSERT_EQ(hull.size(), 5);
     EXPECT_EQ(pts[51], hull[0]);

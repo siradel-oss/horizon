@@ -5,10 +5,9 @@
 
 #include <hrz_common_blob_allocator.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <memory>
 #include <optional>
+#include <span>
 #include <stdint.h>
 
 namespace hrz::model
@@ -60,7 +59,7 @@ public:
     // one is the templated URL.
     // Internally those configs are deduplicated.
     virtual ConfigH register_config(
-        gsl::span<const std::pair<std::string_view, std::string_view>> templates) = 0;
+        std::span<const std::pair<std::string_view, std::string_view>> templates) = 0;
 
     // Add a blob from a URL. A blob-allocator blob can be given if the data
     // was already loaded. If the data is only a subspan of the resource pointed
@@ -81,7 +80,7 @@ public:
     // to point to the specific blob to download.
     virtual Handle add_templated_blob_from_parameters(
         std::string_view template_name,
-        gsl::span<const std::pair<std::string_view, std::string_view>> params,
+        std::span<const std::pair<std::string_view, std::string_view>> params,
         uint32_t load_priority = 0) = 0;
 
     // Increments the ref count of a resource. It will begin loading if

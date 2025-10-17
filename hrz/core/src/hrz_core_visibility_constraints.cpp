@@ -63,7 +63,7 @@ bool are_visibility_constraints_satisfied(
 }
 
 MultiviewVisibilityConstraints are_visibility_constraints_satisfied(
-    gsl::span<const RenderViewInfo> views_info,
+    std::span<const RenderViewInfo> views_info,
     const hrz_proto::LayerVisibilityConstraintList& constraints)
 {
     MultiviewVisibilityConstraints result;

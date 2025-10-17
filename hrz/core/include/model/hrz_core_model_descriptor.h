@@ -160,7 +160,7 @@ struct ModelDescriptor
 
 class BlobLibrary;
 
-uint32_t fetch_glb_declared_size(gsl::span<const std::byte> gltf_data);
+uint32_t fetch_glb_declared_size(std::span<const std::byte> gltf_data);
 
 bool parse_gltf_descriptor(
     std::string_view descriptor_url,

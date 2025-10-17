@@ -18,7 +18,8 @@ class Generator : public google::protobuf::compiler::CodeGenerator
         google::protobuf::compiler::GeneratorContext* generator_context,
         std::string* error) const override
     {
-        std::string file_name = file->name().substr(0, file->name().size() - 6) + ".pb.h";
+        std::string file_name =
+            std::string(file->name().substr(0, file->name().size() - 6)) + ".pb.h";
         auto* stream = generator_context->OpenForInsert(file_name, "global_scope");
         google::protobuf::io::Printer printer(stream, '$');
         printer.Print("namespace hrz_proto { using namespace ::HrzProtocol; }\n");

@@ -150,7 +150,7 @@ void GpuSnapshotComparator::draw(
     }
 }
 
-void GpuSnapshotComparator::_compute_cells(gsl::span<const data::GpuResourceSnapshot> snapshots)
+void GpuSnapshotComparator::_compute_cells(std::span<const data::GpuResourceSnapshot> snapshots)
 {
     const auto& snapshot = snapshots[_snapshot_index];
     std::vector<const data::GpuResourceBucket*> buckets = {};
@@ -198,9 +198,9 @@ void GpuSnapshotComparator::_compute_cells(gsl::span<const data::GpuResourceSnap
 
 void GpuSnapshotComparator::_recursive_compute_cell_children(
     size_t parent_id,
-    gsl::span<const data::GpuResourceBucket*> buckets,
-    gsl::span<const data::GpuResourceBucket*> ref_buckets,
-    gsl::span<const data::GpuResourceBucketGroupingFunction> grouping_functions)
+    std::span<const data::GpuResourceBucket*> buckets,
+    std::span<const data::GpuResourceBucket*> ref_buckets,
+    std::span<const data::GpuResourceBucketGroupingFunction> grouping_functions)
 {
     if (grouping_functions.empty())
     {
@@ -354,7 +354,7 @@ void GpuSnapshotComparator::_sort_cells(const ImGuiTableSortSpecs* sort_specs)
 
 void GpuSnapshotComparator::_draw_header(
     lm::dvec2 position,
-    gsl::span<const data::GpuResourceSnapshot> snapshots)
+    std::span<const data::GpuResourceSnapshot> snapshots)
 {
     const auto& snapshot = snapshots[_snapshot_index];
 

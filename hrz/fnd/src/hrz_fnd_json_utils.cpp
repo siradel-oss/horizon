@@ -2,7 +2,7 @@
 
 namespace hrz::json
 {
-size_t copy_array_values(gsl::span<int> values, const rapidjson::Value& array, int default_value)
+size_t copy_array_values(std::span<int> values, const rapidjson::Value& array, int default_value)
 {
     size_t index = 0;
     if (array.IsArray())
@@ -24,7 +24,7 @@ size_t copy_array_values(gsl::span<int> values, const rapidjson::Value& array, i
 }
 
 size_t copy_array_values(
-    gsl::span<float> values,
+    std::span<float> values,
     const rapidjson::Value& array,
     float default_value)
 {
@@ -48,7 +48,7 @@ size_t copy_array_values(
 }
 
 size_t copy_array_values(
-    gsl::span<double> values,
+    std::span<double> values,
     const rapidjson::Value& array,
     double default_value)
 {

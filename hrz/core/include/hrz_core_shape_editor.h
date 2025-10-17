@@ -78,8 +78,8 @@ void pick(
 
 std::pair<size_t, size_t> make_typed_object_references(
     const ShapeEditor*,
-    gsl::span<const picking::ObjectReference> refs,
-    gsl::span<hrz_proto::TypedObjectReference> output);
+    std::span<const picking::ObjectReference> refs,
+    std::span<hrz_proto::TypedObjectReference> output);
 
 /**
  * Update the editable shape layers.

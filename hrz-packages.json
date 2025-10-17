@@ -6,6 +6,9 @@
             "type": "github",
             "repo": "zaphoyd/websocketpp",
             "ref": "0.8.2",
+            "patches": [
+                "websocketpp_build_fix.patch"
+            ],
             "build_file": "//third_party:websocketpp.BUILD.bazel"
         },
         {
@@ -19,11 +22,9 @@
             "name": "libwebp",
             "type": "github",
             "repo": "webmproject/libwebp",
-            "ref": "v1.2.2",
+            "ref": "v1.6.0",
             "patches": [
-                "libwebp_vp8getcpuinfo_extern.diff",
-                "libwebp_custom_malloc.diff",
-                "libwebp_license.diff"
+                "libwebp_custom_malloc.diff"
             ],
             "build_file": "//third_party:libwebp.BUILD.bazel"
         },
@@ -31,14 +32,17 @@
             "name": "harfbuzz",
             "type": "github",
             "repo": "harfbuzz/harfbuzz",
-            "ref": "10.0.1",
+            "ref": "12.1.0",
             "build_file": "//third_party:harfbuzz.BUILD.bazel"
         },
         {
             "name": "basisu",
             "type": "github",
             "repo": "BinomialLLC/basis_universal",
-            "ref": "1.16.4",
+            "ref": "v1_60",
+            "patches": [
+                "basisu_build_fix.patch"
+            ],
             "build_file": "//third_party:basisu.BUILD.bazel"
         },
         {
@@ -66,21 +70,21 @@
             "name": "stb",
             "type": "github",
             "repo": "nothings/stb",
-            "ref": "af1a5bc352164740c1cc1354942b1c6b72eacb8a",
+            "ref": "fede005abaf93d9d7f3a679d1999b2db341b360f",
             "build_file": "//third_party:stb.BUILD.bazel"
         },
         {
             "name": "earcut",
             "type": "github",
             "repo": "mapbox/earcut.hpp",
-            "ref": "v2.2.3",
+            "ref": "v2.2.4",
             "build_file": "//third_party:earcut.BUILD.bazel"
         },
         {
             "name": "cdt",
             "type": "github",
             "repo": "artem-ogre/CDT",
-            "ref": "1.4.0",
+            "ref": "1.4.4",
             "build_file": "//third_party:cdt.BUILD.bazel"
         },
         {
@@ -96,24 +100,17 @@
             "build_file": "//third_party:delabella.BUILD.bazel"
         },
         {
-            "name": "gsl",
-            "type": "github",
-            "repo": "gsl-lite/gsl-lite",
-            "ref": "v0.42.0",
-            "build_file": "//third_party:gsl.BUILD.bazel"
-        },
-        {
             "name": "rapidjson",
             "type": "github",
-            "repo": "Tencent/rapidjson",
-            "ref": "58c6938b73c8685d82905ed55ec5b59e8f163687",
+            "repo": "jcelerier/rapidjson",
+            "ref": "v1.2.1",
             "build_file": "//third_party:rapidjson.BUILD.bazel"
         },
         {
             "name": "fmtlib",
             "type": "github",
             "repo": "fmtlib/fmt",
-            "ref": "11.0.2",
+            "ref": "12.0.0",
             "build_file": "//third_party:fmtlib.BUILD.bazel"
         },
         {
@@ -127,13 +124,13 @@
             "name": "googletest",
             "type": "github",
             "repo": "google/googletest",
-            "ref": "v1.15.2"
+            "ref": "v1.17.0"
         },
         {
             "name": "microui",
             "type": "github",
             "repo": "rxi/microui",
-            "ref": "05d7b46c9cf650dd0c5fbc83a9bebf87c80d02a5",
+            "ref": "0850aba860959c3e75fb3e97120ca92957f9d057",
             "patches": [
                 "microui_text_color.patch",
                 "microui_unique_header_label.patch",
@@ -170,10 +167,7 @@
             "name": "lz4",
             "type": "github",
             "repo": "lz4/lz4",
-            "ref": "v1.9.4",
-            "patches": [
-                "lz4_clang_tzcnt.diff"
-            ],
+            "ref": "v1.10.0",
             "build_file": "//third_party:lz4.BUILD.bazel"
         },
         {

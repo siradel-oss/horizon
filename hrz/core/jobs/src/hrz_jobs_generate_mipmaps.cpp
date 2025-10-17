@@ -7,7 +7,7 @@
 #include <hrz_common_raster_sampling.h>
 #include <hrz_fnd_log.h>
 
-#include <gsl/gsl-lite.hpp>
+#include <span>
 
 namespace hrz_jobs::generate_mipmaps
 {

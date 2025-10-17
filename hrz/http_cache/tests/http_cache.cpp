@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <optional>
+#include <span>
 
 using namespace hrz;
 
@@ -17,7 +18,7 @@ struct Response
     int code;
     HttpHeaders headers;
     std::string data;
-    std::optional<gsl::span<std::byte>> data_dst;
+    std::optional<std::span<std::byte>> data_dst;
 };
 
 struct RequestsStats
@@ -268,7 +269,7 @@ public:
         }
     }
 
-    bool copy_data(HttpTicket ticket, gsl::span<std::byte> dst) override
+    bool copy_data(HttpTicket ticket, std::span<std::byte> dst) override
     {
         auto it = _responses.find(ticket);
         if (it != _responses.end() && dst.size_bytes() == it->second.data.size()

@@ -43,13 +43,13 @@ bool try_convert_mapbox_resource(
     hrz_proto::SceneDump* scene_dump,
     std::optional<mapbox::Resources> sprite_index_res = std::nullopt)
 {
-    gsl::span<const std::byte> raw_json = mapbox::get_data(res);
+    std::span<const std::byte> raw_json = mapbox::get_data(res);
     auto json = std::string_view((char*)raw_json.data(), raw_json.size());
 
     std::string_view sprite_index_json{};
     if (sprite_index_res.has_value())
     {
-        gsl::span<const std::byte> raw_sprite_index = mapbox::get_data(sprite_index_res.value());
+        std::span<const std::byte> raw_sprite_index = mapbox::get_data(sprite_index_res.value());
         sprite_index_json =
             std::string_view((char*)raw_sprite_index.data(), raw_sprite_index.size());
     }

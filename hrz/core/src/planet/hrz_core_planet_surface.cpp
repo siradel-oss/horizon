@@ -26,12 +26,8 @@
 
 namespace
 {
-enum
-{
-    TextureUnitBase = 4,
-    SetCenterDelayMs = 1000,
-    ClipmapBakeDelayMs = 100,
-};
+constexpr uint32_t SetCenterDelayMs = 1000;
+constexpr uint32_t ClipmapBakeDelayMs = 100;
 
 static_assert(
     hrz_proto::RasterGroup_MAX < hrz::MAX_IMAGERY_GROUP_COUNT,
@@ -380,8 +376,8 @@ struct PlanetSurface
         JobScheduler* js,
         SceneModel* model,
         AttributionRegistry* attributions,
-        gsl::span<const RenderViewInfo> views_info,
-        gsl::span<PlanetGeometry*> geometries)
+        std::span<const RenderViewInfo> views_info,
+        std::span<PlanetGeometry*> geometries)
     {
         HRZ_SCOPED_SAMPLE("planet work");
 
@@ -479,7 +475,7 @@ struct PlanetSurface
                 geometry, ba, js, model, &clipmap_params, dtm_min_max, view_info, min_mipmap_bias);
         }
 
-        std::vector<gsl::span<const planet::RequestedTileCoords>> requested_tile_lists;
+        std::vector<std::span<const planet::RequestedTileCoords>> requested_tile_lists;
         size_t requested_tiles_hash = 0;
 
         bool requested_tiles_updated = false;
@@ -604,7 +600,7 @@ struct PlanetSurface
         }
     }
 
-    bool is_working(gsl::span<const PlanetGeometry*> geometries) const
+    bool is_working(std::span<const PlanetGeometry*> geometries) const
     {
         for (const auto* geometry : geometries)
         {
@@ -786,14 +782,14 @@ void work(
     JobScheduler* js,
     SceneModel* model,
     AttributionRegistry* attributions,
-    gsl::span<const RenderViewInfo> views_info,
-    gsl::span<PlanetGeometry*> geometries)
+    std::span<const RenderViewInfo> views_info,
+    std::span<PlanetGeometry*> geometries)
 {
     assert(planet && al && ba && js);
     planet->work(al, ba, js, model, attributions, views_info, geometries);
 }
 
-bool is_working(const PlanetSurface* planet, gsl::span<const PlanetGeometry*> geometries)
+bool is_working(const PlanetSurface* planet, std::span<const PlanetGeometry*> geometries)
 {
     assert(planet);
     return planet->is_working(geometries);
@@ -907,7 +903,7 @@ void pick(
     PlanetSurface* planet,
     const picking::ObjectReference& obj,
     const lm::dvec3& position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters,
+    std::span<const hrz_proto::LayerHandle> included_rasters,
     hrz_proto::SceneViewIndex scene_view,
     hrz_proto::PickResults& pick_results)
 {
@@ -926,7 +922,7 @@ void pick(
 RasterDataFetchTicket schedule_raster_data_fetch(
     PlanetSurface* planet,
     const GeoPosition2& position,
-    gsl::span<const hrz_proto::LayerHandle> layers)
+    std::span<const hrz_proto::LayerHandle> layers)
 {
     assert(planet);
 
@@ -978,8 +974,8 @@ std::optional<RasterDataFetchResult> retrieve_raster_data_fetch_results(
 
 std::pair<size_t, size_t> make_typed_object_references(
     PlanetSurface* planet,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output)
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output)
 {
     assert(objs.size() <= output.size());
 

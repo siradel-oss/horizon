@@ -179,7 +179,7 @@ private:
     void draw_resource_tree(
         mu_Context* ctx,
         uint64_t tree_id,
-        gsl::span<const uint64_t> gpu_resources,
+        std::span<const uint64_t> gpu_resources,
         const std::function<uint64_t(const GpuResourceInfo&)>& get_first_value,
         const std::function<const char*(uint64_t)>& print_first_value,
         const mu_Color& first_bar_color,

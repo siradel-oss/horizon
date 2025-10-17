@@ -10,6 +10,7 @@
 #include <rapidjson/document.h>
 
 #include <forward_list>
+#include <span>
 #include <string_view>
 #include <vector>
 
@@ -85,7 +86,7 @@ void finalize_expression(NodeIndex root, ExpressionContext&);
 // Recursively traverse the expression tree and generate the styling script for whole expression
 // starting from the given node.
 void generate_sub_expression_script(
-    gsl::span<const Node> nodes,
+    std::span<const Node> nodes,
     NodeIndex node_index,
     std::string& script);
 

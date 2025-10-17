@@ -449,7 +449,7 @@ void _set_thread_collapsed(ui::widget::SampleGraphThread& thread, double& widget
 }
 
 void _show_thread_menu_items(
-    gsl::span<ui::widget::SampleGraphThread> threads,
+    std::span<ui::widget::SampleGraphThread> threads,
     std::optional<uint32_t> selected,
     double& widget_height)
 {
@@ -461,9 +461,15 @@ void _show_thread_menu_items(
     const char* collapse_item_name = "Collapse thread";
     if (selected.has_value())
     {
-        format_buffer(
-            buffer, thread_collapsed ? "Expand {}" : "Collapse {}",
-            threads[selected.value()].name.c_str());
+        auto thread_name = threads[selected.value()].name.c_str();
+        if (thread_collapsed)
+        {
+            format_buffer(buffer, "Expand {}", thread_name);
+        }
+        else
+        {
+            format_buffer(buffer, "Collapse {}", thread_name);
+        }
         collapse_item_name = buffer.data();
     }
 
@@ -491,8 +497,15 @@ void _show_thread_menu_items(
     const char* hide_item_name = "Hide thread";
     if (selected.has_value())
     {
-        format_buffer(
-            buffer, thread_visible ? "Hide {}" : "Show {}", threads[selected.value()].name.c_str());
+        auto thread_name = threads[selected.value()].name.c_str();
+        if (thread_visible)
+        {
+            format_buffer(buffer, "Hide {}", thread_name);
+        }
+        else
+        {
+            format_buffer(buffer, "Show {}", thread_name);
+        }
         hide_item_name = buffer.data();
     }
 

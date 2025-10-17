@@ -5,8 +5,9 @@
 #include "hrz_core_scene_model.h"
 #include "hrz_core_scene_path.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
+
+#include <span>
 
 namespace hrz
 {

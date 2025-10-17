@@ -100,12 +100,12 @@ std::string PatternTileUrlGenerator::make_url(uint32_t x, uint32_t y, uint32_t z
     const uint32_t ry = tile_count - y - 1;
 
     return fmt::format(
-        base, fmt::arg("x", x), fmt::arg("y", y), fmt::arg("z", z), fmt::arg("ry", ry),
-        fmt::arg("sub", subdomain), fmt::arg("quadkey", quadkey));
+        fmt::runtime(base), fmt::arg("x", x), fmt::arg("y", y), fmt::arg("z", z),
+        fmt::arg("ry", ry), fmt::arg("sub", subdomain), fmt::arg("quadkey", quadkey));
 }
 
 MultiPatternTileUrlGenerator::MultiPatternTileUrlGenerator(
-    gsl::span<const std::string> urls,
+    std::span<const std::string> urls,
     unsigned int tile_count_at_level_0_y)
 {
     for (const auto& url : urls)

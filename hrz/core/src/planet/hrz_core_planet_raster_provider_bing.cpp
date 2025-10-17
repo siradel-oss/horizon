@@ -57,7 +57,8 @@ struct UrlGenerator : public hrz::TileUrlGenerator
         size_t subdomain = hrz::hash_values(x, y, z) % tileset_info.subdomains.size();
 
         std::string target_url = fmt::format(
-            tileset_info.url_pattern, fmt::arg("subdomain", tileset_info.subdomains.at(subdomain)),
+            fmt::runtime(tileset_info.url_pattern),
+            fmt::arg("subdomain", tileset_info.subdomains.at(subdomain)),
             fmt::arg("quadkey", hrz::tile_coords_to_quadkey(x, y, z).c_str()),
             fmt::arg("culture", tileset_info.culture), fmt::arg("zoom", z),
             fmt::arg("tileId", (uint64_t)x + (uint64_t)y * (1ULL << z)));
@@ -392,7 +393,7 @@ private:
                     {
                         geometry.projection.set_descriptor_type(
                             hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-                        geometry.projection.set_descriptor(hrz_proj::wmerc_proj_str);
+                        geometry.projection.set_descriptor_(hrz_proj::wmerc_proj_str);
 
                         geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
 

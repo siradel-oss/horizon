@@ -28,12 +28,14 @@ cc_library(
     srcs = [
         "transcoder/basisu_transcoder.cpp",
 
+        "transcoder/basisu.h",
+        "transcoder/basisu_astc_hdr_core.h",
+        "transcoder/basisu_astc_helpers.h",
         "transcoder/basisu_containers.h",
         "transcoder/basisu_containers_impl.h",
-        "transcoder/basisu_transcoder_internal.h",
         "transcoder/basisu_file_headers.h",
+        "transcoder/basisu_transcoder_internal.h",
         "transcoder/basisu_transcoder_uastc.h",
-        "transcoder/basisu.h",
 
         "transcoder/basisu_transcoder_tables_atc_56.inc",
         "transcoder/basisu_transcoder_tables_pvrtc2_45.inc",

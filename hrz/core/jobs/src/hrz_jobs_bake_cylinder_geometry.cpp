@@ -146,7 +146,7 @@ hrz::JobResult run(
         uint32_t first_point = feature.first_point;
         uint32_t point_count = feature.point_count;
 
-        gsl::span<const lm::dvec3> feature_span(
+        std::span<const lm::dvec3> feature_span(
             ((const lm::dvec3*)input_points.data()) + first_point, point_count);
 
         points.clear();
@@ -183,7 +183,7 @@ hrz::JobResult run(
             uint32_t linestring_index = i + feature.first_linestring_size;
             uint32_t linestring_size = input_linestring_sizes.at(linestring_index);
 
-            gsl::span<const lm::dvec3> linestring_points =
+            std::span<const lm::dvec3> linestring_points =
                 points_data.subspan(linestring_first_point, linestring_size);
 
             uint32_t segment_count = linestring_size - 1;
@@ -297,7 +297,7 @@ hrz::JobResult run(
     }
 
     hrz::BSphere<float> bsphere = hrz::compute_bounding_sphere(
-        gsl::span<const lm::vec3>(bsphere_point_buffer_data_opt.value()));
+        std::span<const lm::vec3>(bsphere_point_buffer_data_opt.value()));
 
     bsphere.center += lm::vec3(center); // The points were offset by "center".
 

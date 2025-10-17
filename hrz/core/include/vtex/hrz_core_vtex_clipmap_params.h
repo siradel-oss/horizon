@@ -2,9 +2,9 @@
 
 #include <hrz_common_tile_coords.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
+#include <span>
 #include <vector>
 
 namespace hrz::vtex
@@ -27,7 +27,7 @@ public:
 
     inline uint32_t get_pyramid_count() const { return _pyramid_count; }
 
-    inline gsl::span<const lm::uvec2> get_offsets() const { return _offsets; }
+    inline std::span<const lm::uvec2> get_offsets() const { return _offsets; }
 
     lm::uvec2 get_offset(uint32_t lod) const;
 
@@ -45,7 +45,7 @@ public:
 
     TileCoords source_tile_to_clipmap(TileCoords tile) const;
 
-    void write_offsets(gsl::span<lm::vec4> offsets) const;
+    void write_offsets(std::span<lm::vec4> offsets) const;
 
 private:
     uint32_t _clip_size;

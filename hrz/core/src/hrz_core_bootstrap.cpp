@@ -904,7 +904,7 @@ public:
                                         .hash()};
                                 hrz::scene::select(
                                     scene, result.layer().handle().opaque(),
-                                    gsl::span<const hrz::vector_data::FeatureIdHash>(feature_id));
+                                    std::span<const hrz::vector_data::FeatureIdHash>(feature_id));
                             }
 
                             for (int i = 0; i < result.vector().ids_size(); ++i)
@@ -959,7 +959,7 @@ public:
                                 result.model().data_texture_value());
                             hrz::scene::select(
                                 scene, result.layer().handle().opaque(),
-                                gsl::span<const hrz::vector_data::FeatureIdHash>(feature_id));
+                                std::span<const hrz::vector_data::FeatureIdHash>(feature_id));
                             break;
                         }
                         case hrz_proto::PickLayerResult::kThreeDTile:
@@ -982,7 +982,7 @@ public:
                                         .hash()};
                                 hrz::scene::select(
                                     scene, result.layer().handle().opaque(),
-                                    gsl::span<const hrz::vector_data::FeatureIdHash>(feature_id));
+                                    std::span<const hrz::vector_data::FeatureIdHash>(feature_id));
                             }
                             else
                             {
@@ -1378,7 +1378,7 @@ public:
         uint32_t w,
         uint32_t h,
         uint32_t d,
-        gsl::span<const std::byte> data,
+        std::span<const std::byte> data,
         TextureUpdateDataLayout data_layout) override
     {
         HRZ_SCOPED_SAMPLE("mycelium: cmd update_texture");
@@ -2754,7 +2754,7 @@ public:
             }
         }
 
-        size_t count = hrz::scene::select(core->scene(), 0, {nullptr, 0});
+        size_t count = hrz::scene::select(core->scene(), 0, {});
         for (const auto& p : hashes)
         {
             count = hrz::scene::select(core->scene(), p.first, p.second);
@@ -2774,7 +2774,7 @@ public:
                 hrz::vector_data::FeatureId::from_proto(ref.feature_id()).hash());
         }
 
-        size_t count = hrz::scene::deselect(core->scene(), 0, {nullptr, 0});
+        size_t count = hrz::scene::deselect(core->scene(), 0, {});
         for (const auto& p : hashes)
         {
             count = hrz::scene::deselect(core->scene(), p.first, p.second);

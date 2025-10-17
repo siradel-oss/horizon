@@ -48,7 +48,7 @@ struct FrameFilter
     const char* name;
     std::function<bool(const data::Frame&)> function;
 
-    gsl::not_null<bool*> p_active;
+    bool* p_active;
 
     bool pass(const data::Frame& frame) const { return function(frame); }
 };
@@ -64,7 +64,7 @@ struct FilterDrawResult
 FilterDrawResult _draw_filter_rows(
     ImDrawList* draw_list,
     const Rect& area,
-    gsl::span<FrameFilter> filters)
+    std::span<FrameFilter> filters)
 {
     const double font_size = ImGui::GetFontSize();
     const auto spacing = ImGui::GetStyle().ItemSpacing;
@@ -92,7 +92,8 @@ FilterDrawResult _draw_filter_rows(
         position.x += label_width;
         uint32_t text_color = (*filter.p_active) ? ImGui::GetColorU32(ImGuiCol_Text)
                                                  : ImGui::GetColorU32(ImGuiCol_TextDisabled);
-        ui::helpers::draw_text_right_aligned(draw_list, position, text_color, filter.name);
+        ui::helpers::draw_text_right_aligned(
+            draw_list, position, text_color, fmt::runtime(filter.name));
 
         // Draw checkbox
         position.x += spacing.x;
@@ -143,8 +144,8 @@ std::vector<FrameRender> _compute_frames_render(
     size_t from,
     size_t count,
     std::optional<data::Metric> metric,
-    gsl::span<const data::Frame> frames,
-    gsl::span<const FrameFilter> filters,
+    std::span<const data::Frame> frames,
+    std::span<const FrameFilter> filters,
     const data::MetricsSystem& metrics)
 {
     count = std::min(count, frames.size() - from);
@@ -239,7 +240,7 @@ std::vector<FrameRender> _compute_frames_render(
     return result;
 }
 
-FrameRender _get_merged_frames_render(gsl::span<const FrameRender> frames)
+FrameRender _get_merged_frames_render(std::span<const FrameRender> frames)
 {
     FrameRender result = {};
 
@@ -437,7 +438,7 @@ void FrameGraph::draw(
         // frame with the highest "value" out of the group of merged frames
         if (frame_skip > 0 && !is_skipped_frame)
         {
-            gsl::span<const FrameRender> merged_frames(
+            std::span<const FrameRender> merged_frames(
                 frame_renders.data() + i - min_i, merge_size);
             frame_render = _get_merged_frames_render(merged_frames);
         }

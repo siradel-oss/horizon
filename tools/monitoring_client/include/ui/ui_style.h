@@ -1,7 +1,6 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-
+#include <span>
 #include <vector>
 
 namespace ui::style

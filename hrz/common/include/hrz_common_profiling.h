@@ -80,7 +80,7 @@ struct EndSampleOnScopeExit
 
 // _R suffix means recursive: recursive samples with the same name will be
 // collapsed together.
-// _A suffise means aggregate: sibling samples with the same name will be
+// _A suffix means aggregate: sibling samples with the same name will be
 // collapsed togather.
 // _RA means recursive and aggregate.
 // _ROOT means that this samples marks the root of a samples tree. Its use is
@@ -100,9 +100,9 @@ struct EndSampleOnScopeExit
 #define HRZ_BEGIN_SAMPLE_RA(NAME) \
     HRZ_BEGIN_SAMPLE(NAME, hrz::profiling::Recursive | hrz::profiling::Aggregate)
 
-#define HRZ_SCOPED_SAMPLE_EX(NAME, FLAGS)            \
-    HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS);                \
-    hrz::profiling::EndSampleOnScopeExit HRZ_CONCAT( \
+#define HRZ_SCOPED_SAMPLE_EX(NAME, FLAGS)                  \
+    HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS);                      \
+    const hrz::profiling::EndSampleOnScopeExit HRZ_CONCAT( \
         hrz_profiling_end_sample_on_scope_exit_, __LINE__)
 
 #define HRZ_SCOPED_SAMPLE(NAME) HRZ_SCOPED_SAMPLE_EX(NAME, hrz::profiling::None)

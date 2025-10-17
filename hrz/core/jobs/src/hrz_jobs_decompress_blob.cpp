@@ -27,7 +27,7 @@ hrz::JobResult run(
         context.get_blob_allocator(), input_data.as_bytes().size_bytes());
 
     bool had_error = false;
-    auto append = [&output, &had_error](gsl::span<const std::byte> data)
+    auto append = [&output, &had_error](std::span<const std::byte> data)
     {
         if (had_error || data.empty()) return;
 

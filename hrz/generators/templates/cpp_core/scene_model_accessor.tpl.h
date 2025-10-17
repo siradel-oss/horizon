@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <hrz_protocol_all.h>
-#include <gsl/gsl-lite.hpp>
+#include <span>
 #include <string_view>
 
 namespace hrz::scene_model
@@ -21,7 +21,7 @@ namespace hrz::scene_model
  */
 std::string get_message_part_raw(
     const {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path);
+    std::span<const uint32_t> path);
 
 /**
  * Sets the serialized message raw to message obj at
@@ -29,7 +29,7 @@ std::string get_message_part_raw(
  */
 void set_message_part_raw(
     {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     std::string_view raw);
 
 /**
@@ -38,7 +38,7 @@ void set_message_part_raw(
  */
 uint32_t count_message_part(
     const {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path);
+    std::span<const uint32_t> path);
 
 /**
  * Adds the serialized message raw to the repeated fields in obj pointed
@@ -48,7 +48,7 @@ uint32_t count_message_part(
  */
 uint32_t add_message_part_raw(
     {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     std::string_view raw);
 
 /**
@@ -59,7 +59,7 @@ uint32_t add_message_part_raw(
  */
 uint32_t remove_message_part(
     {{ type.full_name|to_cpp_qualified_name }}& obj,
-    gsl::span<const uint32_t> path);
+    std::span<const uint32_t> path);
 
 {% endif %}
 {% endfor %}
@@ -73,7 +73,7 @@ uint32_t remove_message_part(
 template<typename In, typename Out>
 bool get_message_part(
     const In& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     Out& output)
 {
     std::string raw = std::move(get_message_part_raw(obj, path));
@@ -88,7 +88,7 @@ bool get_message_part(
 template<typename In, typename Part>
 void set_message_part(
     In& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     const Part& part)
 {
     std::string raw = std::move(part.SerializeAsString());
@@ -105,7 +105,7 @@ void set_message_part(
 template<typename In, typename Part>
 uint32_t add_message_part(
     In& obj,
-    gsl::span<const uint32_t> path,
+    std::span<const uint32_t> path,
     const Part& part)
 {
     std::string raw = std::move(part.SerializeAsString());

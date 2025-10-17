@@ -41,7 +41,7 @@ startup --server_javabase=<path to you Java install> # For example C:\Program Fi
 
 ### Linux
 
-- A C++ compiler that supports C++17
+- A C++ compiler that supports C++20
 - Bazel via [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html)
 - OpenGL headers (package `libgl1-mesa-dev` on Ubuntu)
 - The X11 Input extension library, libXi (package `libxi-dev` on Ubuntu)

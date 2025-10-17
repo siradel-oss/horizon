@@ -100,7 +100,7 @@ struct RemoteMonitoring : public ws::ClientHandler
 
     void send_messages(ClientMessageQueue* queue)
     {
-        gsl::span<const std::byte> data = hrz_monitoring::get_written_data(_message_buffer);
+        std::span<const std::byte> data = hrz_monitoring::get_written_data(_message_buffer);
         if (_status == Status::Connected)
         {
             ws::send_raw(_client, data.data(), data.size());

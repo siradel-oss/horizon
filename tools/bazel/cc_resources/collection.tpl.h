@@ -1,8 +1,7 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
-#include <stdint.h>
 #include <cstddef>
+#include <span>
 
 namespace {{ namespace }}
 {
@@ -13,5 +12,5 @@ namespace {{ namespace }}
         {% endfor %}
     };
 
-    gsl::span<const std::byte> get_data(Resources id);
+    std::span<const std::byte> get_data(Resources id);
 }

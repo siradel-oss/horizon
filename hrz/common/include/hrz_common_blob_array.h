@@ -3,9 +3,8 @@
 #include "hrz_common_blob_allocator.h"
 #include "hrz_common_metadata.h"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cassert>
+#include <span>
 #include <type_traits>
 
 namespace hrz
@@ -92,7 +91,7 @@ public:
         Data(blobs::BlobData blob_data, size_t size) :
             _blob_data(std::move(blob_data)),
             _size(size),
-            _data_view(gsl::span<const T>{(const T*)_blob_data->data(), _size})
+            _data_view(std::span<const T>{(const T*)_blob_data->data(), _size})
         {
             assert(_blob_data->is_valid());
             assert(_blob_data->size() == sizeof(T) * _size);
@@ -113,28 +112,28 @@ public:
 
         constexpr const T* data() & { return _data_view.data(); }
 
-        constexpr gsl::span<const T> as_span() && = delete;
+        constexpr std::span<const T> as_span() && = delete;
 
-        constexpr gsl::span<const T> as_span() const& { return _data_view; }
+        constexpr std::span<const T> as_span() const& { return _data_view; }
 
         // Must outlive MutableData
-        constexpr gsl::span<const T> unsafe_as_span() { return _data_view; }
+        constexpr std::span<const T> unsafe_as_span() { return _data_view; }
 
-        constexpr gsl::span<const std::byte> as_bytes() && = delete;
+        constexpr std::span<const std::byte> as_bytes() && = delete;
 
-        constexpr gsl::span<const std::byte> as_bytes() const& { return hrz::as_bytes(_data_view); }
+        constexpr std::span<const std::byte> as_bytes() const& { return std::as_bytes(_data_view); }
 
-        typename gsl::span<T>::const_iterator begin() & { return _data_view.cbegin(); }
+        typename std::span<const T>::iterator begin() & { return _data_view.begin(); }
 
-        typename gsl::span<T>::const_iterator end() & { return _data_view.cend(); }
+        typename std::span<const T>::iterator end() & { return _data_view.end(); }
 
-        typename gsl::span<T>::const_iterator cbegin() && = delete;
+        typename std::span<const T>::iterator cbegin() && = delete;
 
-        typename gsl::span<T>::const_iterator cbegin() const& { return _data_view.cbegin(); }
+        typename std::span<const T>::iterator cbegin() const& { return _data_view.begin(); }
 
-        typename gsl::span<T>::const_iterator cend() && = delete;
+        typename std::span<const T>::iterator cend() && = delete;
 
-        typename gsl::span<T>::const_iterator cend() const& { return _data_view.cend(); }
+        typename std::span<const T>::iterator cend() const& { return _data_view.end(); }
 
         const T& at(size_t index) && = delete;
 
@@ -157,7 +156,7 @@ public:
     private:
         std::optional<blobs::BlobData> _blob_data;
         size_t _size;
-        gsl::span<const T> _data_view;
+        std::span<const T> _data_view;
     };
 
     Data get_cdata() const
@@ -182,7 +181,7 @@ public:
         MutableData(blobs::MutableBlobData blob_data, size_t size) :
             _blob_data(std::move(blob_data)),
             _size(size),
-            _data_view(gsl::span<T>{(T*)_blob_data->data(), _size})
+            _data_view(std::span<T>{(T*)_blob_data->data(), _size})
         {
             assert(_blob_data->is_valid());
             assert(_blob_data->size() == sizeof(T) * _size);
@@ -203,31 +202,31 @@ public:
         // Must outlive MutableData
         constexpr T* unsafe_data() { return _data_view.data(); }
 
-        constexpr gsl::span<T> as_span() & { return _data_view; }
+        constexpr std::span<T> as_span() & { return _data_view; }
 
         // Must outlive MutableData
-        constexpr gsl::span<T> unsafe_as_span() { return _data_view; }
+        constexpr std::span<T> unsafe_as_span() { return _data_view; }
 
-        constexpr gsl::span<const std::byte> as_bytes() && = delete;
+        constexpr std::span<const std::byte> as_bytes() && = delete;
 
-        constexpr gsl::span<const std::byte> as_bytes() const& { return hrz::as_bytes(_data_view); }
+        constexpr std::span<const std::byte> as_bytes() const& { return std::as_bytes(_data_view); }
 
-        constexpr gsl::span<std::byte> as_writable_bytes() &
+        constexpr std::span<std::byte> as_writable_bytes() &
         {
-            return gsl::as_writable_bytes(_data_view);
+            return std::as_writable_bytes(_data_view);
         }
 
-        typename gsl::span<T>::iterator begin() & { return _data_view.begin(); }
+        typename std::span<T>::iterator begin() & { return _data_view.begin(); }
 
-        typename gsl::span<T>::iterator end() & { return _data_view.end(); }
+        typename std::span<T>::iterator end() & { return _data_view.end(); }
 
-        typename gsl::span<T>::const_iterator cbegin() && = delete;
+        typename std::span<const T>::iterator cbegin() && = delete;
 
-        typename gsl::span<T>::const_iterator cbegin() const& { return _data_view.cbegin(); }
+        typename std::span<const T>::iterator cbegin() const& { return _data_view.begin(); }
 
-        typename gsl::span<T>::const_iterator cend() && = delete;
+        typename std::span<const T>::iterator cend() && = delete;
 
-        typename gsl::span<T>::const_iterator cend() const& { return _data_view.cend(); }
+        typename std::span<const T>::iterator cend() const& { return _data_view.end(); }
 
         T& at(size_t index) &
         {
@@ -247,7 +246,7 @@ public:
     private:
         std::optional<blobs::MutableBlobData> _blob_data;
         size_t _size;
-        gsl::span<T> _data_view;
+        std::span<T> _data_view;
     };
 
     MutableData get_mutable_data()

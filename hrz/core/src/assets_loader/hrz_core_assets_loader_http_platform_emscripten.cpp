@@ -82,7 +82,7 @@ class EmscriptenHttpLoader : public IHttpLoader
         int handle;
         size_t data_size;
         bool has_fetch_data;
-        std::optional<gsl::span<std::byte>> data_dst;
+        std::optional<std::span<std::byte>> data_dst;
         bool has_data; // true if the data has been copied to `data_dst`
         bool is_data_owned;
     };
@@ -592,7 +592,7 @@ public:
         return std::nullopt;
     }
 
-    bool copy_data(HttpTicket ticket, gsl::span<std::byte> dst) override
+    bool copy_data(HttpTicket ticket, std::span<std::byte> dst) override
     {
         {
             std::lock_guard<std::mutex> lock(_data_mutex);

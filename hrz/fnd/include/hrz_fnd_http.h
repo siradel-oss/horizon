@@ -23,7 +23,7 @@ public:
     struct OwnedHeader
     {
         std::string_view name;
-        gsl::span<char> value;
+        std::span<char> value;
 
         constexpr std::string_view value_str() const
         {
@@ -118,7 +118,7 @@ public:
 
     // The span must be at least 30 chars long.
     // It will be null-terminated.
-    void write_imf_fixdate(gsl::span<char>) const;
+    void write_imf_fixdate(std::span<char>) const;
 
     // Originates from a temporary buffer that must not be freed.
     const char* get_imf_fixdate() const;
@@ -190,7 +190,7 @@ public:
     // Returns true if the copy can start, i.e. the data is
     // downloaded, the data hasn't already been copied, and
     // the region has the right size.
-    virtual bool copy_data(HttpTicket ticket, gsl::span<std::byte> dst) = 0;
+    virtual bool copy_data(HttpTicket ticket, std::span<std::byte> dst) = 0;
 
     // Returns true if the downloaded data has been copied
     // to the memory region given in `copy_data()`.

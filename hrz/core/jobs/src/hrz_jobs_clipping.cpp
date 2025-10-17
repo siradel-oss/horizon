@@ -195,7 +195,7 @@ void _clip_triangle(
             pts_out.push_back({p, w});
         },
         [rasterize_fn, &pts_out,
-         &maybe_append_final_point](gsl::span<const std::pair<Vec, int>> clipped)
+         &maybe_append_final_point](std::span<const std::pair<Vec, int>> clipped)
         {
             if (clipped.size() >= 3)
             {
@@ -207,7 +207,7 @@ void _clip_triangle(
                 auto& pa = pts_out[i0];
                 maybe_append_final_point(pa);
 
-                for (int i = 1; i < clipped.size() - 1; ++i)
+                for (int i = 1; i < (int)clipped.size() - 1; ++i)
                 {
                     const int i1 = clipped[i].second;
                     const int i2 = clipped[i + 1].second;
@@ -492,10 +492,10 @@ template void clip_segment(
 
 template<typename T>
 void clip_convex_polygon(
-    gsl::span<const lm::Vector<T, 2>> pts,
+    std::span<const lm::Vector<T, 2>> pts,
     const lm::Bbox<T, 2>& bbox,
     hrz::function_ref<void(const lm::Vector<T, 2>&, int, int, float)> declare_point,
-    hrz::function_ref<void(gsl::span<const std::pair<lm::Vector<T, 2>, int>>)> done)
+    hrz::function_ref<void(std::span<const std::pair<lm::Vector<T, 2>, int>>)> done)
 {
     assert(pts.size() >= 3);
 
@@ -543,7 +543,7 @@ void clip_convex_polygon(
         auto prev = points_in->back();
         typename HalfSpace<T>::Side prev_side = hs.side(prev.first);
 
-        for (int i = 0; i < points_in->size(); ++i)
+        for (size_t i = 0; i < points_in->size(); ++i)
         {
             const auto curr = (*points_in)[i];
             const typename HalfSpace<T>::Side curr_side = hs.side(curr.first);
@@ -598,15 +598,15 @@ void clip_convex_polygon(
 }
 
 template void clip_convex_polygon(
-    gsl::span<const lm::vec2> pts,
+    std::span<const lm::vec2> pts,
     const lm::bbox2& bbox,
     hrz::function_ref<void(const lm::vec2&, int, int, float)> declare_point,
-    hrz::function_ref<void(gsl::span<const std::pair<lm::vec2, int>>)> done);
+    hrz::function_ref<void(std::span<const std::pair<lm::vec2, int>>)> done);
 
 template void clip_convex_polygon(
-    gsl::span<const lm::dvec2> pts,
+    std::span<const lm::dvec2> pts,
     const lm::dbbox2& bbox,
     hrz::function_ref<void(const lm::dvec2&, int, int, float)> declare_point,
-    hrz::function_ref<void(gsl::span<const std::pair<lm::dvec2, int>>)> done);
+    hrz::function_ref<void(std::span<const std::pair<lm::dvec2, int>>)> done);
 
 } // namespace hrz

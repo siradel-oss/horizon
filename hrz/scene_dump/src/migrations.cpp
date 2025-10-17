@@ -21,7 +21,7 @@ bool walk_common_fields(
     for (int i = 0; i < descriptor->field_count(); ++i)
     {
         auto field = descriptor->field(i);
-        auto field_name = field->name().c_str();
+        auto field_name = field->name();
 
         if (dst_msg->msg->GetDescriptor()->FindFieldByName(field_name) == nullptr) continue;
 
@@ -86,7 +86,7 @@ bool visit_layers_of_type(
 }
 
 bool walk_fields_of_type(
-    const char* name,
+    std::string_view name,
     const DynamicMessage& src,
     DynamicMessage* dst,
     std::function<bool(const DynamicMessage&, DynamicMessage*)> cb)
@@ -131,9 +131,9 @@ bool migration_5d6d6cce_to_22e6ae36(const DynamicMessage& src_msg, DynamicMessag
 {
     auto migration_func = [](const DynamicMessage& src_msg, DynamicMessage* dst_msg)
     {
-        auto message_type_name = src_msg.msg->GetDescriptor()->full_name().c_str();
+        auto message_type_name = src_msg.msg->GetDescriptor()->full_name();
 
-        if (strcmp(message_type_name, "HrzProtocol.RasterParams") == 0)
+        if (message_type_name == "HrzProtocol.RasterParams")
         {
             if (dst_msg->has_field("display_bounds"))
             {
@@ -160,7 +160,7 @@ bool migration_5d6d6cce_to_22e6ae36(const DynamicMessage& src_msg, DynamicMessag
                 display_bounds.set_double("north", 90.0);
             }
         }
-        else if (strcmp(message_type_name, "HrzProtocol.VectorTilesSource") == 0)
+        else if (message_type_name == "HrzProtocol.VectorTilesSource")
         {
             dst_msg->set_bool("override_levels", true);
             dst_msg->set_bool("override_bounds", true);
@@ -1791,7 +1791,7 @@ bool migration_2c75ee8f_to_db6a65c4(const DynamicMessage& src, DynamicMessage* d
 {
     auto migrate_raster_nodata = [](const DynamicMessage& src_raster_nodata,
                                     DynamicMessage& dst_raster_nodata,
-                                    const std::string& image_format)
+                                    std::string_view image_format)
     {
         if (!src_raster_nodata.get_bool("has_nodata")) return;
 

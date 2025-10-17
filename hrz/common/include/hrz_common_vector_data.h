@@ -6,13 +6,13 @@
 #include "hrz_common_geo.h"
 #include "hrz_common_tile_coords.h"
 
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_inlined_vector.h>
 #include <hrz_fnd_variant.h>
 #include <hrz_protocol_all.h>
 
 #include <lin_maths.h>
 
+#include <bit>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -118,10 +118,11 @@ inline lm::uvec2 feature_id_hash_as_uvec2(FeatureIdHash hash)
 {
     static_assert(
         sizeof(vector_data::FeatureIdHash) == sizeof(uint64_t), "Unsupported feature ID hash size");
+    static_assert(
+        std::endian::native == std::endian::little,
+        "This operation relies on hashes being sent as little-endian values to the GPU");
 
-    // @Endianness This relies on hashes being sent as little-endian
-    //             values to the GPU.
-    return hrz::bit_cast<lm::uvec2>(hash);
+    return std::bit_cast<lm::uvec2>(hash);
 }
 
 struct FeatureIds;
@@ -179,7 +180,7 @@ struct FeatureIds
     // this function.
     // This function takes the ownership of the array.
     static std::optional<FeatureIds> make(
-        gsl::span<AttributeValues> attribute_values,
+        std::span<AttributeValues> attribute_values,
         BlobArray<FeatureIdHash> hashes_array);
 
     Hash compute_hash();
@@ -293,11 +294,11 @@ struct RawClientVectorData
     std::vector<AttributeModel> attributes;
 };
 
-lm::dvec3 compute_ring_average(gsl::span<const lm::dvec3> linestring);
+lm::dvec3 compute_ring_average(std::span<const lm::dvec3> linestring);
 
 void compute_linestring_middle_and_angle(
-    gsl::span<const lm::dvec3> points,
-    gsl::span<const uint32_t> linestring_sizes,
+    std::span<const lm::dvec3> points,
+    std::span<const uint32_t> linestring_sizes,
     lm::dvec3* middle,
     float* angle);
 

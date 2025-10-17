@@ -1,15 +1,15 @@
 #pragma once
 
 #include <hrz_common_proto_maths.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_char_utils.h>
 #include <hrz_fnd_maths.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
+#include <bit>
 #include <optional>
+#include <span>
 #include <string_view>
 
 namespace hrz
@@ -62,7 +62,7 @@ static inline lm::vec4 convert_bytes_to_rgba_color(const lm::ubvec4& color)
 
 static inline lm::ubvec4 convert_uint_color_to_bytes(uint32_t c)
 {
-    return hrz::bit_cast<lm::ubvec4, uint32_t>(c);
+    return std::bit_cast<lm::ubvec4, uint32_t>(c);
 }
 
 // @Note: color channels are expected to be in the [0, 1] range.

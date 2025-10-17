@@ -5,11 +5,11 @@
 #include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 #include <mycelium_render_graph.h>
 
 #include <cstdint>
+#include <span>
 #include <vector>
 
 namespace hrz
@@ -82,7 +82,7 @@ void destroy_system(PickingSystem*, Render*);
 PositionTicket schedule_pick(
     PickingSystem*,
     lm::ivec2 viewport_sample_position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters = {});
+    std::span<const hrz_proto::LayerHandle> included_rasters = {});
 
 /**
  * Tell the picking system to trigger a render to the picking framebuffer, and

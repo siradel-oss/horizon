@@ -5,9 +5,9 @@
 #include <hrz_scene_model_version.h>
 
 #include <argparser.h>
-#include <gsl/gsl-lite.hpp>
 #include <wsi.h>
 
+#include <span>
 #include <thread>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>

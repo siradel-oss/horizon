@@ -65,7 +65,7 @@ void notify_update(
  */
 RenderRequest work(ClippingPlaneLayerSystem*, SceneModel*);
 
-void draw(ClippingPlaneLayerSystem*, Render*, gsl::span<const hrz::RenderViewInfo> views_info);
+void draw(ClippingPlaneLayerSystem*, Render*, std::span<const hrz::RenderViewInfo> views_info);
 
 /**
  * Retrieve all clipping planes info.

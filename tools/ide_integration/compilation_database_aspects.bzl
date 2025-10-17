@@ -121,17 +121,17 @@ def _get_compile_flags(ctx, dep):
     for system_include in system_includes:
         if len(system_include) == 0:
             system_include = "."
-        options.append("-isystem {}".format(system_include))
+        options += ["-I", "\"" + system_include + "\""]
 
     for include in includes:
         if len(include) == 0:
             include = "."
-        options.append("-I {}".format(include))
+        options += ["-I", "\"" + include + "\""]
 
     for quote_include in quote_includes:
         if len(quote_include) == 0:
             quote_include = "."
-        options.append("-iquote {}".format(quote_include))
+        options += ["-I", "\"" + quote_include + "\""]
 
     return options
 
@@ -181,7 +181,7 @@ def _cc_compile_commands(ctx, target, feature_configuration, cc_toolchain):
 
     compile_flags.extend(ctx.rule.attr.copts if "copts" in dir(ctx.rule.attr) else [])
 
-    cmdline_list = [compiler]
+    cmdline_list = ["\"" + compiler + "\""]
     cmdline_list.extend(compiler_options)
     cmdline_list.extend(compile_flags)
     cmdline = " ".join(cmdline_list)

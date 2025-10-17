@@ -8,10 +8,10 @@
 #include <hrz_fnd_variant.h>
 #include <hrz_jobs_protocol.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <optional>
+#include <span>
 #include <string>
 
 namespace hrz::three_d_tiles
@@ -77,8 +77,8 @@ double distance(const BoundingVolume& volume, const lm::dvec3& ecef_pos);
  */
 bool intersects_space_subset(
     const BoundingVolume& volume,
-    gsl::span<const lm::dvec4> planes,
-    gsl::span<const lm::dvec3> vertices);
+    std::span<const lm::dvec4> planes,
+    std::span<const lm::dvec3> vertices);
 
 BoundingVolume transform_bounding_volume(
     const BoundingVolume& volume,

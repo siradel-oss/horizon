@@ -248,7 +248,7 @@ hrz::JobResult run(
         }
     }
 
-    gsl::span<hrz::vector_data::AttributeValues> values_finalized_span(
+    std::span<hrz::vector_data::AttributeValues> values_finalized_span(
         attribute_index_to_values_finalized);
 
     hrz::BlobVector<hrz::vector_data::FeatureIdHash> hashes_vector(

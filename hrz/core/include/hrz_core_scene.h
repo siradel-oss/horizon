@@ -9,12 +9,12 @@
 #include <hrz_fnd_static_vector.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 #include <mycelium_backend.h>
 
 #include <cstdint>
 #include <optional>
+#include <span>
 
 namespace hrz
 {
@@ -207,7 +207,7 @@ void load_scene_dump(
 std::optional<PositionPickingTicket> schedule_pick(
     Scene*,
     lm::ivec2 mouse_position,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters = {});
+    std::span<const hrz_proto::LayerHandle> included_rasters = {});
 
 /**
  * Schedules picking for a rectangle area.
@@ -220,7 +220,7 @@ std::optional<AreaPickingTicket> schedule_pick(Scene*, lm::ibbox2 rect);
 RasterDataFetchTicket schedule_raster_data_fetch(
     Scene*,
     const GeoPosition2& position,
-    gsl::span<const hrz_proto::LayerHandle> raster_layers);
+    std::span<const hrz_proto::LayerHandle> raster_layers);
 
 /**
  * Retrieves limited information about a position pick.
@@ -263,7 +263,7 @@ bool retrieve_raster_data_fetch_results(
 size_t select(
     Scene*,
     uint64_t scene_layer_id,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes);
 
 /**
  * Deselects features from a given layer from the scene.
@@ -272,7 +272,7 @@ size_t select(
 size_t deselect(
     Scene*,
     uint64_t scene_layer_id,
-    gsl::span<const vector_data::FeatureIdHash> feature_id_hashes);
+    std::span<const vector_data::FeatureIdHash> feature_id_hashes);
 
 /**
  * Deselect all currently selected features from the scene.

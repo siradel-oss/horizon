@@ -1,9 +1,9 @@
 #pragma once
 
 #include <fmt/core.h>
-#include <gsl/gsl-lite.hpp>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -137,7 +137,7 @@ size_t decode_base64_size_hint(
  */
 size_t decode_base64_s(
     std::string_view str,
-    gsl::span<std::byte> data,
+    std::span<std::byte> data,
     Base64DecodingVariant variant = Base64DecodingVariant::Normal);
 
 /**
@@ -155,7 +155,7 @@ size_t decode_base64(
  * Returns the amount of characters written.
  */
 size_t encode_base64(
-    gsl::span<const std::byte> data,
+    std::span<const std::byte> data,
     std::string* str,
     Base64EncodingVariant variant = Base64EncodingVariant::Normal);
 
@@ -164,7 +164,7 @@ size_t encode_base64(
  * bytes written in `buffer` (between 0 and 4).
  * `buffer` must be large enough to contain the result.
  */
-size_t encode_code_point_to_utf8(uint32_t code_point, gsl::span<char> buffer);
+size_t encode_code_point_to_utf8(uint32_t code_point, std::span<char> buffer);
 
 /**
  * Remove fmt named arguments from fmt_string that are not in valid_args.
@@ -173,7 +173,7 @@ size_t encode_code_point_to_utf8(uint32_t code_point, gsl::span<char> buffer);
  */
 std::string sanitize_named_fmt_arguments(
     std::string fmt_string,
-    gsl::span<const std::string_view> valid_args);
+    std::span<const std::string_view> valid_args);
 
 /**
  * Parses a string into the given types. Uses the C locale. Return nullopt if the parsing fails.

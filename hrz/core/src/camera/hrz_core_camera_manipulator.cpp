@@ -42,7 +42,7 @@ lm::ddual_quat CameraManipulator::work(
     const ViewportInfo& viewport,
     double height_above_terrain,
     const std::array<PickingSystem*, hrz::SCENE_VIEW_COUNT>& picking,
-    const std::function<void(gsl::span<const hrz_proto::CameraNotification>)>& notifications_cb)
+    const std::function<void(std::span<const hrz_proto::CameraNotification>)>& notifications_cb)
 {
     if (_delayed_pose)
     {

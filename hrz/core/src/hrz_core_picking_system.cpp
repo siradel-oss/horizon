@@ -574,7 +574,7 @@ void _prepare_next_frame_if_needed(PickingSystem* system)
 PositionTicket schedule_pick(
     PickingSystem* system,
     lm::ivec2 pos,
-    gsl::span<const hrz_proto::LayerHandle> included_rasters)
+    std::span<const hrz_proto::LayerHandle> included_rasters)
 {
     assert(system);
 

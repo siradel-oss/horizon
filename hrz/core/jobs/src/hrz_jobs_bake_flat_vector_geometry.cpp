@@ -131,7 +131,7 @@ struct DelabellaTriangulationIterator
 {
     DelabellaTriangulationIterator(
         IDelaBella2<double, int32_t>* triangulation_,
-        gsl::span<const lm::dvec2> vertices) :
+        std::span<const lm::dvec2> vertices) :
         triangulation(triangulation_),
         vertices(vertices),
         current_triangle(triangulation->GetFirstDelaunaySimplex())
@@ -162,7 +162,7 @@ struct DelabellaTriangulationIterator
     }
 
     IDelaBella2<double, int32_t>* triangulation;
-    gsl::span<const lm::dvec2> vertices;
+    std::span<const lm::dvec2> vertices;
     const IDelaBella2<double, int32_t>::Simplex* current_triangle;
 };
 
@@ -262,8 +262,8 @@ void append_polygon_vertex<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>(
 template<typename TVertex>
 void generate_polygon_geometry(
     uint32_t feature_index,
-    gsl::span<const lm::dvec3> feature_span,
-    gsl::span<const uint32_t> linestring_sizes,
+    std::span<const lm::dvec3> feature_span,
+    std::span<const uint32_t> linestring_sizes,
     hrz::BlobVector<lm::dvec3>& positions,
     hrz::BlobVector<TVertex>& polygon_data,
     hrz::BlobVector<uint32_t>& indices,
@@ -442,9 +442,8 @@ void generate_polygon_geometry(
         if (!edges_data_opt.has_value()) return;
         auto& edges_data = edges_data_opt.value();
 
-        // Parameter should have a get_next_triangle method.
-        // @Todo(C++20) Use concept.
         auto generate_mesh = [&](auto& triangulation)
+            requires requires { triangulation.get_next_triangle(); }
         {
             if (should_clip)
             {
@@ -598,13 +597,13 @@ void generate_polygon_geometry(
         // a flat surface. A less pretty but much faster triangulation can be used,
         // using Earcut.
 
-        hrz::InlinedVector<gsl::span<const lm::dvec3>, 32> rings;
+        hrz::InlinedVector<std::span<const lm::dvec3>, 32> rings;
         rings.reserve(linestring_sizes.size());
 
         uint32_t linestring_start = 0;
         for (uint32_t linestring_size : linestring_sizes)
         {
-            gsl::span<const lm::dvec3> ring_span =
+            std::span<const lm::dvec3> ring_span =
                 feature_span.subspan(linestring_start, linestring_size);
 
             rings.push_back(ring_span);
@@ -781,9 +780,9 @@ SegmentSubdivisionResult append_segment(
 
 void generate_polylines_geometry(
     uint32_t feature_index,
-    gsl::span<const lm::dvec3> feature_span,
-    gsl::span<const hrz::GeoPosition3> feature_geo_span,
-    gsl::span<const uint32_t> linestring_sizes,
+    std::span<const lm::dvec3> feature_span,
+    std::span<const hrz::GeoPosition3> feature_geo_span,
+    std::span<const uint32_t> linestring_sizes,
     hrz::BlobVector<lm::dvec3>& positions,
     hrz::BlobVector<uint32_t>& polylines_segment_counts,
     hrz::BlobVector<hrz::vt::FlatVectorGeometry::PolylineInstance>& polyline_data,
@@ -915,7 +914,7 @@ void generate_polylines_geometry(
 
 void generate_points_geometry(
     uint32_t feature_index,
-    gsl::span<const lm::dvec3> feature_span,
+    std::span<const lm::dvec3> feature_span,
     hrz::BlobVector<lm::dvec3>& positions,
     hrz::BlobVector<hrz::vt::FlatVectorGeometry::PointInstance>& point_data,
     const lm::ubvec4& rgba,
@@ -967,7 +966,7 @@ hrz::JobResult run(
     auto points_geo_data = points_geo_array.get_mutable_data();
 
     transform_wmerc_to_geo(input_points.size(), input_points.data(), points_geo_data.data());
-    gsl::span<const hrz::GeoPosition3> points_geo = points_geo_data.as_span();
+    std::span<const hrz::GeoPosition3> points_geo = points_geo_data.as_span();
 
     // Baked positions for later reprojection
     hrz::BlobVector<lm::dvec3> polygon_positions(
@@ -1101,7 +1100,7 @@ hrz::JobResult run(
 
         auto feature_points =
             input_points.as_span().subspan(feature.first_point, feature.point_count);
-        auto feature_points_geo = gsl::span<const hrz::GeoPosition3>(points_geo)
+        auto feature_points_geo = std::span<const hrz::GeoPosition3>(points_geo)
                                       .subspan(feature.first_point, feature.point_count);
 
         if (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
@@ -1326,18 +1325,18 @@ hrz::JobResult run(
         &hrz_proj::wmerc_to_ecef, point_positions_data.size(), &point_positions_data.data()->x);
 
     hrz::BSphere<double> bsphere_polygons =
-        hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(polygon_positions_data));
+        hrz::compute_bounding_sphere(std::span<const lm::dvec3>(polygon_positions_data));
     hrz::BSphere<double> bsphere_polylines =
-        hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(polyline_positions_data));
+        hrz::compute_bounding_sphere(std::span<const lm::dvec3>(polyline_positions_data));
     hrz::BSphere<double> bsphere_points =
-        hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(point_positions_data));
+        hrz::compute_bounding_sphere(std::span<const lm::dvec3>(point_positions_data));
 
     hrz::StaticVector<hrz::BSphere<double>, 3> bspheres;
     if (polygon_positions.size().value_or(0) > 0) bspheres.push_back(bsphere_polygons);
     if (polyline_positions.size().value_or(0) > 0) bspheres.push_back(bsphere_polylines);
     if (point_positions.size().value_or(0) > 0) bspheres.push_back(bsphere_points);
     hrz::BSphere<double> bsphere =
-        hrz::merge_bounding_spheres(gsl::span<const hrz::BSphere<double>>(bspheres));
+        hrz::merge_bounding_spheres(std::span<const hrz::BSphere<double>>(bspheres));
 
     auto solid_color_polygon_vertices_data_opt = solid_color_polygon_vertices.data();
     auto polyline_vertices_data_opt = polyline_vertices.data();
@@ -1362,7 +1361,7 @@ hrz::JobResult run(
         {
             if (segment_count == 0) continue;
 
-            gsl::span<const lm::dvec3> positions(
+            std::span<const lm::dvec3> positions(
                 (const lm::dvec3*)polyline_positions_data.data() + previous_segment_count * 2,
                 segment_count * 2);
 

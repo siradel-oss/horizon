@@ -17,7 +17,7 @@ content = bytes(fp.read())
 if MODE == "cpp":
     full_str = "#include <cstdint>\n"
     full_str = "#include <cstddef>\n"
-    full_str += "#include <gsl/gsl-lite.hpp>\n"
+    full_str += "#include <span>\n"
     full_str += "extern const size_t _embedded_resource_%s_len;\n" % RES_NAME
     full_str += "extern const std::byte* _embedded_resource_%s;\n" % RES_NAME
     full_str += "const size_t _embedded_resource_%s_len = %d;\n" % (RES_NAME, len(content))

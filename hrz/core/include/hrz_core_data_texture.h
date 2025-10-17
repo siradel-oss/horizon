@@ -2,10 +2,10 @@
 
 #include "hrz_core_render.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <optional>
+#include <span>
 
 namespace hrz
 {
@@ -59,7 +59,7 @@ struct DataTexture
         }
     }
 
-    void set(gsl::span<const ExternalType> new_data)
+    void set(std::span<const ExternalType> new_data)
     {
         auto new_size = _get_instance_data_texture_size(new_data.size());
 
@@ -87,7 +87,7 @@ struct DataTexture
             if (!resource.has_value())
             {
                 static constexpr ExternalType default_upload_data[] = {ExternalType()};
-                gsl::span<const std::byte> data_span = {};
+                std::span<const std::byte> data_span = {};
 
                 my::TextureResource res;
                 res.layout.type = my::TextureLayout::Type2D;
@@ -102,7 +102,7 @@ struct DataTexture
                     res.layout.width = WidthMultiplier;
                     res.layout.height = 1;
                     data_span =
-                        hrz::as_bytes(gsl::span<const ExternalType>{default_upload_data, 1});
+                        std::as_bytes(std::span<const ExternalType>{default_upload_data, 1});
                 }
                 else
                 {
@@ -111,7 +111,7 @@ struct DataTexture
 
                     res.layout.width = size.x * WidthMultiplier;
                     res.layout.height = size.y;
-                    data_span = hrz::as_bytes(gsl::span<const ExternalType>(data));
+                    data_span = std::as_bytes(std::span<const ExternalType>(data));
                 }
 
                 res.data = {&data_span, 1};
@@ -125,7 +125,7 @@ struct DataTexture
 
                 render->my->update_texture(
                     resource.value(), Format, 0, 0, 0, 0, size.x * WidthMultiplier, size.y, 1,
-                    hrz::as_bytes(gsl::span<const ExternalType>(data)));
+                    std::as_bytes(std::span<const ExternalType>(data)));
             }
 
             if constexpr (!kRetainData)
@@ -139,7 +139,7 @@ struct DataTexture
         }
     }
 
-    gsl::span<ExternalType> resize_and_get_data(size_t size)
+    std::span<ExternalType> resize_and_get_data(size_t size)
     {
         texture_status = DataTextureStatus::Stale;
         auto new_size = _get_instance_data_texture_size(size);
@@ -147,9 +147,8 @@ struct DataTexture
         return data;
     }
 
-    // @Todo(C++20) Use requires
-    template<bool _kRetainData = kRetainData, std::enable_if_t<_kRetainData, int> = 0>
     inline const ExternalType& data_at(size_t i) const
+        requires kRetainData
     {
         return data.at(i);
     }

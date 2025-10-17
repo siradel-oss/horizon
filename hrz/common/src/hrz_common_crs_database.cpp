@@ -5,9 +5,8 @@
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_string_utils.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <optional>
+#include <span>
 
 namespace
 {
@@ -115,7 +114,7 @@ bool convert_crs(std::string_view descriptor, pl_Crs* crs)
 
 bool convert_crs(const hrz_proto::SpatialReferenceSystem& srs, pl_Crs* crs)
 {
-    return convert_crs(srs.descriptor(), srs.descriptor_type(), crs);
+    return convert_crs(srs.descriptor_(), srs.descriptor_type(), crs);
 }
 
 bool convert_crs(std::string_view descriptor, hrz_proto::SpatialReferenceSystem* proto_srs)
@@ -123,12 +122,12 @@ bool convert_crs(std::string_view descriptor, hrz_proto::SpatialReferenceSystem*
     if (has_known_authority(descriptor))
     {
         proto_srs->set_descriptor_type(hrz_proto::SrsDescriptorType::SRID_DESCRIPTOR);
-        proto_srs->set_descriptor(descriptor.data(), descriptor.size());
+        proto_srs->set_descriptor_(descriptor.data(), descriptor.size());
     }
     else
     {
         proto_srs->set_descriptor_type(hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
-        proto_srs->set_descriptor(descriptor.data(), descriptor.size());
+        proto_srs->set_descriptor_(descriptor.data(), descriptor.size());
     }
 
     // We still return whether we know the descriptor or not.
@@ -139,7 +138,7 @@ bool convert_crs(std::string_view descriptor, hrz_proto::SpatialReferenceSystem*
 bool check_crs(const hrz_proto::SpatialReferenceSystem& srs)
 {
     pl_Crs crs;
-    return convert_crs(srs.descriptor(), srs.descriptor_type(), &crs);
+    return convert_crs(srs.descriptor_(), srs.descriptor_type(), &crs);
 }
 
 std::string srid_descriptor_to_proj4(std::string_view srid_string)

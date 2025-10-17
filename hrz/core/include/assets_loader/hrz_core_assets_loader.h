@@ -8,11 +8,10 @@
 #include <hrz_fnd_http.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <variant>
 

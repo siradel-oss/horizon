@@ -5,12 +5,12 @@
 
 #include <hrz_fnd_string_utils.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <rapidjson/document.h>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -239,7 +239,7 @@ bool draw_editable_filter_row(
     return change;
 }
 
-void draw_metadata_table(gsl::span<const data::Metadata> metadata, const char* table_id)
+void draw_metadata_table(std::span<const data::Metadata> metadata, const char* table_id)
 {
     if (ImGui::BeginTable(table_id, 3, ImGuiTableFlags_SizingFixedFit))
     {

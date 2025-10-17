@@ -35,7 +35,7 @@ public:
 
 private:
     std::optional<data::Metric> _metric;
-    gsl::span<const data::Thread> _cached_threads;
+    std::span<const data::Thread> _cached_threads;
 
     view::View _view;
     view::Ruler _vertical_ruler;

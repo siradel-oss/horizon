@@ -17,6 +17,7 @@
 #include <earcut.hpp>
 
 #include <limits>
+#include <span>
 
 namespace hrz_jobs::bake_extruded_vector_geometry
 {
@@ -129,8 +130,8 @@ struct VertexWithBevelInfo
 };
 
 void make_linestring_bevel_info(
-    gsl::span<const lm::dvec3> points,
-    gsl::span<VertexWithBevelInfo> out_vertex_info,
+    std::span<const lm::dvec3> points,
+    std::span<VertexWithBevelInfo> out_vertex_info,
     float bevel_width,
     bool is_closed,
     bool use_z,
@@ -239,8 +240,8 @@ double max_segment_angular_length_for_altitude(
 }
 
 void generate_roof_geometry(
-    gsl::span<const lm::dvec3> feature_span,
-    gsl::span<const gsl::span<const lm::dvec3>> linestrings,
+    std::span<const lm::dvec3> feature_span,
+    std::span<const std::span<const lm::dvec3>> linestrings,
     GeometryBuilder& builder,
     double altitude,
     const FeatureInfo& info)
@@ -461,14 +462,14 @@ void generate_roof_geometry(
 }
 
 void generate_roof_geometry(
-    gsl::span<const VertexWithBevelInfo> vbis,
-    gsl::span<const std::pair<size_t, size_t>> linestrings,
+    std::span<const VertexWithBevelInfo> vbis,
+    std::span<const std::pair<size_t, size_t>> linestrings,
     GeometryBuilder& builder,
     double roof_altitude,
     const FeatureInfo& info)
 {
     std::vector<lm::dvec3> roof_vertices;
-    std::vector<gsl::span<const lm::dvec3>> rings;
+    std::vector<std::span<const lm::dvec3>> rings;
 
     if (!info.roof_bevel)
     {
@@ -517,7 +518,7 @@ void generate_roof_geometry(
         for (const auto& linestring : linestrings)
         {
             const size_t start_v_index = v_index;
-            gsl::span<const VertexWithBevelInfo> vbis_ring(
+            std::span<const VertexWithBevelInfo> vbis_ring(
                 vbis.data() + linestring.first, linestring.second);
 
             for (size_t i = 0; i < linestring.second; ++i)
@@ -661,7 +662,7 @@ struct VertexInterp
 };
 
 void generate_polygon(
-    gsl::span<const VertexInterp> input_verts,
+    std::span<const VertexInterp> input_verts,
     GeometryBuilder& builder,
     const FeatureInfo& info)
 {
@@ -696,7 +697,7 @@ void generate_polygon(
 
                 return static_cast<int>(tmp_verts.size() - 1);
             },
-            [&tmp_verts, &clipped_verts](gsl::span<const std::pair<lm::dvec2, int>> clipped)
+            [&tmp_verts, &clipped_verts](std::span<const std::pair<lm::dvec2, int>> clipped)
             {
                 if (clipped.size() < 3) return;
 
@@ -972,9 +973,9 @@ hrz::JobResult run(
         uint32_t current_linestring_start = 0;
         for (const uint32_t linestring_size : feature_linestring_sizes)
         {
-            const gsl::span<const lm::dvec3> linestring_points =
+            const std::span<const lm::dvec3> linestring_points =
                 feature_points.subspan(current_linestring_start, linestring_size);
-            const gsl::span<VertexWithBevelInfo> linestring_bevel_verts_info(
+            const std::span<VertexWithBevelInfo> linestring_bevel_verts_info(
                 vertices_bevel_info.data() + current_linestring_start, linestring_size);
 
             // The first linestring of a polygon determines the winding order.
@@ -1060,7 +1061,7 @@ hrz::JobResult run(
                     const uint32_t linestring_size = linestring_span.second;
                     const size_t index_ring_start = linestring_span.first;
 
-                    auto bevel_info_span = gsl::span<VertexWithBevelInfo>(
+                    auto bevel_info_span = std::span<VertexWithBevelInfo>(
                         vertices_bevel_info.data() + index_ring_start, linestring_size);
 
                     for (uint32_t p0 = linestring_size - 1, p1 = 0; p1 < linestring_size; p0 = p1++)
@@ -1149,7 +1150,7 @@ hrz::JobResult run(
 
     // Compute world-space bounding sphere
     hrz::BSphere<double> bsphere;
-    bsphere = hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(positions_data));
+    bsphere = hrz::compute_bounding_sphere(std::span<const lm::dvec3>(positions_data));
 
     // Finalize
     geometry.vertex_data = std::move(vertex_array_opt.value());

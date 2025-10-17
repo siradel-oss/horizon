@@ -5,6 +5,7 @@
 #include <hrz_common_color.h>
 #include <hrz_common_fmt.h>
 #include <hrz_common_profiling.h>
+#include <hrz_fnd_mem.h>
 
 namespace hrz::vt::symbol
 {

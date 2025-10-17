@@ -7,7 +7,6 @@
 #include <hrz_common_profiling.h>
 #include <hrz_common_random.h>
 #include <hrz_common_style.h>
-#include <hrz_fnd_bit_cast.h>
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_gen_index_pool.h>
@@ -17,6 +16,8 @@
 #include <hrz_fnd_string_utils.h>
 
 #include <fmt/args.h>
+
+#include <bit>
 
 #define CHECK_ERR_M(MSG, ...)   \
     do                          \
@@ -91,7 +92,7 @@ struct BufferPool
         _debug_num_releases += 1;
     }
 
-    gsl::span<RawValue> buffer(Handle handle)
+    std::span<RawValue> buffer(Handle handle)
     {
         if (!_handles.is_valid(handle)) return {};
 
@@ -528,7 +529,7 @@ struct State
 
     bool execute_operator(FlatAst::NodeRef node_ref, std::vector<Value>& stack, size_t inst_count)
     {
-        StaticVector<gsl::span<const RawValue>, kMaxFunctionParameters> spans;
+        StaticVector<std::span<const RawValue>, kMaxFunctionParameters> spans;
         StaticVector<BufferPool::Handle, kMaxFunctionParameters> temp_buffer_handles;
 
         uint8_t operand_count = node_ref.get_operator_operand_count();
@@ -568,7 +569,7 @@ struct State
             res_buffer_handle = buffer_pool.request_buffer();
         }
 
-        gsl::span<RawValue> res_buffer =
+        std::span<RawValue> res_buffer =
             buffer_pool.buffer(res_buffer_handle.value()).subspan(0, inst_count);
         CHECK_ERR(operator_evaluator(
             operator_evaluator_context, node_ref.get_operator_kind(), spans, res_buffer));
@@ -590,7 +591,7 @@ struct State
     // This is called when a new batch of values has finished processing. When
     // only 1 values is returned, it should be copied for the whole instance
     // span. Otherwise each value corresponds to an instance in the span.
-    using ValueExpressionCallback = std::function<bool(InstanceSpan, gsl::span<const RawValue>)>;
+    using ValueExpressionCallback = std::function<bool(InstanceSpan, std::span<const RawValue>)>;
 
     bool evaluate_expr(
         const FlatAst::FullNode* root,
@@ -847,7 +848,7 @@ struct State
         }
     }
 
-    void emit_instances(InstanceSpan inst_span, gsl::span<const RawValue> values)
+    void emit_instances(InstanceSpan inst_span, std::span<const RawValue> values)
     {
         if (values.size() == 1)
         {
@@ -883,7 +884,7 @@ struct State
 
     bool execute_emit(FlatAst::NodeRef node_ref, InstanceSpan inst_span)
     {
-        auto do_emit = [this](InstanceSpan batch_span, gsl::span<const RawValue> values) -> bool
+        auto do_emit = [this](InstanceSpan batch_span, std::span<const RawValue> values) -> bool
         {
             emit_instances(batch_span, values);
             return true;
@@ -914,7 +915,7 @@ struct State
         uint64_t prp_id = root->set.prp_id;
 
         auto do_set = [this,
-                       prp_id](InstanceSpan batch_span, gsl::span<const RawValue> values) -> bool
+                       prp_id](InstanceSpan batch_span, std::span<const RawValue> values) -> bool
         {
             if (values.size() == 1)
             {
@@ -990,7 +991,7 @@ struct State
                         48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
 
         // This is the span that contains the elements of the mask.
-        gsl::span<int> bits_span(bits, count);
+        std::span<int> bits_span(bits, count);
 
         for (; count > 0; --count)
         {
@@ -1052,7 +1053,7 @@ struct State
 
                     CHECK_ERR(evaluate_expr(
                         cond_node, iter_span,
-                        [&](InstanceSpan batch_span, gsl::span<const RawValue> values) -> bool
+                        [&](InstanceSpan batch_span, std::span<const RawValue> values) -> bool
                         {
                             // Evaluate as constant expression if and only if we have only 1 value
                             // (this is a property of "evaluate_expr" that constant expressions are

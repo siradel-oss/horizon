@@ -158,7 +158,7 @@ public:
     const BaseUrl& get_base_url() const override { return _base_url; }
 
     ConfigH register_config(
-        gsl::span<const std::pair<std::string_view, std::string_view>> templates) override
+        std::span<const std::pair<std::string_view, std::string_view>> templates) override
     {
         uint64_t identity = hrz::hash_kv(templates);
 
@@ -237,7 +237,7 @@ public:
 
     Handle add_templated_blob_from_parameters(
         std::string_view template_name,
-        gsl::span<const std::pair<std::string_view, std::string_view>> params,
+        std::span<const std::pair<std::string_view, std::string_view>> params,
         uint32_t load_priority) override
     {
         fmt::dynamic_format_arg_store<fmt::format_context> params_copy;

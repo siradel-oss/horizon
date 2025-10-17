@@ -58,7 +58,7 @@ TileJsonVersion get_tilejson_version(const char* version_string)
 } // namespace
 
 std::optional<TileJsonInfo> parse_tilejson(
-    gsl::span<const std::byte> raw_data,
+    std::span<const std::byte> raw_data,
     const BaseUrl& base_url)
 {
     HRZ_SCOPED_SAMPLE("parse tilejson json");

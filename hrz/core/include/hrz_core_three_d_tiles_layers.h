@@ -7,10 +7,10 @@
 #include <hrz_common_picking_types.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
 #include <cstdint>
+#include <span>
 
 namespace hrz
 {
@@ -89,7 +89,7 @@ RenderRequest work(
     BlobAllocator* ba,
     ImageDecoder* imgdec,
     AttributionRegistry* attributions,
-    gsl::span<const RenderViewInfo> views_info);
+    std::span<const RenderViewInfo> views_info);
 
 /**
  * Use to indicate that a picking event has occured.
@@ -101,8 +101,8 @@ void pick(ThreeDTilesLayerSystem* system, const picking::PositionResult&, hrz_pr
 
 std::pair<size_t, size_t> make_typed_object_references(
     ThreeDTilesLayerSystem* system,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output);
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output);
 
 /**
  * This transforms a generic picking ID (which points to a 3DTiles batch) into

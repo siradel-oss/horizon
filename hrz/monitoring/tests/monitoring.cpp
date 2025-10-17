@@ -90,7 +90,7 @@ TEST(MessageBuffer, parsing)
     { parsed_messages.push_back(*message); };
 
     hrz_monitoring::parse_messages(
-        gsl::span<const std::byte>((const std::byte*)ground_truth_data, written_size), callback);
+        std::span<const std::byte>((const std::byte*)ground_truth_data, written_size), callback);
 
     EXPECT_EQ(parsed_messages.size(), 3);
 

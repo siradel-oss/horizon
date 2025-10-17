@@ -30,7 +30,7 @@ PageTable::PageTable(
     layout.levels = 1;
 
     std::unique_ptr<std::byte[]> data = {};
-    gsl::span<const std::byte> data_span = {};
+    std::span<const std::byte> data_span = {};
 
     if (my::is_format_compressed(format))
     {
@@ -38,7 +38,7 @@ PageTable::PageTable(
 
         size_t data_size = layout.get_level_byte_size(0);
         data = std::make_unique<std::byte[]>(data_size);
-        data_span = gsl::span<const std::byte>{data.get(), data_size};
+        data_span = std::span<const std::byte>{data.get(), data_size};
     }
 
     my::TextureResource res;

@@ -12,24 +12,27 @@
 #include <hrz_fnd_string_utils.h>
 #include <hrz_protocol_all.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
+#include <span>
 #include <vector>
 
 namespace hrz_jobs::rasterize_cesium_terrain_tile
 {
 namespace
 {
-// @Endianness The file format is little-endian.
+static_assert(
+    std::endian::native == std::endian::little,
+    "Cesium terrain tile format is little-endian");
 static_assert(sizeof(double) == 8, "sizeof(double) != 8");
 static_assert(sizeof(float) == 4, "sizeof(float) != 4");
 
 // https://github.com/CesiumGS/cesium/wiki/heightmap-1.0
 hrz::JobResult decode_heightmap_tile(
-    gsl::span<const std::byte> raw_data,
+    std::span<const std::byte> raw_data,
     hrz::BlobImage& output,
     const JobContext& context)
 {
@@ -119,7 +122,7 @@ struct SampleAndComposeFunction : public rasterizer::SampleAndComposeFunction<fl
 
 // https://github.com/CesiumGS/quantized-mesh
 hrz::JobResult decode_quantized_mesh_tile(
-    gsl::span<const std::byte> raw_data,
+    std::span<const std::byte> raw_data,
     hrz::BlobImage& output,
     const JobContext& context)
 {

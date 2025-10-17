@@ -259,7 +259,7 @@ RenderRequest _update_layer(
         auto layer_proto = builder.clone().get();
         layer->materials.recreate_all_materials(
             layer->model_prototype,
-            gsl::span<const hrz_proto::Material* const>(
+            std::span<const hrz_proto::Material* const>(
                 layer_proto.materials().data(), (size_t)layer_proto.materials().size()));
     };
 
@@ -765,8 +765,8 @@ void pick(
 
 std::pair<size_t, size_t> make_typed_object_references(
     SingleModelLayerSystem* system,
-    gsl::span<const picking::ObjectReference> objs,
-    gsl::span<hrz_proto::TypedObjectReference> output)
+    std::span<const picking::ObjectReference> objs,
+    std::span<hrz_proto::TypedObjectReference> output)
 {
     assert(objs.size() <= output.size());
 
@@ -837,7 +837,7 @@ RenderRequest work(
     const SelectionSystem* selection,
     AttributionRegistry* attributions,
     PlanetSurface* planet,
-    gsl::span<const RenderViewInfo> views_info)
+    std::span<const RenderViewInfo> views_info)
 {
     HRZ_SCOPED_SAMPLE("single model layers work");
 

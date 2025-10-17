@@ -3,8 +3,10 @@
 #include <hrz_fnd_array_view.h>
 #include <hrz_fnd_function_ref.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <lin_maths.h>
+
+#include <functional>
+#include <span>
 
 namespace hrz
 {
@@ -96,9 +98,9 @@ void clip_segment(
  */
 template<typename T>
 void clip_convex_polygon(
-    gsl::span<const lm::Vector<T, 2>> pts,
+    std::span<const lm::Vector<T, 2>> pts,
     const lm::Bbox<T, 2>& bbox,
     hrz::function_ref<void(const lm::Vector<T, 2>&, int, int, float)> declare_point,
-    hrz::function_ref<void(gsl::span<const std::pair<lm::Vector<T, 2>, int>>)> done);
+    hrz::function_ref<void(std::span<const std::pair<lm::Vector<T, 2>, int>>)> done);
 
 } // namespace hrz

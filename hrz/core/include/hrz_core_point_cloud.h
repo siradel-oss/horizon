@@ -91,7 +91,7 @@ public:
     virtual void update_selection(const hrz::flat_hash_set<uint64_t>& selected_features) = 0;
 
     virtual void update_feature_colors(
-        gsl::span<const lm::ubvec4> colors,
+        std::span<const lm::ubvec4> colors,
         bool has_transparent_color) = 0;
 
     virtual void update_uniform_data(const UniformData& uniform_data) = 0;

@@ -66,7 +66,7 @@ RenderRequest work(
     SceneModel*,
     ClientMessageQueue*,
     hrz_proto::SceneViewIndex main_view_index,
-    gsl::span<const RenderViewInfo> view_infos);
+    std::span<const RenderViewInfo> view_infos);
 
 /**
  * This function should be called once per frame.
@@ -76,7 +76,7 @@ void work_gpu(GizmoLayerSystem*, Render*);
 /**
  * Draw the gizmos.
  */
-void draw(GizmoLayerSystem*, Render*, gsl::span<const RenderViewInfo> view_infos);
+void draw(GizmoLayerSystem*, Render*, std::span<const RenderViewInfo> view_infos);
 
 /**
  * Handle events.

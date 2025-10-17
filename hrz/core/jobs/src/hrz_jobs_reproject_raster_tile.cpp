@@ -244,7 +244,7 @@ void compute_tiled_mercator_reprojection(
     }
 }
 
-lm::dbbox2 bounds_from_points(gsl::span<const lm::dvec2> points)
+lm::dbbox2 bounds_from_points(std::span<const lm::dvec2> points)
 {
     lm::dbbox2 bounds(points[0], points[0]);
     for (const lm::dvec2& pt : points)

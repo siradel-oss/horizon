@@ -2,11 +2,11 @@
 
 #include <hrz_fnd_flat_hash_set.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <imgui.h>
 
 #include <functional>
 #include <optional>
+#include <span>
 #include <string>
 
 namespace array_selector
@@ -20,7 +20,7 @@ template<typename T>
 std::optional<size_t> array_selector_modal(
     const char* title,
     bool is_open,
-    gsl::span<const T> elements,
+    std::span<const T> elements,
     NamingFunction<T> naming_function,
     std::optional<size_t> selected = std::nullopt,
     const hrz::flat_hash_set<size_t> disabled = {})

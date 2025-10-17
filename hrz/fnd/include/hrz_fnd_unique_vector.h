@@ -38,7 +38,7 @@ public:
 
     constexpr const_iterator end() const { return _container.end(); }
 
-    gsl::span<const T> as_span() const { return {_container.data(), _container.size()}; }
+    std::span<const T> as_span() const { return {_container.data(), _container.size()}; }
 };
 
 template<typename T, size_t N>

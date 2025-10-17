@@ -4,9 +4,8 @@
 #include "hrz_common_blob_array.h"
 #include "hrz_fnd_array_view.h"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <cassert>
+#include <span>
 #include <type_traits>
 
 namespace hrz

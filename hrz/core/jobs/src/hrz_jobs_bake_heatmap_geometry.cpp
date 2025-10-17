@@ -24,7 +24,7 @@ namespace hrz_jobs::bake_heatmap_geometry
 namespace
 {
 void generate_points_geometry(
-    gsl::span<const lm::dvec3> feature_span,
+    std::span<const lm::dvec3> feature_span,
     hrz::BlobVector<lm::dvec3>& positions,
     hrz::BlobVector<hrz::vt::HeatmapGeometry::PointInstance>& point_data,
     float value,
@@ -110,7 +110,7 @@ hrz::JobResult run(
         &hrz_proj::wmerc_to_ecef, point_positions_data.size(), &point_positions_data.data()->x);
 
     hrz::BSphere<double> bsphere =
-        hrz::compute_bounding_sphere(gsl::span<const lm::dvec3>(point_positions_data));
+        hrz::compute_bounding_sphere(std::span<const lm::dvec3>(point_positions_data));
 
     auto point_vertices_data_opt = point_vertices.data();
     if (!point_vertices_data_opt.has_value())

@@ -979,7 +979,7 @@ hrz::JobResult run(
 
         if (srs == "EPSG:3857")
         {
-            geometry.projection.set_descriptor(proj_str);
+            geometry.projection.set_descriptor_(proj_str);
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
@@ -994,7 +994,7 @@ hrz::JobResult run(
         }
         else if (srs == "EPSG:4326" || srs == "CRS:84")
         {
-            geometry.projection.set_descriptor(proj_str);
+            geometry.projection.set_descriptor_(proj_str);
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::GLOBAL);
@@ -1009,7 +1009,7 @@ hrz::JobResult run(
         }
         else
         {
-            geometry.projection.set_descriptor(proj_str);
+            geometry.projection.set_descriptor_(proj_str);
             geometry.projection.set_descriptor_type(
                 hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
             geometry.tiling_scheme.set_type(hrz_proto::TilingSchemeType::LOCAL);

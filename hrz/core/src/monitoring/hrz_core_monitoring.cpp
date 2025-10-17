@@ -11,6 +11,7 @@
 #include <hrz_common_ui_utils.h>
 #include <hrz_fnd_format.h>
 #include <hrz_fnd_log.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_time.h>
 #include <hrz_monitoring.h>
@@ -738,7 +739,7 @@ using TreenodeId = std::array<uint64_t, 3>;
 void Monitoring::draw_resource_tree(
     mu_Context* ctx,
     uint64_t tree_id,
-    gsl::span<const uint64_t> gpu_resources,
+    std::span<const uint64_t> gpu_resources,
     const std::function<uint64_t(const GpuResourceInfo&)>& get_first_value,
     const std::function<const char*(uint64_t)>& print_first_value,
     const mu_Color& first_bar_color,

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <gsl/gsl-lite.hpp>
 #include <rapidjson/document.h>
 
 #include <optional>
+#include <span>
 
 namespace hrz::json
 {
@@ -127,7 +127,7 @@ struct EnumVariant
 template<typename T>
 inline std::optional<T> as_str_enum(
     const rapidjson::Value& node,
-    gsl::span<const EnumVariant<T>> variants)
+    std::span<const EnumVariant<T>> variants)
 {
     std::optional<const char*> str_opt = as_str(node);
     if (!str_opt.has_value())
@@ -146,15 +146,15 @@ inline std::optional<T> as_str_enum(
 
 // Returns the number of values copied from the json array.
 size_t copy_array_values(
-    gsl::span<int> values,
+    std::span<int> values,
     const rapidjson::Value& array,
     int default_value = 0);
 size_t copy_array_values(
-    gsl::span<float> values,
+    std::span<float> values,
     const rapidjson::Value& array,
     float default_value = 0.0f);
 size_t copy_array_values(
-    gsl::span<double> values,
+    std::span<double> values,
     const rapidjson::Value& array,
     double default_value = 0.0);
 
@@ -229,7 +229,7 @@ template<typename T>
 inline std::optional<T> get_str_enum(
     const rapidjson::Value& node,
     const char* name,
-    gsl::span<const EnumVariant<T>> variants)
+    std::span<const EnumVariant<T>> variants)
 {
     return as_str_enum(get_member_or_null(node, name), variants);
 }
@@ -238,7 +238,7 @@ template<typename T>
 inline T get_str_enum_or(
     const rapidjson::Value& node,
     const char* name,
-    gsl::span<const EnumVariant<T>> variants,
+    std::span<const EnumVariant<T>> variants,
     T default_value)
 {
     return get_str_enum(node, name, variants).value_or(default_value);

@@ -2,8 +2,7 @@
 
 #include "hrz_fnd_mime.h"
 
-#include <gsl/gsl-lite.hpp>
-
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -52,7 +51,7 @@ std::string parameter_value_from_query(std::string_view query, std::string_view 
 // This turns the last part of the path into a directory.
 std::string add_slash(std::string_view url);
 
-std::string join(gsl::span<const std::string_view> parts);
+std::string join(std::span<const std::string_view> parts);
 std::string join(std::initializer_list<std::string_view> parts);
 
 std::string append_query_parameters(

@@ -214,8 +214,8 @@ void hrz::planet::ElevationQuery::_cancel(
 void hrz::planet::ElevationQuery::_start_culling(
     JobScheduler* js,
     uint64_t raster_ids_hash,
-    gsl::span<const Raster*> rasters,
-    gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
+    std::span<const Raster*> rasters,
+    std::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
     Ticket ticket)
 {
     Batch* batch = _batchs.get_object(ticket);
@@ -241,7 +241,7 @@ void hrz::planet::ElevationQuery::_start_waiting_for_tiles(
     JobScheduler* js,
     AssetsLoader* al,
     Ticket ticket,
-    gsl::span<const Raster*> rasters)
+    std::span<const Raster*> rasters)
 {
     Batch* batch = _batchs.get_object(ticket);
     assert(batch && batch->status == Batch::Culling);
@@ -266,7 +266,7 @@ void hrz::planet::ElevationQuery::_start_waiting_for_tiles(
 
 bool hrz::planet::ElevationQuery::_all_tiles_available(
     const Batch* batch,
-    gsl::span<const Raster*> rasters)
+    std::span<const Raster*> rasters)
 {
     for (const auto& tile : batch->tiles)
     {
@@ -282,8 +282,8 @@ bool hrz::planet::ElevationQuery::_all_tiles_available(
 void hrz::planet::ElevationQuery::_start_sampling(
     JobScheduler* js,
     BlobAllocator* ba,
-    gsl::span<const Raster*> rasters,
-    gsl::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
+    std::span<const Raster*> rasters,
+    std::span<const hrz::planet::TiledRasterGeometry> raster_geometries,
     Ticket ticket,
     Batch* batch)
 {
@@ -463,7 +463,7 @@ void hrz::planet::ElevationQuery::work(
         return raster_geometries_lazy;
     };
 
-    auto get_rasters = [&]() -> gsl::span<const Raster*>
+    auto get_rasters = [&]() -> std::span<const Raster*>
     {
         if (!initialized_rasters_data)
         {

@@ -4,10 +4,10 @@
 
 #include <hrz_monitoring.h>
 
-#include <gsl/gsl-lite.hpp>
 #include <ws_server.h>
 
 #include <cassert>
+#include <span>
 #include <string>
 
 const std::string UNKNOWN_SESSION_ID = "0";
@@ -132,7 +132,7 @@ struct Handler : public ws::ServerHandler
 
     virtual void on_raw_message(const void* data, size_t size)
     {
-        gsl::span<std::byte> byte_data((std::byte*)data, size);
+        std::span<std::byte> byte_data((std::byte*)data, size);
 
         hrz_monitoring::parse_messages(
             byte_data,

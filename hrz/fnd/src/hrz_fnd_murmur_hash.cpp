@@ -136,7 +136,7 @@ static void MurmurHash3_x64_128(const void* key, const int len, const uint32_t s
 
 namespace hrz
 {
-uint128 murmur3_x64_128(gsl::span<const std::byte> s)
+uint128 murmur3_x64_128(std::span<const std::byte> s)
 {
     uint128 res;
     MurmurHash3_x64_128(s.data(), s.size(), 0, &res);

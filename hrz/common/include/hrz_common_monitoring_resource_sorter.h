@@ -5,9 +5,8 @@
 
 #include <hrz_fnd_flat_hash_set.h>
 
-#include <gsl/gsl-lite.hpp>
-
 #include <functional>
+#include <span>
 #include <vector>
 
 namespace hrz::monitoring
@@ -92,9 +91,9 @@ public:
 
     void schedule_sort() { dirty = true; }
 
-    gsl::span<const Handle> get_handles_sorted_by_system() { return handles_sorted_by_system; }
+    std::span<const Handle> get_handles_sorted_by_system() { return handles_sorted_by_system; }
 
-    gsl::span<const Handle> get_handles_sorted_by_layer() { return handles_sorted_by_layer; }
+    std::span<const Handle> get_handles_sorted_by_layer() { return handles_sorted_by_layer; }
 
     size_t size() const { return handles_sorted_by_layer.size(); }
 
