@@ -205,8 +205,8 @@ hrz::JobResult match_feature_counts(
 
         if (params.geometry->features.size() > expected_feature_count)
         {
-            response.geometry->features =
-                params.geometry->features.make_sub_array(0, expected_feature_count);
+            response.geometry->features = params.geometry->features.make_sub_array(
+                hrz::unsafe("Size is checked above"), 0, expected_feature_count);
         }
         else if (params.geometry->features.size() < expected_feature_count)
         {
@@ -247,7 +247,8 @@ hrz::JobResult match_feature_counts(
 
         if (attribute.values.size() > expected_feature_count)
         {
-            attribute.values = attribute.values.make_sub_array(0, expected_feature_count);
+            attribute.values = attribute.values.make_sub_array(
+                hrz::unsafe("Size is checked above"), 0, expected_feature_count);
         }
         else if (attribute.values.size() < expected_feature_count)
         {

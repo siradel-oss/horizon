@@ -2,9 +2,12 @@
 
 #include "hrz_common_blob_allocator.h"
 #include "hrz_common_blob_array.h"
-#include "hrz_fnd_array_view.h"
+
+#include <hrz_fnd_array_view.h>
+#include <hrz_fnd_unsafe.h>
 
 #include <cassert>
+#include <optional>
 #include <span>
 #include <type_traits>
 
@@ -22,18 +25,57 @@ class BlobArrayView
 public:
     BlobArrayView() : _blob({}), _size(0), _offset(0), _stride(0) {}
 
+private:
     BlobArrayView(blobs::BlobHandle blob, size_t element_count, size_t offset, size_t stride) :
         _blob(std::move(blob)), _size(element_count), _offset(offset), _stride(stride)
     {
         assert(_blob.is_valid());
         assert(_blob.check_integrity());
+        assert((_blob.data_alignment() + offset) % alignof(T) == 0);
+        assert(stride % alignof(T) == 0);
+        assert(
+            (element_count > 0 ? offset + (element_count - 1) * stride + sizeof(T) : 0)
+            <= _blob.data_size());
     }
 
+public:
     explicit BlobArrayView(BlobArray<T> array) :
         _blob(std::move(array.blob())), _size(array.size()), _offset(0), _stride(sizeof(T))
     {
         assert(_blob.is_valid());
         assert(_blob.check_integrity());
+    }
+
+    // Call this when you cannot guarantee the size of the blob and its alignment
+    static std::optional<BlobArrayView> make_blob_array_view(
+        blobs::BlobHandle blob,
+        size_t element_count,
+        size_t offset = 0,
+        size_t stride = sizeof(T))
+    {
+        if (element_count > 0)
+        {
+            if (!blob.is_valid() || ((blob.data_alignment() + offset) % alignof(T) != 0)
+                || (stride % alignof(T) != 0)
+                || (element_count > 0 ? offset + (element_count - 1) * stride + sizeof(T) : 0)
+                    <= blob.data_size())
+            {
+                return std::nullopt;
+            }
+        }
+
+        return {BlobArrayView(std::move(blob), element_count, offset, stride)};
+    }
+
+    // @Safety Only call this if you can guarantee the alignment and the size of the blob.
+    static BlobArrayView make_blob_array_view(
+        unsafe,
+        blobs::BlobHandle blob,
+        size_t element_count,
+        size_t offset = 0,
+        size_t stride = sizeof(T))
+    {
+        return BlobArrayView(std::move(blob), element_count, offset, stride);
     }
 
     blobs::BlobHandle blob() const { return _blob; }

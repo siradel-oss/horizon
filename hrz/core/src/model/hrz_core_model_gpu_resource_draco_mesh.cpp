@@ -74,14 +74,25 @@ void GpuDracoMeshResource::work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler
                 uri = bl->get_uri(blob_handle.value(), NullCfg);
 
                 auto [blob, mime_type] = bl->get_blob(blob_handle.value(), NullCfg);
-                auto sub_blob = blobs::make_sub_blob(ba, blob, blob_byte_offset, blob_byte_length);
+                auto sub_blob_opt =
+                    blobs::make_sub_blob(ba, blob, blob_byte_offset, blob_byte_length);
 
-                decompression_ticket = hrz_jobs::add_job_decompress_draco_mesh(js, sub_blob, owner);
+                if (sub_blob_opt.has_value())
+                {
+                    decompression_ticket =
+                        hrz_jobs::add_job_decompress_draco_mesh(js, sub_blob_opt.value(), owner);
 
-                bl->release(blob_handle.value(), NullCfg);
-                blob_handle = std::nullopt;
+                    bl->release(blob_handle.value(), NullCfg);
+                    blob_handle = std::nullopt;
 
-                status = Status::DecodingMesh;
+                    status = Status::DecodingMesh;
+                }
+                else
+                {
+                    HRZ_LOG_ERROR("Blob is too small to contain the sub-blob");
+                    status = Status::Error;
+                }
+
                 break;
             }
             case BlobLibrary::Status::Unloaded:

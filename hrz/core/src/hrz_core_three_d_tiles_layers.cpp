@@ -49,6 +49,7 @@
 #include <hrz_fnd_meta.h>
 #include <hrz_fnd_observed.h>
 #include <hrz_fnd_overload.h>
+#include <hrz_fnd_static_string.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_time.h>
 #include <hrz_fnd_url_utils.h>
@@ -2479,7 +2480,17 @@ struct ThreeDTilesSystem
             geometry.quantized_volume_offset = lm::dvec3(0.0f);
             geometry.quantized_volume_scale = lm::dvec3(1.0f);
 
-            geometry.positions = feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+            auto positions_opt = hrz::BlobArray<lm::vec3>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!positions_opt.has_value())
+            {
+                HRZ_LOG_ERROR("Incorrect alignment of position data in tile \"{}\"", tile.uri);
+                return false;
+            }
+
+            geometry.positions = std::move(positions_opt.value());
             geometry.positions_format = my::VertexFormat::Float32_3;
         }
         else if (document.HasMember("POSITION_QUANTIZED"))
@@ -2498,7 +2509,17 @@ struct ThreeDTilesSystem
                 std::span<double>(geometry.quantized_volume_scale.m),
                 document["QUANTIZED_VOLUME_SCALE"], 1.0);
 
-            geometry.positions = feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+            auto positions_opt = hrz::BlobArray<lm::usvec3>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!positions_opt.has_value())
+            {
+                HRZ_LOG_ERROR("Incorrect alignment of position data in tile \"{}\"", tile.uri);
+                return false;
+            }
+
+            geometry.positions = std::move(positions_opt.value());
             geometry.positions_format = my::VertexFormat::UInt16Norm_3;
         }
         else
@@ -2516,84 +2537,78 @@ struct ThreeDTilesSystem
             size_t data_size = geometry.point_count * sizeof(lm::ubvec4);
             CHECK_DATA_SIZE();
 
-            geometry.colors_rate = my::VertexRate::PerVertex;
-            geometry.colors = feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
-            geometry.colors_format = my::VertexFormat::UInt8Norm_4;
-
-            auto colors_data = std::get<hrz::blobs::BlobHandle>(geometry.colors).get_data();
-            for (size_t i = 0; i < colors_data.size() * 4; i += 4)
+            auto colors_opt = hrz::BlobArray<lm::ubvec4>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!colors_opt.has_value())
             {
-                lm::ubvec4 c;
-                std::memcpy(&c, colors_data.data() + i, sizeof(lm::ubvec4));
+                HRZ_LOG_ERROR("Incorrect alignment of color data in tile \"{}\"", tile.uri);
+                return false;
+            }
 
-                if (c.a > 0 && c.a < 255)
+            {
+                auto colors_data = colors_opt->get_data();
+                for (lm::ubvec4 c : colors_data)
                 {
-                    geometry.has_transparent_color = true;
-                    break;
+                    if (c.a > 0 && c.a < 255)
+                    {
+                        geometry.has_transparent_color = true;
+                        break;
+                    }
                 }
             }
+
+            geometry.colors_rate = my::VertexRate::PerVertex;
+            geometry.colors = std::move(colors_opt.value());
+            geometry.colors_format = my::VertexFormat::UInt8Norm_4;
         }
         else if (document.HasMember("RGB"))
         {
-            const auto& rgba_node = hrz::json::get_member_or_null(document, "RGB");
+            const auto& rgb_node = hrz::json::get_member_or_null(document, "RGB");
 
-            auto byte_offset = hrz::json::get_int_or(rgba_node, "byteOffset", 0);
+            auto byte_offset = hrz::json::get_int_or(rgb_node, "byteOffset", 0);
             size_t data_size = geometry.point_count * sizeof(lm::ubvec3);
             CHECK_DATA_SIZE();
 
+            auto colors_opt = hrz::BlobArray<lm::ubvec3>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!colors_opt.has_value())
+            {
+                HRZ_LOG_ERROR("Incorrect alignment of color data in tile \"{}\"", tile.uri);
+                return false;
+            }
+
             geometry.has_transparent_color = false;
             geometry.colors_rate = my::VertexRate::PerVertex;
-            geometry.colors = feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+            geometry.colors = std::move(colors_opt.value());
             geometry.colors_format = my::VertexFormat::UInt8Norm_3;
         }
         else if (document.HasMember("RGB565"))
         {
-            const auto& rgba_node = hrz::json::get_member_or_null(document, "RGB565");
+            const auto& rgb565_node = hrz::json::get_member_or_null(document, "RGB565");
 
-            auto byte_offset = hrz::json::get_int_or(rgba_node, "byteOffset", 0);
+            auto byte_offset = hrz::json::get_int_or(rgb565_node, "byteOffset", 0);
             size_t data_size = geometry.point_count * sizeof(uint16_t);
             CHECK_DATA_SIZE();
 
-            // The specification guarantees that the data is correctly aligned.
-            // https://docs.ogc.org/cs/22-025r4/22-025r4.html#toc26
-            assert(byte_offset % alignof(uint16_t) == 0);
-            auto compressed_colors_bin_data =
-                feature_table_bin_data.subspan(byte_offset, data_size);
-            auto compressed_colors_data = std::span<const uint16_t>{
-                (const uint16_t*)compressed_colors_bin_data.data(),
-                compressed_colors_bin_data.size_bytes() / sizeof(uint16_t)};
-
-            auto colors_blob = hrz::BlobVector<lm::ubvec3>(ba, geometry.point_count);
-            colors_blob.resize(geometry.point_count);
-
-            if (auto colors_data_opt = colors_blob.data(); colors_data_opt.has_value())
+            auto compressed_colors_opt = hrz::BlobArray<uint16_t>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!compressed_colors_opt.has_value())
             {
-                auto colors_data = colors_data_opt.value();
-                for (size_t i = 0; i < geometry.point_count; ++i)
-                {
-                    auto color = compressed_colors_data[i];
-                    colors_data[i] = lm::ubvec3(
-                        (color & 0xf800) >> 8, (color & 0x07e0) >> 3, (color & 0x001f) << 3);
-                }
-            }
-            else
-            {
-                HRZ_LOG_ERROR("Couldn't allocate colors blob for pnts tile \"{}\"", tile.uri);
+                HRZ_LOG_ERROR("Incorrect alignment of color data in tile \"{}\"", tile.uri);
                 return false;
             }
 
-            if (auto blob_array = colors_blob.to_blob_array(); blob_array)
-            {
-                geometry.has_transparent_color = false;
-                geometry.colors_rate = my::VertexRate::PerVertex;
-                geometry.colors = blob_array->blob();
-                geometry.colors_format = my::VertexFormat::UInt8Norm_3;
-            }
-            else
-            {
-                HRZ_LOG_ERROR("Couldn't allocate colors blob for pnts tile \"{}\"", tile.uri);
-                return false;
-            }
+            geometry.compressed_colors = {std::move(compressed_colors_opt.value())};
+            geometry.decompressed_colors_allocation = {
+                hrz::BlobArrayAllocation<lm::ubvec3>::allocate(ba, geometry.point_count)};
+
+            // `geometry.colors` will be filled when the blob array allocation has finished.
         }
         else
         {
@@ -2605,7 +2620,7 @@ struct ThreeDTilesSystem
 
             geometry.has_transparent_color = default_color.a < 1.0f;
             geometry.colors_rate = my::VertexRate::Constant;
-            geometry.colors = hrz::convert_rgba_color_to_bytes(default_color);
+            geometry.colors = {hrz::convert_rgba_color_to_bytes(default_color)};
             geometry.colors_format = my::VertexFormat::UInt8Norm_4;
         }
 
@@ -2617,43 +2632,22 @@ struct ThreeDTilesSystem
             size_t data_size = geometry.point_count * sizeof(lm::vec3);
             CHECK_DATA_SIZE();
 
-            // The specification guarantees that the data is correctly aligned.
-            // https://docs.ogc.org/cs/22-025r4/22-025r4.html#toc26
-            assert(byte_offset % alignof(lm::vec3) == 0);
-            auto normals_bin_data = feature_table_bin_data.subspan(byte_offset, data_size);
-            auto normals_data = std::span<const lm::vec3>{
-                (const lm::vec3*)normals_bin_data.data(),
-                normals_bin_data.size_bytes() / sizeof(lm::vec3)};
-
-            auto compressed_normals_blob = hrz::BlobVector<uint16_t>(ba, geometry.point_count);
-            compressed_normals_blob.resize(geometry.point_count);
-
-            if (auto compressed_normals_data_opt = compressed_normals_blob.data();
-                compressed_normals_data_opt.has_value())
+            auto normals_opt = hrz::BlobArray<lm::vec3>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!normals_opt.has_value())
             {
-                auto compressed_normals_data = compressed_normals_data_opt.value();
-                for (size_t i = 0; i < geometry.point_count; ++i)
-                {
-                    compressed_normals_data[i] =
-                        (uint16_t)hrz::octahedral_compress_normal<8>(normals_data[i]);
-                }
-            }
-            else
-            {
-                HRZ_LOG_ERROR("Couldn't allocate normals blob for pnts tile \"{}\"", tile.uri);
+                HRZ_LOG_ERROR("Incorrect alignment of normal data in tile \"{}\"", tile.uri);
                 return false;
             }
 
-            if (auto blob_array = compressed_normals_blob.to_blob_array(); blob_array)
-            {
-                geometry.compressed_normals_rate = my::VertexRate::PerVertex;
-                geometry.compressed_normals = blob_array->blob();
-            }
-            else
-            {
-                HRZ_LOG_ERROR("Couldn't allocate normals blob for pnts tile \"{}\"", tile.uri);
-                return false;
-            }
+            geometry.normals = {std::move(normals_opt.value())};
+            geometry.compressed_normals_allocation = {
+                hrz::BlobArrayAllocation<uint16_t>::allocate(ba, geometry.point_count)};
+
+            // `geometry.compressed_normals` will be filled when the blob array allocation has
+            // finished.
         }
         else if (document.HasMember("NORMAL_OCT16P"))
         {
@@ -2663,9 +2657,18 @@ struct ThreeDTilesSystem
             size_t data_size = geometry.point_count * sizeof(uint16_t);
             CHECK_DATA_SIZE();
 
+            auto compressed_normals_opt = hrz::BlobArray<uint16_t>::make_blob_array(
+                ba,
+                feature_table_bin_blob.make_sub_blob(
+                    hrz::unsafe("Offset and size are checked above"), byte_offset, data_size));
+            if (!compressed_normals_opt.has_value())
+            {
+                HRZ_LOG_ERROR("Incorrect alignment of normal data in tile \"{}\"", tile.uri);
+                return false;
+            }
+
             geometry.compressed_normals_rate = my::VertexRate::PerVertex;
-            geometry.compressed_normals =
-                feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+            geometry.compressed_normals = compressed_normals_opt.value();
         }
         else
         {
@@ -2690,8 +2693,19 @@ struct ThreeDTilesSystem
                 {
                     size_t data_size = geometry.point_count * sizeof(uint8_t);
                     CHECK_DATA_SIZE();
-                    geometry.batch_ids =
-                        feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+
+                    auto batch_ids_opt = hrz::BlobArray<uint8_t>::make_blob_array(
+                        ba,
+                        feature_table_bin_blob.make_sub_blob(
+                            hrz::unsafe("Offset and size are checked above"), byte_offset,
+                            data_size));
+                    if (!batch_ids_opt.has_value())
+                    {
+                        HRZ_LOG_ERROR("Incorrect alignment of batch IDs in tile \"{}\"", tile.uri);
+                        return false;
+                    }
+
+                    geometry.batch_ids = batch_ids_opt.value();
                     geometry.batch_ids_format = my::VertexFormat::UInt8;
                     geometry.batch_ids_rate = my::VertexRate::PerVertex;
                     break;
@@ -2700,8 +2714,19 @@ struct ThreeDTilesSystem
                 {
                     size_t data_size = geometry.point_count * sizeof(uint16_t);
                     CHECK_DATA_SIZE();
-                    geometry.batch_ids =
-                        feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+
+                    auto batch_ids_opt = hrz::BlobArray<uint16_t>::make_blob_array(
+                        ba,
+                        feature_table_bin_blob.make_sub_blob(
+                            hrz::unsafe("Offset and size are checked above"), byte_offset,
+                            data_size));
+                    if (!batch_ids_opt.has_value())
+                    {
+                        HRZ_LOG_ERROR("Incorrect alignment of batch IDs in tile \"{}\"", tile.uri);
+                        return false;
+                    }
+
+                    geometry.batch_ids = batch_ids_opt.value();
                     geometry.batch_ids_format = my::VertexFormat::UInt16;
                     geometry.batch_ids_rate = my::VertexRate::PerVertex;
                     break;
@@ -2710,8 +2735,19 @@ struct ThreeDTilesSystem
                 {
                     size_t data_size = geometry.point_count * sizeof(uint32_t);
                     CHECK_DATA_SIZE();
-                    geometry.batch_ids =
-                        feature_table_bin_blob.make_sub_blob(byte_offset, data_size);
+
+                    auto batch_ids_opt = hrz::BlobArray<uint32_t>::make_blob_array(
+                        ba,
+                        feature_table_bin_blob.make_sub_blob(
+                            hrz::unsafe("Offset and size are checked above"), byte_offset,
+                            data_size));
+                    if (!batch_ids_opt.has_value())
+                    {
+                        HRZ_LOG_ERROR("Incorrect alignment of batch IDs in tile \"{}\"", tile.uri);
+                        return false;
+                    }
+
+                    geometry.batch_ids = batch_ids_opt.value();
                     geometry.batch_ids_format = my::VertexFormat::UInt32;
                     geometry.batch_ids_rate = my::VertexRate::PerVertex;
                     break;
@@ -2812,7 +2848,7 @@ struct ThreeDTilesSystem
         auto gltf_offset = header_size + feature_table_json_size + feature_table_bin_size
             + batch_table_json_size + batch_table_bin_size;
 
-        if (feature_table_json_size + feature_table_bin_size > tile_data_size)
+        if (gltf_offset > tile_data_size)
         {
             HRZ_LOG_ERROR("Invalid b3dm header in tile \"{}\"", tile.uri);
             return false;
@@ -2850,10 +2886,11 @@ struct ThreeDTilesSystem
             hrz::three_d_tiles::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
-                ba, tile_data_blob, header_size + feature_table_json_size + feature_table_bin_size,
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
+                header_size + feature_table_json_size + feature_table_bin_size,
                 batch_table_json_size);
             params.bin_data = hrz::blobs::make_sub_blob(
-                ba, tile_data_blob,
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
                 header_size + feature_table_json_size + feature_table_bin_size
                     + batch_table_json_size,
                 batch_table_bin_size);
@@ -2863,7 +2900,9 @@ struct ThreeDTilesSystem
                 {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
-        auto gltf_blob = hrz::blobs::make_sub_blob(ba, tile_data_blob, gltf_offset);
+        auto gltf_blob = hrz::blobs::make_sub_blob(
+            hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
+            gltf_offset);
 
         content.draw_prps = config->inherited_draw_prps;
         content.draw_prps.transform =
@@ -2972,10 +3011,11 @@ struct ThreeDTilesSystem
             hrz::three_d_tiles::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
-                ba, tile_data_blob, header_size + feature_table_json_size + feature_table_bin_size,
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
+                header_size + feature_table_json_size + feature_table_bin_size,
                 batch_table_json_size);
             params.bin_data = hrz::blobs::make_sub_blob(
-                ba, tile_data_blob,
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
                 header_size + feature_table_json_size + feature_table_bin_size
                     + batch_table_json_size,
                 batch_table_bin_size);
@@ -2992,7 +3032,16 @@ struct ThreeDTilesSystem
         {
             auto gltf_span = tile_data.subspan(gltf_offset, tile_data.size() - gltf_offset);
             auto gltf_size = hrz::model::fetch_glb_declared_size(gltf_span);
-            auto gltf_blob = hrz::blobs::make_sub_blob(ba, tile_data_blob, gltf_offset, gltf_size);
+
+            if (gltf_size > gltf_span.size())
+            {
+                HRZ_LOG_ERROR("Invalid embedded glTF size in i3dm tile \"{}\"", tile.uri);
+                return false;
+            }
+
+            auto gltf_blob = hrz::blobs::make_sub_blob(
+                hrz::unsafe("Offset and size are checked above"), ba, tile_data_blob, gltf_offset,
+                gltf_size);
 
             content.model_uri_hash = std::nullopt;
             content.prototype = hrz::model::create_from_gltf_blob(
@@ -3006,7 +3055,9 @@ struct ThreeDTilesSystem
         else if (gltf_format == 0) // External glTF
         {
             hrz::BaseUrl i3dm_base_url = tileset->base_url.derive_base(tile.uri);
-            auto gltf_blob = hrz::blobs::make_sub_blob(ba, tile_data_blob, gltf_offset);
+            auto gltf_blob = hrz::blobs::make_sub_blob(
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
+                gltf_offset);
             auto gltf_data = gltf_blob.get_data();
             std::string_view partial_uri =
                 hrz::str::rtrim_s({(const char*)gltf_data.data(), gltf_data.size()}, '\x20');
@@ -3120,6 +3171,7 @@ struct ThreeDTilesSystem
 
         auto feature_table_json_data = tile_data.subspan(header_size, feature_table_json_size);
         auto feature_table_bin_blob = tile_data_blob.make_sub_blob(
+            hrz::unsafe("Component sizes are checked against tile size"),
             header_size + feature_table_json_size, feature_table_bin_size);
         if (!_decode_pnts_feature_table(
                 tile, &subtile, feature_table_json_data, feature_table_bin_blob, owner, ba))
@@ -3133,10 +3185,11 @@ struct ThreeDTilesSystem
             hrz::three_d_tiles::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
-                ba, tile_data_blob, header_size + feature_table_json_size + feature_table_bin_size,
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
+                header_size + feature_table_json_size + feature_table_bin_size,
                 batch_table_json_size);
             params.bin_data = hrz::blobs::make_sub_blob(
-                ba, tile_data_blob,
+                hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
                 header_size + feature_table_json_size + feature_table_bin_size
                     + batch_table_json_size,
                 batch_table_bin_size);
@@ -3243,15 +3296,15 @@ struct ThreeDTilesSystem
         {
             hrz::three_d_tiles::EncodedBatchTable params;
             params.batch_length = content.batch_length;
-            params.json_data = hrz::blobs::make_sub_blob(ba, tile_data_blob, 0, 0);
-            params.bin_data = hrz::blobs::make_sub_blob(ba, tile_data_blob, 0, 0);
+            params.json_data = {};
+            params.bin_data = {};
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
                 js, params,
                 {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
-        auto gltf_blob = hrz::blobs::make_sub_blob(ba, tile_data_blob, 0);
+        auto& gltf_blob = tile_data_blob;
 
         content.draw_prps = config->inherited_draw_prps;
         content.draw_prps.transform =
@@ -3354,7 +3407,8 @@ struct ThreeDTilesSystem
                 }
 
                 auto subtile_data_blob = hrz::blobs::make_sub_blob(
-                    ba, tile_data_blob, current_subtile_offset, subtile_size);
+                    hrz::unsafe("Offset and size are checked above"), ba, tile_data_blob,
+                    current_subtile_offset, subtile_size);
 
                 // Composite tiles can only contain other 3D Tiles formats, no raw glTF or external
                 // tilesets.
@@ -4865,6 +4919,99 @@ struct ThreeDTilesSystem
         hrz::RenderRequest render_request;
         auto& content = std::get<ThreeDTile::PntsContent>(subtile.content);
 
+        if (auto& allocation = content.geometry->decompressed_colors_allocation;
+            allocation.has_value())
+        {
+            assert(content.geometry->compressed_colors.has_value());
+
+            switch (allocation->get_state(ctx.ba))
+            {
+                case hrz::BlobArrayAllocationState::Allocated:
+                {
+                    auto colors_array = allocation->to_array(ctx.ba);
+                    colors_array.register_blob_owner(
+                        ctx.ba,
+                        {hrz::monitoring::systems::ThreeDTilesLayers,
+                         tileset.config->global_layer_id});
+                    colors_array.register_blob_metadata(
+                        ctx.ba, "contents"_ss, "point cloud colors"_ss);
+
+                    {
+                        auto colors_data = colors_array.get_mutable_data();
+                        auto compressed_colors_data =
+                            content.geometry->compressed_colors->get_data();
+
+                        for (size_t i = 0; i < content.geometry->point_count; ++i)
+                        {
+                            auto color = compressed_colors_data[i];
+                            colors_data[i] = lm::ubvec3(
+                                (color & 0xf800) >> 8, (color & 0x07e0) >> 3,
+                                (color & 0x001f) << 3);
+                        }
+                    }
+
+                    content.geometry->compressed_colors = std::nullopt;
+                    content.geometry->decompressed_colors_allocation = std::nullopt;
+
+                    content.geometry->colors = std::move(colors_array);
+                    break;
+                }
+                case hrz::BlobArrayAllocationState::Error:
+                {
+                    HRZ_LOG_ERROR(
+                        "Could not allocate color array for point cloud tile \"{}\"", tile.uri);
+                    _mark_subtile_load_error(tile, subtile);
+                    break;
+                }
+                default: break;
+            }
+        }
+
+        if (auto& allocation = content.geometry->compressed_normals_allocation;
+            allocation.has_value())
+        {
+            assert(content.geometry->normals.has_value());
+
+            switch (allocation->get_state(ctx.ba))
+            {
+                case hrz::BlobArrayAllocationState::Allocated:
+                {
+                    auto compressed_normals_array = allocation->to_array(ctx.ba);
+                    compressed_normals_array.register_blob_owner(
+                        ctx.ba,
+                        {hrz::monitoring::systems::ThreeDTilesLayers,
+                         tileset.config->global_layer_id});
+                    compressed_normals_array.register_blob_metadata(
+                        ctx.ba, "contents"_ss, "point cloud normals"_ss);
+
+                    {
+                        auto compressed_normals_data = compressed_normals_array.get_mutable_data();
+                        auto normals_data = content.geometry->normals->get_data();
+
+                        for (size_t i = 0; i < content.geometry->point_count; ++i)
+                        {
+                            compressed_normals_data[i] =
+                                (uint16_t)hrz::octahedral_compress_normal<8>(normals_data[i]);
+                        }
+                    }
+
+                    content.geometry->normals = std::nullopt;
+                    content.geometry->compressed_normals_allocation = std::nullopt;
+
+                    content.geometry->compressed_normals = std::move(compressed_normals_array);
+                    break;
+                }
+                case hrz::BlobArrayAllocationState::Error:
+                {
+                    HRZ_LOG_ERROR(
+                        "Could not allocate normal array for point cloud tile \"{}\"", tile.uri);
+                    _mark_subtile_load_error(tile, subtile);
+                    break;
+                }
+                default: break;
+            }
+        }
+
         if (hrz_jobs::is_job_valid(ctx.js, content.decode_batch_table_ticket)
             && hrz_jobs::is_job_finished(ctx.js, content.decode_batch_table_ticket))
         {
@@ -4895,7 +5042,10 @@ struct ThreeDTilesSystem
                 });
         }
 
-        if (content.has_loaded_batch_table
+        if (subtile.load_status != ThreeDTile::Subtile::LoadStatus::ERROR
+            && !content.geometry->decompressed_colors_allocation.has_value()
+            && !content.geometry->compressed_normals_allocation.has_value()
+            && content.has_loaded_batch_table
             && (content.point_cloud || content.geometry->point_count == 0))
         {
             _mark_subtile_loaded(tile, subtile);
@@ -6253,10 +6403,32 @@ struct ThreeDTilesSystem
             || (content.geometry.has_value() && content.geometry->point_count == 0))
             return;
 
+        auto geometry_has_positions = [&]()
+        {
+            if (!content.geometry.has_value())
+            {
+                return false;
+            }
+            else if (content.geometry->positions_format == my::VertexFormat::Float32_3)
+            {
+                return std::get<hrz::BlobArray<lm::vec3>>(content.geometry->positions)
+                    .blob()
+                    .is_valid();
+            }
+            else if (content.geometry->positions_format == my::VertexFormat::UInt16Norm_3)
+            {
+                return std::get<hrz::BlobArray<lm::usvec3>>(content.geometry->positions)
+                    .blob()
+                    .is_valid();
+            }
+            else
+            {
+                return false;
+            }
+        };
+
         // Data not available yet
-        if (!content.geometry.has_value() || !content.geometry->positions.is_valid()
-            || !content.has_loaded_batch_table)
-            return;
+        if (!geometry_has_positions() || !content.has_loaded_batch_table) return;
 
         content.uniform_data.mutate(
             [&tile, &subtile, &content](hrz::PointCloud::UniformData& uniform)

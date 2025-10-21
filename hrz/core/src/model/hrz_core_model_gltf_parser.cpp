@@ -1040,12 +1040,19 @@ bool parse_gltf_descriptor(
                         // JSON chunk
                         json_data_offset = current_offset;
                         json_data_length = chunk_length;
+
+                        if (json_data_offset + json_data_length > gltf_size)
+                        {
+                            malformed_file = true;
+                            continue;
+                        }
                     }
                     else if (memcmp((const char*)chunk_type.data(), "BIN\0", 4) == 0)
                     {
                         // Binary buffer chunk
-                        auto embedded_resources =
-                            blobs::make_sub_blob(ba, gltf_blob, current_offset, chunk_length);
+                        auto embedded_resources = blobs::make_sub_blob(
+                            hrz::unsafe("Offset and length are checked above"), ba, gltf_blob,
+                            current_offset, chunk_length);
                         const size_t embedded_resources_offset = descriptor_offset + current_offset;
 
                         descriptor->embedded_resources = bl->add_blob_from_url(
@@ -1063,8 +1070,9 @@ bool parse_gltf_descriptor(
 
             if (!malformed_file && json_data_length > 0)
             {
-                auto json_data_blob =
-                    blobs::make_sub_blob(ba, gltf_blob, json_data_offset, json_data_length);
+                auto json_data_blob = blobs::make_sub_blob(
+                    hrz::unsafe("Offset and length are checked above"), ba, gltf_blob,
+                    json_data_offset, json_data_length);
                 return _parse_gltf_json(
                     additional_attribution, json_data_blob, ba, bl, attributions, buffers_priority,
                     textures_priority, descriptor);

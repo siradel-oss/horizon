@@ -70,8 +70,11 @@ hrz::JobResult run(
     }
 
     {
-        static_assert(hrz::blobs::BLOB_ALIGNMENT >= alignof(uint32_t));
-        static_assert(hrz::blobs::BLOB_ALIGNMENT >= alignof(uint64_t));
+        if (params.image.blob().data_alignment() < alignof(uint32_t)
+            || compressed_image_blob->data_alignment() < alignof(uint64_t))
+        {
+            return hrz::JobResult::FAILURE;
+        }
 
         auto uncompressed_image_data = params.image.blob().get_mutable_data();
         auto rgba_data = std::span<uint32_t>{

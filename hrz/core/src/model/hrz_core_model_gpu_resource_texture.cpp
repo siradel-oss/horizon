@@ -170,12 +170,15 @@ void GpuTextureResource::work(
                 {
                     if (blob_length == 0)
                     {
-                        compressed_data_handle = blobs::make_sub_blob(ba, buffer_blob, blob_offset);
+                        compressed_data_handle = blobs::make_sub_blob(
+                            hrz::unsafe("Offset and length are checked above"), ba, buffer_blob,
+                            blob_offset);
                     }
                     else
                     {
-                        compressed_data_handle =
-                            blobs::make_sub_blob(ba, buffer_blob, blob_offset, blob_length);
+                        compressed_data_handle = blobs::make_sub_blob(
+                            hrz::unsafe("Offset is checked above"), ba, buffer_blob, blob_offset,
+                            blob_length);
                     }
 
                     const hrz_proto::ImageFormat format = is_data_texture

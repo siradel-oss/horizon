@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
+#include <numeric>
 
 extern "C"
 {
@@ -1763,6 +1764,7 @@ BlobId make_sub_blob(
 } // namespace
 
 BlobHandle make_sub_blob(
+    unsafe unsafe,
     BlobAllocator* allocator,
     const BlobHandle& parent_handle,
     size_t offset_in_parent)
@@ -1782,6 +1784,7 @@ BlobHandle make_sub_blob(
 }
 
 BlobHandle make_sub_blob(
+    unsafe,
     BlobAllocator* allocator,
     const BlobHandle& parent_handle,
     size_t offset_in_parent,
@@ -1795,6 +1798,57 @@ BlobHandle make_sub_blob(
 
     assert(offset_in_parent <= parent_blob->size);
     assert(offset_in_parent + size <= parent_blob->size);
+
+    auto sub_blob_id =
+        make_sub_blob(allocator, parent_handle.blob_id, parent_blob, offset_in_parent, size);
+    return BlobHandle(allocator, sub_blob_id);
+}
+
+std::optional<BlobHandle> make_sub_blob(
+    BlobAllocator* allocator,
+    const BlobHandle& parent_handle,
+    size_t offset_in_parent)
+{
+    if (!allocator || parent_handle.blob_id == NO_BLOB)
+    {
+        return std::nullopt;
+    }
+
+    HRZ_SCOPED_EXCLUSIVE_LOCK(allocator->mutex);
+
+    auto parent_blob = allocator->blob_pool.get_object(parent_handle.blob_id);
+
+    if (offset_in_parent > parent_blob->size)
+    {
+        return std::nullopt;
+    }
+
+    size_t size = parent_blob->size - offset_in_parent;
+
+    auto sub_blob_id =
+        make_sub_blob(allocator, parent_handle.blob_id, parent_blob, offset_in_parent, size);
+    return BlobHandle(allocator, sub_blob_id);
+}
+
+std::optional<BlobHandle> make_sub_blob(
+    BlobAllocator* allocator,
+    const BlobHandle& parent_handle,
+    size_t offset_in_parent,
+    size_t size)
+{
+    if (!allocator || parent_handle.blob_id == NO_BLOB)
+    {
+        return std::nullopt;
+    }
+
+    HRZ_SCOPED_EXCLUSIVE_LOCK(allocator->mutex);
+
+    auto parent_blob = allocator->blob_pool.get_object(parent_handle.blob_id);
+
+    if (offset_in_parent > parent_blob->size || offset_in_parent + size > parent_blob->size)
+    {
+        return std::nullopt;
+    }
 
     auto sub_blob_id =
         make_sub_blob(allocator, parent_handle.blob_id, parent_blob, offset_in_parent, size);
@@ -2939,6 +2993,39 @@ size_t BlobHandle::data_size() const
     auto blob = allocator->blob_pool.get_object(blob_id);
 
     return blob->size;
+}
+
+namespace
+{
+// Take the shared mutex before calling this function.
+size_t get_blob_data_alignment(BlobAllocator* allocator, BlobId blob_id)
+{
+    auto blob = allocator->blob_pool.get_object(blob_id);
+
+    if (blob->parent == NO_BLOB)
+    {
+        return BLOB_ALIGNMENT;
+    }
+    else
+    {
+        size_t parent_data_alignment = get_blob_data_alignment(allocator, blob->parent);
+        return std::gcd(parent_data_alignment, blob->offset_in_parent);
+    }
+}
+} // namespace
+
+size_t BlobHandle::data_alignment() const
+{
+    if (allocator == nullptr || blob_id == NO_BLOB)
+    {
+        return 0;
+    }
+
+    assert(allocator);
+    assert(blob_id != NO_BLOB);
+    HRZ_SCOPED_SHARED_LOCK(allocator->mutex);
+
+    return get_blob_data_alignment(allocator, blob_id);
 }
 
 bool BlobHandle::check_integrity() const

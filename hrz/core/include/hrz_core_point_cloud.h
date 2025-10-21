@@ -61,19 +61,32 @@ public:
         lm::dvec3 quantized_volume_offset;
         lm::dvec3 quantized_volume_scale;
         my::VertexFormat positions_format{};
-        hrz::blobs::BlobHandle positions;
+        std::variant<hrz::BlobArray<lm::vec3>, hrz::BlobArray<lm::usvec3>> positions;
+
+        // Used temporarily to decompress colours in RGB565 format.
+        std::optional<hrz::BlobArray<uint16_t>> compressed_colors;
+        std::optional<hrz::BlobArrayAllocation<lm::ubvec3>> decompressed_colors_allocation;
 
         bool has_transparent_color = false;
         my::VertexRate colors_rate{};
         my::VertexFormat colors_format{};
-        std::variant<hrz::blobs::BlobHandle, lm::ubvec4> colors;
+        std::variant<hrz::BlobArray<lm::ubvec4>, hrz::BlobArray<lm::ubvec3>, lm::ubvec4> colors;
+
+        // Used temporarily to compress normals in float3 format.
+        std::optional<hrz::BlobArray<lm::vec3>> normals;
+        std::optional<hrz::BlobArrayAllocation<uint16_t>> compressed_normals_allocation;
 
         my::VertexRate compressed_normals_rate{};
-        std::variant<hrz::blobs::BlobHandle, uint16_t> compressed_normals;
+        std::variant<hrz::BlobArray<uint16_t>, uint16_t> compressed_normals;
 
         my::VertexRate batch_ids_rate{};
         my::VertexFormat batch_ids_format{};
-        std::variant<hrz::blobs::BlobHandle, uint32_t> batch_ids;
+        std::variant<
+            hrz::BlobArray<uint8_t>,
+            hrz::BlobArray<uint16_t>,
+            hrz::BlobArray<uint32_t>,
+            uint32_t>
+            batch_ids;
 
         hrz::BlobArray<uint64_t> feature_ids;
     };

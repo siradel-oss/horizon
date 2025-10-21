@@ -3,12 +3,18 @@
 #include "hrz_common_blob_allocator.h"
 #include "hrz_common_metadata.h"
 
+#include <hrz_fnd_unsafe.h>
+
 #include <cassert>
+#include <optional>
 #include <span>
 #include <type_traits>
 
 namespace hrz
 {
+template<typename T>
+class BlobArrayAllocation;
+
 // An analogue to `std::array` that owns data stored in a blob.
 //
 // An instance of this class is always valid.
@@ -30,24 +36,44 @@ class BlobArray
 public:
     BlobArray() : _blob({}), _size(0) {}
 
+private:
     BlobArray(BlobAllocator* allocator, blobs::BlobHandle blob) :
         _blob(std::move(blob)), _size(_blob.data_size() / sizeof(T))
     {
         assert(_blob.is_valid());
         assert(_blob.check_integrity());
+        assert(_blob.data_alignment() % alignof(T) == 0);
 
         register_blob_metadata(allocator, "type"_ss, "blob array"_ss);
     }
 
-private:
     BlobArray(blobs::BlobHandle blob) : _blob(std::move(blob)), _size(_blob.data_size() / sizeof(T))
     {
         assert(_blob.is_valid());
         assert(_blob.check_integrity());
-        assert(_blob.data_size() % sizeof(T) == 0);
+        assert(_blob.data_alignment() % alignof(T) == 0);
     }
 
 public:
+    // Call this function where you cannot guarantee the alignment of the blob.
+    static std::optional<BlobArray> make_blob_array(
+        BlobAllocator* allocator,
+        blobs::BlobHandle blob)
+    {
+        if (!blob.is_valid() || (blob.data_alignment() % alignof(T) != 0))
+        {
+            return std::nullopt;
+        }
+
+        return {BlobArray(allocator, std::move(blob))};
+    }
+
+    // @Safety Only call this if you can guarantee the alignment of the blob.
+    static BlobArray make_blob_array(unsafe, BlobAllocator* allocator, blobs::BlobHandle blob)
+    {
+        return BlobArray(allocator, std::move(blob));
+    }
+
     blobs::BlobHandle blob() const { return _blob; }
 
     size_t size() const { return _size; }
@@ -75,15 +101,19 @@ public:
         }
     }
 
-    BlobArray make_sub_array(size_t offset, size_t size) const
+    BlobArray make_sub_array(unsafe unsafe, size_t offset, size_t size) const
     {
         assert(offset + size <= _size);
 
-        blobs::BlobHandle sub_blob = _blob.make_sub_blob(offset * sizeof(T), size * sizeof(T));
+        blobs::BlobHandle sub_blob =
+            _blob.make_sub_blob(unsafe, offset * sizeof(T), size * sizeof(T));
         return BlobArray(std::move(sub_blob));
     }
 
-    BlobArray make_sub_array(size_t offset) const { return make_sub_array(offset, _size - offset); }
+    BlobArray make_sub_array(unsafe unsafe, size_t offset) const
+    {
+        return make_sub_array(unsafe, offset, _size - offset);
+    }
 
     struct Data
     {
@@ -335,7 +365,9 @@ public:
         }
 
         auto blob = blobs::to_blob(blob_allocator, _ticket);
-        return BlobArray<T>(blob_allocator, std::move(blob));
+
+        return BlobArray<T>::make_blob_array(
+            hrz::unsafe("The blob is a root blob"), blob_allocator, std::move(blob));
     }
 
     size_t requested_size() const { return _requested_size; }

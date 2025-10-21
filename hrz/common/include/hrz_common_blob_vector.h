@@ -240,7 +240,8 @@ public:
         {
             blobs::shrink_blob(_allocator, _blob, sizeof(T) * _size);
 
-            array = {BlobArray<T>(_allocator, std::move(_blob))};
+            array = {BlobArray<T>::make_blob_array(
+                hrz::unsafe("The blob is a root blob"), _allocator, std::move(_blob))};
         }
         else
         {

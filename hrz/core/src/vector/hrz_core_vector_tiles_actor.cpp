@@ -1975,7 +1975,9 @@ struct VectorTilesActor : public Actor
             }
             else
             {
-                auto point_view = BlobArrayView<lm::dvec2>(
+                auto point_view = BlobArrayView<lm::dvec2>::make_blob_array_view(
+                    hrz::unsafe(
+                        "Converting from a blob array of dvec3 to a blob array view of dvec2"),
                     geometry.repr.geometry.points.blob(), geometry.repr.geometry.points.size(), 0,
                     sizeof(lm::dvec3));
                 _elevation_query_channel.send(
@@ -1994,7 +1996,9 @@ struct VectorTilesActor : public Actor
             }
             else
             {
-                auto point_view = BlobArrayView<lm::dvec2>(
+                auto point_view = BlobArrayView<lm::dvec2>::make_blob_array_view(
+                    hrz::unsafe(
+                        "Converting from a blob array of dvec3 to a blob array view of dvec2"),
                     geometry.repr.geometry.features.blob(), geometry.repr.geometry.features.size(),
                     offsetof(vector_data::VectorTileGeometry::Feature, anchor),
                     sizeof(vector_data::VectorTileGeometry::Feature));
@@ -2391,7 +2395,9 @@ struct VectorTilesActor : public Actor
 
             if (content.geometry.repr.geometry.features.blob().is_valid())
             {
-                auto anchors_view = BlobArrayView<lm::dvec3>(
+                auto anchors_view = BlobArrayView<lm::dvec3>::make_blob_array_view(
+                    hrz::unsafe("Converting from a blob array of `Feature` to a blob array view of "
+                                "a property of these instances"),
                     content.geometry.repr.geometry.features.blob(),
                     content.geometry.repr.geometry.features.size(),
                     offsetof(vector_data::VectorTileGeometry::Feature, anchor),

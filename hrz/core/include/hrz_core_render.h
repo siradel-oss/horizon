@@ -5,6 +5,7 @@
 #include "monitoring/hrz_core_monitoring_gpu.h"
 
 #include <hrz_common_blob_allocator.h>
+#include <hrz_common_blob_array.h>
 #include <hrz_common_metadata.h>
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_shader_defines.h>
@@ -503,6 +504,43 @@ struct VertexInputBuilder
         my::VertexRate rate)
     {
         add_input_stream_raw(index, std::as_bytes(data), format, rate);
+    }
+
+    template<typename T>
+    void add_input_stream(
+        int index,
+        const BlobArray<T>& data,
+        my::VertexFormat format,
+        my::VertexRate rate)
+    {
+        add_input_stream(index, data.blob(), format, rate);
+    }
+
+    template<typename T>
+    void add_input_stream(
+        int index,
+        const std::variant<BlobArray<T>, T>& data,
+        my::VertexFormat format,
+        my::VertexRate rate)
+    {
+        std::visit(
+            [this, index, format, rate](const auto& arg)
+            {
+                using ArgType = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<ArgType, BlobArray<T>>)
+                {
+                    add_input_stream(index, arg, format, rate);
+                }
+                else if constexpr (std::is_same_v<ArgType, T>)
+                {
+                    add_input_stream(index, std::span<const T>(&arg, 1), format, rate);
+                }
+                else
+                {
+                    static_assert(hrz::always_false<ArgType>, "Unexpected type");
+                }
+            },
+            data);
     }
 
     template<typename T>

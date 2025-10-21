@@ -10,6 +10,7 @@
 #include <hrz_common_geo.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_mem.h>
+#include <hrz_fnd_overload.h>
 #include <hrz_fnd_static_vector.h>
 
 namespace
@@ -214,18 +215,38 @@ public:
         _renderable.render_data.point_count = (uint32_t)geometry.point_count;
 
         {
+            auto positions = std::visit(
+                hrz::overload{
+                    [](const hrz::BlobArray<lm::vec3>& a) { return a.blob(); },
+                    [](const hrz::BlobArray<lm::usvec3>& a) { return a.blob(); }},
+                geometry.positions);
+
+            auto colors = std::visit<std::variant<blobs::BlobHandle, lm::ubvec4>>(
+                hrz::overload{
+                    [](const hrz::BlobArray<lm::ubvec4>& a) { return a.blob(); },
+                    [](const hrz::BlobArray<lm::ubvec3>& a) { return a.blob(); },
+                    [](lm::ubvec4 c) { return c; }},
+                geometry.colors);
+
+            auto batch_ids = std::visit<std::variant<blobs::BlobHandle, uint32_t>>(
+                hrz::overload{
+                    [](const hrz::BlobArray<uint8_t>& a) { return a.blob(); },
+                    [](const hrz::BlobArray<uint16_t>& a) { return a.blob(); },
+                    [](const hrz::BlobArray<uint32_t>& a) { return a.blob(); },
+                    [](uint32_t c) { return c; }},
+                geometry.batch_ids);
+
             hrz::render::VertexInputBuilder builder;
-            builder.add_input_stream<hrz::empty>(
-                InputStreamPosition, geometry.positions, geometry.positions_format,
+            builder.add_input_stream(
+                InputStreamPosition, positions, geometry.positions_format,
                 my::VertexRate::PerVertex);
             builder.add_input_stream(
-                InputStreamColor, geometry.colors, geometry.colors_format, geometry.colors_rate);
+                InputStreamColor, colors, geometry.colors_format, geometry.colors_rate);
             builder.add_input_stream(
                 InputStreamCompressedNormal, geometry.compressed_normals, my::VertexFormat::UInt16,
                 geometry.compressed_normals_rate);
             builder.add_input_stream(
-                InputStreamBatchId, geometry.batch_ids, geometry.batch_ids_format,
-                geometry.batch_ids_rate);
+                InputStreamBatchId, batch_ids, geometry.batch_ids_format, geometry.batch_ids_rate);
 
             auto [vbo, vi] =
                 builder.build(render, owner.system, owner.layer_id, {{"content", "point cloud"}});

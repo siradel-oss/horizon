@@ -88,11 +88,14 @@ std::optional<blobs::BlobHandle> _retrieve_data_from_assets_loader(
         {
             if (length > 0)
             {
-                blob = {blobs::make_sub_blob(ba, full_blob, offset, length)};
+                blob = {blobs::make_sub_blob(
+                    hrz::unsafe("Offset and length are checked above"), ba, full_blob, offset,
+                    length)};
             }
             else
             {
-                blob = {blobs::make_sub_blob(ba, full_blob, offset)};
+                blob = {blobs::make_sub_blob(
+                    hrz::unsafe("Offset is checked above"), ba, full_blob, offset)};
             }
         }
         else

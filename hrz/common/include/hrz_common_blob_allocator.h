@@ -3,6 +3,7 @@
 #include "hrz_common_metadata.h"
 #include "hrz_common_monitoring_defs.h"
 
+#include <hrz_fnd_unsafe.h>
 #include <hrz_monitoring.h>
 
 #include <cstddef>
@@ -21,7 +22,7 @@ namespace blobs
 using BlobId = uint64_t;
 
 static constexpr BlobId NO_BLOB = 0;
-static constexpr size_t BLOB_ALIGNMENT = 8;
+static constexpr size_t BLOB_ALIGNMENT = alignof(std::max_align_t);
 
 enum BlobState
 {
@@ -241,11 +242,15 @@ public:
     BlobData get_data() const;
     MutableBlobData get_mutable_data() const;
     size_t data_size() const;
+    size_t data_alignment() const;
 
     bool check_integrity() const;
 
-    BlobHandle make_sub_blob(size_t offset) const;
-    BlobHandle make_sub_blob(size_t offset, size_t size) const;
+    BlobHandle make_sub_blob(unsafe, size_t offset) const;
+    BlobHandle make_sub_blob(unsafe, size_t offset, size_t size) const;
+
+    std::optional<BlobHandle> make_sub_blob(size_t offset) const;
+    std::optional<BlobHandle> make_sub_blob(size_t offset, size_t size) const;
 
 private:
     void acquire();
@@ -256,8 +261,14 @@ private:
 
     friend std::optional<BlobHandle> allocate_blob_sync(BlobAllocator* allocator, size_t size);
     friend BlobHandle to_blob(BlobAllocator*, AllocationTicket&);
-    friend BlobHandle make_sub_blob(BlobAllocator*, const BlobHandle&, size_t);
-    friend BlobHandle make_sub_blob(BlobAllocator*, const BlobHandle&, size_t, size_t);
+    friend BlobHandle make_sub_blob(unsafe, BlobAllocator*, const BlobHandle&, size_t);
+    friend BlobHandle make_sub_blob(unsafe, BlobAllocator*, const BlobHandle&, size_t, size_t);
+    friend std::optional<BlobHandle> make_sub_blob(BlobAllocator*, const BlobHandle&, size_t);
+    friend std::optional<BlobHandle> make_sub_blob(
+        BlobAllocator*,
+        const BlobHandle&,
+        size_t,
+        size_t);
     friend void shrink_blob(BlobAllocator*, const BlobHandle&, size_t);
     friend void register_metadata(
         BlobAllocator*,
@@ -416,14 +427,38 @@ std::optional<BlobHandle> allocate_blob_sync(BlobAllocator*, size_t size);
 /**
  * Create a handle to a blob whose data is contained in an existing
  * blob, at the given offset, up to the end of the existing blob.
+ * @Safety Only call this function if you can guarantee that the offset
+ * is not larger than the size of the blob.
  */
-BlobHandle make_sub_blob(BlobAllocator*, const BlobHandle&, size_t offset);
+BlobHandle make_sub_blob(unsafe, BlobAllocator*, const BlobHandle&, size_t offset);
 
 /**
  * Create a handle to a blob whose data is contained in an existing
  * blob, at the given offset, with the given size.
+ * @Safety Only call this function if you can guarantee that offset +
+ * size is not larger than the size of the blob.
  */
-BlobHandle make_sub_blob(BlobAllocator*, const BlobHandle&, size_t offset, size_t size);
+BlobHandle make_sub_blob(unsafe, BlobAllocator*, const BlobHandle&, size_t offset, size_t size);
+
+/**
+ * Create a handle to a blob whose data is contained in an existing
+ * blob, at the given offset, up to the end of the existing blob.
+ * Call this function is you cannot guarantee that the offset is less
+ * than the size of the blob.
+ */
+std::optional<BlobHandle> make_sub_blob(BlobAllocator*, const BlobHandle&, size_t offset);
+
+/**
+ * Create a handle to a blob whose data is contained in an existing
+ * blob, at the given offset, with the given size.
+ * Call this function is you cannot guarantee that offset + size
+ * is less than the size of the blob.
+ */
+std::optional<BlobHandle> make_sub_blob(
+    BlobAllocator*,
+    const BlobHandle&,
+    size_t offset,
+    size_t size);
 
 /**
  * Shrink a blob.
@@ -485,17 +520,28 @@ void dump_blobs(const BlobAllocator*, const LayersInfo*, hrz_monitoring::Message
  */
 void work(BlobAllocator*);
 
-inline BlobHandle BlobHandle::make_sub_blob(size_t offset) const
+inline BlobHandle BlobHandle::make_sub_blob(::hrz::unsafe unsafe, size_t offset) const
 {
     if (!allocator) return {};
+    return ::hrz::blobs::make_sub_blob(unsafe, allocator, *this, offset);
+}
+
+inline BlobHandle BlobHandle::make_sub_blob(::hrz::unsafe unsafe, size_t offset, size_t size) const
+{
+    if (!allocator) return {};
+    return ::hrz::blobs::make_sub_blob(unsafe, allocator, *this, offset, size);
+}
+
+inline std::optional<BlobHandle> BlobHandle::make_sub_blob(size_t offset) const
+{
+    if (!allocator) return std::nullopt;
     return ::hrz::blobs::make_sub_blob(allocator, *this, offset);
 }
 
-inline BlobHandle BlobHandle::make_sub_blob(size_t offset, size_t size) const
+inline std::optional<BlobHandle> BlobHandle::make_sub_blob(size_t offset, size_t size) const
 {
-    if (!allocator) return {};
+    if (!allocator) return std::nullopt;
     return ::hrz::blobs::make_sub_blob(allocator, *this, offset, size);
 }
-
 } // namespace blobs
 } // namespace hrz
