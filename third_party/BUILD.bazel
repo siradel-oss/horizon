@@ -49,7 +49,10 @@ target_alias(
 
 alias(
     name = "harfbuzz",
-    actual = "@harfbuzz//:harfbuzz",
+    actual = select({
+        "//:os_web": "@harfbuzz//:harfbuzz_tiny",
+        "//conditions:default": "@harfbuzz//:harfbuzz",
+    }),
 )
 
 alias(
