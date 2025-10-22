@@ -103,7 +103,13 @@ struct hash<hrz::TileCoords>
 
 namespace hrz
 {
-inline bool tile_usage_comp(const TileCoords& t1, int t1_uses, const TileCoords& t2, int t2_uses)
+inline bool tile_usage_comp(
+    const TileCoords& t1,
+    int t1_uses,
+    int t1_past_uses,
+    const TileCoords& t2,
+    int t2_uses,
+    int t2_past_uses)
 {
     if (t1_uses != t2_uses)
     {
@@ -114,6 +120,10 @@ inline bool tile_usage_comp(const TileCoords& t1, int t1_uses, const TileCoords&
     if (t1_uses != t2_uses)
     {
         return t1_uses > t2_uses;
+    }
+    else if (t1_past_uses != t2_past_uses)
+    {
+        return t1_past_uses > t2_past_uses;
     }
     else if (t1.lod != t2.lod)
     {

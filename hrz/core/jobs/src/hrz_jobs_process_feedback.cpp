@@ -145,7 +145,7 @@ hrz::JobResult run(
         std::sort(
             response.tile_usage.begin(), response.tile_usage.end(),
             [](const auto& t1, const auto& t2)
-            { return tile_usage_comp(t1.coords, t1.uses, t2.coords, t2.uses); });
+            { return tile_usage_comp(t1.coords, t1.uses, 0, t2.coords, t2.uses, 0); });
     }
 
     return hrz::JobResult::SUCCESS;

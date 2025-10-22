@@ -184,6 +184,7 @@ class RasterMergeGroup
         bool in_atlas;
         TileCoords coords;
         int uses;
+        int past_uses;
         hrz_jobs::ComposeRasterTileTicket compose_tile_ticket;
         hrz_jobs::CompressBlobImageTicket compress_tile_ticket;
         BlobImage image;

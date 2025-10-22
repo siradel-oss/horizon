@@ -378,6 +378,9 @@ void RasterMergeGroup::update_requested_tiles(
     // Reset use counts for all previously requested tiles.
     for (auto& tile : _tiles)
     {
+        constexpr float decay_factor = 0.75f;
+        tile.second.past_uses =
+            std::max((int)(tile.second.past_uses * decay_factor), tile.second.uses);
         tile.second.uses = 0;
     }
 
@@ -414,6 +417,7 @@ void RasterMergeGroup::update_requested_tiles(
                 ComposedTile composed_tile;
                 composed_tile.coords = requested_tile.coords;
                 composed_tile.uses = requested_tile.uses;
+                composed_tile.past_uses = 0;
                 composed_tile.status = ComposedTile::Status::WaitingForProvider;
                 composed_tile.in_atlas = false;
 
@@ -458,7 +462,10 @@ void RasterMergeGroup::update_requested_tiles(
     std::sort(
         _sorted_tiles.begin(), _sorted_tiles.end(),
         [](const ComposedTile* t1, const ComposedTile* t2)
-        { return tile_usage_comp(t1->coords, t1->uses, t2->coords, t2->uses); });
+        {
+            return tile_usage_comp(
+                t1->coords, t1->uses, t1->past_uses, t2->coords, t2->uses, t2->past_uses);
+        });
 
     // Touch tiles that are already in the atlas and must stay there.
     for (unsigned int tile_index = 0;
