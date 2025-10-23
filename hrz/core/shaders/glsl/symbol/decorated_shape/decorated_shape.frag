@@ -52,8 +52,7 @@ void main()
     if (v_border_size > 0.0) border_alpha = aastep(v_border_radius - v_border_size, dist);
 
     vec4 color = vec4(mix(v_color, v_border_color, border_alpha));
-    o_color = vec4(color.rgb, color.a * alpha);
-    alpha = o_color.a;
+    o_color = color * alpha;
 #endif
 
     if (alpha <= 0.0) discard;

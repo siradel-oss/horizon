@@ -103,9 +103,8 @@ void main()
     pattern_color = blend_premultiplied(
         hrz_tile.polygon_pattern_color_blend_mode,
         pattern_color,
-        v_pattern_color.rgb,
+        v_pattern_color,
         v_pattern_color_blend_strength);
-    pattern_color *= v_pattern_color.a;
 
     color = pattern_color + color * (1.0 - pattern_color.a);
 #endif

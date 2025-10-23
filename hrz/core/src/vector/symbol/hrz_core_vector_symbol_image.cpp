@@ -150,6 +150,8 @@ void ImageElementSystem::collect_shaders(hrz::GpuResourceContext* rc)
     res.initial_state.color_blend.enable = true;
     res.initial_state.color_blend.color.src = my::ColorBlendState::One;
     res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+    res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+    res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
     res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
     rc->alloc(&res, hrz::monitoring::systems::Symbols);
 

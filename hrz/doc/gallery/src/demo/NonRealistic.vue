@@ -5,20 +5,110 @@ import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 import { applyScene, applySceneTemplate, getLayerByName } from "@/utils/scenes";
 import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
-import FullscreenSource from "@/component/FullscreenSource.vue";
+import { ref, watch, computed } from "vue";
 
-let api: HrzApi.AsyncApi;
-
-async function onHorizonReady(api_: HrzApi.AsyncApi) {
-    api = api_;
-    applySceneTemplate(api, "non_realistic_ambiance");
-    applySceneTemplate(api, "plan_ign");
-    applySceneTemplate(api, "ign_srtm_dtm");
-    applySceneTemplate(api, "initial_viewpoint_france_far");
+enum SkyMode {
+    ATMOSPHERE_AND_SPACE = "Atmosphere and space",
+    ATMOSPHERE_ONLY = "Atmosphere only",
+    NO_SKY = "No sky",
 }
 
+let api = ref<HrzApi.AsyncApi | null>(null);
+let atmosphereColor = ref<HrzProtocol.IColor | null>(null);
+let spaceColor = ref<HrzProtocol.IColor | null>(null);
+let transitionDistance = ref(0);
+
+let skyMode = ref<SkyMode>(SkyMode.ATMOSPHERE_AND_SPACE);
+
+async function onHorizonReady(api_: HrzApi.AsyncApi) {
+    api.value = api_;
+    applySceneTemplate(api.value, "non_realistic_ambiance").then(async function () {
+        atmosphereColor.value = await HrzApi.SceneViewSettingsPathBuilder.create(
+            HrzProtocol.SceneViewIndex.SCENE_VIEW_0
+        )
+            .ambient()
+            .sky()
+            .staticAtmosphereColor()
+            .get(api.value!);
+        spaceColor.value = await HrzApi.SceneViewSettingsPathBuilder.create(
+            HrzProtocol.SceneViewIndex.SCENE_VIEW_0
+        )
+            .ambient()
+            .sky()
+            .staticSpaceColor()
+            .get(api.value!);
+        transitionDistance.value = await HrzApi.SceneViewSettingsPathBuilder.create(
+            HrzProtocol.SceneViewIndex.SCENE_VIEW_0
+        )
+            .ambient()
+            .sky()
+            .staticColorTransitionEndDistance()
+            .get(api.value!);
+    });
+    applySceneTemplate(api.value, "plan_ign");
+    applySceneTemplate(api.value, "ign_srtm_dtm");
+    applySceneTemplate(api.value, "initial_viewpoint_france_far");
+}
+
+async function setAtmosphereColor(color: HrzProtocol.IColor) {
+    if (api.value) {
+        await HrzApi.SceneViewSettingsPathBuilder.create(HrzProtocol.SceneViewIndex.SCENE_VIEW_0)
+            .ambient()
+            .sky()
+            .staticAtmosphereColor()
+            .set(api.value, color);
+    }
+}
+
+async function setSpaceColor(color: HrzProtocol.IColor) {
+    if (api.value) {
+        await HrzApi.SceneViewSettingsPathBuilder.create(HrzProtocol.SceneViewIndex.SCENE_VIEW_0)
+            .ambient()
+            .sky()
+            .staticSpaceColor()
+            .set(api.value, color);
+    }
+}
+
+watch([skyMode], async function () {
+    if (!api.value || !atmosphereColor.value || !spaceColor.value) {
+        return;
+    }
+
+    switch (skyMode.value) {
+        case SkyMode.ATMOSPHERE_AND_SPACE:
+            await setAtmosphereColor(atmosphereColor.value);
+            await setSpaceColor(spaceColor.value);
+            break;
+        case SkyMode.ATMOSPHERE_ONLY:
+            await setAtmosphereColor(atmosphereColor.value);
+            await setSpaceColor({ r: 0, g: 0, b: 0, a: 0 });
+            break;
+        case SkyMode.NO_SKY:
+            await setAtmosphereColor({ r: 0, g: 0, b: 0, a: 0 });
+            await setSpaceColor({ r: 0, g: 0, b: 0, a: 0 });
+            break;
+    }
+});
+
+watch([transitionDistance], async function () {
+    if (!api.value) {
+        return;
+    }
+
+    await HrzApi.SceneViewSettingsPathBuilder.create(HrzProtocol.SceneViewIndex.SCENE_VIEW_0)
+        .ambient()
+        .sky()
+        .staticColorTransitionEndDistance()
+        .set(api.value, transitionDistance.value);
+});
+
 async function retrieveAmbientSettings(): Promise<any> {
-    return (await HrzApi.SceneViewSettingsPathBuilder.create(0).ambient().get(api)).toJSON();
+    if (api.value) {
+        return (
+            await HrzApi.SceneViewSettingsPathBuilder.create(0).ambient().get(api.value)
+        ).toJSON();
+    }
 }
 </script>
 <template>
@@ -37,6 +127,36 @@ async function retrieveAmbientSettings(): Promise<any> {
                 <p>
                     One example of the usefulness of these ambient settings is to display raster
                     with baked-in hillshading.
+                </p>
+                <p>
+                    Additionally, by setting static sky colours to transparent colours, the scene
+                    can be integrated more seamlessly with the host web page: the elements below the
+                    canvas that contains the scene will be visible through the transparent sky. This
+                    allows for example to display a simple sphere, reminiscent of a globe.
+                </p>
+                <p>
+                    <label>Sky configuration</label>
+                    <select v-model.number="skyMode">
+                        <option v-for="value in SkyMode" :value="value" :key="value">
+                            {{ value }}
+                        </option>
+                    </select>
+                </p>
+                <p>
+                    <label
+                        >Transition distance ({{
+                            $filters.formatNumber(transitionDistance)
+                        }}
+                        px)</label
+                    >
+                    <input
+                        type="range"
+                        min="0"
+                        max="512"
+                        step="1"
+                        v-model.number="transitionDistance"
+                        :disabled="skyMode === SkyMode.NO_SKY"
+                    />
                 </p>
                 <p>
                     <FullscreenSceneModel

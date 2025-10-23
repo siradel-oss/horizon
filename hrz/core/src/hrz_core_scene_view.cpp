@@ -72,7 +72,7 @@ public:
         depth.height = 1;
 
         my::RenderGraph::ResourceInfo color;
-        color.format = my::TextureFormat::RGB8;
+        color.format = my::TextureFormat::RGBA8;
         color.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
         color.width = 1;
         color.height = 1;
@@ -2254,6 +2254,8 @@ public:
         res.initial_state.color_blend.color.op = my::ColorBlendState::Op::Add;
         res.initial_state.color_blend.color.src = my::ColorBlendState::Factor::One;
         res.initial_state.color_blend.color.dst = my::ColorBlendState::Factor::OneMinusSrcAlpha;
+        res.initial_state.color_blend.alpha.src = my::ColorBlendState::Factor::One;
+        res.initial_state.color_blend.alpha.dst = my::ColorBlendState::Factor::OneMinusSrcAlpha;
         res.initial_state.depth.test = false;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.stencil.enable = false;

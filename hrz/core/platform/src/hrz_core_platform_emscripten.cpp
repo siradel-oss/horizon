@@ -866,7 +866,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
 
     EmscriptenWebGLContextAttributes attributes;
     emscripten_webgl_init_context_attributes(&attributes);
-    attributes.alpha = false;
+    attributes.alpha = true;
+    attributes.premultipliedAlpha = true;
     attributes.depth = false;
     attributes.stencil = false;
     attributes.antialias = false;

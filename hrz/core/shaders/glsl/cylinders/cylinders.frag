@@ -79,6 +79,7 @@ void main()
     }
 
     vec4 color = mix(v_empty_color, v_color, dash_value);
+    color.rgb *= color.a;
 
     if (color.a == 0.0) discard;
 

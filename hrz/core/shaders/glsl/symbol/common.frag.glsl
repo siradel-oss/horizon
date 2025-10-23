@@ -50,7 +50,7 @@ void draw_quick_highlight()
 #ifdef SYMBOL_VISUAL
     if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
-        o_color = apply_quick_highlight_color(o_color);
+        o_color = apply_quick_highlight_color_premultiplied(o_color);
     }
 #endif
 }

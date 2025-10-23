@@ -60,6 +60,7 @@ void fetch_pattern_style(uint style_index)
     v_pattern_transform[1].xy = uintBitsToFloat(data1.zw);
     v_color = unpackColor(data2.x);
     v_pattern_color = unpackColor(data2.y);
+    v_pattern_color.rgb *= v_pattern_color.a;
     v_pattern_color_blend_strength = uintBitsToFloat(data2.z);
 
     if (sprite_size.x == 0.0 || sprite_size.y == 0.0)

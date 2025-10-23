@@ -23,7 +23,9 @@ void main()
 
     const float padding = DECORATED_BOX_PADDING;
     v_color = i_color;
+    v_color.rgb *= v_color.a;
     v_border_color = i_border_color;
+    v_border_color.rgb *= v_border_color.a;
     v_border_radius = i_border_size_radius.y;
     v_border_size = i_border_size_radius.x;
     v_size = i_size * 0.5;

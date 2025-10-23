@@ -109,8 +109,10 @@ struct Cube : public my::Renderer::Renderable
         res.outputs = outputs;
         res.initial_state.depth.test = true;
         res.initial_state.color_blend.enable = true;
-        res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+        res.initial_state.color_blend.color.src = my::ColorBlendState::One;
         res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+        res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+        res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
 
         rc->alloc(&res, hrz::monitoring::systems::Viewsheds);
     }
@@ -298,10 +300,8 @@ RenderRequest update(ViewshedsSystem* sys, const CameraViewInfo& cam, SceneModel
         sys->cube.draw_from_main_cam = settings.draw_wireframe_from_position();
 
         auto visible_color = hrz::to_lm(settings.visible_color());
-        visible_color.xyz *= visible_color.a;
         sys->visible_color[0] = visible_color;
         auto hidden_color = hrz::to_lm(settings.hidden_color());
-        hidden_color.xyz *= hidden_color.a;
         sys->hidden_color[0] = hidden_color;
 
         sys->model_updated = false;

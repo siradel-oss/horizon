@@ -30,5 +30,6 @@ void main()
     v_uv_size = i_uv_size;
     v_uv = write_perspective_uv(i_uv, in_element_pos.w);
     v_color = i_color;
+    v_color.rgb *= v_color.a;
 }
 

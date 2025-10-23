@@ -96,6 +96,10 @@ vec4 compute_material_color_lin(uint blend_mode, float blend_strength, out float
         color_lin.a *= v_feature_color_lin.a;
     }
 
+    // Convert the alpha from sRGB's gamma.
+    color_lin.a = pow(color_lin.a, 2.2);
+    color_lin.rgb *= color_lin.a;
+
     return color_lin;
 }
 
@@ -125,6 +129,9 @@ vec4 apply_color_decoration(vec4 color_lin, vec3 normal, uvec3 feature_reference
     }
 
     vec4 color = linear_to_srgb(color_lin);
+    // Convert the alpha to sRGB's gamma.
+    color.a = pow(color.a, 1.0 / 2.2);
+
     color = compute_viewshed_color(color, normal);
     color = mix_premultiplied_colors(color, compute_clip_outline_color());
 

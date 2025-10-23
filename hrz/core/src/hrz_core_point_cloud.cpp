@@ -430,8 +430,10 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         my::ShaderDerivativeResource res_d(
             opaque_shader, res, PointCloud_visual_transparent_name.c_str());
         res_d.initial_state.color_blend.enable = true;
-        res_d.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+        res_d.initial_state.color_blend.color.src = my::ColorBlendState::One;
         res_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+        res_d.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+        res_d.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
         rc->alloc(&res_d, hrz::monitoring::systems::PointCloud);
     }
 

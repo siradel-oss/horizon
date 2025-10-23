@@ -20,6 +20,7 @@ void main()
     handle_selection(anchor);
 
     v_color = i_color;
+    v_color.rgb *= v_color.a;
 
 #ifdef SYMBOL_VISUAL
     v_feature_id = anchor.feature_id;

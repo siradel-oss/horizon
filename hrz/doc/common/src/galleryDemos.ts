@@ -107,7 +107,7 @@ export const DEFINITIONS: { [id: string]: Definition } = {
     },
     nonRealistic: {
         title: "Non-realistic rendering",
-        tags: ["ambiance"],
+        tags: ["ambiance", "integration"],
         thumbnailFile: "non_realistic.webp",
     },
     markers: {

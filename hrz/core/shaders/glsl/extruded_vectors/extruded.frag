@@ -58,6 +58,7 @@ void main()
 
     vec3 color = v_color.rgb * sun;
     o_color = vec4(linear_to_srgb(color), v_color.a);
+    o_color.rgb *= o_color.a;
 
     o_color = compute_viewshed_color(o_color, normal);
     o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());

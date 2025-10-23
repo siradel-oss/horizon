@@ -822,8 +822,10 @@ struct ThreeDTilesSystem
             res.initial_state.depth.compare = my::DepthState::LessEqual;
 
             res.initial_state.color_blend.enable = false;
-            res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+            res.initial_state.color_blend.color.src = my::ColorBlendState::One;
             res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+            res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+            res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
 
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
 

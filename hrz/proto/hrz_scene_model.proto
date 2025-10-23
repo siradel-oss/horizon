@@ -1960,11 +1960,9 @@ message SkySettings {
     float                        attenuation                            = 2;
 
     // Color of the atmosphere used when `mode` is `SKY_STATIC`.
-    // Alpha is ignored.
     Color                        static_atmosphere_color                = 3;
 
     // Color of the outer space used when `mode` is `SKY_STATIC`.
-    // Alpha is ignored.
     Color                        static_space_color                     = 4;
 
     // Distance from the horizon at which the sky color starts transitioning
@@ -2048,7 +2046,6 @@ message AmbientSettings {
     FogSettings             secondary_fog       = 20;
 
     // This color is displayed under the transparent terrain.
-    // Alpha is ignored.
     Color                   underground_color   = 10;
 }
 

@@ -21,8 +21,7 @@ void main()
     if (color.a < 0.1) discard;
 
 #ifdef SYMBOL_VISUAL
-    o_color = blend_premultiplied(hrz_image.blend_mode, color, v_color.rgb, hrz_image.blend_strength);
-    o_color *= v_color.a;
+    o_color = blend_premultiplied(hrz_image.blend_mode, color, v_color, hrz_image.blend_strength);
 #endif
 
     draw_quick_highlight();

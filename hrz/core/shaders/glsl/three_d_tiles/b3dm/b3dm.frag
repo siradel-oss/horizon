@@ -47,13 +47,10 @@ void main()
     if (hrz_mesh.geometry.draw_under_flat_overlays)
     {
         vec4 color = linear_to_srgb(color_lin);
-        color.rgb *= color.a;
+        color.a = pow(color.a, 1.0 / 2.2);
         color = mix_premultiplied_colors(color, compute_overlay_color(v_overlay_cams_clip_pos));
-        if (color.a > 0.0)
-        {
-            color.rgb /= color.a;
-        }
         color_lin = srgb_to_linear(color);
+        color_lin.a = pow(color_lin.a, 2.2);
     }
 
     uvec3 feature_reference = uvec3(hrz_mesh.geometry.feature_reference.r, v_feature_id);

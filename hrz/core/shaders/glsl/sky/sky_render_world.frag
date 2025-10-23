@@ -141,7 +141,7 @@ vec4 compute_fog(FogParams fog, float view_distance, float distance_to_altitude,
     f = 1.0 - exp(-f);
     f = clamp(f, 0.0, 1.0);
 
-    return vec4(fog.color.rgb, fog.color.a * f);
+    return vec4(fog.color.rgb * fog.color.a * f, fog.color.a * f);
 }
 #endif
 
@@ -149,7 +149,7 @@ void main()
 {
     vec2 bb_size = vec2(hrz_frame.viewport_size);
     vec2 uv = gl_FragCoord.xy / bb_size;
-    vec3 color = srgb_to_linear(texture(u_color, uv).rgb);
+    vec4 color = srgb_to_linear(texture(u_color, uv));
     float depth_raw = texture(u_depth, uv).r;
 
     bool in_sky = depth_raw >= 1.0;
@@ -187,18 +187,22 @@ void main()
 
         const float camera_height_fade_start = 200000.0;
         const float camera_height_fade_end   = 2000000.0;
-        float camera_height_factor = 1.0 - clamp((hrz_sky.altitude - camera_height_fade_start) / (camera_height_fade_end - camera_height_fade_start), 0.0, 1.0);
+        float camera_height_factor = 1.0 - clamp(
+            (hrz_sky.altitude - camera_height_fade_start) / (camera_height_fade_end - camera_height_fade_start),
+            0.0, 1.0);
 
         if (hrz_sky.fog[0].enabled)
         {
             vec4 fog = compute_fog(hrz_sky.fog[0], view_distance, distance_to_altitude, horizon_angle, in_sky);
-            color = mix(color, fog.rgb, fog.a * camera_height_factor);
+            fog *= camera_height_factor;
+            color = fog + color * (1.0 - fog.a);
         }
 
         if (hrz_sky.fog[1].enabled)
         {
             vec4 fog = compute_fog(hrz_sky.fog[1], view_distance, distance_to_altitude, horizon_angle, in_sky);
-            color = mix(color, fog.rgb, fog.a * camera_height_factor);
+            fog *= camera_height_factor;
+            color = fog + color * (1.0 - fog.a);
         }
     }
 #endif
@@ -212,17 +216,21 @@ void main()
         // between them.
 
         const float min_aerial_depth = float(HRZ_S_SKY_AERIAL_MAX_DEPTH) * 0.5;
-        vec3 aerial_contrib = color;
-        vec3 sky_view_contrib = color;
+        vec4 aerial_contrib = vec4(0.0);
+        vec4 sky_view_contrib = vec4(0.0);
 
         float atmosphere_opacity = smoothstep(hrz_frame.atmosphere_fade_start,
             hrz_frame.atmosphere_fade_end, depth);
 
-        vec3 coords = normalize(v_coords);
-        vec2 polar_uv = encode_sky_view_uv(coords, hrz_sky.horizon_horizon_angle);
-        vec4 in_scattered = texture(u_sky_view, polar_uv);
+        {
+            vec3 coords = normalize(v_coords);
+            vec2 polar_uv = encode_sky_view_uv(coords, hrz_sky.horizon_horizon_angle);
+            vec4 in_scattered = texture(u_sky_view, polar_uv);
 
-        sky_view_contrib = in_scattered.rgb * float(HRZ_S_SKY_EXPOSURE) * atmosphere_opacity + color * mix(1.0, in_scattered.a, atmosphere_opacity);
+            vec4 terrain_color = color * mix(1.0, in_scattered.a, atmosphere_opacity);
+            vec4 scattered_color = vec4(in_scattered.rgb * float(HRZ_S_SKY_EXPOSURE) * atmosphere_opacity, atmosphere_opacity);
+            sky_view_contrib = scattered_color + terrain_color;
+        }
 
         if (hrz_sky.altitude <= STRAT_RADIUS - EARTH_RADIUS && depth < float(HRZ_S_SKY_AERIAL_MAX_DEPTH))
         {
@@ -247,7 +255,9 @@ void main()
 
             vec4 in_scattered = mix(in_scattered_0, in_scattered_1, slice_fract);
 
-            aerial_contrib = in_scattered.rgb * float(HRZ_S_SKY_EXPOSURE) * atmosphere_opacity + color * mix(1.0, in_scattered.a, atmosphere_opacity);
+            vec4 terrain_color = color * mix(1.0, in_scattered.a, atmosphere_opacity);
+            vec4 scattered_color = vec4(in_scattered.rgb * float(HRZ_S_SKY_EXPOSURE) * atmosphere_opacity, atmosphere_opacity);
+            aerial_contrib = scattered_color + terrain_color;
         }
 
         float interpolation = 0.0;
@@ -264,5 +274,8 @@ void main()
     }
 #endif
 
-    o_color = vec4(linear_to_srgb(color), 1.0);
+    o_color = vec4(linear_to_srgb(color));
+
+    // Use sRGB's gamma on the alpha channel.
+    o_color.a = pow(o_color.a, 1.0 / 2.2);
 }

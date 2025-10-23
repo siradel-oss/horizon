@@ -659,9 +659,9 @@ def run_tests_in_context(ctx):
             if entry.name not in test_names:
                 report.results.append(entry)
                 report.total_tests += 1
-                if error_type == Result.ErrorType.None_:
+                if entry.error_type == Result.ErrorType.None_:
                     report.passed_tests += 1
-                elif error_type == Result.ErrorType.Aborted:
+                elif entry.error_type == Result.ErrorType.Aborted:
                     report.aborted_tests += 1
                 else:
                     report.failed_tests += 1

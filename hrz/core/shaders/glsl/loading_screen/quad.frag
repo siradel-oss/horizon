@@ -53,5 +53,6 @@ void main()
 		o_color = mix(blue_color, o_color, aastep(radius - 0.5, sdf(gl_FragCoord.xy, left, progress)));
     }
 
-    o_color.a *= hrz_load.fadeout;
+    o_color.rgb *= o_color.a;
+    o_color *= hrz_load.fadeout;
 }

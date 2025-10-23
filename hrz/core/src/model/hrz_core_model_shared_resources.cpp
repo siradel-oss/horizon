@@ -126,8 +126,10 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
 
     my::ShaderDerivativeResource res_d(single_opaque_shader, res, "Gltf_transparent");
     res_d.initial_state.color_blend.enable = true;
-    res_d.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+    res_d.initial_state.color_blend.color.src = my::ColorBlendState::One;
     res_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+    res_d.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+    res_d.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
     res_d.initial_state.rasterization.cull_mode = my::RasterizationState::None;
     rc->alloc(&res_d, hrz::monitoring::systems::Models);
 
@@ -357,8 +359,10 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
 
     my::ShaderDerivativeResource res_d(instanced_opaque_shader, res, "GltfInstanced_transparent");
     res_d.initial_state.color_blend.enable = true;
-    res_d.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+    res_d.initial_state.color_blend.color.src = my::ColorBlendState::One;
     res_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+    res_d.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+    res_d.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
     rc->alloc(&res_d, hrz::monitoring::systems::Models);
 
     const char* picking_color_outputs[] = {"o_object_reference", "o_depth_value"};
@@ -545,15 +549,19 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
 
     my::ShaderDerivativeResource res_d(b3dm_opaque_shader, res, "ThreeDTilesB3dm_transparent");
     res_d.initial_state.color_blend.enable = true;
-    res_d.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+    res_d.initial_state.color_blend.color.src = my::ColorBlendState::One;
     res_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+    res_d.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+    res_d.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
     rc->alloc(&res_d, hrz::monitoring::systems::Models);
 
     my::ShaderDerivativeResource res_f_d(
         b3dm_opaque_float_batch_ids_shader, res_f, "ThreeDTilesB3dmFloatBatchIds_transparent");
     res_f_d.initial_state.color_blend.enable = true;
-    res_f_d.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+    res_f_d.initial_state.color_blend.color.src = my::ColorBlendState::One;
     res_f_d.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+    res_f_d.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+    res_f_d.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
     rc->alloc(&res_f_d, hrz::monitoring::systems::Models);
 
     const char* picking_color_outputs[] = {"o_object_reference", "o_depth_value"};

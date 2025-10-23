@@ -106,6 +106,8 @@ void main()
 #   ifdef SYMBOL_TEXT_OUTLINE
     v_color = texelFetch(u_outline_colors, data_coords, 0);
 #   endif
+
+    v_color.rgb *= v_color.a;
 #elif defined(SYMBOL_PICKING) || defined(SYMBOL_SELECTION)
     float outline_alpha = texelFetch(u_outline_colors, data_coords, 0).a;
     if (outline_alpha == 0.0 || outline_width == 0.0)

@@ -38,22 +38,27 @@ vec4 blend(uint mode, vec4 base, vec3 color, float blend_strength)
     ));
 }
 
-// Only the base colour is expected to be premultiplied.
-vec4 blend_premultiplied(uint mode, vec4 base, vec3 color, float blend_strength)
+vec4 blend_premultiplied(uint mode, vec4 base, vec4 color, float blend_strength)
 {
     if (base.a != 0.0)
     {
         base.rgb /= base.a;
     }
 
+    if (color.a != 0.0)
+    {
+        color.rgb /= color.a;
+    }
+
     vec4 blended = blend(
         mode,
         base,
-        color,
+        color.rgb,
         blend_strength
     );
 
     blended.rgb *= blended.a;
+    blended *= color.a;
 
     return blended;
 }

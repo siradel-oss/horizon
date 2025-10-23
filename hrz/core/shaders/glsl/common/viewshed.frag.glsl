@@ -48,7 +48,15 @@ vec4 check_visibility_with_normal_correction(float shadow_map_value, vec3 normal
 
 vec4 apply_viewshed_color(vec4 in_color, vec4 viewshed_color)
 {
-    return vec4(mix_premultiplied_colors(in_color, viewshed_color).rgb, in_color.a);
+    if (in_color.a == 0.0 || viewshed_color.a == 0.0)
+    {
+        return in_color;
+    }
+
+    in_color.rgb /= in_color.a;
+    vec4 color = vec4(mix(in_color.rgb, viewshed_color.rgb, viewshed_color.a), in_color.a);
+    color.rgb *= color.a;
+    return color;
 }
 
 vec4 compute_viewshed_color(vec4 in_color ,vec3 normal)

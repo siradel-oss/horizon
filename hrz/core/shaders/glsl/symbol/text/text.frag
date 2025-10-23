@@ -39,14 +39,14 @@ void main()
     float alpha = aastep(text_edge, dist);
 
 #ifdef SYMBOL_VISUAL
-    alpha *= v_color.a;
-    if (alpha == 0.0) discard;
+    vec4 color = v_color * alpha;
+    if (color.a == 0.0) discard;
 #elif defined(SYMBOL_PICKING) || defined(SYMBOL_SELECTION)
     if (alpha < 0.25) discard;
 #endif
 
 #ifdef SYMBOL_VISUAL
-    o_color = vec4(v_color.rgb, alpha);
+    o_color = color;
 #endif
 
     draw_quick_highlight();

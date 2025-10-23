@@ -72,6 +72,11 @@ static inline uint32_t convert_rgba_color_to_uint(const lm::vec4& color)
     return rgba.r + (rgba.g << 8) + (rgba.b << 16) + (rgba.a << 24);
 }
 
+static inline lm::vec4 convert_byte_color_to_rgba(const lm::ubvec4& color)
+{
+    return lm::vec4{(float)color.r, (float)color.g, (float)color.b, (float)color.a} / 255.0f;
+}
+
 static inline lm::vec4 convert_uint_color_to_rgba(uint32_t c)
 {
     return lm::vec4{

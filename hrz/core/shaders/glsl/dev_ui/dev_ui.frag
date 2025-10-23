@@ -9,4 +9,5 @@ void main()
 {
     float tex_color = texture(u_atlas, v_uv).r;
     o_color = vec4(vec3(1), tex_color) * vec4(v_color);
+    o_color.rgb *= o_color.a;
 }

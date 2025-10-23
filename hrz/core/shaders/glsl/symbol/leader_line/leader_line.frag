@@ -16,8 +16,7 @@ void main()
     float aa = aastep(0.25, uv_x) - aastep(0.75, uv_x);
 
 #ifdef SYMBOL_VISUAL
-    o_color = v_color;
-    o_color.a *= aa;
+    o_color = v_color * aa;
 #endif
 
     draw_quick_highlight();

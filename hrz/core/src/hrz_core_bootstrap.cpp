@@ -94,7 +94,11 @@ void collect_present_shaders(hrz::GpuResourceContext* rc)
     res.samplers = samplers;
     res.output_count = HRZ_ARRAY_COUNT(outputs);
     res.outputs = outputs;
-    res.initial_state.color_blend.enable = false;
+    res.initial_state.color_blend.enable = true;
+    res.initial_state.color_blend.color.src = my::ColorBlendState::One;
+    res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+    res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+    res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
     res.initial_state.depth.test = false;
     res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
     res.initial_state.stencil.enable = false;
@@ -231,7 +235,15 @@ public:
             my::Rect vp = {0, 0, vp_width, vp_height};
 
             my::ClearTarget clear = {
-                my::Attachment::Color0, my::ClearValue::make_color_float(0, 0, 0, 1)};
+                my::Attachment::Color0,
+                my::ClearValue::make_color_float(
+                    0, 0, 0,
+#ifdef HRZ_EMSCRIPTEN
+                    0
+#else
+                    1
+#endif
+                    )};
 
             render->set_framebuffer(my::ResourceHandle::null(), {vp, vp});
             render->clear(1, &clear);
@@ -1571,8 +1583,10 @@ public:
             res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.color_blend.enable = true;
-            res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+            res.initial_state.color_blend.color.src = my::ColorBlendState::One;
             res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+            res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+            res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
             res.initial_state.depth.test = false;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.stencil.enable = false;

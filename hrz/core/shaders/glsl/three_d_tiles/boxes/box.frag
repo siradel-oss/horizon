@@ -14,7 +14,7 @@ void main()
 
     vec3 sun = do_sun_lighting(v_normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, false);
     vec3 color = pow(v_color.rgb, vec3(0.45)) * sun;
-    o_color = vec4(pow(color, vec3(2.2)), v_color.a);
+    o_color = vec4(pow(color, vec3(2.2)) * v_color.a, v_color.a);
 
     ivec2 pixel_coord = ivec2(gl_FragCoord.xy - 0.5);
     if (pixel_coord.x % 2 == pixel_coord.y % 2)

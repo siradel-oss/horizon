@@ -486,9 +486,12 @@ void initialize_rendering(DevUi* ui, GpuResourceContext* rc)
         res.initial_state.depth.test = false;
         res.initial_state.depth.write = false;
         res.initial_state.color_blend.enable = true;
-        res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+        res.initial_state.color_blend.color.src = my::ColorBlendState::One;
         res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+        res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+        res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
         res.initial_state.color_blend.color.op = my::ColorBlendState::Add;
+        res.initial_state.color_blend.mask = my::ColorBlendState::Components::RGBA;
 
         ui->shader = rc->alloc(&res, hrz::monitoring::systems::DevUi);
     }

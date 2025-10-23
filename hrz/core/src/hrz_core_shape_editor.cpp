@@ -2218,10 +2218,10 @@ void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t globa
     shape->line_type = LineType::Geodesics;
     shape->max_point_count = std::numeric_limits<size_t>::max();
     shape->stroke_color = {1.0, 0.0, 0.0, 1.0};
-    shape->fill_color = {1.0, 0.0, 0.0, 0.5};
+    shape->fill_color = {0.5, 0.0, 0.0, 0.5};
     shape->stroke_width = 8.0;
-    shape->selected_stroke_color = {1.0, 0.0, 1.0, 0.8};
-    shape->selected_fill_color = {1.0, 0.0, 1.0, 0.5};
+    shape->selected_stroke_color = {0.8, 0.0, 0.8, 0.8};
+    shape->selected_fill_color = {0.5, 0.0, 0.5, 0.5};
     shape->selected_stroke_width = 8.0;
     shape->control_point_size = 12;
     shape->control_point_color = {1, 0, 0, 1};
@@ -2647,9 +2647,12 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
         {
             shape.stroke_color = hrz::to_lm(builder.clone().stroke_color().get());
             shape.fill_color = hrz::to_lm(builder.clone().fill_color().get());
+            shape.fill_color.rgb *= shape.fill_color.a;
             shape.stroke_width = builder.clone().stroke_width().get();
             shape.selected_stroke_color = hrz::to_lm(builder.clone().selected_stroke_color().get());
+            shape.selected_stroke_color.rgb *= shape.selected_stroke_color.a;
             shape.selected_fill_color = hrz::to_lm(builder.clone().selected_fill_color().get());
+            shape.selected_fill_color.rgb *= shape.selected_fill_color.a;
             shape.selected_stroke_width = builder.clone().selected_stroke_width().get();
             shape.update_ubo = true;
             shape.style_updated = false;
@@ -5144,8 +5147,10 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.output_count = HRZ_ARRAY_COUNT(visual_outputs);
         res.outputs = visual_outputs;
         res.initial_state.color_blend.enable = true;
-        res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+        res.initial_state.color_blend.color.src = my::ColorBlendState::One;
         res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+        res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+        res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
         res.initial_state.depth.test = false;
         res.initial_state.depth.write = false;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::Back;

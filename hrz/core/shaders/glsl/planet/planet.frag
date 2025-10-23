@@ -223,9 +223,12 @@ void main()
             altitude + EARTH_RADIUS, v_view_normal_to_sun, hrz_frame.terrain_receive_shadows);
     }
 
-    vec3 color_linear = srgb_to_linear(o_color.rgb) * sun;
-    o_color.rgb = linear_to_srgb(color_linear);
-    o_color *= hrz_frame.terrain_color_opacity.a;
+    vec4 color_linear = vec4(srgb_to_linear(o_color.rgb) * sun, o_color.a);
+    color_linear *= hrz_frame.terrain_color_opacity.a;
+    o_color = linear_to_srgb(color_linear);
+
+    // Use sRGB's gamma on the alpha channel.
+    o_color.a = pow(o_color.a, 1.0 / 2.2);
 
     o_color = compute_viewshed_color(o_color, geometry_normal);
     o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());

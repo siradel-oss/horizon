@@ -1006,8 +1006,10 @@ void init_render(DebugDrawSystem* dd, Render* render)
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.depth.test = false;
         res.initial_state.color_blend.enable = true;
-        res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+        res.initial_state.color_blend.color.src = my::ColorBlendState::One;
         res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+        res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+        res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
 
         dd->primitive_shader = render->rc->alloc(&res, hrz::monitoring::systems::DevTools);
     }
@@ -1041,8 +1043,10 @@ void init_render(DebugDrawSystem* dd, Render* render)
         res.outputs = outputs;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.color_blend.enable = true;
-        res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
+        res.initial_state.color_blend.color.src = my::ColorBlendState::One;
         res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
+        res.initial_state.color_blend.alpha.src = my::ColorBlendState::One;
+        res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
         res.initial_state.depth.test = false;
         res.initial_state.depth.write = false;
 
@@ -1220,7 +1224,8 @@ void polyline(std::span<const double> coords, const lm::vec4& color, Space space
     g_line_commands.push_back({});
     auto& command = g_line_commands.back();
 
-    command.color = (lm::ubvec4)(color * 255.0f);
+    auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
+    command.color = (lm::ubvec4)(premultiplied_color * 255.0f);
     command.coordinate_space = space;
 
     command.points.reserve(((coords.size() / 3) - 1) * 2);
@@ -1238,7 +1243,8 @@ void points(std::span<const double> coords, const lm::vec4& color, Space space, 
     g_point_commands.push_back({});
     auto& command = g_point_commands.back();
 
-    command.color = (lm::ubvec4)(color * 255.0f);
+    auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
+    command.color = (lm::ubvec4)(premultiplied_color * 255.0f);
     command.coordinate_space = space;
 
     command.points.reserve(coords.size() / 3);
@@ -1255,7 +1261,8 @@ void triangles(std::span<const double> coords, const lm::vec4& color, Space spac
     g_triangle_commands.push_back({});
     auto& command = g_triangle_commands.back();
 
-    command.color = (lm::ubvec4)(color * 255.0f);
+    auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
+    command.color = (lm::ubvec4)(premultiplied_color * 255.0f);
     command.coordinate_space = space;
 
     command.points.reserve(((coords.size() / 3) / 3) * 3);
@@ -1285,9 +1292,11 @@ void text(
     g_text_commands.push_back({});
     auto& command = g_text_commands.back();
 
+    auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
+
     command.text = text.data();
     command.position = position;
-    command.color = color;
+    command.color = premultiplied_color;
     command.align = align;
     command.coordinate_space = space;
 }
