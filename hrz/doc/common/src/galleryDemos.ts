@@ -37,7 +37,7 @@ export const DEFINITIONS: { [id: string]: Definition } = {
     },
     ambiance: {
         title: "Ambiance",
-        tags: ["customization"],
+        tags: ["ambiance"],
         thumbnailFile: "ambiance.webp",
     },
     untiledRaster: {
@@ -107,7 +107,7 @@ export const DEFINITIONS: { [id: string]: Definition } = {
     },
     nonRealistic: {
         title: "Non-realistic rendering",
-        tags: ["customization"],
+        tags: ["ambiance"],
         thumbnailFile: "non_realistic.webp",
     },
     markers: {
@@ -154,5 +154,10 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         title: "Polyline animation",
         tags: ["vector", "polyline", "animation"],
         thumbnailFile: "polyline_animation.webp",
+    },
+    loadingScreen: {
+        title: "Loading screen",
+        tags: ["integration"],
+        thumbnailFile: "loading_screen.webp",
     },
 };

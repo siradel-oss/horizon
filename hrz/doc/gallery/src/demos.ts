@@ -118,3 +118,6 @@ registerDemo("lesArcs", LesArcs);
 
 import PolylineAnimation from "./demo/PolylineAnimation.vue";
 registerDemo("polylineAnimation", PolylineAnimation);
+
+import LoadingScreen from "./demo/LoadingScreen.vue";
+registerDemo("loadingScreen", LoadingScreen);

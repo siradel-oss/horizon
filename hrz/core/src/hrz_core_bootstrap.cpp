@@ -2494,6 +2494,12 @@ public:
 
         if (info.to_link_initial_done >= info.to_link_initial)
         {
+            hrz_proto::ViewerLoadingProgressMessage message;
+            message.set_total_step_count(info.to_link_initial);
+            message.set_completed_step_count(info.to_link_initial_done);
+            hrz::client_message_queue::enqueue_viewer_loading_progress_message(
+                _message_queue, std::move(message));
+
             hrz::client_message_queue::enqueue_viewer_ready_message(_message_queue, {});
 
             if (_loading_screen_technique)
