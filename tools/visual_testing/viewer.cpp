@@ -194,7 +194,8 @@ public:
         int width,
         int height,
         bool show_window,
-        uint64_t timeout_ms)
+        uint64_t timeout_ms,
+        uint32_t log_filter_level)
     {
         // Initialize Horizon.
         std::optional<WsiInstance> wsi = wsi_init(width, height, show_window);
@@ -205,7 +206,7 @@ public:
         }
 
         hrz_proto::ViewerOptions options;
-        options.set_log_filter_level(0);
+        options.set_log_filter_level(log_filter_level);
         options.set_graphics_level(hrz_proto::GraphicsLevelHigh);
 
         backend = hrz_core::Backend::create(wsi->instance, wsi->window, options);
@@ -368,6 +369,13 @@ int main(int argc, char* argv[])
     arg.default_double = DEFAULT_TIMEOUT_SEC;
     argparser::add_argument(arg_parser, arg);
 
+    arg.name = "log-filter-level";
+    arg.type = argparser::ArgType::Uint;
+    arg.required = false;
+    arg.has_default = true;
+    arg.default_uint = 0;
+    argparser::add_argument(arg_parser, arg);
+
     arg.name = "help";
     arg.type = argparser::ArgType::Bool;
     arg.required = false;
@@ -402,6 +410,7 @@ int main(int argc, char* argv[])
     uint32_t height = argparser::get_value_uint(arg_parser, "height").value();
     bool show_window = argparser::get_value_bool(arg_parser, "show-window").value();
     double timeout_sec = argparser::get_value_double(arg_parser, "timeout").value();
+    uint32_t log_filter_level = argparser::get_value_uint(arg_parser, "log-filter-level").value();
 
     if (width < 1 || height < 1)
     {
@@ -411,5 +420,6 @@ int main(int argc, char* argv[])
 
     Viewer v;
     return v.run(
-        input_file, output_capture_file, (int)width, (int)height, show_window, timeout_sec * 1000);
+        input_file, output_capture_file, (int)width, (int)height, show_window, timeout_sec * 1000,
+        log_filter_level);
 }

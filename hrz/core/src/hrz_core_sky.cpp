@@ -11,7 +11,6 @@
 #include <hrz_common_geo.h>
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_profiling.h>
-#include <hrz_common_proto_maths.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_mem.h>
 #include <hrz_protocol_path_builder.h>
@@ -66,7 +65,8 @@ struct UboData
     lm::vec4 underground_color{lm::vec4(0.0f)};
     float color_transition_start_horizon_angle{0};
     float color_transition_end_horizon_angle{0};
-    uint32_t _padding[2];
+    hrz::bool32 oklab_gradient{false};
+    uint32_t _padding;
 };
 
 HRZ_CHECK_UBO_SIZE(UboData);
@@ -1031,13 +1031,7 @@ public:
             res.initial_state.depth.test = false;
             res.initial_state.depth.write = false;
             res.initial_state.stencil.enable = false;
-            res.initial_state.color_blend.enable = true;
-            res.initial_state.color_blend.color.src = my::ColorBlendState::SrcAlpha;
-            res.initial_state.color_blend.color.dst = my::ColorBlendState::OneMinusSrcAlpha;
-            res.initial_state.color_blend.alpha.src = my::ColorBlendState::SrcAlpha;
-            res.initial_state.color_blend.alpha.dst = my::ColorBlendState::OneMinusSrcAlpha;
-            res.initial_state.color_blend.color.op = my::ColorBlendState::Add;
-            res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
+            res.initial_state.color_blend.enable = false;
 
             rc->alloc(&res, hrz::monitoring::systems::Sky);
         }
@@ -1199,7 +1193,7 @@ public:
         ctx.read_write(_depth_input_name, Sampled, _depth_output_name);
 
         my::RenderGraph::ResourceInfo color;
-        color.format = my::TextureFormat::RGBA8;
+        color.format = my::TextureFormat::SRGBA8;
         color.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
         color.width = 1;
         color.height = 1;
@@ -1535,7 +1529,9 @@ struct SkySystem
     lm::vec3 ambient_color_linear = lm::vec3(0.42f);
     lm::vec4 underground_color_linear = hrz::srgb_to_linear(lm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
     lm::vec4 underground_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+    lm::vec4 atmosphere_color_linear = hrz::srgb_to_linear(lm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
     lm::vec4 atmosphere_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
+    lm::vec4 space_color_linear = hrz::srgb_to_linear(lm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     lm::vec4 space_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     float color_transition_start_distance = 0.0f;
     float color_transition_end_distance = 0.0f;
@@ -1588,6 +1584,7 @@ void init_render_precompute(SkySystem* sky, RenderView* render)
     ubo_data.underground_color = lm::vec4(0.0f);
     ubo_data.atmosphere_color = lm::vec4(0.0f);
     ubo_data.space_color = lm::vec4(0.0f);
+    ubo_data.oklab_gradient = false;
     ubo_data.color_transition_start_horizon_angle = 0;
     ubo_data.color_transition_end_horizon_angle = 0;
     sky->ubo.set(0, ubo_data);
@@ -1680,20 +1677,24 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         sky->sun_ambient_balance = settings.sun_ambient_balance();
         sky->lighting_strength = settings.lighting_strength();
         sky->wrap_lighting = settings.wrap_lighting();
-        sky->sun_color_linear = srgb_to_linear(to_lm(settings.sun().static_color()).rgb);
+        sky->sun_color_linear = hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(settings.sun().static_color()).rgb);
         sky->sun_azimuth = settings.sun().direction().azimuth();
         sky->sun_altitude = settings.sun().direction().altitude();
-        sky->ambient_color_linear =
-            srgb_to_linear(to_lm(settings.ambient_lighting().static_color()).rgb);
-        sky->underground_color_linear = hrz::srgb_to_linear(to_lm(settings.underground_color()));
-        sky->underground_color_linear.rgb *= sky->underground_color_linear.a;
-        sky->underground_color_oklab = hrz::srgb_to_oklab(to_lm(settings.underground_color()));
-        sky->underground_color_oklab.rgb *= sky->underground_color_oklab.a;
-        sky->atmosphere_color_oklab =
-            hrz::srgb_to_oklab(to_lm(settings.sky().static_atmosphere_color()));
-        sky->atmosphere_color_oklab.rgb *= sky->atmosphere_color_oklab.a;
-        sky->space_color_oklab = hrz::srgb_to_oklab(to_lm(settings.sky().static_space_color()));
-        sky->space_color_oklab.rgb *= sky->space_color_oklab.a;
+        sky->ambient_color_linear = hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(settings.ambient_lighting().static_color()).rgb);
+        sky->underground_color_linear = hrz::premultiply_alpha(
+            hrz::srgb_to_linear(hrz::convert_proto_color_to_float(settings.underground_color())));
+        sky->underground_color_oklab = hrz::premultiply_alpha(
+            hrz::srgb_to_oklab(hrz::convert_proto_color_to_float(settings.underground_color())));
+        sky->atmosphere_color_linear = hrz::premultiply_alpha(hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(settings.sky().static_atmosphere_color())));
+        sky->atmosphere_color_oklab = hrz::premultiply_alpha(hrz::srgb_to_oklab(
+            hrz::convert_proto_color_to_float(settings.sky().static_atmosphere_color())));
+        sky->space_color_linear = hrz::premultiply_alpha(hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(settings.sky().static_space_color())));
+        sky->space_color_oklab = hrz::premultiply_alpha(hrz::srgb_to_oklab(
+            hrz::convert_proto_color_to_float(settings.sky().static_space_color())));
         sky->color_transition_start_distance =
             settings.sky().static_color_transition_start_distance();
         sky->color_transition_end_distance = std::max(
@@ -1708,14 +1709,16 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         sky->fog[0].falloff_start = settings.primary_fog().falloff_start();
         sky->fog[0].falloff_end = settings.primary_fog().falloff_end();
         sky->fog[0].apply_to_sky = settings.primary_fog().apply_to_sky();
-        sky->fog[0].color_linear = srgb_to_linear(to_lm(settings.primary_fog().color()));
+        sky->fog[0].color_linear =
+            hrz::srgb_to_linear(hrz::convert_proto_color_to_float(settings.primary_fog().color()));
 
         sky->fog[1].density = settings.secondary_fog().density();
         sky->fog[1].start_distance = settings.secondary_fog().start_distance();
         sky->fog[1].falloff_start = settings.secondary_fog().falloff_start();
         sky->fog[1].falloff_end = settings.secondary_fog().falloff_end();
         sky->fog[1].apply_to_sky = settings.secondary_fog().apply_to_sky();
-        sky->fog[1].color_linear = srgb_to_linear(to_lm(settings.secondary_fog().color()));
+        sky->fog[1].color_linear = hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(settings.secondary_fog().color()));
 
         if (hrz::get_flag(hrz::Flag::EnableAtmosphere))
         {
@@ -1750,6 +1753,13 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
     UboData ubo_data = sky->ubo.get();
 
+    if (update_sky_ubo)
+    {
+        ubo_data.oklab_gradient = !sky->enable_simulated_sky
+            && sky->underground_color_linear.a == 1.0f && sky->atmosphere_color_linear.a == 1.0f
+            && sky->space_color_linear.a == 1.0f;
+    }
+
     if (sky->camera_position != geo || update_sky_ubo)
     {
         sky->camera_position = geo;
@@ -1777,6 +1787,12 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         {
             case hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_METERS:
             {
+                const auto& atmosphere_color = ubo_data.oklab_gradient
+                    ? sky->atmosphere_color_oklab
+                    : sky->atmosphere_color_linear;
+                const auto& space_color =
+                    ubo_data.oklab_gradient ? sky->space_color_oklab : sky->space_color_linear;
+
                 if (sky->color_transition_start_distance < altitude_for_static_sky)
                 {
                     ubo_data.color_transition_start_horizon_angle = (float)-acos(
@@ -1788,13 +1804,13 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
                         ubo_data.color_transition_end_horizon_angle = (float)-acos(
                             (HRZ_S_EARTH_RADIUS + sky->color_transition_end_distance)
                             / (HRZ_S_EARTH_RADIUS + altitude_for_static_sky));
-                        ubo_data.space_color = sky->space_color_oklab;
+                        ubo_data.space_color = space_color;
                     }
                     else
                     {
                         ubo_data.color_transition_end_horizon_angle = 0;
                         ubo_data.space_color = lm::mix(
-                            sky->atmosphere_color_oklab, sky->space_color_oklab,
+                            atmosphere_color, space_color,
                             (float)((altitude_for_static_sky - sky->color_transition_start_distance)
                                     / (sky->color_transition_end_distance
                                        - sky->color_transition_start_distance)));
@@ -1803,7 +1819,7 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
                 else
                 {
                     ubo_data.color_transition_start_horizon_angle = 0;
-                    ubo_data.space_color = sky->atmosphere_color_oklab;
+                    ubo_data.space_color = atmosphere_color;
                 }
                 break;
             }
@@ -2064,9 +2080,10 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
     if (update_sky_ubo)
     {
-        ubo_data.underground_color = sky->enable_simulated_sky ? sky->underground_color_linear
-                                                               : sky->underground_color_oklab;
-        ubo_data.atmosphere_color = sky->atmosphere_color_oklab;
+        ubo_data.underground_color =
+            ubo_data.oklab_gradient ? sky->underground_color_oklab : sky->underground_color_linear;
+        ubo_data.atmosphere_color =
+            ubo_data.oklab_gradient ? sky->atmosphere_color_oklab : sky->atmosphere_color_linear;
 
         render_request.request_visual_render();
     }
@@ -2185,7 +2202,7 @@ void fill_frame_uniform_data(const SkySystem* sky, FrameUniformData* ubo)
     ubo->sun_strength = std::min(sky->sun_ambient_balance * 2.0, 1.0) * sky->lighting_strength;
     ubo->ambient_strength =
         std::min(2.0f - sky->sun_ambient_balance * 2.0, 1.0) * sky->lighting_strength;
-    ubo->sun_color_linear = sky->sun_color_linear;
+    ubo->sun_color = sky->sun_color_linear;
     ubo->wrap_lighting = sky->wrap_lighting;
 
     double altitude = sky->ubo.get().altitude;

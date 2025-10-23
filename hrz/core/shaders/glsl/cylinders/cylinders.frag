@@ -11,6 +11,8 @@
 #define varying in
 #include "cylinders/interface.glsl"
 
+#include "common/colors.glsl"
+
 #ifdef CYLINDER_VISUAL
 #   include "common/sun_lighting.frag.glsl"
 #   include "common/viewshed.frag.glsl"
@@ -33,12 +35,6 @@ layout(location = 0) out float o_highlight;
 uvec3 build_feature_reference()
 {
     return hrz_tile.feature_reference | uvec3(0, v_feature_id);
-}
-
-vec4 apply_sun_color(vec4 srgb, vec3 sun)
-{
-    vec3 color = srgb_to_linear(srgb.rgb) * sun;
-    return vec4(linear_to_srgb(color), srgb.a);
 }
 #endif
 
@@ -78,7 +74,12 @@ void main()
         }
     }
 
-    vec4 color = mix(v_empty_color, v_color, dash_value);
+    // The colours are not premulitiplied. If one of the two colours is fully transparent,
+    // its non-alpha components will have an effect.
+    // This is different from typical blending, and is voluntary.
+    vec4 color = oklab_to_linear(mix(v_empty_color_oklab, v_color_oklab, dash_value));
+
+    // The blended colour is now premultiplied.
     color.rgb *= color.a;
 
     if (color.a == 0.0) discard;
@@ -89,14 +90,14 @@ void main()
     {
         sun = do_sun_lighting(v_normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_tile.receive_shadows);
     }
-    o_color = apply_sun_color(color, sun);
+    o_color = vec4(color.rgb * sun, color.a);
 
     o_color = compute_viewshed_color(o_color, v_normal);
     o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());
 
     if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
-        o_color = apply_quick_highlight_color(o_color);
+        o_color = apply_quick_highlight_color_premultiplied(o_color);
     }
 #endif
 

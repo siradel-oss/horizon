@@ -27,13 +27,13 @@ ElementGeometry SymbolBaker::LeaderLineVisitor::visit_element(
     assert(element.type == hrz_proto::SymbolElementType::LEADER_LINE_SYMBOL_ELEMENT);
     const auto& params = element.leader_line();
 
-    auto color = params.default_color;
-    load_rgba_color_property(params.color_prp, &color);
+    auto color_srgb = params.default_color_srgb;
+    load_rgba_color_property(params.color_prp, &color_srgb);
 
     auto target_offset = params.default_target_offset;
     load_vec3f_property(params.target_offset_prp, &target_offset);
 
-    if (element.anchor_index.has_value() && params.width > 0 && color.a > 0)
+    if (element.anchor_index.has_value() && params.width > 0 && color_srgb.a > 0)
     {
         lm::dvec3 feature_position = get_feature_position();
         lm::vec3 in_tile_feature_position = lm::vec3(feature_position - get_tile_center());
@@ -45,7 +45,7 @@ ElementGeometry SymbolBaker::LeaderLineVisitor::visit_element(
         instance.target_in_tile_position =
             in_tile_feature_position + lm::vec4(enu_matrix * lm::dvec4(target_offset, 0)).xyz;
         instance.in_symbol_position = {0, 0, 0};
-        instance.color = color;
+        instance.color = color_srgb;
         instance.anchor_index = element.anchor_index.value();
 
         auto& instances = instances_by_z_index.at(element.z_index.value());

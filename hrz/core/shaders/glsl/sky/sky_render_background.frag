@@ -55,10 +55,6 @@ void main()
     float sky_color_alpha = mix(1.0 - in_scattered.a, 1.0, sky_transition);
 
     o_color = vec4(sky_color, sky_color_alpha) + underground_color * (1.0 - sky_color_alpha);
-
-    o_color = linear_to_srgb(o_color);
-    // Use sRGB's gamma on the alpha channel.
-    o_color.a = pow(o_color.a, 1.0 / 2.2);
 #else
     vec4 sky_color = vec4(0.0);
 
@@ -76,12 +72,11 @@ void main()
 
     o_color = mix(hrz_sky.underground_color, sky_color, sky_transition);
 
-    o_color.rgb /= o_color.a;
-    o_color = oklab_to_linear(o_color);
-    o_color.rgb *= o_color.a;
-
-    o_color = linear_to_srgb(o_color);
-    // Use sRGB's gamma on the alpha channel.
-    o_color.a = pow(o_color.a, 1.0 / 2.2);
+    if (hrz_sky.oklab_gradient)
+    {
+        // Oklab interpolation does not support premultiplied alpha, but
+        // we should only enter this block when all colours are opaque.
+        o_color = oklab_to_linear(o_color);
+    }
 #endif
 }

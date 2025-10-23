@@ -165,26 +165,29 @@ message CoordinatesFrame {
 }
 
 enum ImageFormat {
-    // nonlinear sRGB encoding + linear alpha channel, 8 bits per channel
-    // @label="SRGBA 8"
+    // Nonlinear sRGB encoding + linear alpha channel, 8 bits per channel.
+    //
+    // The usual format for images.
+    // @label="sRGB RGBA8"
     SRGBA_8           = 0;
 
-    // float encoding one 32-bit channel
+    // IEEE 754 single precision floating point, little-endian, one 32-bit
+    // channel.
     // @label="R F32"
     R_F32             = 1;
 
-    // silicium encoding one 32-bit channel
-    // @label="R F32 SILICIUM"
+    // Silicium encoding, one 32-bit channel.
+    // @label="R F32 Silicium"
     R_F32_SILICIUM    = 2;
 
     // Signed fixed-point value with 1 sign bit, 23 integer bits, and 8
     // fractional bits.
-    // @label="SIGNED FIXED 24 8"
+    // @label="Signed fixed 24.8"
     SIGNED_FIXED_24_8 = 3;
 
-    // greyscale, nonlinear sRGB encoding, 8-bit
-    // @label="SRGB R 8"
-    SRGB_R_8          = 4;
+    // Greyscale, linear encoding, 8-bit.
+    // @label="R8"
+    R_8               = 4;
 
     // 24-bit values in [-32768, 32768] range, with 8 fractional bits.
     // @label="Terrarium"
@@ -211,6 +214,10 @@ message Image {
     bytes       data   = 4;
 }
 
+// Colour in sRGB space, with alpha.
+// All components are in [0, 1] range.
+// Red, green, and blue are gamma corrected, they are non-linear.
+// Alpha is linear.
 message Color {
     float r = 1;
     float g = 2;
@@ -225,32 +232,32 @@ message ColorPoint {
 }
 
 enum ColorInterpolationMode {
-    // Uses the OkLab perceptual color space for color blending.
+    // Uses the Oklab perceptually uniform color space for color blending.
     // This creates visibly intuitive results.
     //
     // @label="Oklab (perceptual)"
-    PERCEPTUAL_OKLAB = 0;
+    OKLAB       = 0;
 
-    // Uses the perceptual RGB (sRGB) color space.
-    // This is similar to OkLab for grayscale, but visually
+    // Uses the sRGB color space.
+    // This is similar to Oklab for grayscale, but visually
     // degrades highly saturated colors when blended together.
     //
     // @label="sRGB"
-    SRGB             = 1;
+    SRGB        = 1;
 
-    // Uses RGB triplets with linear values.
-    // This is similar to OkLab when blending saturated colors.
+    // Uses colors from the sRGB color space, without gamma correction.
+    // This is similar to Oklab when blending saturated colors.
     // However blending colors with highly different values is
     // visually unintuitive.
     //
-    // @label="Linear RGB"
-    LINEAR_RGB       = 2;
+    // @label="Linear sRGB"
+    LINEAR_SRGB = 2;
 
     // Doesn't interpolate colors. Uses the first one when the
     // blending factor is < 0.5, and the second one otherwise.
     //
     // @label="Threshold"
-    THRESHOLD        = 3;
+    THRESHOLD   = 3;
 }
 
 message NumericPalette {

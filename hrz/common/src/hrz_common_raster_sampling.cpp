@@ -292,38 +292,31 @@ void DtmBlendingFunction::blend(const void* src, void* dst) const
 void ImageryBlendingFunction::blend(const void* src, void* dst) const
 {
     auto src_ui8 = static_cast<const uint8_t*>(src);
-    auto dst_ui8 = static_cast<uint8_t*>(dst);
-
-    uint8_t r = src_ui8[0];
-    uint8_t g = src_ui8[1];
-    uint8_t b = src_ui8[2];
     uint8_t a = src_ui8[3];
 
-    if (opacity < 255)
+    if (a == 0) return;
+
+    if (opacity == 255 && a == 255)
     {
-        r = (uint8_t)(((uint16_t)(r + 1) * opacity) >> 8);
-        g = (uint8_t)(((uint16_t)(g + 1) * opacity) >> 8);
-        b = (uint8_t)(((uint16_t)(b + 1) * opacity) >> 8);
-        a = (uint8_t)(((uint16_t)(a + 1) * opacity) >> 8);
+        std::memcpy(dst, src, sizeof(uint8_t) * 4);
+        return;
     }
 
-    if (a < 255)
-    {
-        const uint16_t src_ratio = 256; // Premultiplied
-        const uint16_t dst_ratio = 256 - (uint16_t)a;
+    lm::ubvec4 src_ubvec4;
+    std::memcpy(&src_ubvec4, src, sizeof(lm::ubvec4));
+    lm::ubvec4 dst_ubvec4;
+    std::memcpy(&dst_ubvec4, dst, sizeof(lm::ubvec4));
 
-        dst_ui8[0] = (uint8_t)(((uint16_t)dst_ui8[0] * dst_ratio + (uint16_t)r * src_ratio) >> 8);
-        dst_ui8[1] = (uint8_t)(((uint16_t)dst_ui8[1] * dst_ratio + (uint16_t)g * src_ratio) >> 8);
-        dst_ui8[2] = (uint8_t)(((uint16_t)dst_ui8[2] * dst_ratio + (uint16_t)b * src_ratio) >> 8);
-        dst_ui8[3] = (uint8_t)(((uint16_t)dst_ui8[3] * dst_ratio + (uint16_t)a * src_ratio) >> 8);
-    }
-    else
-    {
-        dst_ui8[0] = r;
-        dst_ui8[1] = g;
-        dst_ui8[2] = b;
-        dst_ui8[3] = a;
-    }
+    lm::vec4 src_lin = hrz::srgb_to_linear_lut(src_ubvec4);
+    lm::vec4 dst_lin = hrz::srgb_to_linear_lut(dst_ubvec4);
+
+    src_lin *= ((float)opacity / 255.0f);
+
+    dst_lin = src_lin + dst_lin * (1.0f - src_lin.a);
+
+    dst_ubvec4 = hrz::linear_to_srgb_lut(dst_lin);
+
+    std::memcpy(dst, &dst_ubvec4, sizeof(uint32_t));
 }
 
 PixelValue<uint8_t, 4> fetch_rgba8_pixel(

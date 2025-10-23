@@ -9,9 +9,27 @@ copy_file(
     out = "glsl/defines.glsl",
 )
 
+# On the web, the backbuffer always expects sRGB values. No automatic
+# linear-to-sRGB conversion takes place.
+# There exists the `drawingBufferColorSpace` canvas property, but it
+# doesn't support linear sRGB.
+#
+# Same thing for headless EGL. One can request an sRGB backbuffer, with
+# `EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_SRGB`, but llvmpipe does not
+# support it and the call to `eglCreatePbufferSurface` fails accordingly.
 glsl_config(
     name = "config",
     common_files = glob(["glsl/**/*.glsl"]) + ["glsl/defines.glsl"],
+    defines = select({
+        "//:os_web": [
+            "WRITE_SRGB_PREMULTIPLIED_ALPHA_TO_BACKBUFFER",
+            "WRITE_SRGB_TO_BACKBUFFER",
+        ],
+        "//:linux_wsi_headless_egl": [
+            "WRITE_SRGB_TO_BACKBUFFER",
+        ],
+        "//conditions:default": [],
+    }),
     includes = [
         "glsl",
     ],

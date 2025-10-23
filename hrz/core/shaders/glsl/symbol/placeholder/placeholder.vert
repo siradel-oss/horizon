@@ -10,6 +10,8 @@ layout(location = 7) in uint i_anchor_index;
 #include "symbol/defs.glsl"
 #include "symbol/common.vert.glsl"
 
+#include "common/colors.glsl"
+
 void main()
 {
     handle_visibility(i_anchor_index);
@@ -18,7 +20,7 @@ void main()
 
     handle_selection(anchor);
 
-    v_color = i_color;
+    v_color = srgb_to_linear(i_color);
     v_color.rgb *= v_color.a;
 
     vec4 in_element_pos = i_transform * vec4(i_in_mesh_pos * i_size, 0, 1);

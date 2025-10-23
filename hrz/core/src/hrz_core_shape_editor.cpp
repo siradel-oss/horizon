@@ -2645,13 +2645,18 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
 
         if (shape.style_updated)
         {
-            shape.stroke_color = hrz::to_lm(builder.clone().stroke_color().get());
-            shape.fill_color = hrz::to_lm(builder.clone().fill_color().get());
+            shape.stroke_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(builder.clone().stroke_color().get()));
+            shape.stroke_color.rgb *= shape.stroke_color.a;
+            shape.fill_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(builder.clone().fill_color().get()));
             shape.fill_color.rgb *= shape.fill_color.a;
             shape.stroke_width = builder.clone().stroke_width().get();
-            shape.selected_stroke_color = hrz::to_lm(builder.clone().selected_stroke_color().get());
+            shape.selected_stroke_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(builder.clone().selected_stroke_color().get()));
             shape.selected_stroke_color.rgb *= shape.selected_stroke_color.a;
-            shape.selected_fill_color = hrz::to_lm(builder.clone().selected_fill_color().get());
+            shape.selected_fill_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(builder.clone().selected_fill_color().get()));
             shape.selected_fill_color.rgb *= shape.selected_fill_color.a;
             shape.selected_stroke_width = builder.clone().selected_stroke_width().get();
             shape.update_ubo = true;
@@ -2663,11 +2668,14 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
         if (shape.control_style_updated)
         {
             shape.control_point_size = builder.clone().control_point_size().get();
-            shape.control_point_color = hrz::to_lm(builder.clone().control_point_color().get());
+            shape.control_point_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(builder.clone().control_point_color().get()));
             shape.midpoint_control_point_color =
-                hrz::to_lm(builder.clone().midpoint_control_point_color().get());
+                hrz::srgb_to_linear(hrz::convert_proto_color_to_float(
+                    builder.clone().midpoint_control_point_color().get()));
             shape.selected_control_point_color =
-                hrz::to_lm(builder.clone().selected_control_point_color().get());
+                hrz::srgb_to_linear(hrz::convert_proto_color_to_float(
+                    builder.clone().selected_control_point_color().get()));
             shape.show_midpoint_control_points =
                 builder.clone().show_midpoint_control_points().get()
                 && !(shape.kind == Shape::Kind::Polyline && shape.max_point_count <= 2);

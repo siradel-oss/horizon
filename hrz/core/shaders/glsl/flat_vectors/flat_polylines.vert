@@ -47,8 +47,6 @@ void main()
     }
 #endif
 
-    v_color = i_color;
-
 #ifdef FLAT_VISUAL
     v_feature_id = fetch_feature_id();
 #endif
@@ -62,7 +60,7 @@ void main()
 
     float width = i_width;
     v_color = i_color;
-    v_empty_color = i_empty_color;
+    v_empty_color_oklab = i_empty_color;
     vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.center_low.xyz, hrz_tile.center_high.xyz), 0.0);
 
     float pixel_to_meter = fetch_camera_height() * hrz_frame.camera_height_to_perceived_distance * hrz_frame.pixel_size_in_meters;

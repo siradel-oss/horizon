@@ -28,14 +28,16 @@ RawValue compute_numeric_palette_value(const hrz::Palette& palette, double value
 {
     auto color = hrz::palette::numeric_palettization(palette, value);
     assert(color.has_value());
-    return attr_from_color<RawValue>(hrz::convert_rgba_color_to_bytes(color.value()));
+    return attr_from_color<RawValue>(
+        hrz::convert_rgba_color_to_bytes(hrz::linear_to_srgb(color.value())));
 }
 
 RawValue compute_label_palette_value(const hrz::Palette& palette, std::string_view label)
 {
     auto color = hrz::palette::label_palettization(palette, label);
     assert(color.has_value());
-    return attr_from_color<RawValue>(hrz::convert_rgba_color_to_bytes(color.value()));
+    return attr_from_color<RawValue>(
+        hrz::convert_rgba_color_to_bytes(hrz::linear_to_srgb(color.value())));
 }
 
 struct AndOp
@@ -471,11 +473,12 @@ bool execute_mix_colors(
 
     for (size_t i = 0; i < res_buffer.size(); ++i)
     {
-        lm::vec4 from = convert_uint_color_to_rgba((uint32_t)attr_as_uint64(arg_buffers[0][i]));
-        lm::vec4 to = convert_uint_color_to_rgba((uint32_t)attr_as_uint64(arg_buffers[1][i]));
+        lm::ubvec4 from = convert_uint_color_to_bytes((uint32_t)attr_as_uint64(arg_buffers[0][i]));
+        lm::ubvec4 to = convert_uint_color_to_bytes((uint32_t)attr_as_uint64(arg_buffers[1][i]));
         double t = attr_as_number(arg_buffers[2][i]);
 
-        uint64_t interpolated_color = convert_rgba_color_to_uint(hrz::mix_srgb_colors(from, to, t));
+        uint64_t interpolated_color =
+            convert_byte_color_to_uint(hrz::mix_srgb_colors_in_oklab(from, to, t));
         res_buffer[i] = attr_from<RawValue>(interpolated_color);
     }
 

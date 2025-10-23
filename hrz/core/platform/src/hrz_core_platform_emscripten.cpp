@@ -892,6 +892,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
     try_enable_webgl_extension(ctx, "WEBGL_provoking_vertex", hrz::log::Severity::Debug);
     try_enable_webgl_extension(ctx, "OES_texture_float_linear", hrz::log::Severity::Debug);
     try_enable_webgl_extension(ctx, "WEBGL_compressed_texture_s3tc", hrz::log::Severity::Debug);
+    try_enable_webgl_extension(
+        ctx, "WEBGL_compressed_texture_s3tc_srgb", hrz::log::Severity::Debug);
     try_enable_webgl_extension(ctx, "EXT_texture_compression_bptc", hrz::log::Severity::Debug);
     try_enable_webgl_extension(ctx, "WEBGL_compressed_texture_etc1", hrz::log::Severity::Debug);
     try_enable_webgl_extension(ctx, "WEBGL_compressed_texture_etc", hrz::log::Severity::Debug);

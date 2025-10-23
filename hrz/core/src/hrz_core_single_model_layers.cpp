@@ -10,6 +10,7 @@
 #include "model/hrz_core_model_materials_manager.h"
 #include "planet/hrz_core_planet_surface.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_profiling.h>
 #include <hrz_common_proto_geo.h>
 #include <hrz_common_proto_maths.h>
@@ -367,7 +368,8 @@ RenderRequest _update_layer(
     if (layer->appearance_updated)
     {
         layer->draw_prps.lighting = hrz::render::from_proto(builder.clone().lighting().get());
-        layer->draw_prps.color = to_lm(builder.clone().color().get());
+        layer->draw_prps.color =
+            hrz::srgb_to_linear(hrz::convert_proto_color_to_float(builder.clone().color().get()));
 
         layer->appearance_updated = false;
         render_request.request_visual_render();

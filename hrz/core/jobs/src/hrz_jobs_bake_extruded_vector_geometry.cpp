@@ -717,7 +717,8 @@ void generate_polygon(
     for (const auto& p : input_verts)
     {
         builder.append_vertex(
-            p.pos, p.normal, hrz::convert_rgba_color_to_bytes(p.color), info.feature_index);
+            p.pos, p.normal, hrz::convert_rgba_color_to_bytes(hrz::linear_to_srgb(p.color)),
+            info.feature_index);
     }
 
     // Generate fans
@@ -750,22 +751,22 @@ void generate_wall_roof_bevel(
             {
                 lm::dvec3((bi0.has_bevel ? bi0.bevel_pos1 : bi0.pos).xy, wall_top_z_0),
                 n0,
-                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.wall_top_color_srgb)),
             },
             {
                 lm::dvec3((bi1.has_bevel ? bi1.bevel_pos0 : bi1.pos).xy, wall_top_z_1),
                 n1,
-                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.wall_top_color_srgb)),
             },
             {
                 lm::dvec3(bi1.inset.xy, roof_z_1),
                 nroof,
-                hrz::convert_bytes_to_rgba_color(info.roof_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.roof_color_srgb)),
             },
             {
                 lm::dvec3(bi0.inset.xy, roof_z_0),
                 nroof,
-                hrz::convert_bytes_to_rgba_color(info.roof_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.roof_color_srgb)),
             }};
 
         if (info.invert_walls_winding)
@@ -791,17 +792,17 @@ void generate_wall_roof_bevel(
             {
                 lm::dvec3(bi0.bevel_pos0.xy, wall_top_z_0),
                 lm::vec3(info.normal_matrix * bi0.normal0),
-                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.wall_top_color_srgb)),
             },
             {
                 lm::dvec3(bi0.bevel_pos1.xy, wall_top_z_0),
                 lm::vec3(info.normal_matrix * bi0.normal1),
-                hrz::convert_bytes_to_rgba_color(info.wall_top_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.wall_top_color_srgb)),
             },
             {
                 lm::dvec3(bi0.inset.xy, roof_z_0),
                 nroof,
-                hrz::convert_bytes_to_rgba_color(info.roof_color_srgb),
+                hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.roof_color_srgb)),
             }};
 
         if (info.invert_walls_winding)
@@ -852,13 +853,6 @@ hrz::JobResult run(
 
     const auto& style = input.style;
 
-    const lm::ubvec4 default_upper_color_srgb =
-        hrz::convert_rgba_color_to_bytes(input.default_upper_color);
-    const lm::ubvec4 default_lower_color_srgb =
-        hrz::convert_rgba_color_to_bytes(input.default_lower_color);
-    const lm::ubvec4 default_roof_color_srgb =
-        hrz::convert_rgba_color_to_bytes(input.default_roof_color);
-
     auto input_features = input.geometry.features.get_data();
     auto input_points = input.geometry.points.get_data();
     auto input_sizes = input.geometry.linestring_sizes.get_data();
@@ -903,9 +897,9 @@ hrz::JobResult run(
         if (instance.repr_id != input.repr_id) continue;
 
         FeatureInfo info(tile_info);
-        info.roof_color_srgb = default_roof_color_srgb;
-        info.wall_top_color_srgb = default_upper_color_srgb;
-        info.wall_bottom_color_srgb = default_lower_color_srgb;
+        info.roof_color_srgb = input.default_roof_color_srgb;
+        info.wall_top_color_srgb = input.default_upper_color_srgb;
+        info.wall_bottom_color_srgb = input.default_lower_color_srgb;
 
         const auto& feature = input_features.at(instance.feature_index);
         info.feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);

@@ -1,3 +1,4 @@
+#include "common/colors.glsl"
 #include "common/logz.glsl"
 #include "common/frag_processing.glsl"
 #include "common/highlight.glsl"
@@ -98,9 +99,15 @@ void main()
     }
 
 #ifdef FLAT_VISUAL
-    vec4 color = mix(v_empty_color, v_color, dash_value);
-    o_color.rgb = alpha * color.rgb * color.a;
-    o_color.a = alpha * color.a;
+    // The colours are not premulitiplied. If one of the two colours is fully transparent,
+    // its non-alpha components will have an effect.
+    // This is different from typical blending, and is voluntary.
+    vec4 color = oklab_to_linear(mix(v_empty_color_oklab, v_color, dash_value));
+
+    // The blended colour is now premultiplied.
+    color.rgb *= color.a;
+
+    o_color = color * alpha;
 
     if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {

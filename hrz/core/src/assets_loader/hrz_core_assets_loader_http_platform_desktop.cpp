@@ -9,6 +9,7 @@
 #include <hrz_fnd_flat_hash_map.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_log.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_meta.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_url_utils.h>
@@ -38,9 +39,8 @@ using namespace hrz;
 using namespace assets_loader;
 
 constexpr unsigned int kMaxHostConnections = 4;
-constexpr size_t kL1CacheLineSize = 64;
 
-struct alignas(kL1CacheLineSize) RequestSlot
+struct alignas(hrz::L1CacheLineSize) RequestSlot
 {
     HttpRequestStatus status{};
     HttpTicket ticket{};
@@ -60,10 +60,10 @@ struct alignas(kL1CacheLineSize) RequestSlot
 };
 
 static_assert(
-    sizeof(RequestSlot) % kL1CacheLineSize == 0,
+    sizeof(RequestSlot) % hrz::L1CacheLineSize == 0,
     "RequestSlot size must be a multiple of 64 bytes");
 static_assert(
-    alignof(RequestSlot) == kL1CacheLineSize,
+    alignof(RequestSlot) == hrz::L1CacheLineSize,
     "RequestSlot size must be aligned on 64 bytes");
 
 size_t _header_callback(char* raw_header, size_t size, size_t nitems, void* userdata)

@@ -4,7 +4,7 @@
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_blob_image.h>
 #include <hrz_common_blob_malloc_adapter.h>
-#include <hrz_common_image_processing.h>
+#include <hrz_common_color.h>
 #include <hrz_common_profiling.h>
 #include <hrz_fnd_defer.h>
 #include <hrz_fnd_inlined_vector.h>
@@ -147,33 +147,10 @@ std::optional<hrz::BlobImage> finalize_image(
     int width,
     int height,
     int bytes_per_pixel,
-    bool premultiply_alpha,
     bool convert_scalars_to_float,
     const hrz::blobs::BlobHandle& decoded_image_blob,
     const hrz_jobs::JobContext& context)
 {
-    if (premultiply_alpha)
-    {
-        if (encoded_image_format == hrz_proto::ImageFormat::SRGBA_8)
-        {
-            assert(bytes_per_pixel == 4);
-            auto decoded_image_data = decoded_image_blob.get_mutable_data();
-
-            transform_32bit_image_data(
-                decoded_image_data.data(), width * height,
-                [](uint32_t v) {
-                    return std::bit_cast<uint32_t>(
-                        hrz::premultiply_alpha(std::bit_cast<lm::ubvec4>(v)));
-                });
-        }
-        else
-        {
-            HRZ_LOG_WARNING(
-                "Cannot premultiply alpha of image of format {}",
-                hrz_proto::ImageFormat_Name(encoded_image_format));
-        }
-    }
-
     if (convert_scalars_to_float)
     {
         auto convert = [&](float (*decode_func)(uint32_t))
@@ -219,22 +196,26 @@ std::optional<hrz::BlobImage> finalize_image(
 basist::transcoder_texture_format select_target_compressed_texture_format(
     basist::basis_tex_format source_format,
     bool has_alpha,
+    bool is_srgb,
     const hrz::PlatformInfo& platform_info,
     const my::Instance::Info& my_instance_info)
 {
-    if (my_instance_info.has_pvrtc2_texture_compression)
+#define HRZ_HAS_TEXTURE_COMPRESSION(COMP)                            \
+    ((!is_srgb && my_instance_info.has_##COMP##_texture_compression) \
+     || (is_srgb && my_instance_info.has_##COMP##_srgb_texture_compression))
+
+    if (HRZ_HAS_TEXTURE_COMPRESSION(pvrtc2))
     {
         // Basis Universal has cTFPVRTC2_4_RGB, but the OpenGL ES extension
         // has no such format.
         return basist::transcoder_texture_format::cTFPVRTC2_4_RGBA;
     }
-    if (my_instance_info.has_astc_texture_compression
+    if (HRZ_HAS_TEXTURE_COMPRESSION(astc)
         && (has_alpha || source_format == basist::basis_tex_format::cUASTC4x4))
     {
         return basist::transcoder_texture_format::cTFASTC_4x4_RGBA;
     }
-    if (my_instance_info.has_bc7_texture_compression
-        && source_format == basist::basis_tex_format::cUASTC4x4)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(bc7) && source_format == basist::basis_tex_format::cUASTC4x4)
     {
         return basist::transcoder_texture_format::cTFBC7_RGBA;
     }
@@ -245,28 +226,28 @@ basist::transcoder_texture_format select_target_compressed_texture_format(
     }
     // According to some reports, ETC1/2 support on desktop, when present,
     // is likely to be emulated.
-    if (my_instance_info.has_etc2_texture_compression && platform_info.is_mobile())
+    if (HRZ_HAS_TEXTURE_COMPRESSION(etc2) && platform_info.is_mobile())
     {
         return basist::transcoder_texture_format::cTFETC2_RGBA;
     }
-    if (my_instance_info.has_etc1_texture_compression && platform_info.is_mobile())
+    if (HRZ_HAS_TEXTURE_COMPRESSION(etc1) && platform_info.is_mobile())
     {
         return has_alpha ? basist::transcoder_texture_format::cTFRGBA32
                          : basist::transcoder_texture_format::cTFETC1_RGB;
     }
-    if (my_instance_info.has_astc_texture_compression)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(astc))
     {
         return basist::transcoder_texture_format::cTFASTC_4x4_RGBA;
     }
-    if (my_instance_info.has_bc7_texture_compression)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(bc7))
     {
         return basist::transcoder_texture_format::cTFBC7_RGBA;
     }
-    if (my_instance_info.has_etc2_texture_compression)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(etc2))
     {
         return basist::transcoder_texture_format::cTFETC2_RGBA;
     }
-    if (my_instance_info.has_etc1_texture_compression)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(etc1))
     {
         return has_alpha ? basist::transcoder_texture_format::cTFRGBA32
                          : basist::transcoder_texture_format::cTFETC1_RGB;
@@ -277,16 +258,46 @@ basist::transcoder_texture_format select_target_compressed_texture_format(
     //     WEBGL_compressed_texture_astc formats instead. They are more widely supported
     //     and offer a larger range of quality controls.
     // @Todo Some textures appear full black when transcoding to PVRTC.
-    if (my_instance_info.has_pvrtc_texture_compression)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(pvrtc))
     {
         return has_alpha ? basist::transcoder_texture_format::cTFPVRTC1_4_RGBA
                          : basist::transcoder_texture_format::cTFPVRTC1_4_RGB;
     }
     return basist::transcoder_texture_format::cTFRGBA32;
+
+#undef HRZ_HAS_TEXTURE_COMPRESSION
 }
 
-my::TextureFormat convert_basisu_texture_format(basist::transcoder_texture_format format)
+my::TextureFormat convert_basisu_texture_format(
+    basist::transcoder_texture_format format,
+    bool is_srgb)
 {
+    if (is_srgb)
+    {
+        switch (format)
+        {
+            case basist::transcoder_texture_format::cTFBC1_RGB: return my::TextureFormat::SRGB_BC1;
+            case basist::transcoder_texture_format::cTFBC3_RGBA:
+                return my::TextureFormat::SRGBA_BC3;
+            case basist::transcoder_texture_format::cTFBC7_RGBA:
+                return my::TextureFormat::SRGBA_BC7;
+            case basist::transcoder_texture_format::cTFETC1_RGB:
+                return my::TextureFormat::SRGB_ETC1;
+            case basist::transcoder_texture_format::cTFETC2_RGBA:
+                return my::TextureFormat::SRGBA_ETC2_EAC;
+            case basist::transcoder_texture_format::cTFASTC_4x4_RGBA:
+                return my::TextureFormat::SRGBA_ASTC_4x4;
+            case basist::transcoder_texture_format::cTFPVRTC1_4_RGB:
+                return my::TextureFormat::SRGB_PVRTC1_4BPP;
+            case basist::transcoder_texture_format::cTFPVRTC1_4_RGBA:
+                return my::TextureFormat::SRGBA_PVRTC1_4BPP;
+            case basist::transcoder_texture_format::cTFPVRTC2_4_RGBA:
+                return my::TextureFormat::SRGBA_PVRTC2_4BPP;
+            case basist::transcoder_texture_format::cTFRGBA32: return my::TextureFormat::SRGBA8;
+            default: assert(false && "Unhandled case"); return my::TextureFormat::SRGBA8;
+        }
+    }
+
     switch (format)
     {
         case basist::transcoder_texture_format::cTFBC1_RGB: return my::TextureFormat::RGB_BC1;
@@ -345,15 +356,17 @@ hrz::JobResult decode_ktx2(
         return hrz::JobResult::FAILURE;
     }
 
+    bool is_srgb = transcoder.get_dfd_transfer_func() == basist::KTX2_KHR_DF_TRANSFER_SRGB;
     auto target_texture_format = allow_decoding_to_compressed_image
         ? select_target_compressed_texture_format(
-            transcoder.get_basis_tex_format(), transcoder.get_has_alpha(), platform_info,
+            transcoder.get_basis_tex_format(), transcoder.get_has_alpha(), is_srgb, platform_info,
             my_instance_info)
         : basist::transcoder_texture_format::cTFRGBA32;
+    auto texture_format = convert_basisu_texture_format(target_texture_format, is_srgb);
 
     my::TextureLayout texture_layout{};
     texture_layout.type = my::TextureLayout::Type2D;
-    texture_layout.format = convert_basisu_texture_format(target_texture_format);
+    texture_layout.format = texture_format;
     texture_layout.width = 0;
     texture_layout.height = 0;
     texture_layout.depth = 1;
@@ -386,9 +399,10 @@ hrz::JobResult decode_ktx2(
                 || level_height != texture_layout.get_level_data_height(level))
             {
                 HRZ_LOG_ERROR(
-                    "Unexpected level size: got {}x{}, expected {}x{}", level_width, level_height,
-                    texture_layout.get_level_data_width(level),
-                    texture_layout.get_level_data_height(level));
+                    "Unexpected level {} size: got {}x{}, expected {}x{} (image size is {}x{})",
+                    level, level_width, level_height, texture_layout.get_level_data_width(level),
+                    texture_layout.get_level_data_height(level), transcoder.get_width(),
+                    transcoder.get_height());
                 return hrz::JobResult::FAILURE;
             }
         }
@@ -423,9 +437,8 @@ hrz::JobResult decode_ktx2(
     }
 
     decoded_image = hrz::BlobImage::make(
-        convert_basisu_texture_format(target_texture_format), texture_layout.width,
-        texture_layout.height, texture_layout.levels, std::move(decoded_image_blob.value()),
-        context.get_blob_allocator());
+        texture_format, texture_layout.width, texture_layout.height, texture_layout.levels,
+        std::move(decoded_image_blob.value()), context.get_blob_allocator());
 
     return hrz::JobResult::SUCCESS;
 }
@@ -766,10 +779,6 @@ hrz::JobResult run(
 
     if (is_data_ktx2(encoded_image_data))
     {
-        if (params.premultiply_alpha)
-        {
-            HRZ_LOG_WARNING("Cannot premultiply alpha of KTX2 image");
-        }
         return decode_ktx2(
             encoded_image_data, params.image_format, params.allow_decoding_to_compressed_image,
             params.platform_info, params.my_instance_info, decoded_image, context);
@@ -815,8 +824,8 @@ hrz::JobResult run(
     if (decoded_image_blob.has_value())
     {
         auto decoded_image_opt = finalize_image(
-            params.image_format, width, height, byte_per_pixel, params.premultiply_alpha,
-            params.convert_scalars_to_float, decoded_image_blob.value(), context);
+            params.image_format, width, height, byte_per_pixel, params.convert_scalars_to_float,
+            decoded_image_blob.value(), context);
         if (decoded_image_opt.has_value())
         {
             decoded_image = std::move(decoded_image_opt.value());

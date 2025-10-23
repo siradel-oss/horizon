@@ -719,10 +719,10 @@ TEST_F(FeatureStyling, set_colorize_numeric)
     data.ast = ast;
     add_repr(data, 0, "r");
 
-    hrz::Palette palette;
-    palette.type = hrz_proto::PaletteType::NUMERIC;
-    palette.numeric.mode = hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB;
-    palette.name = "numeric_palette";
+    hrz_proto::Palette palette;
+    palette.set_type(hrz_proto::PaletteType::NUMERIC);
+    palette.mutable_numeric()->set_interpolation_mode(hrz_proto::ColorInterpolationMode::OKLAB);
+    palette.set_name("numeric_palette");
 
     hrz_proto::Color lower;
     lower.set_r(1);
@@ -730,21 +730,31 @@ TEST_F(FeatureStyling, set_colorize_numeric)
     lower.set_b(1);
     lower.set_a(1);
 
+    auto color_point = palette.mutable_numeric()->add_color_points();
+    color_point->set_value(0.0f);
+    color_point->mutable_first_color()->CopyFrom(lower);
+    color_point->mutable_second_color()->CopyFrom(lower);
+
     hrz_proto::Color upper;
     upper.set_r(0);
     upper.set_g(0);
     upper.set_b(0);
     upper.set_a(1);
 
-    hrz::Palette::NumericColorPoint cp_low =
-        hrz::palette::from_proto(lower, lower, hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB);
-    hrz::Palette::NumericColorPoint cp_up =
-        hrz::palette::from_proto(upper, upper, hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB);
-    palette.numeric.color_points.push_back({0.0, cp_low});
-    palette.numeric.color_points.push_back({100.0, cp_up});
-    palette.numeric.nan_color_srgb = lm::vec4(1, 0, 1, 1);
+    color_point = palette.mutable_numeric()->add_color_points();
+    color_point->set_value(100.0f);
+    color_point->mutable_first_color()->CopyFrom(upper);
+    color_point->mutable_second_color()->CopyFrom(upper);
 
-    data.palettes.push_back(std::move(palette));
+    hrz_proto::Color nan_color;
+    nan_color.set_r(1);
+    nan_color.set_g(0);
+    nan_color.set_b(0);
+    nan_color.set_a(1);
+
+    palette.mutable_numeric()->mutable_nan_color()->CopyFrom(nan_color);
+
+    data.palettes.push_back(hrz::palette::from_proto(palette));
 
     auto attr = new_attribute();
     for (int i = 0; i < 5; ++i)
@@ -762,7 +772,7 @@ TEST_F(FeatureStyling, set_colorize_numeric)
     ASSERT_EQ(hrz::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
-    uint32_t values[5] = {0xffffffff, 0xffbcbcbc, 0xff7f7f7f, 0xff494949, 0xff1c1c1c};
+    uint32_t values[5] = {0xffffffff, 0xffbebebe, 0xff808080, 0xff484848, 0xff161616};
 
     for (size_t i = 0; i < 5; ++i)
     {
@@ -800,23 +810,39 @@ TEST_F(FeatureStyling, set_colorize_labels)
     data.ast = ast;
     add_repr(data, 0, "r");
 
-    hrz::Palette palette;
-    palette.type = hrz_proto::PaletteType::LABEL;
-    palette.name = "label_palette";
+    hrz_proto::Palette palette;
+    palette.set_type(hrz_proto::PaletteType::LABEL);
+    palette.set_name("label_palette");
 
-    hrz::Palette::LabelColor label1;
-    label1.label = "A";
-    label1.color = lm::vec4(1, 1, 1, 1);
+    hrz_proto::Color a_color;
+    a_color.set_r(1);
+    a_color.set_g(1);
+    a_color.set_b(1);
+    a_color.set_a(1);
 
-    hrz::Palette::LabelColor label2;
-    label2.label = "B";
-    label2.color = lm::vec4(0.5, 0.5, 0.5, 1);
+    auto label = palette.mutable_label()->add_labels();
+    label->set_label("A");
+    label->mutable_color()->CopyFrom(a_color);
 
-    palette.label.mapping.push_back(label1);
-    palette.label.mapping.push_back(label2);
-    palette.label.default_color = lm::vec4(1, 0, 1, 1);
+    hrz_proto::Color b_color;
+    b_color.set_r(0.5f);
+    b_color.set_g(0.5f);
+    b_color.set_b(0.5f);
+    b_color.set_a(1);
 
-    data.palettes.push_back(std::move(palette));
+    label = palette.mutable_label()->add_labels();
+    label->set_label("B");
+    label->mutable_color()->CopyFrom(b_color);
+
+    hrz_proto::Color default_color;
+    default_color.set_r(1);
+    default_color.set_g(0);
+    default_color.set_b(1);
+    default_color.set_a(1);
+
+    palette.mutable_label()->mutable_default_color()->CopyFrom(default_color);
+
+    data.palettes.push_back(hrz::palette::from_proto(palette));
 
     auto attr = new_attribute();
     attr.push((std::string_view) "A");
@@ -832,7 +858,6 @@ TEST_F(FeatureStyling, set_colorize_labels)
     ASSERT_EQ(hrz::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
 
-    // Last two have rounding errors.
     uint32_t values[3] = {0xffffffff, 0xffff00ff, 0xff808080};
 
     for (size_t i = 0; i < 3; ++i)

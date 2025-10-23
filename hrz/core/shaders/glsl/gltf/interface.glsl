@@ -3,8 +3,8 @@
 varying vec2 v_uv_0;
 varying vec2 v_uv_1;
 
-varying vec4 v_geometry_color_lin;
-flat varying vec4 v_feature_color_lin;
+varying vec4 v_geometry_color;
+flat varying vec4 v_feature_color;
 
 #ifdef GLTF_VISUAL
     varying vec3 v_view_pos;

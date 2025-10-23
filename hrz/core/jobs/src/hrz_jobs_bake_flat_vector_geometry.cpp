@@ -5,6 +5,7 @@
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_blob_array.h>
 #include <hrz_common_blob_vector.h>
+#include <hrz_common_color.h>
 #include <hrz_common_profiling.h>
 #include <hrz_common_proj.h>
 #include <hrz_common_triangulation.h>
@@ -40,7 +41,8 @@ struct hash<PolygonPatternStyle>
     {
         return hrz::hash_values(
             style.sprite_size, style.sprite_offset, style.polygon_pattern_transform,
-            style.background_color, style.pattern_color, style.pattern_color_blend_strength);
+            style.background_color_srgb, style.pattern_color_srgb,
+            style.pattern_color_blend_strength);
     }
 };
 } // namespace std
@@ -53,7 +55,8 @@ bool operator==(const PolygonPatternStyle& lhs, const PolygonPatternStyle& rhs)
 {
     return lhs.sprite_size == rhs.sprite_size && lhs.sprite_offset == rhs.sprite_offset
         && lhs.polygon_pattern_transform == rhs.polygon_pattern_transform
-        && lhs.background_color == rhs.background_color && lhs.pattern_color == rhs.pattern_color
+        && lhs.background_color_srgb == rhs.background_color_srgb
+        && lhs.pattern_color_srgb == rhs.pattern_color_srgb
         && lhs.pattern_color_blend_strength == rhs.pattern_color_blend_strength;
 }
 } // namespace hrz::vt
@@ -980,9 +983,6 @@ hrz::JobResult run(
 
     const auto& style = input.style;
 
-    lm::ubvec4 default_fill_rgba = hrz::convert_rgba_color_to_bytes(input.default_color);
-    lm::ubvec4 default_empty_rgba = hrz::convert_rgba_color_to_bytes(input.default_empty_color);
-
     lm::dbbox2 tile_bounds = hrz::mercator_tile_bbox_meters(input.coords);
     lm::dvec2 tile_size = tile_bounds.max - tile_bounds.min;
 
@@ -1016,8 +1016,8 @@ hrz::JobResult run(
         uint64_t prp_begin = instance.first_prp;
         uint64_t prp_end = prp_begin + instance.prp_count;
 
-        lm::ubvec4 fill_rgba = default_fill_rgba;
-        lm::ubvec4 empty_rgba = default_empty_rgba;
+        lm::ubvec4 fill_color_srgb = input.default_color_srgb;
+        lm::ubvec4 empty_color_srgb = input.default_empty_color_srgb;
 
         float line_width = input.default_line_width;
         float disc_radius = input.default_disc_radius;
@@ -1029,8 +1029,7 @@ hrz::JobResult run(
         std::string_view polygon_pattern_sprite_name = input.default_polygon_pattern_sprite_name;
         lm::vec2 polygon_pattern_size = input.default_polygon_pattern_size;
         float polygon_pattern_rotation = input.default_polygon_pattern_rotation;
-        lm::ubvec4 polygon_pattern_color =
-            hrz::convert_rgba_color_to_bytes(input.default_polygon_pattern_color);
+        lm::ubvec4 polygon_pattern_color_srgb = input.default_polygon_pattern_color_srgb;
         float polygon_pattern_blend_strength = input.default_polygon_pattern_color_blend_strength;
 
         for (uint64_t j = prp_begin; j < prp_end; ++j)
@@ -1041,7 +1040,7 @@ hrz::JobResult run(
             }
             if (style_prps[j] == input.color_prp)
             {
-                fill_rgba = style_values.as_color(j);
+                fill_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.disc_radius_prp)
             {
@@ -1061,7 +1060,7 @@ hrz::JobResult run(
             }
             if (style_prps[j] == input.empty_color_prp)
             {
-                empty_rgba = style_values.as_color(j);
+                empty_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.polygon_pattern_sprite_index_prp)
             {
@@ -1085,13 +1084,30 @@ hrz::JobResult run(
             }
             if (style_prps[j] == input.polygon_pattern_color_prp)
             {
-                polygon_pattern_color = style_values.as_color(j);
+                polygon_pattern_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.polygon_pattern_color_blend_strength_prp)
             {
                 polygon_pattern_blend_strength =
                     hrz::clamp((float)style_values.as_number(j), 0.0f, 1.0f);
             }
+        }
+
+        lm::ubvec4 fill_color_oklab = {};
+        lm::ubvec4 empty_color_oklab = {};
+        if ((feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
+             && input.polygons_outline)
+            || feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
+        {
+            // This stores Oklab colours in 8-bit-per-channel vectors. It's not
+            // great, and some precision is lost. (Usually only sRGB colours should
+            // be reduced to 8 bits per channel.) However the colour interpolation
+            // between these two colours in done with floats in the shader, so
+            // the precision loss should be acceptable.
+            fill_color_oklab = hrz::convert_rgba_color_to_bytes(
+                hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(fill_color_srgb)));
+            empty_color_oklab = hrz::convert_rgba_color_to_bytes(
+                hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(empty_color_srgb)));
         }
 
         if (animation_speed != 0)
@@ -1113,9 +1129,9 @@ hrz::JobResult run(
             {
                 generate_polylines_geometry(
                     feature_index, feature_points, feature_points_geo, feature_linestring_sizes,
-                    polyline_positions, polyline_segment_counts, polyline_vertices, fill_rgba,
-                    line_width, dash_length, dash_period, animation_speed, empty_rgba, input.coords,
-                    tile_bounds, input.clip_to_tile, true);
+                    polyline_positions, polyline_segment_counts, polyline_vertices,
+                    fill_color_oklab, line_width, dash_length, dash_period, animation_speed,
+                    empty_color_oklab, input.coords, tile_bounds, input.clip_to_tile, true);
             }
             else
             {
@@ -1168,8 +1184,8 @@ hrz::JobResult run(
                     style.polygon_pattern_transform = lm::mat2(
                         lm::vec2(lm::dvec2(transform.x.x, transform.x.y)),
                         lm::vec2(lm::dvec2(transform.y.x, transform.y.y)));
-                    style.background_color = fill_rgba;
-                    style.pattern_color = polygon_pattern_color;
+                    style.background_color_srgb = fill_color_srgb;
+                    style.pattern_color_srgb = polygon_pattern_color_srgb;
                     style.pattern_color_blend_strength = polygon_pattern_blend_strength;
 
                     uint32_t pattern_style_index = 0;
@@ -1186,7 +1202,7 @@ hrz::JobResult run(
 
                     generate_polygon_geometry<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>(
                         feature_index, feature_points, feature_linestring_sizes, polygon_positions,
-                        pattern_polygon_vertices, pattern_polygon_indices, fill_rgba,
+                        pattern_polygon_vertices, pattern_polygon_indices, fill_color_srgb,
                         pattern_style_index, input.coords, tile_bounds, input.clip_to_tile,
                         context.get_blob_allocator());
                 }
@@ -1194,7 +1210,7 @@ hrz::JobResult run(
                 {
                     generate_polygon_geometry<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>(
                         feature_index, feature_points, feature_linestring_sizes, polygon_positions,
-                        solid_color_polygon_vertices, pattern_polygon_indices, fill_rgba, 0,
+                        solid_color_polygon_vertices, pattern_polygon_indices, fill_color_srgb, 0,
                         input.coords, tile_bounds, input.clip_to_tile,
                         context.get_blob_allocator());
                 }
@@ -1209,15 +1225,15 @@ hrz::JobResult run(
             {
                 generate_polylines_geometry(
                     feature_index, feature_points, feature_points_geo, feature_linestring_sizes,
-                    polyline_positions, polyline_segment_counts, polyline_vertices, fill_rgba,
-                    line_width, dash_length, dash_period, animation_speed, empty_rgba, input.coords,
-                    tile_bounds, input.clip_to_tile, false);
+                    polyline_positions, polyline_segment_counts, polyline_vertices,
+                    fill_color_oklab, line_width, dash_length, dash_period, animation_speed,
+                    empty_color_oklab, input.coords, tile_bounds, input.clip_to_tile, false);
             }
         }
         else if (feature.type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
         {
             generate_points_geometry(
-                feature_index, feature_points, point_positions, point_vertices, fill_rgba,
+                feature_index, feature_points, point_positions, point_vertices, fill_color_srgb,
                 disc_radius);
         }
     }

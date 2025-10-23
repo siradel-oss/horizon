@@ -143,6 +143,11 @@ PlatformInfo detect_platform(
         info.gpu_vendor = PlatformInfo::SwiftShader;
         info.gpu_form_factor = PlatformInfo::GpuFormFactor::Software;
     }
+    else if (gl_renderer.find("llvmpipe") != npos)
+    {
+        info.gpu_vendor = PlatformInfo::Llvmpipe;
+        info.gpu_form_factor = PlatformInfo::GpuFormFactor::Software;
+    }
 
     return info;
 }

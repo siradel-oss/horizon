@@ -404,23 +404,23 @@ ElementSystem::PrototypeH TextElementSystem::make_prototype(
     prototype.baking_params.default_font_size = descriptor.font_size().default_value();
     prototype.baking_params.font_size_prp =
         register_prp(descriptor.font_size().name(), prototype.baking_params.default_font_size);
-    prototype.baking_params.default_fill_color =
+    prototype.baking_params.default_fill_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.text_color().default_value());
     prototype.baking_params.fill_color_prp = register_prp(
         descriptor.text_color().name(),
         hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_fill_color));
+            prototype.baking_params.default_fill_color_srgb));
     prototype.baking_params.default_outline_size =
         std::max(descriptor.outline_width().default_value(), 0.0f);
     prototype.baking_params.outline_size_prp = register_prp(
         descriptor.outline_width().name(), prototype.baking_params.default_outline_size);
     prototype.baking_params.outline_size_unit = descriptor.outline_width_unit();
-    prototype.baking_params.default_outline_color =
+    prototype.baking_params.default_outline_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.outline_color().default_value());
     prototype.baking_params.outline_color_prp = register_prp(
         descriptor.outline_color().name(),
         hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_outline_color));
+            prototype.baking_params.default_outline_color_srgb));
     prototype.baking_params.default_alignment = descriptor.alignment().default_value();
     prototype.baking_params.alignment_prp = register_prp(
         descriptor.alignment().name(), (int64_t)prototype.baking_params.default_alignment);
@@ -698,14 +698,14 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
     {
         auto data = instance_data.fill_colors.get_data();
         renderable.data.fill_color_texture = alloc_data_texture(
-            std::as_bytes(data.as_span()), my::TextureFormat::RGBA8, 1,
+            std::as_bytes(data.as_span()), my::TextureFormat::SRGBA8, 1,
             "text fill color texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.fill_color_texture, "text fill color texture");
     }
     {
         auto data = instance_data.outline_colors.get_data();
         renderable.data.outline_color_texture = alloc_data_texture(
-            std::as_bytes(data.as_span()), my::TextureFormat::RGBA8, 1,
+            std::as_bytes(data.as_span()), my::TextureFormat::SRGBA8, 1,
             "text outline color texture"_ss);
         CHECK_RESOURCE_UPLOAD(renderable.data.outline_color_texture, "text outline color texture");
     }

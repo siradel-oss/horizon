@@ -22,7 +22,7 @@ void output_uv_and_color()
 {
     v_uv_0 = fetch_uv(i_uv_0, i_compressed_uv_0, hrz_prim.materials[0].uv_compression);
     v_uv_1 = fetch_uv(i_uv_1, i_compressed_uv_1, hrz_prim.materials[1].uv_compression);
-    v_geometry_color_lin = fetch_color();
+    v_geometry_color = fetch_color();
 }
 
 #ifdef GLTF_VISUAL

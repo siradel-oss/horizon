@@ -1,26 +1,32 @@
 #pragma once
 
-vec3 srgb_to_linear(vec3 x)
-{
-    return pow(x, vec3(2.2));
+// sRGB <-> Linear conversion functions from Godot
+// https://github.com/godotengine/godot/blob/c5cf73a2e7abe0dae858bc47408d57700f7c2845/drivers/gles3/shaders/tonemap_inc.glsl#L13
+// MIT license
+
+// This expects 0-1 range input, outside that range it behaves poorly.
+vec3 srgb_to_linear(vec3 color) {
+	// Approximation from http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html
+	return color * (color * (color * 0.305306011 + 0.682171111) + 0.012522878);
 }
 
-vec4 srgb_to_linear(vec4 x)
+vec4 srgb_to_linear(vec4 color)
 {
-    return vec4(srgb_to_linear(x.rgb), x.a);
+    return vec4(srgb_to_linear(color.rgb), color.a);
 }
 
-vec3 linear_to_srgb(vec3 x)
-{
-    return pow(x, vec3(1.0 / 2.2));
+// This expects 0-1 range input.
+vec3 linear_to_srgb(vec3 color) {
+	// Approximation from http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html
+	return max(vec3(1.055) * pow(color, vec3(0.416666667)) - vec3(0.055), vec3(0.0));
 }
 
-vec4 linear_to_srgb(vec4 x)
+vec4 linear_to_srgb(vec4 color)
 {
-    return vec4(linear_to_srgb(x.rgb), x.a);
+    return vec4(linear_to_srgb(color.rgb), color.a);
 }
 
-// See 'hrz_common_palette.cpp'.
+// See 'hrz_common_color.cpp'.
 vec3 oklab_to_linear(vec3 lms)
 {
     vec3 lms_lin = lms.xyz * lms.xyz * lms.xyz;

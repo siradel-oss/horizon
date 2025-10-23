@@ -13,6 +13,8 @@ layout(location = 9) in uint i_anchor_index;
 #include "symbol/common.vert.glsl"
 #include "symbol/decorated_shape/defs.glsl"
 
+#include "common/colors.glsl"
+
 void main()
 {
     handle_visibility(i_anchor_index);
@@ -22,9 +24,9 @@ void main()
     handle_selection(anchor);
 
     const float padding = DECORATED_BOX_PADDING;
-    v_color = i_color;
+    v_color = srgb_to_linear(i_color);
     v_color.rgb *= v_color.a;
-    v_border_color = i_border_color;
+    v_border_color = srgb_to_linear(i_border_color);
     v_border_color.rgb *= v_border_color.a;
     v_border_radius = i_border_size_radius.y;
     v_border_size = i_border_size_radius.x;

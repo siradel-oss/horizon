@@ -11,6 +11,8 @@ layout(location = 4) in uint i_anchor_index;
 #include "symbol/common.vert.glsl"
 #include "symbol/leader_line/defs.glsl"
 
+#include "common/colors.glsl"
+
 void main()
 {
     handle_visibility(i_anchor_index);
@@ -19,7 +21,7 @@ void main()
 
     handle_selection(anchor);
 
-    v_color = i_color;
+    v_color = srgb_to_linear(i_color);
     v_color.rgb *= v_color.a;
 
 #ifdef SYMBOL_VISUAL

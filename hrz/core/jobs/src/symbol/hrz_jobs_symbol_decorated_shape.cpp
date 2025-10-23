@@ -39,11 +39,11 @@ ElementGeometry SymbolBaker::DecoratedShapeVisitor::visit_element(
     Size clamped_size = lm::clamp(fitted_size, constraints.min, constraints.max);
     lm::vec2 alignment_offset = (clamped_size - fitted_size) * alignment;
 
-    lm::ubvec4 color = params.default_color;
-    load_rgba_color_property(params.color_prp, &color);
+    lm::ubvec4 color_srgb = params.default_color_srgb;
+    load_rgba_color_property(params.color_prp, &color_srgb);
 
-    lm::ubvec4 border_color = params.default_border_color;
-    load_rgba_color_property(params.border_color_prp, &border_color);
+    lm::ubvec4 border_color_srgb = params.default_border_color_srgb;
+    load_rgba_color_property(params.border_color_prp, &border_color_srgb);
 
     float border_size = params.default_border_size;
     load_float_property(params.border_size_prp, &border_size);
@@ -56,8 +56,8 @@ ElementGeometry SymbolBaker::DecoratedShapeVisitor::visit_element(
         DecoratedShapeInstance instance;
         instance.transform = lm::translation(lm::vec3(alignment_offset, 0.0f));
         instance.size = fitted_size;
-        instance.color = color;
-        instance.border_color = border_color;
+        instance.color = color_srgb;
+        instance.border_color = border_color_srgb;
         instance.border_size_radius = lm::vec2(border_size, border_radius);
         instance.anchor_index = element.anchor_index.value();
 

@@ -1,6 +1,6 @@
 #pragma once
 
-varying vec4 v_color;
+varying vec4 v_color; // Oklab for polylines, sRGB otherwise
 
 #ifdef FLAT_POINTS
 varying vec2 v_uv;
@@ -9,7 +9,7 @@ varying float v_radius_px;
 #endif
 
 #ifdef FLAT_POLYLINES
-varying vec4 v_empty_color;
+varying vec4 v_empty_color_oklab;
 varying float v_pos_along_line;
 
 #ifdef FLAT_POLYLINES_ROUND

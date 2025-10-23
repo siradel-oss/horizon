@@ -19,7 +19,7 @@ void fill_ubo_data(PaletteUniformData* ubo_data, const Palette& palette)
     }
 
     ubo_data->num_color_points = num_color_points;
-    ubo_data->nan_color_srgb = palette.numeric.nan_color_srgb;
+    ubo_data->nan_color = palette.numeric.nan_color;
     ubo_data->color_interpolation_mode = (int32_t)palette.numeric.mode;
 
     auto it = palette.numeric.color_points.begin();

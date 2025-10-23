@@ -1,6 +1,7 @@
 #include "hrz_jobs_declarations.h"
 
 #include <hrz_common_blob_allocator.h>
+#include <hrz_common_color.h>
 #include <hrz_common_image_processing.h>
 #include <hrz_common_image_view.h>
 #include <hrz_common_palette.h>
@@ -86,21 +87,20 @@ hrz::JobResult run(
             {
                 auto pixel = fetch_pixel_func(image_view, x, y, nodata_function);
 
-                lm::vec4 color;
+                lm::ubvec4 color_srgb;
                 if (!pixel.is_nodata)
                 {
-                    color =
-                        hrz::palette::numeric_palettization(params.palette, pixel.value[0]).value();
+                    color_srgb = hrz::convert_rgba_color_to_bytes(hrz::linear_to_srgb(
+                        hrz::palette::numeric_palettization(params.palette, pixel.value[0])
+                            .value()));
                 }
                 else
                 {
-                    color = params.nodata_color;
+                    color_srgb = params.nodata_color_srgb;
                 }
 
-                *out_ptr++ = (uint8_t)(color.r * 255);
-                *out_ptr++ = (uint8_t)(color.g * 255);
-                *out_ptr++ = (uint8_t)(color.b * 255);
-                *out_ptr++ = (uint8_t)(color.a * 255);
+                std::memcpy(out_ptr, &color_srgb, sizeof(lm::ubvec4));
+                out_ptr += sizeof(lm::ubvec4);
             }
         }
     }

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "camera/hrz_core_camera_types.h"
-#include "lin_maths.h"
 
-#include <hrz_common_proto_maths.h>
 #include <hrz_fnd_class.h>
 #include <hrz_protocol_all.h>
+
+#include <lin_maths.h>
 
 namespace hrz
 {
@@ -60,14 +60,5 @@ public:
 };
 } // namespace grid
 
-inline grid::GridParams from_proto(const hrz_proto::Grid& grid)
-{
-    grid::GridParams grid_params;
-    grid_params.extent = grid.extent();
-    grid_params.cell_size = grid.cell_size();
-    grid_params.color = hrz::to_lm(grid.color());
-    grid_params.scene_views_bitset = grid.scene_views().bits();
-    grid_params.extent_unit = grid.extent_unit();
-    return grid_params;
-}
+grid::GridParams from_proto(const hrz_proto::Grid& grid);
 } // namespace hrz

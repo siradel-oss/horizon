@@ -173,7 +173,7 @@ const TURBO_COLORS = ["#4058D3", "#3FA6E8", "#51F0B0", "#A5F070", "#FADA63", "#F
 
 function generatePalette(min: number, max: number): HrzProtocol.INumericPalette {
     let palette = new HrzProtocol.NumericPalette();
-    palette.interpolationMode = HrzProtocol.ColorInterpolationMode.PERCEPTUAL_OKLAB;
+    palette.interpolationMode = HrzProtocol.ColorInterpolationMode.OKLAB;
 
     for (let i = 0; i < TURBO_COLORS.length; i++) {
         const value = min + (max - min) * (i / (TURBO_COLORS.length - 1));

@@ -40,21 +40,17 @@ void main()
     handle_depth_and_clip();
 
     float value = 0.0;
-    vec4 color_lin = compute_material_color_lin(
+    vec4 color = compute_material_color(
         hrz_mesh.geometry.mesh_color_blend_mode, hrz_mesh.geometry.mesh_color_blend_strength, value);
 
 #ifdef GLTF_VISUAL
     if (hrz_mesh.geometry.draw_under_flat_overlays)
     {
-        vec4 color = linear_to_srgb(color_lin);
-        color.a = pow(color.a, 1.0 / 2.2);
         color = mix_premultiplied_colors(color, compute_overlay_color(v_overlay_cams_clip_pos));
-        color_lin = srgb_to_linear(color);
-        color_lin.a = pow(color_lin.a, 2.2);
     }
 
     uvec3 feature_reference = uvec3(hrz_mesh.geometry.feature_reference.r, v_feature_id);
-    o_color = apply_color_decoration(color_lin, get_normal(), feature_reference);
+    o_color = apply_color_decoration(color, get_normal(), feature_reference);
 #endif
 
 #ifdef GLTF_PICKING
@@ -86,5 +82,5 @@ void main()
     }
 #endif
 
-    handle_alpha_discard(color_lin.a);
+    handle_alpha_discard(color.a);
 }

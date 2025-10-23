@@ -32,7 +32,7 @@ hrz::JobResult run(
         return hrz::JobResult::SUCCESS;
     }
 
-    if (params.image.format() != my::TextureFormat::RGBA8)
+    if (params.image.format() != my::TextureFormat::SRGBA8)
     {
         HRZ_LOG_ERROR("Unsupported input image format");
         return hrz::JobResult::FAILURE;
@@ -44,8 +44,8 @@ hrz::JobResult run(
         return hrz::JobResult::FAILURE;
     }
 
-    if (params.output_format != my::TextureFormat::RGBA_BC3
-        && params.output_format != my::TextureFormat::RGBA_ETC2_EAC)
+    if (params.output_format != my::TextureFormat::SRGBA_BC3
+        && params.output_format != my::TextureFormat::SRGBA_ETC2_EAC)
     {
         HRZ_LOG_ERROR("Unsupported compressed texture format");
         return hrz::JobResult::FAILURE;
@@ -91,12 +91,12 @@ hrz::JobResult run(
 
         switch (params.output_format)
         {
-            case my::TextureFormat::RGBA_BC3:
+            case my::TextureFormat::SRGBA_BC3:
                 etcpak::CompressDxt5(
                     rgba_data.data(), block_data.data(), block_count_width * block_count_height,
                     block_count_width * 4);
                 break;
-            case my::TextureFormat::RGBA_ETC2_EAC:
+            case my::TextureFormat::SRGBA_ETC2_EAC:
             {
                 // Unfortunately, etcpak expects data in BGRA format when compressing to ETC.
                 // See https://github.com/wolfpld/etcpak/issues/34

@@ -8,9 +8,9 @@
 #include "vector/hrz_core_vector_repr.h"
 
 #include <hrz_common_blob_array.h>
+#include <hrz_common_color.h>
 #include <hrz_common_fmt.h>
 #include <hrz_common_monitoring_defs.h>
-#include <hrz_common_proto_maths.h>
 #include <hrz_common_style.h>
 #include <hrz_common_vector_data.h>
 #include <hrz_common_vector_tiles.h>
@@ -188,8 +188,8 @@ struct Config
     uint64_t dash_length_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t animation_speed_prp = hrz::style::Parser::INVALID_PROPERTY;
 
-    lm::vec4 default_color = {0, 0, 0, 0};
-    lm::vec4 default_empty_color = {0, 0, 0, 0};
+    lm::ubvec4 default_color_srgb = {0, 0, 0, 0};
+    lm::ubvec4 default_empty_color_srgb = {0, 0, 0, 0};
     float default_radius = 0;
     float default_altitude_offset = 0;
     hrz_proto::DashMode dash_mode{};
@@ -536,12 +536,14 @@ public:
         config.repr_id = repr.id();
 
         config.default_radius = repr.cylinder().radius().default_value();
-        config.default_color = hrz::to_lm(repr.cylinder().color().default_value());
+        config.default_color_srgb =
+            hrz::convert_proto_color_to_bytes(repr.cylinder().color().default_value());
         config.default_altitude_offset = repr.cylinder().altitude_offset().default_value();
         config.default_dash_period = repr.cylinder().dash_period().default_value();
         config.default_dash_length = repr.cylinder().dash_length().default_value();
         config.default_animation_speed = repr.cylinder().animation_speed().default_value();
-        config.default_empty_color = hrz::to_lm(repr.cylinder().empty_color().default_value());
+        config.default_empty_color_srgb =
+            hrz::convert_proto_color_to_bytes(repr.cylinder().empty_color().default_value());
 
         config.radius_prp = register_prp(radius_prp_name, config.default_radius);
         config.altitude_offset_prp =
@@ -549,11 +551,11 @@ public:
         config.color_prp = register_prp(
             color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_color));
+                config.default_color_srgb));
         config.empty_color_prp = register_prp(
             empty_color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_empty_color));
+                config.default_empty_color_srgb));
         config.dash_period_prp = register_prp(dash_period_prp_name, config.default_dash_period);
         config.dash_length_prp = register_prp(dash_length_prp_name, config.default_dash_length);
         config.animation_speed_prp =
@@ -630,10 +632,10 @@ public:
             HRZ_LOG_WARNING("Unknown config. Using default values.");
         }
 
-        bake_data.default_color = cfg.default_color;
+        bake_data.default_color_srgb = cfg.default_color_srgb;
         bake_data.default_radius = cfg.default_radius;
         bake_data.default_altitude_offset = cfg.default_altitude_offset;
-        bake_data.default_empty_color = cfg.default_empty_color;
+        bake_data.default_empty_color_srgb = cfg.default_empty_color_srgb;
         bake_data.default_dash_period = cfg.default_dash_period;
         bake_data.default_dash_length = cfg.default_dash_length;
         bake_data.default_animation_speed = cfg.default_animation_speed;

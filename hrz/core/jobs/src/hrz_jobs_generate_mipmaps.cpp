@@ -1,6 +1,7 @@
 #include "hrz_jobs_declarations.h"
 
 #include <hrz_common_blob_allocator.h>
+#include <hrz_common_color.h>
 #include <hrz_common_image_processing.h>
 #include <hrz_common_planet.h>
 #include <hrz_common_profiling.h>
@@ -34,6 +35,20 @@ void interpolate(const T* a, const T* b, T* res)
     {
         res[channel] = (a[channel] + b[channel]) / 2;
     }
+}
+
+template<>
+void interpolate<uint8_t, 4, hrz_proto::ImageFormat::SRGBA_8>(
+    const uint8_t* a,
+    const uint8_t* b,
+    uint8_t* res)
+{
+    lm::ubvec4 a_rgba;
+    std::memcpy(&a_rgba, a, sizeof(lm::ubvec4));
+    lm::ubvec4 b_rgba;
+    std::memcpy(&b_rgba, b, sizeof(lm::ubvec4));
+    lm::ubvec4 res_rgba = hrz::mix_srgb_colors_in_linear(a_rgba, b_rgba, 0.5f);
+    std::memcpy(res, &res_rgba, sizeof(lm::ubvec4));
 }
 
 template<>

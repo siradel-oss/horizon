@@ -1,11 +1,11 @@
 #include "planet/hrz_core_planet_raster_provider.h"
 #include "planet/hrz_core_planet_tile_fetcher.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_fmt.h>
 #include <hrz_common_image_processing.h>
 #include <hrz_common_palette.h>
 #include <hrz_common_planet.h>
-#include <hrz_common_proto_maths.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_format.h>
 #include <hrz_fnd_gen_object_pool.h>
@@ -71,7 +71,7 @@ class PalettizedRasterProvider : public RasterProvider
 
     std::unique_ptr<RasterProvider> child_raster_provider;
     hrz::Palette palette;
-    lm::vec4 nodata_color; // sRGB
+    lm::ubvec4 nodata_color_srgb;
     hrz_proto::RasterNodata nodata;
 
     std::vector<hrz_jobs::PalettizeImageTicket> jobs_to_cancel;
@@ -87,7 +87,7 @@ public:
         child_raster_provider(
             create_provider(params.provider(), queue, default_tile_cache_size, raster_id)),
         palette(hrz::palette::from_proto(params.palette())),
-        nodata_color(hrz::to_lm(params.nodata_color())),
+        nodata_color_srgb(hrz::convert_proto_color_to_bytes(params.nodata_color())),
         nodata(params.nodata()),
         raster_id(raster_id)
     {
@@ -352,7 +352,7 @@ public:
                         palettize_image_params.image = child_image.image;
                         palettize_image_params.nodata = child_raster_provider->get_nodata();
                         palettize_image_params.palette = palette;
-                        palettize_image_params.nodata_color = nodata_color;
+                        palettize_image_params.nodata_color_srgb = nodata_color_srgb;
 
                         tile->attribution = std::move(child_image.attribution);
                         tile->palettize_image_ticket = hrz_jobs::add_job_palettize_image(
@@ -443,7 +443,8 @@ public:
                 palettized_image_provider_path.is_nodata_color()
                 || palettized_image_provider_path.is_nodata())
             {
-                nodata_color = hrz::to_lm(provider_model.palettized().nodata_color());
+                nodata_color_srgb =
+                    hrz::convert_proto_color_to_bytes(provider_model.palettized().nodata_color());
 
                 return UpdateAction::RestartTiles;
             }

@@ -7,6 +7,7 @@
 #include "vector/hrz_core_vector_repr.h"
 
 #include <hrz_common_blob_array.h>
+#include <hrz_common_color.h>
 #include <hrz_common_fmt.h>
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_proto_maths.h>
@@ -404,7 +405,7 @@ struct Config
     uint64_t animation_speed_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t empty_color_prp = hrz::style::Parser::INVALID_PROPERTY;
 
-    lm::vec4 default_color = {0, 0, 0, 0};
+    lm::ubvec4 default_color_srgb = {0, 0, 0, 0};
 
     bool clip_to_tile = false;
     bool polygons_outline = false;
@@ -418,7 +419,7 @@ struct Config
     float default_dash_period = 0.0f;
     float default_dash_length = 0.0f;
     float default_animation_speed = 0.0f;
-    lm::vec4 default_empty_color = {0, 0, 0, 0};
+    lm::ubvec4 default_empty_color_srgb = {0, 0, 0, 0};
     hrz_proto::PolylineSide polyline_side;
     hrz_proto::InWorldSizeUnit line_width_unit;
 
@@ -447,7 +448,7 @@ struct Config
     hrz_proto::PolygonPatternTilingType polygon_pattern_tiling_type;
     hrz_proto::PolygonPatternReferenceLatitudeType polygon_pattern_reference_latitude_type;
     float polygon_pattern_reference_latitude = 0.0f;
-    lm::vec4 default_polygon_pattern_color = {0, 0, 0, 0};
+    lm::ubvec4 default_polygon_pattern_color_srgb = {0, 0, 0, 0};
     uint64_t polygon_pattern_color_prp = hrz::style::Parser::INVALID_PROPERTY;
     hrz_proto::BlendMode polygon_pattern_color_blend_mode;
     float default_polygon_pattern_color_blend_strength = 0.0f;
@@ -1119,20 +1120,21 @@ public:
         config.repr_id = repr.id();
 
         config.default_line_width = repr.flat_overlay_geometry().line_width().default_value();
-        config.default_color = hrz::to_lm(repr.flat_overlay_geometry().color().default_value());
+        config.default_color_srgb =
+            hrz::convert_proto_color_to_bytes(repr.flat_overlay_geometry().color().default_value());
         config.default_dash_length = repr.flat_overlay_geometry().dash_length().default_value();
         config.default_dash_period = repr.flat_overlay_geometry().dash_period().default_value();
         config.default_animation_speed =
             repr.flat_overlay_geometry().animation_speed().default_value();
-        config.default_empty_color =
-            hrz::to_lm(repr.flat_overlay_geometry().line_empty_color().default_value());
+        config.default_empty_color_srgb = hrz::convert_proto_color_to_bytes(
+            repr.flat_overlay_geometry().line_empty_color().default_value());
         config.default_disc_radius = repr.flat_overlay_geometry().disc_radius().default_value();
 
         config.line_width_prp = register_prp(line_width_prp_name, config.default_line_width);
         config.color_prp = register_prp(
             color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_color));
+                config.default_color_srgb));
         config.disc_radius_prp = register_prp(disc_radius_prp_name, config.default_disc_radius);
         config.dash_length_prp = register_prp(dash_length_prp_name, config.default_dash_length);
         config.dash_period_prp = register_prp(dash_period_prp_name, config.default_dash_period);
@@ -1141,7 +1143,7 @@ public:
         config.empty_color_prp = register_prp(
             empty_color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_empty_color));
+                config.default_empty_color_srgb));
 
         config.z_index = repr.flat_overlay_geometry().z_index();
         config.polygons_outline = repr.flat_overlay_geometry().polygons_outline();
@@ -1155,7 +1157,8 @@ public:
         config.polyline_side = repr.flat_overlay_geometry().side();
         config.line_width_unit = repr.flat_overlay_geometry().line_width_unit();
 
-        config.disc_outline_color = hrz::to_lm(repr.flat_overlay_geometry().disc_outline_color());
+        config.disc_outline_color = hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(repr.flat_overlay_geometry().disc_outline_color()));
         config.disc_outline_width = repr.flat_overlay_geometry().disc_outline_width();
         config.disc_radius_unit = repr.flat_overlay_geometry().disc_radius_unit();
 
@@ -1202,12 +1205,12 @@ public:
             repr.flat_overlay_geometry().polygon_pattern_reference_latitude_type();
         config.polygon_pattern_reference_latitude =
             lm::radians(repr.flat_overlay_geometry().polygon_pattern_reference_latitude());
-        config.default_polygon_pattern_color =
-            hrz::to_lm(repr.flat_overlay_geometry().polygon_pattern_color().default_value());
+        config.default_polygon_pattern_color_srgb = hrz::convert_proto_color_to_bytes(
+            repr.flat_overlay_geometry().polygon_pattern_color().default_value());
         config.polygon_pattern_color_prp = register_prp(
             repr.flat_overlay_geometry().polygon_pattern_color().name(),
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_polygon_pattern_color));
+                config.default_polygon_pattern_color_srgb));
         config.polygon_pattern_color_blend_mode =
             repr.flat_overlay_geometry().polygon_pattern_color_blend_mode();
         config.default_polygon_pattern_color_blend_strength =
@@ -1434,7 +1437,7 @@ public:
 
         auto& bake_data = tile->bake_data.value();
 
-        bake_data.default_color = cfg->default_color;
+        bake_data.default_color_srgb = cfg->default_color_srgb;
         bake_data.default_line_width = cfg->default_line_width;
         bake_data.default_disc_radius = cfg->default_disc_radius;
 
@@ -1447,7 +1450,7 @@ public:
         bake_data.default_dash_period = cfg->default_dash_period;
         bake_data.default_dash_length = cfg->default_dash_length;
         bake_data.default_animation_speed = cfg->default_animation_speed;
-        bake_data.default_empty_color = cfg->default_empty_color;
+        bake_data.default_empty_color_srgb = cfg->default_empty_color_srgb;
         bake_data.dash_period_prp = cfg->dash_period_prp;
         bake_data.dash_length_prp = cfg->dash_length_prp;
         bake_data.animation_speed_prp = cfg->animation_speed_prp;
@@ -1474,7 +1477,7 @@ public:
         bake_data.default_polygon_pattern_sprite_name = cfg->default_polygon_pattern_sprite_name;
         bake_data.default_polygon_pattern_size = cfg->default_polygon_pattern_size;
         bake_data.default_polygon_pattern_rotation = cfg->default_polygon_pattern_rotation;
-        bake_data.default_polygon_pattern_color = cfg->default_polygon_pattern_color;
+        bake_data.default_polygon_pattern_color_srgb = cfg->default_polygon_pattern_color_srgb;
         bake_data.default_polygon_pattern_color_blend_strength =
             cfg->default_polygon_pattern_color_blend_strength;
 

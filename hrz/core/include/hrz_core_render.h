@@ -198,7 +198,7 @@ struct FrameUniformData
     float ambient_strength;
     uint32_t _padding1[2];
 
-    lm::vec3 sun_color_linear;
+    lm::vec3 sun_color;
     float wrap_lighting;
 
     uint32_t first_imagery_group;

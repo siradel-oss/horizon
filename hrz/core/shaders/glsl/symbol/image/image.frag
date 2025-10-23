@@ -20,6 +20,8 @@ void main()
     vec4 color = texture(u_image, uv);
     if (color.a < 0.1) discard;
 
+    color.rgb *= color.a;
+
 #ifdef SYMBOL_VISUAL
     o_color = blend_premultiplied(hrz_image.blend_mode, color, v_color, hrz_image.blend_strength);
 #endif

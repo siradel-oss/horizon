@@ -23,9 +23,10 @@ layout(std140) uniform SkyParams
     vec3 ground_normal_view;   // The planet normal vector at the camera position, in view space
     float fog_min_depth;
     FogParams fog[2];
-    vec4 atmosphere_color; // Premultiplied alpha Oklab
-    vec4 space_color; // Premultiplied alpha Oklab
-    vec4 underground_color; // Premultiplied alpha linear when drawing atmosphere, Oklab when not
+    vec4 atmosphere_color; // Premultiplied alpha, Oklab if `oklab_gradient` is true else linear
+    vec4 space_color; // Premultiplied alpha, Oklab if `oklab_gradient` is true else linear
+    vec4 underground_color; // Premultiplied alpha, Oklab if `oklab_gradient` is true else linear
     float color_transition_horizon_start_angle;
     float color_transition_horizon_end_angle;
+    bool oklab_gradient;
 } hrz_sky;

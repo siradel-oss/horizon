@@ -4,6 +4,7 @@
 #include "hrz_core_render.h"
 #include "hrz_core_shaders.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_proto_geo.h>
 #include <hrz_common_proto_maths.h>
 #include <hrz_fnd_flat_hash_map.h>
@@ -106,7 +107,8 @@ RenderRequest _update_layer(ClippingPlaneLayerSystem* system, SceneModel* model,
     layer->inv_view = hrz::enu_to_ecef_transform_for_geo(from_proto(data.origin_position()));
     layer->view = lm::inverse(layer->inv_view);
     layer->normal = lm::dvec3(hrz::to_lm(data.normal()));
-    layer->outline_color = hrz::to_lm(data.outline_color());
+    layer->outline_color = hrz::premultiply_alpha(
+        hrz::srgb_to_linear(hrz::convert_proto_color_to_float(data.outline_color())));
     layer->outline_distance = data.outline_distance();
     layer->show_plane = data.show_plane();
     layer->grid_params = hrz::from_proto(data.grid());

@@ -1201,25 +1201,48 @@ void Monitoring::draw_ui(
 
         if (mu_header(ctx, "Texture formats"))
         {
-            static int layout[] = {60, -1};
-            mu_layout_row(ctx, 2, layout, 0);
+            static int layout[] = {60, 80, -1};
+            mu_layout_row(ctx, 3, layout, 0);
+
+            mu_text(ctx, "");
+            mu_text(ctx, "Linear");
+            mu_text(ctx, "sRGB");
 
             static mu_Color colors[2] = {{255, 127, 127, 255}, {127, 255, 127, 255}};
 
-            auto draw_format = [&](const char* name, bool available)
-            {
-                mu_text(ctx, name);
+            auto draw_availability = [&](bool available) {
                 mu_text_color(
                     ctx, available ? "Available" : "Unavailable", colors[available ? 1 : 0]);
             };
 
-            draw_format("BC1~3", my->get_info().has_bc1_bc2_bc3_texture_compression);
-            draw_format("BC7", my->get_info().has_bc7_texture_compression);
-            draw_format("ETC1", my->get_info().has_etc1_texture_compression);
-            draw_format("ETC2", my->get_info().has_etc2_texture_compression);
-            draw_format("ASTC", my->get_info().has_astc_texture_compression);
-            draw_format("PVRTC", my->get_info().has_pvrtc_texture_compression);
-            draw_format("PVRTC2", my->get_info().has_pvrtc2_texture_compression);
+            auto draw_format = [&](const char* name, bool rgb_available, bool srgb_available)
+            {
+                mu_text(ctx, name);
+                draw_availability(rgb_available);
+                draw_availability(srgb_available);
+            };
+
+            draw_format(
+                "BC1~3", my->get_info().has_bc1_bc2_bc3_texture_compression,
+                my->get_info().has_bc1_bc2_bc3_srgb_texture_compression);
+            draw_format(
+                "BC7", my->get_info().has_bc7_texture_compression,
+                my->get_info().has_bc7_srgb_texture_compression);
+            draw_format(
+                "ETC1", my->get_info().has_etc1_texture_compression,
+                my->get_info().has_etc1_srgb_texture_compression);
+            draw_format(
+                "ETC2", my->get_info().has_etc2_texture_compression,
+                my->get_info().has_etc2_srgb_texture_compression);
+            draw_format(
+                "ASTC", my->get_info().has_astc_texture_compression,
+                my->get_info().has_astc_srgb_texture_compression);
+            draw_format(
+                "PVRTC", my->get_info().has_pvrtc_texture_compression,
+                my->get_info().has_pvrtc_srgb_texture_compression);
+            draw_format(
+                "PVRTC2", my->get_info().has_pvrtc2_texture_compression,
+                my->get_info().has_pvrtc2_srgb_texture_compression);
 
             mu_text(ctx, ""); // A bit of vertical spacing
         }

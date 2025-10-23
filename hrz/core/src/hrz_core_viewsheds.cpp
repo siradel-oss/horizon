@@ -5,10 +5,10 @@
 #include "hrz_core_shaders.h"
 #include "hrz_core_shadow_map.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_profiling.h>
 #include <hrz_common_proto_geo.h>
-#include <hrz_common_proto_maths.h>
 #include <hrz_fnd_defines.h>
 #include <hrz_fnd_mem.h>
 #include <hrz_protocol_path_builder.h>
@@ -299,9 +299,11 @@ RenderRequest update(ViewshedsSystem* sys, const CameraViewInfo& cam, SceneModel
 
         sys->cube.draw_from_main_cam = settings.draw_wireframe_from_position();
 
-        auto visible_color = hrz::to_lm(settings.visible_color());
+        auto visible_color = hrz::premultiply_alpha(
+            hrz::srgb_to_linear(hrz::convert_proto_color_to_float(settings.visible_color())));
         sys->visible_color[0] = visible_color;
-        auto hidden_color = hrz::to_lm(settings.hidden_color());
+        auto hidden_color = hrz::premultiply_alpha(
+            hrz::srgb_to_linear(hrz::convert_proto_color_to_float(settings.hidden_color())));
         sys->hidden_color[0] = hidden_color;
 
         sys->model_updated = false;

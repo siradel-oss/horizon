@@ -13,6 +13,8 @@ layout(location = 10) in vec2 i_uv_size;
 #include "symbol/defs.glsl"
 #include "symbol/common.vert.glsl"
 
+#include "common/colors.glsl"
+
 void main()
 {
     handle_visibility(i_anchor_index);
@@ -29,7 +31,7 @@ void main()
     v_uv_offset = i_uv_offset;
     v_uv_size = i_uv_size;
     v_uv = write_perspective_uv(i_uv, in_element_pos.w);
-    v_color = i_color;
+    v_color = srgb_to_linear(i_color);
     v_color.rgb *= v_color.a;
 }
 

@@ -1,7 +1,6 @@
 #include "hrz_common_palette.h"
 
 #include "hrz_common_color.h"
-#include "hrz_common_proto_maths.h"
 
 #include <hrz_fnd_log.h>
 
@@ -9,25 +8,25 @@
 
 namespace
 {
-constexpr lm::vec4 encode(hrz_proto::ColorInterpolationMode mode, const lm::vec4& color)
+constexpr lm::vec4 encode_from_srgb(hrz_proto::ColorInterpolationMode mode, const lm::vec4& color)
 {
     switch (mode)
     {
-        case hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB: return hrz::srgb_to_oklab(color);
-        case hrz_proto::ColorInterpolationMode::LINEAR_RGB: return hrz::srgb_to_linear(color);
+        case hrz_proto::ColorInterpolationMode::OKLAB: return hrz::srgb_to_oklab(color);
+        case hrz_proto::ColorInterpolationMode::LINEAR_SRGB: return hrz::srgb_to_linear(color);
         case hrz_proto::ColorInterpolationMode::SRGB: return color;
-        case hrz_proto::ColorInterpolationMode::THRESHOLD: return color;
+        case hrz_proto::ColorInterpolationMode::THRESHOLD: return hrz::srgb_to_linear(color);
         default: return color;
     }
 }
 
-constexpr lm::vec4 decode(hrz_proto::ColorInterpolationMode mode, const lm::vec4& color)
+constexpr lm::vec4 decode_to_linear(hrz_proto::ColorInterpolationMode mode, const lm::vec4& color)
 {
     switch (mode)
     {
-        case hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB: return hrz::oklab_to_srgb(color);
-        case hrz_proto::ColorInterpolationMode::LINEAR_RGB: return hrz::linear_to_srgb(color);
-        case hrz_proto::ColorInterpolationMode::SRGB: return color;
+        case hrz_proto::ColorInterpolationMode::OKLAB: return hrz::oklab_to_linear(color);
+        case hrz_proto::ColorInterpolationMode::LINEAR_SRGB: return color;
+        case hrz_proto::ColorInterpolationMode::SRGB: return hrz::srgb_to_linear(color);
         case hrz_proto::ColorInterpolationMode::THRESHOLD: return color;
         default: return color;
     }
@@ -41,8 +40,8 @@ constexpr lm::vec4 mix(
 {
     switch (mode)
     {
-        case hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB:
-        case hrz_proto::ColorInterpolationMode::LINEAR_RGB:
+        case hrz_proto::ColorInterpolationMode::OKLAB:
+        case hrz_proto::ColorInterpolationMode::LINEAR_SRGB:
         case hrz_proto::ColorInterpolationMode::SRGB: return lm::mix(a, b, x);
         case hrz_proto::ColorInterpolationMode::THRESHOLD: return (x < 0.5) ? a : b;
         default: return a;
@@ -92,16 +91,16 @@ std::optional<lm::vec4> numeric_palettization(const Palette& palette, float valu
 
     if (color_points.empty() || std::isnan(value))
     {
-        return palette.numeric.nan_color_srgb;
+        return palette.numeric.nan_color;
     }
 
     if (value < color_points.front().value)
     {
-        return color_points.front().color_point.first_srgb;
+        return color_points.front().color_point.first;
     }
     else if (value >= color_points.back().value)
     {
-        return color_points.back().color_point.second_srgb;
+        return color_points.back().color_point.second;
     }
 
     auto upper = std::ranges::upper_bound(
@@ -111,7 +110,7 @@ std::optional<lm::vec4> numeric_palettization(const Palette& palette, float valu
     // Value is exactly the last one.
     if (upper == color_points.end())
     {
-        return (--upper)->color_point.first_srgb;
+        return (--upper)->color_point.first;
     }
 
     auto lower = upper;
@@ -120,14 +119,14 @@ std::optional<lm::vec4> numeric_palettization(const Palette& palette, float valu
         lower--;
     }
 
-    if (upper->color_point.first_srgb == lower->color_point.second_srgb)
+    if (upper->color_point.first == lower->color_point.second)
     {
-        return upper->color_point.first_srgb;
+        return upper->color_point.first;
     }
     else
     {
         const float delta = 1.0f - (value - lower->value) / (upper->value - lower->value);
-        return decode(
+        return decode_to_linear(
             palette.numeric.mode,
             mix(palette.numeric.mode, upper->color_point.first_encoded,
                 lower->color_point.second_encoded, delta));
@@ -164,17 +163,19 @@ Palette from_proto(const hrz_proto::NumericPalette& proto)
     auto& numeric = palette.numeric;
 
     numeric.mode = proto.interpolation_mode();
-    numeric.nan_color_srgb = hrz::to_lm(proto.nan_color());
+    numeric.nan_color = hrz::srgb_to_linear(hrz::convert_proto_color_to_float(proto.nan_color()));
 
     for (const auto& color_point : proto.color_points())
     {
-        lm::vec4 first_srgb = hrz::to_lm(color_point.first_color());
-        lm::vec4 second_srgb = hrz::to_lm(color_point.second_color());
+        lm::vec4 first_srgb = hrz::convert_proto_color_to_float(color_point.first_color());
+        lm::vec4 first = hrz::srgb_to_linear(first_srgb);
+        lm::vec4 second_srgb = hrz::convert_proto_color_to_float(color_point.second_color());
+        lm::vec4 second = hrz::srgb_to_linear(second_srgb);
 
         numeric.color_points.push_back(
             {color_point.value(),
-             {first_srgb, second_srgb, encode(numeric.mode, first_srgb),
-              encode(numeric.mode, second_srgb)}});
+             {first, second, encode_from_srgb(numeric.mode, first_srgb),
+              encode_from_srgb(numeric.mode, second_srgb)}});
     }
 
     std::ranges::sort(
@@ -193,25 +194,31 @@ Palette from_proto(const hrz_proto::LabelPalette& proto)
 
     auto& label = palette.label;
 
-    label.default_color = hrz::to_lm(proto.default_color());
+    label.default_color =
+        hrz::srgb_to_linear(hrz::convert_proto_color_to_float(proto.default_color()));
     for (const auto& label_color : proto.labels())
     {
-        label.mapping.push_back({label_color.label(), hrz::to_lm(label_color.color())});
+        label.mapping.push_back(
+            {label_color.label(),
+             hrz::srgb_to_linear(hrz::convert_proto_color_to_float(label_color.color()))});
     }
 
     return palette;
 }
 
 Palette::NumericColorPoint from_proto(
-    const hrz_proto::Color& color_low,
-    const hrz_proto::Color& color_up,
+    const hrz_proto::Color& first_color,
+    const hrz_proto::Color& second_color,
     hrz_proto::ColorInterpolationMode mode)
 {
+    lm::vec4 first_srgb = hrz::convert_proto_color_to_float(first_color);
+    lm::vec4 second_srgb = hrz::convert_proto_color_to_float(second_color);
+
     Palette::NumericColorPoint cp;
-    cp.first_srgb = hrz::to_lm(color_low);
-    cp.second_srgb = hrz::to_lm(color_up);
-    cp.first_encoded = encode(mode, cp.first_srgb);
-    cp.second_encoded = encode(mode, cp.second_srgb);
+    cp.first = hrz::srgb_to_linear(first_srgb);
+    cp.second = hrz::srgb_to_linear(second_srgb);
+    cp.first_encoded = encode_from_srgb(mode, first_srgb);
+    cp.second_encoded = encode_from_srgb(mode, second_srgb);
     return cp;
 }
 

@@ -390,14 +390,16 @@ NodeIndex parse_interpolate_operator(
             case MapboxPropertyType::Color:
             {
                 auto first_color =
-                    convert_uint_color_to_rgba(ctx.nodes[stop_output_1_index].literal.u64);
+                    convert_uint_color_to_bytes(ctx.nodes[stop_output_1_index].literal.u64);
                 auto second_color =
-                    convert_uint_color_to_rgba(ctx.nodes[stop_output_2_index].literal.u64);
+                    convert_uint_color_to_bytes(ctx.nodes[stop_output_2_index].literal.u64);
                 auto mixed_color = interpolation_operator == InterpolationOperator::InterpolateHcl
                         || interpolation_operator == InterpolationOperator::InterpolateLab
-                    ? mix_srgb_colors(first_color, second_color, 0.5f)
-                    : lm::mix(first_color, second_color, 0.5f);
-                literal.u64 = convert_rgba_color_to_uint(mixed_color);
+                    ? mix_srgb_colors_in_oklab(first_color, second_color, 0.5f)
+                    : convert_rgba_color_to_bytes(lm::mix(
+                        convert_byte_color_to_rgba(first_color),
+                        convert_byte_color_to_rgba(second_color), 0.5f));
+                literal.u64 = convert_byte_color_to_uint(mixed_color);
             }
             break;
             default: HRZ_LOG_ERROR("Unsupported type for interpolation"); return NO_NODE;
@@ -449,7 +451,7 @@ NodeIndex parse_interpolate_operator(
         numeric_palette->set_interpolation_mode(
             interpolation_operator == InterpolationOperator::InterpolateHcl
                     || interpolation_operator == InterpolationOperator::InterpolateLab
-                ? hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB
+                ? hrz_proto::ColorInterpolationMode::OKLAB
                 : hrz_proto::ColorInterpolationMode::SRGB);
 
         NodeIndex input_index =

@@ -215,35 +215,64 @@ my::GLInstance::GLInstance() : Instance()
 
 #ifdef MYCELIUM_CORE_33
     _instance_info.has_bc1_bc2_bc3_texture_compression = GLAD_GL_EXT_texture_compression_s3tc;
+    _instance_info.has_bc1_bc2_bc3_srgb_texture_compression =
+        GLAD_GL_EXT_texture_compression_s3tc && GLAD_GL_ARB_texture_view;
     _instance_info.has_bc7_texture_compression = GLAD_GL_ARB_texture_compression_bptc;
+    _instance_info.has_bc7_srgb_texture_compression = GLAD_GL_ARB_texture_compression_bptc;
     _instance_info.has_etc1_texture_compression = false;
+    _instance_info.has_etc1_srgb_texture_compression = false;
     _instance_info.has_etc2_texture_compression = GLAD_GL_ARB_ES3_compatibility;
-    _instance_info.has_astc_texture_compression = GLAD_GL_KHR_texture_compression_astc_hdr;
+    _instance_info.has_etc2_srgb_texture_compression = GLAD_GL_ARB_ES3_compatibility;
+    _instance_info.has_astc_texture_compression = GLAD_GL_KHR_texture_compression_astc_ldr;
+    _instance_info.has_astc_srgb_texture_compression = GLAD_GL_KHR_texture_compression_astc_ldr;
     _instance_info.has_pvrtc_texture_compression = false;
+    _instance_info.has_pvrtc_srgb_texture_compression = false;
     _instance_info.has_pvrtc2_texture_compression = false;
+    _instance_info.has_pvrtc2_srgb_texture_compression = false;
 #elif MYCELIUM_ES_30
     _instance_info.has_bc1_bc2_bc3_texture_compression = GLAD_GL_EXT_texture_compression_s3tc;
+    _instance_info.has_bc1_bc2_bc3_srgb_texture_compression =
+        GLAD_GL_EXT_texture_compression_s3tc && GLAD_GL_ARB_texture_view;
     _instance_info.has_bc7_texture_compression = GLAD_GL_EXT_texture_compression_bptc;
+    _instance_info.has_bc7_srgb_texture_compression = GLAD_GL_EXT_texture_compression_bptc;
     _instance_info.has_etc1_texture_compression = GLAD_GL_OES_compressed_ETC1_RGB8_texture;
+    _instance_info.has_etc1_srgb_texture_compression = true;
     _instance_info.has_etc2_texture_compression = true;
-    _instance_info.has_astc_texture_compression = GLAD_GL_KHR_texture_compression_astc_hdr;
+    _instance_info.has_etc2_srgb_texture_compression = true;
+    _instance_info.has_astc_texture_compression = GLAD_GL_KHR_texture_compression_astc_ldr;
+    _instance_info.has_astc_srgb_texture_compression = GLAD_GL_KHR_texture_compression_astc_ldr;
     _instance_info.has_pvrtc_texture_compression = GLAD_GL_IMG_texture_compression_pvrtc;
+    _instance_info.has_pvrtc_srgb_texture_compression =
+        GLAD_GL_IMG_texture_compression_pvrtc && GLAD_GL_EXT_pvrtc_sRGB;
     _instance_info.has_pvrtc2_texture_compression = GLAD_GL_IMG_texture_compression_pvrtc2;
+    _instance_info.has_pvrtc2_srgb_texture_compression =
+        GLAD_GL_IMG_texture_compression_pvrtc2 && GLAD_GL_EXT_pvrtc_sRGB;
 #elif MYCELIUM_WEBGL_2
     _instance_info.has_bc1_bc2_bc3_texture_compression =
         HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_s3tc");
+    _instance_info.has_bc1_bc2_bc3_srgb_texture_compression =
+        HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_s3tc_srgb");
     _instance_info.has_bc7_texture_compression =
+        HAS_WEBGL_EXTENSION("EXT_texture_compression_bptc");
+    _instance_info.has_bc7_srgb_texture_compression =
         HAS_WEBGL_EXTENSION("EXT_texture_compression_bptc");
     _instance_info.has_etc1_texture_compression =
         HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_etc1");
+    _instance_info.has_etc1_srgb_texture_compression = false;
     _instance_info.has_etc2_texture_compression =
         HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_etc");
+    _instance_info.has_etc2_srgb_texture_compression =
+        HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_etc");
     _instance_info.has_astc_texture_compression =
+        HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_astc");
+    _instance_info.has_astc_srgb_texture_compression =
         HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_astc");
     _instance_info.has_pvrtc_texture_compression =
         HAS_WEBGL_EXTENSION("WEBGL_compressed_texture_pvrtc")
         || HAS_WEBGL_EXTENSION("WEBKIT_WEBGL_compressed_texture_pvrtc");
+    _instance_info.has_pvrtc_srgb_texture_compression = false;
     _instance_info.has_pvrtc2_texture_compression = false;
+    _instance_info.has_pvrtc2_srgb_texture_compression = false;
 #endif
 
     _gpu_memory_info_type = GpuMemoryInfoType::None;
@@ -260,6 +289,10 @@ my::GLInstance::GLInstance() : Instance()
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &value);
     GL_ERROR();
     _uniform_buffer_offset_alignment = value;
+
+#ifndef MYCELIUM_WEBGL_2
+    glEnable(GL_FRAMEBUFFER_SRGB);
+#endif
 
     _store_resource_size_reports = false;
 
@@ -614,14 +647,26 @@ size_t my::TextureLayout::get_level_byte_size(uint32_t level) const
             case TextureFormat::RGBA_BC1:
             case TextureFormat::RGB_ETC1:
             case TextureFormat::RGB_ETC2:
-            case TextureFormat::RGBA_PVRTC2_4BPP: block_byte_size = 8; break;
+            case TextureFormat::RGBA_PVRTC2_4BPP:
+            case TextureFormat::SRGB_BC1:
+            case TextureFormat::SRGBA_BC1:
+            case TextureFormat::SRGB_ETC1:
+            case TextureFormat::SRGB_ETC2:
+            case TextureFormat::SRGBA_PVRTC2_4BPP: block_byte_size = 8; break;
             case TextureFormat::RGBA_BC2:
             case TextureFormat::RGBA_BC3:
             case TextureFormat::RGBA_BC7:
             case TextureFormat::RGBA_ETC2_EAC:
-            case TextureFormat::RGBA_ASTC_4x4: block_byte_size = 16; break;
+            case TextureFormat::RGBA_ASTC_4x4:
+            case TextureFormat::SRGBA_BC2:
+            case TextureFormat::SRGBA_BC3:
+            case TextureFormat::SRGBA_BC7:
+            case TextureFormat::SRGBA_ETC2_EAC:
+            case TextureFormat::SRGBA_ASTC_4x4: block_byte_size = 16; break;
             case TextureFormat::RGB_PVRTC1_4BPP:
             case TextureFormat::RGBA_PVRTC1_4BPP:
+            case TextureFormat::SRGB_PVRTC1_4BPP:
+            case TextureFormat::SRGBA_PVRTC1_4BPP:
                 return my_MAX(level_width, 8) * my_MAX(level_height, 8) / 2;
             default: assert(false && "Unhandled case"); break;
         }

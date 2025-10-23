@@ -10,7 +10,7 @@ struct PaletteUniformData
 {
     float color_points_value[HRZ_S_MAX_PALETTE_COLOR_POINTS];
     lm::vec4 color_points_encoded[2 * HRZ_S_MAX_PALETTE_COLOR_POINTS];
-    lm::vec4 nan_color_srgb;
+    lm::vec4 nan_color;
     int32_t color_interpolation_mode;
     uint32_t num_color_points;
     uint32_t _padding[2];

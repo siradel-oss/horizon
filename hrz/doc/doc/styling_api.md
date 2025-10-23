@@ -152,7 +152,7 @@ Floating point literals use a period to separate the decimal and fractional part
 
 #### Color literals
 
-Color literals use the hexadecimal notation `#rgb` or `#rgba` or `#rrggbb` or `#rrggbbaa`.
+Color literals use the hexadecimal notation `#rgb` or `#rgba` or `#rrggbb` or `#rrggbbaa`. They represent values in the [sRGB color space](https://en.wikipedia.org/wiki/SRGB). The alpha channel is interpreted linearly.
 
 !!! important
     Hexadecimal numbers (0xabcdef) are interpreted differently than special color hexadecimal values. Thus, 0xffff00ff yields a different colour than #ffff00ff. So do not use the hexadecimal integer literal notation for colors, and vice-versa.

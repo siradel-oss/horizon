@@ -1,3 +1,4 @@
+#include "common/colors.glsl"
 #include "common/logz.glsl"
 #include "common/highlight.glsl"
 #include "common/round_to_power_of_two.glsl"
@@ -27,7 +28,7 @@ uniform sampler2D u_pattern;
 
 void main()
 {
-    vec4 color = vec4(v_color.rgb * v_color.a, v_color.a);
+    vec4 color = v_color;
 
 #ifdef FLAT_POLYGONS_PATTERN
     // Clip tile to bounds, with a tiny margin to avoid missing pixels in some cases.
@@ -97,6 +98,7 @@ void main()
     vec2 in_texture_uv = vec2(uv.x, 1.0 - uv.y);
     in_texture_uv = in_texture_uv * v_pattern_sprite_size + v_pattern_sprite_offset;
     vec4 pattern_color = texture(u_pattern, in_texture_uv);
+    pattern_color.rgb *= pattern_color.a;
 
     // Blend the pattern colour with the pattern texture, then blend the result with the background colour.
     // (This requires the pattern texture to have premultiplied alpha.)

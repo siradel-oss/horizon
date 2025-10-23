@@ -210,34 +210,6 @@ static lm::mat4 euler_angles_xyz_to_mat4(lm::vec3 angles)
 template<typename T>
 bool is_clockwise(std::span<const T> pts);
 
-template<typename T>
-inline lm::Vector<T, 3> srgb_to_linear(lm::Vector<T, 3> color)
-{
-    color = lm::pow(color, lm::Vector<T, 3>((T)2.2));
-    return color;
-}
-
-template<typename T>
-inline lm::Vector<T, 3> linear_to_srgb(lm::Vector<T, 3> color)
-{
-    color = lm::pow(color, lm::Vector<T, 3>((T)(1.0 / 2.2)));
-    return color;
-}
-
-template<typename T>
-inline lm::Vector<T, 4> srgb_to_linear(lm::Vector<T, 4> color)
-{
-    color.rgb = srgb_to_linear(color.rgb);
-    return color;
-}
-
-template<typename T>
-inline lm::Vector<T, 4> linear_to_srgb(lm::Vector<T, 4> color)
-{
-    color.rgb = linear_to_srgb(color.rgb);
-    return color;
-}
-
 struct alignas(16) GlslStd140Mat3
 {
     lm::vec4 cols[3];

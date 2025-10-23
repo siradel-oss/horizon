@@ -56,17 +56,17 @@ void main()
         sun = do_sun_lighting(normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_tile.receive_shadows);
     }
 
-    vec3 color = v_color.rgb * sun;
-    o_color = vec4(linear_to_srgb(color), v_color.a);
-    o_color.rgb *= o_color.a;
+    vec4 color = vec4(v_color.rgb * sun, v_color.a);
 
-    o_color = compute_viewshed_color(o_color, normal);
-    o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());
+    color = compute_viewshed_color(color, normal);
+    color = mix_premultiplied_colors(color, compute_clip_outline_color());
 
     if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
-        o_color = apply_quick_highlight_color(o_color);
+        color = apply_quick_highlight_color_premultiplied(color);
     }
+
+    o_color = color;
 #endif
 
 #ifdef EXTRUDED_PICKING

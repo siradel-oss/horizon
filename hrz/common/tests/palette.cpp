@@ -1,5 +1,6 @@
 #define HRZ_LOG_PREFIX HrzCommonTests
 
+#include <hrz_common_color.h>
 #include <hrz_common_palette.h>
 #include <hrz_fnd_log.h>
 #include <hrz_protocol_all.h>
@@ -65,13 +66,13 @@ struct GlobalColors
         proto_midgray.set_b(0.5);
         proto_midgray.set_a(1);
 
-        lm_red = lm::vec4(1, 0, 0, 1);
-        lm_green = lm::vec4(0, 1, 0, 1);
-        lm_blue = lm::vec4(0, 0, 1, 1);
-        lm_magenta = lm::vec4(1, 1, 0, 1);
-        lm_white = lm::vec4(1, 1, 1, 1);
-        lm_black = lm::vec4(0, 0, 0, 1);
-        lm_midgray = lm::vec4(0.388601, 0.388601, 0.388601, 1);
+        lm_red = hrz::srgb_to_linear(lm::vec4(1, 0, 0, 1));
+        lm_green = hrz::srgb_to_linear(lm::vec4(0, 1, 0, 1));
+        lm_blue = hrz::srgb_to_linear(lm::vec4(0, 0, 1, 1));
+        lm_magenta = hrz::srgb_to_linear(lm::vec4(1, 1, 0, 1));
+        lm_white = hrz::srgb_to_linear(lm::vec4(1, 1, 1, 1));
+        lm_black = hrz::srgb_to_linear(lm::vec4(0, 0, 0, 1));
+        lm_midgray = hrz::srgb_to_linear(lm::vec4(0.388601, 0.388601, 0.388601, 1));
     }
 
     hrz_proto::Color proto_red;
@@ -147,7 +148,7 @@ TEST(CommonPalette, numeric_palette_continuous)
     // NaN: red
 
     *numeric->mutable_nan_color() = global_colors.proto_red;
-    numeric->set_interpolation_mode(hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB);
+    numeric->set_interpolation_mode(hrz_proto::ColorInterpolationMode::OKLAB);
 
     {
         auto* color_point = numeric->add_color_points();
@@ -207,7 +208,7 @@ TEST(CommonPalette, numeric_palette_color_point_edges)
     // NaN: white
 
     *numeric->mutable_nan_color() = global_colors.proto_white;
-    numeric->set_interpolation_mode(hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB);
+    numeric->set_interpolation_mode(hrz_proto::ColorInterpolationMode::OKLAB);
 
     {
         auto* color_point = numeric->add_color_points();
@@ -275,7 +276,7 @@ TEST(CommonPalette, numeric_palette_discrete)
     // NaN: white
 
     *numeric->mutable_nan_color() = global_colors.proto_white;
-    numeric->set_interpolation_mode(hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB);
+    numeric->set_interpolation_mode(hrz_proto::ColorInterpolationMode::OKLAB);
 
     {
         auto* color_point = numeric->add_color_points();
@@ -389,12 +390,12 @@ TEST(CommonPalette, numeric_color_interpolation_modes)
         EXPECT_TRUE(c3.has_value());
 
         EXPECT_TRUE(test_color_eq(c1.value(), global_colors.lm_red));
-        EXPECT_TRUE(test_color_eq(c2.value(), lm::vec4(0.5, 0.5, 0.0, 1.0)));
+        EXPECT_TRUE(test_color_eq(c2.value(), hrz::srgb_to_linear(lm::vec4(0.5, 0.5, 0.0, 1.0))));
         EXPECT_TRUE(test_color_eq(c3.value(), global_colors.lm_green));
     }
 
     {
-        hrz::Palette palette = make_palette(hrz_proto::ColorInterpolationMode::PERCEPTUAL_OKLAB);
+        hrz::Palette palette = make_palette(hrz_proto::ColorInterpolationMode::OKLAB);
         auto c1 = hrz::palette::numeric_palettization(palette, 0.0);
         auto c2 = hrz::palette::numeric_palettization(palette, 0.5);
         auto c3 = hrz::palette::numeric_palettization(palette, 1.0);
@@ -404,13 +405,15 @@ TEST(CommonPalette, numeric_color_interpolation_modes)
         EXPECT_TRUE(c3.has_value());
 
         EXPECT_TRUE(test_color_eq(c1.value(), global_colors.lm_red));
-        EXPECT_TRUE(
-            test_color_eq(c2.value(), lm::vec4(0.81163394f, 0.65453935f, 0.017539153f, 1.0f)));
+        // Value obtained on https://observablehq.com/@aras-p/oklab-interpolation-test
+        // to guarantee implementation independence.
+        EXPECT_TRUE(test_color_eq(
+            c2.value(), hrz::srgb_to_linear(lm::vec4(0.81630f, 0.66036f, 0.00177f, 1.0f))));
         EXPECT_TRUE(test_color_eq(c3.value(), global_colors.lm_green));
     }
 
     {
-        hrz::Palette palette = make_palette(hrz_proto::ColorInterpolationMode::LINEAR_RGB);
+        hrz::Palette palette = make_palette(hrz_proto::ColorInterpolationMode::LINEAR_SRGB);
         auto c1 = hrz::palette::numeric_palettization(palette, 0.0);
         auto c2 = hrz::palette::numeric_palettization(palette, 0.5);
         auto c3 = hrz::palette::numeric_palettization(palette, 1.0);
@@ -420,7 +423,7 @@ TEST(CommonPalette, numeric_color_interpolation_modes)
         EXPECT_TRUE(c3.has_value());
 
         EXPECT_TRUE(test_color_eq(c1.value(), global_colors.lm_red));
-        EXPECT_TRUE(test_color_eq(c2.value(), lm::vec4(0.72974002f, 0.72974002f, 0.0f, 1.0f)));
+        EXPECT_TRUE(test_color_eq(c2.value(), lm::vec4(0.5f, 0.5f, 0.0f, 1.0f)));
         EXPECT_TRUE(test_color_eq(c3.value(), global_colors.lm_green));
     }
 }

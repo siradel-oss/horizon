@@ -37,12 +37,6 @@
 #ifndef GL_ETC1_RGB8_OES
 #    define GL_ETC1_RGB8_OES 0x8D64
 #endif
-#ifndef GL_COMPRESSED_RGB8_ETC2
-#    define GL_COMPRESSED_RGB8_ETC2 0x9274
-#endif
-#ifndef GL_COMPRESSED_RGBA8_ETC2_EAC
-#    define GL_COMPRESSED_RGBA8_ETC2_EAC 0x9278
-#endif
 #ifndef GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG
 #    define GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG 0x8C00
 #endif
@@ -54,6 +48,33 @@
 #endif
 #ifndef GL_COMPRESSED_RGBA_ASTC_4x4_KHR
 #    define GL_COMPRESSED_RGBA_ASTC_4x4_KHR 0x93B0
+#endif
+#ifndef GL_COMPRESSED_SRGB_S3TC_DXT1_EXT
+#    define GL_COMPRESSED_SRGB_S3TC_DXT1_EXT 0x8C4C
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT
+#    define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT 0x8C4D
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT
+#    define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT 0x8C4E
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT
+#    define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT 0x8C4F
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB
+#    define GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB 0x8E8D
+#endif
+#ifndef GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR
+#    define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR 0x93D0
+#endif
+#ifndef GL_COMPRESSED_SRGB_PVRTC_4BPPV1_EXT
+#    define GL_COMPRESSED_SRGB_PVRTC_4BPPV1_EXT 0x8A55
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT
+#    define GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT 0x8A57
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV2_IMG
+#    define GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV2_IMG 0x93F1
 #endif
 
 namespace my
@@ -382,7 +403,8 @@ static size_t format_format(TextureFormat format)
         case TextureFormat::RGB32UI: return GL_RGB_INTEGER;
         case TextureFormat::RGBA8:
         case TextureFormat::RGBA16F:
-        case TextureFormat::RGBA32F: return GL_RGBA;
+        case TextureFormat::RGBA32F:
+        case TextureFormat::SRGBA8: return GL_RGBA;
         case TextureFormat::RGBA8I:
         case TextureFormat::RGBA8UI:
         case TextureFormat::RGBA16I:
@@ -417,7 +439,8 @@ static size_t format_type(TextureFormat format)
         case TextureFormat::RGB8:
         case TextureFormat::RGB8UI:
         case TextureFormat::RGBA8:
-        case TextureFormat::RGBA8UI: return GL_UNSIGNED_BYTE;
+        case TextureFormat::RGBA8UI:
+        case TextureFormat::SRGBA8: return GL_UNSIGNED_BYTE;
         case TextureFormat::R16I:
         case TextureFormat::RG16I:
         case TextureFormat::RGB16I:
@@ -512,6 +535,21 @@ static size_t format_internal(TextureFormat format)
         case TextureFormat::RGBA_PVRTC1_4BPP: return GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
         case TextureFormat::RGBA_PVRTC2_4BPP: return GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG;
         case TextureFormat::RGBA_ASTC_4x4: return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+        case TextureFormat::SRGBA8: return GL_SRGB8_ALPHA8;
+        case TextureFormat::SRGB_BC1: return GL_COMPRESSED_SRGB_S3TC_DXT1_EXT;
+        case TextureFormat::SRGBA_BC1: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+        case TextureFormat::SRGBA_BC2: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+        case TextureFormat::SRGBA_BC3: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+        case TextureFormat::SRGBA_BC7:
+            return GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB; // _EXT in OpenGL ES
+        case TextureFormat::SRGB_ETC1:
+            return GL_COMPRESSED_SRGB8_ETC2; // There's no separate SRGB ETC1 format in GL
+        case TextureFormat::SRGB_ETC2: return GL_COMPRESSED_SRGB8_ETC2;
+        case TextureFormat::SRGBA_ETC2_EAC: return GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+        case TextureFormat::SRGB_PVRTC1_4BPP: return GL_COMPRESSED_SRGB_PVRTC_4BPPV1_EXT;
+        case TextureFormat::SRGBA_PVRTC1_4BPP: return GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT;
+        case TextureFormat::SRGBA_PVRTC2_4BPP: return GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV2_IMG;
+        case TextureFormat::SRGBA_ASTC_4x4: return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
         default:
         {
             assert(!"Unknown texture format");

@@ -156,7 +156,7 @@ public:
 
         switch (_render_type)
         {
-            case hrz::RenderType::RenderVisual: res.format = my::TextureFormat::RGBA8; break;
+            case hrz::RenderType::RenderVisual: res.format = my::TextureFormat::SRGBA8; break;
             case hrz::RenderType::RenderPicking: res.format = my::TextureFormat::RG32UI; break;
             case hrz::RenderType::RenderSelection: res.format = my::TextureFormat::R8; break;
             default: assert(false && "Unhandled case"); break;

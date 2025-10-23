@@ -2,6 +2,7 @@
 
 #include "hrz_common_image_view.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_image_processing.h>
 #include <hrz_fnd_class.h>
 #include <hrz_fnd_log.h>
@@ -484,6 +485,61 @@ struct SamplingFunctionImpl : public SamplingFunction
         }
     }
 
+    PixelValue<float, 4> _interpolate_linear_colors(
+        PixelValue<float, 4>& data0,
+        PixelValue<float, 4>& data1,
+        float f) const
+    {
+        if (data0.is_nodata) return data1;
+        if (data1.is_nodata) return data0;
+
+        lm::vec4 a = std::bit_cast<lm::vec4>(data0.value);
+        lm::vec4 b = std::bit_cast<lm::vec4>(data1.value);
+        lm::vec4 res = a * (1.0f - f) + b * f;
+
+        PixelValue<float, 4> output;
+        std::memcpy(output.value.data(), &res, sizeof(float) * 4);
+        output.is_nodata = false;
+
+        return output;
+    }
+
+    PixelValue<float, 4> _interpolate_linear_color_pixel(
+        PixelValue<float, 4>& data00,
+        PixelValue<float, 4>& data01,
+        PixelValue<float, 4>& data10,
+        PixelValue<float, 4>& data11,
+        float xf,
+        float yf) const
+    {
+        // @Todo The interpolation is wrong when only one source value is nodata.
+        // (The weight of the value that is alone on its line is too big.)
+
+        auto data0 = _interpolate_linear_colors(data00, data01, xf);
+        auto data1 = _interpolate_linear_colors(data10, data11, xf);
+        return _interpolate_linear_colors(data0, data1, yf);
+    }
+
+    PixelValue<uint8_t, 4> _interpolate_srgba8_pixel(
+        PixelValue<uint8_t, 4>& data00,
+        PixelValue<uint8_t, 4>& data01,
+        PixelValue<uint8_t, 4>& data10,
+        PixelValue<uint8_t, 4>& data11,
+        SubpixelCoordT xf,
+        SubpixelCoordT yf) const
+    {
+        PixelValue<float, 4> data00_lin = _to_premultiplied_linear(data00);
+        PixelValue<float, 4> data01_lin = _to_premultiplied_linear(data01);
+        PixelValue<float, 4> data10_lin = _to_premultiplied_linear(data10);
+        PixelValue<float, 4> data11_lin = _to_premultiplied_linear(data11);
+
+        float xff = (float)xf / (float)std::numeric_limits<SubpixelCoordT>::max();
+        float yff = (float)yf / (float)std::numeric_limits<SubpixelCoordT>::max();
+
+        return _to_srgb(_interpolate_linear_color_pixel(
+            data00_lin, data01_lin, data10_lin, data11_lin, xff, yff));
+    }
+
     PixelValue<T, CHANNELS> _interpolate_pixel(
         PixelValue<T, CHANNELS>& data00,
         PixelValue<T, CHANNELS>& data01,
@@ -492,12 +548,10 @@ struct SamplingFunctionImpl : public SamplingFunction
         SubpixelCoordT xf,
         SubpixelCoordT yf) const
     {
-        // It's important to switch to premultiplied alpha before interpolating
-        // to get good results.
-        _apply_alpha(data00);
-        _apply_alpha(data01);
-        _apply_alpha(data10);
-        _apply_alpha(data11);
+        if constexpr (std::is_same_v<T, uint8_t> && CHANNELS == 4)
+        {
+            return _interpolate_srgba8_pixel(data00, data01, data10, data11, xf, yf);
+        }
 
         PixelValue<T, CHANNELS> output;
         output.is_nodata = false;
@@ -514,35 +568,43 @@ struct SamplingFunctionImpl : public SamplingFunction
         return output;
     }
 
-    void _apply_alpha(PixelValue<T, CHANNELS>& value) const
+    PixelValue<float, 4> _to_premultiplied_linear(const PixelValue<uint8_t, 4>& input) const
     {
+        PixelValue<float, 4> output{{}, input.is_nodata};
+
         // Nodata values must be preserved if present.
-        if (nodata.handling != hrz_proto::IGNORE_NODATA && value.is_nodata) return;
-
-        if constexpr (std::is_integral_v<T> && CHANNELS == 4)
+        if (nodata.handling != hrz_proto::IGNORE_NODATA && input.is_nodata)
         {
-            T& r = value.value[0];
-            T& g = value.value[1];
-            T& b = value.value[2];
-            T& a = value.value[3];
+            return output;
+        }
 
-            static const NextSizeT max = (NextSizeT)std::numeric_limits<SubpixelCoordT>::max() + 1;
-            static const NextSizeT shift = sizeof(SubpixelCoordT) * 8;
+        lm::vec4 color_lin = hrz::srgb_to_linear_lut(std::bit_cast<lm::ubvec4>(input.value));
 
+        if (input.value[3] != 255)
+        {
             switch (alpha_channel_usage)
             {
-                case hrz_proto::AlphaChannelUsage::IGNORE_ALPHA_CHANNEL: a = (T)max - 1; break;
+                case hrz_proto::AlphaChannelUsage::IGNORE_ALPHA_CHANNEL: color_lin.a = 1.0f; break;
                 case hrz_proto::AlphaChannelUsage::USE_ALPHA_CHANNEL:
-                    r = (T)((((NextSizeT)r + 1) * a) >> shift);
-                    g = (T)((((NextSizeT)g + 1) * a) >> shift);
-                    b = (T)((((NextSizeT)b + 1) * a) >> shift);
+                    color_lin = hrz::premultiply_alpha(color_lin);
                     break;
                 case hrz_proto::AlphaChannelUsage::USE_ALPHA_CHANNEL_PREMULTIPLIED:
                     // Nothing to do
                     break;
-                default: assert(!"Unhandled alpha channel usage");
+                default: assert(!"Unhandled alpha channel usage"); break;
             }
         }
+
+        output.value = std::bit_cast<std::array<float, 4>>(color_lin);
+        return output;
+    }
+
+    PixelValue<uint8_t, 4> _to_srgb(const PixelValue<float, 4>& input) const
+    {
+        return PixelValue<uint8_t, 4>{
+            std::bit_cast<std::array<uint8_t, 4>>(
+                hrz::linear_to_srgb_lut(std::bit_cast<lm::vec4>(input.value))),
+            input.is_nodata};
     }
 
     // Returns true if the pixel should be discarded, false otherwise.
@@ -600,8 +662,15 @@ struct SamplingFunctionImpl : public SamplingFunction
             int y = std::min((int)std::floor(uv.y), input_height - 1);
 
             auto data = pixel_fetch_func(input, x, y, nodata);
-            _apply_alpha(data);
-            output = data;
+
+            if constexpr (std::is_same_v<T, uint8_t> && CHANNELS == 4)
+            {
+                output = _to_srgb(_to_premultiplied_linear(data));
+            }
+            else
+            {
+                output = data;
+            }
         }
 
         nodata.apply<T, CHANNELS>(output);

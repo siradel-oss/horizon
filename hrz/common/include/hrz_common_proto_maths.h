@@ -23,11 +23,6 @@ inline lm::dvec3 to_lm(const hrz_proto::Vec3d& v)
     return lm::dvec3(v.x(), v.y(), v.z());
 }
 
-inline lm::vec4 to_lm(const hrz_proto::Color& v)
-{
-    return lm::vec4(v.r(), v.g(), v.b(), v.a());
-}
-
 inline lm::vec3 to_lm(const hrz_proto::Vec3f& v)
 {
     return lm::vec3(v.x(), v.y(), v.z());

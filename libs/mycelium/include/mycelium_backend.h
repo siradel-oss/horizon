@@ -418,6 +418,19 @@ enum class TextureFormat
     RGBA_PVRTC1_4BPP,
     RGBA_PVRTC2_4BPP,
     RGBA_ASTC_4x4,
+    SRGBA8,
+    SRGB_BC1,  // aka DXT1
+    SRGBA_BC1, // aka DXT1
+    SRGBA_BC2, // aka DXT2 and DXT3
+    SRGBA_BC3, // aka DXT4 and DXT5
+    SRGBA_BC7,
+    SRGB_ETC1,
+    SRGB_ETC2,
+    SRGBA_ETC2_EAC,
+    SRGB_PVRTC1_4BPP,
+    SRGBA_PVRTC1_4BPP,
+    SRGBA_PVRTC2_4BPP,
+    SRGBA_ASTC_4x4,
 };
 
 static constexpr bool is_format_compressed(TextureFormat format)
@@ -435,7 +448,19 @@ static constexpr bool is_format_compressed(TextureFormat format)
         case TextureFormat::RGB_PVRTC1_4BPP:
         case TextureFormat::RGBA_PVRTC1_4BPP:
         case TextureFormat::RGBA_PVRTC2_4BPP:
-        case TextureFormat::RGBA_ASTC_4x4: return true;
+        case TextureFormat::RGBA_ASTC_4x4:
+        case TextureFormat::SRGB_BC1:
+        case TextureFormat::SRGBA_BC1:
+        case TextureFormat::SRGBA_BC2:
+        case TextureFormat::SRGBA_BC3:
+        case TextureFormat::SRGBA_BC7:
+        case TextureFormat::SRGB_ETC1:
+        case TextureFormat::SRGB_ETC2:
+        case TextureFormat::SRGBA_ETC2_EAC:
+        case TextureFormat::SRGB_PVRTC1_4BPP:
+        case TextureFormat::SRGBA_PVRTC1_4BPP:
+        case TextureFormat::SRGBA_PVRTC2_4BPP:
+        case TextureFormat::SRGBA_ASTC_4x4: return true;
         default: return false;
     }
 }
@@ -447,12 +472,18 @@ static constexpr size_t format_external_pixel_byte_size(TextureFormat format)
 {
     switch (format)
     {
-        case TextureFormat::RGB_BC1:          // Actually 4 bits per pixel
-        case TextureFormat::RGB_ETC1:         // Actually 4 bits per pixel
-        case TextureFormat::RGB_ETC2:         // Actually 4 bits per pixel
-        case TextureFormat::RGB_PVRTC1_4BPP:  // Actually 4 bits per pixel
-        case TextureFormat::RGBA_PVRTC1_4BPP: // Actually 4 bits per pixel
-        case TextureFormat::RGBA_PVRTC2_4BPP: // Actually 4 bits per pixel
+        case TextureFormat::RGB_BC1:           // Actually 4 bits per pixel
+        case TextureFormat::RGB_ETC1:          // Actually 4 bits per pixel
+        case TextureFormat::RGB_ETC2:          // Actually 4 bits per pixel
+        case TextureFormat::RGB_PVRTC1_4BPP:   // Actually 4 bits per pixel
+        case TextureFormat::RGBA_PVRTC1_4BPP:  // Actually 4 bits per pixel
+        case TextureFormat::RGBA_PVRTC2_4BPP:  // Actually 4 bits per pixel
+        case TextureFormat::SRGB_BC1:          // Actually 4 bits per pixel
+        case TextureFormat::SRGB_ETC1:         // Actually 4 bits per pixel
+        case TextureFormat::SRGB_ETC2:         // Actually 4 bits per pixel
+        case TextureFormat::SRGB_PVRTC1_4BPP:  // Actually 4 bits per pixel
+        case TextureFormat::SRGBA_PVRTC1_4BPP: // Actually 4 bits per pixel
+        case TextureFormat::SRGBA_PVRTC2_4BPP: // Actually 4 bits per pixel
             return 1;
         case TextureFormat::R8:
         case TextureFormat::R8I:
@@ -462,7 +493,13 @@ static constexpr size_t format_external_pixel_byte_size(TextureFormat format)
         case TextureFormat::RGBA_BC3:
         case TextureFormat::RGBA_BC7:
         case TextureFormat::RGBA_ETC2_EAC:
-        case TextureFormat::RGBA_ASTC_4x4: return 1;
+        case TextureFormat::RGBA_ASTC_4x4:
+        case TextureFormat::SRGBA_BC1:
+        case TextureFormat::SRGBA_BC2:
+        case TextureFormat::SRGBA_BC3:
+        case TextureFormat::SRGBA_BC7:
+        case TextureFormat::SRGBA_ETC2_EAC:
+        case TextureFormat::SRGBA_ASTC_4x4: return 1;
         case TextureFormat::R16F:
         case TextureFormat::R16I:
         case TextureFormat::R16UI:
@@ -482,6 +519,7 @@ static constexpr size_t format_external_pixel_byte_size(TextureFormat format)
         case TextureFormat::RGBA8:
         case TextureFormat::RGBA8I:
         case TextureFormat::RGBA8UI:
+        case TextureFormat::SRGBA8:
         case TextureFormat::Depth24:
         case TextureFormat::Depth32F:
         case TextureFormat::Depth24Stencil8: return 4;
@@ -515,12 +553,18 @@ static constexpr size_t format_internal_pixel_byte_size(TextureFormat format)
 {
     switch (format)
     {
-        case TextureFormat::RGB_BC1:          // Actually 4 bits per pixel
-        case TextureFormat::RGB_ETC1:         // Actually 4 bits per pixel
-        case TextureFormat::RGB_ETC2:         // Actually 4 bits per pixel
-        case TextureFormat::RGB_PVRTC1_4BPP:  // Actually 4 bits per pixel
-        case TextureFormat::RGBA_PVRTC1_4BPP: // Actually 4 bits per pixel
-        case TextureFormat::RGBA_PVRTC2_4BPP: // Actually 4 bits per pixel
+        case TextureFormat::RGB_BC1:           // Actually 4 bits per pixel
+        case TextureFormat::RGB_ETC1:          // Actually 4 bits per pixel
+        case TextureFormat::RGB_ETC2:          // Actually 4 bits per pixel
+        case TextureFormat::RGB_PVRTC1_4BPP:   // Actually 4 bits per pixel
+        case TextureFormat::RGBA_PVRTC1_4BPP:  // Actually 4 bits per pixel
+        case TextureFormat::RGBA_PVRTC2_4BPP:  // Actually 4 bits per pixel
+        case TextureFormat::SRGB_BC1:          // Actually 4 bits per pixel
+        case TextureFormat::SRGB_ETC1:         // Actually 4 bits per pixel
+        case TextureFormat::SRGB_ETC2:         // Actually 4 bits per pixel
+        case TextureFormat::SRGB_PVRTC1_4BPP:  // Actually 4 bits per pixel
+        case TextureFormat::SRGBA_PVRTC1_4BPP: // Actually 4 bits per pixel
+        case TextureFormat::SRGBA_PVRTC2_4BPP: // Actually 4 bits per pixel
             return 1;
         case TextureFormat::R8:
         case TextureFormat::R8I:
@@ -530,7 +574,13 @@ static constexpr size_t format_internal_pixel_byte_size(TextureFormat format)
         case TextureFormat::RGBA_BC3:
         case TextureFormat::RGBA_BC7:
         case TextureFormat::RGBA_ETC2_EAC:
-        case TextureFormat::RGBA_ASTC_4x4: return 1;
+        case TextureFormat::RGBA_ASTC_4x4:
+        case TextureFormat::SRGBA_BC1:
+        case TextureFormat::SRGBA_BC2:
+        case TextureFormat::SRGBA_BC3:
+        case TextureFormat::SRGBA_BC7:
+        case TextureFormat::SRGBA_ETC2_EAC:
+        case TextureFormat::SRGBA_ASTC_4x4: return 1;
         case TextureFormat::R16F:
         case TextureFormat::R16I:
         case TextureFormat::R16UI:
@@ -552,7 +602,8 @@ static constexpr size_t format_internal_pixel_byte_size(TextureFormat format)
         case TextureFormat::RGBA8UI:
         case TextureFormat::Depth24:
         case TextureFormat::Depth32F:
-        case TextureFormat::Depth24Stencil8: return 4;
+        case TextureFormat::Depth24Stencil8:
+        case TextureFormat::SRGBA8: return 4;
         case TextureFormat::RGB16I:
         case TextureFormat::RGB16UI:
         case TextureFormat::RGB16F:
@@ -616,7 +667,10 @@ static size_t format_channel_count(TextureFormat format)
         case TextureFormat::RGB_BC1:
         case TextureFormat::RGB_ETC1:
         case TextureFormat::RGB_ETC2:
-        case TextureFormat::RGB_PVRTC1_4BPP: return 3;
+        case TextureFormat::RGB_PVRTC1_4BPP:
+        case TextureFormat::SRGB_ETC1:
+        case TextureFormat::SRGB_ETC2:
+        case TextureFormat::SRGB_PVRTC1_4BPP: return 3;
         case TextureFormat::RGBA8:
         case TextureFormat::RGBA8I:
         case TextureFormat::RGBA8UI:
@@ -633,7 +687,17 @@ static size_t format_channel_count(TextureFormat format)
         case TextureFormat::RGBA_ETC2_EAC:
         case TextureFormat::RGBA_PVRTC1_4BPP:
         case TextureFormat::RGBA_PVRTC2_4BPP:
-        case TextureFormat::RGBA_ASTC_4x4: return 4;
+        case TextureFormat::RGBA_ASTC_4x4:
+        case TextureFormat::SRGBA8:
+        case TextureFormat::SRGB_BC1:
+        case TextureFormat::SRGBA_BC1:
+        case TextureFormat::SRGBA_BC2:
+        case TextureFormat::SRGBA_BC3:
+        case TextureFormat::SRGBA_BC7:
+        case TextureFormat::SRGBA_ETC2_EAC:
+        case TextureFormat::SRGBA_PVRTC1_4BPP:
+        case TextureFormat::SRGBA_PVRTC2_4BPP:
+        case TextureFormat::SRGBA_ASTC_4x4: return 4;
         default:
         {
             assert(!"Unknown texture format");
@@ -699,6 +763,19 @@ static const char* format_str(TextureFormat format)
         case TextureFormat::RGBA_PVRTC1_4BPP: return "RGBA_PVRTC1_4BPP";
         case TextureFormat::RGBA_PVRTC2_4BPP: return "RGBA_PVRTC2_4BPP";
         case TextureFormat::RGBA_ASTC_4x4: return "RGBA_ASTC_4x4";
+        case TextureFormat::SRGBA8: return "sRGBA8";
+        case TextureFormat::SRGB_BC1: return "SRGB_BC1";
+        case TextureFormat::SRGBA_BC1: return "SRGBA_BC1";
+        case TextureFormat::SRGBA_BC2: return "SRGBA_BC2";
+        case TextureFormat::SRGBA_BC3: return "SRGBA_BC3";
+        case TextureFormat::SRGBA_BC7: return "SRGBA_BC7";
+        case TextureFormat::SRGB_ETC1: return "SRGB_ETC1";
+        case TextureFormat::SRGB_ETC2: return "SRGB_ETC2";
+        case TextureFormat::SRGBA_ETC2_EAC: return "SRGBA_ETC2_EAC";
+        case TextureFormat::SRGB_PVRTC1_4BPP: return "SRGB_PVRTC1_4BPP";
+        case TextureFormat::SRGBA_PVRTC1_4BPP: return "SRGBA_PVRTC1_4BPP";
+        case TextureFormat::SRGBA_PVRTC2_4BPP: return "SRGBA_PVRTC2_4BPP";
+        case TextureFormat::SRGBA_ASTC_4x4: return "SRGBA_ASTC_4x4";
         default:
         {
             return "Unknown format";
@@ -1365,6 +1442,13 @@ public:
         bool has_astc_texture_compression;
         bool has_pvrtc_texture_compression;
         bool has_pvrtc2_texture_compression;
+        bool has_bc1_bc2_bc3_srgb_texture_compression;
+        bool has_bc7_srgb_texture_compression;
+        bool has_etc1_srgb_texture_compression;
+        bool has_etc2_srgb_texture_compression;
+        bool has_astc_srgb_texture_compression;
+        bool has_pvrtc_srgb_texture_compression;
+        bool has_pvrtc2_srgb_texture_compression;
     };
 
     struct GpuMemoryInfo

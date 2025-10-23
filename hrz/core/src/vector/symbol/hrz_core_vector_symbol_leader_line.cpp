@@ -233,13 +233,13 @@ ElementSystem::PrototypeH LeaderLineElementSystem::make_prototype(
     prototype.baking_params.target_offset_prp.z =
         register_prp(target_offset_z_prp_name, prototype.baking_params.default_target_offset.z);
 
-    prototype.baking_params.default_color =
+    prototype.baking_params.default_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.color().default_value());
     auto color_prp_name = descriptor.color().name();
     prototype.baking_params.color_prp = register_prp(
         color_prp_name,
         vector_data::attr_from_color<vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_color));
+            prototype.baking_params.default_color_srgb));
 
     prototype.status = Prototype::Status::Uploading;
 

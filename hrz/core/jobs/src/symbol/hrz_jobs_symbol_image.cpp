@@ -28,8 +28,8 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
     assert(element.type == hrz_proto::SymbolElementType::IMAGE_SYMBOL_ELEMENT);
     const auto& params = element.image();
 
-    auto color = params.default_color;
-    load_rgba_color_property(params.color_prp, &color);
+    auto color_srgb = params.default_color_srgb;
+    load_rgba_color_property(params.color_prp, &color_srgb);
 
     float scale = params.default_scale;
     load_float_property(params.scale_prp, &scale);
@@ -93,7 +93,7 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
         instance.anchor_index = element.anchor_index.value();
         instance.transform = transform;
         instance.stretch_size = stretch_factor;
-        instance.color = color;
+        instance.color = color_srgb;
         // Offset the sprite in the atlas so that (0,0) and (1,1) sample at the center of texels.
         instance.uv_offset =
             (lm::vec2(sprite.atlas_offset) + lm::vec2(0.5f)) / lm::vec2(params.image_size);

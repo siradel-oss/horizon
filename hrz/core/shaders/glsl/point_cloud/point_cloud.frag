@@ -39,14 +39,14 @@ void main()
     {
         sun = do_sun_lighting(v_normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_point_cloud.receive_shadows);
     }
+    vec4 color = vec4(v_color.rgb * sun, v_color.a);
 
-    vec4 color = linear_to_srgb(v_color * vec4(sun, 1.0));
     color = compute_viewshed_color(color, v_normal);
     color = mix_premultiplied_colors(color, compute_clip_outline_color());
 
     if ((hrz_point_cloud.feature_reference | uvec3(0, v_feature_id)) == hrz_frame.quick_highlight_feature_reference)
     {
-        color = apply_quick_highlight_color(color);
+        color = apply_quick_highlight_color_premultiplied(color);
     }
 
     o_color = color;

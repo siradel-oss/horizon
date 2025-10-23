@@ -58,13 +58,14 @@ void main()
     }
 #endif
 
-    vec4 feature_color = srgb_to_linear(fetch_feature_color());
-    v_color = blend_linear(
+    vec4 feature_color = fetch_feature_color();
+    v_color = blend(
         hrz_point_cloud.feature_color_blend_mode,
         srgb_to_linear(i_color),
         feature_color.rgb,
         hrz_point_cloud.feature_color_blend_strength);
     v_color.a *= feature_color.a;
+    v_color.rgb *= v_color.a;
 
     if (v_color.a == 0.0)
     {

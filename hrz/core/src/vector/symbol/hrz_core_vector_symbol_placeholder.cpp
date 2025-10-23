@@ -228,13 +228,13 @@ ElementSystem::PrototypeH PlaceholderElementSystem::make_prototype(
     prototype.baking_params.size_prp.y =
         register_prp(size_y_prp_name, prototype.baking_params.default_size.y);
 
-    prototype.baking_params.default_color =
+    prototype.baking_params.default_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.color().default_value());
 
     prototype.baking_params.color_prp = register_prp(
         descriptor.color().name(),
         vector_data::attr_from_color<vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_color));
+            prototype.baking_params.default_color_srgb));
 
     prototype.status = Prototype::Status::Uploading;
 

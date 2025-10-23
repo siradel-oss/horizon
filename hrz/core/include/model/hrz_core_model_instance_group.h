@@ -22,7 +22,7 @@ class InstanceGroup
     using InstanceCompressedNormalTextureResource =
         DataTexture<Width, my::TextureFormat::RGBA16UI, lm::usvec4>;
     using InstanceScaleTextureResource = DataTexture<Width, my::TextureFormat::RGB32F, lm::vec3>;
-    using InstanceColorTextureResource = DataTexture<Width, my::TextureFormat::RGBA8, lm::ubvec4>;
+    using InstanceColorTextureResource = DataTexture<Width, my::TextureFormat::SRGBA8, lm::ubvec4>;
     using InstancePickingIdsResource = DataTexture<Width, my::TextureFormat::R32UI, uint32_t>;
     using InstanceFeatureIdsResource = DataTexture<Width, my::TextureFormat::RG32UI, uint64_t>;
     static_assert(

@@ -26,10 +26,10 @@ void main()
     handle_depth_and_clip();
 
     float value = 0.0;
-    vec4 color_lin = compute_material_color_lin(hrz_mesh.geometry.mesh_color_blend_mode, hrz_mesh.geometry.mesh_color_blend_strength, value);
+    vec4 color = compute_material_color(hrz_mesh.geometry.mesh_color_blend_mode, hrz_mesh.geometry.mesh_color_blend_strength, value);
 
 #ifdef GLTF_VISUAL
-    o_color = apply_color_decoration(color_lin, get_normal(), hrz_mesh.geometry.feature_reference);
+    o_color = apply_color_decoration(color, get_normal(), hrz_mesh.geometry.feature_reference);
 #endif
 
 #ifdef GLTF_PICKING
@@ -42,5 +42,5 @@ void main()
     o_highlight = 1.0;
 #endif
 
-    handle_alpha_discard(color_lin.a);
+    handle_alpha_discard(color.a);
 }

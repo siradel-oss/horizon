@@ -167,7 +167,12 @@ async function retrieveAmbientSettings(): Promise<any> {
             </div>
         </template>
         <template #right>
-            <Viewer @ready="onHorizonReady" />
+            <Viewer
+                :viewer-options="{
+                    loadingScreenBackgroundColor: { r: 1, g: 1, b: 1, a: 1 },
+                }"
+                @ready="onHorizonReady"
+            />
         </template>
     </SplitView>
 </template>

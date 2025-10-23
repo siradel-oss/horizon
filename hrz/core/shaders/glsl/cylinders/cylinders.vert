@@ -5,6 +5,7 @@
 #include "common/clip.vert.glsl"
 #include "common/octahedral.glsl"
 #include "common/sdf.glsl"
+#include "common/colors.glsl"
 #include "cylinders/defs.glsl"
 
 #ifdef CYLINDER_VISUAL
@@ -137,8 +138,8 @@ void main()
     v_dash_ratio = i_geometry.w / i_geometry.z * dash_length_unit_coef / dash_period_unit_coef;
     v_invert_gradient_direction = i_animation_speed < 0.0 ? 1u : 0u;
 
-    v_color = i_color;
-    v_empty_color = i_empty_color;
+    v_color_oklab = i_color;
+    v_empty_color_oklab = i_empty_color;
 
 #ifdef CYLINDER_VISUAL
     mat3 normal_matrix = mat3(hrz_frame.view_matrix);

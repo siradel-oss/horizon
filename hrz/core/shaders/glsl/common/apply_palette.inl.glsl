@@ -14,13 +14,13 @@ vec4 PALETTE_FN_NAME(PALETTE_ADDITIONAL_ARGUMENTS float value)
     Palette palette = PALETTE_UBO_PATH;
 #endif // defined(WORKAROUND_004)
 
-    vec4 nan_color_srgb = PALETTE_UBO_PATH.nan_color_srgb;
+    vec4 nan_color = PALETTE_UBO_PATH.nan_color;
     int color_interpolation_mode = PALETTE_UBO_PATH.color_interpolation_mode;
     int num_color_points = PALETTE_UBO_PATH.num_color_points;
 
     if (num_color_points == 0 || is_nan(value))
     {
-        return nan_color_srgb;
+        return nan_color;
     }
 
     if (value < CPV(0))

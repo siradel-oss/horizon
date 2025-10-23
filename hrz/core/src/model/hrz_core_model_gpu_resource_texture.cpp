@@ -190,8 +190,8 @@ void GpuTextureResource::work(
 
                     decompress_ticket = image_decoder::decode_async(
                         imgdec, js, std::move(compressed_data_handle.value()), owner, format,
-                        mime_type, image_decoder::PremultiplyAlpha::DoNotPremultiply,
-                        scalar_conversion, image_decoder::DecodeToCompressedImage::Allow);
+                        mime_type, scalar_conversion,
+                        image_decoder::DecodeToCompressedImage::Allow);
 
                     compressed_data_handle = std::nullopt;
 

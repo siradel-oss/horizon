@@ -32,5 +32,5 @@ void main()
 #endif
 
     output_uv_and_color();
-    v_feature_color_lin = hrz_mesh.geometry.mesh_color;
+    v_feature_color = hrz_mesh.geometry.mesh_color;
 }

@@ -80,7 +80,6 @@ void compute_clip_outline_attenuation(int index, vec3 view_normal)
 #endif // defined(WORKAROUND_004)
 
         v_clip_color = clip_plane.outline_color;
-        v_clip_color.rgb *= v_clip_color.a;
 
         vec3 n = mat3(clip_plane.matrix) * view_normal;
         v_clip_color *= 1.0 - (abs(dot(clip_plane.normal, n)) * 0.75);

@@ -22,7 +22,7 @@ let layer = ref<HrzProtocol.ILayerHandle | undefined>();
 
 let useBilinearInterpolation = ref(false);
 let colorInterpolationMode = ref<HrzProtocol.ColorInterpolationMode>(
-    HrzProtocol.ColorInterpolationMode.PERCEPTUAL_OKLAB
+    HrzProtocol.ColorInterpolationMode.OKLAB
 );
 let colorValues = reactive<number[]>([]);
 let colors = reactive<HrzProtocol.IColor[]>([]);
@@ -47,7 +47,7 @@ watch(layer, async function (newLayer) {
         rasterData.sampling?.filtering === HrzProtocol.TextureFiltering.BILINEAR;
     colorInterpolationMode.value =
         rasterData.provider?.palettized?.palette?.interpolationMode ||
-        HrzProtocol.ColorInterpolationMode.PERCEPTUAL_OKLAB;
+        HrzProtocol.ColorInterpolationMode.OKLAB;
 
     let colorPoints = rasterData.provider?.palettized?.palette?.colorPoints;
     if (colorPoints) {

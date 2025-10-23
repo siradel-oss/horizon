@@ -183,7 +183,7 @@ struct PalettizeImageParams
     hrz::BlobImage image;
     hrz_proto::RasterNodata nodata;
     hrz::Palette palette;
-    lm::vec4 nodata_color; // sRGB
+    lm::ubvec4 nodata_color_srgb;
 };
 
 struct CesiumTerrainTileData

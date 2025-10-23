@@ -8,6 +8,7 @@
 #include "hrz_core_render.h"
 #include "hrz_core_shaders.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_geo.h>
 #include <hrz_common_geometry.h>
 #include <hrz_common_monitoring_defs.h>
@@ -75,13 +76,14 @@ static constexpr float ORIGIN_OUTLINE_SIZE = 0.025f;
 
 static constexpr float DEFAULT_FADEOUT_THRESHOLD = 0.9f;
 
-static constexpr lm::vec4 RED(0.9, 0.19, 0.3, 1);
-static constexpr lm::vec4 BLUE(0.19, 0.53, 0.89, 1);
-static constexpr lm::vec4 GREEN(0.5, 0.79, 0, 1);
-static constexpr lm::vec4 WHITE(0.9, 0.9, 0.9, 0.9);
+// Linear colours
+static constexpr lm::vec4 RED(0.787, 0.030, 0.073, 1);
+static constexpr lm::vec4 BLUE(0.030, 0.242, 0.767, 1);
+static constexpr lm::vec4 GREEN(0.214, 0.587, 0, 1);
+static constexpr lm::vec4 WHITE(0.787, 0.787, 0.787, 0.9);
 static constexpr lm::vec4 BLACK(0, 0, 0, 1);
-static constexpr lm::vec4 ORANGE(1, 0.5, 0.25, 1);
-static constexpr lm::vec4 HIGHLIGHT(0.9, 0.8, 0.1, 1.0);
+static constexpr lm::vec4 ORANGE(1, 0.214, 0.050, 1);
+static constexpr lm::vec4 HIGHLIGHT(0.787, 0.603, 0.010, 1);
 
 struct GizmoMeshUniformData
 {
@@ -355,7 +357,7 @@ struct LineParams
 LineParams from_proto(const hrz_proto::Line& line)
 {
     LineParams params;
-    params.color = hrz::to_lm(line.color());
+    params.color = hrz::srgb_to_linear(hrz::convert_proto_color_to_float(line.color()));
     params.width = line.width();
     params.extent = line.extent();
     params.scene_views_bitset = line.scene_views().bits();

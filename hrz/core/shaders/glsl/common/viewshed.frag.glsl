@@ -53,13 +53,10 @@ vec4 apply_viewshed_color(vec4 in_color, vec4 viewshed_color)
         return in_color;
     }
 
-    in_color.rgb /= in_color.a;
-    vec4 color = vec4(mix(in_color.rgb, viewshed_color.rgb, viewshed_color.a), in_color.a);
-    color.rgb *= color.a;
-    return color;
+    return mix_premultiplied_colors(in_color, viewshed_color * in_color.a);
 }
 
-vec4 compute_viewshed_color(vec4 in_color ,vec3 normal)
+vec4 compute_viewshed_color(vec4 in_color, vec3 normal)
 {
     vec4 out_color = in_color;
     if (hrz_frame.viewsheds_enabled && is_in_viewshed_frustum(v_viewshed_pos[0]))

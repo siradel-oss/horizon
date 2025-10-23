@@ -55,7 +55,7 @@ struct ImpostorBakingTechnique
         {
             my::TextureResource res;
             res.layout.type = my::TextureLayout::Type2D;
-            res.layout.format = my::TextureFormat::RGBA8;
+            res.layout.format = my::TextureFormat::SRGBA8;
             res.layout.width = texture_size.x;
             res.layout.height = texture_size.y;
             res.layout.depth = 1;

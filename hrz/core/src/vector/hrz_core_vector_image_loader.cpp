@@ -279,8 +279,7 @@ void work(ImageLoader* loader, AssetsLoader* al, BlobAllocator* ba, JobScheduler
                         auto blob = assets_loader::get_blob(al, ba, image->load_ticket);
                         image->decode_ticket = image_decoder::decode_async(
                             js, std::move(blob), {hrz::monitoring::systems::Symbols},
-                            hrz_proto::ImageFormat::SRGBA_8, content_type,
-                            image_decoder::PremultiplyAlpha::Premultiply);
+                            hrz_proto::ImageFormat::SRGBA_8, content_type);
 
                         image->status = Image::Status::Decoding;
                     }

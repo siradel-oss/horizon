@@ -8,7 +8,7 @@
 #define BLEND_MODE_SCREEN 2u
 #define BLEND_MODE_OVERLAY 3u
 
-vec4 blend_linear(uint mode, vec4 base, vec3 color, float blend_strength)
+vec4 blend(uint mode, vec4 base, vec3 color, float blend_strength)
 {
     vec3 blended_color = color;
     if (mode == BLEND_MODE_MULTIPLY)
@@ -26,16 +26,6 @@ vec4 blend_linear(uint mode, vec4 base, vec3 color, float blend_strength)
         blended_color = mix(mult, screen, step(vec3(0.5), base.rgb));
     }
     return vec4(mix(base.rgb, blended_color.rgb, blend_strength), base.a);
-}
-
-vec4 blend(uint mode, vec4 base, vec3 color, float blend_strength)
-{
-    return linear_to_srgb(blend_linear(
-        mode,
-        srgb_to_linear(base),
-        srgb_to_linear(color),
-        blend_strength
-    ));
 }
 
 vec4 blend_premultiplied(uint mode, vec4 base, vec4 color, float blend_strength)

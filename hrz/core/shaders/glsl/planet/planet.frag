@@ -186,7 +186,12 @@ void main()
         // Blend top to bottom (we can because premultiplied!).
         // Stop as soon as we're opaque.
 
-        vec4 color = compute_overlay_color(v_overlay_cams_clip_pos);
+        // Imagery raster groups are blended in sRGB space, as
+        // the whole imagery pipeline is in this space. This
+        // makes blending inside a group or between groups
+        // consistent.
+
+        vec4 color = vec4(0.0);
 
         // Absolutely magnificient!
         if (color.a < 1.0 && (hrz_frame.merge_groups_bitset & 4u) != 0u)
@@ -207,7 +212,8 @@ void main()
             color = mix_premultiplied_colors(this_color, color);
         }
 
-        o_color = mix_premultiplied_colors(vec4(hrz_frame.terrain_color_opacity.rgb, 1), color);
+        color = mix_premultiplied_colors(vec4(hrz_frame.terrain_color_opacity.rgb, 1), color);
+        o_color = mix_premultiplied_colors(color, compute_overlay_color(v_overlay_cams_clip_pos));
     }
 
     vec3 dx = dFdx(v_view_pos);
@@ -223,12 +229,8 @@ void main()
             altitude + EARTH_RADIUS, v_view_normal_to_sun, hrz_frame.terrain_receive_shadows);
     }
 
-    vec4 color_linear = vec4(srgb_to_linear(o_color.rgb) * sun, o_color.a);
-    color_linear *= hrz_frame.terrain_color_opacity.a;
-    o_color = linear_to_srgb(color_linear);
-
-    // Use sRGB's gamma on the alpha channel.
-    o_color.a = pow(o_color.a, 1.0 / 2.2);
+    o_color = vec4(o_color.rgb * sun, o_color.a);
+    o_color *= hrz_frame.terrain_color_opacity.a;
 
     o_color = compute_viewshed_color(o_color, geometry_normal);
     o_color = mix_premultiplied_colors(o_color, compute_clip_outline_color());

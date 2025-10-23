@@ -29,6 +29,7 @@
 #include "vector/data_loader/hrz_core_vector_data_loader.h"
 
 #include <hrz_common_blob_allocator.h>
+#include <hrz_common_color.h>
 #include <hrz_common_font_rasterizer.h>
 #include <hrz_common_geo.h>
 #include <hrz_common_metrics.h>
@@ -133,6 +134,8 @@ class PresentTechnique
         lm::ivec2 screen_resolution;
         lm::ivec2 _padding;
     };
+
+    HRZ_CHECK_UBO_SIZE(SceneViewportUniformData);
 
     size_t _ubo_data_stride{};
 
@@ -1461,6 +1464,8 @@ class LoadingScreenTechnique
     static constexpr uint32_t NumFramesToSkipBeforeFadeout = 2;
     static constexpr double FadeoutDurationMs = 500;
 
+    lm::vec4 _background_color;
+
     my::ResourceHandle _ubo;
     my::ResourceHandle _vertex_buffer;
     my::ResourceHandle _vertex_input;
@@ -1478,10 +1483,13 @@ class LoadingScreenTechnique
         uint32_t num_shaders_ready;
         uint32_t viewport_width;
         uint32_t viewport_height;
-        uint32_t draw_logo;
+        lm::vec4 background_color;
+        hrz::bool32 draw_logo;
         float fadeout;
         uint32_t _padding[2];
     };
+
+    HRZ_CHECK_UBO_SIZE(LoadingScreenUniformData);
 
     struct SceneViewportUniformData
     {
@@ -1491,9 +1499,13 @@ class LoadingScreenTechnique
         lm::ivec2 _padding;
     };
 
+    HRZ_CHECK_UBO_SIZE(SceneViewportUniformData);
+
 public:
-    void init(my::Instance* my, hrz::GpuResourceContext* rc)
+    void init(my::Instance* my, hrz::GpuResourceContext* rc, lm::vec4 background_color)
     {
+        _background_color = background_color;
+
         {
             my::BufferResource res(my::BufferResource::Uniform);
             res.size = sizeof(LoadingScreenUniformData);
@@ -1535,7 +1547,7 @@ public:
             auto data = hrz_res::get_data(hrz_res::Resources::HrzLogo);
             my::TextureResource res;
             res.layout.type = my::TextureLayout::Type2D;
-            res.layout.format = my::TextureFormat::RGBA8;
+            res.layout.format = my::TextureFormat::SRGBA8;
             res.layout.width = 96;
             res.layout.height = 96;
             res.layout.depth = 1;
@@ -1638,9 +1650,10 @@ public:
         uniform_data.num_shaders_ready = std::min(num_shaders_total, num_shaders_ready);
         uniform_data.viewport_width = vp_width;
         uniform_data.viewport_height = vp_height;
+        uniform_data.background_color = _background_color;
         uniform_data.fadeout = _fadeout ? std::pow(1.0 - elapsed / FadeoutDurationMs, 2) : 1;
 
-        const my::UboBinding ubo_binding{0, _ubo, 0, sizeof(SceneViewportUniformData)};
+        const my::UboBinding ubo_binding{0, _ubo, 0, sizeof(LoadingScreenUniformData)};
         const my::TextureBinding texture_binding{0, _texture, _sampler};
         const auto batch_info = my::DrawBatchInfo(my::PrimitiveType::TriangleStrip, 4);
 
@@ -2013,6 +2026,8 @@ public:
         _max_wasm_memory_size = options.max_wasm_memory_size();
 #endif
 
+        hrz::color::initialize_srgb_luts();
+
         hrz::shaders::collect_all_shaders(&_gpu_rc);
 
         auto canvas_size = hrz::platform::get_current_canvas_size(_platform).value_or(lm::uvec2{});
@@ -2054,8 +2069,13 @@ public:
 
         if (_options.show_loading_screen())
         {
+            auto background_color = _options.has_loading_screen_background_color()
+                ? hrz::srgb_to_linear(
+                    hrz::convert_proto_color_to_float(_options.loading_screen_background_color()))
+                : lm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
             _loading_screen_technique.reset(new LoadingScreenTechnique());
-            _loading_screen_technique->init(_my.get(), &_gpu_rc);
+            _loading_screen_technique->init(_my.get(), &_gpu_rc, background_color);
         }
 
         basist::basisu_transcoder_init();

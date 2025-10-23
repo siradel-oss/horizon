@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { HrzCoreBackend } from "@siradel/horizon-core";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 import { MessageHandler } from "@/utils/messages";
 import ScrimDialog from "./ScrimDialog.vue";
+
+interface Props {
+    viewerOptions?: Partial<HrzProtocol.IViewerOptions>;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    viewerOptions: () => ({}),
+});
 
 enum AdditionalAttributionsLink {
     HIDDEN,
@@ -20,7 +28,7 @@ const additionalAttributionsLink = ref<AdditionalAttributionsLink>(
 );
 const attributionsDialog = ref<InstanceType<typeof ScrimDialog>>();
 
-const options: HrzProtocol.IViewerOptions = {
+const defaultOptions: HrzProtocol.IViewerOptions = {
     showLoadingScreen: true,
     keyBindings: {
         bindings: [
@@ -46,6 +54,25 @@ const options: HrzProtocol.IViewerOptions = {
     },
 };
 
+const options = computed(() => {
+    return {
+        ...defaultOptions,
+        ...props.viewerOptions,
+        keyBindings: {
+            ...defaultOptions.keyBindings,
+            ...props.viewerOptions?.keyBindings,
+            bindings: [
+                ...(defaultOptions.keyBindings?.bindings || []),
+                ...(props.viewerOptions?.keyBindings?.bindings || []),
+            ],
+        },
+        graphicsSettingsOverrides: {
+            ...defaultOptions.graphicsSettingsOverrides,
+            ...props.viewerOptions?.graphicsSettingsOverrides,
+        },
+    };
+});
+
 const emits = defineEmits<{
     ready: [api: HrzApi.AsyncApi, msgHandler: MessageHandler];
     clickAt: [x: number, y: number];
@@ -56,7 +83,7 @@ onMounted(() => {
         HrzCoreBackend.init(
             canvas.value as HTMLCanvasElement,
             "assets/",
-            options,
+            options.value,
             async (backend, status) => {
                 if (!backend) {
                     console.error("Failed to initialize Horizon Core Backend: " + status);

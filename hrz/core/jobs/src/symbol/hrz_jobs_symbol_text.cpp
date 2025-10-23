@@ -638,11 +638,11 @@ ElementGeometry SymbolBaker::TextVisitor::visit_element(
     auto outline_size = params.default_outline_size;
     load_float_property(params.outline_size_prp, &outline_size);
 
-    auto fill_color = params.default_fill_color;
-    load_rgba_color_property(params.fill_color_prp, &fill_color);
+    auto fill_color_srgb = params.default_fill_color_srgb;
+    load_rgba_color_property(params.fill_color_prp, &fill_color_srgb);
 
-    auto outline_color = params.default_outline_color;
-    load_rgba_color_property(params.outline_color_prp, &outline_color);
+    auto outline_color_srgb = params.default_outline_color_srgb;
+    load_rgba_color_property(params.outline_color_prp, &outline_color_srgb);
 
     auto alignment = params.default_alignment;
     load_enum_property<hrz_proto::TextAlignment>(params.alignment_prp, &alignment);
@@ -682,8 +682,8 @@ ElementGeometry SymbolBaker::TextVisitor::visit_element(
         instances.transforms.push_back(lm::mat4::identity());
         instances.anchor_indices.push_back(element.anchor_index.value());
         instances.outline_widths.push_back(outline_em_size * 0.5f);
-        instances.fill_colors.push_back(fill_color);
-        instances.outline_colors.push_back(outline_color);
+        instances.fill_colors.push_back(fill_color_srgb);
+        instances.outline_colors.push_back(outline_color_srgb);
 
         instances.has_non_zero_outline_width |= outline_em_size > 0.0f;
 

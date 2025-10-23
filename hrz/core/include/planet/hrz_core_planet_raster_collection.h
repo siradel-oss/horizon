@@ -80,17 +80,17 @@ struct ImageryRasterCollectionTraits
     {
         if (compress_textures)
         {
-            if (platform_info.is_mobile() && my_instance_info.has_etc2_texture_compression)
+            if (platform_info.is_mobile() && my_instance_info.has_etc2_srgb_texture_compression)
             {
-                return my::TextureFormat::RGBA_ETC2_EAC;
+                return my::TextureFormat::SRGBA_ETC2_EAC;
             }
-            else if (my_instance_info.has_bc1_bc2_bc3_texture_compression)
+            else if (my_instance_info.has_bc1_bc2_bc3_srgb_texture_compression)
             {
-                return my::TextureFormat::RGBA_BC3;
+                return my::TextureFormat::SRGBA_BC3;
             }
         }
 
-        return my::TextureFormat::RGBA8;
+        return my::TextureFormat::SRGBA8;
     }
 
     template<typename Accessor>

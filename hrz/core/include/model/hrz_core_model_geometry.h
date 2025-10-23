@@ -112,7 +112,7 @@ public:
 class BatchedModelGeometry : public ModelGeometry
 {
     using FeatureIdsTextureResource = DataTexture<2048, my::TextureFormat::RG32UI, uint64_t>;
-    using FeatureColorsTextureResource = DataTexture<2048, my::TextureFormat::RGBA8, lm::ubvec4>;
+    using FeatureColorsTextureResource = DataTexture<2048, my::TextureFormat::SRGBA8, lm::ubvec4>;
 
     std::vector<bool> _primitive_has_float_batch_ids;
 

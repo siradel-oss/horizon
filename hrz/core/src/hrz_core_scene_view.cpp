@@ -19,6 +19,7 @@
 #include "vector/hrz_core_vector_flat_overlay.h"
 #include "vector/hrz_core_vector_heatmaps.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_geo.h>
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_profiling.h>
@@ -72,7 +73,7 @@ public:
         depth.height = 1;
 
         my::RenderGraph::ResourceInfo color;
-        color.format = my::TextureFormat::RGBA8;
+        color.format = my::TextureFormat::SRGBA8;
         color.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
         color.width = 1;
         color.height = 1;
@@ -748,7 +749,7 @@ public:
         ctx.create(_depth_buffer_names[1], TargetSampled, depth);
 
         my::RenderGraph::ResourceInfo color;
-        color.format = my::TextureFormat::RGBA8;
+        color.format = my::TextureFormat::SRGBA8;
         color.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
         color.width = 1;
         color.height = 1;
@@ -2107,7 +2108,8 @@ public:
 
     void set_settings(const hrz_proto::HighlightSettings& settings)
     {
-        lm::vec4 selection_color = hrz::to_lm(settings.selection_color());
+        lm::vec4 selection_color =
+            hrz::srgb_to_linear(hrz::convert_proto_color_to_float(settings.selection_color()));
         _ubo_data.color = selection_color.rgb;
         _ubo_data.fill_alpha = selection_color.a;
         _ubo_data.outline_alpha = settings.selection_outline_alpha();
@@ -2740,14 +2742,18 @@ RenderRequest work(
         auto highlight_settings = builder.clone().highlight().get();
         view->highlight_apply_pass->set_settings(highlight_settings);
         view->highlight_settings_updated = false;
-        view->quick_highlight_color = hrz::to_lm(highlight_settings.mouse_hover_highlight_color());
+        view->quick_highlight_color = hrz::premultiply_alpha(hrz::srgb_to_linear(
+            hrz::convert_proto_color_to_float(highlight_settings.mouse_hover_highlight_color())));
         render_request.request_visual_render();
     }
 
     if (view->terrain_settings_updated)
     {
         auto terrain_settings = builder.clone().terrain().get();
-        view->terrain_color_opacity.rgb = to_lm(terrain_settings.terrain_color()).rgb;
+        view->terrain_color_opacity.rgb =
+            hrz::premultiply_alpha(hrz::srgb_to_linear(hrz::convert_proto_color_to_float(
+                                       terrain_settings.terrain_color())))
+                .rgb;
         view->terrain_color_opacity.a = terrain_settings.terrain_opacity();
         view->terrain_clip_id = terrain_settings.clip_id();
         view->terrain_lighting = render::from_proto(terrain_settings.lighting());

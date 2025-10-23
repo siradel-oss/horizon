@@ -27,8 +27,6 @@ hrz::JobResult run(
 
     const auto& style = input.style;
 
-    lm::ubvec4 default_color = hrz::convert_rgba_color_to_bytes(input.default_color);
-
     std::optional<lm::dbbox2> clipping_bbox = std::nullopt;
     if (input.clip_to_tile)
     {
@@ -70,7 +68,7 @@ hrz::JobResult run(
             continue;
         }
 
-        lm::ubvec4 rgba = default_color;
+        lm::ubvec4 color_srgb = input.default_color_srgb;
         lm::vec3 scale = input.default_scale;
         lm::dvec3 rotation = lm::dvec3(input.default_rotation);
         lm::dvec3 world_offset = lm::dvec3(input.default_world_offset);
@@ -82,7 +80,7 @@ hrz::JobResult run(
         {
             if (style_prps[j] == input.color_prp)
             {
-                rgba = style_values.as_color(j);
+                color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.scale_x_prp)
             {
@@ -123,7 +121,7 @@ hrz::JobResult run(
         }
 
         if (is_color_unique && first_instance_color.has_value()
-            && first_instance_color.value() != rgba)
+            && first_instance_color.value() != color_srgb)
         {
             is_color_unique = false;
         }
@@ -160,7 +158,7 @@ hrz::JobResult run(
             normal_right & 0xffff, (normal_right >> 16) & 0xffff, normal_up & 0xffff,
             (normal_up >> 16) & 0xffff);
         geometry.scales.emplace_back(scale);
-        geometry.colors.push_back(rgba);
+        geometry.colors.push_back(color_srgb);
         geometry.object_ids.push_back(feature_index);
         geometry.feature_ids.push_back(input_feature_ids.at(instance.feature_index));
 
@@ -178,7 +176,7 @@ hrz::JobResult run(
 
         if (!first_instance_color.has_value())
         {
-            first_instance_color = {rgba};
+            first_instance_color = {color_srgb};
         }
 
         if (!first_instance_scale.has_value())

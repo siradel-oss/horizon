@@ -25,7 +25,7 @@ static inline uint8_t image_format_channel_count(hrz_proto::ImageFormat format)
         case hrz_proto::ImageFormat::TERRAIN_RGB:
         case hrz_proto::ImageFormat::R_F32:
         case hrz_proto::ImageFormat::R_F32_SILICIUM:
-        case hrz_proto::ImageFormat::SRGB_R_8: return 1;
+        case hrz_proto::ImageFormat::R_8: return 1;
         default:
         {
             assert(!"Unhandled image format in channel_count");
@@ -44,7 +44,7 @@ static inline uint8_t image_format_bit_count(hrz_proto::ImageFormat format)
         case hrz_proto::ImageFormat::TERRAIN_RGB:
         case hrz_proto::ImageFormat::R_F32:
         case hrz_proto::ImageFormat::R_F32_SILICIUM: return 32;
-        case hrz_proto::ImageFormat::SRGB_R_8: return 8;
+        case hrz_proto::ImageFormat::R_8: return 8;
         default:
         {
             assert(!"Unhandled image format in bit_count");
@@ -62,13 +62,13 @@ static inline my::TextureFormat image_format_to_gpu_format(hrz_proto::ImageForma
 {
     switch (format)
     {
-        case hrz_proto::ImageFormat::SRGBA_8: return my::TextureFormat::RGBA8;
+        case hrz_proto::ImageFormat::SRGBA_8: return my::TextureFormat::SRGBA8;
         case hrz_proto::ImageFormat::SIGNED_FIXED_24_8: return my::TextureFormat::R32I;
         case hrz_proto::ImageFormat::R_F32: return my::TextureFormat::R32F;
         case hrz_proto::ImageFormat::R_F32_SILICIUM: return my::TextureFormat::R32I;
         case hrz_proto::ImageFormat::TERRARIUM:
         case hrz_proto::ImageFormat::TERRAIN_RGB: return my::TextureFormat::R32UI;
-        case hrz_proto::ImageFormat::SRGB_R_8: return my::TextureFormat::R8;
+        case hrz_proto::ImageFormat::R_8: return my::TextureFormat::R8;
         default:
             HRZ_LOG_ERROR("Unhandled image format: {}", hrz_proto::ImageFormat_Name(format));
             assert(false);
@@ -84,7 +84,7 @@ static inline std::optional<hrz_proto::ImageFormat> gpu_format_to_image_format(
         case my::TextureFormat::RGBA8: return hrz_proto::ImageFormat::SRGBA_8;
         case my::TextureFormat::R32I: return hrz_proto::ImageFormat::SIGNED_FIXED_24_8;
         case my::TextureFormat::R32F: return hrz_proto::ImageFormat::R_F32;
-        case my::TextureFormat::R8: return hrz_proto::ImageFormat::SRGB_R_8;
+        case my::TextureFormat::R8: return hrz_proto::ImageFormat::R_8;
         default: return std::nullopt;
     }
 }
@@ -96,17 +96,6 @@ static inline bool is_scalar_image_format(hrz_proto::ImageFormat format)
         || format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8
         || format == hrz_proto::ImageFormat::TERRARIUM
         || format == hrz_proto::ImageFormat::TERRAIN_RGB;
-}
-
-static inline lm::ubvec4 premultiply_alpha(lm::ubvec4 rgba)
-{
-    float alpha = (float)rgba.a / 255.0F;
-
-    auto premultiply_channel = [&](uint8_t c) { return (uint8_t)std::round((float)c * alpha); };
-
-    return {
-        premultiply_channel(rgba.r), premultiply_channel(rgba.g), premultiply_channel(rgba.b),
-        rgba.a};
 }
 
 // IEEE 754 single precision little endian float decoding,

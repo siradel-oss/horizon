@@ -1264,14 +1264,10 @@ void RasterMergeGroup::work(
 
                     response.image.register_blob_owner(ba, {monitoring::systems::PlanetSurface});
 
-                    if (_atlas_image_format
-                        != hrz::image_format_to_gpu_format(_composed_image_format))
+                    if (my::is_format_compressed(_atlas_image_format)
+                        && !my::is_format_compressed(
+                            hrz::image_format_to_gpu_format(_composed_image_format)))
                     {
-                        // The atlas texture format is not the direct equivalent of the format
-                        // of the tile image, this happens when the atlas is in a compressed
-                        // texture format. In this case, the tile image must be compressed
-                        // before it can be uploaded to the atlas.
-
                         hrz::BlobImageCompressionParams job_params;
                         job_params.image = std::move(response.image);
                         job_params.output_format = _atlas_image_format;

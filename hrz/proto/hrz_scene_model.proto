@@ -1822,8 +1822,14 @@ message EditableShapeLayer {
     float                             selected_stroke_width        = 11;
     // Size of the control points on screen, in pixels in logical pixels.
     float                             control_point_size           = 14;
+    // Colour of the unselected control points at the vertices of the shape.
+    // Alpha is ignored.
     Color                             control_point_color          = 15;
+    // Colour of the control points at the midpoint of each segment.
+    // Alpha is ignored.
     Color                             midpoint_control_point_color = 16;
+    // Colour of the control points when selected.
+    // Alpha is ignored.
     Color                             selected_control_point_color = 17;
     // Show control points at the midpoint of each segment, that can be
     // used to insert new points.

@@ -203,7 +203,7 @@ struct Config
     uint64_t rotation_y_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t rotation_z_prp = hrz::style::Parser::INVALID_PROPERTY;
 
-    lm::vec4 default_color = {0, 0, 0, 0};
+    lm::ubvec4 default_color_srgb = {0, 0, 0, 0};
     lm::vec3 default_world_offset = {0, 0, 0};
     lm::vec3 default_rotation = {0, 0, 0};
     lm::vec3 default_scale = {0, 0, 0};
@@ -588,7 +588,8 @@ public:
         config.repr_id = repr.id();
         config.layer_id = layer_id;
 
-        config.default_color = hrz::to_lm(repr.model().color().default_value());
+        config.default_color_srgb =
+            hrz::convert_proto_color_to_bytes(repr.model().color().default_value());
         config.default_scale = hrz::to_lm(repr.model().scale().default_value());
         config.default_world_offset =
             lm::vec3(hrz::to_lm(repr.model().world_offset().default_value()));
@@ -610,7 +611,7 @@ public:
         config.color_prp = register_prp(
             color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_color));
+                config.default_color_srgb));
         config.scale_x_prp = register_prp(scale_prp_x_name, config.default_scale.x);
         config.scale_y_prp = register_prp(scale_prp_y_name, config.default_scale.y);
         config.scale_z_prp = register_prp(scale_prp_z_name, config.default_scale.z);
@@ -697,7 +698,7 @@ public:
 
         bake_data.frame = cfg.frame;
         bake_data.rotation_order = cfg.rotation_order;
-        bake_data.default_color = cfg.default_color;
+        bake_data.default_color_srgb = cfg.default_color_srgb;
         bake_data.default_scale = cfg.default_scale;
         bake_data.default_world_offset = cfg.default_world_offset;
         bake_data.default_rotation = cfg.default_rotation;

@@ -183,6 +183,10 @@ message ViewerOptions {
     // Default: false
     bool                      show_loading_screen             = 20;
 
+    // Background color for the loading screen.
+    // Default: (0, 0, 0, 1) (i.e. opaque black)
+    Color                     loading_screen_background_color = 30;
+
     // Forces to compile and link all the shaders before the first frame. It
     // results in longer loading times but has the benefit of avoiding
     // stuttering due to shader compilation when using the engine afterwards.

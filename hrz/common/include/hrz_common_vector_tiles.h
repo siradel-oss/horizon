@@ -101,9 +101,9 @@ struct ExtrudedVectorData
     hrz::BlobArray<float> clamps;
 
     float default_extrusion;
-    lm::vec4 default_upper_color;
-    lm::vec4 default_lower_color;
-    lm::vec4 default_roof_color;
+    lm::ubvec4 default_upper_color_srgb;
+    lm::ubvec4 default_lower_color_srgb;
+    lm::ubvec4 default_roof_color_srgb;
     float default_altitude_offset;
 
     uint32_t repr_id;
@@ -124,8 +124,8 @@ struct ExtrudedVectorGeometry
     struct Vertex
     {
         lm::vec3 position;
-        uint32_t normal; // oct-encoded
-        lm::ubvec4 color;
+        uint32_t normal;  // oct-encoded
+        lm::ubvec4 color; // sRGB
 
         // Feature indices are the indices into feature_ids. They will also serve as
         // indices into the selection bitmask.
@@ -167,7 +167,7 @@ struct ModelData
     hrz_proto::EulerRotationOrder rotation_order;
 
     lm::vec3 default_scale;
-    lm::vec4 default_color;
+    lm::ubvec4 default_color_srgb;
     lm::vec3 default_world_offset;
     lm::vec3 default_rotation;
 
@@ -189,7 +189,7 @@ struct ModelGeometry
     std::vector<lm::vec3> positions;
     std::vector<lm::usvec4> normals;
     std::vector<lm::vec3> scales;
-    std::vector<lm::ubvec4> colors;
+    std::vector<lm::ubvec4> colors; // sRGB
     std::vector<vector_data::FeatureIdHash> feature_ids;
     std::vector<uint32_t> object_ids;
 
@@ -213,9 +213,9 @@ struct FlatVectorData
     style::StyledFeatures style;
 
     float default_line_width;
-    lm::vec4 default_color;
+    lm::ubvec4 default_color_srgb;
     float default_disc_radius;
-    lm::vec4 default_empty_color;
+    lm::ubvec4 default_empty_color_srgb;
 
     uint32_t repr_id;
     uint64_t line_width_prp;
@@ -255,7 +255,7 @@ struct FlatVectorData
     std::string default_polygon_pattern_sprite_name;
     lm::vec2 default_polygon_pattern_size;
     float default_polygon_pattern_rotation;
-    lm::vec4 default_polygon_pattern_color;
+    lm::ubvec4 default_polygon_pattern_color_srgb;
     float default_polygon_pattern_color_blend_strength;
 
     hrz_proto::PolygonPatternSizeUnit polygon_pattern_size_unit;
@@ -265,15 +265,16 @@ struct FlatVectorGeometry
 {
 #pragma pack(push, 4)
 
-    // This definition must be in sync with the one in the vertex shader code.
+    // This definition must be in sync with the one in the vertex shader code
+    // (in function `fetch_pattern_style`).
     // /!\ Update hash computation and equality function if modified.
     struct PolygonPatternStyle
     {
         lm::vec2 sprite_size;
         lm::vec2 sprite_offset;
         lm::mat2 polygon_pattern_transform;
-        lm::ubvec4 background_color;
-        lm::ubvec4 pattern_color;
+        lm::ubvec4 background_color_srgb;
+        lm::ubvec4 pattern_color_srgb;
         float pattern_color_blend_strength;
         uint32_t _padding;
     };
@@ -291,7 +292,7 @@ struct FlatVectorGeometry
     struct SolidColorPolygonVertex
     {
         lm::vec3 position;
-        lm::ubvec4 color;
+        lm::ubvec4 color; // sRGB
         uint32_t feature_index;
     };
 
@@ -318,7 +319,7 @@ struct FlatVectorGeometry
         lm::vec3 position1;
         uint32_t normal0; // oct-encoded
         uint32_t normal1; // oct-encoded
-        lm::ubvec4 color;
+        lm::ubvec4 color; // sRGB
         float line_width;
         float line_total_length;
         float progress_at_start;
@@ -326,7 +327,7 @@ struct FlatVectorGeometry
         float dash_period;
         float dash_length;
         float animation_speed;
-        lm::ubvec4 empty_color;
+        lm::ubvec4 empty_color; // sRGB
         uint32_t feature_index;
     };
 
@@ -339,7 +340,7 @@ struct FlatVectorGeometry
     struct PointInstance
     {
         lm::vec3 position;
-        lm::ubvec4 color;
+        lm::ubvec4 color; // sRGB
         float disc_radius;
         uint32_t feature_index;
     };
@@ -404,8 +405,8 @@ struct CylinderVectorData
     hrz_proto::VectorClamping clamping;
     hrz::BlobArray<float> clamps;
 
-    lm::vec4 default_color;
-    lm::vec4 default_empty_color;
+    lm::ubvec4 default_color_srgb;
+    lm::ubvec4 default_empty_color_srgb;
     float default_radius;
     float default_altitude_offset;
     float default_dash_period;
@@ -434,7 +435,7 @@ struct CylinderVectorGeometry
         uint32_t normal0; // oct-encoded
         lm::vec3 position1;
         uint32_t normal1; // oct-encoded
-        lm::ubvec4 color;
+        lm::ubvec4 color; // sRGB
         lm::vec2 radii;
         float line_total_length;
         float progress0;
@@ -442,7 +443,7 @@ struct CylinderVectorGeometry
         float dash_period;
         float dash_length;
         float animation_speed;
-        lm::ubvec4 alternative_color;
+        lm::ubvec4 alternative_color; // sRGB
         uint32_t feature_index;
         vector_data::FeatureIdHash feature_id;
     };
@@ -495,7 +496,7 @@ struct SymbolBakingData
     {
         lm::vec2 default_size;
         lm::ulvec2 size_prp;
-        lm::ubvec4 default_color;
+        lm::ubvec4 default_color_srgb;
         uint64_t color_prp;
     };
 
@@ -506,7 +507,7 @@ struct SymbolBakingData
         lm::vec3 default_target_offset;
         lm::ulvec3 target_offset_prp;
 
-        lm::ubvec4 default_color;
+        lm::ubvec4 default_color_srgb;
         uint64_t color_prp;
     };
 
@@ -613,7 +614,7 @@ struct SymbolBakingData
         hrz_proto::BoxFitAxes fit_axes;
         hrz_proto::BoxFit fit_mode;
         lm::ivec2 image_size;
-        lm::ubvec4 default_color;
+        lm::ubvec4 default_color_srgb;
         float default_scale;
         int default_sprite_index;
         std::string default_sprite_name;
@@ -668,8 +669,8 @@ struct SymbolBakingData
         hrz_proto::BoxFit fit_mode;
         float aspect_ratio;
 
-        lm::ubvec4 default_color;
-        lm::ubvec4 default_border_color;
+        lm::ubvec4 default_color_srgb;
+        lm::ubvec4 default_border_color_srgb;
         float default_border_size;
         float default_border_radius;
 
@@ -734,12 +735,12 @@ struct SymbolBakingData
         uint64_t text_prp;
         float default_font_size;
         uint64_t font_size_prp;
-        lm::ubvec4 default_fill_color;
+        lm::ubvec4 default_fill_color_srgb;
         uint64_t fill_color_prp;
         float default_outline_size;
         uint64_t outline_size_prp;
         hrz_proto::TextOutlineWidthUnit outline_size_unit;
-        lm::ubvec4 default_outline_color;
+        lm::ubvec4 default_outline_color_srgb;
         uint64_t outline_color_prp;
         hrz_proto::TextAlignment default_alignment;
         uint64_t alignment_prp;
@@ -851,7 +852,7 @@ struct BakedSymbols
     {
         lm::mat4 transform;
         lm::vec2 size;
-        lm::ubvec4 color;
+        lm::ubvec4 color; // sRGB
         int32_t anchor_index;
     };
 
@@ -859,7 +860,7 @@ struct BakedSymbols
     {
         lm::mat4 transform;
         lm::vec2 stretch_size;
-        lm::ubvec4 color;
+        lm::ubvec4 color; // sRGB
         int32_t anchor_index;
         lm::vec2 uv_offset;
         lm::vec2 uv_size;
@@ -869,8 +870,8 @@ struct BakedSymbols
     {
         lm::mat4 transform;
         lm::vec2 size;
-        lm::ubvec4 color;
-        lm::ubvec4 border_color;
+        lm::ubvec4 color;        // sRGB
+        lm::ubvec4 border_color; // sRGB
         lm::vec2 border_size_radius;
         int32_t anchor_index;
     };
@@ -879,7 +880,7 @@ struct BakedSymbols
     {
         lm::vec3 target_in_tile_position; // In ECEF
         lm::vec3 in_symbol_position;      // In symbol coordinates
-        lm::ubvec4 color;
+        lm::ubvec4 color;                 // sRGB
         int32_t anchor_index;
     };
 
@@ -920,8 +921,8 @@ struct BakedSymbols
         hrz::BlobArray<lm::mat4> transforms;           // By text
         hrz::BlobArray<uint32_t> anchor_indices;       // By text
         hrz::BlobArray<float> outline_widths;          // By text
-        hrz::BlobArray<lm::ubvec4> fill_colors;        // By text
-        hrz::BlobArray<lm::ubvec4> outline_colors;     // By text
+        hrz::BlobArray<lm::ubvec4> fill_colors;        // By text, sRGB
+        hrz::BlobArray<lm::ubvec4> outline_colors;     // By text, sRGB
         hrz::BlobArray<GlyphPositionUv> positions_uvs; // By glyph
         hrz::BlobArray<uint16_t> text_indices;         // By glyph
 

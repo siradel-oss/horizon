@@ -23,7 +23,7 @@ Int32Value
 
 BytesValue
 value (RvalueBHøbproto3
-•š
+†š
 hrz_types.protoHrzProtocol"
 Void"#
 Vec2i
@@ -527,20 +527,19 @@ image_size (2.HrzProtocol.Vec2uiR	imageSize3
 
 Handedness
 LEFT 	
-RIGHT*~
+RIGHT*y
 ImageFormat
 SRGBA_8 	
 R_F32
 R_F32_SILICIUM
-SIGNED_FIXED_24_8
-SRGB_R_8
+SIGNED_FIXED_24_8
+R_8
 	TERRARIUM
-TERRAIN_RGB*W
-ColorInterpolationMode
-PERCEPTUAL_OKLAB 
-SRGB
-
-LINEAR_RGB
+TERRAIN_RGB*M
+ColorInterpolationMode	
+OKLAB 
+SRGB
+LINEAR_SRGB
 	THRESHOLD*%
 PaletteType	
 LABEL 
@@ -881,7 +880,7 @@ K_CAPSLOCK3
 MB_LEFT 
 	MB_MIDDLE
 MB_RIGHTBHøbproto3
-‘0
+ì0
 hrz_viewer.protoHrzProtocolhrz_types.protohrz_picking.protohrz_wrappers.protohrz_layers.protohrz_input.proto"y
 FeatureReference.
 layer (2.HrzProtocol.LayerHandleRlayer5
@@ -894,7 +893,7 @@ KeyBinding"
 key (2.HrzProtocol.KeyRkey.
 action (2.HrzProtocol.KeyActionRaction"M
 KeyInteractionBindings3
-bindings (2.HrzProtocol.KeyBindingRbindings"„
+bindings (2.HrzProtocol.KeyBindingRbindings"ß
 
 ViewerOptions!
 worker_count (RworkerCount8
@@ -919,7 +918,8 @@ user_agent (	R	userAgentA
 native_http_referrer (	RnativeHttpReferrer'
 disable_terrain (RdisableTerrain2
 disable_flat_overlays (RdisableFlatOverlays.
-show_loading_screen (RshowLoadingScreen8
+show_loading_screen (RshowLoadingScreenY
+loading_screen_background_color (2.HrzProtocol.ColorRloadingScreenBackgroundColor8
 force_shader_compilation (RforceShaderCompilation,
 device_pixel_ratio (RdevicePixelRatioJJJJ"Ù
 GraphicsSettingsOverrides,

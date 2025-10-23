@@ -229,19 +229,19 @@ ElementSystem::PrototypeH DecoratedShapeElementSystem::make_prototype(
     prototype.baking_params.aspect_ratio = descriptor.aspect_ratio();
     prototype.baking_params.alignment = hrz::to_lm(descriptor.alignment());
 
-    prototype.baking_params.default_color =
+    prototype.baking_params.default_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.color().default_value());
-    prototype.baking_params.default_border_color =
+    prototype.baking_params.default_border_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.border_color().default_value());
 
     prototype.baking_params.color_prp = register_prp(
         descriptor.color().name(),
         vector_data::attr_from_color<vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_color));
+            prototype.baking_params.default_color_srgb));
     prototype.baking_params.border_color_prp = register_prp(
         descriptor.border_color().name(),
         vector_data::attr_from_color<vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_border_color));
+            prototype.baking_params.default_border_color_srgb));
 
     prototype.baking_params.default_border_size = descriptor.border_size().default_value();
     prototype.baking_params.default_border_radius = descriptor.border_radius().default_value();

@@ -34,16 +34,16 @@ ElementGeometry SymbolBaker::PlaceholderVisitor::visit_element(
 
     size = lm::clamp(size, constraints.min, constraints.max);
 
-    auto color = params.default_color;
-    load_rgba_color_property(params.color_prp, &color);
+    auto color_srgb = params.default_color_srgb;
+    load_rgba_color_property(params.color_prp, &color_srgb);
 
-    if (element.anchor_index.has_value() && size.x > 0 && size.y > 0 && color.a > 0)
+    if (element.anchor_index.has_value() && size.x > 0 && size.y > 0 && color_srgb.a > 0)
     {
         PlaceholderInstance instance;
         instance.anchor_index = element.anchor_index.value();
         instance.transform = lm::mat4::identity();
         instance.size = size;
-        instance.color = color;
+        instance.color = color_srgb;
 
         auto& instances = instances_by_z_index.at(element.z_index.value());
         instances.push_back(instance);

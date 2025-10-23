@@ -38,7 +38,6 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     hrz::monitoring::ResourceOwner resource_owner,
     hrz_proto::ImageFormat format,
     std::string_view mime_type,
-    PremultiplyAlpha alpha_premultiplication,
     ConvertScalarsToFloat scalar_conversion,
     DecodeToCompressedImage decode_to_compressed_image)
 {
@@ -48,7 +47,6 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     params.encoded_image_data = std::move(blob);
     params.image_format = format;
     params.mime_type = mime_type;
-    params.premultiply_alpha = alpha_premultiplication == PremultiplyAlpha::Premultiply;
     params.allow_decoding_to_compressed_image =
         decode_to_compressed_image == DecodeToCompressedImage::Allow;
     params.convert_scalars_to_float = scalar_conversion == ConvertScalarsToFloat::Convert;
@@ -64,14 +62,12 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     hrz::monitoring::ResourceOwner resource_owner,
     hrz_proto::ImageFormat format,
     std::string_view mime_type,
-    PremultiplyAlpha alpha_premultiplication,
     ConvertScalarsToFloat scalar_conversion)
 {
     BlobImageDecodingParams params;
     params.encoded_image_data = std::move(blob);
     params.image_format = format;
     params.mime_type = mime_type;
-    params.premultiply_alpha = alpha_premultiplication == PremultiplyAlpha::Premultiply;
     params.convert_scalars_to_float = scalar_conversion == ConvertScalarsToFloat::Convert;
 
     // Platform info is necessary to decode to a compressed image,

@@ -1,3 +1,4 @@
+#include "common/colors.glsl"
 #include "common/ubo_frame.glsl"
 #include "common/flat_overlay_cameras.glsl"
 #include "common/camera_height.glsl"
@@ -21,7 +22,7 @@ void main()
     }
 #endif
 
-    v_color = i_color;
+    v_color = srgb_to_linear(i_color);
     v_uv = i_in_mesh_pos + vec2(0.5);
 
     float full_radius = i_radius + hrz_tile.disc_outline_width;

@@ -1,3 +1,4 @@
+#include "common/colors.glsl"
 #include "common/ubo_frame.glsl"
 #include "common/flat_overlay_cameras.glsl"
 #include "common/round_to_power_of_two.glsl"
@@ -58,8 +59,9 @@ void fetch_pattern_style(uint style_index)
     v_pattern_sprite_offset = uintBitsToFloat(data0.zw);
     v_pattern_transform[0].xy = uintBitsToFloat(data1.xy);
     v_pattern_transform[1].xy = uintBitsToFloat(data1.zw);
-    v_color = unpackColor(data2.x);
-    v_pattern_color = unpackColor(data2.y);
+    v_color = srgb_to_linear(unpackColor(data2.x));
+    v_color.rgb *= v_color.a;
+    v_pattern_color = srgb_to_linear(unpackColor(data2.y));
     v_pattern_color.rgb *= v_pattern_color.a;
     v_pattern_color_blend_strength = uintBitsToFloat(data2.z);
 
@@ -82,7 +84,8 @@ void main()
 #endif
 
 #ifndef FLAT_POLYGONS_PATTERN
-    v_color = i_color;
+    v_color = srgb_to_linear(i_color);
+    v_color.rgb *= v_color.a;
 #endif
 
 #ifdef FLAT_VISUAL

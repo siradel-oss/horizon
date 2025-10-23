@@ -149,7 +149,7 @@ void main()
 {
     vec2 bb_size = vec2(hrz_frame.viewport_size);
     vec2 uv = gl_FragCoord.xy / bb_size;
-    vec4 color = srgb_to_linear(texture(u_color, uv));
+    vec4 color = texture(u_color, uv);
     float depth_raw = texture(u_depth, uv).r;
 
     bool in_sky = depth_raw >= 1.0;
@@ -274,8 +274,5 @@ void main()
     }
 #endif
 
-    o_color = vec4(linear_to_srgb(color));
-
-    // Use sRGB's gamma on the alpha channel.
-    o_color.a = pow(o_color.a, 1.0 / 2.2);
+    o_color = color;
 }

@@ -301,7 +301,7 @@ struct PlanetSurface
         {
             my::TextureResource res;
             res.layout.type = my::TextureLayout::Type2D;
-            res.layout.format = my::TextureFormat::RGBA8;
+            res.layout.format = my::TextureFormat::SRGBA8;
             res.layout.width = 1;
             res.layout.height = 1;
             res.layout.depth = 1;

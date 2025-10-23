@@ -46,7 +46,7 @@ vec3 compute_sun_lighting_ambient(vec3 normal, vec3 sun_dir, float altitude, vec
 
 vec3 compute_sun_lighting_diffuse(vec3 normal, vec3 sun_dir, float altitude, vec3 normal_to_ground)
 {
-    vec3 sun_color = hrz_frame.sun_color_linear;
+    vec3 sun_color = hrz_frame.sun_color;
 
 #if !defined(ATMOSPHERE_DISABLED)
     if ((hrz_frame.atmosphere_flags & DYNAMIC_SUN_LIGHTING) != 0u)

@@ -71,8 +71,8 @@ void main()
     }
 #endif
 
-    v_feature_color_lin = srgb_to_linear(fetch_feature_color());
-    if (v_feature_color_lin.a == 0.0)
+    v_feature_color = fetch_feature_color();
+    if (v_feature_color.a == 0.0)
     {
         // The feature is made invisible by the style: generate 0-sized triangles to hide it.
         gl_Position = vec4(0.0);

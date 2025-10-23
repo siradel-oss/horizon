@@ -354,12 +354,12 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
     prototype.baking_params.fit_axes = descriptor.fit_axes();
     prototype.baking_params.fit_mode = descriptor.fit_mode();
     prototype.baking_params.image_size = {0, 0};
-    prototype.baking_params.default_color =
+    prototype.baking_params.default_color_srgb =
         hrz::convert_proto_color_to_bytes(descriptor.color().default_value());
     prototype.baking_params.color_prp = register_prp(
         descriptor.color().name(),
         vector_data::attr_from_color<vector_data::OwnedAttributeValue>(
-            prototype.baking_params.default_color));
+            prototype.baking_params.default_color_srgb));
     prototype.baking_params.default_scale = descriptor.scale().default_value();
     prototype.baking_params.scale_prp =
         register_prp(descriptor.scale().name(), prototype.baking_params.default_scale);

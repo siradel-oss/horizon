@@ -170,6 +170,16 @@ TEST(PlatformDetection, LinuxNativeNvidia)
     ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Discrete);
 }
 
+TEST(PlatformDetection, LinuxNativeLlvmpipe)
+{
+    PlatformInfo info = detect_platform("Linux", "", "Mesa", "llvmpipe (LLVM 20.1.2, 256 bits)");
+
+    ASSERT_EQ(info.os, PlatformInfo::Linux);
+    ASSERT_EQ(info.runtime, PlatformInfo::Native);
+    ASSERT_EQ(info.gpu_vendor, PlatformInfo::Llvmpipe);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Software);
+}
+
 TEST(PlatformDetection, AndroidChrome)
 {
     PlatformInfo info = detect_platform(

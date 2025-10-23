@@ -55,7 +55,7 @@ layout(std140) uniform Frame
     vec4 quick_highlight_color;
     float sun_strength;
     float ambient_strength;
-    vec3 sun_color_linear;
+    vec3 sun_color;
     float wrap_lighting;
     uint first_imagery_group;
     uint last_imagery_group;

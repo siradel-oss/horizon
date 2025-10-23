@@ -544,7 +544,7 @@ void initialize_rendering(DevUi* ui, GpuResourceContext* rc)
             // Instance geometry
             {1, ui->rect.instances_buffer, my::VertexFormat::Float32_4, 0, 24,
              my::VertexRate::PerInstance},
-            // Instance color
+            // Instance color (sRGB)
             {2, ui->rect.instances_buffer, my::VertexFormat::UInt8Norm_4, 16, 24,
              my::VertexRate::PerInstance},
             // Instance UV
@@ -1095,7 +1095,7 @@ void update(DevUi* ui, Context* ctx)
                         }
                         ui->atlas_decode_ticket = image_decoder::decode_async(
                             ctx->job_scheduler, std::move(atlas_blob), {monitoring::systems::DevUi},
-                            hrz_proto::ImageFormat::SRGB_R_8);
+                            hrz_proto::ImageFormat::R_8);
                         ui->status = DevUi::Status::DecodingAtlas;
                         break;
                     }

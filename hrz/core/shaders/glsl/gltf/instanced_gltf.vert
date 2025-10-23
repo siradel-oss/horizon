@@ -1,7 +1,6 @@
 #define varying out
 
 #include "common/maths.glsl"
-#include "common/colors.glsl"
 #include "common/ubo_frame.glsl"
 #include "common/normal_matrix.glsl"
 
@@ -154,5 +153,5 @@ void main()
 #endif
 
     output_uv_and_color();
-    v_feature_color_lin = srgb_to_linear(texel_fetch_wrap(u_instance_color, instance_data_coords));
+    v_feature_color = texel_fetch_wrap(u_instance_color, instance_data_coords);
 }

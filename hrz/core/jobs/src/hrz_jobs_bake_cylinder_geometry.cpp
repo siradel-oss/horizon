@@ -4,6 +4,7 @@
 
 #include <hrz_common_blob_array.h>
 #include <hrz_common_blob_vector.h>
+#include <hrz_common_color.h>
 #include <hrz_common_profiling.h>
 #include <hrz_common_proj.h>
 #include <hrz_common_vector_data.h>
@@ -47,9 +48,6 @@ hrz::JobResult run(
 
     const auto& style = input.style;
 
-    lm::ubvec4 default_fill_rgba = hrz::convert_rgba_color_to_bytes(input.default_color);
-    lm::ubvec4 default_empty_rgba = hrz::convert_rgba_color_to_bytes(input.default_empty_color);
-
     double radius{};
     lm::dvec3 center;
     hrz::vector_repr::compute_tile_radius_center(input.geometry.bounds, &radius, &center);
@@ -80,8 +78,8 @@ hrz::JobResult run(
 
         double altitude_offset = input.default_altitude_offset;
         float radius = input.default_radius;
-        lm::ubvec4 fill_rgba = default_fill_rgba;
-        lm::ubvec4 empty_rgba = default_empty_rgba;
+        lm::ubvec4 fill_color_srgb = input.default_color_srgb;
+        lm::ubvec4 empty_color_srgb = input.default_empty_color_srgb;
         float dash_period = input.default_dash_period;
         float dash_length = input.default_dash_length;
         float animation_speed = input.default_animation_speed;
@@ -98,11 +96,11 @@ hrz::JobResult run(
             }
             if (style_prps[j] == input.color_prp)
             {
-                fill_rgba = style_values.as_color(j);
+                fill_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.empty_color_prp)
             {
-                empty_rgba = style_values.as_color(j);
+                empty_color_srgb = style_values.as_color(j);
             }
             if (style_prps[j] == input.dash_period_prp)
             {
@@ -118,19 +116,35 @@ hrz::JobResult run(
             }
         }
 
+        lm::vec4 fill_color_oklab =
+            hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(fill_color_srgb));
+        lm::vec4 empty_color_oklab =
+            hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(empty_color_srgb));
+
+        // This stores Oklab colours in 8-bit-per-channel vectors. It's not
+        // great, and some precision is lost. (Usually only sRGB colours should
+        // be reduced to 8 bits per channel.) However the colour interpolation
+        // between these two colours in done with floats in the shader, so
+        // the precision loss should be acceptable.
+        lm::ubvec4 fill_color_oklab_uint8 = hrz::convert_rgba_color_to_bytes(fill_color_oklab);
+        lm::ubvec4 empty_color_oklab_uint8 = hrz::convert_rgba_color_to_bytes(empty_color_oklab);
+
         switch (input.dash_mode)
         {
             case hrz_proto::DASH_DISABLED:
-                has_transparency = (fill_rgba.a != 255 && fill_rgba.a != 0);
+                has_transparency =
+                    (fill_color_oklab_uint8.a != 255 && fill_color_oklab_uint8.a != 0);
                 break;
 
             case hrz_proto::DASH_ENABLED_FILLED:
-                has_transparency = (fill_rgba.a != 255 && fill_rgba.a != 0)
-                    || (empty_rgba.a != 255 && empty_rgba.a != 0);
+                has_transparency =
+                    (fill_color_oklab_uint8.a != 255 && fill_color_oklab_uint8.a != 0)
+                    || (empty_color_oklab_uint8.a != 255 && empty_color_oklab_uint8.a != 0);
                 break;
 
             case hrz_proto::DASH_ENABLED_GRADIENT:
-                has_transparency = (fill_rgba.a != 255 || empty_rgba.a != 255);
+                has_transparency =
+                    (fill_color_oklab_uint8.a != 255 || empty_color_oklab_uint8.a != 255);
                 break;
 
             default: assert(false && "Unhandled case");
@@ -216,7 +230,7 @@ hrz::JobResult run(
                      n0_oct,
                      c1,
                      n1_oct,
-                     fill_rgba,
+                     fill_color_oklab_uint8,
                      {radius, radius},
                      0.0f,
                      progress0,
@@ -224,7 +238,7 @@ hrz::JobResult run(
                      dash_period,
                      dash_length,
                      animation_speed,
-                     empty_rgba,
+                     empty_color_oklab_uint8,
                      feature_index,
                      feature_id});
 
@@ -239,7 +253,7 @@ hrz::JobResult run(
                          minus_n_oct,
                          c0,
                          minus_n_oct,
-                         fill_rgba,
+                         fill_color_oklab_uint8,
                          {radius, 0.0f},
                          0.0f,
                          progress0,
@@ -247,7 +261,7 @@ hrz::JobResult run(
                          dash_period,
                          dash_length,
                          animation_speed,
-                         empty_rgba,
+                         empty_color_oklab_uint8,
                          feature_index,
                          feature_id});
                 }
@@ -261,7 +275,7 @@ hrz::JobResult run(
                          n_oct,
                          c1,
                          n_oct,
-                         fill_rgba,
+                         fill_color_oklab_uint8,
                          {radius, 0.0f},
                          0.0f,
                          progress,
@@ -269,7 +283,7 @@ hrz::JobResult run(
                          dash_period,
                          dash_length,
                          animation_speed,
-                         empty_rgba,
+                         empty_color_oklab_uint8,
                          feature_index,
                          feature_id});
                 }

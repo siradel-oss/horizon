@@ -57,8 +57,8 @@ void main()
 #ifdef EXTRUDED_VISUAL
     mat3 view_normal_matrix = mat3(hrz_frame.view_matrix);
 
-    v_color.rgb = srgb_to_linear(i_color.rgb);
-    v_color.a = i_color.a;
+    v_color = vec4(srgb_to_linear(i_color.rgb), i_color.a);
+    v_color.rgb *= v_color.a;
     v_normal = view_normal_matrix * octahedral_decompress_normal(i_normal);
 
     do_sun_shadows(view_pos);

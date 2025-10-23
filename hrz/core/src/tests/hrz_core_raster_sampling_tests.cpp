@@ -1,3 +1,4 @@
+#include <hrz_common_color.h>
 #include <hrz_common_image_processing.h>
 #include <hrz_common_raster_sampling.h>
 #include <hrz_fnd_defines.h>
@@ -9,6 +10,12 @@
 namespace
 {
 using namespace hrz::sampling;
+
+class RasterSampling : public ::testing::Test
+{
+protected:
+    static void SetUpTestSuite() { hrz::color::initialize_srgb_luts(); }
+};
 
 int32_t to_fixed_24_8(int32_t v)
 {
@@ -25,7 +32,7 @@ uint32_t to_terrarium(float v)
     return hrz::encode_float_to_terrarium(v);
 }
 
-TEST(RasterSampling, nodata_ignore_imagery)
+TEST_F(RasterSampling, nodata_ignore_imagery)
 {
     std::array<uint8_t, 4> nodata_color = {64, 65, 66, 67};
     hrz_proto::NodataValue nodata_value;
@@ -107,7 +114,7 @@ TEST(RasterSampling, nodata_ignore_imagery)
     }
 }
 
-TEST(RasterSampling, nodata_discard_imagery)
+TEST_F(RasterSampling, nodata_discard_imagery)
 {
     std::array<uint8_t, 4> nodata_color = {64, 65, 66, 67};
     hrz_proto::NodataValue nodata_value;
@@ -190,7 +197,7 @@ TEST(RasterSampling, nodata_discard_imagery)
     }
 }
 
-TEST(RasterSampling, nodata_set_to_zero_imagery)
+TEST_F(RasterSampling, nodata_set_to_zero_imagery)
 {
     std::array<uint8_t, 4> nodata_color = {64, 65, 66, 67};
     hrz_proto::NodataValue nodata_value;
@@ -273,7 +280,7 @@ TEST(RasterSampling, nodata_set_to_zero_imagery)
     }
 }
 
-TEST(RasterSampling, color_nodata_set_to_zero_imagery)
+TEST_F(RasterSampling, color_nodata_set_to_zero_imagery)
 {
     std::array<uint8_t, 4> nodata_color = {64, 65, 66, 67};
     hrz_proto::NodataValue nodata_value;
@@ -359,7 +366,7 @@ TEST(RasterSampling, color_nodata_set_to_zero_imagery)
     }
 }
 
-TEST(RasterSampling, nodata_ignore_dtm)
+TEST_F(RasterSampling, nodata_ignore_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -399,7 +406,7 @@ TEST(RasterSampling, nodata_ignore_dtm)
     }
 }
 
-TEST(RasterSampling, nodata_discard_dtm)
+TEST_F(RasterSampling, nodata_discard_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -439,7 +446,7 @@ TEST(RasterSampling, nodata_discard_dtm)
     }
 }
 
-TEST(RasterSampling, nodata_set_to_zero_dtm)
+TEST_F(RasterSampling, nodata_set_to_zero_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -479,7 +486,7 @@ TEST(RasterSampling, nodata_set_to_zero_dtm)
     }
 }
 
-TEST(RasterSampling, bit_pattern_nodata_set_to_zero_dtm)
+TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -519,7 +526,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_dtm)
     }
 }
 
-TEST(RasterSampling, float_nodata_set_to_zero_r_f32_dtm)
+TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
@@ -558,7 +565,7 @@ TEST(RasterSampling, float_nodata_set_to_zero_r_f32_dtm)
     }
 }
 
-TEST(RasterSampling, int_nodata_set_to_zero_r_f32_dtm)
+TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -597,7 +604,7 @@ TEST(RasterSampling, int_nodata_set_to_zero_r_f32_dtm)
     }
 }
 
-TEST(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
+TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -636,7 +643,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
     }
 }
 
-TEST(RasterSampling, nan_nodata_set_to_zero_r_f32_dtm)
+TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::NAN_NODATA);
@@ -674,7 +681,7 @@ TEST(RasterSampling, nan_nodata_set_to_zero_r_f32_dtm)
     }
 }
 
-TEST(RasterSampling, float_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_silicium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
@@ -714,7 +721,7 @@ TEST(RasterSampling, float_nodata_set_to_zero_r_f32_silicium_dtm)
     }
 }
 
-TEST(RasterSampling, int_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_silicium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -754,7 +761,7 @@ TEST(RasterSampling, int_nodata_set_to_zero_r_f32_silicium_dtm)
     }
 }
 
-TEST(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -794,7 +801,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
     }
 }
 
-TEST(RasterSampling, nan_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_silicium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::NAN_NODATA);
@@ -833,7 +840,7 @@ TEST(RasterSampling, nan_nodata_set_to_zero_r_f32_silicium_dtm)
     }
 }
 
-TEST(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
+TEST_F(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
@@ -873,7 +880,7 @@ TEST(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
     }
 }
 
-TEST(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
+TEST_F(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -913,7 +920,7 @@ TEST(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
     }
 }
 
-TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
+TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -953,7 +960,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
     }
 }
 
-TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
+TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -993,7 +1000,7 @@ TEST(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
     }
 }
 
-TEST(RasterSampling, sampling_nearest)
+TEST_F(RasterSampling, sampling_nearest)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -1039,7 +1046,7 @@ TEST(RasterSampling, sampling_nearest)
     EXPECT_EQ(500, sample(1.0, 1.0));
 }
 
-TEST(RasterSampling, sampling_bilinear)
+TEST_F(RasterSampling, sampling_bilinear)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -1106,7 +1113,7 @@ TEST(RasterSampling, sampling_bilinear)
     EXPECT_FLOAT_EQ(500, sample(1.0, 1.0));
 }
 
-TEST(RasterSampling, sampling_nearest_nodata)
+TEST_F(RasterSampling, sampling_nearest_nodata)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
@@ -1152,7 +1159,7 @@ TEST(RasterSampling, sampling_nearest_nodata)
 // --------
 // This image gives us all possible 2x2 neighborhoods with nodata values.
 
-TEST(RasterSampling, sampling_bilinear_nodata)
+TEST_F(RasterSampling, sampling_bilinear_nodata)
 {
     const int32_t ndv = -9999;
     hrz_proto::NodataValue nodata_value;
@@ -1346,7 +1353,7 @@ TEST(RasterSampling, sampling_bilinear_nodata)
     }
 }
 
-TEST(RasterSampling, sampling_alpha_ignore)
+TEST_F(RasterSampling, sampling_alpha_ignore)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -1390,7 +1397,7 @@ TEST(RasterSampling, sampling_alpha_ignore)
     }
 }
 
-TEST(RasterSampling, sampling_alpha_use_alpha)
+TEST_F(RasterSampling, sampling_alpha_use_alpha)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -1425,7 +1432,7 @@ TEST(RasterSampling, sampling_alpha_use_alpha)
 
     {
         SCOPED_TRACE("second");
-        sample_compare(1, 0, 0, 127, 0, 127);
+        sample_compare(1, 0, 0, 187, 0, 127);
     }
 
     {
@@ -1434,7 +1441,7 @@ TEST(RasterSampling, sampling_alpha_use_alpha)
     }
 }
 
-TEST(RasterSampling, sampling_alpha_use_premultiplied)
+TEST_F(RasterSampling, sampling_alpha_use_premultiplied)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -1478,7 +1485,7 @@ TEST(RasterSampling, sampling_alpha_use_premultiplied)
     }
 }
 
-TEST(RasterSampling, sampling_premultiply_alpha_before_bilinear_filtering)
+TEST_F(RasterSampling, sampling_premultiply_alpha_before_bilinear_filtering)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
@@ -1508,16 +1515,16 @@ TEST(RasterSampling, sampling_premultiply_alpha_before_bilinear_filtering)
 
     {
         SCOPED_TRACE("first");
-        sample_compare(0.5, 0, 127, 63, 0, 191);
+        sample_compare(0.5, 0, 187, 137, 0, 191);
     }
 
     {
         SCOPED_TRACE("second");
-        sample_compare(1.5, 0, 0, 63, 0, 63);
+        sample_compare(1.5, 0, 0, 136, 0, 63);
     }
 }
 
-TEST(RasterSampling, normal)
+TEST_F(RasterSampling, normal)
 {
     ImageryBlendingFunction fn(255);
 

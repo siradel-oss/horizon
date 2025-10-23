@@ -1,9 +1,9 @@
 #include "hrz_core_grid.h"
 
-#include "camera/hrz_core_camera_types.h"
 #include "hrz_core_render.h"
 #include "hrz_core_shaders.h"
 
+#include <hrz_common_color.h>
 #include <hrz_common_profiling.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_mem.h>
@@ -35,7 +35,9 @@ struct GridUniformData
 HRZ_CHECK_UBO_SIZE(GridUniformData);
 } // anonymous namespace
 
-namespace hrz::grid
+namespace hrz
+{
+namespace grid
 {
 class GridRenderable : public my::Renderer::Renderable
 {
@@ -340,4 +342,16 @@ void collect_shaders(hrz::GpuResourceContext* rc)
 {
     GridRenderable::collect_shaders(rc);
 }
-} // namespace hrz::grid
+} // namespace grid
+
+grid::GridParams from_proto(const hrz_proto::Grid& grid)
+{
+    grid::GridParams grid_params;
+    grid_params.extent = grid.extent();
+    grid_params.cell_size = grid.cell_size();
+    grid_params.color = hrz::srgb_to_linear(hrz::convert_proto_color_to_float(grid.color()));
+    grid_params.scene_views_bitset = grid.scene_views().bits();
+    grid_params.extent_unit = grid.extent_unit();
+    return grid_params;
+}
+} // namespace hrz

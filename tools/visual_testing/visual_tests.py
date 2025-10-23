@@ -400,10 +400,12 @@ class Report:
 class ViewerExitCode(IntEnum):
     Ok = 0
     MissingArguments = 1
-    FailedInitialization = 2
-    MissingSceneDump = 3
-    FailedMigration = 4
-    Timeout = 5
+    InvalidArguments = 2
+    FailedInitialization = 3
+    MissingInput = 4
+    InvalidInput = 5
+    FailedMigration = 6
+    Timeout = 7
 
 def get_git_info():
     global BRANCH
@@ -471,15 +473,17 @@ def generate_ref_image(test, output_dir):
                 "--width", str(IMAGE_SIZE),
                 "--height", str(IMAGE_SIZE),
                 "--timeout", str(test.timeout),
-                "--no-show-window"
+                "--no-show-window",
+                "--log-filter-level", "0" if VERBOSE else "3"
             ],
             cwd=ROOT,
             stdout=STDOUT,
             stderr=STDERR)
-        if ret.returncode == ViewerExitCode.Ok:
+        return_code = ViewerExitCode(ret.returncode)
+        if return_code == ViewerExitCode.Ok:
             shutil.copyfile(get_capture_path(output_dir, test.name), get_ref_image_path(test.name, test.type))
         else:
-            print(f"ERROR: Couldn't generate reference image for '{test.name}', return code: {ret.returncode}")
+            print(f"ERROR: Couldn't generate reference image for '{test.name}', return code: {return_code.name} ({return_code.value})")
     else:
         print(f"ERROR: Couldn't generate reference image for '{test.name}', no input found.")
 
@@ -561,7 +565,8 @@ def run_tests_in_context(ctx):
                 "--output", capture_path,
                 "--width", str(IMAGE_SIZE),
                 "--height", str(IMAGE_SIZE),
-                "--timeout", str(test.timeout)
+                "--timeout", str(test.timeout),
+                "--log-filter-level", "0" if VERBOSE else "3"
             ]
             if not ctx.show_viewer_window:
                 arguments.append("--no-show-window")
@@ -569,14 +574,24 @@ def run_tests_in_context(ctx):
                 arguments,
                 cwd=ROOT,
                 stdout=subprocess.PIPE,
-                stderr=STDERR)
-            process_stdout, _ = ctx.process.communicate()
+                stderr=STDERR,
+                text=True,
+                bufsize=1)
+
+            output_lines = []
+            for line in ctx.process.stdout:
+                if VERBOSE:
+                    print(line, end='')
+                output_lines.append(line)
+
             return_code = ctx.process.wait()
 
             if ctx.terminate:
                 return failed_tests
 
-            log = process_stdout.decode("utf-8")
+            log = "".join(output_lines)
+
+            return_code = ViewerExitCode(return_code)
 
             if return_code == ViewerExitCode.Timeout:
                 error_type = Result.ErrorType.Timeout
@@ -584,7 +599,7 @@ def run_tests_in_context(ctx):
                 error_type = Result.ErrorType.Viewer
 
                 if VERBOSE:
-                    print(f"Viewer error, return code: {return_code}")
+                    print(f"Viewer error, return code: {return_code.name} ({return_code.value})")
 
         duration = time.time_ns() / 1_000_000_000 - start_time
         total_duration += duration

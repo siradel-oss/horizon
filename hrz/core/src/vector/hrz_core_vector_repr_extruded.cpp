@@ -9,9 +9,9 @@
 
 #include <hrz_common_blob_allocator.h>
 #include <hrz_common_blob_array.h>
+#include <hrz_common_color.h>
 #include <hrz_common_fmt.h>
 #include <hrz_common_monitoring_defs.h>
-#include <hrz_common_proto_maths.h>
 #include <hrz_common_style.h>
 #include <hrz_common_vector_data.h>
 #include <hrz_common_vector_tiles.h>
@@ -167,9 +167,9 @@ struct Config
     uint64_t altitude_offset_prp = hrz::style::Parser::INVALID_PROPERTY;
 
     float default_extrusion = 0;
-    lm::vec4 default_upper_color = {0, 0, 0, 0};
-    lm::vec4 default_lower_color = {0, 0, 0, 0};
-    lm::vec4 default_roof_color = {0, 0, 0, 0};
+    lm::ubvec4 default_upper_color_srgb = {0, 0, 0, 0};
+    lm::ubvec4 default_lower_color_srgb = {0, 0, 0, 0};
+    lm::ubvec4 default_roof_color_srgb = {0, 0, 0, 0};
     float default_altitude_offset = 0;
 
     uint32_t scene_views = 0;
@@ -466,12 +466,12 @@ public:
         config.repr_id = repr.id();
 
         config.default_extrusion = repr.extruded_geometry().extrusion().default_value();
-        config.default_upper_color =
-            hrz::to_lm(repr.extruded_geometry().upper_color().default_value());
-        config.default_lower_color =
-            hrz::to_lm(repr.extruded_geometry().lower_color().default_value());
-        config.default_roof_color =
-            hrz::to_lm(repr.extruded_geometry().roof_color().default_value());
+        config.default_upper_color_srgb = hrz::convert_proto_color_to_bytes(
+            repr.extruded_geometry().upper_color().default_value());
+        config.default_lower_color_srgb = hrz::convert_proto_color_to_bytes(
+            repr.extruded_geometry().lower_color().default_value());
+        config.default_roof_color_srgb = hrz::convert_proto_color_to_bytes(
+            repr.extruded_geometry().roof_color().default_value());
         config.default_altitude_offset = repr.extruded_geometry().altitude_offset().default_value();
         config.scene_views = repr.scene_views().bits();
         config.clip_to_tile = repr.extruded_geometry().clip_to_tile();
@@ -482,15 +482,15 @@ public:
         config.upper_color_prp = register_prp(
             upper_color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_upper_color));
+                config.default_upper_color_srgb));
         config.lower_color_prp = register_prp(
             lower_color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_lower_color));
+                config.default_lower_color_srgb));
         config.roof_color_prp = register_prp(
             roof_color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_roof_color));
+                config.default_roof_color_srgb));
         config.altitude_offset_prp =
             register_prp(altitude_offset_prp_name, config.default_altitude_offset);
 
@@ -555,9 +555,9 @@ public:
             HRZ_LOG_WARNING("Unknown config. Using default values.");
         }
 
-        bake_data.default_upper_color = cfg.default_upper_color;
-        bake_data.default_lower_color = cfg.default_lower_color;
-        bake_data.default_roof_color = cfg.default_roof_color;
+        bake_data.default_upper_color_srgb = cfg.default_upper_color_srgb;
+        bake_data.default_lower_color_srgb = cfg.default_lower_color_srgb;
+        bake_data.default_roof_color_srgb = cfg.default_roof_color_srgb;
         bake_data.default_extrusion = cfg.default_extrusion;
         bake_data.default_altitude_offset = cfg.default_altitude_offset;
         bake_data.repr_id = cfg.repr_id;

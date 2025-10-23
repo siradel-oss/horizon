@@ -68,7 +68,7 @@ void main()
     if (texel.a < 0.5) discard;
 
 #ifdef IMPOSTOR_VISUAL
-    vec3 color = blend_linear(hrz_tile.color_blend_mode, srgb_to_linear(texel), v_color.rgb, hrz_tile.color_blend_strength).rgb;
+    vec3 color = blend(hrz_tile.color_blend_mode, texel, v_color.rgb, hrz_tile.color_blend_strength).rgb;
     if (hrz_tile.lighting_enabled)
     {
         vec3 normal = get_normal_frame();
@@ -76,12 +76,12 @@ void main()
         color *= do_sun_lighting_without_shadows(impostor_to_view * normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground);
     }
 
-    o_color = vec4(linear_to_srgb(color), v_color.a);
+    o_color = vec4(color, v_color.a);
     o_color = compute_viewshed_color_no_correction(o_color);
 
     if (build_feature_reference() == hrz_frame.quick_highlight_feature_reference)
     {
-        o_color = apply_quick_highlight_color(o_color);
+        o_color = apply_quick_highlight_color_premultiplied(o_color);
     }
 #endif
 

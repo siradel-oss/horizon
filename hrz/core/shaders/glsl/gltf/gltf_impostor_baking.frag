@@ -19,12 +19,12 @@ void main()
     // cutoff to because other it messes with the alpha cutoff performed during
     // the impostor rendering. For instance, foliage with low opacity will not
     // be rendered and create trees without leaves.
-    vec4 color_lin = v_geometry_color_lin * srgb_to_linear(tex_color) * hrz_prim.materials[0].material_color * hrz_mesh.geometry.mesh_color.a;
+    vec4 color = v_geometry_color * tex_color * hrz_prim.materials[0].material_color * hrz_mesh.geometry.mesh_color.a;
 
-    vec4 material_color_lin = compute_material_color_lin(0, tex_color);
-    handle_alpha_discard(material_color_lin.a);
+    vec4 material_color = compute_material_color(0, tex_color);
+    handle_alpha_discard(material_color.a);
 
-    o_color = linear_to_srgb(color_lin);
+    o_color = color;
 
     // Normal texture is RG8, so the encoded value should be converted from [-1;1] to [0;1]
     o_normal = (vec3_to_octahedral_vec2(v_normal) + vec2(1.0)) / 2.0;
