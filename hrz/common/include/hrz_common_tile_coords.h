@@ -21,22 +21,7 @@ struct TileCoords
 
     constexpr TileCoords(uint32_t x, uint32_t y, uint8_t lod) : x(x), y(y), lod(lod) {}
 
-    constexpr bool operator==(const TileCoords& t) const
-    {
-        return x == t.x && y == t.y && lod == t.lod;
-    }
-
-    constexpr bool operator!=(const TileCoords& t) const
-    {
-        return lod != t.lod || x != t.x || y != t.y;
-    }
-
-    constexpr bool operator<(const TileCoords& t) const
-    {
-        if (lod != t.lod) return lod < t.lod;
-        if (x != t.x) return x < t.x;
-        return y < t.y;
-    }
+    friend constexpr bool operator==(const TileCoords&, const TileCoords&) = default;
 
     inline TileCoords parent() const
     {
@@ -48,6 +33,15 @@ struct TileCoords
         return t;
     }
 };
+
+// This defines an ordering for TileCoords. It's not defined on the struct itself because
+// no true ordering exists and this is just a convention used in some places.
+constexpr bool tile_coords_ordering_lod_y_x(const TileCoords& a, const TileCoords& b)
+{
+    if (a.lod != b.lod) return a.lod < b.lod;
+    if (a.y != b.y) return a.y < b.y;
+    return a.x < b.x;
+}
 
 inline hrz_proto::TileCoords to_proto(const TileCoords& c)
 {

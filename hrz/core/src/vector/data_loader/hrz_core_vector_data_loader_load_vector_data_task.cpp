@@ -287,7 +287,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorData>
     };
 
     auto copy_relevant_attributes =
-        [&](hrz::flat_hash_map<uint32_t, AttributeValueListRef> attribute_ids_to_values)
+        [&](const hrz::flat_hash_map<uint32_t, AttributeValueListRef>& attribute_ids_to_values)
     {
         for (const auto& it : attribute_ids_to_values)
         {

@@ -717,7 +717,7 @@ std::string percent_encode(std::string_view str)
 
 bool parse_data_url_s(std::string_view url, EncodedData* result)
 {
-    if (!str::starts_with(url, "data:")) return false;
+    if (!url.starts_with("data:")) return false;
     url = url.substr(5); // Skip data:
 
     const int payload_start = str::find(url, ',');

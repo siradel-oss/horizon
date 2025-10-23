@@ -486,13 +486,11 @@ void generate_roof_geometry(
         rings.reserve(linestrings.size());
 
         size_t v_index = 0;
-        for (const auto& linestring : linestrings)
+        for (const auto [start_v_index, linestring_size] : linestrings)
         {
-            const size_t start_v_index = v_index;
-
-            for (size_t i = 0; i < linestring.second; ++i)
+            for (size_t i = 0; i < linestring_size; ++i)
             {
-                const auto& vbi = vbis[linestring.first + i];
+                const auto& vbi = vbis[start_v_index + i];
                 if (vbi.has_bevel)
                 {
                     roof_vertices[v_index++] = vbi.bevel_pos0;
@@ -515,13 +513,12 @@ void generate_roof_geometry(
         rings.reserve(linestrings.size());
 
         size_t v_index = 0;
-        for (const auto& linestring : linestrings)
+        for (const auto [start_v_index, linestring_size] : linestrings)
         {
-            const size_t start_v_index = v_index;
-            std::span<const VertexWithBevelInfo> vbis_ring(
-                vbis.data() + linestring.first, linestring.second);
+            const std::span<const VertexWithBevelInfo> vbis_ring(
+                vbis.data() + start_v_index, linestring_size);
 
-            for (size_t i = 0; i < linestring.second; ++i)
+            for (size_t i = 0; i < linestring_size; ++i)
             {
                 roof_vertices[v_index++] = vbis_ring[i].inset;
             }
@@ -686,8 +683,8 @@ void generate_polygon(
             positions, info.wmerc_tile_bounds,
             [&tmp_verts](const lm::dvec2&, int i0, int i1, double t) -> int
             {
-                const auto& a = tmp_verts[i0];
-                const auto& b = tmp_verts[i1];
+                const auto& a = tmp_verts[(size_t)i0];
+                const auto& b = tmp_verts[(size_t)i1];
 
                 tmp_verts.push_back({
                     lm::mix(a.pos, b.pos, t),
@@ -704,9 +701,9 @@ void generate_polygon(
                 clipped_verts.clear();
                 clipped_verts.reserve(clipped.size());
 
-                for (const auto& p : clipped)
+                for (const auto& [pos, index] : clipped)
                 {
-                    clipped_verts.push_back(tmp_verts[p.second]);
+                    clipped_verts.push_back(tmp_verts[(size_t)index]);
                 }
             });
 
@@ -715,7 +712,7 @@ void generate_polygon(
 
     if (input_verts.size() < 3) return;
 
-    const auto first_index = static_cast<uint32_t>(builder.vertices_count());
+    const auto first_index = builder.vertices_count();
 
     for (const auto& p : input_verts)
     {
@@ -727,8 +724,8 @@ void generate_polygon(
     for (size_t i = 1; i + 1 < input_verts.size(); ++i)
     {
         builder.append_index(first_index + 0);
-        builder.append_index(first_index + static_cast<uint32_t>(i));
-        builder.append_index(first_index + static_cast<uint32_t>(i + 1));
+        builder.append_index(first_index + (uint32_t)i);
+        builder.append_index(first_index + (uint32_t)(i + 1));
     }
 }
 
@@ -888,9 +885,10 @@ hrz::JobResult run(
 
     TileInfo tile_info;
     tile_info.bevel_width = std::max(input.bevel_width, 0.0F);
-    tile_info.clip_to_tile = input.clip_to_tile, tile_info.normal_matrix = normal_matrix,
-    tile_info.tile_coords = input.coords,
-    tile_info.wmerc_tile_bounds = hrz::mercator_tile_bbox_meters(input.coords),
+    tile_info.clip_to_tile = input.clip_to_tile;
+    tile_info.normal_matrix = normal_matrix;
+    tile_info.tile_coords = input.coords;
+    tile_info.wmerc_tile_bounds = hrz::mercator_tile_bbox_meters(input.coords);
     tile_info.geo_data_bounds = hrz::GeoBounds(
         hrz::web_mercator_to_geo2(input.geometry.bounds.min),
         hrz::web_mercator_to_geo2(input.geometry.bounds.max));
@@ -1056,15 +1054,12 @@ hrz::JobResult run(
             if (!info.double_sided_roof)
             {
                 // Generate walls geometry for each linestring
-                for (auto linestring_span : linestrings)
+                for (const auto [index_ring_start, linestring_size] : linestrings)
                 {
-                    const uint32_t linestring_size = linestring_span.second;
-                    const size_t index_ring_start = linestring_span.first;
-
                     auto bevel_info_span = std::span<VertexWithBevelInfo>(
                         vertices_bevel_info.data() + index_ring_start, linestring_size);
 
-                    for (uint32_t p0 = linestring_size - 1, p1 = 0; p1 < linestring_size; p0 = p1++)
+                    for (size_t p0 = linestring_size - 1, p1 = 0; p1 < linestring_size; p0 = p1++)
                     {
                         const auto& bi0 = bevel_info_span[p0];
                         const auto& bi1 = bevel_info_span[p1];
@@ -1092,10 +1087,10 @@ hrz::JobResult run(
         }
         else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
         {
-            const uint32_t wall_count = vertices_bevel_info.size() - 1;
+            const size_t wall_count = vertices_bevel_info.size() - 1;
             info.double_sided_walls = true;
 
-            for (uint32_t i = 0; i < wall_count; ++i)
+            for (size_t i = 0; i < wall_count; ++i)
             {
                 const auto& bi0 = vertices_bevel_info[i];
                 const auto& bi1 = vertices_bevel_info[i + 1];
@@ -1142,7 +1137,7 @@ hrz::JobResult run(
 
     // Compute relative coordinates
     {
-        auto vertices_data = vertex_array_opt.value().get_data();
+        auto vertices_data = vertex_array_opt.value().get_mutable_data();
         hrz::vector_repr::compute_rel_coords(
             {positions_data}, tile_bsphere.center,
             {(lm::vec3*)vertices_data.data(), positions_data.size(), sizeof(Vertex)});

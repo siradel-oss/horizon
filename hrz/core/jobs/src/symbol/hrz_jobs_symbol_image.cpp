@@ -143,9 +143,8 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
     }
 
     // Sort such that all instances that share the same geometry index are consecutive.
-    std::sort(
-        image_data.instance_index_geometry_index.begin(),
-        image_data.instance_index_geometry_index.end(),
+    std::ranges::sort(
+        image_data.instance_index_geometry_index,
         [](const std::pair<uint32_t, int>& a, const std::pair<uint32_t, int>& b)
         { return a.second < b.second; });
 

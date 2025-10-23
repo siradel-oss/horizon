@@ -368,8 +368,8 @@ void Monitoring::draw_frametime_categories(mu_Context* ctx, const CpuTime& t)
 
     auto display_time = [&](const char* category, float time)
     {
-        int len = snprintf(buffer, 64, "%s: %.3f ms", category, time);
-        hrz::ui::add_tooltip(ctx, &_tooltip_ctx, {buffer, (size_t)len});
+        auto res = fmt::format_to(buffer, "{}: {:.3f} ms", category, time);
+        hrz::ui::add_tooltip(ctx, &_tooltip_ctx, {buffer, (size_t)std::distance(buffer, res.out)});
     };
 
     if (mu_mouse_over(ctx, events_rect))

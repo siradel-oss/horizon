@@ -703,15 +703,15 @@ void add_scene_model_log_line_raw(Scene* scene, std::string_view line)
 
     const double since_epoch = hrz::now_frame_ms() / 1000.0;
     const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
-    const int minutes = std::floor(since_epoch / 60.0);
-    const int seconds = std::floor(since_epoch) - 60.0 * minutes;
+    const int minutes = (int)std::floor(since_epoch / 60.0);
+    const int seconds = (int)std::floor(since_epoch) - 60 * minutes;
 
     std::string* str = logs.get_string_to_write();
     str->resize(SCENE_MODEL_MAX_LOG_LINE_LENGTH);
-    size_t length = fmt::format_to_n(
-                        &*str->begin(), SCENE_MODEL_MAX_LOG_LINE_LENGTH, "[{:>4}:{:02}.{:03}] {}",
-                        minutes, seconds, millis, line)
-                        .size;
+    const size_t length = fmt::format_to_n(
+                              std::to_address(str->begin()), SCENE_MODEL_MAX_LOG_LINE_LENGTH,
+                              "[{:>4}:{:02}.{:03}] {}", minutes, seconds, millis, line)
+                              .size;
     str->resize(length);
 }
 
@@ -1238,19 +1238,20 @@ void add_camera_notification_log_line(
 {
     auto& logs = scene->camera_notification_logs;
 
-    double since_epoch = hrz::now_frame_s();
-    double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
-    int minutes = (int)(since_epoch / 60.0);
-    int seconds = (int)since_epoch - 60 * minutes;
+    const double since_epoch = hrz::now_frame_s();
+    const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
+    const int minutes = (int)(since_epoch / 60.0);
+    const int seconds = (int)since_epoch - 60 * minutes;
 
     std::string* str = logs.get_string_to_write();
     str->resize(CAMERA_NOTIFICATION_MAX_LOG_LINE_LENGTH);
-    size_t length = fmt::format_to_n(
-                        &*str->begin(), CAMERA_NOTIFICATION_MAX_LOG_LINE_LENGTH,
-                        "[{:>4}:{:02}.{:03}] Camera {}: {} ({})", minutes, seconds, millis,
-                        (int)index, notification_kind_name(notification.kind_case()),
-                        notification_payload_str(notification))
-                        .size;
+    const size_t length =
+        fmt::format_to_n(
+            std::to_address(str->begin()), CAMERA_NOTIFICATION_MAX_LOG_LINE_LENGTH,
+            "[{:>4}:{:02}.{:03}] Camera {}: {} ({})", minutes, seconds, millis, (int)index,
+            notification_kind_name(notification.kind_case()),
+            notification_payload_str(notification))
+            .size;
     str->resize(length);
 }
 

@@ -70,20 +70,10 @@ int find(std::string_view str, char c);
 std::pair<std::string_view, std::string_view> split(std::string_view str, char c);
 
 /**
- * Returns whether `str` starts with `start` or not.
- */
-bool starts_with(std::string_view str, std::string_view start);
-
-/**
  * Returns whether `str` starts with `start` or not, case insensitive.
  * Only for ASCII strings, and without locale handling.
  */
 bool istarts_with(std::string_view str, std::string_view start);
-
-/**
- * Returns whether `str` ends with `end` or not.
- */
-bool ends_with(std::string_view str, std::string_view end);
 
 /**
  * Returns whether `str` ends with `end` or not, case insensitive.

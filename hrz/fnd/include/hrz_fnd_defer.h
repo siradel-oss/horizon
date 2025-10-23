@@ -10,7 +10,7 @@ namespace hrz
 template<typename Finalizer>
 class DeferFinalizer
 {
-    Finalizer _finalizer;
+    HRZ_NO_UNIQUE_ADDRESS Finalizer _finalizer;
     bool _moved = false;
 
 public:

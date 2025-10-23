@@ -167,7 +167,7 @@ void print_service(
         exit(1);
     }
 
-    if (service_ids.count(service_id) > 0)
+    if (service_ids.contains(service_id))
     {
         std::cerr << "Service ID duplicated for " << s->full_name() << std::endl;
         exit(1);
@@ -202,7 +202,7 @@ void print_service(
             exit(1);
         }
 
-        if (method_ids.count(method_id) > 0)
+        if (method_ids.contains(method_id))
         {
             std::cerr << "Method ID duplicated for " << method->full_name() << std::endl;
             exit(1);

@@ -310,6 +310,7 @@ struct OperatorEvaluator
         hrz::Arena* arena;
     };
 
+    // @Todo(C++23) Use static operator()
     bool operator()(
         Context& ctx,
         Operator op,

@@ -55,15 +55,7 @@ struct FrustumCuller
 
     bool intersects(const OrientedBoundingBox& bbox) const;
 
-    bool operator==(const FrustumCuller& other) const
-    {
-        return pos == other.pos && dir == other.dir && near == other.near && far == other.far
-            && planes[0] == other.planes[0] && planes[1] == other.planes[1]
-            && planes[2] == other.planes[2] && planes[3] == other.planes[3]
-            && planes[4] == other.planes[4] && planes[5] == other.planes[5];
-    }
-
-    bool operator!=(const FrustumCuller& other) const { return !(*this == other); }
+    constexpr bool operator==(const FrustumCuller& other) const = default;
 
     static FrustumCuller from_view(const lm::dmat4& proj, const lm::dmat4& view);
 };

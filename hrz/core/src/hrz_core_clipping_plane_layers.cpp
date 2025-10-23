@@ -356,9 +356,9 @@ void get_clip_planes_info(
     ClippingPlaneLayerSystem* system,
     ClippingPlaneInfo (&cpi)[HRZ_S_MAX_CLIP_PLANES])
 {
-    std::fill(std::begin(cpi), std::end(cpi), system->default_plane);
+    std::ranges::fill(cpi, cpi, system->default_plane);
 
-    for (uint64_t layer_id : system->all_active_planes)
+    for (const uint64_t layer_id : system->all_active_planes)
     {
         const auto* layer = _get_layer(system, layer_id);
 
@@ -375,7 +375,7 @@ void get_clip_planes_info(
             // other numerical instabilities, if the outline should be
             // invisible due to its width, we make it invisible due to its
             // colour instead.
-            if (std::abs(plane.outline_distance) < 0.00001)
+            if (std::abs(plane.outline_distance) < 0.00001F)
             {
                 plane.outline_color = lm::vec4(0.0);
                 plane.outline_distance = 1.0;

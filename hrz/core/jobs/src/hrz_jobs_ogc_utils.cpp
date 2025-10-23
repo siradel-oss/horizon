@@ -261,7 +261,6 @@ bool crs_has_flipped_axes(std::string_view authority, unsigned int srid)
     if (authority != "EPSG") return false;
     if (srid > std::numeric_limits<uint16_t>::max()) return false;
 
-    return std::binary_search(
-        std::begin(kFlippedEpsgSrids), std::end(kFlippedEpsgSrids), (uint16_t)srid);
+    return std::ranges::binary_search(kFlippedEpsgSrids, (uint16_t)srid);
 }
 } // namespace hrz::ogc

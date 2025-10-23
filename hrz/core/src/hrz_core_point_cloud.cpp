@@ -10,7 +10,6 @@
 #include <hrz_common_geo.h>
 #include <hrz_fnd_log.h>
 #include <hrz_fnd_mem.h>
-#include <hrz_fnd_overload.h>
 #include <hrz_fnd_static_vector.h>
 
 namespace

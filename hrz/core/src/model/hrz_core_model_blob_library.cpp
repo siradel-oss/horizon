@@ -6,6 +6,7 @@
 #include <hrz_fnd_gen_object_pool.h>
 #include <hrz_fnd_hash.h>
 #include <hrz_fnd_intern_string.h>
+#include <hrz_fnd_meta.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_time.h>
 #include <hrz_fnd_url_utils.h>
@@ -190,7 +191,7 @@ public:
     {
         assert((blob.has_value() && ba) || !blob.has_value());
 
-        if (str::starts_with(url, "data:"))
+        if (url.starts_with("data:"))
         {
             if (blob.has_value())
             {
@@ -304,18 +305,12 @@ public:
         }
 
         return std::visit(
-            [this, cfg_h](const auto& arg) -> std::string
-            {
-                using T = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<T, EmbeddedBlob> || std::is_same_v<T, BlobToEmbed>)
-                {
-                    return "data:...";
-                }
-                else if constexpr (std::is_same_v<T, StreamableBlob>)
-                {
-                    return fmt::format("{} [{}:{}]", arg.url, arg.offset, arg.offset + arg.length);
-                }
-                else if constexpr (std::is_same_v<T, TemplatedBlob>)
+            hrz::overload{
+                [](const EmbeddedBlob&) -> std::string { return "data:..."; },
+                [](const BlobToEmbed&) -> std::string { return "data:..."; },
+                [](const StreamableBlob& arg) -> std::string
+                { return fmt::format("{} [{}:{}]", arg.url, arg.offset, arg.offset + arg.length); },
+                [this, cfg_h](const TemplatedBlob& arg) -> std::string
                 {
                     auto it = arg.blobs.find(cfg_h.o);
                     if (it != arg.blobs.end())
@@ -326,11 +321,8 @@ public:
                     {
                         return "";
                     }
-                }
-            },
+                }},
             *blob);
-
-        return "";
     }
 
     Status get_status(Handle handle, ConfigH cfg_h) const override
@@ -342,22 +334,12 @@ public:
         }
 
         return std::visit(
-            [this, cfg_h](const auto& arg) -> Status
-            {
-                using T = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<T, EmbeddedBlob>)
-                {
-                    return arg.valid ? Status::Loaded : Status::Error;
-                }
-                else if constexpr (std::is_same_v<T, BlobToEmbed>)
-                {
-                    return Status::Loading;
-                }
-                else if constexpr (std::is_same_v<T, StreamableBlob>)
-                {
-                    return arg.status;
-                }
-                else if constexpr (std::is_same_v<T, TemplatedBlob>)
+            hrz::overload{
+                [](const EmbeddedBlob& arg) -> Status
+                { return arg.valid ? Status::Loaded : Status::Error; },
+                [](const BlobToEmbed&) -> Status { return Status::Loading; },
+                [](const StreamableBlob& arg) -> Status { return arg.status; },
+                [this, cfg_h](const TemplatedBlob& arg) -> Status
                 {
                     auto it = arg.blobs.find(cfg_h.o);
                     if (it != arg.blobs.end())
@@ -368,12 +350,7 @@ public:
                     {
                         return Status::Error;
                     }
-                }
-                else
-                {
-                    return Status::Error;
-                }
-            },
+                }},
             *blob);
     }
 
@@ -381,40 +358,42 @@ public:
         const override
     {
         const Blob* blob = _blobs.get_object(handle.o);
-        if (blob)
+        if (!blob)
         {
-            return std::visit(
-                [this, cfg_h](const auto& arg) -> std::pair<blobs::BlobHandle, std::string_view>
+            return std::make_pair(_empty_blob, "");
+        }
+
+        return std::visit(
+            hrz::overload{
+                [this](const EmbeddedBlob& arg) -> std::pair<blobs::BlobHandle, std::string_view>
                 {
-                    using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, EmbeddedBlob>)
+                    if (arg.valid)
                     {
-                        if (arg.valid)
-                        {
-                            return std::make_pair(arg.blob, arg.mime_type);
-                        }
-                    }
-                    else if constexpr (std::is_same_v<T, StreamableBlob>)
-                    {
-                        if (arg.status == Status::Loaded)
-                        {
-                            return std::make_pair(arg.blob, arg.mime_type);
-                        }
-                    }
-                    else if constexpr (std::is_same_v<T, TemplatedBlob>)
-                    {
-                        auto it = arg.blobs.find(cfg_h.o);
-                        if (it != arg.blobs.end())
-                        {
-                            return get_blob(it->second, cfg_h);
-                        }
+                        return std::make_pair(arg.blob, arg.mime_type);
                     }
                     return std::make_pair(_empty_blob, "");
                 },
-                *blob);
-        }
-
-        return std::make_pair(_empty_blob, "");
+                [this](const StreamableBlob& arg) -> std::pair<blobs::BlobHandle, std::string_view>
+                {
+                    if (arg.status == Status::Loaded)
+                    {
+                        return std::make_pair(arg.blob, arg.mime_type);
+                    }
+                    return std::make_pair(_empty_blob, "");
+                },
+                [this,
+                 cfg_h](const TemplatedBlob& arg) -> std::pair<blobs::BlobHandle, std::string_view>
+                {
+                    auto it = arg.blobs.find(cfg_h.o);
+                    if (it != arg.blobs.end())
+                    {
+                        return get_blob(it->second, cfg_h);
+                    }
+                    return std::make_pair(_empty_blob, "");
+                },
+                [this](const BlobToEmbed&) -> std::pair<blobs::BlobHandle, std::string_view>
+                { return std::make_pair(_empty_blob, ""); }},
+            *blob);
     }
 
     void work(AssetsLoader* al, BlobAllocator* ba) override
@@ -557,24 +536,22 @@ public:
     void _destroy(AssetsLoader* al, Blob* blob) const
     {
         std::visit(
-            [al](auto& arg)
-            {
-                using T = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<T, BlobToEmbed>)
+            hrz::overload{
+                [al](BlobToEmbed& arg)
                 {
                     if (arg.loading)
                     {
                         assets_loader::end(al, arg.load_ticket);
                     }
-                }
-                else if constexpr (std::is_same_v<T, EmbeddedBlob>)
+                },
+                [](EmbeddedBlob& arg)
                 {
                     if (arg.valid)
                     {
                         arg.blob.release();
                     }
-                }
-                else if constexpr (std::is_same_v<T, StreamableBlob>)
+                },
+                [al](StreamableBlob& arg)
                 {
                     switch (arg.status)
                     {
@@ -582,10 +559,12 @@ public:
                         case Status::Loaded: arg.blob.release(); break;
                         default: break;
                     }
-                }
-                // Nothing to do for TemplatedBlob. Their child blobs are destroyed anyway because
-                // they are in `_all_blobs`.
-            },
+                },
+                [](TemplatedBlob&)
+                {
+                    // Nothing to do for TemplatedBlob. Their child blobs are destroyed anyway
+                    // because they are in `_all_blobs`.
+                }},
             *blob);
     }
 

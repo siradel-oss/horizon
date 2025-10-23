@@ -435,18 +435,18 @@ hrz::JobResult run(
     }
 
     auto mesh = mesh_or_error.value().get();
-    uint32_t vertex_count = mesh->num_points();
+    const uint32_t vertex_count = mesh->num_points();
+
     std::vector<Attribute> attributes;
+    attributes.reserve((size_t)mesh->num_attributes());
 
     for (int i = 0; i < mesh->num_attributes(); ++i)
     {
-        Attribute attribute = get_mesh_attribute(mesh, i);
-        attributes.push_back(attribute);
+        attributes.push_back(get_mesh_attribute(mesh, i));
     }
 
-    std::sort(
-        attributes.begin(), attributes.end(),
-        [](const Attribute& a, const Attribute& b) { return a.size > b.size; });
+    std::ranges::sort(
+        attributes, [](const Attribute& a, const Attribute& b) { return a.size > b.size; });
 
     size_t vertex_stride = 0;
     {

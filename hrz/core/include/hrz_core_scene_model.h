@@ -114,7 +114,7 @@ uint32_t add(SceneModel* model, const hrz_proto::Path& path, const T& input)
     return add_raw(model, path, raw);
 }
 
-void dev_ui(SceneModel* model, mu_Context* ctx);
+void dev_ui(const SceneModel* model, mu_Context* ctx);
 
 } // namespace scene_model
 

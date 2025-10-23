@@ -619,14 +619,14 @@ hrz::JobResult run(
     pugi::xml_node root_node = doc.child("WMS_Capabilities");
     if (!root_node) root_node = doc.child("WMT_MS_Capabilities");
 
-    auto wms_version = root_node.attribute("version").as_string("");
+    std::string_view wms_version = root_node.attribute("version").as_string("");
     bool old_wms_version = false;
-    if (std::strcmp(wms_version, "") == 0)
+    if (wms_version.empty() == 0)
     {
         HRZ_LOG_WARNING("No WMS version specified, defaulting to 1.3.0.");
         wms_version = "1.3.0";
     }
-    else if (hrz::str::starts_with(wms_version, "1.1") || hrz::str::starts_with(wms_version, "1.0"))
+    else if (wms_version.starts_with("1.1") || wms_version.starts_with("1.0"))
     {
         old_wms_version = true;
     }

@@ -1439,11 +1439,7 @@ void VectorDataLoader::clear_task(Task& task, JobScheduler* js)
     cancel_task_jobs(task, js);
 
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            clear_task<TaskDataType>(task, data, js);
-        },
+        [&]<typename TaskType>(TaskType& data) { clear_task<TaskType>(task, data, js); },
         task.data);
 
     tasks_by_hash.erase(task.hash);
@@ -1454,11 +1450,8 @@ void VectorDataLoader::cancel_task_jobs(Task& task, JobScheduler* js)
     if (!is_loading(task.status)) return;
 
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            cancel_task_jobs<TaskDataType>(task, data, js);
-        },
+        [&]<typename TaskDataType>(TaskDataType& data)
+        { cancel_task_jobs<TaskDataType>(task, data, js); },
         task.data);
 
     tasks_by_hash.erase(task.hash);
@@ -1470,11 +1463,8 @@ void VectorDataLoader::unload_task_data(
     JobScheduler* js)
 {
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            unload_task_data<TaskDataType>(task, data, release_dependent_task_data, js);
-        },
+        [&]<typename TaskDataType>(TaskDataType& data)
+        { unload_task_data<TaskDataType>(task, data, release_dependent_task_data, js); },
         task.data);
 }
 
@@ -1524,30 +1514,29 @@ void VectorDataLoader::restart_task(WeakTaskRef& task_ref, Task& task, hrz::JobS
         // If a data request from a message depends on the task, we retain the data
         // so that it gets reloaded and then sent to the requester in a data message.
         std::visit(
-            [&](auto& data)
-            {
-                using TaskDataType = std::decay_t<decltype(data)>;
-                if constexpr (std::is_same_v<TaskDataType, Task::LoadGeometry>)
+            hrz::overload{
+                [&](Task::LoadGeometry& data)
                 {
-                    auto& layer_model = task.load_geometry().layer_model.value();
+                    auto& layer_model = data.layer_model.value();
                     layer_model.data_version += 1;
                     send_new_data_message(layer_model);
                     restart_tasks_from_requests();
-                }
-                else if constexpr (std::is_same_v<TaskDataType, Task::LoadAllAttributeValues>)
+                },
+                [&](Task::LoadAllAttributeValues& data)
                 {
-                    auto& layer_model = task.load_all_attribute_values().layer_model.value();
+                    auto& layer_model = data.layer_model.value();
                     layer_model.data_version += 1;
                     send_new_data_message(layer_model);
                     restart_tasks_from_requests();
-                }
-                else if constexpr (std::is_same_v<TaskDataType, Task::LoadFeatureIds>)
+                },
+                [&](Task::LoadFeatureIds& data)
                 {
-                    auto& layer_model = task.load_feature_ids().layer_model.value();
+                    auto& layer_model = data.layer_model.value();
                     layer_model.data_version += 1;
                     send_new_data_message(layer_model);
                     restart_tasks_from_requests();
-                }
+                },
+                [&](auto&) {},
             },
             task.data);
     }
@@ -1569,11 +1558,8 @@ void VectorDataLoader::work_new_task(
     assert(task.status == TaskStatus::New);
 
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            work_new_task<TaskDataType>(task_ref, task, data, scene_model, attributions);
-        },
+        [&]<typename TaskDataType>(TaskDataType& data)
+        { work_new_task<TaskDataType>(task_ref, task, data, scene_model, attributions); },
         task.data);
 }
 
@@ -1586,11 +1572,8 @@ void VectorDataLoader::work_unloaded_task(WeakTaskRef& task_ref, Task& task)
     if (task.data_use_count == 0) return;
 
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            work_unloaded_task<TaskDataType>(task_ref, task, data);
-        },
+        [&]<typename TaskDataType>(TaskDataType& data)
+        { work_unloaded_task<TaskDataType>(task_ref, task, data); },
         task.data);
 
     set_task_status(task_ref, task, TaskStatus::Loading);
@@ -1609,11 +1592,8 @@ void VectorDataLoader::work_loading_task(
     assert(task.status == TaskStatus::Loading);
 
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            work_loading_task<TaskDataType>(task_ref, task, data, js, ba, mq, attributions);
-        },
+        [&]<typename TaskDataType>(TaskDataType& data)
+        { work_loading_task<TaskDataType>(task_ref, task, data, js, ba, mq, attributions); },
         task.data);
 }
 
@@ -1630,9 +1610,8 @@ void VectorDataLoader::unload_task_data_if_not_needed(
     }
 
     std::visit(
-        [&](auto& data)
+        [&]<typename TaskDataType>(TaskDataType&)
         {
-            using TaskDataType = std::decay_t<decltype(data)>;
             if (unload_task_data_if_not_needed<TaskDataType>())
             {
                 cancel_task_jobs(task, js);
@@ -1658,11 +1637,8 @@ void VectorDataLoader::check_for_invalidated_data_for_task(
     }
 
     std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            check_for_invalidated_data_for_task<TaskDataType>(task_ref, task, data, js);
-        },
+        [&]<typename TaskDataType>(TaskDataType& data)
+        { check_for_invalidated_data_for_task<TaskDataType>(task_ref, task, data, js); },
         task.data);
 }
 
@@ -1670,13 +1646,11 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
 {
     HRZ_SCOPED_SAMPLE("work messages");
 
-    for (auto& message : asset_loader_channel.receive())
+    for (auto& generic_message : asset_loader_channel.receive())
     {
         std::visit(
-            [&](auto& message)
-            {
-                using MessageType = std::decay_t<decltype(message)>;
-                if constexpr (std::is_same_v<MessageType, assets_loader::messages::LoadedData>)
+            hrz::overload{
+                [&](assets_loader::messages::LoadedData& message)
                 {
                     auto it = tasks_waiting_for_asset_loader_message.find(message.request_id);
                     if (it != tasks_waiting_for_asset_loader_message.end()
@@ -1693,9 +1667,8 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
                             set_task_status(task_ref, task, TaskStatus::Loaded);
                         }
                     }
-                }
-                else if constexpr (std::is_same_v<
-                                       MessageType, assets_loader::messages::LoadFailure>)
+                },
+                [&](assets_loader::messages::LoadFailure& message)
                 {
                     auto it = tasks_waiting_for_asset_loader_message.find(message.request_id);
                     if (it != tasks_waiting_for_asset_loader_message.end()
@@ -1710,8 +1683,8 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
                             set_task_status(task_ref, task, TaskStatus::DataError);
                         }
                     }
-                }
-                else if constexpr (std::is_same_v<MessageType, assets_loader::messages::NewChannel>)
+                },
+                [&](assets_loader::messages::NewChannel& message)
                 {
                     auto it = tasks_waiting_for_asset_loader_message.find(message.request_id);
                     if (it != tasks_waiting_for_asset_loader_message.end()
@@ -1730,22 +1703,16 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
                             set_task_status(task_ref, task, TaskStatus::Loading);
                         }
                     }
-                }
-                else
-                {
-                    static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                }
+                },
             },
-            message);
+            generic_message);
     }
 
-    for (auto& message : in_memory_vector_data_channel.receive())
+    for (auto& generic_message : in_memory_vector_data_channel.receive())
     {
         std::visit(
-            [&](auto& message)
-            {
-                using MessageType = std::decay_t<decltype(message)>;
-                if constexpr (std::is_same_v<MessageType, in_memory::messages::VectorData>)
+            hrz::overload{
+                [&](in_memory::messages::VectorData& message)
                 {
                     auto it =
                         tasks_waiting_for_in_memory_vector_data_message.find(message.request_id);
@@ -1794,8 +1761,8 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
                             }
                         }
                     }
-                }
-                else if constexpr (std::is_same_v<MessageType, in_memory::messages::Error>)
+                },
+                [&](in_memory::messages::Error& message)
                 {
                     auto it =
                         tasks_waiting_for_in_memory_vector_data_message.find(message.request_id);
@@ -1811,13 +1778,9 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
                             set_task_status(task_ref, task, TaskStatus::DataError);
                         }
                     }
-                }
-                else
-                {
-                    static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                }
+                },
             },
-            message);
+            generic_message);
     }
 
     channels.work();
@@ -1827,90 +1790,68 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
         auto channel_id = it.first;
         auto& channel = it.second;
 
-        for (auto& message : channel.receive())
+        for (auto& generic_message : channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, vector_data::messages::LoadLayer>)
+                hrz::overload{
+                    [&](const vector_data::messages::LoadLayer& message)
                     {
                         RequestId request_id{channel_id, message.request_id};
                         load_layer(request_id, message.layer_id);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::ReleaseLayerLoader>)
+                    },
+                    [&](const vector_data::messages::ReleaseLayerLoader& message)
                     {
                         RequestId request_id{channel_id, message.request_id};
                         release_layer_loader(request_id);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::RequestData>)
+                    },
+                    [&](const vector_data::messages::RequestData& message)
                     {
                         RequestId request_id{channel_id, message.request_id};
                         RequestId layer_request_id{channel_id, message.load_layer_request_id};
                         auto it_data_request = request_ids_to_data_requests.find(request_id);
                         if (it_data_request == request_ids_to_data_requests.end())
                         {
-                            if (std::holds_alternative<TileCoords>(message.feature_selection))
-                            {
-                                request_data(
-                                    request_id, layer_request_id,
-                                    std::get<TileCoords>(message.feature_selection),
-                                    message.data_kind);
-                            }
-                            else if (std::holds_alternative<vector_data::FeatureIds>(
-                                         message.feature_selection))
-                            {
-                                request_data(
-                                    request_id, layer_request_id,
-                                    std::get<vector_data::FeatureIds>(message.feature_selection),
-                                    message.data_kind);
-                            }
-                            else
-                            {
-                                assert(false && "Unhandled case");
-                            }
+                            std::visit(
+                                hrz::overload{
+                                    [&](const TileCoords& tile_coords) {
+                                        request_data(
+                                            request_id, layer_request_id, tile_coords,
+                                            message.data_kind);
+                                    },
+                                    [&](const vector_data::FeatureIds& feature_ids) {
+                                        request_data(
+                                            request_id, layer_request_id, feature_ids,
+                                            message.data_kind);
+                                    },
+                                },
+                                message.feature_selection);
                         }
                         else
                         {
                             retain_data(request_id);
                         }
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::ReleaseData>)
+                    },
+                    [&](const vector_data::messages::ReleaseData& message)
                     {
                         RequestId request_id{channel_id, message.request_id};
                         release_data(request_id);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::RetainData>)
+                    },
+                    [&](const vector_data::messages::RetainData& message)
                     {
                         RequestId request_id{channel_id, message.request_id};
                         retain_data(request_id);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::ReleaseDataRequest>)
+                    },
+                    [&](const vector_data::messages::ReleaseDataRequest& message)
                     {
                         RequestId request_id{channel_id, message.request_id};
                         release_request(request_id);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, hrz_proto::VectorDataRequestResponse>)
-                    {
-                        provide_client_data(message);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, hrz_proto::VectorDataInvalidation>)
-                    {
-                        invalidate_client_data(message);
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
+                    [&](const hrz_proto::VectorDataRequestResponse& message)
+                    { provide_client_data(message); },
+                    [&](const hrz_proto::VectorDataInvalidation& message)
+                    { invalidate_client_data(message); },
                 },
-                message);
+                generic_message);
         }
     }
 }
@@ -2201,86 +2142,29 @@ const char* VectorDataLoader::data_kind_str(DataKind data_kind)
 
 const char* VectorDataLoader::task_type_str(const VectorDataLoader::Task& task)
 {
-    std::visit(
-        [&](auto& data)
-        {
-            using TaskDataType = std::decay_t<decltype(data)>;
-            if constexpr (std::is_same_v<TaskDataType, Task::LoadGeometry>)
-            {
-                return "Load geometry";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadAllAttributeValues>)
-            {
-                return "Load all attribute values";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadAttributeValues>)
-            {
-                return "Load single attribute values";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadFeatureIds>)
-            {
-                return "Load feature IDs";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadVectorData>)
-            {
-                return "Load vector data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadVectorTileData>)
-            {
-                return "Load vector tile data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadVectorDataUrlPackage>)
-            {
-                return "Load vector data package from URL";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadVectorDataPmTilesPackage>)
-            {
-                return "Load vector data package from PMTiles";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadUntiledVectorData>)
-            {
-                return "Load untiled vector data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::ExtractVectorTileData>)
-            {
-                return "Extract vector tile data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadInMemoryVectorData>)
-            {
-                return "Load in-memory vector data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadUrlData>)
-            {
-                return "Load URL data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::RequestClientData>)
-            {
-                return "Request client data";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadTileJson>)
-            {
-                return "Load TileJSON";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadPmTiles>)
-            {
-                return "Load PMTiles";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadLayerModel>)
-            {
-                return "Load layer model";
-            }
-            else if constexpr (std::is_same_v<TaskDataType, Task::LoadSourceModel>)
-            {
-                return "Load source model";
-            }
-            else
-            {
-                static_assert(hrz::always_false<TaskDataType>, "Unhandled case");
-            }
+    return std::visit(
+        hrz::overload{
+            [](const Task::LoadGeometry&) { return "Load geometry"; },
+            [](const Task::LoadAllAttributeValues&) { return "Load all attribute values"; },
+            [](const Task::LoadAttributeValues&) { return "Load single attribute values"; },
+            [](const Task::LoadFeatureIds&) { return "Load feature IDs"; },
+            [](const Task::LoadVectorData&) { return "Load vector data"; },
+            [](const Task::LoadVectorTileData&) { return "Load vector tile data"; },
+            [](const Task::LoadVectorDataUrlPackage&)
+            { return "Load vector data package from URL"; },
+            [](const Task::LoadVectorDataPmTilesPackage&)
+            { return "Load vector data package from PMTiles"; },
+            [](const Task::LoadUntiledVectorData&) { return "Load untiled vector data"; },
+            [](const Task::ExtractVectorTileData&) { return "Extract vector tile data"; },
+            [](const Task::LoadInMemoryVectorData&) { return "Load in-memory vector data"; },
+            [](const Task::LoadUrlData&) { return "Load URL data"; },
+            [](const Task::RequestClientData&) { return "Request client data"; },
+            [](const Task::LoadTileJson&) { return "Load TileJSON"; },
+            [](const Task::LoadPmTiles&) { return "Load PMTiles"; },
+            [](const Task::LoadLayerModel&) { return "Load layer model"; },
+            [](const Task::LoadSourceModel&) { return "Load source model"; },
         },
         task.data);
-
-    return "";
 }
 
 const char* VectorDataLoader::task_status_str(const VectorDataLoader::Task& task)
@@ -2368,8 +2252,8 @@ void VectorDataLoader::dev_ui(mu_Context* ctx)
                 request_ids[index] = request_it.first;
                 index += 1;
             }
-            std::sort(
-                request_ids.begin(), request_ids.end(),
+            std::ranges::sort(
+                request_ids,
                 [](const VectorDataLoader::RequestId& a, const VectorDataLoader::RequestId& b)
                 {
                     if (a.channel_id == b.channel_id)

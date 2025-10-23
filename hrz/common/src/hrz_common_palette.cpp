@@ -104,9 +104,10 @@ std::optional<lm::vec4> numeric_palettization(const Palette& palette, float valu
         return color_points.back().color_point.second_srgb;
     }
 
-    auto upper = std::upper_bound(
-        color_points.begin(), color_points.end(), value,
-        [](const float v, const Palette::ValuedNumericColorPoint& p) { return v < p.value; });
+    auto upper = std::ranges::upper_bound(
+        color_points, value, std::less<float>{},
+        [](const Palette::ValuedNumericColorPoint& p) { return p.value; });
+
     // Value is exactly the last one.
     if (upper == color_points.end())
     {
@@ -176,8 +177,8 @@ Palette from_proto(const hrz_proto::NumericPalette& proto)
               encode(numeric.mode, second_srgb)}});
     }
 
-    std::sort(
-        numeric.color_points.begin(), numeric.color_points.end(),
+    std::ranges::sort(
+        numeric.color_points,
         [](const Palette::ValuedNumericColorPoint& p0, const Palette::ValuedNumericColorPoint& p1)
         { return p0.value < p1.value; });
 

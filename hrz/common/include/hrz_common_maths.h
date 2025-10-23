@@ -23,17 +23,7 @@ struct PerspectiveFrustum
     double far;
     lm::bbox2 subfrustum;
 
-    bool operator==(const PerspectiveFrustum& f) const
-    {
-        return fovy == f.fovy && aspect_ratio == f.aspect_ratio && near == f.near && far == f.far
-            && subfrustum == f.subfrustum;
-    }
-
-    bool operator!=(const PerspectiveFrustum& f) const
-    {
-        return fovy != f.fovy || aspect_ratio != f.aspect_ratio || near != f.near || far != f.far
-            || subfrustum != f.subfrustum;
-    }
+    constexpr bool operator==(const PerspectiveFrustum& f) const = default;
 };
 
 template<typename T>
@@ -60,7 +50,7 @@ struct OrientedBBox3
 inline lm::dmat4 make_frame_transform(
     const lm::vec3& front,
     const lm::vec3& up,
-    double right_handed = true)
+    bool right_handed = true)
 {
     lm::vec3 x = lm::cross(front, up);
 
@@ -111,19 +101,42 @@ struct BSphere
 template<typename T>
 BSphere<T> compute_bounding_sphere(std::span<const lm::Vector<T, 3>> pts);
 
+extern template BSphere<float> compute_bounding_sphere<float>(std::span<const lm::vec3> pts);
+extern template BSphere<double> compute_bounding_sphere<double>(std::span<const lm::dvec3> pts);
+
 template<typename T>
 BSphere<T> merge_bounding_spheres(const BSphere<T>& a, const BSphere<T>& b);
 
+extern template BSphere<float> merge_bounding_spheres(
+    const BSphere<float>& a,
+    const BSphere<float>& b);
+extern template BSphere<double> merge_bounding_spheres(
+    const BSphere<double>& a,
+    const BSphere<double>& b);
+
 template<typename T>
 BSphere<T> merge_bounding_spheres(std::span<const BSphere<T>> bspheres);
+
+extern template BSphere<float> merge_bounding_spheres(std::span<const BSphere<float>> bspheres);
+extern template BSphere<double> merge_bounding_spheres(std::span<const BSphere<double>> bspheres);
 
 template<typename T>
 void compute_convex_hull(
     std::span<const lm::Vector<T, 2>> pts,
     std::vector<lm::Vector<T, 2>>& hull);
 
+extern template void compute_convex_hull(
+    std::span<const lm::vec2> pts,
+    std::vector<lm::vec2>& hull);
+extern template void compute_convex_hull(
+    std::span<const lm::dvec2> pts,
+    std::vector<lm::dvec2>& hull);
+
 template<typename T>
 OrientedBBox2<T> compute_minimum_bbox(std::span<const lm::Vector<T, 2>> pts);
+
+extern template OrientedBBox2<float> compute_minimum_bbox(std::span<const lm::vec2> pts);
+extern template OrientedBBox2<double> compute_minimum_bbox(std::span<const lm::dvec2> pts);
 
 template<typename T>
 static lm::Matrix<T, 3> compute_normal_transform_matrix(const lm::Matrix<T, 4>& m)
@@ -242,18 +255,7 @@ struct alignas(16) GlslStd140Mat3
         cols[2] = lm::vec4(mat.col[2], 0);
     }
 
-    constexpr GlslStd140Mat3& operator=(const lm::mat3& mat)
-    {
-        cols[0] = lm::vec4(mat.col[0], 0);
-        cols[1] = lm::vec4(mat.col[1], 0);
-        cols[2] = lm::vec4(mat.col[2], 0);
-        return *this;
-    }
-
-    bool operator!=(const GlslStd140Mat3& other) const
-    {
-        return cols[0] != other.cols[0] || cols[1] != other.cols[1] || cols[2] != other.cols[2];
-    }
+    constexpr bool operator==(const GlslStd140Mat3& other) const = default;
 };
 
 static_assert(sizeof(GlslStd140Mat3) == 12 * sizeof(float), "Size of GlslStd140Mat3");

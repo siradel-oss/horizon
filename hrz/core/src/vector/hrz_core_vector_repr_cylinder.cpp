@@ -219,10 +219,7 @@ struct TileId
     uint64_t channel_id;
     uint64_t tile_id;
 
-    bool operator==(const TileId& other) const
-    {
-        return other.channel_id == channel_id && other.tile_id == tile_id;
-    }
+    constexpr bool operator==(const TileId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TileId& request)
@@ -288,10 +285,7 @@ class CylinderReprSystem : public hrz::vt::ReprSystem
         uint64_t channel_id;
         uint64_t config_id;
 
-        bool operator==(const ConfigId& other) const
-        {
-            return other.channel_id == channel_id && other.config_id == config_id;
-        }
+        constexpr bool operator==(const ConfigId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ConfigId& request)
@@ -985,14 +979,11 @@ public:
             auto channel_id = it.first;
             auto& channel = it.second;
 
-            for (auto& message : channel.receive())
+            for (auto& generic_message : channel.receive())
             {
                 std::visit(
-                    [&](auto& message)
-                    {
-                        using MessageType = std::decay_t<decltype(message)>;
-                        if constexpr (std::is_same_v<
-                                          MessageType, hrz::vt::repr::messages::RegisterStyle>)
+                    hrz::overload{
+                        [&](const hrz::vt::repr::messages::RegisterStyle& message)
                         {
                             decltype(hrz::vt::repr::messages::StyleRegistrationResult::
                                          registered_properties) registered_properties;
@@ -1000,7 +991,7 @@ public:
                             auto handle = register_style(
                                 message.repr, message.layer_id,
                                 [repr_reg = ctx.repr_reg, layer_id = message.layer_id,
-                                 &registered_properties = registered_properties](
+                                 &registered_properties](
                                     std::string_view name,
                                     const hrz::vector_data::OwnedAttributeValue& default_value)
                                     -> uint64_t
@@ -1014,10 +1005,8 @@ public:
                             channel.send(hrz::vt::repr::messages::StyleRegistrationResult{
                                 message.style_id, handle.has_value(),
                                 std::move(registered_properties)});
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType,
-                                               hrz::vt::repr::messages::UnregisterStyle>)
+                        },
+                        [&](const hrz::vt::repr::messages::UnregisterStyle& message)
                         {
                             auto it = _configs_by_id.find(ConfigId{channel_id, message.style_id});
                             if (it != _configs_by_id.end())
@@ -1033,9 +1022,8 @@ public:
                             {
                                 HRZ_LOG_WARNING("Cannot unregister style: style not found");
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType, hrz::vt::repr::messages::AddTile>)
+                        },
+                        [&](const hrz::vt::repr::messages::AddTile& message)
                         {
                             auto it = _configs_by_id.find(ConfigId{channel_id, message.style_id});
                             if (it != _configs_by_id.end())
@@ -1050,9 +1038,8 @@ public:
                             {
                                 HRZ_LOG_ERROR("Cannot add tile: style not found");
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType, hrz::vt::repr::messages::RemoveTile>)
+                        },
+                        [&](const hrz::vt::repr::messages::RemoveTile& message)
                         {
                             auto it = _tiles_by_id.find(TileId{channel_id, message.tile_id});
                             if (it != _tiles_by_id.end())
@@ -1064,15 +1051,12 @@ public:
                             {
                                 HRZ_LOG_WARNING("Cannot remove tile: tile not found");
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType,
-                                               hrz::vt::repr::messages::UpdateTileElevation>)
+                        },
+                        [&](const hrz::vt::repr::messages::UpdateTileElevation&)
                         {
                             // No-op
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType, hrz::vt::repr::messages::UpdateClipId>)
+                        },
+                        [&](const hrz::vt::repr::messages::UpdateClipId& message)
                         {
                             auto it = _tiles_by_id.find(TileId{channel_id, message.tile_id});
                             if (it != _tiles_by_id.end())
@@ -1083,10 +1067,8 @@ public:
                             {
                                 HRZ_LOG_ERROR("Cannot update clip ID: tile not found");
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType,
-                                               hrz::vt::repr::messages::UpdateLighting>)
+                        },
+                        [&](const hrz::vt::repr::messages::UpdateLighting& message)
                         {
                             auto it = _tiles_by_id.find(TileId{channel_id, message.tile_id});
                             if (it != _tiles_by_id.end())
@@ -1097,10 +1079,8 @@ public:
                             {
                                 HRZ_LOG_ERROR("Cannot update lighting: tile not found");
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType,
-                                               hrz::vt::repr::messages::UpdateSelection>)
+                        },
+                        [&](const hrz::vt::repr::messages::UpdateSelection& message)
                         {
                             auto it = _tiles_by_id.find(TileId{channel_id, message.tile_id});
                             if (it != _tiles_by_id.end())
@@ -1111,13 +1091,9 @@ public:
                             {
                                 HRZ_LOG_ERROR("Cannot update selection: tile not found");
                             }
-                        }
-                        else
-                        {
-                            static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                        }
+                        },
                     },
-                    message);
+                    generic_message);
             }
         }
 

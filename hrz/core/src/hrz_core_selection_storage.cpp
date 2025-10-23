@@ -17,12 +17,12 @@ SelectionStorageUint32Buffer<Indirection>::SelectionStorageUint32Buffer(
     _need_to_update_buffer(false),
     resource_owner(resource_owner)
 {
-    size_t bucket_count = (index_count + 31) / 32;
+    const size_t bucket_count = (index_count + 31) / 32;
     _bitmap.resize(bucket_count, 0);
 
     for (const auto& it : metadata)
     {
-        _metadata.push_back({it.first, it.second});
+        _metadata.emplace_back(it.first, it.second);
     }
 }
 
@@ -32,10 +32,10 @@ void SelectionStorageUint32Buffer<Indirection>::update_selection(
 {
     if (_any_selected || !selected_objects.empty())
     {
-        std::fill(_bitmap.begin(), _bitmap.end(), 0);
+        std::ranges::fill(_bitmap, 0);
     }
 
-    bool had_any_selected = _any_selected;
+    const bool had_any_selected = _any_selected;
     _any_selected = false;
 
     if (!selected_objects.empty())
@@ -44,14 +44,14 @@ void SelectionStorageUint32Buffer<Indirection>::update_selection(
         {
             auto mark_index_as_selected = [&](uint32_t index)
             {
-                uint32_t bucket_index = index / 32;
-                uint32_t bit_index = index % 32;
+                const uint32_t bucket_index = index / 32;
+                const uint32_t bit_index = index % 32;
 
                 _bitmap[bucket_index] |= (1 << bit_index);
                 _any_selected = true;
             };
 
-            FeatureIdIndirections indirections = _indirection.get_indirections(object_id);
+            const FeatureIdIndirections indirections = _indirection.get_indirections(object_id);
             if (indirections.has_range())
             {
                 for (auto index : indirections.range())
@@ -132,10 +132,10 @@ void SelectionStorageUint32Texture<Indirection>::update_selection(
 
     if (_any_selected || !selected_objects.empty())
     {
-        std::fill(_bitmask.begin(), _bitmask.end(), 0);
+        std::ranges::fill(_bitmask, 0);
     }
 
-    bool had_any_selected = _any_selected;
+    const bool had_any_selected = _any_selected;
     _any_selected = false;
 
     if (!selected_objects.empty())
@@ -144,13 +144,13 @@ void SelectionStorageUint32Texture<Indirection>::update_selection(
         {
             auto mark_index_as_selected = [&](uint32_t index)
             {
-                uint32_t bucket_index = index / 32;
-                uint32_t bit_index = index % 32;
+                const uint32_t bucket_index = index / 32;
+                const uint32_t bit_index = index % 32;
                 _bitmask[bucket_index] |= 1 << bit_index;
                 _any_selected = true;
             };
 
-            FeatureIdIndirections indirections = _indirection.get_indirections(object_id);
+            const FeatureIdIndirections indirections = _indirection.get_indirections(object_id);
             if (indirections.has_range())
             {
                 for (auto index : indirections.range())

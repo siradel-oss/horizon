@@ -259,7 +259,7 @@ hrz::JobResult run(
         if (order < min_level || order > max_level) continue;
 
         std::string href = tileset_node.attribute("href").value();
-        if (hrz::str::starts_with(href, "http"))
+        if (href.starts_with("http"))
         {
             response.url_patterns.at(order) = fmt::format(
                 "{base_url}/{{x}}/{y}.{ext}", fmt::arg("base_url", href),

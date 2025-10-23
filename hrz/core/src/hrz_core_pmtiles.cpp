@@ -160,10 +160,7 @@ struct DirectoryIdentity
         return H::combine(std::move(h), id.offset, id.length);
     }
 
-    constexpr bool operator==(const DirectoryIdentity& other) const
-    {
-        return offset == other.offset && length == other.length;
-    }
+    constexpr bool operator==(const DirectoryIdentity& other) const = default;
 };
 
 struct DirectoryEntry
@@ -210,9 +207,9 @@ struct Directory
             return std::nullopt;
         }
 
-        auto it = std::upper_bound(
-            std::begin(entries), std::end(entries), tile_id,
-            [](uint64_t id, const DirectoryEntry& entry) { return id < entry.tile_id; });
+        auto it = std::ranges::upper_bound(
+            entries, tile_id, std::less<uint64_t>{},
+            [](const DirectoryEntry& entry) { return entry.tile_id; });
 
         if (it == std::begin(entries))
         {
@@ -701,7 +698,7 @@ public:
         }
     }
 
-    void on_directory_data(Directory* dir, blobs::BlobHandle& data)
+    void on_directory_data(Directory* dir, const blobs::BlobHandle& data)
     {
         if (dir->status != Directory::kLoading)
         {
@@ -725,7 +722,7 @@ public:
     void on_query_data(
         QueryHandle handle,
         TileQuery* query,
-        blobs::BlobHandle& data,
+        const blobs::BlobHandle& data,
         JobScheduler* js)
     {
         if (query->status != TileQuery::kLoadingTileData)
@@ -873,13 +870,11 @@ public:
             return;
         }
 
-        for (auto& message : _asset_loader_channel.receive())
+        for (auto& generic_message : _asset_loader_channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, assets_loader::messages::LoadedData>)
+                hrz::overload{
+                    [this, js](const assets_loader::messages::LoadedData& message)
                     {
                         if (message.request_id == kHeaderAssetRequestId)
                         {
@@ -933,9 +928,8 @@ public:
                                 HRZ_LOG_ERROR("Unknown request ID: {}", message.request_id);
                             }
                         }
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, assets_loader::messages::LoadFailure>)
+                    },
+                    [this](const assets_loader::messages::LoadFailure& message)
                     {
                         if (message.request_id == kHeaderAssetRequestId)
                         {
@@ -979,18 +973,12 @@ public:
                                 HRZ_LOG_ERROR("Unknown request ID: {}", message.request_id);
                             }
                         }
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, assets_loader::messages::NewChannel>)
+                    },
+                    [](const assets_loader::messages::NewChannel&)
                     {
                         // No-op
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
-                },
-                message);
+                    }},
+                generic_message);
         }
 
         if (_status == kInitial)

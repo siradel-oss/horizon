@@ -343,6 +343,7 @@ bool execute_color_functions(
     return true;
 }
 
+// @Todo(c++23) Use static operator()
 struct SetAlphaColorModifier
 {
     constexpr lm::vec4 operator()(lm::vec4 color, float mod) const { return {color.rgb, mod}; }
@@ -353,7 +354,7 @@ struct RotateHueColorModifier
     inline lm::vec4 operator()(lm::vec4 color, float hue_shift) const
     {
         color.rgb = rgb_to_hsv(color.rgb);
-        color.x += hue_shift / 360.0;
+        color.x += hue_shift / 360.0F;
         color.rgb = hsv_to_rgb(color.rgb);
         return color;
     }
@@ -363,8 +364,8 @@ struct LightenColorModifier
 {
     inline lm::vec4 operator()(lm::vec4 color, float mod) const
     {
-        float end = mod > 0.0f ? 1.0f : 0.0f;
-        return lm::mix(color, lm::vec4(end, end, end, color.a), std::min(std::abs(mod), 1.0f));
+        const float end = mod > 0.0F ? 1.0F : 0.0F;
+        return lm::mix(color, lm::vec4(end, end, end, color.a), std::min(std::abs(mod), 1.0F));
     }
 };
 
@@ -372,13 +373,13 @@ struct BrightenColorModifier
 {
     inline lm::vec4 operator()(lm::vec4 color, float mod) const
     {
-        return lm::vec4(color.rgb * std::max(0.0f, mod + 1.0f), color.a);
+        return lm::vec4(color.rgb * std::max(0.0F, mod + 1.0F), color.a);
     }
 };
 
 struct DarkenColorModifier
 {
-    LightenColorModifier inner{};
+    HRZ_NO_UNIQUE_ADDRESS LightenColorModifier inner{};
 
     inline lm::vec4 operator()(lm::vec4 color, float mod) const { return inner(color, -mod); }
 };
@@ -387,15 +388,15 @@ struct SaturateColorModifier
 {
     inline lm::vec4 operator()(lm::vec4 color, float mod) const
     {
-        float l =
-            std::pow(lm::dot(lm::vec3(0.21f, 0.72f, 0.07f), srgb_to_linear(color.rgb)), 1.0 / 2.2);
-        return lm::vec4(lm::mix(lm::vec3(l), color.rgb, std::max(0.0f, mod + 1.0f)), color.a);
+        const float l = std::pow(
+            lm::dot(lm::vec3(0.21F, 0.72F, 0.07F), srgb_to_linear(color.rgb)), 1.0F / 2.2F);
+        return lm::vec4(lm::mix(lm::vec3(l), color.rgb, std::max(0.0F, mod + 1.0F)), color.a);
     }
 };
 
 struct DesaturateColorModifier
 {
-    SaturateColorModifier inner{};
+    HRZ_NO_UNIQUE_ADDRESS SaturateColorModifier inner{};
 
     inline lm::vec4 operator()(lm::vec4 color, float mod) const { return inner(color, -mod); }
 };
@@ -413,7 +414,7 @@ bool execute_modify_color(
     for (size_t i = 0; i < res_buffer.size(); ++i)
     {
         lm::vec4 color = convert_uint_color_to_rgba((uint32_t)attr_as_uint64(arg_buffers[0][i]));
-        float mod = attr_as_number(arg_buffers[1][i]);
+        const auto mod = (float)attr_as_number(arg_buffers[1][i]);
         color = modifier(color, mod);
         res_buffer[i] = attr_from<RawValue>(convert_rgba_color_to_uint(color));
     }

@@ -112,20 +112,19 @@ void message(
     const char* prefix,
     Severity severity,
     std::string_view message,
-    const char* file_full,
-    int line)
+    const std::source_location& location)
 {
     if (severity < g_log_filter_level)
     {
         return;
     }
 
-    std::string_view file = path::basename_s(file_full);
+    const std::string_view file = path::basename_s(location.file_name());
 
-    double since_epoch = hrz::now_ms() / 1000.0;
-    double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
-    int minutes = std::floor(since_epoch / 60.0);
-    int seconds = std::floor(since_epoch) - 60.0 * minutes;
+    const double since_epoch = hrz::now_ms() / 1000.0;
+    const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
+    const int minutes = (int)std::floor(since_epoch / 60.0);
+    const int seconds = (int)std::floor(since_epoch) - 60 * minutes;
 
     LogLine* log_line = _acquire_history_line();
 
@@ -134,12 +133,12 @@ void message(
     std::string* str = &log_line->line;
     str->resize(MAX_MESSAGE_LENGTH);
 
-    size_t length =
+    const size_t length =
         (size_t)fmt::format_to_n(
-            &*str->begin(), MAX_MESSAGE_LENGTH, "{} [{:>4}:{:02}.{:03}] [{:^7}] ({}:{}) {}", prefix,
-            minutes, seconds, millis, _severity_to_string(severity),
-            fmt::string_view(file.data(), file.size()), line,
-            fmt::string_view(message.data(), message.size()))
+            std::to_address(str->begin()), MAX_MESSAGE_LENGTH,
+            "{} [{:>4}:{:02}.{:03}] [{:^7}] ({}:{}) {}", prefix, minutes, seconds, millis,
+            _severity_to_string(severity), fmt::string_view(file.data(), file.size()),
+            location.line(), fmt::string_view(message.data(), message.size()))
             .size;
     str->resize(length);
 

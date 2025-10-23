@@ -273,9 +273,8 @@ std::optional<TileMatrixSet> parse_tile_matrix_set(const pugi::xml_node& matrix_
 
     if (tile_matrices.empty()) return std::nullopt;
 
-    std::sort(
-        tile_matrices.begin(), tile_matrices.end(),
-        [](const auto& a, const auto& b) { return a.scale > b.scale; });
+    std::ranges::sort(
+        tile_matrices, [](const auto& a, const auto& b) { return a.scale > b.scale; });
 
     for (size_t i = 1; i < tile_matrices.size(); ++i)
     {

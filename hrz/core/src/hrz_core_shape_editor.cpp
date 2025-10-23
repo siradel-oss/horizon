@@ -45,7 +45,7 @@ struct Edge
     size_t from;
     size_t to;
 
-    bool operator==(const Edge& other) const { return from == other.from && to == other.to; }
+    constexpr bool operator==(const Edge& other) const = default;
 
     static Edge create(size_t index0, size_t index1)
     {

@@ -168,15 +168,16 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
     blending_params->set_opacity(1.0);
 
     // @Todo(qdebroise): decipher mapbox:// urls.
-    auto url = json::get_str(source, "url");
-    if (url.has_value())
+    auto url_opt = json::get_str(source, "url");
+    if (url_opt.has_value())
     {
-        if (hrz::str::starts_with(url.value(), "pmtiles://"))
+        const std::string_view url = url_opt.value();
+        if (url.starts_with("pmtiles://"))
         {
             raster->mutable_provider()->set_type(
                 hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER);
             auto* pmtiles_provider = raster->mutable_provider()->mutable_pmtiles();
-            pmtiles_provider->set_url(std::string(std::string_view(url.value()).substr(10)));
+            pmtiles_provider->set_url(url.substr(10));
         }
         else
         {
@@ -187,7 +188,7 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
                 hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER);
             auto* tilejson_provider = raster->mutable_provider()->mutable_tilejson();
 
-            tilejson_provider->set_url(url.value());
+            tilejson_provider->set_url(url);
         }
     }
     else
@@ -245,19 +246,19 @@ bool parse_vector_source(ParseContext* ctx, const char* source_name, const rapid
     hrz_proto::VectorDataLayer vector_data_layer;
     hrz_proto::VectorDataSource* vector_data_source = vector_data_layer.add_sources();
 
-    auto url = json::get_str(source, "url");
-
     vector_data_source->set_has_geometry(true);
 
-    if (url.has_value())
+    auto url_opt = json::get_str(source, "url");
+    if (url_opt.has_value())
     {
-        if (hrz::str::starts_with(url.value(), "pmtiles://"))
+        const std::string_view url = url_opt.value();
+        if (url.starts_with("pmtiles://"))
         {
             vector_data_source->set_provider_type(
                 hrz_proto::VectorDataProviderType::PMTILES_VECTOR_DATA_PROVIDER);
             auto* pmtiles_provider = vector_data_source->mutable_pmtiles_data_provider();
 
-            pmtiles_provider->set_url(std::string(std::string_view(url.value()).substr(10)));
+            pmtiles_provider->set_url(url.substr(10));
         }
         else
         {
@@ -266,7 +267,7 @@ bool parse_vector_source(ParseContext* ctx, const char* source_name, const rapid
                 hrz_proto::VectorDataProviderType::TILEJSON_VECTOR_DATA_PROVIDER);
             auto* tilejson_provider = vector_data_source->mutable_tilejson_data_provider();
 
-            tilejson_provider->set_url(url.value());
+            tilejson_provider->set_url(url);
         }
     }
     else

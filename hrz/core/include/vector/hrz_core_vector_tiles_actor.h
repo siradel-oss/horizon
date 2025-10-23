@@ -65,13 +65,7 @@ struct VectorTilesCuller
             geometric_error, distance_from_camera, max_screen_space_error);
     }
 
-    bool operator==(const VectorTilesCuller& other) const
-    {
-        return cam_pos == other.cam_pos && view == other.view && sse == other.sse
-            && frustum_culler == other.frustum_culler && horizon_culler == other.horizon_culler;
-    }
-
-    bool operator!=(const VectorTilesCuller& other) const { return !(*this == other); }
+    constexpr bool operator==(const VectorTilesCuller& other) const = default;
 };
 
 using TileId = uint32_t;

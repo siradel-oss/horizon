@@ -47,15 +47,7 @@ struct GeoPosition2
 
     explicit constexpr operator lm::dvec2() const { return lm::dvec2{lat, lon}; }
 
-    bool operator==(const GeoPosition2& other) const
-    {
-        return lat == other.lat && lon == other.lon;
-    }
-
-    bool operator!=(const GeoPosition2& other) const
-    {
-        return lat != other.lat || lon != other.lon;
-    }
+    constexpr bool operator==(const GeoPosition2& other) const = default;
 };
 
 // In radians.
@@ -75,15 +67,7 @@ struct GeoPosition3
 
     constexpr GeoPosition2 latlon() const { return GeoPosition2(lat, lon); }
 
-    bool operator==(const GeoPosition3& other) const
-    {
-        return lat == other.lat && lon == other.lon && alt == other.alt;
-    }
-
-    bool operator!=(const GeoPosition3& other) const
-    {
-        return lat != other.lat || lon != other.lon || alt != other.alt;
-    }
+    constexpr bool operator==(const GeoPosition3& other) const = default;
 };
 
 /**
@@ -110,17 +94,7 @@ struct GeoBounds
     {
     }
 
-    bool operator==(const GeoBounds& other) const
-    {
-        return west == other.west && east == other.east && south == other.south
-            && north == other.north;
-    }
-
-    bool operator!=(const GeoBounds& other) const
-    {
-        return west != other.west || east != other.east || south != other.south
-            || north != other.north;
-    }
+    constexpr bool operator==(const GeoBounds& other) const = default;
 
     static constexpr GeoBounds empty() { return {0.0, 0.0, 1.0, -1.0}; }
 
@@ -201,19 +175,7 @@ struct GeoVolumeBounds
             mask & 1 ? north : south, mask & 2 ? east : west, mask & 4 ? max_height : min_height);
     }
 
-    bool operator==(const GeoVolumeBounds& other) const
-    {
-        return west == other.west && east == other.east && south == other.south
-            && north == other.north && min_height == other.min_height
-            && max_height == other.max_height;
-    }
-
-    bool operator!=(const GeoVolumeBounds& other) const
-    {
-        return west != other.west || east != other.east || south != other.south
-            || north != other.north || min_height != other.min_height
-            || max_height != other.max_height;
-    }
+    constexpr bool operator==(const GeoVolumeBounds& other) const = default;
 
     static GeoVolumeBounds empty() { return {0.0, 0.0, 1.0, -1.0, 1.0, -1.0}; }
 

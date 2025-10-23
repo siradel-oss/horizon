@@ -34,9 +34,7 @@ public:
         uint16_t tx;
         uint16_t ty;
 
-        inline bool operator==(const Address& a) const { return tx == a.tx && ty == a.ty; }
-
-        inline bool operator!=(const Address& a) const { return tx != a.tx || ty != a.ty; }
+        constexpr bool operator==(const Address& a) const = default;
     };
 
     static constexpr Address NoAddress = PageTable::Address{0xffff, 0xffff};

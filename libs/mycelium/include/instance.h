@@ -146,12 +146,7 @@ struct GLSamplerParams
     GLenum compare_mode;
     GLenum compare_func;
 
-    constexpr bool operator==(const GLSamplerParams& other) const
-    {
-        return wrap_s == other.wrap_s && wrap_t == other.wrap_t && wrap_r == other.wrap_r
-            && min_filter == other.min_filter && mag_filter == other.mag_filter
-            && compare_mode == other.compare_mode && compare_func == other.compare_func;
-    }
+    constexpr bool operator==(const GLSamplerParams& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const GLSamplerParams& p)
@@ -185,21 +180,21 @@ static uint8_t draw_buffer_fingerprint(GLenum value)
 
 // The fingerprint is used to quickly check if we need a new call to
 // glDrawBuffers by encoding the binding informations in a 64 bits uint value.
-static uint64_t compute_draw_buffers_fingerprint(int count, const GLenum* buffers)
+static uint64_t compute_draw_buffers_fingerprint(std::span<const GLenum> buffers)
 {
     // We reserve 15 for GL_BACK(_LEFT) and 0 for GL_NONE.
     // We reserve the top 8 bits for "count".
     static_assert(
         (int)Attachment::_ColorCount < 14 && MaxFramebufferAttachments <= 14,
         "Not enough room for draw buffers fingerprint");
-    assert(count < MaxFramebufferAttachments);
+    assert(buffers.size() < MaxFramebufferAttachments);
 
     uint64_t fingerprint = 0;
 
-    fingerprint |= (uint64_t)count << 56;
-    for (int i = 0; i < count; ++i)
+    fingerprint |= (uint64_t)buffers.size() << 56;
+    for (size_t i = 0; i < buffers.size(); ++i)
     {
-        uint8_t value = draw_buffer_fingerprint(buffers[i]);
+        const uint8_t value = draw_buffer_fingerprint(buffers[i]);
         fingerprint |= ((uint64_t)value) << (i * 4);
     }
 
@@ -511,14 +506,14 @@ struct GLInstance : public Instance
         }
     }
 
-    void update_draw_buffers(int count, const GLenum* buffers, uint64_t fingerprint)
+    void update_draw_buffers(std::span<const GLenum> buffers, uint64_t fingerprint)
     {
         GLFramebuffer* fbo = _framebuffers[_last_draw_framebuffer_handle];
         if (fbo)
         {
             if (fbo->last_draw_buffers_fingerprint != fingerprint)
             {
-                glDrawBuffers(count, buffers);
+                glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
                 GL_ERROR();
                 fbo->last_draw_buffers_fingerprint = fingerprint;
             }
@@ -530,10 +525,9 @@ struct GLInstance : public Instance
 #else
             static const GLenum back_buffers[] = {GL_BACK};
 #endif
-            static const uint64_t back_fingerprint =
-                compute_draw_buffers_fingerprint(1, back_buffers);
+            static const uint64_t back_fingerprint = compute_draw_buffers_fingerprint(back_buffers);
 
-            assert(count == 1 && buffers[0] == GL_COLOR_ATTACHMENT0);
+            assert(buffers.size() == 1 && buffers[0] == GL_COLOR_ATTACHMENT0);
 
             if (_last_default_framebuffer_draw_buffers_fingerprint != back_fingerprint)
             {
@@ -568,9 +562,9 @@ struct GLInstance : public Instance
             GL_ERROR();
             _last_draw_framebuffer_handle = 0;
 
-            static GLenum buffers = {GL_COLOR_ATTACHMENT0};
-            static auto buffers_fingerprint = compute_draw_buffers_fingerprint(1, &buffers);
-            update_draw_buffers(1, &buffers, buffers_fingerprint);
+            static const GLenum buffers[] = {GL_COLOR_ATTACHMENT0};
+            static const auto buffers_fingerprint = compute_draw_buffers_fingerprint(buffers);
+            update_draw_buffers(buffers, buffers_fingerprint);
         }
     }
 

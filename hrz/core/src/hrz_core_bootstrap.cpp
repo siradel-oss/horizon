@@ -109,10 +109,9 @@ void my_log_adapter(
     my::LogSeverity severity,
     const char* message,
     size_t message_length,
-    const char* file,
-    int line)
+    const std::source_location& location)
 {
-    hrz::log::message(prefix, (hrz::log::Severity)severity, {message, message_length}, file, line);
+    hrz::log::message(prefix, (hrz::log::Severity)severity, {message, message_length}, location);
 }
 
 class PresentTechnique
@@ -131,7 +130,7 @@ class PresentTechnique
         lm::ivec2 _padding;
     };
 
-    size_t _ubo_data_stride;
+    size_t _ubo_data_stride{};
 
     lm::uvec2 _last_screen_resolution;
     lm::ibbox2 _last_scene_viewport[hrz::SCENE_VIEW_COUNT];

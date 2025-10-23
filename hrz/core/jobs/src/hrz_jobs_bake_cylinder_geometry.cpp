@@ -284,8 +284,7 @@ hrz::JobResult run(
         // All linestrings of the current feature have been iterated, so we know the total length
         for (uint32_t i = linestring_first_instance; i < instances.size().value_or(0); ++i)
         {
-            auto& instance = instances.data().value()[i];
-            instance.line_total_length = progress;
+            instances.data().value()[i].line_total_length = progress;
         }
     }
 

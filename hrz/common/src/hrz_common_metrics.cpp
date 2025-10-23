@@ -111,21 +111,9 @@ struct Metric
     void reset_value()
     {
         std::visit(
-            [](auto& val)
-            {
-                using T = std::decay_t<decltype(val)>;
-                if constexpr (std::is_same_v<T, double>)
-                {
-                    val = 0.0;
-                }
-                else if constexpr (std::is_same_v<T, HistogramValue>)
-                {
-                    val.reset();
-                }
-                else
-                {
-                    static_assert(hrz::always_false<T>, "Unhandled type in reset_value");
-                }
+            hrz::overload{
+                [](double& val) { val = 0.0; },
+                [](HistogramValue& val) { val.reset(); },
             },
             value);
     }
@@ -246,7 +234,7 @@ struct SharedData
             order[i] = i;
         }
 
-        std::sort(
+        std::ranges::sort(
             order, order + desc->label_count,
             [&](size_t a, size_t b) -> bool
             { return strcmp(desc->label_names[a], desc->label_names[b]); });
@@ -254,15 +242,15 @@ struct SharedData
         uint64_t hash = hrz::murmur3_x64_64(desc->name);
         for (size_t i = 0; i < desc->label_count; ++i)
         {
-            size_t label_index = order[i];
-            uint64_t label_name_hash = hrz::murmur3_x64_64(desc->label_names[label_index]);
-            uint64_t label_value_hash = hrz::murmur3_x64_64(desc->label_values[label_index]);
-            uint64_t label_hash = hrz::hash_mix(label_name_hash, label_value_hash);
+            const size_t label_index = order[i];
+            const uint64_t label_name_hash = hrz::murmur3_x64_64(desc->label_names[label_index]);
+            const uint64_t label_value_hash = hrz::murmur3_x64_64(desc->label_values[label_index]);
+            const uint64_t label_hash = hrz::hash_mix(label_name_hash, label_value_hash);
             hash = hrz::hash_mix(hash, label_hash);
         }
 
         // Unlucky!
-        if (hash == 0) hash = 0x8080808080808080ull;
+        if (hash == 0) hash = 0x8080808080808080ULL;
 
         return hash;
     }
@@ -525,7 +513,7 @@ struct ThreadMetricsRegistry
                 }
 
                 auto& dst = data->_id_to_operations[pair.first];
-                std::copy(
+                std::ranges::copy(
                     storage.operations.begin(), storage.operations.end(), std::back_inserter(dst));
 
                 storage.operations.clear();

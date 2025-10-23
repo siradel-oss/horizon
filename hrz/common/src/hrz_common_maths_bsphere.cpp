@@ -226,8 +226,8 @@ void _compute_exact_bounding_sphere(
     }
 
     // Deduplicate the extremum points
-    std::sort(
-        contained.begin(), contained.end(),
+    std::ranges::sort(
+        contained,
         [](const lm::Vector<T, 3>& a, const lm::Vector<T, 3>& b) -> bool
         {
             if (a.x != b.x) return a.x < b.x;
@@ -235,10 +235,11 @@ void _compute_exact_bounding_sphere(
             return a.z < b.z;
         });
 
-    auto unique_it = std::unique(
-        contained.begin(), contained.end(),
+    auto [unique_it, _] = std::ranges::unique(
+        contained,
         [](const lm::Vector<T, 3>& a, const lm::Vector<T, 3>& b) -> bool { return a == b; });
-    contained.set_size(std::distance(contained.begin(), unique_it));
+
+    contained.set_size((size_t)std::distance(contained.begin(), unique_it));
 
     if (contained.size() <= 4)
     {

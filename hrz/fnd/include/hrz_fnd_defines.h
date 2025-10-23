@@ -34,3 +34,9 @@
 
 #define HRZ_CONCAT2(A, B) A##B
 #define HRZ_CONCAT(A, B) HRZ_CONCAT2(A, B)
+
+#if defined(_MSC_VER)
+#    define HRZ_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#else
+#    define HRZ_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif

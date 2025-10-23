@@ -47,9 +47,9 @@ static const Comparison METADATA_COMPARISONS[] = {
     {"contains", std::nullopt,
      [](std::string_view a, std::string_view b) { return a.find(b) != std::string_view::npos; }},
     {"starts with", std::nullopt,
-     [](std::string_view a, std::string_view b) { return hrz::str::starts_with(a, b); }},
+     [](std::string_view a, std::string_view b) { return a.starts_with(b); }},
     {"ends with", std::nullopt,
-     [](std::string_view a, std::string_view b) { return hrz::str::ends_with(a, b); }}};
+     [](std::string_view a, std::string_view b) { return a.ends_with(b); }}};
 
 } // namespace
 

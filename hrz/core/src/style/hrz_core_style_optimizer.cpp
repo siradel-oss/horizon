@@ -23,7 +23,7 @@ using namespace style;
 struct OptimizerImpl : public Optimizer
 {
     OperatorEvaluator::Context operator_evaluator_context;
-    OperatorEvaluator operator_evaluator;
+    HRZ_NO_UNIQUE_ADDRESS OperatorEvaluator operator_evaluator;
 
     explicit OptimizerImpl(std::span<const hrz::Palette> palettes)
     {

@@ -111,8 +111,8 @@ PageTable::Address PageTable::get_address_for_tile(TileCoords tile) const
 
 void PageTable::sort_pages()
 {
-    std::sort(
-        std::begin(_page_order), std::end(_page_order),
+    std::ranges::sort(
+        _page_order,
         [&](const Address& a, const Address& b)
         { return _pages[page_id(a)].last_touch_time > _pages[page_id(b)].last_touch_time; });
 }
@@ -123,11 +123,11 @@ TileCoords PageTable::recycle_one_page()
 
     sort_pages();
 
-    Address oldest_page_address = _page_order.back();
+    const Address oldest_page_address = _page_order.back();
     _page_order.pop_back();
     _free.push_back(oldest_page_address);
 
-    uint32_t pid = page_id(oldest_page_address);
+    const uint32_t pid = page_id(oldest_page_address);
     _pages[pid].occupied = false;
     _tile_addresses.erase(_pages[pid].tile);
     return _pages[pid].tile;

@@ -112,18 +112,6 @@ std::pair<std::string_view, std::string_view> split(std::string_view str, char c
     }
 }
 
-bool starts_with(std::string_view str, std::string_view start)
-{
-    if (start.size() > str.size()) return false;
-    return str.substr(0, start.size()) == start;
-}
-
-bool ends_with(std::string_view str, std::string_view end)
-{
-    if (end.size() > str.size()) return false;
-    return str.substr(str.size() - end.size()) == end;
-}
-
 bool iequals(std::string_view a, std::string_view b)
 {
     if (a.size() != b.size()) return false;
@@ -446,12 +434,12 @@ std::string sanitize_named_fmt_arguments(
         start = fmt_string.find('{', start);
         if (start == std::string::npos) break;
 
-        size_t end = fmt_string.find('}', start);
+        const size_t end = fmt_string.find('}', start);
         if (end == std::string::npos) break;
 
         auto substitution = std::string_view(fmt_string).substr(start + 1, end - start - 1);
 
-        if (std::find(valid_args.begin(), valid_args.end(), substitution) == valid_args.end())
+        if (std::ranges::find(valid_args, substitution) == valid_args.end())
         {
             fmt_string.erase(start, end - start + 1);
         }

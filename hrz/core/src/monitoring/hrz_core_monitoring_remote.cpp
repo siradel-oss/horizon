@@ -13,8 +13,8 @@
 #include <hrz_fnd_time.h>
 #include <hrz_monitoring.h>
 
+#include <fmt/chrono.h>
 #include <string.h>
-#include <time.h>
 #include <ws_client.h>
 
 #include <string>
@@ -28,21 +28,13 @@ using PbArena = google::protobuf::Arena;
 
 namespace
 {
+
 std::string generate_session_id()
 {
-    time_t since_epoch = time(nullptr);
-    tm now;
-#if HRZ_WINDOWS
-    gmtime_s(&now, &since_epoch);
-#else
-    gmtime_r(&since_epoch, &now);
-#endif
-
-    char id_buffer[16];
-    strftime(id_buffer, 16, "%H%M%S%d%m%y", &now);
-
-    return std::string(id_buffer);
+    auto now = std::chrono::system_clock::now();
+    return fmt::format("{:%H%M%S%d%m%y}", now);
 }
+
 } // namespace
 
 namespace hrz

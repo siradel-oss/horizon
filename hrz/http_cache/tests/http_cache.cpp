@@ -195,7 +195,7 @@ public:
         response.headers.set_header("Date", _clock->now().get_imf_fixdate());
         response.data_dst = std::nullopt;
 
-        if (str::starts_with(url, "https://horizon.tests/"))
+        if (url.starts_with("https://horizon.tests/"))
         {
             handle_request(url.substr(21), headers, response);
         }

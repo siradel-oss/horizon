@@ -74,9 +74,9 @@ bool init_crs_from_srid(pl_Crs* crs, std::string_view srid_string)
 
 bool has_known_authority(std::string_view descriptor)
 {
-    return hrz::str::starts_with(descriptor, "EPSG:") || hrz::str::starts_with(descriptor, "OGC:")
-        || hrz::str::starts_with(descriptor, "CRS:") || hrz::str::starts_with(descriptor, "OSGEO:")
-        || hrz::str::starts_with(descriptor, "urn:ogc:def:crs:");
+    return descriptor.starts_with("EPSG:") || descriptor.starts_with("OGC:")
+        || descriptor.starts_with("CRS:") || descriptor.starts_with("OSGEO:")
+        || descriptor.starts_with("urn:ogc:def:crs:");
 }
 
 } // namespace

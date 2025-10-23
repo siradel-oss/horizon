@@ -47,7 +47,8 @@ private:
         register_blob_metadata(allocator, "type"_ss, "blob array"_ss);
     }
 
-    BlobArray(blobs::BlobHandle blob) : _blob(std::move(blob)), _size(_blob.data_size() / sizeof(T))
+    explicit BlobArray(blobs::BlobHandle blob) :
+        _blob(std::move(blob)), _size(_blob.data_size() / sizeof(T))
     {
         assert(_blob.is_valid());
         assert(_blob.check_integrity());

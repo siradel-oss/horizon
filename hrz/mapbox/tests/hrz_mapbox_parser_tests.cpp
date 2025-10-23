@@ -705,11 +705,11 @@ TEST(MapboxTranslation, parse_vector_shared_source)
         else if (layer.has_vector_tiles())
         {
             const auto& vtl = layer.vector_tiles();
-            if (hrz::str::starts_with(layer.name(), "hk_mvt - HK_SAMPLE_3857"))
+            if (layer.name().starts_with("hk_mvt - HK_SAMPLE_3857"))
             {
                 EXPECT_EQ(vtl.source().vector_data_layer_id(), 1);
             }
-            else if (hrz::str::starts_with(layer.name(), "hk_mvt - HK_SAMPLE_4326"))
+            else if (layer.name().starts_with("hk_mvt - HK_SAMPLE_4326"))
             {
                 EXPECT_EQ(vtl.source().vector_data_layer_id(), 2);
             }
@@ -1946,16 +1946,16 @@ TEST(MapboxTranslation, parse_vector_symbol_rotation_alignment)
                     hrz_proto::SymbolElementType::ANCHOR_SYMBOL_ELEMENT);
                 const auto& anchor = symbol.root_element().anchor();
 
-                if (hrz::str::starts_with(repr.name(), "auto_alignment_with_point_placement")
-                    || hrz::str::starts_with(repr.name(), "viewport_alignment"))
+                if (repr.name().starts_with("auto_alignment_with_point_placement")
+                    || repr.name().starts_with("viewport_alignment"))
                 {
                     EXPECT_EQ(
                         anchor.x_axis_alignment(),
                         hrz_proto::SymbolAxisAlignment::AXIS_ALIGNMENT_SCREEN);
                 }
                 else if (
-                    hrz::str::starts_with(repr.name(), "auto_alignment_with_line_placement")
-                    || hrz::str::starts_with(repr.name(), "map_alignment"))
+                    repr.name().starts_with("auto_alignment_with_line_placement")
+                    || repr.name().starts_with("map_alignment"))
                 {
                     EXPECT_EQ(
                         anchor.x_axis_alignment(),
@@ -2000,18 +2000,18 @@ TEST(MapboxTranslation, parse_vector_symbol_pitch_alignment)
                     hrz_proto::SymbolElementType::ANCHOR_SYMBOL_ELEMENT);
                 const auto& anchor = symbol.root_element().anchor();
 
-                if (hrz::str::starts_with(repr.name(), "auto_alignment_with_point_placement")
-                    || hrz::str::starts_with(repr.name(), "auto_alignment_with_line_placement"))
+                if (repr.name().starts_with("auto_alignment_with_point_placement")
+                    || repr.name().starts_with("auto_alignment_with_line_placement"))
                 {
                     EXPECT_EQ(anchor.x_axis_alignment(), anchor.y_axis_alignment());
                 }
-                else if (hrz::str::starts_with(repr.name(), "map_alignment"))
+                else if (repr.name().starts_with("map_alignment"))
                 {
                     EXPECT_EQ(
                         anchor.y_axis_alignment(),
                         hrz_proto::SymbolAxisAlignment::AXIS_ALIGNMENT_WORLD);
                 }
-                else if (hrz::str::starts_with(repr.name(), "viewport_alignment"))
+                else if (repr.name().starts_with("viewport_alignment"))
                 {
                     EXPECT_EQ(
                         anchor.y_axis_alignment(),

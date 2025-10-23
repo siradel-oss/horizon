@@ -91,8 +91,8 @@ class MaterialsManager
 
     std::optional<MaterialHandle> find_material_by_name(std::string_view name)
     {
-        auto it = std::find_if(
-            _materials.begin(), _materials.end(),
+        auto it = std::ranges::find_if(
+            _materials,
             [&](const MaterialHandle handle)
             {
                 auto* mat = _materials_pool.get_object(handle);

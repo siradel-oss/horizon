@@ -13,10 +13,7 @@ struct FullObjectId
     uint64_t layer_id;
     uint64_t object_id;
 
-    bool operator==(const FullObjectId& id) const
-    {
-        return id.layer_id == layer_id && id.object_id == object_id;
-    }
+    constexpr bool operator==(const FullObjectId& id) const = default;
 };
 } // namespace
 

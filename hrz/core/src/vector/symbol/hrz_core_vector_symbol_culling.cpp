@@ -123,7 +123,7 @@ struct BitsetTexture
     {
         if (lm::is_valid(ones_bbox))
         {
-            std::fill(bits.begin(), bits.end(), 0);
+            std::ranges::fill(bits, 0);
             dirty_bbox = ones_bbox;
             ones_bbox = lm::ubbox2::invalid();
             return true;
@@ -133,7 +133,7 @@ struct BitsetTexture
 
     void all_ones()
     {
-        std::fill(bits.begin(), bits.end(), 0xffffffffu);
+        std::ranges::fill(bits, 0xffffffffU);
         ones_bbox = lm::ubbox2{{0, 0}, {texture_size.x - 1, texture_size.y - 1}};
         dirty_bbox = ones_bbox;
     }
@@ -163,8 +163,8 @@ struct SymbolCullingSystem
             const hrz::monitoring::ResourceOwner& resource_owner,
             std::initializer_list<std::pair<hrz::MetadataString, hrz::MetadataString>> metadata) :
             group_info{std::move(group_info_)},
-            anchor_spans{anchor_spans_},
-            anchors{anchors_},
+            anchor_spans{std::move(anchor_spans_)},
+            anchors{std::move(anchors_)},
             bitset_textures{
                 BitsetTexture(anchors.size(), resource_owner, metadata),
                 BitsetTexture(anchors.size(), resource_owner, metadata)}

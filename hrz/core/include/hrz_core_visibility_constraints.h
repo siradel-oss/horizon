@@ -24,15 +24,7 @@ struct MultiviewVisibilityConstraints
     uint32_t active_views = 0;
     uint32_t satisfied_in = 0;
 
-    constexpr bool operator==(const MultiviewVisibilityConstraints& other) const
-    {
-        return active_views == other.active_views && satisfied_in == other.satisfied_in;
-    }
-
-    constexpr bool operator!=(const MultiviewVisibilityConstraints& other) const
-    {
-        return active_views != other.active_views || satisfied_in != other.satisfied_in;
-    }
+    constexpr bool operator==(const MultiviewVisibilityConstraints& other) const = default;
 };
 
 MultiviewVisibilityConstraints are_visibility_constraints_satisfied(

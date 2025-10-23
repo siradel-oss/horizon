@@ -288,8 +288,8 @@ struct QueueImpl
         ResourceBinder* rb,
         const void* user_data)
     {
-        BinMask mask = (BinMask)1 << bin;
-        Renderer::ViewMask view_mask = 1u << view_id;
+        const BinMask mask = (BinMask)1 << bin;
+        const Renderer::ViewMask view_mask = 1U << view_id;
 
         const bool use_depth = depth_sort_mode != my::DepthSortMode::NoSort;
         const bool invert_depth = depth_sort_mode == my::DepthSortMode::BackToFront;
@@ -311,8 +311,8 @@ struct QueueImpl
             }
         }
 
-        std::sort(
-            _sort_headers.begin(), _sort_headers.end(),
+        std::ranges::sort(
+            _sort_headers,
             [](const SortHeader& a, const SortHeader& b) -> bool { return a.key < b.key; });
 
         for (const SortHeader& it : _sort_headers)

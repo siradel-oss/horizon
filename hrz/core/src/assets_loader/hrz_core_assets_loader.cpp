@@ -59,10 +59,7 @@ struct ChannelRequestId
     uint64_t channel_id;
     uint64_t request_id;
 
-    bool operator==(const ChannelRequestId& other) const
-    {
-        return other.channel_id == channel_id && other.request_id == request_id;
-    }
+    constexpr bool operator==(const ChannelRequestId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const ChannelRequestId& request)
@@ -416,7 +413,7 @@ Ticket begin(
     r->channel_request_id = channel_request_id;
     r->url = std::string(url);
 
-    if (hrz::str::starts_with(url, "client:"))
+    if (url.starts_with("client:"))
     {
         r->protocol_data.emplace<Request::ClientData>();
     }
@@ -481,7 +478,7 @@ Ticket reset_priority(AssetsLoader* l, Ticket t, uint32_t priority)
     if (!l->requests_pool.is_valid(pt.handle)) return t;
 
     auto& q = l->queues[pt.queue];
-    auto it = std::find(std::begin(q), std::end(q), pt);
+    auto it = std::ranges::find(q, pt);
     if (it != std::end(q))
     {
         // The request is still in the queue.
@@ -616,13 +613,11 @@ void work_message_queues(AssetsLoader* al)
         auto channel_id = it.first;
         auto& channel = it.second;
 
-        for (auto& message : channel.receive())
+        for (auto& generic_message : channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, messages::LoadRequest>)
+                hrz::overload{
+                    [&](const messages::LoadRequest& message)
                     {
                         ChannelRequestId channel_request_id{channel_id, message.request_id};
                         al->channel_tickets.insert(
@@ -631,34 +626,28 @@ void work_message_queues(AssetsLoader* al)
                                  al, message.url, message.range_start, message.range_size,
                                  message.headers, message.queue, message.priority,
                                  message.resource_owner, {channel_request_id})});
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::ResetRequestPriority>)
+                    },
+                    [&](const messages::ResetRequestPriority& message)
                     {
                         auto it = al->channel_tickets.find({channel_id, message.request_id});
                         if (it != al->channel_tickets.end())
                         {
                             reset_priority(al, it->second, message.priority);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::CancelRequest>)
+                    },
+                    [&](const messages::CancelRequest& message)
                     {
                         auto it = al->channel_tickets.find({channel_id, message.request_id});
                         if (it != al->channel_tickets.end())
                         {
                             end(al, it->second);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::CreateChannel>)
-                    {
-                        channel.send(messages::NewChannel{
-                            message.request_id, std::move(create_channel(al))});
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
+                    [&](const messages::CreateChannel& message) {
+                        channel.send(messages::NewChannel{message.request_id, create_channel(al)});
+                    },
                 },
-                message);
+                generic_message);
         }
     }
 }
@@ -679,7 +668,7 @@ void work_ended_requests(AssetsLoader* al, BlobAllocator* ba)
         {
             set_request_status(al, pt.handle, req, RequestStatus::Canceled);
             auto& q = al->queues[pt.queue];
-            auto it = std::find(std::begin(q), std::end(q), pt);
+            auto it = std::ranges::find(q, pt);
             if (it != std::end(q))
             {
                 q.erase(it);
@@ -732,8 +721,8 @@ void work_sort_queues(AssetsLoader* al)
     {
         for (auto& q : al->queues)
         {
-            std::sort(
-                q.begin(), q.end(),
+            std::ranges::sort(
+                q,
                 [](const InnerTicket& a, const InnerTicket& b) { return a.priority < b.priority; });
         }
     }
@@ -774,7 +763,7 @@ void work_emit_requests(AssetsLoader* al, ClientMessageQueue* mq)
             message.set_range_start(req->range_start);
             message.set_range_size(req->range_size);
             // Remove "client:" from the url when sending it to the client
-            assert(str::starts_with(req->url, "client:"));
+            assert(req->url.starts_with("client:"));
             message.set_url(req->url.substr(7));
             client_message_queue::enqueue_asset_request_message(mq, std::move(message));
 

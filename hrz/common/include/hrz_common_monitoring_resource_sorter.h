@@ -29,8 +29,8 @@ class ResourceSorter
     {
         HRZ_SCOPED_SAMPLE("monitoring resource sorter sort");
 
-        std::sort(
-            handles_sorted_by_system.begin(), handles_sorted_by_system.end(),
+        std::ranges::sort(
+            handles_sorted_by_system,
             [&](Handle handle_a, Handle handle_b)
             {
                 const Resource& res_a = get_resource(handle_a);
@@ -51,8 +51,8 @@ class ResourceSorter
                 return backup_sort(res_a, res_b);
             });
 
-        std::sort(
-            handles_sorted_by_layer.begin(), handles_sorted_by_layer.end(),
+        std::ranges::sort(
+            handles_sorted_by_layer,
             [&](Handle handle_a, Handle handle_b)
             {
                 const Resource& res_a = get_resource(handle_a);
@@ -108,11 +108,9 @@ public:
 
         auto remove_unregistered_handles = [&](std::vector<Handle>& handles)
         {
-            handles.erase(
-                std::remove_if(
-                    handles.begin(), handles.end(),
-                    [&](uint64_t handle) { return newly_unregistered_handles.count(handle) > 0; }),
-                handles.end());
+            std::erase_if(
+                handles,
+                [&](Handle handle) { return newly_unregistered_handles.contains(handle); });
         };
 
         remove_unregistered_handles(handles_sorted_by_system);

@@ -4,6 +4,8 @@
 #    include <emscripten/emscripten.h>
 #endif
 
+#include <inttypes.h>
+
 #include <iterator>
 
 namespace my
@@ -54,8 +56,7 @@ void log_message(
     const char* prefix,
     LogSeverity severity,
     const std::string& message,
-    const char* file,
-    int line)
+    const std::source_location& location)
 {
     if (severity < g_log_filter_level)
     {
@@ -64,7 +65,7 @@ void log_message(
 
     if (g_log_function != nullptr)
     {
-        g_log_function(prefix, severity, message.c_str(), message.size(), file, line);
+        g_log_function(prefix, severity, message.c_str(), message.size(), location);
     }
     else
     {
@@ -72,10 +73,12 @@ void log_message(
         std::string str;
         fmt::format_to_n(
             std::back_inserter(str), MAX_MESSAGE_LENGTH, "[{:^7}] ({}:{}) {}",
-            severity_to_string(severity), file, line, message);
+            severity_to_string(severity), location.file_name(), location.line(), message);
         emscripten_log(EM_LOG_CONSOLE | severity_to_em_flag(severity), str.c_str());
 #else
-        printf("[%s] (%s:%d) %s\n", severity_to_string(severity), file, line, message.c_str());
+        printf(
+            "[%s] (%s:%" PRIuLEAST32 ") %s\n", severity_to_string(severity), location.file_name(),
+            location.line(), message.c_str());
         fflush(stdout);
 #endif
     }

@@ -32,14 +32,14 @@ public:
     {
         uint64_t o;
 
-        constexpr bool operator==(const Handle& other) const { return o == other.o; }
+        constexpr bool operator==(const Handle& other) const = default;
     };
 
     struct ConfigH
     {
         uint64_t o;
 
-        constexpr bool operator==(const ConfigH& other) const { return o == other.o; }
+        constexpr bool operator==(const ConfigH& other) const = default;
     };
 
     enum Status

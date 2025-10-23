@@ -277,7 +277,7 @@ const std::string IMAGE_FORMATS[] = {"mixed", "jpgpng", "jpg",  "png32",
 
 bool format_supports_transparency(std::string_view format)
 {
-    return hrz::str::starts_with(format, "png") || hrz::str::ends_with(format, "png");
+    return format.starts_with("png") || format.ends_with("png");
 }
 } // namespace
 

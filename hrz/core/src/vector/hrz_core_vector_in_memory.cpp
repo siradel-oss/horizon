@@ -163,10 +163,7 @@ struct RequestId
     uint64_t channel_id;
     uint64_t request_id;
 
-    bool operator==(const RequestId& other) const
-    {
-        return other.channel_id == channel_id && other.request_id == request_id;
-    }
+    constexpr bool operator==(const RequestId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const RequestId& request)
@@ -1252,13 +1249,11 @@ void work(
         auto channel_id = it.first;
         auto& channel = it.second;
 
-        for (auto& message : channel.receive())
+        for (auto& generic_message : channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, messages::TileDataRequest>)
+                hrz::overload{
+                    [&](const messages::TileDataRequest& message)
                     {
                         auto request_id = RequestId{channel_id, message.request_id};
 
@@ -1274,8 +1269,8 @@ void work(
                         request_tile_data(
                             system, request_id, message.in_memory_layer_id, message.tile_coords,
                             message.subscribe_to_updates);
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::FeatureDataRequest>)
+                    },
+                    [&](const messages::FeatureDataRequest& message)
                     {
                         auto request_id = RequestId{channel_id, message.request_id};
 
@@ -1291,8 +1286,8 @@ void work(
                         request_feature_data(
                             system, request_id, message.in_memory_layer_id, message.feature_ids,
                             message.subscribe_to_updates);
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::ReleaseDataRequest>)
+                    },
+                    [&](const messages::ReleaseDataRequest& message)
                     {
                         auto request_id = RequestId{channel_id, message.request_id};
 
@@ -1306,13 +1301,8 @@ void work(
                             HRZ_LOG_WARNING(
                                 "No request with ID {}-{}", channel_id, message.request_id);
                         }
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
-                },
-                message);
+                    }},
+                generic_message);
         }
     }
 
@@ -1597,7 +1587,8 @@ void work(
             }
 
             // Ordered so that tiles with the lowest LODs come first.
-            std::set<TileCoords> tiles_to_regenerate_by_coords;
+            std::set<TileCoords, decltype(&tile_coords_ordering_lod_y_x)>
+                tiles_to_regenerate_by_coords(&tile_coords_ordering_lod_y_x);
 
             for (const auto& it : layer->tiles_by_coords)
             {
@@ -1886,14 +1877,14 @@ void work(
 
                 // @Safety the lifetime of the temporary blob array data object is extended until
                 // the end of the copy call.
-                std::copy(
-                    tile->positions.begin(), tile->positions.end(),
+                std::ranges::copy(
+                    tile->positions,
                     tracker.tile_data.geometry.points.get_mutable_data().unsafe_data());
 
                 // @Safety the lifetime of the temporary blob array data object is extended until
                 // the end of the copy call.
-                std::copy(
-                    tile->sizes.begin(), tile->sizes.end(),
+                std::ranges::copy(
+                    tile->sizes,
                     tracker.tile_data.geometry.linestring_sizes.get_mutable_data().unsafe_data());
             }
 

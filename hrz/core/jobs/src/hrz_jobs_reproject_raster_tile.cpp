@@ -32,10 +32,7 @@ struct SignedTileCoords
     int32_t x, y;
     uint8_t lod;
 
-    bool operator==(const SignedTileCoords& t) const
-    {
-        return x == t.x && y == t.y && lod == t.lod;
-    }
+    constexpr bool operator==(const SignedTileCoords& t) const = default;
 
     SignedTileCoords to_parent_tile() const
     {

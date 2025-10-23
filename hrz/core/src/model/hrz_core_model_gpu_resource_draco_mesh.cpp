@@ -65,7 +65,7 @@ void GpuDracoMeshResource::work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler
     {
         assert(blob_handle.has_value());
 
-        auto blob_status = bl->get_status(blob_handle.value(), NullCfg);
+        const auto blob_status = bl->get_status(blob_handle.value(), NullCfg);
         switch (blob_status)
         {
             case BlobLibrary::Status::Loading: break;
@@ -73,11 +73,11 @@ void GpuDracoMeshResource::work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler
             {
                 uri = bl->get_uri(blob_handle.value(), NullCfg);
 
-                auto [blob, mime_type] = bl->get_blob(blob_handle.value(), NullCfg);
-                auto sub_blob_opt =
-                    blobs::make_sub_blob(ba, blob, blob_byte_offset, blob_byte_length);
+                const auto [blob, mime_type] = bl->get_blob(blob_handle.value(), NullCfg);
 
-                if (sub_blob_opt.has_value())
+                if (auto sub_blob_opt =
+                        blobs::make_sub_blob(ba, blob, blob_byte_offset, blob_byte_length);
+                    sub_blob_opt.has_value())
                 {
                     decompression_ticket =
                         hrz_jobs::add_job_decompress_draco_mesh(js, sub_blob_opt.value(), owner);

@@ -34,14 +34,14 @@ constexpr T hash_mix(T x_high, T x_low)
 
 inline uint64_t murmur3_x64_64(std::span<const std::byte> s)
 {
-    uint128 res = murmur3_x64_128(s);
-    return hrz::hash_mix(low(res), high(res));
+    const uint128 res = murmur3_x64_128(s);
+    return hrz::hash_mix(res.low, res.high);
 }
 
 inline uint64_t murmur3_x64_64(std::string_view s)
 {
-    uint128 res = murmur3_x64_128(s);
-    return hrz::hash_mix(low(res), high(res));
+    const uint128 res = murmur3_x64_128(s);
+    return hrz::hash_mix(res.low, res.high);
 }
 
 // Mixes multiples hashes together __in place__.
@@ -93,7 +93,7 @@ struct hash<hrz::uint128>
     size_t operator()(const hrz::uint128& k) const
     {
         auto h = hash<uint64_t>{};
-        return hrz::hash_mix(h(hrz::low(k)), h(hrz::high(k)));
+        return hrz::hash_mix(h(k.low), h(k.high));
     }
 };
 

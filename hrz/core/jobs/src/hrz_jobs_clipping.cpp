@@ -555,7 +555,7 @@ void clip_convex_polygon(
                 // Compute intersected here
                 const auto t = hs.intersect(prev.first, curr.first);
                 auto new_pos = lm::mix(prev.first, curr.first, t);
-                declare_point(new_pos, prev.second, curr.second, t);
+                declare_point(new_pos, prev.second, curr.second, (float)t);
                 points_out->emplace_back(new_pos, next_index++);
             }
 

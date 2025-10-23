@@ -459,8 +459,8 @@ void RasterMergeGroup::update_requested_tiles(
     {
         _sorted_tiles.push_back(&pair.second);
     }
-    std::sort(
-        _sorted_tiles.begin(), _sorted_tiles.end(),
+    std::ranges::sort(
+        _sorted_tiles,
         [](const ComposedTile* t1, const ComposedTile* t2)
         {
             return tile_usage_comp(
@@ -983,9 +983,8 @@ void RasterMergeGroup::work(
                             tile_raster.reprojected_tiles.push_back(std::move(rt));
                         }
 
-                        std::sort(
-                            std::begin(tile_raster.reprojected_tiles),
-                            std::end(tile_raster.reprojected_tiles),
+                        std::ranges::sort(
+                            tile_raster.reprojected_tiles,
                             [](const ComposedTile::ReprojectedTile& p0,
                                const ComposedTile::ReprojectedTile& p1)
                             { return p0.coords.lod < p1.coords.lod; });
@@ -1877,8 +1876,8 @@ void RasterMergeGroup::dev_ui(
                 sorted_coords.push_back(pair.first);
             }
 
-            std::sort(
-                sorted_coords.begin(), sorted_coords.end(),
+            std::ranges::sort(
+                sorted_coords,
                 [](const hrz::TileCoords& a, const hrz::TileCoords& b)
                 {
                     if (a.lod == b.lod)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <stdint.h>
 
 // We cannot use absl::uint128 because it's over-aligned in the Clang build
@@ -12,32 +13,15 @@ struct uint128
     uint64_t low;
     uint64_t high;
 
-    constexpr bool operator==(const uint128& other) const
-    {
-        return low == other.low && high == other.high;
-    }
+    friend constexpr bool operator==(uint128 a, uint128 b) = default;
+    friend constexpr bool operator!=(uint128 a, uint128 b) = default;
 
-    constexpr bool operator!=(const uint128& other) const
+    friend constexpr std::strong_ordering operator<=>(uint128 a, uint128 b)
     {
-        return low != other.low || high != other.high;
-    }
-
-    constexpr bool operator<(const uint128& other) const
-    {
-        if (high != other.high)
-            return high < other.high;
+        if (a.high != b.high)
+            return a.high <=> b.high;
         else
-            return low < other.low;
+            return a.low <=> b.low;
     }
 };
-
-static constexpr uint64_t high(uint128 x)
-{
-    return x.high;
-}
-
-static constexpr uint64_t low(uint128 x)
-{
-    return x.low;
-}
 } // namespace hrz

@@ -414,13 +414,7 @@ public:
         return compute_screen_space_size(geometric_error, distance) / max_screen_space_error;
     }
 
-    bool operator==(const ScreenSpaceError& other) const
-    {
-        return _sse_denominator == other._sse_denominator
-            && _viewport_height == other._viewport_height;
-    }
-
-    bool operator!=(const ScreenSpaceError& other) const { return !(*this == other); }
+    constexpr bool operator==(const ScreenSpaceError& other) const = default;
 };
 
 struct LightingSettings
@@ -429,13 +423,7 @@ struct LightingSettings
     bool cast_shadows{};
     bool receive_shadows{};
 
-    constexpr bool operator==(const LightingSettings& other) const
-    {
-        return lighting_enabled == other.lighting_enabled && cast_shadows == other.cast_shadows
-            && receive_shadows == other.receive_shadows;
-    }
-
-    constexpr bool operator!=(const LightingSettings& other) const { return !(*this == other); }
+    constexpr bool operator==(const LightingSettings& other) const = default;
 };
 
 static LightingSettings from_proto(const hrz_proto::LightingSettings& proto)
@@ -524,22 +512,11 @@ struct VertexInputBuilder
         my::VertexRate rate)
     {
         std::visit(
-            [this, index, format, rate](const auto& arg)
-            {
-                using ArgType = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<ArgType, BlobArray<T>>)
-                {
-                    add_input_stream(index, arg, format, rate);
-                }
-                else if constexpr (std::is_same_v<ArgType, T>)
-                {
-                    add_input_stream(index, std::span<const T>(&arg, 1), format, rate);
-                }
-                else
-                {
-                    static_assert(hrz::always_false<ArgType>, "Unexpected type");
-                }
-            },
+            hrz::overload{
+                [this, index, format, rate](const BlobArray<T>& arg)
+                { add_input_stream(index, arg, format, rate); },
+                [this, index, format, rate](const T& arg)
+                { add_input_stream(index, std::span<const T>(&arg, 1), format, rate); }},
             data);
     }
 
@@ -551,22 +528,11 @@ struct VertexInputBuilder
         my::VertexRate rate)
     {
         std::visit(
-            [this, index, format, rate](const auto& arg)
-            {
-                using ArgType = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<ArgType, blobs::BlobHandle>)
-                {
-                    add_input_stream(index, arg, format, rate);
-                }
-                else if constexpr (std::is_same_v<ArgType, T>)
-                {
-                    add_input_stream(index, std::span<const T>(&arg, 1), format, rate);
-                }
-                else
-                {
-                    static_assert(hrz::always_false<ArgType>, "Unexpected type");
-                }
-            },
+            hrz::overload{
+                [this, index, format, rate](const blobs::BlobHandle& arg)
+                { add_input_stream(index, arg, format, rate); },
+                [this, index, format, rate](const T& arg)
+                { add_input_stream(index, std::span<const T>(&arg, 1), format, rate); }},
             data);
     }
 

@@ -73,6 +73,15 @@ void clip_triangle(
     hrz::function_ref<Index(const lm::Vector<T, 2>& pos, const lm::Vector<T, 3>& weight)>
         append_fn);
 
+extern template void clip_triangle(
+    hrz::ArrayView<const lm::dvec2> points,
+    uint32_t i0,
+    uint32_t i1,
+    uint32_t i2,
+    const lm::dbbox2& bbox,
+    hrz::function_ref<void(uint32_t i0, uint32_t i1, uint32_t i2)> rasterize_fn,
+    hrz::function_ref<uint32_t(const lm::dvec2&, const lm::dvec3&)> append_fn);
+
 /**
  * Clips a segment to a bbox and calls the rasterize function with the
  * clipped points and the interpolation factors [0..1], which can be used
@@ -84,6 +93,20 @@ void clip_segment(
     lm::Vector<T, 2> p1,
     const lm::Bbox<T, 2>& bbox,
     hrz::function_ref<void(const lm::Vector<T, 2>& p0, const lm::Vector<T, 2>& p1, T t0, T t1)>
+        rasterize_fn);
+
+extern template void clip_segment(
+    lm::vec2 p0,
+    lm::vec2 p1,
+    const lm::bbox2& bbox,
+    hrz::function_ref<void(const lm::vec2& p0, const lm::vec2& p1, float attr0, float attr1)>
+        rasterize_fn);
+
+extern template void clip_segment(
+    lm::dvec2 p0,
+    lm::dvec2 p1,
+    const lm::dbbox2& bbox,
+    hrz::function_ref<void(const lm::dvec2& p0, const lm::dvec2& p1, double attr0, double attr1)>
         rasterize_fn);
 
 /**
@@ -102,5 +125,17 @@ void clip_convex_polygon(
     const lm::Bbox<T, 2>& bbox,
     hrz::function_ref<void(const lm::Vector<T, 2>&, int, int, float)> declare_point,
     hrz::function_ref<void(std::span<const std::pair<lm::Vector<T, 2>, int>>)> done);
+
+extern template void clip_convex_polygon(
+    std::span<const lm::vec2> pts,
+    const lm::bbox2& bbox,
+    hrz::function_ref<void(const lm::vec2&, int, int, float)> declare_point,
+    hrz::function_ref<void(std::span<const std::pair<lm::vec2, int>>)> done);
+
+extern template void clip_convex_polygon(
+    std::span<const lm::dvec2> pts,
+    const lm::dbbox2& bbox,
+    hrz::function_ref<void(const lm::dvec2&, int, int, float)> declare_point,
+    hrz::function_ref<void(std::span<const std::pair<lm::dvec2, int>>)> done);
 
 } // namespace hrz

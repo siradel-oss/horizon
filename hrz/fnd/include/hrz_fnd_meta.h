@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <type_traits>
 
 namespace hrz
@@ -37,10 +38,27 @@ struct empty
 template<typename T>
 using devoid_t = select_t<T, const empty, std::is_void_v<T>>;
 
-// Used to avoid issues with static_false in constexpr contexts.
-// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2593r0.html
-// @Todo(C++23) Shouldn't be needed.
-template<typename T>
-inline constexpr bool always_false = false;
+/**
+ * Helper to create overloaded lambdas for std::visit.
+ * Usage:
+ *     auto visitor = hrz::overload{
+ *         [](TypeA a) { ... },
+ *         [](TypeB b) { ... },
+ *         ...
+ *     };
+ *     std::visit(visitor, variant);
+ */
+
+template<typename... Ts>
+struct overload : Ts...
+{
+    using Ts::operator()...;
+};
+
+template<typename... Ts>
+overload(Ts...) -> overload<Ts...>;
+
+template<typename T, typename... Ts>
+concept is_one_of = (std::same_as<T, Ts> || ...);
 
 } // namespace hrz

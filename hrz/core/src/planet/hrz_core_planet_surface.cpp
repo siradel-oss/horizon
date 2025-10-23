@@ -104,10 +104,7 @@ struct TerrainVersionSubscription
     uint64_t channel_id;
     uint64_t subscription_id;
 
-    bool operator==(const TerrainVersionSubscription& other) const
-    {
-        return other.channel_id == channel_id && other.subscription_id == subscription_id;
-    }
+    constexpr bool operator==(const TerrainVersionSubscription& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TerrainVersionSubscription& update)
@@ -335,7 +332,7 @@ struct PlanetSurface
         for (unsigned int i = 0; i < imagery_merge_group_count; i++)
         {
             img_rasters.add_group(
-                render, clipmap_params, std::string("imagery raster group ") + std::to_string(i),
+                render, clipmap_params, fmt::format("imagery raster group {}", i),
                 compress_atlas_textures, platform_info, my_instance_info);
         }
 
@@ -388,16 +385,12 @@ struct PlanetSurface
             auto channel_id = it.first;
             auto& channel = it.second;
 
-            for (auto& message : channel.receive())
+            for (auto& generic_message : channel.receive())
             {
                 std::visit(
-                    [&](auto& message)
-                    {
-                        using MessageType = std::decay_t<decltype(message)>;
-                        if constexpr (std::is_same_v<
-                                          MessageType,
-                                          planet::surface::messages::
-                                              SubscribeToTerrainVersionUpdates>)
+                    hrz::overload{
+                        [&](const planet::surface::messages::SubscribeToTerrainVersionUpdates&
+                                message)
                         {
                             TerrainVersionSubscription subscription_id{
                                 channel_id, message.subscription_id};
@@ -411,18 +404,13 @@ struct PlanetSurface
                                     "Duplicated terrain version update subscription ID: {}-{}",
                                     subscription_id.channel_id, subscription_id.subscription_id);
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType,
-                                               planet::surface::messages::
-                                                   CancelTerrainVersionUpdatesSubscription>)
-                        {
+                        },
+                        [&](const planet::surface::messages::
+                                CancelTerrainVersionUpdatesSubscription& message) {
                             terrain_version_subscriptions.erase(
                                 {channel_id, message.subscription_id});
-                        }
-                        else if constexpr (
-                            std::is_same_v<
-                                MessageType, planet::surface::messages::RequestTileElevationBounds>)
+                        },
+                        [&](const planet::surface::messages::RequestTileElevationBounds& message)
                         {
                             double min_elevation = 0.0;
                             double max_elevation = 0.0;
@@ -433,13 +421,9 @@ struct PlanetSurface
                                 message.request_id,
                                 success ? std::optional<double>{min_elevation} : std::nullopt,
                                 success ? std::optional<double>{max_elevation} : std::nullopt});
-                        }
-                        else
-                        {
-                            static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                        }
+                        },
                     },
-                    message);
+                    generic_message);
             }
         }
 

@@ -435,22 +435,19 @@ void remove_ended_gestures(GestureSystem* system)
 
     auto now = hrz::now_frame_ms();
 
-    for (auto it = system->gestures.begin(); it != system->gestures.end();)
-    {
-        auto gesture_id = *it;
-        const auto gesture = system->gesture_pool.get_object(gesture_id);
-
-        if (get_status(gesture) == GestureStatus::Ended
-            && now - gesture->end_time_ms >= ENDED_GESTURE_TTL)
+    std::erase_if(
+        system->gestures,
+        [&](GestureId gesture_id)
         {
-            system->gesture_pool.release(gesture_id);
-            it = system->gestures.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
+            const auto gesture = system->gesture_pool.get_object(gesture_id);
+            if (get_status(gesture) == GestureStatus::Ended
+                && now - gesture->end_time_ms >= ENDED_GESTURE_TTL)
+            {
+                system->gesture_pool.release(gesture_id);
+                return true;
+            }
+            return false;
+        });
 }
 
 bool dequeue_event(GestureSystem* system, Event& event)

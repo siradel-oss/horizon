@@ -20,14 +20,7 @@ public:
 
     bool is_occluded(lm::dvec3 position) const;
 
-    bool operator==(const HorizonCuller& other) const
-    {
-        return _eye_pos == other._eye_pos && _eye_pos_length == other._eye_pos_length
-            && _horizon_distance_squared == other._horizon_distance_squared
-            && _horizon_plane_distance == other._horizon_plane_distance;
-    }
-
-    bool operator!=(const HorizonCuller& other) const { return !(*this == other); }
+    constexpr bool operator==(const HorizonCuller& other) const = default;
 };
 
 namespace horizon_culling

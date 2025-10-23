@@ -4,6 +4,7 @@
 #include <hrz_fnd_defines.h>
 
 #include <functional>
+#include <source_location>
 #include <stdint.h>
 #include <string_view>
 
@@ -49,10 +50,10 @@ enum SampleFlags
 
 void begin_sample(
     const char* name,
-    const char* source_file,
-    uint32_t source_line,
     int flags,
-    uint64_t* hash_cache);
+    uint64_t* hash_cache,
+    const std::source_location& source_loc = std::source_location::current());
+
 void end_sample();
 
 enum FrameRenderTypes
@@ -86,10 +87,11 @@ struct EndSampleOnScopeExit
 // _ROOT means that this samples marks the root of a samples tree. Its use is
 // encouraged to check that there is no sample tree imbalance.
 
-#define HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS)                                  \
-    static uint64_t HRZ_CONCAT(hrz_profiling_sample_hash_, __LINE__) = 0; \
-    hrz::profiling::begin_sample(                                         \
-        NAME, __FILE__, __LINE__, FLAGS, &HRZ_CONCAT(hrz_profiling_sample_hash_, __LINE__))
+#define HRZ_BEGIN_SAMPLE_EX2(NAME, FLAGS, ID)                       \
+    static uint64_t HRZ_CONCAT(hrz_profiling_sample_hash_, ID) = 0; \
+    hrz::profiling::begin_sample(NAME, FLAGS, &HRZ_CONCAT(hrz_profiling_sample_hash_, ID))
+
+#define HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS) HRZ_BEGIN_SAMPLE_EX2(NAME, FLAGS, __COUNTER__)
 
 #define HRZ_END_SAMPLE() hrz::profiling::end_sample()
 
@@ -103,7 +105,7 @@ struct EndSampleOnScopeExit
 #define HRZ_SCOPED_SAMPLE_EX(NAME, FLAGS)                  \
     HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS);                      \
     const hrz::profiling::EndSampleOnScopeExit HRZ_CONCAT( \
-        hrz_profiling_end_sample_on_scope_exit_, __LINE__)
+        hrz_profiling_end_sample_on_scope_exit_, __COUNTER__)
 
 #define HRZ_SCOPED_SAMPLE(NAME) HRZ_SCOPED_SAMPLE_EX(NAME, hrz::profiling::None)
 #define HRZ_SCOPED_SAMPLE_ROOT(NAME) HRZ_SCOPED_SAMPLE_EX(NAME, hrz::profiling::Root)

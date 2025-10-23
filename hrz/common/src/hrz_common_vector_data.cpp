@@ -41,9 +41,8 @@ FeatureId FeatureId::Builder::build()
         return feature_id;
     }
 
-    std::sort(
-        _values.begin(), _values.end(),
-        [](const Value& a, const Value& b) { return a.attribute_id < b.attribute_id; });
+    std::ranges::sort(
+        _values, [](const Value& a, const Value& b) { return a.attribute_id < b.attribute_id; });
 
     for (const auto& value : _values)
     {
@@ -170,8 +169,8 @@ std::optional<FeatureIds> FeatureIds::make(
         feature_ids._values.push_back(attribute_values[i]);
     }
 
-    std::sort(
-        feature_ids._values.begin(), feature_ids._values.end(),
+    std::ranges::sort(
+        feature_ids._values,
         [](const AttributeValues& a, const AttributeValues& b)
         { return a.attribute_id < b.attribute_id; });
 

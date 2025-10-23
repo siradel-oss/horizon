@@ -507,8 +507,8 @@ static my::ResourceHandle create_framebuffer(GLInstance* my, const FramebufferRe
     GLFramebuffer* ptr = my->_framebuffers[fb_handle];
     assert(ptr);
 
-    static const GLenum default_draw_buffer = GL_COLOR_ATTACHMENT0;
-    ptr->last_draw_buffers_fingerprint = compute_draw_buffers_fingerprint(1, &default_draw_buffer);
+    static const GLenum default_draw_buffer[] = {GL_COLOR_ATTACHMENT0};
+    ptr->last_draw_buffers_fingerprint = compute_draw_buffers_fingerprint(default_draw_buffer);
 
     glGenFramebuffers(1, &ptr->fbo);
     my->bind_draw_framebuffer(fb_handle);

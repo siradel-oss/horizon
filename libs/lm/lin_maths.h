@@ -662,7 +662,7 @@ struct ClampOp
 // @@OPERATORS
 
 template<typename F, size_t N, typename... T, typename R = typename F::ResultType>
-Vector<R, N> apply(F f, const Vector<T, N>&... v)
+constexpr Vector<R, N> apply(F f, const Vector<T, N>&... v)
 {
     Vector<R, N> c;
     for (size_t i = 0; i < N; ++i)
@@ -673,7 +673,7 @@ Vector<R, N> apply(F f, const Vector<T, N>&... v)
 }
 
 template<typename F, size_t N, typename... T, typename R = typename F::ResultType>
-Matrix<R, N> apply(F f, const Matrix<T, N>&... m)
+constexpr Matrix<R, N> apply(F f, const Matrix<T, N>&... m)
 {
     Matrix<R, N> c;
     for (size_t i = 0; i < N * N; ++i)
@@ -684,7 +684,7 @@ Matrix<R, N> apply(F f, const Matrix<T, N>&... m)
 }
 
 template<typename F, size_t N, typename T>
-typename F::ResultType fold(F f, const Vector<T, N>& v, typename F::ResultType result)
+constexpr typename F::ResultType fold(F f, const Vector<T, N>& v, typename F::ResultType result)
 {
     for (size_t i = 0; i < N; ++i)
     {
@@ -694,7 +694,7 @@ typename F::ResultType fold(F f, const Vector<T, N>& v, typename F::ResultType r
 }
 
 template<typename F, size_t N, typename T>
-typename F::ResultType fold(F f, const Matrix<T, N>& v, typename F::ResultType result)
+constexpr typename F::ResultType fold(F f, const Matrix<T, N>& v, typename F::ResultType result)
 {
     for (size_t i = 0; i < N * N; ++i)
     {
@@ -706,26 +706,26 @@ typename F::ResultType fold(F f, const Matrix<T, N>& v, typename F::ResultType r
 // @@COMPONENTWISE
 
 template<typename U, typename V, size_t N, typename R = typename AddOp<U, V>::ResultType>
-Vector<R, N> operator+(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr Vector<R, N> operator+(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return apply(AddOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
-Vector<T, N>& operator+=(Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Vector<T, N>& operator+=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(AddOp<T>{}, a, b);
     return a;
 }
 
 template<typename U, typename V, size_t N, typename R = typename SubOp<U, V>::ResultType>
-Vector<R, N> operator-(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr Vector<R, N> operator-(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return apply(SubOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
-Vector<T, N>& operator-=(Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Vector<T, N>& operator-=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(SubOp<T>{}, a, b);
     return a;
@@ -738,154 +738,154 @@ constexpr Vector<T, N> operator-(const Vector<T, N>& a)
 }
 
 template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-Vector<R, N> operator*(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr Vector<R, N> operator*(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return apply(MulOp<U, V>{}, a, b);
 }
 
 template<typename U, Arithmetic V, size_t N>
-auto operator*(const Vector<U, N>& a, V b)
+constexpr auto operator*(const Vector<U, N>& a, V b)
 {
     return apply(MulOp<U, V>{}, a, Vector<V, N>(b));
 }
 
 template<Arithmetic U, typename V, size_t N>
-auto operator*(U a, const Vector<V, N>& b)
+constexpr auto operator*(U a, const Vector<V, N>& b)
 {
     return apply(MulOp<U, V>{}, Vector<U, N>(a), b);
 }
 
 template<typename T, size_t N>
-Vector<T, N>& operator*=(Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(MulOp<T>{}, a, b);
     return a;
 }
 
 template<typename T, size_t N>
-Vector<T, N>& operator*=(Vector<T, N>& a, const T& b)
+constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const T& b)
 {
     a = apply(MulOp<T>{}, a, Vector<T, N>(b));
     return a;
 }
 
 template<typename U, typename V, size_t N, typename R = typename DivOp<U, V>::ResultType>
-Vector<R, N> operator/(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr Vector<R, N> operator/(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return apply(DivOp<U, V>{}, a, b);
 }
 
 template<typename U, Arithmetic V, size_t N>
-auto operator/(const Vector<U, N>& a, V b)
+constexpr auto operator/(const Vector<U, N>& a, V b)
 {
     return apply(DivOp<U, V>{}, a, Vector<V, N>(b));
 }
 
 template<Arithmetic U, typename V, size_t N>
-auto operator/(U a, const Vector<V, N>& b)
+constexpr auto operator/(U a, const Vector<V, N>& b)
 {
     return apply(DivOp<U, V>{}, Vector<U, N>(a), b);
 }
 
 template<typename T, size_t N>
-Vector<T, N>& operator/=(Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(DivOp<T>{}, a, b);
     return a;
 }
 
 template<typename T, size_t N>
-Vector<T, N>& operator/=(Vector<T, N>& a, const T& b)
+constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const T& b)
 {
     a = apply(DivOp<T>{}, a, Vector<T, N>(b));
     return a;
 }
 
 template<typename U, typename V, size_t N, typename R = typename AddOp<U, V>::ResultType>
-Matrix<R, N> operator+(const Matrix<U, N>& a, const Matrix<V, N>& b)
+constexpr Matrix<R, N> operator+(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
     return apply(AddOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
-Matrix<T, N>& operator+=(Matrix<T, N>& a, const Matrix<T, N>& b)
+constexpr Matrix<T, N>& operator+=(Matrix<T, N>& a, const Matrix<T, N>& b)
 {
     a = apply(AddOp<T>{}, a, b);
     return a;
 }
 
 template<typename U, typename V, size_t N, typename R = typename SubOp<U, V>::ResultType>
-Matrix<R, N> operator-(const Matrix<U, N>& a, const Matrix<V, N>& b)
+constexpr Matrix<R, N> operator-(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
     return apply(SubOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
-Matrix<T, N>& operator-=(Matrix<T, N>& a, const Matrix<T, N>& b)
+constexpr Matrix<T, N>& operator-=(Matrix<T, N>& a, const Matrix<T, N>& b)
 {
     a = apply(SubOp<T>{}, a, b);
     return a;
 }
 
 template<typename T, size_t N>
-Matrix<T, N> operator-(const Matrix<T, N>& a)
+constexpr Matrix<T, N> operator-(const Matrix<T, N>& a)
 {
     return apply(NegOp<T>{}, a);
 }
 
 template<typename U, Arithmetic V, size_t N>
-auto operator*(const Matrix<U, N>& a, V b)
+constexpr auto operator*(const Matrix<U, N>& a, V b)
 {
     return apply(MulOp<U, V>{}, a, Matrix<V, N>(b));
 }
 
 template<Arithmetic U, typename V, size_t N>
-auto operator*(U a, const Matrix<V, N>& b)
+constexpr auto operator*(U a, const Matrix<V, N>& b)
 {
     return apply(MulOp<U, V>{}, Matrix<U, N>(a), b);
 }
 
 template<typename T, size_t N>
-Matrix<T, N>& operator*=(Matrix<T, N>& a, const T& b)
+constexpr Matrix<T, N>& operator*=(Matrix<T, N>& a, const T& b)
 {
     a = apply(MulOp<T>{}, a, Matrix<T, N>(b));
     return a;
 }
 
 template<typename U, Arithmetic V, size_t N>
-auto operator/(const Matrix<U, N>& a, V b)
+constexpr auto operator/(const Matrix<U, N>& a, V b)
 {
     return apply(DivOp<U, V>{}, a, Matrix<V, N>(b));
 }
 
 template<Arithmetic U, typename V, size_t N>
-auto operator/(U a, const Matrix<V, N>& b)
+constexpr auto operator/(U a, const Matrix<V, N>& b)
 {
     return apply(DivOp<U, V>{}, Matrix<U, N>(a), b);
 }
 
 template<typename T, size_t N>
-Matrix<T, N>& operator/=(Matrix<T, N>& a, const T& b)
+constexpr Matrix<T, N>& operator/=(Matrix<T, N>& a, const T& b)
 {
     a = apply(DivOp<T>{}, a, Matrix<T, N>(b));
     return a;
 }
 
-#define IMPL_BOOL_BINARY_OP(OP, NAME)                                  \
-    template<typename U, typename V, size_t N>                         \
-    Vector<bool, N> NAME(const Vector<U, N>& a, const Vector<V, N>& b) \
-    {                                                                  \
-        return apply(OP<U, V>{}, a, b);                                \
-    }                                                                  \
-    template<typename U, Arithmetic V, size_t N>                       \
-    Vector<bool, N> NAME(const Vector<U, N>& a, V b)                   \
-    {                                                                  \
-        return apply(OP<U, V>{}, a, Vector<V, N>(b));                  \
-    }                                                                  \
-    template<Arithmetic U, typename V, size_t N>                       \
-    Vector<bool, N> NAME(U a, const Vector<V, N>& b)                   \
-    {                                                                  \
-        return apply(OP<U, V>{}, Vector<U, N>(a), b);                  \
+#define IMPL_BOOL_BINARY_OP(OP, NAME)                                            \
+    template<typename U, typename V, size_t N>                                   \
+    constexpr Vector<bool, N> NAME(const Vector<U, N>& a, const Vector<V, N>& b) \
+    {                                                                            \
+        return apply(OP<U, V>{}, a, b);                                          \
+    }                                                                            \
+    template<typename U, Arithmetic V, size_t N>                                 \
+    constexpr Vector<bool, N> NAME(const Vector<U, N>& a, V b)                   \
+    {                                                                            \
+        return apply(OP<U, V>{}, a, Vector<V, N>(b));                            \
+    }                                                                            \
+    template<Arithmetic U, typename V, size_t N>                                 \
+    constexpr Vector<bool, N> NAME(U a, const Vector<V, N>& b)                   \
+    {                                                                            \
+        return apply(OP<U, V>{}, Vector<U, N>(a), b);                            \
     }
 IMPL_BOOL_BINARY_OP(EqualOp, eq)
 IMPL_BOOL_BINARY_OP(NotEqualOp, neq)
@@ -898,7 +898,7 @@ IMPL_BOOL_BINARY_OP(OrOp, operator||)
 #undef IMPL_BOOL_BINARY_OP
 
 template<typename T, size_t N>
-Vector<bool, N> operator!(const Vector<T, N>& a)
+constexpr Vector<bool, N> operator!(const Vector<T, N>& a)
 {
     return apply(NotOp<T>{}, a);
 }
@@ -985,25 +985,25 @@ IMPL_TERNARY(ClampOp, clamp)
 #undef IMPL_TERNARY
 
 template<typename T, size_t N>
-Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, const Vector<T, N>& a)
+constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, const Vector<T, N>& a)
 {
     return x * (Vector<T, N>(1) - a) + y * a;
 }
 
 template<typename T, size_t N>
-Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, T a)
+constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, T a)
 {
     return x * ((T)1 - a) + y * a;
 }
 
 template<typename T, size_t N>
-Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, const Matrix<T, N>& a)
+constexpr Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, const Matrix<T, N>& a)
 {
     return x * (Matrix<T, N>(1) - a) + y * a;
 }
 
 template<typename T, size_t N>
-Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, T a)
+constexpr Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, T a)
 {
     return x * ((T)1 - a) + y * a;
 }
@@ -1011,7 +1011,7 @@ Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, T a)
 // @@VECTOR_ARITHMETIC
 
 template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-Vector<R, N> operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
+constexpr Vector<R, N> operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
 {
     Vector<R, N> v(0);
     for (size_t i = 0; i < N; ++i)
@@ -1022,7 +1022,7 @@ Vector<R, N> operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
 }
 
 template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-Matrix<R, N> operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
+constexpr Matrix<R, N> operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
     Matrix<R, N> v;
     for (size_t i = 0; i < N; ++i)
@@ -1035,31 +1035,31 @@ Matrix<R, N> operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
 // @@FOLD_OPERATORS
 
 template<size_t N>
-bool any(const Vector<bool, N>& v)
+constexpr bool any(const Vector<bool, N>& v)
 {
     return fold(OrOp<bool>{}, v, false);
 }
 
 template<size_t N>
-bool all(const Vector<bool, N>& v)
+constexpr bool all(const Vector<bool, N>& v)
 {
     return fold(AndOp<bool>{}, v, true);
 }
 
 template<typename T, size_t N>
-T minelem(const Vector<T, N>& v)
+constexpr T minelem(const Vector<T, N>& v)
 {
     return fold(MinOp<T>{}, v, v.m[0]);
 }
 
 template<typename T, size_t N>
-T maxelem(const Vector<T, N>& v)
+constexpr T maxelem(const Vector<T, N>& v)
 {
     return fold(MaxOp<T>{}, v, v.m[0]);
 }
 
 template<typename T, size_t N>
-T sum(const Vector<T, N>& v)
+constexpr T sum(const Vector<T, N>& v)
 {
     return fold(AddOp<T>{}, v, 0);
 }
@@ -1067,7 +1067,7 @@ T sum(const Vector<T, N>& v)
 // @@VECTOR_OPERATORS
 
 template<typename U, typename V, size_t N>
-bool operator==(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr bool operator==(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     for (int i = 0; i < N; ++i)
     {
@@ -1076,18 +1076,8 @@ bool operator==(const Vector<U, N>& a, const Vector<V, N>& b)
     return true;
 }
 
-template<typename U, typename V, size_t N>
-bool operator!=(const Vector<U, N>& a, const Vector<V, N>& b)
-{
-    for (int i = 0; i < N; ++i)
-    {
-        if (a.m[i] != b.m[i]) return true;
-    }
-    return false;
-}
-
 template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-R dot(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr R dot(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return sum(a * b);
 }
@@ -1273,23 +1263,13 @@ Matrix<T, N> inverse(const Matrix<T, N>& m)
 }
 
 template<typename U, typename V, size_t N>
-bool operator==(const Matrix<U, N>& a, const Matrix<V, N>& b)
+constexpr bool operator==(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
     for (int i = 0; i < N; ++i)
     {
         if (a.col[i] != b.col[i]) return false;
     }
     return true;
-}
-
-template<typename U, typename V, size_t N>
-bool operator!=(const Matrix<U, N>& a, const Matrix<V, N>& b)
-{
-    for (int i = 0; i < N; ++i)
-    {
-        if (a.col[i] != b.col[i]) return true;
-    }
-    return false;
 }
 
 // @@MATRIX_CONSTRUCT
@@ -1747,12 +1727,6 @@ constexpr bool operator==(const DualQuaternion<T>& a, const DualQuaternion<T>& b
 }
 
 template<typename T>
-constexpr bool operator!=(const DualQuaternion<T>& a, const DualQuaternion<T>& b)
-{
-    return !(a.r == b.r && a.d == b.d);
-}
-
-template<typename T>
 constexpr DualQuaternion<T> translation_dquat(const Vector<T, 3>& p)
 {
     return DualQuaternion<T>(
@@ -1840,32 +1814,26 @@ using dbbox2 = Bbox<double, 2>;
 using dbbox3 = Bbox<double, 3>;
 
 template<typename U, typename V, size_t N>
-bool operator==(const Bbox<U, N>& a, const Bbox<V, N>& b)
+constexpr bool operator==(const Bbox<U, N>& a, const Bbox<V, N>& b)
 {
     return a.min == b.min && a.max == b.max;
 }
 
-template<typename U, typename V, size_t N>
-bool operator!=(const Bbox<U, N>& a, const Bbox<V, N>& b)
-{
-    return a.min != b.min || a.max != b.max;
-}
-
 template<typename T, size_t N>
-inline Vector<T, N> size(const Bbox<T, N>& bb)
+constexpr Vector<T, N> size(const Bbox<T, N>& bb)
 {
     return bb.max - bb.min;
 }
 
 template<typename T, size_t N>
-inline T area(const Bbox<T, N>& bb)
+constexpr T area(const Bbox<T, N>& bb)
 {
     auto bb_size = size(bb);
     return bb_size.x * bb_size.y;
 }
 
 template<typename T, size_t N>
-inline Vector<T, N> center(const Bbox<T, N>& bb)
+constexpr Vector<T, N> center(const Bbox<T, N>& bb)
 {
     return (bb.min + bb.max) / (T)2;
 }

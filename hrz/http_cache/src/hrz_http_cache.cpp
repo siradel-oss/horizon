@@ -147,7 +147,7 @@ public:
 private:
     hrz::LruList<Entry> _lru;
     hrz::flat_hash_map<K, Entry*> _cache;
-    Stat _stat;
+    HRZ_NO_UNIQUE_ADDRESS Stat _stat;
 
 public:
     const Entry* get_if_fresh_or_remove(K key, hrz::HttpTime now)

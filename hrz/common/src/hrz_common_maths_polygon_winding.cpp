@@ -47,7 +47,7 @@ bool is_clockwise(std::span<const T> pts)
         return false;
     }
 
-    auto pivot_it = std::min_element(pts.begin(), pts.end(), compare<T>);
+    auto pivot_it = std::ranges::min_element(pts, compare<T>);
 
     size_t b_index = std::distance(pts.begin(), pivot_it);
     size_t a_index = (b_index > 0) ? b_index - 1 : pts.size() - 1;

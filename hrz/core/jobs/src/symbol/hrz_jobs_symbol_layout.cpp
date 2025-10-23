@@ -553,37 +553,27 @@ ElementGeometry SymbolBaker::TransformVisitor::visit_element(
 
     for (const auto& component : params.components)
     {
-        std::visit(
-            [&transform, this](const auto& comp)
-            {
-                using T = std::decay_t<decltype(comp)>;
-                if constexpr (std::is_same_v<T, Transform::Translation>)
+        transform = std::visit(
+            hrz::overload{
+                [&transform, this](const Transform::Translation& comp)
                 {
                     lm::vec3 t = comp.default_translation;
                     load_vec3f_property(comp.translation_prp, &t);
-                    transform = lm::translation(t) * transform;
-                }
-                else if constexpr (std::is_same_v<T, Transform::Scaling>)
+                    return lm::translation(t) * transform;
+                },
+                [&transform, this](const Transform::Scaling& comp)
                 {
                     lm::vec3 s = comp.default_scaling;
                     load_vec3f_property(comp.scaling_prp, &s);
-                    transform = lm::scaling(s) * transform;
-                }
-                else if constexpr (std::is_same_v<T, Transform::Rotation>)
+                    return lm::scaling(s) * transform;
+                },
+                [&transform, this](const Transform::Rotation& comp)
                 {
                     lm::vec3 r = comp.default_rotation;
                     load_vec3f_property(comp.rotation_prp, &r);
-                    transform = hrz::euler_rotation(r, comp.order) * transform;
-                }
-                else if constexpr (std::is_same_v<T, Transform::Generic>)
-                {
-                    transform = comp.matrix * transform;
-                }
-                else
-                {
-                    static_assert(hrz::always_false<T>, "Unhandled component type");
-                }
-            },
+                    return hrz::euler_rotation(r, comp.order) * transform;
+                },
+                [&transform](const Transform::Generic& comp) { return comp.matrix * transform; }},
             component);
     }
 

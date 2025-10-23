@@ -115,16 +115,16 @@ class Kdtree
             sorted_axis_values.push_back(pt.m[max_extent_axis]);
         }
 
-        std::sort(sorted_axis_values.begin(), sorted_axis_values.end());
-        float median = sorted_axis_values[sorted_axis_values.size() / 2];
+        std::ranges::sort(sorted_axis_values);
+        const float median = sorted_axis_values[sorted_axis_values.size() / 2];
 
         for (const auto& pt : leaf.rects)
         {
-            int child = (pt.m[max_extent_axis] < median) ? 0 : 1;
+            const int child = (pt.m[max_extent_axis] < median) ? 0 : 1;
             children[child].insert(pt);
         }
 
-        SplitNode split_node;
+        SplitNode split_node{};
         split_node.split_value = median;
         split_node.split_axis = max_extent_axis;
         split_node.children[0] = _arena.alloc<Node>(std::in_place, std::move(children[0]));

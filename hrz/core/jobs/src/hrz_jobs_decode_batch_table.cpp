@@ -413,8 +413,7 @@ bool _decode_batch_table_hierarchy(
                 continue;
 
             auto reader = attribute_values->get_reader();
-            batch_class.attributes.emplace_back(
-                BatchClass::Attribute{i, std::move(*attribute_values), std::move(reader)});
+            batch_class.attributes.emplace_back(i, std::move(*attribute_values), std::move(reader));
             attributes_to_load.insert(i);
         }
 
@@ -448,9 +447,9 @@ bool _decode_batch_table_hierarchy(
 
     {
         auto ool_span = class_ids.ool_data.as_span();
-        uint64_t max_class_id = hrz::vector_data::attr_as_uint64(
-            *std::max_element(
-                class_ids.values.begin(), class_ids.values.end(),
+        const uint64_t max_class_id = hrz::vector_data::attr_as_uint64(
+            *std::ranges::max_element(
+                class_ids.values,
                 [ool_span](AttributeValue value_a, AttributeValue value_b)
                 {
                     return hrz::vector_data::attr_as_uint64(value_a, ool_span)

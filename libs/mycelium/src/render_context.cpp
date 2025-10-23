@@ -360,9 +360,10 @@ void GLInstance::clear(uint32_t clear_count, const ClearTarget* values)
             }
 
             draw_buffers_fingerprint =
-                compute_draw_buffers_fingerprint(draw_buffer_count, draw_buffers);
+                compute_draw_buffers_fingerprint({draw_buffers, (size_t)draw_buffer_count});
 
-            update_draw_buffers(draw_buffer_count, draw_buffers, draw_buffers_fingerprint);
+            update_draw_buffers(
+                {draw_buffers, (size_t)draw_buffer_count}, draw_buffers_fingerprint);
 
             draw_buffers[to_reset] = GL_NONE;
 
@@ -508,7 +509,8 @@ void GLInstance::draw(
     }
 
     update_draw_buffers(
-        shader->draw_buffer_count, shader->draw_buffers, shader->draw_buffers_fingerprint);
+        {shader->draw_buffers, (size_t)shader->draw_buffer_count},
+        shader->draw_buffers_fingerprint);
 
     for (uint32_t i = 0; i < ubo_count; ++i)
     {
@@ -679,9 +681,9 @@ void GLInstance::blit_framebuffers(
         }
 
         draw_buffers_fingerprint =
-            compute_draw_buffers_fingerprint(draw_buffer_count, draw_buffers);
+            compute_draw_buffers_fingerprint({draw_buffers, (size_t)draw_buffer_count});
 
-        update_draw_buffers(draw_buffer_count, draw_buffers, draw_buffers_fingerprint);
+        update_draw_buffers({draw_buffers, (size_t)draw_buffer_count}, draw_buffers_fingerprint);
 
         if (_last_read_framebuffer_handle == 0)
         {

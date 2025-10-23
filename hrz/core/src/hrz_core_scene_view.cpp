@@ -1543,8 +1543,7 @@ public:
                     ((hrz::GpuResourceContext*)rc)
                         ->alloc(
                             &res, hrz::monitoring::systems::SceneView,
-                            {{"contents"_ss,
-                              std::string("depth reduction buffer ") + std::to_string(i)}});
+                            {{"contents"_ss, fmt::format("depth reduction buffer {}", i)}});
                 attachments[0].texture_or_renderbuffer = _buffers[i];
                 _fbos[i] = ((hrz::GpuResourceContext*)rc)
                                ->alloc(&fb_res, hrz::monitoring::systems::SceneView);

@@ -5,6 +5,7 @@
 #include <hrz_common_monitoring_defs.h>
 #include <hrz_common_profiling.h>
 #include <hrz_fnd_defines.h>
+#include <hrz_fnd_mem.h>
 #include <hrz_fnd_thread.h>
 #include <hrz_fnd_time.h>
 #include <hrz_monitoring.h>
@@ -336,9 +337,8 @@ void cancel_job(JobScheduler* scheduler, Ticket ticket)
         // The job's status wasn't in-progress. This means
         // that it was still queued, or already complete.
 
-        auto it = std::find_if(
-            scheduler->queued_jobs.begin(), scheduler->queued_jobs.end(),
-            [=](const Ticket& t) { return t == ticket; });
+        auto it = std::ranges::find_if(
+            scheduler->queued_jobs, [=](const Ticket& t) { return t == ticket; });
 
         if (it != scheduler->queued_jobs.end())
         {
@@ -444,14 +444,19 @@ void dev_ui(JobScheduler* scheduler, mu_Context* ctx, const char* window_name)
 
     if (mu_begin_window_ex(ctx, window_name, mu_rect(300, 100, 400, 300), MU_OPT_CLOSED))
     {
-        int window_width = mu_get_current_container(ctx)->body.w - 16;
+        const int window_width = mu_get_current_container(ctx)->body.w - 16;
 
         mu_layout_row(ctx, 1, &window_width, 0);
-        snprintf(buffer, 1024, "%zd requests queued", scheduler->queued_jobs.size());
+        auto fmtres = fmt::format_to_n(
+            buffer, HRZ_ARRAY_COUNT(buffer) - 1, "{} requests queued",
+            scheduler->queued_jobs.size());
+        *fmtres.out = '\0';
         mu_text(ctx, buffer);
 
         mu_layout_row(ctx, 1, &window_width, 0);
-        snprintf(buffer, 1024, "%d workers", scheduler->worker_count);
+        fmtres = fmt::format_to_n(
+            buffer, HRZ_ARRAY_COUNT(buffer) - 1, "{} workers", scheduler->worker_count);
+        *fmtres.out = '\0';
         mu_text(ctx, buffer);
 
         if (mu_header(ctx, "Workers"))
@@ -465,7 +470,8 @@ void dev_ui(JobScheduler* scheduler, mu_Context* ctx, const char* window_name)
 
             for (auto worker : scheduler->workers)
             {
-                snprintf(buffer, 1024, "%d", worker->id);
+                fmtres = fmt::format_to_n(buffer, HRZ_ARRAY_COUNT(buffer) - 1, "{}", worker->id);
+                *fmtres.out = '\0';
                 mu_text(ctx, buffer);
                 mu_text(ctx, worker_status_str(worker));
 

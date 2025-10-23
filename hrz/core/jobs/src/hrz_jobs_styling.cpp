@@ -218,7 +218,7 @@ struct State
     std::vector<hrz::RngState> batch_rng_states;
 
     OperatorEvaluator::Context operator_evaluator_context;
-    OperatorEvaluator operator_evaluator;
+    HRZ_NO_UNIQUE_ADDRESS OperatorEvaluator operator_evaluator;
 
     // Index of each instance in "instances".
     // Allows reordering the instances without touching "instances", which is
@@ -382,7 +382,7 @@ struct State
             }
             else
             {
-                std::fill(buffer.begin(), buffer.end(), attr_null<RawValue>());
+                std::ranges::fill(buffer, attr_null<RawValue>());
             }
 
             VariableInfo attr_info{};
@@ -884,7 +884,7 @@ struct State
 
     bool execute_emit(FlatAst::NodeRef node_ref, InstanceSpan inst_span)
     {
-        auto do_emit = [this](InstanceSpan batch_span, std::span<const RawValue> values) -> bool
+        auto do_emit = [this](InstanceSpan batch_span, std::span<const RawValue> values)
         {
             emit_instances(batch_span, values);
             return true;
@@ -914,8 +914,7 @@ struct State
         const FlatAst::FullNode* root = &data->ast->full_nodes[node_ref.full_node];
         uint64_t prp_id = root->set.prp_id;
 
-        auto do_set = [this,
-                       prp_id](InstanceSpan batch_span, std::span<const RawValue> values) -> bool
+        auto do_set = [this, prp_id](InstanceSpan batch_span, std::span<const RawValue> values)
         {
             if (values.size() == 1)
             {

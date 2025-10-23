@@ -141,20 +141,18 @@ struct VectorTiles
 
         RenderRequest render_request;
 
-        for (auto& message : _actor_channel.receive())
+        for (auto& generic_message : _actor_channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, from_actor::RegisterProperties>)
+                hrz::overload{
+                    [&](from_actor::RegisterProperties& message)
                     {
                         assert(message.parser != nullptr);
                         repr_reg->register_properties(_layer_id, *message.parser);
 
                         _actor_channel.send(to_actor::SignalPropertiesRegistered{message.parser});
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::TileCoords>)
+                    },
+                    [&](from_actor::TileCoords& message)
                     {
                         TileDataId tile_data_id{};
 
@@ -166,8 +164,8 @@ struct VectorTiles
                             _data_min_lod = std::min(_data_min_lod, message.tile_coords.lod);
                             _data_max_lod = std::max(_data_max_lod, message.tile_coords.lod);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::TileFeatureIds>)
+                    },
+                    [&](from_actor::TileFeatureIds& message)
                     {
                         TileDataId tile_data_id{};
 
@@ -184,8 +182,8 @@ struct VectorTiles
 
                         auto tile_data = _tile_data_pool.get_object(tile_data_id);
                         tile_data->feature_ids = std::move(message.feature_ids);
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::TileAttributes>)
+                    },
+                    [&](from_actor::TileAttributes& message)
                     {
                         TileDataId tile_data_id{};
 
@@ -202,8 +200,8 @@ struct VectorTiles
 
                         auto tile_data = _tile_data_pool.get_object(tile_data_id);
                         tile_data->attributes.push_back(std::move(message.attribute_values));
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::TileFeatureAnchors>)
+                    },
+                    [&](from_actor::TileFeatureAnchors& message)
                     {
                         TileDataId tile_data_id{};
 
@@ -220,8 +218,8 @@ struct VectorTiles
 
                         auto tile_data = _tile_data_pool.get_object(tile_data_id);
                         tile_data->anchors = std::move(message.feature_anchors);
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::DiscardTile>)
+                    },
+                    [&](from_actor::DiscardTile& message)
                     {
                         auto it = _tile_id_to_tile_data_id.find(message.tile_id);
                         if (it != _tile_id_to_tile_data_id.end())
@@ -230,21 +228,13 @@ struct VectorTiles
                             _tile_data_pool.release(tile_data_id);
                             _tile_id_to_tile_data_id.erase(it);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::RenderRequest>)
-                    {
-                        render_request |= message.render_request;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, from_actor::NewVisibilitySet>)
-                    {
-                        _new_visibility_set = std::move(message.visibility_set);
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
+                    [&](from_actor::RenderRequest& message)
+                    { render_request |= message.render_request; },
+                    [&](from_actor::NewVisibilitySet& message)
+                    { _new_visibility_set = std::move(message.visibility_set); },
                 },
-                message);
+                generic_message);
         }
 
         if (_should_schedule_flat_overlays)

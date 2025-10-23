@@ -644,23 +644,23 @@ public:
             logical_resources_sorted.push_back(id);
         }
 
-        std::sort(
-            logical_resources_sorted.begin(), logical_resources_sorted.end(),
+        std::ranges::sort(
+            logical_resources_sorted,
             [&](uint32_t a, uint32_t b)
             { return _logical_resources[a].first_use < _logical_resources[b].first_use; });
 
-        for (uint32_t id : logical_resources_sorted)
+        for (const uint32_t id : logical_resources_sorted)
         {
-            LogicalResource& logical = _logical_resources[id];
+            const LogicalResource& logical = _logical_resources[id];
 
             if (logical.physical != NO_PHYSICAL_RESOURCE) continue;
 
             uint32_t available_from = 0;
-            uint32_t phys_id = _physical_resources.size();
+            const auto phys_id = (uint32_t)_physical_resources.size();
 
             std::vector<const char*> names = {logical.name};
 
-            for (uint32_t res_id : logical_resources_sorted)
+            for (const uint32_t res_id : logical_resources_sorted)
             {
                 LogicalResource& res = _logical_resources[res_id];
                 if (res.physical == NO_PHYSICAL_RESOURCE && res.first_use >= available_from

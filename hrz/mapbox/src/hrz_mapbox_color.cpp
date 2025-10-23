@@ -280,19 +280,19 @@ bool parse_mapbox_color_string(std::string_view input, uint32_t* color)
     {
         CHECK_ERR(parse_hexadecimal_color_string(input, color));
     }
-    else if (hrz::str::starts_with(input, "rgb("))
+    else if (input.starts_with("rgb("))
     {
         CHECK_ERR(parse_rgba_function_color_string(input, FunctionType::Rgb, color));
     }
-    else if (hrz::str::starts_with(input, "rgba("))
+    else if (input.starts_with("rgba("))
     {
         CHECK_ERR(parse_rgba_function_color_string(input, FunctionType::Rgba, color));
     }
-    else if (hrz::str::starts_with(input, "hsl("))
+    else if (input.starts_with("hsl("))
     {
         CHECK_ERR(parse_hsla_function_color_string(input, FunctionType::Hsl, color));
     }
-    else if (hrz::str::starts_with(input, "hsla("))
+    else if (input.starts_with("hsla("))
     {
         CHECK_ERR(parse_hsla_function_color_string(input, FunctionType::Hsla, color));
     }

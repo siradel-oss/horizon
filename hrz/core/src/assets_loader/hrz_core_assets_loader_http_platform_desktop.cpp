@@ -501,21 +501,19 @@ public:
                 std::lock_guard<std::mutex> lock(_q_mutex);
                 while (!_queue.empty())
                 {
-                    Message msg = std::move(_queue.front());
+                    Message generic_message = std::move(_queue.front());
                     _queue.pop_front();
                     _queue_size.fetch_sub(1);
 
                     std::visit(
-                        [this](auto& msg)
-                        {
-                            using T = std::decay_t<decltype(msg)>;
-                            if constexpr (std::is_same_v<T, AddRequestMsg>)
+                        hrz::overload{
+                            [this](AddRequestMsg& msg)
                             {
                                 assert(!_available_slots.empty());
-                                size_t slot_index = _available_slots.back();
+                                const size_t slot_index = _available_slots.back();
                                 _available_slots.pop_back();
 
-                                if (hrz::str::starts_with(msg.url, "data:"))
+                                if (msg.url.starts_with("data:"))
                                 {
                                     do_data_request_thread(msg, slot_index);
                                 }
@@ -523,13 +521,13 @@ public:
                                 {
                                     start_http_request_thread(msg, slot_index);
                                 }
-                            }
-                            else if constexpr (std::is_same_v<T, CancelRequestMsg>)
+                            },
+                            [this](CancelRequestMsg& msg)
                             {
                                 auto it = _running_http_requests.find(msg.ticket);
                                 if (it != _running_http_requests.end())
                                 {
-                                    size_t slot_index = it->second;
+                                    const size_t slot_index = it->second;
                                     _running_http_requests.erase(it);
 
                                     RequestSlot* req = &_slots[slot_index];
@@ -538,13 +536,8 @@ public:
                                     curl_multi_remove_handle(_multi_handle, req->handle);
                                     finish_request_in_slot_thread(slot_index, req->status, false);
                                 }
-                            }
-                            else
-                            {
-                                static_assert(hrz::always_false<T>, "Unknown message type");
-                            }
-                        },
-                        msg);
+                            }},
+                        generic_message);
                 }
             }
 

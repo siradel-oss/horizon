@@ -112,8 +112,7 @@ struct ThreadProfiler
 
     void begin_sample(
         const char* name,
-        const char* source_file,
-        uint32_t source_line,
+        const std::source_location& source_loc,
         int flags,
         uint64_t hash)
     {
@@ -131,7 +130,7 @@ struct ThreadProfiler
 
         if (!_root)
         {
-            _root = init_sample(name, _thread_id, source_file, source_line, hash);
+            _root = init_sample(name, _thread_id, source_loc, hash);
             _current_parent = _root;
         }
         else
@@ -159,8 +158,7 @@ struct ThreadProfiler
             }
             else
             {
-                profiling::SamplePtr sample =
-                    init_sample(name, _thread_id, source_file, source_line, hash);
+                profiling::SamplePtr sample = init_sample(name, _thread_id, source_loc, hash);
                 if (!_current_parent->first_child)
                 {
                     _current_parent->first_child = sample;
@@ -261,8 +259,7 @@ struct ThreadProfiler
     profiling::SamplePtr init_sample(
         const char* name,
         uint32_t thread_id,
-        const char* source_file,
-        uint32_t source_line,
+        const std::source_location& source_loc,
         uint64_t hash)
     {
         int64_t now = now_us_s64();
@@ -283,8 +280,8 @@ struct ThreadProfiler
 
         sample->pb_sample->set_name(name);
         sample->pb_sample->set_thread_id(thread_id);
-        sample->pb_sample->set_source_file(source_file);
-        sample->pb_sample->set_source_line(source_line);
+        sample->pb_sample->set_source_file(source_loc.file_name());
+        sample->pb_sample->set_source_line(source_loc.line());
         sample->pb_sample->set_entry(now);
 
         return sample;
@@ -402,23 +399,22 @@ void hrz::profiling::dump_thread_names(
 
 void hrz::profiling::begin_sample(
     const char* name,
-    const char* source_file,
-    uint32_t source_line,
     int flags,
-    uint64_t* hash_cache)
+    uint64_t* hash_cache,
+    const std::source_location& source_loc)
 {
     if (!g_thread_profiler || !g_thread_profiler->_enabled) return;
 
     if (*hash_cache == 0)
     {
         *hash_cache = murmur3_x64_64(name);
-        *hash_cache = hash_mix(*hash_cache, murmur3_x64_64(source_file));
-        *hash_cache = hash_mix(*hash_cache, (uint64_t)source_line);
+        *hash_cache = hash_mix(*hash_cache, murmur3_x64_64(source_loc.file_name()));
+        *hash_cache = hash_mix(*hash_cache, (uint64_t)source_loc.line());
 
         if (*hash_cache == 0) *hash_cache = 1;
     }
 
-    g_thread_profiler->begin_sample(name, source_file, source_line, flags, *hash_cache);
+    g_thread_profiler->begin_sample(name, source_loc, flags, *hash_cache);
 }
 
 void hrz::profiling::end_sample()

@@ -1600,12 +1600,12 @@ struct PatchTree
 
             for (uint16_t i = 0; i < level_count; ++i)
             {
-                uint16_t patch_id = to_visit[i + level_first].patch;
+                const uint16_t patch_id = to_visit[i + level_first].patch;
                 patch_distances.emplace_back(i, patches[patch_id].distance);
             }
 
-            std::sort(
-                std::begin(patch_distances), std::end(patch_distances),
+            std::ranges::sort(
+                patch_distances,
                 [](const std::pair<uint16_t, float>& p0, const std::pair<uint16_t, float>& p1)
                 { return p0.second < p1.second; });
 
@@ -1615,7 +1615,7 @@ struct PatchTree
                 traverse_patch_render(ctx, patch.patch, patch.n_ab, patch.n_bc, patch.n_ca);
             }
 
-            uint32_t patch_count = to_visit.size();
+            const auto patch_count = (uint32_t)to_visit.size();
             if (patch_count == level_first + level_count)
             {
                 // None added, we are done here

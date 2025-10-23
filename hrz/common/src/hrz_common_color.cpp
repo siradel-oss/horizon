@@ -44,7 +44,7 @@ std::optional<uint32_t> html_color_lookup_a(std::string_view str)
             }
             break;
         case 'q':
-            if (hrz::str::starts_with(str, "qua"))
+            if (str.starts_with("qua"))
             {
                 return html_color_lookup_aqua(str.substr(3));
             }
@@ -104,13 +104,13 @@ std::optional<uint32_t> html_color_lookup_bl(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "a"))
+            if (str.starts_with("a"))
             {
                 return html_color_lookup_bla(str.substr(1));
             }
             break;
         case 'u':
-            if (hrz::str::starts_with(str, "ue"))
+            if (str.starts_with("ue"))
             {
                 return html_color_lookup_blue(str.substr(2));
             }
@@ -125,7 +125,7 @@ std::optional<uint32_t> html_color_lookup_b(std::string_view str)
     switch (str[0])
     {
         case 'l':
-            if (hrz::str::starts_with(str, "l"))
+            if (str.starts_with("l"))
             {
                 return html_color_lookup_bl(str.substr(1));
             }
@@ -206,7 +206,7 @@ std::optional<uint32_t> html_color_lookup_cor(std::string_view str)
     switch (str[0])
     {
         case 'n':
-            if (hrz::str::starts_with(str, "n"))
+            if (str.starts_with("n"))
             {
                 return html_color_lookup_corn(str.substr(1));
             }
@@ -227,7 +227,7 @@ std::optional<uint32_t> html_color_lookup_c(std::string_view str)
     switch (str[0])
     {
         case 'h':
-            if (hrz::str::starts_with(str, "h"))
+            if (str.starts_with("h"))
             {
                 return html_color_lookup_ch(str.substr(1));
             }
@@ -239,7 +239,7 @@ std::optional<uint32_t> html_color_lookup_c(std::string_view str)
             }
             break;
         case 'o':
-            if (hrz::str::starts_with(str, "or"))
+            if (str.starts_with("or"))
             {
                 return html_color_lookup_cor(str.substr(2));
             }
@@ -287,7 +287,7 @@ std::optional<uint32_t> html_color_lookup_darkgr(std::string_view str)
     switch (str[0])
     {
         case 'e':
-            if (hrz::str::starts_with(str, "e"))
+            if (str.starts_with("e"))
             {
                 return html_color_lookup_darkgre(str.substr(1));
             }
@@ -308,7 +308,7 @@ std::optional<uint32_t> html_color_lookup_darkg(std::string_view str)
     switch (str[0])
     {
         case 'r':
-            if (hrz::str::starts_with(str, "r"))
+            if (str.starts_with("r"))
             {
                 return html_color_lookup_darkgr(str.substr(1));
             }
@@ -350,7 +350,7 @@ std::optional<uint32_t> html_color_lookup_darko(std::string_view str)
     switch (str[0])
     {
         case 'r':
-            if (hrz::str::starts_with(str, "r"))
+            if (str.starts_with("r"))
             {
                 return html_color_lookup_darkor(str.substr(1));
             }
@@ -398,7 +398,7 @@ std::optional<uint32_t> html_color_lookup_darkslate(std::string_view str)
             }
             break;
         case 'g':
-            if (hrz::str::starts_with(str, "gr"))
+            if (str.starts_with("gr"))
             {
                 return html_color_lookup_darkslategr(str.substr(2));
             }
@@ -425,7 +425,7 @@ std::optional<uint32_t> html_color_lookup_darks(std::string_view str)
             }
             break;
         case 'l':
-            if (hrz::str::starts_with(str, "late"))
+            if (str.starts_with("late"))
             {
                 return html_color_lookup_darkslate(str.substr(4));
             }
@@ -440,19 +440,19 @@ std::optional<uint32_t> html_color_lookup_dark(std::string_view str)
     switch (str[0])
     {
         case 'g':
-            if (hrz::str::starts_with(str, "g"))
+            if (str.starts_with("g"))
             {
                 return html_color_lookup_darkg(str.substr(1));
             }
             break;
         case 'o':
-            if (hrz::str::starts_with(str, "o"))
+            if (str.starts_with("o"))
             {
                 return html_color_lookup_darko(str.substr(1));
             }
             break;
         case 's':
-            if (hrz::str::starts_with(str, "s"))
+            if (str.starts_with("s"))
             {
                 return html_color_lookup_darks(str.substr(1));
             }
@@ -551,19 +551,19 @@ std::optional<uint32_t> html_color_lookup_d(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "ark"))
+            if (str.starts_with("ark"))
             {
                 return html_color_lookup_dark(str.substr(3));
             }
             break;
         case 'e':
-            if (hrz::str::starts_with(str, "eep"))
+            if (str.starts_with("eep"))
             {
                 return html_color_lookup_deep(str.substr(3));
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "imgr"))
+            if (str.starts_with("imgr"))
             {
                 return html_color_lookup_dimgr(str.substr(4));
             }
@@ -635,7 +635,7 @@ std::optional<uint32_t> html_color_lookup_gre(std::string_view str)
     switch (str[0])
     {
         case 'e':
-            if (hrz::str::starts_with(str, "en"))
+            if (str.starts_with("en"))
             {
                 return html_color_lookup_green(str.substr(2));
             }
@@ -656,7 +656,7 @@ std::optional<uint32_t> html_color_lookup_gr(std::string_view str)
     switch (str[0])
     {
         case 'e':
-            if (hrz::str::starts_with(str, "e"))
+            if (str.starts_with("e"))
             {
                 return html_color_lookup_gre(str.substr(1));
             }
@@ -695,7 +695,7 @@ std::optional<uint32_t> html_color_lookup_g(std::string_view str)
     switch (str[0])
     {
         case 'r':
-            if (hrz::str::starts_with(str, "r"))
+            if (str.starts_with("r"))
             {
                 return html_color_lookup_gr(str.substr(1));
             }
@@ -713,7 +713,7 @@ std::optional<uint32_t> html_color_lookup_g(std::string_view str)
             }
             break;
         case 'o':
-            if (hrz::str::starts_with(str, "old"))
+            if (str.starts_with("old"))
             {
                 return html_color_lookup_gold(str.substr(3));
             }
@@ -749,7 +749,7 @@ std::optional<uint32_t> html_color_lookup_i(std::string_view str)
     switch (str[0])
     {
         case 'n':
-            if (hrz::str::starts_with(str, "ndi"))
+            if (str.starts_with("ndi"))
             {
                 return html_color_lookup_indi(str.substr(3));
             }
@@ -788,7 +788,7 @@ std::optional<uint32_t> html_color_lookup_la(std::string_view str)
     switch (str[0])
     {
         case 'v':
-            if (hrz::str::starts_with(str, "vender"))
+            if (str.starts_with("vender"))
             {
                 return html_color_lookup_lavender(str.substr(6));
             }
@@ -851,7 +851,7 @@ std::optional<uint32_t> html_color_lookup_lightgr(std::string_view str)
     switch (str[0])
     {
         case 'e':
-            if (hrz::str::starts_with(str, "e"))
+            if (str.starts_with("e"))
             {
                 return html_color_lookup_lightgre(str.substr(1));
             }
@@ -872,7 +872,7 @@ std::optional<uint32_t> html_color_lookup_lightg(std::string_view str)
     switch (str[0])
     {
         case 'r':
-            if (hrz::str::starts_with(str, "r"))
+            if (str.starts_with("r"))
             {
                 return html_color_lookup_lightgr(str.substr(1));
             }
@@ -932,7 +932,7 @@ std::optional<uint32_t> html_color_lookup_lights(std::string_view str)
             }
             break;
         case 'l':
-            if (hrz::str::starts_with(str, "lategr"))
+            if (str.starts_with("lategr"))
             {
                 return html_color_lookup_lightslategr(str.substr(6));
             }
@@ -953,19 +953,19 @@ std::optional<uint32_t> html_color_lookup_light(std::string_view str)
     switch (str[0])
     {
         case 'c':
-            if (hrz::str::starts_with(str, "c"))
+            if (str.starts_with("c"))
             {
                 return html_color_lookup_lightc(str.substr(1));
             }
             break;
         case 'g':
-            if (hrz::str::starts_with(str, "g"))
+            if (str.starts_with("g"))
             {
                 return html_color_lookup_lightg(str.substr(1));
             }
             break;
         case 's':
-            if (hrz::str::starts_with(str, "s"))
+            if (str.starts_with("s"))
             {
                 return html_color_lookup_lights(str.substr(1));
             }
@@ -1016,13 +1016,13 @@ std::optional<uint32_t> html_color_lookup_li(std::string_view str)
     switch (str[0])
     {
         case 'g':
-            if (hrz::str::starts_with(str, "ght"))
+            if (str.starts_with("ght"))
             {
                 return html_color_lookup_light(str.substr(3));
             }
             break;
         case 'm':
-            if (hrz::str::starts_with(str, "me"))
+            if (str.starts_with("me"))
             {
                 return html_color_lookup_lime(str.substr(2));
             }
@@ -1043,13 +1043,13 @@ std::optional<uint32_t> html_color_lookup_l(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "a"))
+            if (str.starts_with("a"))
             {
                 return html_color_lookup_la(str.substr(1));
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "i"))
+            if (str.starts_with("i"))
             {
                 return html_color_lookup_li(str.substr(1));
             }
@@ -1145,7 +1145,7 @@ std::optional<uint32_t> html_color_lookup_medium(std::string_view str)
     switch (str[0])
     {
         case 's':
-            if (hrz::str::starts_with(str, "s"))
+            if (str.starts_with("s"))
             {
                 return html_color_lookup_mediums(str.substr(1));
             }
@@ -1196,19 +1196,19 @@ std::optional<uint32_t> html_color_lookup_m(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "a"))
+            if (str.starts_with("a"))
             {
                 return html_color_lookup_ma(str.substr(1));
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "i"))
+            if (str.starts_with("i"))
             {
                 return html_color_lookup_mi(str.substr(1));
             }
             break;
         case 'e':
-            if (hrz::str::starts_with(str, "edium"))
+            if (str.starts_with("edium"))
             {
                 return html_color_lookup_medium(str.substr(5));
             }
@@ -1253,7 +1253,7 @@ std::optional<uint32_t> html_color_lookup_ol(std::string_view str)
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "ive"))
+            if (str.starts_with("ive"))
             {
                 return html_color_lookup_olive(str.substr(3));
             }
@@ -1286,7 +1286,7 @@ std::optional<uint32_t> html_color_lookup_or(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "ange"))
+            if (str.starts_with("ange"))
             {
                 return html_color_lookup_orange(str.substr(4));
             }
@@ -1307,13 +1307,13 @@ std::optional<uint32_t> html_color_lookup_o(std::string_view str)
     switch (str[0])
     {
         case 'l':
-            if (hrz::str::starts_with(str, "l"))
+            if (str.starts_with("l"))
             {
                 return html_color_lookup_ol(str.substr(1));
             }
             break;
         case 'r':
-            if (hrz::str::starts_with(str, "r"))
+            if (str.starts_with("r"))
             {
                 return html_color_lookup_or(str.substr(1));
             }
@@ -1349,7 +1349,7 @@ std::optional<uint32_t> html_color_lookup_pale(std::string_view str)
     switch (str[0])
     {
         case 'g':
-            if (hrz::str::starts_with(str, "g"))
+            if (str.starts_with("g"))
             {
                 return html_color_lookup_paleg(str.substr(1));
             }
@@ -1376,7 +1376,7 @@ std::optional<uint32_t> html_color_lookup_pa(std::string_view str)
     switch (str[0])
     {
         case 'l':
-            if (hrz::str::starts_with(str, "le"))
+            if (str.starts_with("le"))
             {
                 return html_color_lookup_pale(str.substr(2));
             }
@@ -1418,13 +1418,13 @@ std::optional<uint32_t> html_color_lookup_p(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "a"))
+            if (str.starts_with("a"))
             {
                 return html_color_lookup_pa(str.substr(1));
             }
             break;
         case 'e':
-            if (hrz::str::starts_with(str, "e"))
+            if (str.starts_with("e"))
             {
                 return html_color_lookup_pe(str.substr(1));
             }
@@ -1484,7 +1484,7 @@ std::optional<uint32_t> html_color_lookup_r(std::string_view str)
     switch (str[0])
     {
         case 'o':
-            if (hrz::str::starts_with(str, "o"))
+            if (str.starts_with("o"))
             {
                 return html_color_lookup_ro(str.substr(1));
             }
@@ -1601,7 +1601,7 @@ std::optional<uint32_t> html_color_lookup_slate(std::string_view str)
             }
             break;
         case 'g':
-            if (hrz::str::starts_with(str, "gr"))
+            if (str.starts_with("gr"))
             {
                 return html_color_lookup_slategr(str.substr(2));
             }
@@ -1616,19 +1616,19 @@ std::optional<uint32_t> html_color_lookup_s(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "a"))
+            if (str.starts_with("a"))
             {
                 return html_color_lookup_sa(str.substr(1));
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "i"))
+            if (str.starts_with("i"))
             {
                 return html_color_lookup_si(str.substr(1));
             }
             break;
         case 'e':
-            if (hrz::str::starts_with(str, "ea"))
+            if (str.starts_with("ea"))
             {
                 return html_color_lookup_sea(str.substr(2));
             }
@@ -1640,7 +1640,7 @@ std::optional<uint32_t> html_color_lookup_s(std::string_view str)
             }
             break;
         case 'l':
-            if (hrz::str::starts_with(str, "late"))
+            if (str.starts_with("late"))
             {
                 return html_color_lookup_slate(str.substr(4));
             }
@@ -1778,7 +1778,7 @@ std::optional<uint32_t> html_color_lookup_wh(std::string_view str)
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "ite"))
+            if (str.starts_with("ite"))
             {
                 return html_color_lookup_white(str.substr(3));
             }
@@ -1811,91 +1811,91 @@ std::optional<uint32_t> html_color_lookup(std::string_view str)
     switch (str[0])
     {
         case 'a':
-            if (hrz::str::starts_with(str, "a"))
+            if (str.starts_with("a"))
             {
                 return html_color_lookup_a(str.substr(1));
             }
             break;
         case 'b':
-            if (hrz::str::starts_with(str, "b"))
+            if (str.starts_with("b"))
             {
                 return html_color_lookup_b(str.substr(1));
             }
             break;
         case 'c':
-            if (hrz::str::starts_with(str, "c"))
+            if (str.starts_with("c"))
             {
                 return html_color_lookup_c(str.substr(1));
             }
             break;
         case 'd':
-            if (hrz::str::starts_with(str, "d"))
+            if (str.starts_with("d"))
             {
                 return html_color_lookup_d(str.substr(1));
             }
             break;
         case 'f':
-            if (hrz::str::starts_with(str, "f"))
+            if (str.starts_with("f"))
             {
                 return html_color_lookup_f(str.substr(1));
             }
             break;
         case 'g':
-            if (hrz::str::starts_with(str, "g"))
+            if (str.starts_with("g"))
             {
                 return html_color_lookup_g(str.substr(1));
             }
             break;
         case 'i':
-            if (hrz::str::starts_with(str, "i"))
+            if (str.starts_with("i"))
             {
                 return html_color_lookup_i(str.substr(1));
             }
             break;
         case 'l':
-            if (hrz::str::starts_with(str, "l"))
+            if (str.starts_with("l"))
             {
                 return html_color_lookup_l(str.substr(1));
             }
             break;
         case 'm':
-            if (hrz::str::starts_with(str, "m"))
+            if (str.starts_with("m"))
             {
                 return html_color_lookup_m(str.substr(1));
             }
             break;
         case 'o':
-            if (hrz::str::starts_with(str, "o"))
+            if (str.starts_with("o"))
             {
                 return html_color_lookup_o(str.substr(1));
             }
             break;
         case 'p':
-            if (hrz::str::starts_with(str, "p"))
+            if (str.starts_with("p"))
             {
                 return html_color_lookup_p(str.substr(1));
             }
             break;
         case 'r':
-            if (hrz::str::starts_with(str, "r"))
+            if (str.starts_with("r"))
             {
                 return html_color_lookup_r(str.substr(1));
             }
             break;
         case 's':
-            if (hrz::str::starts_with(str, "s"))
+            if (str.starts_with("s"))
             {
                 return html_color_lookup_s(str.substr(1));
             }
             break;
         case 't':
-            if (hrz::str::starts_with(str, "t"))
+            if (str.starts_with("t"))
             {
                 return html_color_lookup_t(str.substr(1));
             }
             break;
         case 'h':
-            if (hrz::str::starts_with(str, "ho"))
+            if (str.starts_with("ho"))
             {
                 return html_color_lookup_ho(str.substr(2));
             }
@@ -1907,7 +1907,7 @@ std::optional<uint32_t> html_color_lookup(std::string_view str)
             }
             break;
         case 'n':
-            if (hrz::str::starts_with(str, "nav"))
+            if (str.starts_with("nav"))
             {
                 return html_color_lookup_nav(str.substr(3));
             }
@@ -1919,13 +1919,13 @@ std::optional<uint32_t> html_color_lookup(std::string_view str)
             }
             break;
         case 'w':
-            if (hrz::str::starts_with(str, "wh"))
+            if (str.starts_with("wh"))
             {
                 return html_color_lookup_wh(str.substr(2));
             }
             break;
         case 'y':
-            if (hrz::str::starts_with(str, "yellow"))
+            if (str.starts_with("yellow"))
             {
                 return html_color_lookup_yellow(str.substr(6));
             }

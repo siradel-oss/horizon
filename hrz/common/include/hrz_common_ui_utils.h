@@ -15,7 +15,7 @@ namespace hrz::ui
 {
 struct StickyPanelState
 {
-    mu_Container* panel;
+    mu_Container* panel{};
     bool sticked = true;
     int last_body_height = 0;
     int last_content_height = 0;
@@ -102,11 +102,11 @@ static void draw_tooltips(mu_Context* ctx, TooltipContext* tooltip_ctx)
     for (const auto& tooltip : tooltip_ctx->tooltips)
     {
         const char* text = tooltip_ctx->tooltip_buffer.data() + tooltip.text_start;
-        ptrdiff_t text_length = tooltip.text_length;
+        const auto text_length = (ptrdiff_t)tooltip.text_length;
 
         constexpr int interline_height = -1;
 
-        int line_height = ctx->text_height(ctx->style->font);
+        const int line_height = ctx->text_height(ctx->style->font);
 
         int tooltip_width = 0;
         int tooltip_height = 0;
@@ -117,8 +117,8 @@ static void draw_tooltips(mu_Context* ctx, TooltipContext* tooltip_ctx)
             const char* new_line =
                 (const char*)memchr(line_start, '\n', text_length - (line_start - text));
             const char* line_end = new_line != nullptr ? new_line : text + text_length;
-            int line_length = line_end - line_start;
-            int line_width = ctx->text_width(ctx->style->font, line_start, line_length);
+            const int line_length = line_end - line_start;
+            const int line_width = ctx->text_width(ctx->style->font, line_start, line_length);
 
             tooltip_width = std::max(tooltip_width, line_width);
 
@@ -158,7 +158,7 @@ static void draw_tooltips(mu_Context* ctx, TooltipContext* tooltip_ctx)
             rect.y = cont_rect.y + cont_rect.h - rect.h - padding - margin;
         }
 
-        mu_Rect bg{
+        const mu_Rect bg{
             rect.x - padding_x, rect.y - padding, rect.w + padding_x * 2, rect.h + padding * 2};
 
         mu_draw_rect(ctx, bg, mu_Color{0, 0, 0, 220});
@@ -171,7 +171,7 @@ static void draw_tooltips(mu_Context* ctx, TooltipContext* tooltip_ctx)
             const char* new_line =
                 (const char*)memchr(line_start, '\n', text_length - (line_start - text));
             const char* line_end = new_line != nullptr ? new_line : text + text_length;
-            int line_length = line_end - line_start;
+            const int line_length = line_end - line_start;
 
             mu_draw_text(
                 ctx, ctx->style->font, line_start, line_length, mu_Vec2{rect.x, rect.y + line_y},
@@ -191,13 +191,13 @@ static void draw_progress_bar(
     const mu_Color& right_color,
     TooltipContext* tooltip_ctx = nullptr)
 {
-    progress = hrz::clamp(progress, 0.0f, 1.0f);
+    progress = hrz::clamp(progress, 0.0F, 1.0F);
 
-    mu_Rect full_rect = mu_layout_next(ctx);
+    const mu_Rect full_rect = mu_layout_next(ctx);
     mu_draw_rect(ctx, full_rect, right_color);
 
     mu_Rect rect = full_rect;
-    rect.w *= progress;
+    rect.w = (int)((float)rect.w * progress);
     mu_draw_rect(ctx, rect, left_color);
 
     mu_draw_box(ctx, full_rect, mu_Color{0, 0, 0, 255});
@@ -205,8 +205,8 @@ static void draw_progress_bar(
     if (tooltip_ctx && mu_mouse_over(ctx, full_rect))
     {
         char buffer[8];
-        int len = snprintf(buffer, 8, "%.2f%%", (progress * 100));
-        add_tooltip(ctx, tooltip_ctx, {buffer, (size_t)len});
+        auto res = fmt::format_to(buffer, "{:.2f}%", progress * 100);
+        add_tooltip(ctx, tooltip_ctx, {buffer, (size_t)std::distance(buffer, res.out)});
     }
 }
 
@@ -216,12 +216,12 @@ static int begin_layout_treenode(
     size_t id_size,
     hrz::flat_hash_set<mu_Id>& expanded_nodes)
 {
-    mu_Id id = mu_get_id(ctx, id_data, id_size);
+    const mu_Id id = mu_get_id(ctx, id_data, (int)id_size);
 
     static int outer_layout[] = {-1};
     mu_layout_row(ctx, 1, outer_layout, 0);
 
-    mu_Rect rect = mu_layout_next(ctx);
+    const mu_Rect rect = mu_layout_next(ctx);
     mu_layout_set_next(ctx, rect, 0);
 
     mu_layout_begin_column(ctx);

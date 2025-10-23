@@ -5,7 +5,6 @@
 #include "hrz_core_events.h"
 #include "hrz_core_gestures.h"
 #include "hrz_core_grid.h"
-#include "hrz_core_picking_id_allocator.h"
 #include "hrz_core_render.h"
 #include "hrz_core_shaders.h"
 
@@ -19,6 +18,7 @@
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_gen_object_pool.h>
 #include <hrz_fnd_mem.h>
+#include <hrz_fnd_meta.h>
 #include <hrz_protocol_path_builder.h>
 
 #include <lin_maths.h>
@@ -2114,80 +2114,80 @@ public:
             for (auto& c : _components)
             {
                 std::visit(
-                    [&](auto& element)
+                    [&]<typename T>(GizmoComponentTemplate<T>& generic_element)
                     {
-                        if (!(_mask & element.part.id)) return;
+                        if (!(_mask & generic_element.part.id)) return;
 
                         const auto& reference_frame_transform =
-                            get_reference_frame_matrix(element.get_reference_frame());
+                            get_reference_frame_matrix(generic_element.get_reference_frame());
                         lm::dmat4 display_transform =
                             partial_display_transform * reference_frame_transform;
                         lm::dmat4 global_display_transform =
                             partial_rotation * reference_frame_transform;
 
-                        element.update_alpha_fadeout(global_display_transform, display_transform);
+                        generic_element.update_alpha_fadeout(
+                            global_display_transform, display_transform);
 
-                        using T = std::decay_t<decltype(element)>;
-                        if constexpr (std::is_same_v<T, GizmoComponentTemplate<ArrowTrait>>)
-                        {
-                            GizmoMeshUniformData data = element.get_uniform_data(
-                                display_transform, position_offset_to_camera, scale_factor,
-                                _highlighted_part);
-                            arrow_renderable.add_instance(
-                                _position_ecef, scale_factor, scene_view_bitset, data);
-
-                            if (_state.part.action == Action::TranslateAxis
-                                && _state.part.id == element.part.id)
+                        hrz::overload{
+                            [&](GizmoComponentTemplate<ArrowTrait>& element)
                             {
-                                _add_translation_line(
-                                    line_renderable, view_info, _position_ecef, scene_view_bitset,
-                                    global_display_transform);
-                            }
-                        }
-                        else if constexpr (std::is_same_v<T, GizmoComponentTemplate<PlaneTrait>>)
-                        {
-                            GizmoMeshUniformData data = element.get_uniform_data(
-                                display_transform, position_offset_to_camera, scale_factor,
-                                _highlighted_part);
-                            square_renderable.add_instance(
-                                _position_ecef, scale_factor, scene_view_bitset, data);
+                                const GizmoMeshUniformData data = element.get_uniform_data(
+                                    display_transform, position_offset_to_camera, scale_factor,
+                                    _highlighted_part);
+                                arrow_renderable.add_instance(
+                                    _position_ecef, scale_factor, scene_view_bitset, data);
 
-                            if (_state.part.action == Action::TranslatePlane
-                                && _state.part.id == element.part.id)
+                                if (_state.part.action == Action::TranslateAxis
+                                    && _state.part.id == element.part.id)
+                                {
+                                    _add_translation_line(
+                                        line_renderable, view_info, _position_ecef,
+                                        scene_view_bitset, global_display_transform);
+                                }
+                            },
+                            [&](GizmoComponentTemplate<PlaneTrait>& element)
                             {
-                                _add_translation_grid(
-                                    grid_renderable, view_info, _position_ecef, _last_idle_position,
-                                    scale_factor, scene_view_bitset, global_display_transform);
-                            }
-                        }
-                        else if constexpr (std::is_same_v<T, GizmoComponentTemplate<TorusTrait>>)
-                        {
-                            GizmoMeshUniformData data = element.get_uniform_data(
-                                display_transform, position_offset_to_camera, scale_factor,
-                                _highlighted_part);
-                            torus_renderable.add_instance(
-                                _position_ecef, scale_factor, scene_view_bitset, data);
-                        }
-                        else if constexpr (std::is_same_v<T, GizmoComponentTemplate<CircleTrait>>)
-                        {
-                            GizmoCircleUniformData data = element.get_uniform_data(
-                                display_transform, position_offset_to_camera, scale_factor,
-                                _highlighted_part);
-                            circle_renderable.add_instance(
-                                _position_ecef, scale_factor, scene_view_bitset, data);
+                                const GizmoMeshUniformData data = element.get_uniform_data(
+                                    display_transform, position_offset_to_camera, scale_factor,
+                                    _highlighted_part);
+                                square_renderable.add_instance(
+                                    _position_ecef, scale_factor, scene_view_bitset, data);
 
-                            if (_state.part.action == Action::TranslatePlane
-                                && _state.part.id == element.part.id)
+                                if (_state.part.action == Action::TranslatePlane
+                                    && _state.part.id == element.part.id)
+                                {
+                                    _add_translation_grid(
+                                        grid_renderable, view_info, _position_ecef,
+                                        _last_idle_position, scale_factor, scene_view_bitset,
+                                        global_display_transform);
+                                }
+                            },
+                            [&](GizmoComponentTemplate<TorusTrait>& element)
                             {
-                                _add_translation_grid(
-                                    grid_renderable, view_info, _position_ecef, _last_idle_position,
-                                    scale_factor, scene_view_bitset, global_display_transform);
-                            }
-                        }
-                        else
-                        {
-                            static_assert(hrz::always_false<T>, "Unhandled gizmo component type");
-                        }
+                                const GizmoMeshUniformData data = element.get_uniform_data(
+                                    display_transform, position_offset_to_camera, scale_factor,
+                                    _highlighted_part);
+                                torus_renderable.add_instance(
+                                    _position_ecef, scale_factor, scene_view_bitset, data);
+                            },
+                            [&](GizmoComponentTemplate<CircleTrait>& element)
+                            {
+                                const GizmoCircleUniformData data = element.get_uniform_data(
+                                    display_transform, position_offset_to_camera, scale_factor,
+                                    _highlighted_part);
+                                circle_renderable.add_instance(
+                                    _position_ecef, scale_factor, scene_view_bitset, data);
+
+                                if (_state.part.action == Action::TranslatePlane
+                                    && _state.part.id == element.part.id)
+                                {
+                                    _add_translation_grid(
+                                        grid_renderable, view_info, _position_ecef,
+                                        _last_idle_position, scale_factor, scene_view_bitset,
+                                        global_display_transform);
+                                }
+                            },
+                        }(generic_element);
                     },
                     c);
             }

@@ -132,17 +132,17 @@ void hrz::HttpHeaders::refresh_hashes() const
         }
     }
 
-    std::sort(full_order.begin(), full_order.end());
-    std::sort(content_order.begin(), content_order.end());
+    std::ranges::sort(full_order);
+    std::ranges::sort(content_order);
 
-    for (hrz::uint128 key : full_order)
+    for (const hrz::uint128 key : full_order)
     {
         hash_full = hrz::hash_values(
             hash_full, key.high, key.low,
             hrz::murmur3_x64_64(_headers.find(key)->second.value_str()));
     }
 
-    for (hrz::uint128 key : content_order)
+    for (const hrz::uint128 key : content_order)
     {
         hash_content = hrz::hash_values(
             hash_content, key.high, key.low,
@@ -196,12 +196,12 @@ constexpr int parse_triple_character_id(const char* str)
         + hrz::ascii_to_lower((int)str[2]);
 }
 
-constexpr int parse_number(const char* str, int length)
+constexpr int parse_number(std::string_view str)
 {
     int value = 0;
-    for (int i = 0; i < length; ++i)
+    for (const char c : str)
     {
-        value = value * 10 + (int)(str[i] - '0');
+        value = value * 10 + (int)(c - '0');
     }
     return value;
 }
@@ -282,14 +282,15 @@ hrz::HttpTime hrz::HttpTime::from_imf_fixdate(std::string_view str)
         default: return HttpTime::invalid();
     }
 
-    int day_of_month = parse_number(str.data() + 5, 2);
-    int year = parse_number(str.data() + 12, 4);
-    int hours = parse_number(str.data() + 17, 2);
-    int minutes = parse_number(str.data() + 20, 2);
-    int seconds = parse_number(str.data() + 23, 2);
+    const int day_of_month = parse_number(str.substr(5, 2));
+    const int year = parse_number(str.substr(12, 4));
+    const int hours = parse_number(str.substr(17, 2));
+    const int minutes = parse_number(str.substr(20, 2));
+    const int seconds = parse_number(str.substr(23, 2));
 
-    absl::CivilSecond civil(year, month, day_of_month, hours, minutes, seconds);
-    absl::Time time = absl::FromCivil(civil, absl::UTCTimeZone());
+    const absl::CivilSecond civil(year, month, day_of_month, hours, minutes, seconds);
+    const absl::Time time = absl::FromCivil(civil, absl::UTCTimeZone());
+
     return HttpTime(absl::ToUnixSeconds(time));
 }
 

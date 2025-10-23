@@ -343,8 +343,8 @@ bool cull_one_view(
     // Second pass does the actual culling and updates the bitsets
     if (instances.size() > 0)
     {
-        std::sort(
-            instance_depths.begin(), instance_depths.end(),
+        std::ranges::sort(
+            instance_depths,
             [&](const std::pair<uint32_t, float>& a, const std::pair<uint32_t, float>& b)
             {
                 const auto& instance_a = instances.at(a.first);

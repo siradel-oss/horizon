@@ -784,23 +784,18 @@ struct VectorTilesActor : public Actor
 
         RenderRequest render_request;
 
-        for (auto& message : _channel.receive())
+        for (auto& generic_message : _channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, to_actor::SetBounds>)
+                hrz::overload{
+                    [&](const to_actor::SetBounds& message)
                     {
                         _layer_bounds = message.bounds.value_or(GeoBounds::full());
                         _layer_min_lod = message.min_lod.value_or(0);
                         _layer_max_lod = message.max_lod.value_or(32);
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetClamping>)
-                    {
-                        _clamping = message.clamping;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetAttributes>)
+                    },
+                    [&](const to_actor::SetClamping& message) { _clamping = message.clamping; },
+                    [&](const to_actor::SetAttributes& message)
                     {
                         _attributes.clear();
                         for (auto& attrib : message.attributes)
@@ -813,13 +808,10 @@ struct VectorTilesActor : public Actor
 
                         _needs_to_reload_attributes = true;
                         _script_compilation_status = ScriptCompilationStatus::MustRecompile;
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, to_actor::SetMaxScreenSpaceError>)
-                    {
-                        _max_screen_space_error = message.max_screen_space_error;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetPalettes>)
+                    },
+                    [&](const to_actor::SetMaxScreenSpaceError& message)
+                    { _max_screen_space_error = message.max_screen_space_error; },
+                    [&](const to_actor::SetPalettes& message)
                     {
                         _palettes.clear();
                         for (auto& palette : message.palettes)
@@ -827,13 +819,13 @@ struct VectorTilesActor : public Actor
                             _palettes.push_back(hrz::palette::from_proto(palette));
                         }
                         _script_compilation_status = ScriptCompilationStatus::MustRecompile;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetStyleScript>)
+                    },
+                    [&](const to_actor::SetStyleScript& message)
                     {
                         _script = message.script;
                         _script_compilation_status = ScriptCompilationStatus::MustRecompile;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetRepresentations>)
+                    },
+                    [&](const to_actor::SetRepresentations& message)
                     {
                         auto& new_reprs = message.reprs;
 
@@ -897,8 +889,8 @@ struct VectorTilesActor : public Actor
 
                             _loading_tiles.insert(tile_id);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::AddRepresentation>)
+                    },
+                    [&](const to_actor::AddRepresentation& message)
                     {
                         auto& new_repr = message.repr;
                         auto type = new_repr.type();
@@ -936,8 +928,8 @@ struct VectorTilesActor : public Actor
 
                             _loading_tiles.insert(tile_id);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::UpdateRepresentation>)
+                    },
+                    [&](const to_actor::UpdateRepresentation& message)
                     {
                         auto& index = message.index;
                         auto& repr = message.repr;
@@ -997,8 +989,8 @@ struct VectorTilesActor : public Actor
 
                             _loading_tiles.insert(tile_id);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::RemoveRepresentation>)
+                    },
+                    [&](const to_actor::RemoveRepresentation& message)
                     {
                         auto& index = message.index;
 
@@ -1039,8 +1031,8 @@ struct VectorTilesActor : public Actor
 
                             _loading_tiles.insert(it.second);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::ReprChannel>)
+                    },
+                    [&](to_actor::ReprChannel& message)
                     {
                         _repr_channels.insert_or_assign(message.type, std::move(message.channel));
                         if (!message.schedules_instantly)
@@ -1051,8 +1043,8 @@ struct VectorTilesActor : public Actor
                         {
                             _reprs_using_z_coordinates.insert(message.type);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetSpecialAttributes>)
+                    },
+                    [&](const to_actor::SetSpecialAttributes& message)
                     {
                         if (!message.anchor_z_attribute_name.empty())
                         {
@@ -1088,33 +1080,30 @@ struct VectorTilesActor : public Actor
                         }
 
                         _script_compilation_status = ScriptCompilationStatus::MustRecompile;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetClipId>)
+                    },
+                    [&](const to_actor::SetClipId& message)
                     {
                         _clip_id = message.clip_id;
                         _appearance_changed = true;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetLighting>)
+                    },
+                    [&](const to_actor::SetLighting& message)
                     {
                         _lighting_settings = message.lighting_settings;
                         _appearance_changed = true;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetRngSeed>)
+                    },
+                    [&](const to_actor::SetRngSeed& message)
                     {
                         _rng_seed = message.rng_seed;
                         _script_compilation_status = ScriptCompilationStatus::MustRecompile;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::SetVisibility>)
-                    {
-                        _visible_in = message.visible_in;
-                    }
-                    else if constexpr (std::is_same_v<MessageType, to_actor::UpdateSelection>)
+                    },
+                    [&](const to_actor::SetVisibility& message)
+                    { _visible_in = message.visible_in; },
+                    [&](to_actor::UpdateSelection& message)
                     {
                         _selected_features = std::move(message.selected_features);
                         _selected_features_changed = true;
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, to_actor::SignalPropertiesRegistered>)
+                    },
+                    [&](const to_actor::SignalPropertiesRegistered& message)
                     {
                         if (_script_compilation_status
                                 == ScriptCompilationStatus::WaitingForProperties
@@ -1123,25 +1112,16 @@ struct VectorTilesActor : public Actor
                             _script_compilation_status =
                                 ScriptCompilationStatus::PropertiesRegistered;
                         }
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, to_actor::GenerateNewVisibilitySet>)
+                    },
+                    [&](to_actor::GenerateNewVisibilitySet& message)
                     {
                         _cullers = {std::move(message.cullers)};
                         _generate_new_visibility_set = true;
                         _include_debug_info_in_visibility_set = message.include_debug_info;
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, to_actor::SignalVisibilitySetDestroyed>)
-                    {
-                        _last_destroyed_visibility_set_id = message.visibility_set_id;
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
-                },
-                message);
+                    },
+                    [&](const to_actor::SignalVisibilitySetDestroyed& message)
+                    { _last_destroyed_visibility_set_id = message.visibility_set_id; }},
+                generic_message);
         }
 
         if (_model_status == ModelStatus::Unloaded)
@@ -1162,14 +1142,11 @@ struct VectorTilesActor : public Actor
             return &node->content.value();
         };
 
-        for (auto& message : _vector_data_channel.receive())
+        for (auto& generic_message : _vector_data_channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<
-                                      MessageType, vector_data::messages::LayerModelUpdate>)
+                hrz::overload{
+                    [&](const vector_data::messages::LayerModelUpdate& message)
                     {
                         assert(message.request_id == 0);
 
@@ -1192,9 +1169,8 @@ struct VectorTilesActor : public Actor
                         _model_status = ModelStatus::Loaded;
 
                         render_request.request_visual_render();
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::LayerModelError>)
+                    },
+                    [&](const vector_data::messages::LayerModelError& message)
                     {
                         assert(message.request_id == 0);
                         clean_tree(ba, js);
@@ -1203,122 +1179,119 @@ struct VectorTilesActor : public Actor
                             ScriptCompilationStatus::MustRecompile; // Attribute types may have
                                                                     // changed.
                         _model_status = ModelStatus::Error;
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::LayerNewData>)
+                    },
+                    [&](const vector_data::messages::LayerNewData&)
                     {
                         // No-op
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::DataUpdate>)
+                    },
+                    [&](vector_data::messages::DataUpdate& message)
                     {
                         auto tile_id_and_data_kind =
                             extract_tile_id_from_request_id(message.request_id);
                         auto* content = get_tile_content_for_tile_id(tile_id_and_data_kind.tile_id);
                         if (content == nullptr) return;
 
-                        if (std::holds_alternative<vector_data::FeatureIds>(message.data))
-                        {
-                            assert(
-                                tile_id_and_data_kind.data_kind
-                                == vector_data::DataKind::FeatureIds);
-                            auto& feature_ids = std::get<vector_data::FeatureIds>(message.data);
-                            content->feature_ids.feature_ids = std::move(feature_ids);
-                            content->feature_ids.status = TileContent::FeatureIds::Status::Ready;
-
-                            if (_static_tiles)
-                            {
-                                _vector_data_channel.send(
-                                    vector_data::messages::ReleaseDataRequest{message.request_id});
-                            }
-
-                            if (content->feature_ids.feature_ids.empty())
-                            {
-                                if (_static_tiles)
+                        std::visit(
+                            hrz::overload{
+                                [&](vector_data::FeatureIds&& feature_ids)
                                 {
-                                    _vector_data_channel.send(
-                                        vector_data::messages::ReleaseDataRequest{
-                                            make_data_request_id(
-                                                tile_id_and_data_kind.tile_id,
-                                                vector_data::DataKind::AttributeValues)});
-                                }
+                                    assert(
+                                        tile_id_and_data_kind.data_kind
+                                        == vector_data::DataKind::FeatureIds);
+                                    content->feature_ids.feature_ids = std::move(feature_ids);
+                                    content->feature_ids.status =
+                                        TileContent::FeatureIds::Status::Ready;
 
-                                for (auto& repr : _reprs_configs)
+                                    if (_static_tiles)
+                                    {
+                                        _vector_data_channel.send(
+                                            vector_data::messages::ReleaseDataRequest{
+                                                message.request_id});
+                                    }
+
+                                    if (content->feature_ids.feature_ids.empty())
+                                    {
+                                        if (_static_tiles)
+                                        {
+                                            _vector_data_channel.send(
+                                                vector_data::messages::ReleaseDataRequest{
+                                                    make_data_request_id(
+                                                        tile_id_and_data_kind.tile_id,
+                                                        vector_data::DataKind::AttributeValues)});
+                                        }
+
+                                        for (auto& repr : _reprs_configs)
+                                        {
+                                            content->reschedule_styling(
+                                                _styling_jobs_to_cancel, repr.id, repr.id);
+                                        }
+                                        content->style_job.status =
+                                            TileContent::StyleJob::Status::Ready;
+                                    }
+                                },
+                                [&](vector_data::VectorTileGeometry&& geometry_source)
                                 {
-                                    content->reschedule_styling(
-                                        _styling_jobs_to_cancel, repr.id, repr.id);
-                                }
-                                content->style_job.status = TileContent::StyleJob::Status::Ready;
-                            }
-                        }
-                        else if (std::holds_alternative<vector_data::VectorTileGeometry>(
-                                     message.data))
-                        {
-                            assert(
-                                tile_id_and_data_kind.data_kind == vector_data::DataKind::Geometry);
-                            auto& geometry_source =
-                                std::get<vector_data::VectorTileGeometry>(message.data);
+                                    assert(
+                                        tile_id_and_data_kind.data_kind
+                                        == vector_data::DataKind::Geometry);
 
-                            if (content->attributes.status
-                                > TileContent::Attributes::Status::Loading)
-                            {
-                                content->attributes.status =
-                                    TileContent::Attributes::Status::AllocatingSpecialAttributes;
-                            }
+                                    if (content->attributes.status
+                                        > TileContent::Attributes::Status::Loading)
+                                    {
+                                        content->attributes.status = TileContent::Attributes::
+                                            Status::AllocatingSpecialAttributes;
+                                    }
 
-                            content->geometry.repr.geometry = std::move(geometry_source);
-                            content->geometry.attribution = std::move(message.attribution);
+                                    content->geometry.repr.geometry = std::move(geometry_source);
+                                    content->geometry.attribution = std::move(message.attribution);
 
-                            content->geometry.status = TileContent::Geometry::Status::Clamping;
-                            query_elevations_for_clamping(
-                                tile_id_and_data_kind.tile_id, content->geometry);
+                                    content->geometry.status =
+                                        TileContent::Geometry::Status::Clamping;
+                                    query_elevations_for_clamping(
+                                        tile_id_and_data_kind.tile_id, content->geometry);
 
-                            if (_static_tiles)
-                            {
-                                _vector_data_channel.send(
-                                    vector_data::messages::ReleaseDataRequest{message.request_id});
-                            }
-                            else
-                            {
-                                _vector_data_channel.send(
-                                    vector_data::messages::ReleaseData{message.request_id});
-                            }
-                        }
-                        else if (std::holds_alternative<
-                                     hrz::InlinedVector<vector_data::AttributeValues, 16>>(
-                                     message.data))
-                        {
-                            assert(
-                                tile_id_and_data_kind.data_kind
-                                == vector_data::DataKind::AttributeValues);
-                            auto& attribute_values =
-                                std::get<hrz::InlinedVector<vector_data::AttributeValues, 16>>(
-                                    message.data);
-                            content->attributes.attributes = std::move(attribute_values);
-                            content->attributes.attribution = message.attribution;
+                                    if (_static_tiles)
+                                    {
+                                        _vector_data_channel.send(
+                                            vector_data::messages::ReleaseDataRequest{
+                                                message.request_id});
+                                    }
+                                    else
+                                    {
+                                        _vector_data_channel.send(
+                                            vector_data::messages::ReleaseData{message.request_id});
+                                    }
+                                },
+                                [&](hrz::InlinedVector<vector_data::AttributeValues, 16>&&
+                                        attribute_values)
+                                {
+                                    assert(
+                                        tile_id_and_data_kind.data_kind
+                                        == vector_data::DataKind::AttributeValues);
+                                    content->attributes.attributes = std::move(attribute_values);
+                                    content->attributes.attribution = message.attribution;
 
-                            if (content->attributes.status
-                                == TileContent::Attributes::Status::Loading)
-                            {
-                                content->attributes.status =
-                                    TileContent::Attributes::Status::AllocatingSpecialAttributes;
-                            }
+                                    if (content->attributes.status
+                                        == TileContent::Attributes::Status::Loading)
+                                    {
+                                        content->attributes.status = TileContent::Attributes::
+                                            Status::AllocatingSpecialAttributes;
+                                    }
 
-                            if (_static_tiles)
-                            {
-                                _vector_data_channel.send(
-                                    vector_data::messages::ReleaseDataRequest{message.request_id});
-                            }
-                            else
-                            {
-                                _vector_data_channel.send(
-                                    vector_data::messages::ReleaseData{message.request_id});
-                            }
-                        }
-                        else
-                        {
-                            assert(false && "Unhandled case");
-                        }
+                                    if (_static_tiles)
+                                    {
+                                        _vector_data_channel.send(
+                                            vector_data::messages::ReleaseDataRequest{
+                                                message.request_id});
+                                    }
+                                    else
+                                    {
+                                        _vector_data_channel.send(
+                                            vector_data::messages::ReleaseData{message.request_id});
+                                    }
+                                },
+                            },
+                            std::move(message.data));
 
                         destroy_reprs(*content, DestroyRepr_Baking);
                         for (auto& repr : _reprs_configs)
@@ -1329,9 +1302,8 @@ struct VectorTilesActor : public Actor
 
                         assert(content->load_status == TileContent::LoadStatus::Loading);
                         _loading_tiles.insert(tile_id_and_data_kind.tile_id);
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType, vector_data::messages::DataError>)
+                    },
+                    [&](const vector_data::messages::DataError& message)
                     {
                         auto tile_id_and_data_kind =
                             extract_tile_id_from_request_id(message.request_id);
@@ -1381,23 +1353,17 @@ struct VectorTilesActor : public Actor
 
                             render_request.request_visual_render();
                         }
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
                 },
-                message);
+                generic_message);
         }
 
-        for (auto& message : _elevation_query_channel.receive())
+        for (auto& generic_message : _elevation_query_channel.receive())
         {
             namespace messages = planet::elevation_query::messages;
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, messages::ElevationQueryResult>)
+                hrz::overload{
+                    [&](messages::ElevationQueryResult& message)
                     {
                         auto* content = get_tile_content_for_tile_id(message.query_id);
                         if (content == nullptr) return;
@@ -1422,31 +1388,22 @@ struct VectorTilesActor : public Actor
 
                             content->geometry.status = TileContent::Geometry::Status::Ready;
                         }
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
                 },
-                message);
+                generic_message);
         }
 
-        for (auto& message : _planet_channel.receive())
+        for (auto& generic_message : _planet_channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<
-                                      MessageType, planet::surface::messages::TerrainVersionUpdate>)
+                hrz::overload{
+                    [&](const planet::surface::messages::TerrainVersionUpdate& message)
                     {
                         _planet_elevation_version_has_changed =
                             message.terrain_version != _planet_elevation_version;
                         _planet_elevation_version = message.terrain_version;
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType,
-                                           planet::surface::messages::TileElevationBounds>)
+                    },
+                    [&](const planet::surface::messages::TileElevationBounds& message)
                     {
                         auto node = _tile_node_pool.get_object(message.request_id);
                         if (node != nullptr)
@@ -1454,7 +1411,7 @@ struct VectorTilesActor : public Actor
                             if (message.min_elevation.has_value()
                                 && message.max_elevation.has_value())
                             {
-                                Elevation elevation{
+                                const Elevation elevation{
                                     message.min_elevation.value(), message.max_elevation.value(),
                                     ElevationSource::GroundTruth};
                                 if (update_tile_elevation(*node, elevation))
@@ -1464,34 +1421,27 @@ struct VectorTilesActor : public Actor
                             }
                             else if (node->elevation.source == ElevationSource::GroundTruth)
                             {
-                                Elevation elevation{0.0, 0.0, ElevationSource::None};
+                                const Elevation elevation{0.0, 0.0, ElevationSource::None};
                                 if (update_tile_elevation(*node, elevation))
                                 {
                                     render_request.request_visual_render();
                                 }
                             }
                         }
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
                 },
-                message);
+                generic_message);
         }
 
         for (auto& it : _repr_channels)
         {
             auto& channel = it.second;
 
-            for (auto& message : channel.receive())
+            for (auto& generic_message : channel.receive())
             {
                 std::visit(
-                    [&](auto& message)
-                    {
-                        using MessageType = std::decay_t<decltype(message)>;
-                        if constexpr (std::is_same_v<
-                                          MessageType, repr::messages::StyleRegistrationResult>)
+                    hrz::overload{
+                        [&](const repr::messages::StyleRegistrationResult& message)
                         {
                             for (const auto& prp : message.registered_properties)
                             {
@@ -1506,9 +1456,8 @@ struct VectorTilesActor : public Actor
                                     break;
                                 }
                             }
-                        }
-                        else if constexpr (std::is_same_v<
-                                               MessageType, repr::messages::TileStatusUpdate>)
+                        },
+                        [&](const repr::messages::TileStatusUpdate& message)
                         {
                             auto repr_id = message.tile_id;
                             auto tile_id = extract_tile_id_from_repr_id(repr_id);
@@ -1536,13 +1485,9 @@ struct VectorTilesActor : public Actor
                             }
 
                             render_request.request_visual_render();
-                        }
-                        else
-                        {
-                            static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                        }
+                        },
                     },
-                    message);
+                    generic_message);
             }
         }
 

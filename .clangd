@@ -13,6 +13,7 @@ CompileFlags:
         - "-Wno-documentation-unknown-command"
         - "-Wno-global-constructors"
         - "-Wno-old-style-cast"
+        - "-Wno-padded"
         - "-Wno-unsafe-buffer-usage"
         - "-Wno-unsafe-buffer-usage-in-container"
         - "-Wno-unused-macros"

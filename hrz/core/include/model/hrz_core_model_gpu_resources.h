@@ -136,12 +136,7 @@ struct SamplerWithParams
     bool can_use_linear_filtering;
     bool can_use_mipmaps;
 
-    constexpr bool operator==(const SamplerWithParams& other) const
-    {
-        return sampler_id == other.sampler_id
-            && can_use_linear_filtering == other.can_use_linear_filtering
-            && can_use_mipmaps == other.can_use_mipmaps;
-    }
+    constexpr bool operator==(const SamplerWithParams& other) const = default;
 };
 
 } // namespace model

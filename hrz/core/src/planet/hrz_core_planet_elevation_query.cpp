@@ -95,7 +95,7 @@ std::optional<hrz::BlobArray<float>> hrz::planet::ElevationQuery::retrieve(Ticke
     auto elevations = std::move(batch->elevations);
     batch->elevations = std::nullopt;
 
-    auto it = std::find(std::begin(_finished), std::end(_finished), ticket);
+    auto it = std::ranges::find(_finished, ticket);
     assert(it != _finished.end());
     _finished.erase(it);
     _batchs.release(ticket);
@@ -150,44 +150,42 @@ void hrz::planet::ElevationQuery::_cancel(
         {
             case Batch::Queued:
             {
-                auto it = std::find(std::begin(_queued), std::end(_queued), ticket);
+                auto it = std::ranges::find(_queued, ticket);
                 assert(it != _queued.end());
                 _queued.erase(it);
                 break;
             }
             case Batch::Culling:
             {
-                auto it = std::find(std::begin(_culling), std::end(_culling), ticket);
+                auto it = std::ranges::find(_culling, ticket);
                 assert(it != _culling.end());
                 _culling.erase(it);
                 break;
             }
             case Batch::WaitingForTiles:
             {
-                auto it =
-                    std::find(std::begin(_waiting_for_tiles), std::end(_waiting_for_tiles), ticket);
+                auto it = std::ranges::find(_waiting_for_tiles, ticket);
                 assert(it != _waiting_for_tiles.end());
                 _waiting_for_tiles.erase(it);
                 break;
             }
             case Batch::ReadyToSample:
             {
-                auto it =
-                    std::find(std::begin(_ready_to_sample), std::end(_ready_to_sample), ticket);
+                auto it = std::ranges::find(_ready_to_sample, ticket);
                 assert(it != _ready_to_sample.end());
                 _ready_to_sample.erase(it);
                 break;
             }
             case Batch::Sampling:
             {
-                auto it = std::find(std::begin(_sampling), std::end(_sampling), ticket);
+                auto it = std::ranges::find(_sampling, ticket);
                 assert(it != _sampling.end());
                 _sampling.erase(it);
                 break;
             }
             case Batch::Finished:
             {
-                auto it = std::find(std::begin(_finished), std::end(_finished), ticket);
+                auto it = std::ranges::find(_finished, ticket);
                 assert(it != _finished.end());
                 _finished.erase(it);
                 break;
@@ -371,14 +369,11 @@ void hrz::planet::ElevationQuery::work(
         auto channel_id = it.first;
         auto& channel = it.second;
 
-        for (auto& message : channel.receive())
+        for (auto& generic_message : channel.receive())
         {
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<
-                                      MessageType, elevation_query::messages::QueryElevation>)
+                hrz::overload{
+                    [&](elevation_query::messages::QueryElevation& message)
                     {
                         ElevationQueryId query_id{channel_id, message.query_id};
                         auto ticket = start_query(
@@ -393,10 +388,8 @@ void hrz::planet::ElevationQuery::work(
                                 "Duplicated elevation query ID: {}-{}", query_id.channel_id,
                                 query_id.query_id);
                         }
-                    }
-                    else if constexpr (std::is_same_v<
-                                           MessageType,
-                                           elevation_query::messages::CancelElevationQuery>)
+                    },
+                    [&](elevation_query::messages::CancelElevationQuery& message)
                     {
                         ElevationQueryId query_id{channel_id, message.query_id};
                         auto it = _query_ids_to_tickets.find(query_id);
@@ -405,13 +398,9 @@ void hrz::planet::ElevationQuery::work(
                             queue_cancel(it->second);
                             _query_ids_to_tickets.erase(it);
                         }
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
+                    },
                 },
-                message);
+                generic_message);
         }
     }
 

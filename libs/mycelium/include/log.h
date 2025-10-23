@@ -5,6 +5,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
+#include <source_location>
 #include <string>
 
 namespace my
@@ -15,8 +16,7 @@ void log_message(
     const char* prefix,
     LogSeverity severity,
     const std::string& message,
-    const char* file,
-    int line);
+    const std::source_location& location = std::source_location::current());
 
 } // namespace my
 
@@ -27,10 +27,9 @@ void log_message(
 #define MY_LOG_XSTRINGIFY(X) #X
 #define MY_LOG_STRINGIFY(X) MY_LOG_XSTRINGIFY(X)
 
-#define MY_LOG(SEVERITY, FMT, ...)                                                                \
-    ::my::log_message(                                                                            \
-        MY_LOG_STRINGIFY(MY_LOG_PREFIX), SEVERITY, ::fmt::format(FMT_STRING(FMT), ##__VA_ARGS__), \
-        __FILE__, __LINE__)
+#define MY_LOG(SEVERITY, FMT, ...) \
+    ::my::log_message(             \
+        MY_LOG_STRINGIFY(MY_LOG_PREFIX), SEVERITY, ::fmt::format(FMT_STRING(FMT), ##__VA_ARGS__))
 
 #ifndef NDEBUG
 #    define MY_LOG_DEBUG(FMT, ...) MY_LOG(::my::LogSeverity::Debug, FMT, ##__VA_ARGS__)

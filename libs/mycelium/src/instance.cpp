@@ -852,7 +852,7 @@ void do_post_link_steps(my::GLInstance* inst, my::GLShader* ptr)
     }
 
     ptr->draw_buffers_fingerprint =
-        my::compute_draw_buffers_fingerprint(ptr->draw_buffer_count, ptr->draw_buffers);
+        my::compute_draw_buffers_fingerprint({ptr->draw_buffers, (size_t)ptr->draw_buffer_count});
 }
 
 void my::GLInstance::configure_shaders_linking(const ShadersLinkingConfig& config)

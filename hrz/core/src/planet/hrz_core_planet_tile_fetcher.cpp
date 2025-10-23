@@ -338,8 +338,8 @@ void TileFetcher::work(
     // Sort tiles from most recently used to least recently used. This allows iterating the
     // array back to front and thus making the erase operation as simple as a pop_back().
     // @Note: `last_touch_time` is ms since epoch. So, higher values mean more recent tiles.
-    std::sort(
-        std::begin(_ordered_tiles), std::end(_ordered_tiles),
+    std::ranges::sort(
+        _ordered_tiles,
         [&](TileHandle h1, TileHandle h2)
         {
             const Tile* t1 = _tiles_pool.get_object(h1);
@@ -543,18 +543,16 @@ void WebMercatorZonesTileAttributionPolicy::add_zone(
     AttributionHandle attribution)
 {
     _zones.push_back({lod_min, lod_max, hrz::geo_to_web_mercator(geo_bounds), attribution});
-    std::sort(
-        _zones.begin(), _zones.end(),
-        [](const Zone& a, const Zone& b) -> bool { return a.lod_min < b.lod_min; });
+    std::ranges::sort(
+        _zones, [](const Zone& a, const Zone& b) -> bool { return a.lod_min < b.lod_min; });
 }
 
 hrz::InlinedVector<AttributionHandle, 4> WebMercatorZonesTileAttributionPolicy::
     get_tile_attribution(TileCoords tile) const
 {
-    auto last = std::upper_bound(
-        _zones.begin(), _zones.end(), Zone{},
-        [tile](const Zone& value, const Zone& element) -> bool
-        { return tile.lod < element.lod_min; });
+    auto last = std::ranges::upper_bound(
+        _zones, (int)tile.lod, std::less<int>{},
+        [](const Zone& element) { return element.lod_min; });
 
     auto bounds = hrz::mercator_tile_bbox_meters(tile);
 

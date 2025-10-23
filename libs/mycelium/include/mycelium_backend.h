@@ -182,9 +182,7 @@ struct ResourceHandle
 
     constexpr operator bool() const { return handle; }
 
-    constexpr bool operator==(const ResourceHandle& h) const { return h.handle == handle; }
-
-    constexpr bool operator!=(const ResourceHandle& h) const { return h.handle != handle; }
+    constexpr bool operator==(const ResourceHandle& h) const = default;
 };
 
 enum class IndexType

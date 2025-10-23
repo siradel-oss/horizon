@@ -48,7 +48,6 @@
 #include <hrz_fnd_mem.h>
 #include <hrz_fnd_meta.h>
 #include <hrz_fnd_observed.h>
-#include <hrz_fnd_overload.h>
 #include <hrz_fnd_static_string.h>
 #include <hrz_fnd_string_utils.h>
 #include <hrz_fnd_time.h>
@@ -889,17 +888,17 @@ struct ThreeDTilesSystem
 
         config->inherited_draw_prps.clip_id = clip_id;
         config->inherited_draw_prps.lighting = lighting_settings;
-        config->inherited_draw_prps.color = lm::vec4(1.0f);
+        config->inherited_draw_prps.color = lm::vec4(1.0F);
         config->inherited_draw_prps.apply_feature_color_to_overlay = false;
         config->inherited_draw_prps.overlay_material_enabled = false;
-        config->inherited_draw_prps.overlay_material_opacity = 1.0f;
+        config->inherited_draw_prps.overlay_material_opacity = 1.0F;
         config->inherited_draw_prps.transform = lm::dmat4::identity();
         config->inherited_draw_prps.feature_color_blend_mode = color_blend_mode;
         config->inherited_draw_prps.feature_color_blend_strength = color_blend_strength;
 
         config->attributes = attributes;
-        config->has_vector_data_layer_attributes = std::any_of(
-            config->attributes.begin(), config->attributes.end(),
+        config->has_vector_data_layer_attributes = std::ranges::any_of(
+            config->attributes,
             [](const hrz::three_d_tiles::AttributeConfig& attribute)
             { return attribute.has_vector_data_layer_source(); });
         config->vector_data_layer_id = 0;
@@ -1476,9 +1475,8 @@ struct ThreeDTilesSystem
             for (auto& subtile : tile.subtiles)
             {
                 std::visit(
-                    [&](auto& content)
+                    [&]<typename T>(T& content)
                     {
-                        using T = std::decay_t<decltype(content)>;
                         if constexpr (std::is_same_v<T, ThreeDTile::TilesetContent>)
                         {
                             visit_tiles<VISITOR>(content.tileset_handle, visitor);
@@ -1579,11 +1577,9 @@ struct ThreeDTilesSystem
             for (auto& subtile : tile.subtiles)
             {
                 std::visit(
-                    [this, &subtile, &tile, &has_subtile_to_load](auto& content)
-                    {
-                        using T = std::decay_t<decltype(content)>;
-
-                        if constexpr (std::is_same_v<T, ThreeDTile::TilesetContent>)
+                    hrz::overload{
+                        [this, &subtile, &tile,
+                         &has_subtile_to_load](ThreeDTile::TilesetContent& content)
                         {
                             if (reload_subtiles_content(content.tileset_handle, true))
                             {
@@ -1591,26 +1587,28 @@ struct ThreeDTilesSystem
                                 tile.subtiles_left_to_load += 1;
                                 has_subtile_to_load = true;
                             }
-                        }
-                        else if constexpr (std::is_same_v<T, ThreeDTile::B3dmContent>)
+                        },
+                        [&subtile, &tile, &has_subtile_to_load](ThreeDTile::B3dmContent&)
                         {
                             subtile.load_status = ThreeDTile::Subtile::LoadStatus::LOADING;
                             tile.subtiles_left_to_load += 1;
                             has_subtile_to_load = true;
-                        }
-                        else if constexpr (
-                            std::is_same_v<T, ThreeDTile::I3dmContent>
-                            || std::is_same_v<T, ThreeDTile::PntsContent>
-                            || std::is_same_v<T, std::monostate>)
+                        },
+                        [](ThreeDTile::I3dmContent&)
                         {
                             // We do nothing, because reloading happens for materials,
                             // but i3dm and pnts don't use dynamic materials.
-                        }
-                        else
+                        },
+                        [](ThreeDTile::PntsContent&)
                         {
-                            static_assert(hrz::always_false<T>, "non-exhaustive visitor!");
-                        }
-                    },
+                            // We do nothing, because reloading happens for materials,
+                            // but i3dm and pnts don't use dynamic materials.
+                        },
+                        [](std::monostate&)
+                        {
+                            // We do nothing, because reloading happens for materials,
+                            // but i3dm and pnts don't use dynamic materials.
+                        }},
                     subtile.content);
             }
 
@@ -1859,41 +1857,28 @@ struct ThreeDTilesSystem
     }
 
     void _unload_subtile(
-        Tileset* tileset,
-        const ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
         hrz::AssetsLoader* al,
         hrz::JobScheduler* js,
         hrz::BlobAllocator* ba)
     {
         std::visit(
-            [this, al, js, ba](auto& content)
-            {
-                using T = std::decay_t<decltype(content)>;
-                if constexpr (std::is_same_v<T, ThreeDTile::B3dmContent>)
-                {
-                    _unload_b3dm_subtile(content, al, js, ba);
-                }
-                else if constexpr (std::is_same_v<T, ThreeDTile::TilesetContent>)
+            hrz::overload{
+                [this, al, js, ba](ThreeDTile::B3dmContent& content)
+                { _unload_b3dm_subtile(content, al, js, ba); },
+                [this, al, js, ba](ThreeDTile::I3dmContent& content)
+                { _unload_i3dm_subtile(content, al, js, ba); },
+                [this, al, js, ba](ThreeDTile::PntsContent& content)
+                { _unload_pnts_subtile(content, al, js, ba); },
+                [this, al, js, ba](ThreeDTile::TilesetContent& content)
                 {
                     if (content.tileset_handle != 0)
                     {
                         _unload_tileset(content.tileset_handle, al, js, ba);
                     }
                     content.tileset_handle = 0;
-                }
-                else if constexpr (std::is_same_v<T, ThreeDTile::I3dmContent>)
-                {
-                    _unload_i3dm_subtile(content, al, js, ba);
-                }
-                else if constexpr (std::is_same_v<T, ThreeDTile::PntsContent>)
-                {
-                    _unload_pnts_subtile(content, al, js, ba);
-                }
-                else if constexpr (!std::is_same_v<T, std::monostate>)
-                {
-                    static_assert(hrz::always_false<T>, "Unhandled case");
-                }
+                },
+                [](std::monostate&) {},
             },
             subtile.content);
 
@@ -1923,7 +1908,7 @@ struct ThreeDTilesSystem
 
         for (auto& subtile : tile.subtiles)
         {
-            _unload_subtile(tileset, tile, subtile, al, js, ba);
+            _unload_subtile(subtile, al, js, ba);
         }
         tile.subtiles.clear();
 
@@ -2049,14 +2034,11 @@ struct ThreeDTilesSystem
     }
 
     template<typename SRC, typename DST>
-    static void _load_binary_data(const SRC* src, DST* dst, size_t n)
+    static void _load_binary_data(std::span<const SRC> src, std::span<DST> dst)
     {
+        assert(src.size() == dst.size());
         assert(sizeof(DST) >= sizeof(SRC));
-
-        for (size_t i = 0; i < n; ++i)
-        {
-            dst[i] = src[i];
-        }
+        std::ranges::copy_n(src.begin(), src.size(), dst.begin());
     }
 
     bool _decode_i3dm_feature_table(
@@ -2345,8 +2327,9 @@ struct ThreeDTilesSystem
                     size_t data_size = content.instances_length * sizeof(uint8_t);
                     CHECK_DATA_SIZE();
                     _load_binary_data<uint8_t, uint32_t>(
-                        (const uint8_t*)(feature_table_bin_data.data() + byte_offset),
-                        content.batch_id_data.data(), content.instances_length);
+                        {(const uint8_t*)(feature_table_bin_data.data() + byte_offset),
+                         content.instances_length},
+                        {content.batch_id_data.data(), content.instances_length});
                     break;
                 }
                 case hrz::three_d_tiles::AttributeComponentType::SHORT:
@@ -2355,8 +2338,9 @@ struct ThreeDTilesSystem
                     size_t data_size = content.instances_length * sizeof(uint16_t);
                     CHECK_DATA_SIZE();
                     _load_binary_data<uint16_t, uint32_t>(
-                        (const uint16_t*)(feature_table_bin_data.data() + byte_offset),
-                        content.batch_id_data.data(), content.instances_length);
+                        {(const uint16_t*)(feature_table_bin_data.data() + byte_offset),
+                         content.instances_length},
+                        {content.batch_id_data.data(), content.instances_length});
                     break;
                 }
                 case hrz::three_d_tiles::AttributeComponentType::INT:
@@ -2365,8 +2349,9 @@ struct ThreeDTilesSystem
                     size_t data_size = content.instances_length * sizeof(uint32_t);
                     CHECK_DATA_SIZE();
                     _load_binary_data<uint32_t, uint32_t>(
-                        (const uint32_t*)(feature_table_bin_data.data() + byte_offset),
-                        content.batch_id_data.data(), content.instances_length);
+                        {(const uint32_t*)(feature_table_bin_data.data() + byte_offset),
+                         content.instances_length},
+                        {content.batch_id_data.data(), content.instances_length});
                     break;
                 }
                 default:
@@ -2377,10 +2362,7 @@ struct ThreeDTilesSystem
                     return false;
             }
 
-            content.batch_length =
-                *std::max_element(
-                    std::begin(content.batch_id_data), std::end(content.batch_id_data))
-                + 1;
+            content.batch_length = *std::ranges::max_element(content.batch_id_data) + 1;
         }
         else
         {
@@ -3507,32 +3489,32 @@ struct ThreeDTilesSystem
             if (_load_content(tileset, tile, tile_data_blob, js, al, ba, attributions)) return true;
         }
 
-        if (hrz::str::ends_with(tile.uri, ".json"))
+        if (tile.uri.ends_with(".json"))
         {
             // This is probably an external tileset, sent with the wrong content-type header.
             if (_load_external_tileset(tileset, tile_index, tile, tile_data_blob, js)) return true;
         }
-        else if (hrz::str::ends_with(tile.uri, ".b3dm"))
+        else if (tile.uri.ends_with(".b3dm"))
         {
             // This is probably a b3dm, sent with the wrong content-type header.
             if (_load_b3dm(tileset, tile, tile_data_blob, js, ba, attributions)) return true;
         }
-        else if (hrz::str::ends_with(tile.uri, ".i3dm"))
+        else if (tile.uri.ends_with(".i3dm"))
         {
             // This is probably an i3dm, sent with the wrong content-type header.
             if (_load_i3dm(tileset, tile, tile_data_blob, al, js, ba, attributions)) return true;
         }
-        else if (hrz::str::ends_with(tile.uri, ".pnts"))
+        else if (tile.uri.ends_with(".pnts"))
         {
             // This is probably a pnts, sent with the wrong content-type header.
             if (_load_pnts(tileset, tile, tile_data_blob, al, js, ba, attributions)) return true;
         }
-        else if (hrz::str::ends_with(tile.uri, ".cmpt"))
+        else if (tile.uri.ends_with(".cmpt"))
         {
             // This is probably a cmpt, sent with the wrong content-type header.
             if (_load_cmpt(tileset, tile, tile_data_blob, js, al, ba, attributions)) return true;
         }
-        else if (hrz::str::ends_with(tile.uri, ".glb") || hrz::str::ends_with(tile.uri, ".gltf"))
+        else if (tile.uri.ends_with(".glb") || tile.uri.ends_with(".gltf"))
         {
             // This is probably a gltf, sent with the wrong content-type header.
             if (_load_gltf_if_allowed(tileset, tile, tile_data_blob, js, ba, attributions))
@@ -3637,32 +3619,12 @@ struct ThreeDTilesSystem
     bool _is_styled(const ThreeDTile::Subtile& subtile)
     {
         return std::visit(
-            [](const auto& content) -> bool
-            {
-                using T = std::decay_t<decltype(content)>;
-                if constexpr (std::is_same_v<T, ThreeDTile::B3dmContent>)
-                {
-                    return content.has_been_styled_once;
-                }
-                else if constexpr (std::is_same_v<T, ThreeDTile::I3dmContent>)
-                {
-                    return content.has_been_styled_once;
-                }
-                else if constexpr (std::is_same_v<T, ThreeDTile::PntsContent>)
-                {
-                    return content.has_been_styled_once;
-                }
-                else if constexpr (
-                    std::is_same_v<T, ThreeDTile::TilesetContent>
-                    || std::is_same_v<T, std::monostate>)
-                {
-                    return true;
-                }
-                else
-                {
-                    static_assert(hrz::always_false<T>, "Unhandled case");
-                }
-            },
+            hrz::overload{
+                [](const ThreeDTile::B3dmContent& content) { return content.has_been_styled_once; },
+                [](const ThreeDTile::I3dmContent& content) { return content.has_been_styled_once; },
+                [](const ThreeDTile::PntsContent& content) { return content.has_been_styled_once; },
+                [](const ThreeDTile::TilesetContent&) { return true; },
+                [](const std::monostate&) { return true; }},
             subtile.content);
     }
 
@@ -3771,9 +3733,7 @@ struct ThreeDTilesSystem
                             tile.culled_in.reset();
                             tile.active_child_count = 0;
                             tile.renderable_child_count = 0;
-                            std::fill(
-                                std::begin(tile.rendered_child_count_per_view),
-                                std::end(tile.rendered_child_count_per_view), 0);
+                            std::ranges::fill(tile.rendered_child_count_per_view, 0);
                             tile.should_render_children_in.reset();
                             tile.delete_if_unused = true;
 
@@ -4013,8 +3973,7 @@ struct ThreeDTilesSystem
         {
             auto& content = std::get<ThreeDTile::B3dmContent>(subtile.content);
 
-            std::fill(
-                content.per_batch_color.begin(), content.per_batch_color.end(), lm::ubvec4{0xff});
+            std::ranges::fill(content.per_batch_color, lm::ubvec4{0xff});
 
             return hrz::RenderRequest::visual();
         }
@@ -4022,17 +3981,14 @@ struct ThreeDTilesSystem
         {
             auto& content = std::get<ThreeDTile::I3dmContent>(subtile.content);
 
-            std::fill(
-                content.per_instance_color.begin(), content.per_instance_color.end(),
-                lm::ubvec4{0xff});
+            std::ranges::fill(content.per_instance_color, lm::ubvec4{0xff});
 
             return hrz::RenderRequest::visual();
         }
         else if (subtile.has_pnts())
         {
             auto& content = std::get<ThreeDTile::PntsContent>(subtile.content);
-            std::fill(
-                content.per_batch_color.begin(), content.per_batch_color.end(), lm::ubvec4{0xff});
+            std::ranges::fill(content.per_batch_color, lm::ubvec4{0xff});
             content.has_transparent_feature = false;
             return hrz::RenderRequest::visual();
         }
@@ -4218,7 +4174,7 @@ struct ThreeDTilesSystem
         // its colour down below. So by initialising
         // all the colours to 0, features that have not
         // been emitted are made invisible.
-        std::fill(per_batch_color.begin(), per_batch_color.end(), lm::ubvec4{0});
+        std::ranges::fill(per_batch_color, lm::ubvec4{0});
 
         auto result_prps = result.features.prps.get_data();
         auto result_values = result.features.get_values_reader();
@@ -4575,10 +4531,8 @@ struct ThreeDTilesSystem
     void _work_subtile_models(ThreeDTile::Subtile* subtile, const TilesetWorkContext& ctx)
     {
         std::visit(
-            [&](auto& content)
-            {
-                using T = std::decay_t<decltype(content)>;
-                if constexpr (std::is_same_v<T, ThreeDTile::B3dmContent>)
+            hrz::overload{
+                [&](ThreeDTile::B3dmContent& content)
                 {
                     if (content.prototype)
                     {
@@ -4587,8 +4541,8 @@ struct ThreeDTilesSystem
                             ctx.attributions);
                         content.materials.work(content.prototype);
                     }
-                }
-                else if constexpr (std::is_same_v<T, ThreeDTile::I3dmContent>)
+                },
+                [&](ThreeDTile::I3dmContent& content)
                 {
                     if (content.prototype)
                     {
@@ -4601,18 +4555,19 @@ struct ThreeDTilesSystem
                             hrz::model::work(content.prototype, *content.model);
                         }
                     }
-                }
-                else if constexpr (
-                    std::is_same_v<T, ThreeDTile::TilesetContent>
-                    || std::is_same_v<T, ThreeDTile::PntsContent>
-                    || std::is_same_v<T, std::monostate>)
+                },
+                [&](ThreeDTile::TilesetContent&)
                 {
-                }
-                else
+                    // No action needed for TilesetContent
+                },
+                [&](ThreeDTile::PntsContent&)
                 {
-                    static_assert(hrz::always_false<T>, "Unhandled content type");
-                }
-            },
+                    // No action needed for PntsContent
+                },
+                [&](std::monostate&)
+                {
+                    // No action needed for std::monostate
+                }},
             subtile->content);
     }
 
@@ -5226,16 +5181,13 @@ struct ThreeDTilesSystem
                 {
                     if (subtile.load_status != ThreeDTile::Subtile::LoadStatus::LOADING) continue;
 
-                    std::visit(
-                        [&](auto& content)
-                        {
-                            using T = std::decay_t<decltype(content)>;
-                            if constexpr (std::is_same_v<T, ThreeDTile::B3dmContent>)
-                            {
-                                render_request |= _work_loading_subtile_b3dm(
+                    render_request |= std::visit(
+                        hrz::overload{
+                            [&](ThreeDTile::B3dmContent&) {
+                                return _work_loading_subtile_b3dm(
                                     *tileset, tile, subtile, tile_object_reference, ctx);
-                            }
-                            else if constexpr (std::is_same_v<T, ThreeDTile::TilesetContent>)
+                            },
+                            [&](ThreeDTile::TilesetContent& content)
                             {
                                 auto tileset = _tilesets.get_object(content.tileset_handle);
                                 auto root_tile_status = get_root_tile_status(tileset);
@@ -5247,22 +5199,17 @@ struct ThreeDTilesSystem
                                 {
                                     _mark_subtile_load_error(tile, subtile);
                                 }
-                            }
-                            else if constexpr (std::is_same_v<T, ThreeDTile::I3dmContent>)
-                            {
-                                render_request |= _work_loading_subtile_i3dm(
+                                return hrz::RenderRequest{};
+                            },
+                            [&](ThreeDTile::I3dmContent&) {
+                                return _work_loading_subtile_i3dm(
                                     *tileset, tile, subtile, tile_object_reference, ctx);
-                            }
-                            else if constexpr (std::is_same_v<T, ThreeDTile::PntsContent>)
-                            {
-                                render_request |= _work_loading_subtile_pnts(
+                            },
+                            [&](ThreeDTile::PntsContent&) {
+                                return _work_loading_subtile_pnts(
                                     *tileset, tile, subtile, tile_object_reference, ctx);
-                            }
-                            else if constexpr (!std::is_same_v<T, std::monostate>)
-                            {
-                                assert(false && "Unhandled case");
-                            }
-                        },
+                            },
+                            [&](std::monostate&) { return hrz::RenderRequest{}; }},
                         subtile.content);
                 }
 
@@ -5852,14 +5799,12 @@ struct ThreeDTilesSystem
             return {tileset, &tile, &tile.subtiles.at(subtile_index)};
         };
 
-        for (auto& message : _vector_data_channel.receive())
+        for (auto& generic_message : _vector_data_channel.receive())
         {
             namespace messages = hrz::vector_data::messages;
             std::visit(
-                [&](auto& message)
-                {
-                    using MessageType = std::decay_t<decltype(message)>;
-                    if constexpr (std::is_same_v<MessageType, messages::LayerModelUpdate>)
+                hrz::overload{
+                    [&](messages::LayerModelUpdate& message)
                     {
                         auto tileset = get_tileset_for_layer_request(message.request_id);
                         if (tileset != nullptr)
@@ -5868,8 +5813,8 @@ struct ThreeDTilesSystem
                                 TilesetConfig::VectorDataLayerStatus::LOADED;
                             _trigger_restyling(tileset, true);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::LayerModelError>)
+                    },
+                    [&](messages::LayerModelError& message)
                     {
                         auto tileset = get_tileset_for_layer_request(message.request_id);
                         if (tileset != nullptr)
@@ -5878,12 +5823,12 @@ struct ThreeDTilesSystem
                                 TilesetConfig::VectorDataLayerStatus::ERROR;
                             _trigger_restyling(tileset, true);
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::LayerNewData>)
+                    },
+                    [&](const messages::LayerNewData&)
                     {
                         // No-op
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::DataUpdate>)
+                    },
+                    [&](messages::DataUpdate& message)
                     {
                         auto [tileset, tile, subtile] =
                             get_subtile_for_data_request(message.request_id);
@@ -5991,8 +5936,8 @@ struct ThreeDTilesSystem
                                 _trigger_restyling(tileset, false);
                             }
                         }
-                    }
-                    else if constexpr (std::is_same_v<MessageType, messages::DataError>)
+                    },
+                    [&](messages::DataError& message)
                     {
                         auto [tileset, tile, subtile] =
                             get_subtile_for_data_request(message.request_id);
@@ -6007,13 +5952,8 @@ struct ThreeDTilesSystem
                                 _trigger_restyling(tileset, false);
                             }
                         }
-                    }
-                    else
-                    {
-                        static_assert(hrz::always_false<MessageType>, "Unhandled case");
-                    }
-                },
-                message);
+                    }},
+                generic_message);
         }
     }
 
@@ -6097,11 +6037,8 @@ struct ThreeDTilesSystem
     hrz::RenderRequest _upload_subtile_style_data(ThreeDTile::Subtile& subtile)
     {
         std::visit(
-            [&](auto& content)
-            {
-                using ContentType = std::decay_t<decltype(content)>;
-
-                if constexpr (std::is_same_v<ContentType, ThreeDTile::B3dmContent>)
+            hrz::overload{
+                [&](ThreeDTile::B3dmContent& content)
                 {
                     if (subtile.styling_status
                         == ThreeDTile::StylingStatus::WAITING_FOR_RESOURCE_UPDATE)
@@ -6116,8 +6053,8 @@ struct ThreeDTilesSystem
                         content.has_been_styled_once = true;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
                     }
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::I3dmContent>)
+                },
+                [&](ThreeDTile::I3dmContent& content)
                 {
                     if (subtile.styling_status
                         == ThreeDTile::StylingStatus::WAITING_FOR_RESOURCE_UPDATE)
@@ -6130,8 +6067,8 @@ struct ThreeDTilesSystem
                         content.has_been_styled_once = true;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
                     }
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::PntsContent>)
+                },
+                [&](ThreeDTile::PntsContent& content)
                 {
                     if (subtile.styling_status
                         == ThreeDTile::StylingStatus::WAITING_FOR_RESOURCE_UPDATE)
@@ -6142,18 +6079,10 @@ struct ThreeDTilesSystem
                         content.has_been_styled_once = true;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
                     }
-                }
-                else if constexpr (
-                    std::is_same_v<ContentType, ThreeDTile::TilesetContent>
-                    || std::is_same_v<ContentType, std::monostate>)
-                {
-                    subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
-                }
-                else
-                {
-                    static_assert(hrz::always_false<ContentType>, "Unhandled case");
-                }
-            },
+                },
+                [&](ThreeDTile::TilesetContent&)
+                { subtile.styling_status = ThreeDTile::StylingStatus::IDLE; },
+                [&](std::monostate&) { subtile.styling_status = ThreeDTile::StylingStatus::IDLE; }},
             subtile.content);
 
         return hrz::RenderRequest::visual();
@@ -6165,11 +6094,8 @@ struct ThreeDTilesSystem
         ThreeDTile::Subtile& subtile)
     {
         std::visit(
-            [&](auto& content)
-            {
-                using ContentType = std::decay_t<decltype(content)>;
-
-                if constexpr (std::is_same_v<ContentType, ThreeDTile::B3dmContent>)
+            hrz::overload{
+                [&](ThreeDTile::B3dmContent& content)
                 {
                     if (tile.was_made_renderable_once) return;
 
@@ -6179,8 +6105,8 @@ struct ThreeDTilesSystem
                             content.prototype, *content.geometry,
                             tileset.config->selected_feature_ids);
                     }
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::I3dmContent>)
+                },
+                [&](ThreeDTile::I3dmContent& content)
                 {
                     if (content.prototype && content.instance_group.has_value()
                         && !tile.was_made_renderable_once)
@@ -6189,30 +6115,28 @@ struct ThreeDTilesSystem
                             content.prototype, content.instance_group.value(),
                             tileset.config->selected_feature_ids);
                     }
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::PntsContent>)
+                },
+                [&](ThreeDTile::PntsContent& content)
                 {
                     if (content.point_cloud)
                     {
                         content.point_cloud->update_selection(tileset.config->selected_feature_ids);
                     }
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::TilesetContent>)
+                },
+                [&](ThreeDTile::TilesetContent& content)
                 {
                     assert(
                         get_root_tile_status(_tilesets.get_object(content.tileset_handle))
                         == ThreeDTile::LoadStatus::RENDERABLE);
-                }
-                else if constexpr (!std::is_same_v<ContentType, std::monostate>)
+                },
+                [&](std::monostate&)
                 {
-                    static_assert(hrz::always_false<ContentType>, "Unhandled case");
-                }
-            },
+                    // Empty block for std::monostate
+                }},
             subtile.content);
     }
 
     hrz::RenderRequest _make_tile_renderable(
-        hrz::Render* render,
         Tileset* tileset,
         uint32_t tile_index,
         ThreeDTile& tile)
@@ -6469,11 +6393,8 @@ struct ThreeDTilesSystem
         hrz::BlobAllocator* ba)
     {
         std::visit(
-            [&](auto& content)
-            {
-                using ContentType = std::decay_t<decltype(content)>;
-
-                if constexpr (std::is_same_v<ContentType, ThreeDTile::B3dmContent>)
+            hrz::overload{
+                [&](ThreeDTile::B3dmContent& content)
                 {
                     if (content.prototype != nullptr)
                     {
@@ -6481,26 +6402,19 @@ struct ThreeDTilesSystem
                         content.materials.work_gpu(
                             content.prototype, _model_shared_resources, render);
                     }
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::I3dmContent>)
+                },
+                [&](ThreeDTile::I3dmContent&)
+                { _work_gpu_subtile_i3dm(tile, subtile, render, ba); },
+                [&](ThreeDTile::PntsContent&)
+                { _work_gpu_subtile_pnts(tileset, tile, subtile, render); },
+                [&](ThreeDTile::TilesetContent&)
                 {
-                    _work_gpu_subtile_i3dm(tile, subtile, render, ba);
-                }
-                else if constexpr (std::is_same_v<ContentType, ThreeDTile::PntsContent>)
+                    // No action needed for TilesetContent
+                },
+                [&](std::monostate&)
                 {
-                    _work_gpu_subtile_pnts(tileset, tile, subtile, render);
-                }
-                else if constexpr (
-                    std::is_same_v<ContentType, ThreeDTile::TilesetContent>
-                    || std::is_same_v<ContentType, std::monostate>)
-                {
-                    // No action needed for these types
-                }
-                else
-                {
-                    static_assert(hrz::always_false<ContentType>, "Unhandled case");
-                }
-            },
+                    // No action needed for std::monostate
+                }},
             subtile.content);
     }
 
@@ -6547,7 +6461,7 @@ struct ThreeDTilesSystem
                 // frames later, which would create undesired flickering.
                 if (tile.load_status == ThreeDTile::LoadStatus::LOADED && !has_unstyled_subtiles)
                 {
-                    render_request |= _make_tile_renderable(render, tileset, tile_index, tile);
+                    render_request |= _make_tile_renderable(tileset, tile_index, tile);
                 }
 
                 if (has_non_idle_styling_status_subtiles)
@@ -6604,11 +6518,8 @@ struct ThreeDTilesSystem
                     }
 
                     std::visit(
-                        [&](auto& content)
-                        {
-                            using ContentType = std::decay_t<decltype(content)>;
-
-                            if constexpr (std::is_same_v<ContentType, ThreeDTile::B3dmContent>)
+                        hrz::overload{
+                            [&](ThreeDTile::B3dmContent& content)
                             {
                                 const auto& model = content.materials.get_active_model();
                                 if (content.prototype && model.has_value())
@@ -6618,8 +6529,8 @@ struct ThreeDTilesSystem
                                         draw_in.bits(), _model_shared_resources, render,
                                         attributions);
                                 }
-                            }
-                            else if constexpr (std::is_same_v<ContentType, ThreeDTile::I3dmContent>)
+                            },
+                            [&](ThreeDTile::I3dmContent& content)
                             {
                                 if (content.prototype && content.model.has_value())
                                 {
@@ -6629,8 +6540,8 @@ struct ThreeDTilesSystem
                                         draw_in.bits(), _model_shared_resources_instanced, render,
                                         attributions);
                                 }
-                            }
-                            else if constexpr (std::is_same_v<ContentType, ThreeDTile::PntsContent>)
+                            },
+                            [&](ThreeDTile::PntsContent& content)
                             {
                                 if (content.point_cloud)
                                 {
@@ -6642,18 +6553,15 @@ struct ThreeDTilesSystem
 
                                     content.point_cloud->draw(render, draw_in.bits());
                                 }
-                            }
-                            else if constexpr (
-                                std::is_same_v<ContentType, ThreeDTile::TilesetContent>
-                                || std::is_same_v<ContentType, std::monostate>)
+                            },
+                            [&](ThreeDTile::TilesetContent&)
                             {
                                 // No action needed for these types
-                            }
-                            else
+                            },
+                            [&](std::monostate&)
                             {
-                                static_assert(hrz::always_false<ContentType>, "Unhandled case");
-                            }
-                        },
+                                // No action needed for these types
+                            }},
                         subtile.content);
                 }
             }

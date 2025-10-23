@@ -39,6 +39,24 @@ If the issue still occurs, install a recent version of the JDK and add to your `
 startup --server_javabase=<path to you Java install> # For example C:\Program Files\Java\jre1.8.0_271
 ```
 
+#### Issues when building WASM on Windows
+
+There are currently (Bazel 8) issues with Bazel and symlinks on Windows which means that symlinks created by the Node/npm rules might be broken. This appears as packages that are not found at build time. See [this issue](https://github.com/aspect-build/rules_js/issues/2261).
+
+Meanwhile, you can either build Horizon only on Linux or WSL, or do the following, very annoying, thing:
+
+When you encounter an error, delete all symlinks from `node_modules` in the current `bin` directory (with transition). For example (`C:\Users\WK5714\_bazel_WK5714\g2xpdmbf\execroot\_main\bazel-out\x64_windows-opt-exec-ST-d57f47055a04\bin`). Look at the build logs to find this path. So `cd` to this path and run the following command if you have `fd-find` installed:
+
+```
+fd -pIH -t l "node_modules" -x cmd /c rmdir "{}" && fd -pIH -t l "node_modules" -x cmd /c del "{}"
+```
+
+Then delete the runfiles folder for TSC. For example `C:\Users\WK5714\_bazel_WK5714\g2xpdmbf\execroot\_main\bazel-out\x64_windows-opt-exec-ST-d57f47055a04\bin\external\aspect_rules_ts++ext+npm_typescript\tsc_\tsc.bat.runfiles`.
+
+Then re-run the build. It should go a bit further but might still fail before the end. In which case, restart this process until you manage to build Horizon fully.
+
+Unless you nuke your workspace or change npm dependencies, you should not need to re-do this whole process once the build was successful once.
+
 ### Linux
 
 - A C++ compiler that supports C++20

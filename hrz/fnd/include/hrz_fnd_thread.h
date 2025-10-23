@@ -8,12 +8,12 @@
 #define HRZ_SCOPED_LOCK_CONCAT(prefix, suffix) HRZ_SCOPED_LOCK_CONCAT_(prefix, suffix)
 
 #define HRZ_SCOPED_LOCK(MUTEX) \
-    std::unique_lock<std::mutex> HRZ_SCOPED_LOCK_CONCAT(_lock_, __LINE__)(MUTEX)
+    const std::unique_lock<std::mutex> HRZ_SCOPED_LOCK_CONCAT(_lock_, __COUNTER__)(MUTEX)
 
 #define HRZ_SCOPED_EXCLUSIVE_LOCK(MUTEX) \
-    std::unique_lock<std::shared_mutex> HRZ_SCOPED_LOCK_CONCAT(_lock_, __LINE__)(MUTEX)
+    const std::unique_lock<std::shared_mutex> HRZ_SCOPED_LOCK_CONCAT(_lock_, __COUNTER__)(MUTEX)
 #define HRZ_SCOPED_SHARED_LOCK(MUTEX) \
-    std::shared_lock<std::shared_mutex> HRZ_SCOPED_LOCK_CONCAT(_lock_, __LINE__)(MUTEX)
+    const std::shared_lock<std::shared_mutex> HRZ_SCOPED_LOCK_CONCAT(_lock_, __COUNTER__)(MUTEX)
 
 namespace hrz
 {

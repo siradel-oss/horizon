@@ -31,34 +31,30 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
             {
                 case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
                 {
-                    uint32_t value = nodata_value.bit_pattern();
-                    if ((value & ~nodata_mask) != 0)
+                    nodata_pattern = nodata_value.bit_pattern();
+                    if ((nodata_pattern & ~nodata_mask) != 0)
                     {
                         HRZ_LOG_WARNING(
                             "Too many bits provided for {} nodata bit "
                             "pattern. Ignoring extra bits.",
                             hrz_proto::ImageFormat_Name(image_format));
-                        value &= nodata_mask;
+                        nodata_pattern &= nodata_mask;
                     }
-                    std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
                     break;
                 }
                 case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
                 {
-                    uint32_t value = encode_func((float)nodata_value.uint_value());
-                    std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                    nodata_pattern = encode_func((float)nodata_value.uint_value());
                     break;
                 }
                 case hrz_proto::NodataValueType::INT_VALUE_NODATA:
                 {
-                    uint32_t value = encode_func((float)nodata_value.int_value());
-                    std::memcpy(&nodata_pattern, &value, sizeof(int32_t));
+                    nodata_pattern = encode_func((float)nodata_value.int_value());
                     break;
                 }
                 case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
                 {
-                    uint32_t value = encode_func(nodata_value.float_value());
-                    std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                    nodata_pattern = encode_func(nodata_value.float_value());
                     break;
                 }
                 case hrz_proto::NodataValueType::NAN_NODATA:
@@ -87,31 +83,29 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                 {
                     case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
                     {
-                        uint32_t value = nodata_value.bit_pattern();
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                        nodata_pattern = nodata_value.bit_pattern();
                         break;
                     }
                     case hrz_proto::NodataValueType::COLOR_NODATA:
                     {
                         const auto& color = nodata_value.color();
-                        lm::ubvec4 rgba = {
+                        const lm::ubvec4 rgba = {
                             (uint8_t)std::round(color.r() * 255),
                             (uint8_t)std::round(color.g() * 255),
                             (uint8_t)std::round(color.b() * 255),
                             (uint8_t)std::round(color.a() * 255)};
-                        std::memcpy(&nodata_pattern, &rgba, sizeof(uint32_t));
+                        nodata_pattern = std::bit_cast<uint32_t>(rgba);
                         break;
                     }
                     case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
                     {
-                        uint32_t value = nodata_value.uint_value();
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                        nodata_pattern = nodata_value.uint_value();
                         break;
                     }
                     case hrz_proto::NodataValueType::INT_VALUE_NODATA:
                     {
-                        int32_t value = nodata_value.int_value();
-                        std::memcpy(&nodata_pattern, &value, sizeof(int32_t));
+                        const int32_t value = nodata_value.int_value();
+                        nodata_pattern = std::bit_cast<uint32_t>(value);
                         break;
                     }
                     case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
@@ -132,8 +126,7 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                 {
                     case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
                     {
-                        uint32_t value = nodata_value.bit_pattern();
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                        nodata_pattern = nodata_value.bit_pattern();
                         break;
                     }
                     case hrz_proto::NodataValueType::COLOR_NODATA:
@@ -144,26 +137,26 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                     case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
                     {
                         auto value = (float)nodata_value.uint_value();
-                        std::memcpy(&nodata_pattern, &value, sizeof(float));
+                        nodata_pattern = std::bit_cast<uint32_t>(value);
                         break;
                     }
                     case hrz_proto::NodataValueType::INT_VALUE_NODATA:
                     {
                         auto value = (float)nodata_value.int_value();
-                        std::memcpy(&nodata_pattern, &value, sizeof(float));
+                        nodata_pattern = std::bit_cast<uint32_t>(value);
                         break;
                     }
                     case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
                     {
-                        float value = nodata_value.float_value();
-                        std::memcpy(&nodata_pattern, &value, sizeof(float));
+                        const float value = nodata_value.float_value();
+                        nodata_pattern = std::bit_cast<uint32_t>(value);
                         break;
                     }
                     case hrz_proto::NodataValueType::NAN_NODATA:
                     {
-                        uint32_t value = 0x7f800000;
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
-                        std::memcpy(&nodata_mask, &value, sizeof(uint32_t));
+                        const uint32_t value = 0x7f800000;
+                        nodata_pattern = value;
+                        nodata_mask = value;
                         break;
                     }
                     default:
@@ -179,8 +172,7 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                 {
                     case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
                     {
-                        uint32_t value = nodata_value.bit_pattern();
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                        nodata_pattern = nodata_value.bit_pattern();
                         break;
                     }
                     case hrz_proto::NodataValueType::COLOR_NODATA:
@@ -190,30 +182,27 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                     }
                     case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
                     {
-                        uint32_t value =
+                        nodata_pattern =
                             hrz::encode_float_to_r_f32_silicium((float)nodata_value.uint_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
                         break;
                     }
                     case hrz_proto::NodataValueType::INT_VALUE_NODATA:
                     {
-                        uint32_t value =
+                        nodata_pattern =
                             hrz::encode_float_to_r_f32_silicium((float)nodata_value.int_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
                         break;
                     }
                     case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
                     {
-                        uint32_t value =
+                        nodata_pattern =
                             hrz::encode_float_to_r_f32_silicium(nodata_value.float_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
                         break;
                     }
                     case hrz_proto::NodataValueType::NAN_NODATA:
                     {
-                        uint32_t value = 0xff000000;
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
-                        std::memcpy(&nodata_mask, &value, sizeof(uint32_t));
+                        const uint32_t value = 0xff000000;
+                        nodata_pattern = value;
+                        nodata_mask = value;
                         break;
                     }
                     default:
@@ -229,27 +218,24 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                 {
                     case hrz_proto::NodataValueType::BIT_PATTERN_NODATA:
                     {
-                        uint32_t value = nodata_value.bit_pattern();
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                        nodata_pattern = nodata_value.bit_pattern();
                         break;
                     }
                     case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
                     {
-                        uint32_t value = nodata_value.uint_value() * 256;
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
+                        nodata_pattern = nodata_value.uint_value() * 256;
                         break;
                     }
                     case hrz_proto::NodataValueType::INT_VALUE_NODATA:
                     {
                         int32_t value = nodata_value.int_value() * 256;
-                        std::memcpy(&nodata_pattern, &value, sizeof(int32_t));
+                        nodata_pattern = std::bit_cast<uint32_t>(value);
                         break;
                     }
                     case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
                     {
-                        uint32_t value =
+                        nodata_pattern =
                             hrz::encode_float_to_signed_fixed_24_8(nodata_value.float_value());
-                        std::memcpy(&nodata_pattern, &value, sizeof(uint32_t));
                         break;
                     }
                     case hrz_proto::NodataValueType::NAN_NODATA:

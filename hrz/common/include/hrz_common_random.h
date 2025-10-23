@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hrz_fnd_maths.h>
+
 #include <lin_maths.h>
 #include <pcg/pcg_basic.h>
 
@@ -22,8 +24,8 @@ static inline void srand(RngState& state, uint64_t init_state, uint64_t init_seq
 // Upper bound is exclusive.
 static inline float rand_f32(RngState& state, float low = 0.0f, float up = 1.0f)
 {
-    float r = (float)std::ldexp(pcg32_random_r(&state), -32);
-    return low + r * (up - low);
+    const auto r = (float)std::ldexp(pcg32_random_r(&state), -32);
+    return hrz::lerp(low, up, r);
 }
 
 // Generates an unsigned integer in the provided bounds following a uniform distribution.

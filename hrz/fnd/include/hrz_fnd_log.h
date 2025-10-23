@@ -5,6 +5,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
+#include <source_location>
 #include <span>
 #include <string_view>
 
@@ -31,8 +32,7 @@ void message(
     const char* prefix,
     Severity severity,
     std::string_view message,
-    const char* file,
-    int line);
+    const std::source_location& location = std::source_location::current());
 
 /**
  * Retrieves zero-terminated strings (and the associated severities) from
@@ -72,7 +72,7 @@ void set_log_filter_level(Severity filter_level);
 #define HRZ_LOG(SEVERITY, FMT, ...)                  \
     ::hrz::log::message(                             \
         HRZ_LOG_STRINGIFY(HRZ_LOG_PREFIX), SEVERITY, \
-        ::fmt::format(FMT_STRING(FMT), ##__VA_ARGS__), __FILE__, __LINE__)
+        ::fmt::format(FMT_STRING(FMT), ##__VA_ARGS__))
 
 #ifndef NDEBUG
 #    define HRZ_LOG_DEBUG(FMT, ...) HRZ_LOG(::hrz::log::Severity::Debug, FMT, ##__VA_ARGS__)

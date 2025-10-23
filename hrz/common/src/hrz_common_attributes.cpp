@@ -13,23 +13,16 @@ namespace hrz::vector_data
 RefAttributeValueTraits::Type OwnedAttributeValueTraits::as_ref(const Type& value, empty)
 {
     return std::visit(
-        [](const auto& arg) -> RefAttributeValueTraits::Type
-        {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, std::nullptr_t>)
+        hrz::overload{
+            [](std::nullptr_t) -> RefAttributeValueTraits::Type
+            { return attr_null<RefAttributeValue>(); },
+            [&]<typename U>(const U& arg) -> RefAttributeValueTraits::Type
             {
-                return attr_null<RefAttributeValue>();
-            }
-            else if constexpr (
-                std::is_same_v<T, bool> || std::is_same_v<T, double> || std::is_same_v<T, uint64_t>
-                || std::is_same_v<T, int64_t> || std::is_same_v<T, std::string>)
-            {
+                using ArgType = std::decay_t<decltype(arg)>;
+                static_assert(
+                    hrz::is_one_of<ArgType, bool, double, uint64_t, int64_t, std::string>);
                 return attr_from<RefAttributeValue>(arg);
-            }
-            else
-            {
-                static_assert(hrz::always_false<T>, "Unhandled case");
-            }
+            },
         },
         value);
 }

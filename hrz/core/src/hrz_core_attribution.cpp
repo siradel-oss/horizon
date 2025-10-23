@@ -209,8 +209,8 @@ AttributionHandle register_attribution_group(
     {
         if (handle.o == 0) continue;
 
-        bool is_duplicate = std::any_of(
-            deduplicated_in_source_order.begin(), deduplicated_in_source_order.end(),
+        const bool is_duplicate = std::ranges::any_of(
+            deduplicated_in_source_order,
             [handle](AttributionHandle other) { return other == handle; });
         if (!is_duplicate)
         {

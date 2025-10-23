@@ -1003,8 +1003,8 @@ private:
         // the other rasters are just shifted and not randomly reordered.
         // (In the case of slot collisions.)
 
-        std::stable_sort(
-            _rasters.begin(), _rasters.end(),
+        std::ranges::stable_sort(
+            _rasters,
             [](const std::unique_ptr<Raster>& a, const std::unique_ptr<Raster>& b)
             { return a->slot < b->slot; });
 

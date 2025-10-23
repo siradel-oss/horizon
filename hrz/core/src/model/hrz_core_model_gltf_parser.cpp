@@ -789,8 +789,8 @@ bool _parse_gltf_json(
 
             const auto& ext_str = ext_json.GetString();
 
-            auto found = std::find_if(
-                std::begin(s_supported_extensions), std::end(s_supported_extensions),
+            auto found = std::ranges::find_if(
+                s_supported_extensions,
                 [&](const char* extension_str) -> bool
                 { return std::strcmp(ext_str, extension_str) == 0; });
 

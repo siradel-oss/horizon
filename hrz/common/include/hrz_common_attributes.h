@@ -996,17 +996,17 @@ ATTR_AS_IMPL(color, lm::ubvec4)
     return convert_uint_color_to_bytes((uint32_t)attr_as_uint64<T, Traits>(value, ctx));
 }
 
-#define ATTR_WRITE_IMPL_(FN_NAME, TYPE)                             \
-    template<typename T, typename Traits = AttributeValueTraits<T>> \
-    T FN_NAME(TYPE, devoid_t<typename Traits::WriteContext>& ctx);  \
-    template<typename T, typename Traits = AttributeValueTraits<T>> \
-    inline T FN_NAME(TYPE)                                          \
-        requires std::is_void_v<typename Traits::WriteContext>      \
-    {                                                               \
-        return FN_NAME<T, Traits>(value, empty{});                  \
-    }                                                               \
-    template<typename T, typename Traits>                           \
-    T FN_NAME(TYPE, devoid_t<typename Traits::WriteContext>& ctx)
+#define ATTR_WRITE_IMPL_(FN_NAME, TYPE)                                             \
+    template<typename T, typename Traits = AttributeValueTraits<T>>                 \
+    T FN_NAME(TYPE, [[maybe_unused]] devoid_t<typename Traits::WriteContext>& ctx); \
+    template<typename T, typename Traits = AttributeValueTraits<T>>                 \
+    inline T FN_NAME(TYPE)                                                          \
+        requires std::is_void_v<typename Traits::WriteContext>                      \
+    {                                                                               \
+        return FN_NAME<T, Traits>(value, empty{});                                  \
+    }                                                                               \
+    template<typename T, typename Traits>                                           \
+    T FN_NAME(TYPE, [[maybe_unused]] devoid_t<typename Traits::WriteContext>& ctx)
 
 #define ATTR_FROM_IMPL(TYPE) ATTR_WRITE_IMPL_(attr_from, TYPE)
 #define ATTR_FROM_COLOR_IMPL(TYPE) ATTR_WRITE_IMPL_(attr_from_color, TYPE)
@@ -1078,25 +1078,15 @@ ATTR_FROM_IMPL(const std::string& value)
 ATTR_FROM_IMPL(const RefAttributeValue& value)
 {
     return std::visit(
-        [&](const auto& arg) -> T
-        {
-            using ArgType = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<ArgType, std::nullptr_t>)
+        hrz::overload{
+            [](std::nullptr_t) -> T { return attr_null<T, Traits>(); },
+            [&ctx]<typename U>(const U& arg) -> T
             {
-                return attr_null<T, Traits>();
-            }
-            else if constexpr (
-                std::is_same_v<ArgType, bool> || std::is_same_v<ArgType, double>
-                || std::is_same_v<ArgType, uint64_t> || std::is_same_v<ArgType, int64_t>
-                || std::is_same_v<ArgType, std::string_view>)
-            {
+                using ArgType = std::decay_t<decltype(arg)>;
+                static_assert(
+                    hrz::is_one_of<ArgType, bool, double, uint64_t, int64_t, std::string_view>);
                 return attr_from<T, Traits>(arg, ctx);
-            }
-            else
-            {
-                static_assert(hrz::always_false<ArgType>, "Unhandled case");
-            }
-        },
+            }},
         value);
 }
 

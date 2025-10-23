@@ -1764,7 +1764,7 @@ BlobId make_sub_blob(
 } // namespace
 
 BlobHandle make_sub_blob(
-    unsafe unsafe,
+    unsafe,
     BlobAllocator* allocator,
     const BlobHandle& parent_handle,
     size_t offset_in_parent)
@@ -1776,7 +1776,7 @@ BlobHandle make_sub_blob(
     auto parent_blob = allocator->blob_pool.get_object(parent_handle.blob_id);
 
     assert(offset_in_parent <= parent_blob->size);
-    size_t size = parent_blob->size - offset_in_parent;
+    const size_t size = parent_blob->size - offset_in_parent;
 
     auto sub_blob_id =
         make_sub_blob(allocator, parent_handle.blob_id, parent_blob, offset_in_parent, size);

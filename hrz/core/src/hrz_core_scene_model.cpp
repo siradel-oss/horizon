@@ -531,7 +531,7 @@ uint32_t remove(SceneModel* model, const hrz_proto::Path& path)
     return 0;
 }
 
-void dev_ui(SceneModel* model, mu_Context* ctx)
+void dev_ui(const SceneModel* model, mu_Context* ctx)
 {
     int layout_full[] = {-1};
 
@@ -543,12 +543,12 @@ void dev_ui(SceneModel* model, mu_Context* ctx)
     mu_layout_row(ctx, 2, layout_columns, 0);
 
     static fmt::memory_buffer buffer;
-    for (auto& sys : model->models)
+    for (const auto& [root_type, model_root] : model->models)
     {
-        mu_text(ctx, path_root_name(sys.first));
+        mu_text(ctx, path_root_name(root_type));
 
         buffer.clear();
-        fmt::format_to(std::back_inserter(buffer), "{}", sys.second->size());
+        fmt::format_to(std::back_inserter(buffer), "{}", model_root->size());
         buffer.push_back('\0');
         mu_label(ctx, buffer.data());
     }

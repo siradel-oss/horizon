@@ -65,10 +65,7 @@ private:
         uint64_t channel_id;
         uint64_t query_id;
 
-        bool operator==(const ElevationQueryId& other) const
-        {
-            return other.channel_id == channel_id && other.query_id == query_id;
-        }
+        constexpr bool operator==(const ElevationQueryId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ElevationQueryId& id)

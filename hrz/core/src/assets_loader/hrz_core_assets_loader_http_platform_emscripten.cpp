@@ -540,7 +540,7 @@ public:
         _available_slots_count.fetch_sub(1);
 
         std::string url;
-        if (!hrz::str::starts_with(url_s, "data:") && hrz::url::is_relative(url_s))
+        if (!url_s.starts_with("data:") && hrz::url::is_relative(url_s))
         {
             url = hrz::url::join({_base_url, url_s});
         }

@@ -536,7 +536,7 @@ private:
             return std::get<hrz::TileCoords>(data);
         }
 
-        bool operator==(const FeatureSelection& other) const { return other.data == data; }
+        constexpr bool operator==(const FeatureSelection& other) const = default;
 
         uint64_t hash() const
         {
@@ -569,10 +569,7 @@ private:
         uint64_t channel_id;
         uint64_t request_id;
 
-        bool operator==(const RequestId& other) const
-        {
-            return other.channel_id == channel_id && other.request_id == request_id;
-        }
+        constexpr bool operator==(const RequestId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const RequestId& request)

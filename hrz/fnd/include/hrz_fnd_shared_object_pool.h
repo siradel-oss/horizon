@@ -33,9 +33,7 @@ public:
 
         uint32_t to_int() const { return handle; }
 
-        bool operator==(const Handle& other) const { return other.handle == handle; }
-
-        bool operator!=(const Handle& other) const { return other.handle != handle; }
+        constexpr bool operator==(const Handle& other) const = default;
 
         bool is_null() const { return handle == std::numeric_limits<PrivateHandle>::max(); }
 
@@ -250,9 +248,7 @@ public:
             return std::pair<Handle, T&>{{handle}, *(pool->get_object({handle}))};
         }
 
-        bool operator==(const iterator& it) const { return it.pool == pool && it.handle == handle; }
-
-        bool operator!=(const iterator& it) const { return it.pool != pool || it.handle != handle; }
+        constexpr bool operator==(const iterator& it) const = default;
 
     private:
         void advance()
@@ -298,15 +294,7 @@ public:
             return std::pair<Handle, const T&>{{handle}, *(pool->get_object({handle}))};
         }
 
-        bool operator==(const const_iterator& it) const
-        {
-            return it.pool == pool && it.handle == handle;
-        }
-
-        bool operator!=(const const_iterator& it) const
-        {
-            return it.pool != pool || it.handle != handle;
-        }
+        constexpr bool operator==(const const_iterator& it) const = default;
 
     private:
         void advance()
@@ -462,9 +450,7 @@ public:
             return std::pair<Handle, T&>{it.first, it.second.object};
         }
 
-        bool operator==(const iterator& it) const { return it.pool_it == pool_it; }
-
-        bool operator!=(const iterator& it) const { return it.pool_it != pool_it; }
+        constexpr bool operator==(const iterator& it) const = default;
 
     private:
         ObjectPoolIterator pool_it;
@@ -498,9 +484,7 @@ public:
             return std::make_pair(pool_it->first, pool_it->second.object);
         }
 
-        bool operator==(const const_iterator& it) const { return it.pool_it == pool_it; }
-
-        bool operator!=(const const_iterator& it) const { return it.pool_it != pool_it; }
+        constexpr bool operator==(const const_iterator& it) const = default;
 
     private:
         ObjectPoolIterator pool_it;
@@ -563,15 +547,7 @@ private:
             return pool->pool.at(handle);
         }
 
-        bool operator==(const RefBase& ref) const
-        {
-            return ref.pool == pool && ref.handle == handle;
-        }
-
-        bool operator!=(const RefBase& ref) const
-        {
-            return ref.pool != pool || ref.handle != handle;
-        }
+        constexpr bool operator==(const RefBase& ref) const = default;
 
         Handle get_handle() const { return handle; }
 

@@ -61,18 +61,6 @@ TEST(String, find)
     EXPECT_EQ(-1, str::find("", 'a'));
 }
 
-TEST(String, starts_with)
-{
-    EXPECT_TRUE(str::starts_with("hello world", "hell"));
-    EXPECT_FALSE(str::starts_with("hello world", "help"));
-    EXPECT_FALSE(str::starts_with("hello world", "hello world!"));
-    EXPECT_TRUE(str::starts_with("hello world", "hello world"));
-    EXPECT_TRUE(str::starts_with("hello world", "h"));
-    EXPECT_TRUE(str::starts_with("hello world", ""));
-    EXPECT_TRUE(str::starts_with("", ""));
-    EXPECT_FALSE(str::starts_with("", "hi"));
-}
-
 TEST(String, istarts_with)
 {
     EXPECT_TRUE(str::istarts_with("heLLo world", "hell"));

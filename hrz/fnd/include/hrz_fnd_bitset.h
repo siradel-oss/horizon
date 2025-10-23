@@ -5,14 +5,15 @@
 namespace hrz
 {
 template<int N = 32>
-struct Bitset32
+class Bitset32
 {
     static_assert(N <= 32, "Not enough _bits!");
 
-    static constexpr uint32_t MASK = (1ull << N) - 1;
+    static constexpr uint32_t MASK = (1ULL << N) - 1;
     uint32_t _bits{};
 
-    constexpr Bitset32() : _bits{} {}
+public:
+    constexpr Bitset32() = default;
 
     constexpr explicit Bitset32(bool b) : _bits(b ? MASK : 0) {}
 
@@ -24,13 +25,13 @@ struct Bitset32
 
     constexpr bool is_set(int i) const { return _bits & ((uint32_t)1 << i) & MASK; }
 
-    inline void set(int i) { _bits |= ((uint32_t)1 << i) & MASK; }
+    constexpr void set(int i) { _bits |= ((uint32_t)1 << i) & MASK; }
 
-    inline void reset(int i) { _bits &= (~((uint32_t)1 << i)) & MASK; }
+    constexpr void reset(int i) { _bits &= (~((uint32_t)1 << i)) & MASK; }
 
-    inline void reset(Bitset32 b) { _bits &= (~b._bits) & MASK; }
+    constexpr void reset(Bitset32 b) { _bits &= (~b._bits) & MASK; }
 
-    inline void reset() { _bits = 0; }
+    constexpr void reset() { _bits = 0; }
 
     constexpr bool any() const { return _bits; }
 
@@ -42,40 +43,29 @@ struct Bitset32
 
     constexpr Bitset32 operator!() const { return {(~_bits) & MASK}; }
 
-    inline Bitset32& operator|=(const Bitset32& v)
+    constexpr friend bool operator==(const Bitset32<N>& a, const Bitset32<N>& b) = default;
+
+    constexpr Bitset32& operator|=(const Bitset32& v)
     {
         _bits |= v._bits;
         return *this;
     }
 
-    inline Bitset32& operator&=(const Bitset32& v)
+    constexpr Bitset32& operator&=(const Bitset32& v)
     {
         _bits &= v._bits;
         return *this;
     }
+
+    friend constexpr Bitset32 operator&(const Bitset32& a, const Bitset32& b)
+    {
+        return {a._bits & b._bits};
+    }
+
+    friend constexpr Bitset32 operator|(const Bitset32& a, const Bitset32& b)
+    {
+        return {a._bits | b._bits};
+    }
 };
 
-template<int N>
-constexpr Bitset32<N> operator&(const Bitset32<N>& a, const Bitset32<N>& b)
-{
-    return {a._bits & b._bits};
-}
-
-template<int N>
-constexpr Bitset32<N> operator|(const Bitset32<N>& a, const Bitset32<N>& b)
-{
-    return {a._bits | b._bits};
-}
-
-template<int N>
-constexpr bool operator==(const Bitset32<N>& a, const Bitset32<N>& b)
-{
-    return a._bits == b._bits;
-}
-
-template<int N>
-constexpr bool operator!=(const Bitset32<N>& a, const Bitset32<N>& b)
-{
-    return a._bits != b._bits;
-}
 } // namespace hrz

@@ -17,13 +17,13 @@ uint64_t hash_kv(std::span<const std::pair<std::string_view, std::string_view>> 
 
     for (const auto& kv : kvs)
     {
-        uint64_t k = murmur3_x64_64(kv.first);
-        uint64_t v = murmur3_x64_64(kv.second);
-        ordered.push_back(std::make_pair(k, hash_mix(k, v)));
+        const uint64_t k = murmur3_x64_64(kv.first);
+        const uint64_t v = murmur3_x64_64(kv.second);
+        ordered.emplace_back(k, hash_mix(k, v));
     }
 
-    std::sort(
-        ordered.begin(), ordered.end(),
+    std::ranges::sort(
+        ordered,
         [](const std::pair<uint64_t, uint64_t>& a, const std::pair<uint64_t, uint64_t>& b) -> bool
         { return a.first < b.first; });
 

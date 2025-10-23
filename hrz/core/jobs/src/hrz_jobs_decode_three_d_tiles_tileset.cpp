@@ -289,10 +289,10 @@ unsigned int parse_tile(
                 content_node, {"extensions", SIRADEL_range_request});
             if (!range_request.IsNull())
             {
-                tile.range.emplace(hrz::three_d_tiles::ThreeDTilesTilesetDescriptor::Range{
+                tile.range.emplace(
                     hrz::json::get_uint64_or(range_request, "offset", 0),
                     hrz::json::get_uint64_or(range_request, "length", 0),
-                    hrz::json::get_str(range_request, "mimeType")});
+                    hrz::json::get_str(range_request, "mimeType"));
             }
         }
     }

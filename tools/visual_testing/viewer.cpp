@@ -228,12 +228,12 @@ public:
         }
 
         // Load input.
-        ExitCode load_exit_code;
-        if (hrz::str::ends_with(input_file, ".hrz_scene.pbf"))
+        ExitCode load_exit_code{};
+        if (std::string_view(input_file).ends_with(".hrz_scene.pbf"))
         {
             load_exit_code = load_scene_dump(input_file);
         }
-        else if (hrz::str::ends_with(input_file, ".json"))
+        else if (std::string_view(input_file).ends_with(".json"))
         {
             load_exit_code = load_mapbox_style(input_file);
         }

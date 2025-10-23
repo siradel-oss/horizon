@@ -116,7 +116,7 @@ public:
                 default: assert(false && "Unhandled case"); break;
             }
 
-            cascade.output_target_name += "target " + std::to_string(i);
+            cascade.output_target_name += fmt::format("target {}", i);
         }
 
         _texture_size = (is_dummy)

@@ -15,7 +15,7 @@ std::optional<hrz::crs::Srid> parse_single_comma_srid(
     std::string_view authority,
     std::string_view str)
 {
-    assert(hrz::str::starts_with(str, authority) && str[authority.size()] == ':');
+    assert(str.starts_with(authority) && str[authority.size()] == ':');
 
     str = str.substr(authority.size() + 1);
 
@@ -60,7 +60,7 @@ namespace hrz::crs
 {
 std::optional<Srid> parse_srid(std::string_view str)
 {
-    if (hrz::str::starts_with(str, "urn:ogc:def:crs:"))
+    if (str.starts_with("urn:ogc:def:crs:"))
     {
         str = str.substr(16);
     }
@@ -75,11 +75,11 @@ std::optional<Srid> parse_srid(std::string_view str)
         return {{str.substr(0, 3), 84}};
     }
 
-    if (hrz::str::starts_with(str, "EPSG:"))
+    if (str.starts_with("EPSG:"))
     {
         return parse_single_comma_srid("EPSG", str);
     }
-    else if (hrz::str::starts_with(str, "OSGEO:"))
+    else if (str.starts_with("OSGEO:"))
     {
         return parse_single_comma_srid("OSGEO", str);
     }
