@@ -84,6 +84,10 @@ struct ImageryRasterCollectionTraits
             {
                 return my::TextureFormat::SRGBA_ETC2_EAC;
             }
+            else if (my_instance_info.has_bc7_srgb_texture_compression)
+            {
+                return my::TextureFormat::SRGBA_BC7;
+            }
             else if (my_instance_info.has_bc1_bc2_bc3_srgb_texture_compression)
             {
                 return my::TextureFormat::SRGBA_BC3;

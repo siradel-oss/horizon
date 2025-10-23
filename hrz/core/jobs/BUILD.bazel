@@ -188,10 +188,10 @@ cc_library(
         "//third_party:delabella",
         "//third_party:draco",
         "//third_party:earcut",
+        "//third_party:etcpak",
         "//third_party:libwebp",
         "//third_party:pugixml",
         "//third_party:rapidjson",
-        "//third_party/etcpak",
         "//third_party/stb_image",
     ],
 )

@@ -223,6 +223,13 @@
             "repo": "google/woff2",
             "ref": "0f4d304faa1c62994536dc73510305c7357da8d4",
             "build_file": "//third_party:woff2.BUILD.bazel"
+        },
+        {
+            "name": "etcpak",
+            "type": "github",
+            "repo": "wolfpld/etcpak",
+            "ref": "2.0",
+            "build_file": "//third_party:etcpak.BUILD.bazel"
         }
     ]
 }

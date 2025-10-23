@@ -6,7 +6,8 @@
 #include <hrz_fnd_log.h>
 
 #include <etcpak/ProcessDxtc.hpp>
-#include <etcpak/ProcessEtc.hpp>
+#include <etcpak/ProcessRGB.hpp>
+#include <etcpak/bc7enc.h>
 #include <mycelium_backend.h>
 
 #include <cassert>
@@ -44,7 +45,8 @@ hrz::JobResult run(
         return hrz::JobResult::FAILURE;
     }
 
-    if (params.output_format != my::TextureFormat::SRGBA_BC3
+    if (params.output_format != my::TextureFormat::SRGBA_BC7
+        && params.output_format != my::TextureFormat::SRGBA_BC3
         && params.output_format != my::TextureFormat::SRGBA_ETC2_EAC)
     {
         HRZ_LOG_ERROR("Unsupported compressed texture format");
@@ -91,8 +93,19 @@ hrz::JobResult run(
 
         switch (params.output_format)
         {
+            case my::TextureFormat::SRGBA_BC7:
+            {
+                bc7enc_compress_block_params params;
+                bc7enc_compress_block_params_init(&params);
+                params.m_perceptual = true;
+
+                CompressBc7(
+                    rgba_data.data(), block_data.data(), block_count_width * block_count_height,
+                    block_count_width * 4, &params);
+                break;
+            }
             case my::TextureFormat::SRGBA_BC3:
-                etcpak::CompressDxt5(
+                CompressBc3(
                     rgba_data.data(), block_data.data(), block_count_width * block_count_height,
                     block_count_width * 4);
                 break;
@@ -110,7 +123,7 @@ hrz::JobResult run(
                     rgba_data[i] = bgra;
                 }
 
-                etcpak::CompressEtc2Rgba(
+                CompressEtc2Rgba(
                     rgba_data.data(), block_data.data(), block_count_width * block_count_height,
                     block_count_width * 4, true);
                 break;

@@ -3,12 +3,22 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "etcpak",
     srcs = glob([
-        "*.cpp",
-        "*.hpp",
+        "bc7enc.cpp",
+        "Dither.cpp",
+        "Dither.hpp",
+        "ForceInline.hpp",
+        "Math.hpp",
+        "ProcessCommon.hpp",
+        "ProcessDxtc.cpp",
+        "ProcessRGB.cpp",
+        "Tables.cpp",
+        "Tables.hpp",
+        "Vector.hpp",
     ]),
     hdrs = [
+        "bc7enc.h",
         "ProcessDxtc.hpp",
-        "ProcessEtc.hpp",
+        "ProcessRGB.hpp",
     ],
     copts = select({
         "@//:os_linux": ["-msse4.1"],

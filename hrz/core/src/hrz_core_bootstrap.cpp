@@ -45,6 +45,7 @@
 #include <hrz_fnd_time.h>
 
 #include <basisu_transcoder.h>
+#include <etcpak/bc7enc.h>
 
 #include <deque>
 #include <vector>
@@ -2027,6 +2028,12 @@ public:
 #endif
 
         hrz::color::initialize_srgb_luts();
+
+        if (_graphics_settings.raster_atlas_texture_compression_enabled()
+            && my_info.has_bc7_srgb_texture_compression)
+        {
+            bc7enc_compress_block_init();
+        }
 
         hrz::shaders::collect_all_shaders(&_gpu_rc);
 

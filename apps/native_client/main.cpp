@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
     arg.default_string = "";
     argparser::add_argument(arg_parser, arg);
 
-    arg.name = "shadows-enabled";
+    arg.name = "enable-shadows";
     arg.type = argparser::ArgType::Bool;
     arg.required = false;
     arg.has_default = false;
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
     arg.has_default = false;
     argparser::add_argument(arg_parser, arg);
 
-    arg.name = "atmosphere-enabled";
+    arg.name = "enable-atmosphere";
     arg.type = argparser::ArgType::Bool;
     arg.required = false;
     arg.has_default = false;
@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
     arg.has_default = false;
     argparser::add_argument(arg_parser, arg);
 
-    arg.name = "ui-elements-depth-peeling-enabled";
+    arg.name = "enable-ui-elements-depth-peeling";
     arg.type = argparser::ArgType::Bool;
     arg.required = false;
     arg.has_default = false;
@@ -270,6 +270,12 @@ int main(int argc, char* argv[])
 
     arg.name = "raster-atlas-size";
     arg.type = argparser::ArgType::Uint;
+    arg.required = false;
+    arg.has_default = false;
+    argparser::add_argument(arg_parser, arg);
+
+    arg.name = "compress-raster-atlas-texture";
+    arg.type = argparser::ArgType::Bool;
     arg.required = false;
     arg.has_default = false;
     argparser::add_argument(arg_parser, arg);
@@ -353,17 +359,17 @@ int main(int argc, char* argv[])
         options.mutable_graphics_settings_overrides()->set_##PRP(PRP##_opt.value()); \
     }
 
-    OVERRIDE_SETTING_WITH_OPT_ARG(shadows_enabled, "shadows-enabled", bool);
+    OVERRIDE_SETTING_WITH_OPT_ARG(shadows_enabled, "enable-shadows", bool);
     OVERRIDE_SETTING_WITH_OPT_ARG(shadows_cascade_count, "shadows-cascade-count", uint);
-    OVERRIDE_SETTING_WITH_OPT_ARG(atmosphere_enabled, "atmosphere-enabled", bool);
+    OVERRIDE_SETTING_WITH_OPT_ARG(atmosphere_enabled, "enable-atmosphere", bool);
     OVERRIDE_SETTING_WITH_OPT_ARG(flat_overlay_resolution, "flat-overlay-resolution", uint);
     OVERRIDE_SETTING_WITH_OPT_ARG(flat_overlay_cascade_count, "flat-overlay-cascade-count", uint);
     OVERRIDE_SETTING_WITH_OPT_ARG(
-        ui_elements_depth_peeling_enabled, "ui-elements-depth-peeling-enabled", bool);
+        ui_elements_depth_peeling_enabled, "enable-ui-elements-depth-peeling", bool);
     OVERRIDE_SETTING_WITH_OPT_ARG(imagery_merge_group_count, "imagery-merge-group-count", uint);
     OVERRIDE_SETTING_WITH_OPT_ARG(raster_atlas_size, "raster-atlas-size", uint);
     OVERRIDE_SETTING_WITH_OPT_ARG(
-        raster_atlas_texture_compression_enabled, "raster-atlas-texture-compression-enabled", bool);
+        raster_atlas_texture_compression_enabled, "compress-raster-atlas-texture", bool);
 
 #undef OVERRIDE_SETTING_WITH_OPT_ARG
 

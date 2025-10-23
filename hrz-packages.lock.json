@@ -149,6 +149,16 @@
       "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/earcut/fcfa6a47_v2.2.4.tar.gz"
     ]
   },
+  "etcpak": {
+    "build_file": "//third_party:etcpak.BUILD.bazel",
+    "digest": "dc7a1b23a039594b3d0e9d00581a7d3d2ef4b6656ad532f7ed2b844bd9b4ba39",
+    "prefix": "etcpak-2.0",
+    "type": "http_archive",
+    "urls": [
+      "https://github.com/wolfpld/etcpak/archive/2.0.tar.gz",
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/etcpak/dc7a1b23_2.0.tar.gz"
+    ]
+  },
   "fmtlib": {
     "build_file": "//third_party:fmtlib.BUILD.bazel",
     "digest": "aa3e8fbb6a0066c03454434add1f1fc23299e85758ceec0d7d2d974431481e40",

@@ -337,3 +337,13 @@ http_archive(
     build_file = "//third_party:zlib.BUILD.bazel",
     strip_prefix = "zlib-1.3.1",
 )
+http_archive(
+    name = "etcpak",
+    urls = [
+        "https://github.com/wolfpld/etcpak/archive/2.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/etcpak/dc7a1b23_2.0.tar.gz",
+    ],
+    sha256 = "dc7a1b23a039594b3d0e9d00581a7d3d2ef4b6656ad532f7ed2b844bd9b4ba39",
+    build_file = "//third_party:etcpak.BUILD.bazel",
+    strip_prefix = "etcpak-2.0",
+)
