@@ -2435,7 +2435,7 @@ void update_viewport(
 
     lm::vec2 viewport_size = lm::size(viewport);
 
-    view->viewport_on_canvas = {
+    view->viewport_on_canvas = lm::ibbox2{
         lm::ivec2{lm::round((viewport.min + viewport_size * subfrustum.min) * canvas_size)},
         lm::ivec2{lm::round((viewport.min + viewport_size * subfrustum.max) * canvas_size)}};
 

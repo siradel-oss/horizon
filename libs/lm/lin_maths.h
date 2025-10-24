@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
 #include <utility>
@@ -25,8 +26,12 @@ namespace lm
 template<typename T>
 concept Arithmetic = std::is_arithmetic_v<T>;
 
+template<typename From, typename To>
+concept ConvertibleToWithoutNarrowing = std::convertible_to<From, To> && std::is_scalar_v<From>
+    && std::is_scalar_v<To> && requires(From t) { To{t}; };
+
 template<typename T>
-T sign(T v)
+constexpr T sign(T v)
 {
     static_assert(std::is_signed_v<T>, "Value type must be signed");
     return (T(0) < v) - (v < T(0));
@@ -35,36 +40,14 @@ T sign(T v)
 // @@VECTOR_TYPES
 
 template<typename T, size_t N>
-struct Vector
-{
-    T m[N];
-
-    Vector()
-    {
-        for (size_t i = 0; i < N; ++i)
-        {
-            m[i] = 0;
-        }
-    }
-
-    template<typename U>
-    explicit Vector(const Vector<U, N>& other)
-    {
-        for (size_t i = 0; i < N; ++i)
-        {
-            m[i] = (T)other.m[i];
-        }
-    }
-
-    constexpr Vector(const Vector<T, N>& other) = default;
-};
+struct Vector;
 
 template<typename T>
 struct Vector<T, 2>
 {
     union
     {
-        T m[2];
+        T m[2]{};
 
         struct
         {
@@ -77,18 +60,18 @@ struct Vector<T, 2>
         };
     };
 
-    constexpr Vector() : x(0), y(0) {}
+    constexpr Vector() = default;
 
-    constexpr explicit Vector(T v) : x(v), y(v) {}
+    constexpr explicit Vector(T v) : x{v}, y{v} {}
 
-    constexpr Vector(T x, T y) : x(x), y(y) {}
+    constexpr Vector(T x, T y) : x{x}, y{y} {}
 
-    template<typename U>
-    explicit constexpr Vector(const Vector<U, 2>& other) : x((T)other.x), y((T)other.y)
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Vector(const Vector<U, 2>& other)
+        requires(!std::same_as<T, U>)
+        : x{(T)other.x}, y{(T)other.y}
     {
     }
-
-    constexpr Vector(const Vector<T, 2>& other) = default;
 };
 
 template<typename T>
@@ -96,7 +79,7 @@ struct Vector<T, 3>
 {
     union
     {
-        T m[3];
+        T m[3]{};
 
         struct
         {
@@ -131,24 +114,28 @@ struct Vector<T, 3>
         };
     };
 
-    constexpr Vector() : x(0), y(0), z(0) {}
+    constexpr Vector() = default;
 
-    constexpr explicit Vector(T v) : x(v), y(v), z(v) {}
+    constexpr explicit Vector(T v) : x{v}, y{v}, z{v} {}
 
-    constexpr Vector(T x, T y, T z) : x(x), y(y), z(z) {}
+    constexpr Vector(T x, T y, T z) : x{x}, y{y}, z{z} {}
 
-    template<typename U>
-    constexpr Vector(const Vector<U, 2>& v, T z = (T)0) : x(v.x), y(v.y), z(z)
+    template<std::convertible_to<T> U>
+    constexpr Vector(const Vector<U, 2>& v, T z) : x{(T)v.x}, y{(T)v.y}, z{z}
     {
     }
 
-    template<typename U>
-    explicit constexpr Vector(const Vector<U, 3>& other) :
-        x((T)other.x), y((T)other.y), z((T)other.z)
+    template<std::convertible_to<T> U>
+    constexpr explicit Vector(const Vector<U, 2>& v) : x{(T)v.x}, y{(T)v.y}, z{}
     {
     }
 
-    constexpr Vector(const Vector<T, 3>& other) = default;
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Vector(const Vector<U, 3>& other)
+        requires(!std::same_as<T, U>)
+        : x{(T)other.x}, y{(T)other.y}, z{(T)other.z}
+    {
+    }
 };
 
 template<typename T>
@@ -156,7 +143,7 @@ struct Vector<T, 4>
 {
     union
     {
-        T m[4];
+        T m[4]{};
 
         struct
         {
@@ -215,35 +202,44 @@ struct Vector<T, 4>
         };
     };
 
-    constexpr Vector() : x(0), y(0), z(0), w(0) {}
+    constexpr Vector() = default;
 
-    constexpr explicit Vector(T v) : x(v), y(v), z(v), w(v) {}
+    constexpr explicit Vector(T v) : x{v}, y{v}, z{v}, w{v} {}
 
-    constexpr Vector(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
+    constexpr Vector(T x, T y, T z, T w) : x{x}, y{y}, z{z}, w{w} {}
 
-    template<typename U, typename V>
+    template<std::convertible_to<T> U, std::convertible_to<T> V>
     constexpr Vector(const Vector<U, 2>& xy, const Vector<V, 2>& zw) :
-        x(xy.x), y(xy.y), z(zw.x), w(zw.y)
+        x{(T)xy.x}, y{(T)xy.y}, z{(T)zw.x}, w{(T)zw.y}
     {
     }
 
-    template<typename U>
-    constexpr Vector(Vector<U, 2> v, T z = (T)0, T w = (T)0) : x(v.x), y(v.y), z(z), w(w)
+    template<std::convertible_to<T> U>
+    constexpr Vector(const Vector<U, 2>& v, T z, T w) : x{(T)v.x}, y{(T)v.y}, z{z}, w{w}
     {
     }
 
-    template<typename U>
-    constexpr Vector(Vector<U, 3> v, T w = (T)0) : x(v.x), y(v.y), z(v.z), w(w)
+    template<std::convertible_to<T> U>
+    constexpr explicit Vector(const Vector<U, 2>& v, T z = T{0}) : x{(T)v.x}, y{(T)v.y}, z{z}, w{}
     {
     }
 
-    template<typename U>
-    explicit constexpr Vector(const Vector<U, 4>& other) :
-        x((T)other.x), y((T)other.y), z((T)other.z), w((T)other.w)
+    template<std::convertible_to<T> U>
+    constexpr explicit Vector(Vector<U, 3> v) : x{(T)v.x}, y{(T)v.y}, z{(T)v.z}, w{}
     {
     }
 
-    constexpr Vector(const Vector<T, 4>& other) = default;
+    template<std::convertible_to<T> U>
+    constexpr Vector(Vector<U, 3> v, T w) : x{(T)v.x}, y{(T)v.y}, z{(T)v.z}, w{w}
+    {
+    }
+
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Vector(const Vector<U, 4>& other)
+        requires(!std::same_as<T, U>)
+        : x{(T)other.x}, y{(T)other.y}, z{(T)other.z}, w{(T)other.w}
+    {
+    }
 };
 
 using vec2 = Vector<float, 2>;
@@ -287,44 +283,14 @@ using usvec3 = Vector<uint16_t, 3>;
 using usvec4 = Vector<uint16_t, 4>;
 
 template<typename T, size_t N>
-struct Matrix
-{
-    union
-    {
-        T m[N][N]; // Column-major ([column][row])
-        T e[N * N];
-        Vector<T, N> col[N];
-    };
-
-    Matrix()
-    {
-        for (size_t i = 0; i < N * N; ++i)
-        {
-            e[i] = 0;
-        }
-    }
-
-    template<typename U>
-    explicit Matrix(const Matrix<U, N>& other)
-    {
-        for (size_t i = 0; i < N; ++i)
-        {
-            for (size_t j = 0; j < N; ++j)
-            {
-                m[i][j] = (T)other.m[i][j];
-            }
-        }
-    }
-
-    constexpr Matrix(const Matrix<T, N>& other) = default;
-};
+struct Matrix;
 
 template<typename T>
 struct Matrix<T, 2>
 {
     union
     {
-        T m[2][2];
+        T m[2][2]{};
         T e[4];
         Vector<T, 2> col[2];
 
@@ -334,23 +300,27 @@ struct Matrix<T, 2>
         };
     };
 
-    constexpr Matrix() : x(0, 0), y(0, 0) {}
+    constexpr Matrix() = default;
 
-    template<typename U>
-    explicit constexpr Matrix(const Matrix<U, 2>& other) : x(other.x), y(other.y)
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Matrix(const Matrix<U, 2>& other)
+        requires(!std::same_as<T, U>)
+        : x{other.x}, y{other.y}
     {
     }
 
-    constexpr Matrix(const Matrix<T, 2>& other) = default;
+    // We keep this specifically so we can still write the constructor without specifying
+    // lm::Vector<T, ...> for each column.
+    constexpr explicit Matrix(const Vector<T, 2>& x, const Vector<T, 2>& y) : x{x}, y{y} {}
 
-    template<typename U>
-    explicit constexpr Matrix(const Vector<U, 2>& x, const Vector<U, 2>& y) : x(x), y(y)
+    template<std::convertible_to<T> U>
+    constexpr explicit Matrix(const Vector<U, 2>& x, const Vector<U, 2>& y)
+        requires(!std::same_as<T, U>)
+        : x{x}, y{y}
     {
     }
 
-    constexpr Matrix(const Vector<T, 2>& x, const Vector<T, 2>& y) : x(x), y(y) {}
-
-    constexpr explicit Matrix(T v) : x(v), y(v) {}
+    constexpr explicit Matrix(T v) : x{v}, y{v} {}
 
     static constexpr Matrix<T, 2> identity()
     {
@@ -363,7 +333,7 @@ struct Matrix<T, 3>
 {
     union
     {
-        T m[3][3];
+        T m[3][3]{};
         T e[9];
         Vector<T, 3> col[3];
 
@@ -373,33 +343,36 @@ struct Matrix<T, 3>
         };
     };
 
-    constexpr Matrix() : x(0, 0, 0), y(0, 0, 0), z(0, 0, 0) {}
+    constexpr Matrix() = default;
 
-    template<typename U>
-    explicit constexpr Matrix(const Matrix<U, 3>& other) : x(other.x), y(other.y), z(other.z)
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Matrix(const Matrix<U, 3>& other)
+        requires(!std::same_as<T, U>)
+        : x{other.x}, y{other.y}, z{other.z}
     {
     }
 
-    constexpr Matrix(const Matrix<T, 3>& other) = default;
-
-    template<typename U>
-    explicit constexpr Matrix(const Vector<U, 3>& x, const Vector<U, 3>& y, const Vector<U, 3>& z) :
-        x(x), y(y), z(z)
+    // We keep this specifically so we can still write the constructor without specifying
+    // lm::Vector<T, ...> for each column.
+    constexpr explicit Matrix(const Vector<T, 3>& x, const Vector<T, 3>& y, const Vector<T, 3>& z) :
+        x{x}, y{y}, z{z}
     {
     }
 
-    constexpr Matrix(const Vector<T, 3>& x, const Vector<T, 3>& y, const Vector<T, 3>& z) :
-        x(x), y(y), z(z)
+    template<std::convertible_to<T> U>
+    constexpr explicit Matrix(const Vector<U, 3>& x, const Vector<U, 3>& y, const Vector<U, 3>& z)
+        requires(!std::same_as<T, U>)
+        : x{x}, y{y}, z{z}
     {
     }
 
-    template<typename U>
+    template<std::convertible_to<T> U>
     explicit constexpr Matrix(const Matrix<U, 4>& other) :
-        x(other.x.xyz), y(other.y.xyz), z(other.z.xyz)
+        x{other.x.xyz}, y{other.y.xyz}, z{other.z.xyz}
     {
     }
 
-    constexpr explicit Matrix(T v) : x(v), y(v), z(v) {}
+    constexpr explicit Matrix(T v) : x{v}, y{v}, z{v} {}
 
     static constexpr Matrix<T, 3> identity()
     {
@@ -412,7 +385,7 @@ struct Matrix<T, 4>
 {
     union
     {
-        T m[4][4];
+        T m[4][4]{};
         T e[16];
         Vector<T, 4> col[4];
 
@@ -422,36 +395,38 @@ struct Matrix<T, 4>
         };
     };
 
-    constexpr Matrix() : x(0, 0, 0, 0), y(0, 0, 0, 0), z(0, 0, 0, 0), w(0, 0, 0, 0) {}
+    constexpr Matrix() = default;
 
-    template<typename U>
-    explicit constexpr Matrix(const Matrix<U, 4>& other) :
-        x(other.x), y(other.y), z(other.z), w(other.w)
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Matrix(const Matrix<U, 4>& other)
+        requires(!std::same_as<T, U>)
+        : x{other.x}, y{other.y}, z{other.z}, w{other.w}
     {
     }
 
-    constexpr Matrix(const Matrix<T, 4>& other) = default;
-
-    template<typename U>
-    explicit constexpr Matrix(
-        const Vector<U, 4>& x,
-        const Vector<U, 4>& y,
-        const Vector<U, 4>& z,
-        const Vector<U, 4>& w) :
-        x(x), y(y), z(z), w(w)
-    {
-    }
-
-    constexpr Matrix(
+    // We keep this specifically so we can still write the constructor without specifying
+    // lm::Vector<T, ...> for each column.
+    constexpr explicit Matrix(
         const Vector<T, 4>& x,
         const Vector<T, 4>& y,
         const Vector<T, 4>& z,
         const Vector<T, 4>& w) :
-        x(x), y(y), z(z), w(w)
+        x{x}, y{y}, z{z}, w{w}
     {
     }
 
-    constexpr explicit Matrix(T v) : x(v), y(v), z(v), w(v) {}
+    template<std::convertible_to<T> U>
+    explicit constexpr Matrix(
+        const Vector<U, 4>& x,
+        const Vector<U, 4>& y,
+        const Vector<U, 4>& z,
+        const Vector<U, 4>& w)
+        requires(!std::same_as<T, U>)
+        : x{x}, y{y}, z{z}, w{w}
+    {
+    }
+
+    constexpr explicit Matrix(T v) : x{v}, y{v}, z{v}, w{v} {}
 
     static constexpr Matrix<T, 4> identity()
     {
@@ -470,6 +445,17 @@ using dmat3 = Matrix<double, 3>;
 using dmat4 = Matrix<double, 4>;
 
 // @@OPERATIONS
+
+template<typename F, typename... T>
+concept Operator =
+    requires { typename F::ResultType; } && std::semiregular<F> && std::invocable<F, T...>
+    && std::same_as<std::invoke_result_t<F, T...>, typename F::ResultType>;
+
+template<typename F, typename T>
+concept FoldOperator = Operator<F, T, T> && std::same_as<T, typename F::ResultType>;
+
+// @Todo(C++23) Use static operator() for all those operations. Maybe some won't need to be a
+// functor anymore.
 
 template<typename U, typename V = U>
 struct AddOp
@@ -661,10 +647,10 @@ struct ClampOp
 
 // @@OPERATORS
 
-template<typename F, size_t N, typename... T, typename R = typename F::ResultType>
-constexpr Vector<R, N> apply(F f, const Vector<T, N>&... v)
+template<typename... T, size_t N>
+constexpr auto apply(Operator<T...> auto f, const Vector<T, N>&... v)
 {
-    Vector<R, N> c;
+    Vector<typename decltype(f)::ResultType, N> c;
     for (size_t i = 0; i < N; ++i)
     {
         c.m[i] = f(v.m[i]...);
@@ -672,10 +658,36 @@ constexpr Vector<R, N> apply(F f, const Vector<T, N>&... v)
     return c;
 }
 
-template<typename F, size_t N, typename... T, typename R = typename F::ResultType>
-constexpr Matrix<R, N> apply(F f, const Matrix<T, N>&... m)
+// Optimize vector-scalar and scalar-vector operations because they are fairly common
+// and this avoids having to create a temporary vector of the scalar value.
+// Same for matrices.
+
+template<typename U, Arithmetic V, size_t N>
+constexpr auto apply(Operator<U, V> auto f, const Vector<U, N>& u, V v)
 {
-    Matrix<R, N> c;
+    Vector<typename decltype(f)::ResultType, N> c;
+    for (size_t i = 0; i < N; ++i)
+    {
+        c.m[i] = f(u.m[i], v);
+    }
+    return c;
+}
+
+template<Arithmetic U, typename V, size_t N>
+constexpr auto apply(Operator<U, V> auto f, U u, const Vector<V, N>& v)
+{
+    Vector<typename decltype(f)::ResultType, N> c;
+    for (size_t i = 0; i < N; ++i)
+    {
+        c.m[i] = f(u, v.m[i]);
+    }
+    return c;
+}
+
+template<typename... T, size_t N>
+constexpr auto apply(Operator<T...> auto f, const Matrix<T, N>&... m)
+{
+    Matrix<typename decltype(f)::ResultType, N> c;
     for (size_t i = 0; i < N * N; ++i)
     {
         c.e[i] = f(m.e[i]...);
@@ -683,8 +695,30 @@ constexpr Matrix<R, N> apply(F f, const Matrix<T, N>&... m)
     return c;
 }
 
-template<typename F, size_t N, typename T>
-constexpr typename F::ResultType fold(F f, const Vector<T, N>& v, typename F::ResultType result)
+template<typename U, Arithmetic V, size_t N>
+constexpr auto apply(Operator<U, V> auto f, const Matrix<U, N>& u, V v)
+{
+    Matrix<typename decltype(f)::ResultType, N> c;
+    for (size_t i = 0; i < N * N; ++i)
+    {
+        c.e[i] = f(u.e[i], v);
+    }
+    return c;
+}
+
+template<Arithmetic U, typename V, size_t N>
+constexpr auto apply(Operator<U, V> auto f, U u, const Matrix<V, N>& v)
+{
+    Matrix<typename decltype(f)::ResultType, N> c;
+    for (size_t i = 0; i < N * N; ++i)
+    {
+        c.e[i] = f(u, v.e[i]);
+    }
+    return c;
+}
+
+template<typename T, size_t N>
+constexpr auto fold(FoldOperator<T> auto f, const Vector<T, N>& v, T result)
 {
     for (size_t i = 0; i < N; ++i)
     {
@@ -693,8 +727,8 @@ constexpr typename F::ResultType fold(F f, const Vector<T, N>& v, typename F::Re
     return result;
 }
 
-template<typename F, size_t N, typename T>
-constexpr typename F::ResultType fold(F f, const Matrix<T, N>& v, typename F::ResultType result)
+template<typename T, size_t N>
+constexpr auto fold(FoldOperator<T> auto f, const Matrix<T, N>& v, T result)
 {
     for (size_t i = 0; i < N * N; ++i)
     {
@@ -705,23 +739,41 @@ constexpr typename F::ResultType fold(F f, const Matrix<T, N>& v, typename F::Re
 
 // @@COMPONENTWISE
 
-template<typename U, typename V, size_t N, typename R = typename AddOp<U, V>::ResultType>
-constexpr Vector<R, N> operator+(const Vector<U, N>& a, const Vector<V, N>& b)
-{
-    return apply(AddOp<U, V>{}, a, b);
-}
+#define IMPL_VEC_BINARY_OP_WITH_SCALAR(OP, NAME)                      \
+    template<typename U, typename V, size_t N>                        \
+    constexpr auto NAME(const Vector<U, N>& a, const Vector<V, N>& b) \
+    {                                                                 \
+        return apply(OP<U, V>{}, a, b);                               \
+    }                                                                 \
+    template<typename U, Arithmetic V, size_t N>                      \
+    constexpr auto NAME(const Vector<U, N>& a, V b)                   \
+    {                                                                 \
+        return apply(OP<U, V>{}, a, b);                               \
+    }                                                                 \
+    template<Arithmetic U, typename V, size_t N>                      \
+    constexpr auto NAME(U a, const Vector<V, N>& b)                   \
+    {                                                                 \
+        return apply(OP<U, V>{}, a, b);                               \
+    }
+IMPL_VEC_BINARY_OP_WITH_SCALAR(AddOp, operator+)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(SubOp, operator-)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(MulOp, operator*)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(DivOp, operator/)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(EqualOp, eq)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(NotEqualOp, neq)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(LessOp, operator<)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(GreaterOp, operator>)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(LEqualOp, operator<=)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(GEqualOp, operator>=)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(AndOp, operator&&)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(OrOp, operator||)
+#undef IMPL_VEC_BINARY_OP_WITH_SCALAR
 
 template<typename T, size_t N>
 constexpr Vector<T, N>& operator+=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(AddOp<T>{}, a, b);
     return a;
-}
-
-template<typename U, typename V, size_t N, typename R = typename SubOp<U, V>::ResultType>
-constexpr Vector<R, N> operator-(const Vector<U, N>& a, const Vector<V, N>& b)
-{
-    return apply(SubOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
@@ -732,257 +784,127 @@ constexpr Vector<T, N>& operator-=(Vector<T, N>& a, const Vector<T, N>& b)
 }
 
 template<typename T, size_t N>
-constexpr Vector<T, N> operator-(const Vector<T, N>& a)
+constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const Vector<T, N>& v)
 {
-    return apply(NegOp<T>{}, a);
-}
-
-template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-constexpr Vector<R, N> operator*(const Vector<U, N>& a, const Vector<V, N>& b)
-{
-    return apply(MulOp<U, V>{}, a, b);
-}
-
-template<typename U, Arithmetic V, size_t N>
-constexpr auto operator*(const Vector<U, N>& a, V b)
-{
-    return apply(MulOp<U, V>{}, a, Vector<V, N>(b));
-}
-
-template<Arithmetic U, typename V, size_t N>
-constexpr auto operator*(U a, const Vector<V, N>& b)
-{
-    return apply(MulOp<U, V>{}, Vector<U, N>(a), b);
-}
-
-template<typename T, size_t N>
-constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const Vector<T, N>& b)
-{
-    a = apply(MulOp<T>{}, a, b);
+    a = apply(MulOp<T>{}, a, v);
     return a;
 }
 
 template<typename T, size_t N>
-constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const T& b)
+constexpr Vector<T, N>& operator*=(Vector<T, N>& a, T v)
 {
-    a = apply(MulOp<T>{}, a, Vector<T, N>(b));
-    return a;
-}
-
-template<typename U, typename V, size_t N, typename R = typename DivOp<U, V>::ResultType>
-constexpr Vector<R, N> operator/(const Vector<U, N>& a, const Vector<V, N>& b)
-{
-    return apply(DivOp<U, V>{}, a, b);
-}
-
-template<typename U, Arithmetic V, size_t N>
-constexpr auto operator/(const Vector<U, N>& a, V b)
-{
-    return apply(DivOp<U, V>{}, a, Vector<V, N>(b));
-}
-
-template<Arithmetic U, typename V, size_t N>
-constexpr auto operator/(U a, const Vector<V, N>& b)
-{
-    return apply(DivOp<U, V>{}, Vector<U, N>(a), b);
-}
-
-template<typename T, size_t N>
-constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const Vector<T, N>& b)
-{
-    a = apply(DivOp<T>{}, a, b);
+    a = apply(MulOp<T>{}, a, v);
     return a;
 }
 
 template<typename T, size_t N>
-constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const T& b)
+constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const Vector<T, N>& v)
 {
-    a = apply(DivOp<T>{}, a, Vector<T, N>(b));
-    return a;
-}
-
-template<typename U, typename V, size_t N, typename R = typename AddOp<U, V>::ResultType>
-constexpr Matrix<R, N> operator+(const Matrix<U, N>& a, const Matrix<V, N>& b)
-{
-    return apply(AddOp<U, V>{}, a, b);
-}
-
-template<typename T, size_t N>
-constexpr Matrix<T, N>& operator+=(Matrix<T, N>& a, const Matrix<T, N>& b)
-{
-    a = apply(AddOp<T>{}, a, b);
-    return a;
-}
-
-template<typename U, typename V, size_t N, typename R = typename SubOp<U, V>::ResultType>
-constexpr Matrix<R, N> operator-(const Matrix<U, N>& a, const Matrix<V, N>& b)
-{
-    return apply(SubOp<U, V>{}, a, b);
-}
-
-template<typename T, size_t N>
-constexpr Matrix<T, N>& operator-=(Matrix<T, N>& a, const Matrix<T, N>& b)
-{
-    a = apply(SubOp<T>{}, a, b);
+    a = apply(DivOp<T>{}, a, v);
     return a;
 }
 
 template<typename T, size_t N>
-constexpr Matrix<T, N> operator-(const Matrix<T, N>& a)
+constexpr Vector<T, N>& operator/=(Vector<T, N>& a, T v)
 {
-    return apply(NegOp<T>{}, a);
+    a = apply(DivOp<T>{}, a, v);
+    return a;
 }
 
 template<typename U, Arithmetic V, size_t N>
 constexpr auto operator*(const Matrix<U, N>& a, V b)
 {
-    return apply(MulOp<U, V>{}, a, Matrix<V, N>(b));
+    return apply(MulOp<U, V>{}, a, b);
 }
 
 template<Arithmetic U, typename V, size_t N>
 constexpr auto operator*(U a, const Matrix<V, N>& b)
 {
-    return apply(MulOp<U, V>{}, Matrix<U, N>(a), b);
+    return apply(MulOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
-constexpr Matrix<T, N>& operator*=(Matrix<T, N>& a, const T& b)
+constexpr Matrix<T, N>& operator*=(Matrix<T, N>& a, T b)
 {
-    a = apply(MulOp<T>{}, a, Matrix<T, N>(b));
+    a = apply(MulOp<T>{}, a, b);
     return a;
 }
 
 template<typename U, Arithmetic V, size_t N>
 constexpr auto operator/(const Matrix<U, N>& a, V b)
 {
-    return apply(DivOp<U, V>{}, a, Matrix<V, N>(b));
+    return apply(DivOp<U, V>{}, a, b);
 }
 
 template<Arithmetic U, typename V, size_t N>
 constexpr auto operator/(U a, const Matrix<V, N>& b)
 {
-    return apply(DivOp<U, V>{}, Matrix<U, N>(a), b);
+    return apply(DivOp<U, V>{}, a, b);
 }
 
 template<typename T, size_t N>
-constexpr Matrix<T, N>& operator/=(Matrix<T, N>& a, const T& b)
+constexpr Matrix<T, N>& operator/=(Matrix<T, N>& a, T b)
 {
-    a = apply(DivOp<T>{}, a, Matrix<T, N>(b));
+    a = apply(DivOp<T>{}, a, b);
     return a;
 }
 
-#define IMPL_BOOL_BINARY_OP(OP, NAME)                                            \
-    template<typename U, typename V, size_t N>                                   \
-    constexpr Vector<bool, N> NAME(const Vector<U, N>& a, const Vector<V, N>& b) \
-    {                                                                            \
-        return apply(OP<U, V>{}, a, b);                                          \
-    }                                                                            \
-    template<typename U, Arithmetic V, size_t N>                                 \
-    constexpr Vector<bool, N> NAME(const Vector<U, N>& a, V b)                   \
-    {                                                                            \
-        return apply(OP<U, V>{}, a, Vector<V, N>(b));                            \
-    }                                                                            \
-    template<Arithmetic U, typename V, size_t N>                                 \
-    constexpr Vector<bool, N> NAME(U a, const Vector<V, N>& b)                   \
-    {                                                                            \
-        return apply(OP<U, V>{}, Vector<U, N>(a), b);                            \
+#define IMPL_VEC_UNARY_OP(OP, NAME)            \
+    template<typename T, size_t N>             \
+    constexpr auto NAME(const Vector<T, N>& v) \
+    {                                          \
+        return apply(OP<T>{}, v);              \
     }
-IMPL_BOOL_BINARY_OP(EqualOp, eq)
-IMPL_BOOL_BINARY_OP(NotEqualOp, neq)
-IMPL_BOOL_BINARY_OP(LessOp, operator<)
-IMPL_BOOL_BINARY_OP(GreaterOp, operator>)
-IMPL_BOOL_BINARY_OP(LEqualOp, operator<=)
-IMPL_BOOL_BINARY_OP(GEqualOp, operator>=)
-IMPL_BOOL_BINARY_OP(AndOp, operator&&)
-IMPL_BOOL_BINARY_OP(OrOp, operator||)
-#undef IMPL_BOOL_BINARY_OP
+IMPL_VEC_UNARY_OP(NegOp, operator-)
+IMPL_VEC_UNARY_OP(NotOp, operator!)
+IMPL_VEC_UNARY_OP(SignOp, sign)
+IMPL_VEC_UNARY_OP(AbsOp, abs)
+IMPL_VEC_UNARY_OP(CeilOp, ceil)
+IMPL_VEC_UNARY_OP(FloorOp, floor)
+IMPL_VEC_UNARY_OP(RoundOp, round)
+IMPL_VEC_UNARY_OP(ExpOp, exp)
+IMPL_VEC_UNARY_OP(LogOp, log)
+IMPL_VEC_UNARY_OP(Log10Op, log10)
+IMPL_VEC_UNARY_OP(SqrtOp, sqrt)
+IMPL_VEC_UNARY_OP(SinOp, sin)
+IMPL_VEC_UNARY_OP(CosOp, cos)
+IMPL_VEC_UNARY_OP(TanOp, tan)
+IMPL_VEC_UNARY_OP(AsinOp, asin)
+IMPL_VEC_UNARY_OP(AcosOp, acos)
+IMPL_VEC_UNARY_OP(AtanOp, atan)
+#undef IMPL_VEC_UNARY_OP
 
-template<typename T, size_t N>
-constexpr Vector<bool, N> operator!(const Vector<T, N>& a)
-{
-    return apply(NotOp<T>{}, a);
-}
-
-#define IMPL_UNARY(OP, NAME)                 \
-    template<typename T, size_t N>           \
-    Vector<T, N> NAME(const Vector<T, N>& v) \
-    {                                        \
-        return apply(OP<T>{}, v);            \
-    }                                        \
-                                             \
-    template<typename T, size_t N>           \
-    Matrix<T, N> NAME(const Matrix<T, N>& v) \
-    {                                        \
-        return apply(OP<T>{}, v);            \
+#define IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(OP, NAME)            \
+    template<typename T, size_t N>                                    \
+    constexpr auto NAME(const Vector<T, N>& a, const Vector<T, N>& b) \
+    {                                                                 \
+        return apply(OP<T>{}, a, b);                                  \
+    }                                                                 \
+    template<typename T, size_t N>                                    \
+    constexpr auto NAME(const Vector<T, N>& a, T b)                   \
+    {                                                                 \
+        return apply(OP<T>{}, a, b);                                  \
+    }                                                                 \
+    template<typename T, size_t N>                                    \
+    constexpr auto NAME(T a, const Vector<T, N>& b)                   \
+    {                                                                 \
+        return apply(OP<T>{}, a, b);                                  \
     }
-IMPL_UNARY(SignOp, sign)
-IMPL_UNARY(AbsOp, abs)
-IMPL_UNARY(CeilOp, ceil)
-IMPL_UNARY(FloorOp, floor)
-IMPL_UNARY(RoundOp, round)
-IMPL_UNARY(ExpOp, exp)
-IMPL_UNARY(LogOp, log)
-IMPL_UNARY(Log10Op, log10)
-IMPL_UNARY(SqrtOp, sqrt)
-IMPL_UNARY(SinOp, sin)
-IMPL_UNARY(CosOp, cos)
-IMPL_UNARY(TanOp, tan)
-IMPL_UNARY(AsinOp, asin)
-IMPL_UNARY(AcosOp, acos)
-IMPL_UNARY(AtanOp, atan)
-#undef IMPL_UNARY
+IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(FmodOp, fmod)
+IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(PowOp, pow)
+IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(Atan2Op, atan2)
+IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(MinOp, min)
+IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(MaxOp, max)
+#undef IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE
 
-#define IMPL_BINARY(OP, NAME)                                       \
-    template<typename T, size_t N>                                  \
-    Vector<T, N> NAME(const Vector<T, N>& a, const Vector<T, N>& b) \
-    {                                                               \
-        return apply(OP<T>{}, a, b);                                \
-    }                                                               \
-    template<typename T, size_t N>                                  \
-    Vector<T, N> NAME(const Vector<T, N>& a, const T& b)            \
-    {                                                               \
-        return apply(OP<T>{}, a, Vector<T, N>(b));                  \
-    }                                                               \
-    template<typename T, size_t N>                                  \
-    Vector<T, N> NAME(const T& a, const Vector<T, N>& b)            \
-    {                                                               \
-        return apply(OP<T>{}, Vector<T, N>(a), b);                  \
-    }                                                               \
-    template<typename T, size_t N>                                  \
-    Matrix<T, N> NAME(const Matrix<T, N>& a, const Matrix<T, N>& b) \
-    {                                                               \
-        return apply(OP<T>{}, a, b);                                \
-    }                                                               \
-    template<typename T, size_t N>                                  \
-    Matrix<T, N> NAME(const Matrix<T, N>& a, const T& b)            \
-    {                                                               \
-        return apply(OP<T>{}, a, Matrix<T, N>(b));                  \
-    }                                                               \
-    template<typename T, size_t N>                                  \
-    Matrix<T, N> NAME(const T& a, const Matrix<T, N>& b)            \
-    {                                                               \
-        return apply(OP<T>{}, Matrix<T, N>(a), b);                  \
+#define IMPL_VEC_TERNARY_OP(OP, NAME)                                              \
+    template<typename T, size_t N>                                                 \
+    auto NAME(const Vector<T, N>& a, const Vector<T, N>& b, const Vector<T, N>& c) \
+    {                                                                              \
+        return apply(OP<T>{}, a, b, c);                                            \
     }
-IMPL_BINARY(FmodOp, fmod)
-IMPL_BINARY(PowOp, pow)
-IMPL_BINARY(Atan2Op, atan2)
-IMPL_BINARY(MinOp, min)
-IMPL_BINARY(MaxOp, max)
-#undef IMPL_BINARY
-
-#define IMPL_TERNARY(OP, NAME)                                                             \
-    template<typename T, size_t N>                                                         \
-    Vector<T, N> NAME(const Vector<T, N>& a, const Vector<T, N>& b, const Vector<T, N>& c) \
-    {                                                                                      \
-        return apply(OP<T>{}, a, b, c);                                                    \
-    }                                                                                      \
-    template<typename T, size_t N>                                                         \
-    Matrix<T, N> NAME(const Matrix<T, N>& a, const Matrix<T, N>& b, const Matrix<T, N>& c) \
-    {                                                                                      \
-        return apply(OP<T>{}, a, b, c);                                                    \
-    }
-IMPL_TERNARY(ClampOp, clamp)
-#undef IMPL_TERNARY
+IMPL_VEC_TERNARY_OP(ClampOp, clamp)
+#undef IMPL_VEC_TERNARY_OP
 
 template<typename T, size_t N>
 constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, const Vector<T, N>& a)
@@ -996,24 +918,12 @@ constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, T a)
     return x * ((T)1 - a) + y * a;
 }
 
-template<typename T, size_t N>
-constexpr Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, const Matrix<T, N>& a)
-{
-    return x * (Matrix<T, N>(1) - a) + y * a;
-}
-
-template<typename T, size_t N>
-constexpr Matrix<T, N> mix(const Matrix<T, N>& x, const Matrix<T, N>& y, T a)
-{
-    return x * ((T)1 - a) + y * a;
-}
-
 // @@VECTOR_ARITHMETIC
 
-template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-constexpr Vector<R, N> operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
+template<typename U, typename V, size_t N>
+constexpr auto operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
 {
-    Vector<R, N> v(0);
+    Vector<typename MulOp<U, V>::ResultType, N> v(0);
     for (size_t i = 0; i < N; ++i)
     {
         v += a.col[i] * b.m[i];
@@ -1021,10 +931,10 @@ constexpr Vector<R, N> operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
     return v;
 }
 
-template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
-constexpr Matrix<R, N> operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
+template<typename U, typename V, size_t N>
+constexpr auto operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
-    Matrix<R, N> v;
+    Matrix<typename MulOp<U, V>::ResultType, N> v;
     for (size_t i = 0; i < N; ++i)
     {
         v.col[i] = a * b.col[i];
@@ -1061,7 +971,7 @@ constexpr T maxelem(const Vector<T, N>& v)
 template<typename T, size_t N>
 constexpr T sum(const Vector<T, N>& v)
 {
-    return fold(AddOp<T>{}, v, 0);
+    return fold(AddOp<T>{}, v, T{0});
 }
 
 // @@VECTOR_OPERATORS
@@ -1101,10 +1011,11 @@ Vector<T, N> normalize(const Vector<T, N>& v)
     return v * inv_length;
 }
 
-template<typename U, typename V, typename R = typename MulOp<U, V>::ResultType>
-Vector<R, 3> cross(const Vector<U, 3>& a, const Vector<V, 3>& b)
+template<typename U, typename V>
+auto cross(const Vector<U, 3>& a, const Vector<V, 3>& b)
 {
-    return Vector<R, 3>{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+    return Vector<typename MulOp<U, V>::ResultType, 3>{
+        a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
 
 template<typename T, size_t N>
@@ -1350,7 +1261,7 @@ Matrix<T, 4> orthographic_opengl(T left, T right, T bottom, T top, T near, T far
 }
 
 template<typename T>
-Matrix<T, 4> orthographic_opengl(T width, T height, T near, T far)
+inline Matrix<T, 4> orthographic_opengl(T width, T height, T near, T far)
 {
     return orthographic_opengl(-width / 2, width / 2, -height / 2, height / 2, near, far);
 }
@@ -1421,23 +1332,23 @@ struct Quaternion
         T m[4];
     };
 
-    constexpr Quaternion() : x(0), y(0), z(0), w(1) {}
+    constexpr Quaternion() : x{0}, y{0}, z{0}, w{1} {}
 
-    template<typename U>
-    constexpr Quaternion(U x, U y, U z, U w) : x((T)x), y((T)y), z((T)z), w((T)w)
+    template<std::convertible_to<T> U>
+    constexpr explicit Quaternion(U x, U y, U z, U w) : x{(T)x}, y{(T)y}, z{(T)z}, w{(T)w}
     {
     }
 
-    template<typename U>
-    constexpr Quaternion(const Vector<U, 3>& a, U w) : x((T)a.x), y((T)a.y), z((T)a.z), w((T)w)
+    template<std::convertible_to<T> U>
+    constexpr explicit Quaternion(const Vector<U, 3>& a, U w) :
+        x{(T)a.x}, y{(T)a.y}, z{(T)a.z}, w{(T)w}
     {
     }
 
-    constexpr Quaternion(const Quaternion<T>&) = default;
-
-    template<typename U>
-    constexpr explicit Quaternion(const Quaternion<U>& q) :
-        x((T)q.x), y((T)q.y), z((T)q.z), w((T)q.w)
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Quaternion(const Quaternion<U>& q)
+        requires(!std::is_same_v<U, T>)
+        : x{(T)q.x}, y{(T)q.y}, z{(T)q.z}, w{(T)q.w}
     {
     }
 };
@@ -1494,7 +1405,7 @@ constexpr Vector<R, 3> operator*(const Quaternion<U>& q, const Vector<V, 3>& v)
 }
 
 template<typename T>
-double dot(const Quaternion<T>& a, const Quaternion<T>& b)
+constexpr double dot(const Quaternion<T>& a, const Quaternion<T>& b)
 {
     return lm::dot(a.xyz, b.xyz) + a.w * b.w;
 }
@@ -1575,31 +1486,28 @@ template<typename T>
 class PrecomputedSlerp
 {
     Quaternion<T> _x, _z;
-    T _angle, _inv_sin_angle;
-    bool _small_angle;
+    T _angle{}, _inv_sin_angle{};
+    bool _small_angle = true;
 
 public:
     PrecomputedSlerp() = default;
 
     // Partially from https://www.geometrictools.com/GTE/Mathematics/Quaternion.h
-    PrecomputedSlerp(const Quaternion<T>& x, const Quaternion<T>& y)
+    PrecomputedSlerp(const Quaternion<T>& x, const Quaternion<T>& z) : _x{x}, _z{z}
     {
-        _x = x;
-        _z = y;
-
-        T cos_theta = dot(x, y);
-        if (cos_theta < (T)0.0)
+        T cos_theta = dot(x, z);
+        if (cos_theta < T{0})
         {
-            _z.xyz = -y.xyz;
-            _z.w = -y.w;
+            _z.xyz = -z.xyz;
+            _z.w = -z.w;
             cos_theta = -cos_theta;
         }
 
-        _small_angle = cos_theta > (T)1.0 - std::numeric_limits<T>::epsilon();
+        _small_angle = cos_theta > T{1} - std::numeric_limits<T>::epsilon();
         if (!_small_angle)
         {
-            _angle = std::acos(cos_theta);
-            _inv_sin_angle = 1.0 / std::sin(_angle);
+            _angle = (T)std::acos(cos_theta);
+            _inv_sin_angle = T{1} / (T)std::sin(_angle);
         }
     }
 
@@ -1611,13 +1519,13 @@ public:
         T c1, c2;
         if (_small_angle)
         {
-            c1 = (T)1.0 - t;
+            c1 = T{1} - t;
             c2 = t;
         }
         else
         {
-            c1 = std::sin(((T)1.0 - t) * _angle) * _inv_sin_angle;
-            c2 = std::sin(t * _angle) * _inv_sin_angle;
+            c1 = (T)std::sin((T{1} - t) * _angle) * _inv_sin_angle;
+            c2 = (T)std::sin(t * _angle) * _inv_sin_angle;
         }
 
         res.xyz = c1 * _x.xyz + c2 * _z.xyz;
@@ -1701,14 +1609,16 @@ struct DualQuaternion
     Quaternion<T> r;
     Quaternion<T> d;
 
-    constexpr DualQuaternion() : r(0, 0, 0, 1), d(0, 0, 0, 0) {}
+    constexpr DualQuaternion() : r{0, 0, 0, 1}, d{0, 0, 0, 0} {}
 
-    constexpr DualQuaternion(const Quaternion<T>& r_, const Quaternion<T>& d_ = {0, 0, 0, 0}) :
+    constexpr explicit DualQuaternion(
+        const Quaternion<T>& r_,
+        const Quaternion<T>& d_ = Quaternion<T>{0, 0, 0, 0}) :
         r(r_), d(d_)
     {
     }
 
-    explicit DualQuaternion(const Vector<T, 3>& v) : r(0, 0, 0, 1), d(v.x, v.y, v.z, 0) {}
+    constexpr explicit DualQuaternion(const Vector<T, 3>& v) : r{0, 0, 0, 1}, d{v.x, v.y, v.z, 0} {}
 };
 
 using dual_quat = DualQuaternion<float>;
@@ -1770,15 +1680,23 @@ Matrix<T, 4> transform_matrix(const DualQuaternion<T>& q)
 }
 
 // @@BOUNDINGBOXES
+
 template<typename T, size_t N>
 struct Bbox
 {
     Vector<T, N> min;
     Vector<T, N> max;
 
-    Bbox() = default;
+    constexpr Bbox() = default;
 
-    constexpr Bbox(const Vector<T, N>& min, const Vector<T, N>& max) : min(min), max(max) {}
+    constexpr explicit Bbox(const Vector<T, N>& min, const Vector<T, N>& max) : min{min}, max{max}
+    {
+    }
+
+    template<std::convertible_to<T> U>
+    constexpr explicit Bbox(const Vector<U, N>& min, const Vector<U, N>& max) : min{min}, max{max}
+    {
+    }
 
     static constexpr Bbox<T, N> invalid()
     {
@@ -1787,12 +1705,12 @@ struct Bbox
             Vector<T, N>(std::numeric_limits<T>::lowest()));
     }
 
-    template<typename U>
-    explicit Bbox(const Bbox<U, N>& other) : min(other.min), max(other.max)
+    template<std::convertible_to<T> U>
+    constexpr explicit(!ConvertibleToWithoutNarrowing<U, T>) Bbox(const Bbox<U, N>& other)
+        requires(!std::same_as<T, U>)
+        : min{other.min}, max{other.max}
     {
     }
-
-    constexpr Bbox(const Bbox<T, N>& other) = default;
 };
 
 using bbox2 = Bbox<float, 2>;
@@ -1851,7 +1769,7 @@ inline T radius2(const Bbox<T, N>& bb)
 }
 
 template<typename T, size_t N>
-inline bool intersect(const Bbox<T, N>& left, const Bbox<T, N>& right)
+constexpr bool intersect(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     return !(
         left.max.x < right.min.x || left.min.x > right.max.x || left.max.y < right.min.y
@@ -1861,7 +1779,7 @@ inline bool intersect(const Bbox<T, N>& left, const Bbox<T, N>& right)
 // Consider the intervals as open.
 // @Todo Should the openness be part of the bbox definition?
 template<typename T, size_t N>
-inline bool intersect_open(const Bbox<T, N>& left, const Bbox<T, N>& right)
+constexpr bool intersect_open(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     return !(
         left.max.x <= right.min.x || left.min.x >= right.max.x || left.max.y <= right.min.y
@@ -1869,33 +1787,33 @@ inline bool intersect_open(const Bbox<T, N>& left, const Bbox<T, N>& right)
 }
 
 template<typename T, size_t N>
-inline Bbox<T, N> intersection(const Bbox<T, N>& left, const Bbox<T, N>& right)
+constexpr Bbox<T, N> intersection(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     return Bbox<T, N>(max(left.min, right.min), min(left.max, right.max));
 }
 
 template<typename T, size_t N>
-inline Bbox<T, N> expand(const Bbox<T, N>& bbox, const Vector<T, N>& v)
+constexpr Bbox<T, N> expand(const Bbox<T, N>& bbox, const Vector<T, N>& v)
 {
     return Bbox<T, N>(min(bbox.min, v), max(bbox.max, v));
 }
 
 template<typename T, size_t N>
-inline Bbox<T, N> merge(const Bbox<T, N>& left, const Bbox<T, N>& right)
+constexpr Bbox<T, N> merge(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     Bbox<T, N> res{min(left.min, right.min), max(left.max, right.max)};
     return res;
 }
 
 template<typename T, size_t N>
-inline Bbox<T, N> merge(const Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Bbox<T, N> merge(const Vector<T, N>& a, const Vector<T, N>& b)
 {
-    Bbox<T, N> res = {min(a, b), max(a, b)};
+    Bbox<T, N> res{min(a, b), max(a, b)};
     return res;
 }
 
 template<typename T, typename U, size_t N>
-bool contains(const Bbox<T, N>& bbox, const Vector<U, N>& v)
+constexpr bool contains(const Bbox<T, N>& bbox, const Vector<U, N>& v)
 {
     bool is_inside = true;
     for (unsigned int i = 0; i < N; ++i)
@@ -1906,7 +1824,7 @@ bool contains(const Bbox<T, N>& bbox, const Vector<U, N>& v)
 }
 
 template<typename T, size_t N>
-inline bool is_valid(const Bbox<T, N>& bbox)
+constexpr bool is_valid(const Bbox<T, N>& bbox)
 {
     return all(bbox.min <= bbox.max);
 }
@@ -1920,7 +1838,7 @@ inline bool is_valid(const Bbox<T, N>& bbox)
 // optimize this away. Clang accepts constexpr on this function but not all
 // compilers do for now.
 template<typename T, size_t N>
-Vector<T, N> corner(const Bbox<T, N>& bbox, uint32_t mask)
+constexpr Vector<T, N> corner(const Bbox<T, N>& bbox, uint32_t mask)
 {
     Vector<T, N> c;
     for (size_t i = 0; i < N; ++i)

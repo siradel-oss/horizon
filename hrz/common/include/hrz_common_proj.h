@@ -28,11 +28,11 @@ extern pl_Crs ecef;
 extern pl_Crs lonlat_deg;
 extern pl_Crs lonlat_rad;
 
-static const lm::dbbox2 web_mercator_bounds = {
+static const lm::dbbox2 web_mercator_bounds{
     {-hrz::HALF_MERCATOR_RANGE, -hrz::HALF_MERCATOR_RANGE},
     {hrz::HALF_MERCATOR_RANGE, hrz::HALF_MERCATOR_RANGE},
 };
-static const lm::dbbox2 wgs84_bounds = {
+static const lm::dbbox2 wgs84_bounds{
     {-180, -90},
     {180, 90},
 };

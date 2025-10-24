@@ -217,7 +217,7 @@ void compute_tiled_mercator_reprojection(
         lm::bbox2 uv_clipping;
         if (!raster_bounds.has_value())
         {
-            uv_clipping = {{0, 0}, {1, 1}};
+            uv_clipping = lm::bbox2{{0, 0}, {1, 1}};
         }
         else
         {

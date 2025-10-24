@@ -1508,12 +1508,12 @@ void DebugDraw::point_text(std::string_view text, const lm::dvec3& position) con
 
 void DebugDraw::screen_text(std::string_view text, const lm::dvec2& position) const
 {
-    dd::text(text, position, color, text_align, dd::Space::Screen, group);
+    dd::text(text, lm::dvec3(position), color, text_align, dd::Space::Screen, group);
 }
 
 void DebugDraw::clip_text(std::string_view text, const lm::dvec2& position) const
 {
-    dd::text(text, position, color, text_align, dd::Space::Clip, group);
+    dd::text(text, lm::dvec3(position), color, text_align, dd::Space::Clip, group);
 }
 
 void DebugDraw::text_geo(std::string_view text, const GeoPosition3& geo) const

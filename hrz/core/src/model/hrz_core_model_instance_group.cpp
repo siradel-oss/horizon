@@ -246,10 +246,8 @@ void InstanceGroup::set_data(ModelPrototype* proto, const InstanceGroupData& gro
             }
             else
             {
-                x = lm::normalize(
-                    lm::dvec3(group_linear_xform * group_data.normals[2 * instance + 0]));
-                y = lm::normalize(
-                    lm::dvec3(group_linear_xform * group_data.normals[2 * instance + 1]));
+                x.xyz = lm::normalize(group_linear_xform * group_data.normals[2 * instance + 0]);
+                y.xyz = lm::normalize(group_linear_xform * group_data.normals[2 * instance + 1]);
             }
         }
         else if (group_data.use_enu_orientation)

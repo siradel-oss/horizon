@@ -449,8 +449,8 @@ struct Scene : public hrz_proto::ICameraService
     std::optional<hrz_proto::SceneViewIndex> find_center_view_for_camera(
         hrz_proto::CameraIndex cam_index)
     {
-        static constexpr float kMargin = 0.005;
-        static constexpr lm::bbox2 kTargetZone = {{0.5f - kMargin, 0.5f}, {0.5f + kMargin, 1.0f}};
+        static constexpr float kMargin = 0.005F;
+        static constexpr lm::bbox2 kTargetZone{{0.5f - kMargin, 0.5f}, {0.5f + kMargin, 1.0f}};
 
         float max_area_best_view = std::numeric_limits<float>::min();
         std::optional<hrz_proto::SceneViewIndex> best_view;

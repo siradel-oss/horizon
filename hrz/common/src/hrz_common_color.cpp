@@ -2006,7 +2006,7 @@ lm::vec3 rgb_to_hsv(const lm::vec3& c)
 // See https://bottosson.github.io/posts/oklab/
 lm::vec4 linear_to_oklab(const lm::vec4& rgb_lin)
 {
-    static const lm::mat3 lin_rgb_to_lin_lms = {
+    static const lm::mat3 lin_rgb_to_lin_lms{
         {0.4122214708f, 0.2119034982f, 0.0883024619f},
         {0.5363325363f, 0.6806995451f, 0.2817188376f},
         {0.0514459929f, 0.1073969566f, 0.6299787005f}};
@@ -2026,7 +2026,7 @@ lm::vec4 oklab_to_linear(const lm::vec4& lms)
 
     lm::vec3 lms_lin = lms.xyz * lms.xyz * lms.xyz;
 
-    static const lm::mat3 lin_lms_to_lin_rgb = {
+    static const lm::mat3 lin_lms_to_lin_rgb{
         {+4.0767416621f, -1.2684380046f, -0.0041960863f},
         {-3.3077115913f, +2.6097574011f, -0.7034186147f},
         {+0.2309699292f, -0.3413193965f, +1.7076147010f}};

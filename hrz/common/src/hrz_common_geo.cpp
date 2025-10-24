@@ -83,7 +83,7 @@ lm::dmat4 hrz::enu_to_ecef_rotation_matrix_for_geo(double lat, double lon)
     double cos_lat = std::cos(lat);
     double sin_lon = std::sin(lon);
     double cos_lon = std::cos(lon);
-    return {
+    return lm::dmat4{
         {-sin_lon, cos_lon, 0, 0},
         {-sin_lat * cos_lon, -sin_lat * sin_lon, cos_lat, 0},
         {cos_lat * cos_lon, cos_lat * sin_lon, sin_lat, 0},
@@ -98,7 +98,7 @@ lm::dmat4 hrz::ecef_to_enu_rotation_matrix_for_geo(double lat, double lon)
     double cos_lat = std::cos(lat);
     double sin_lon = std::sin(lon);
     double cos_lon = std::cos(lon);
-    return {
+    return lm::dmat4{
         {-sin_lon, -sin_lat * cos_lon, cos_lat * cos_lon, 0},
         {cos_lon, -sin_lat * sin_lon, cos_lat * sin_lon, 0},
         {0, cos_lat, sin_lat, 0},
@@ -766,7 +766,7 @@ hrz::ScreenToEllipsoidTransform::ScreenToEllipsoidTransform(
     const lm::dmat4& inv_pv_cc,
     const lm::vec2& subview_size)
 {
-    lm::dmat4 screen_to_ndc = {
+    lm::dmat4 screen_to_ndc{
         {2.0 / subview_size.x, 0, 0, 0},
         {0, -2.0 / subview_size.y, 0, 0},
         {0, 0, 1, 0},

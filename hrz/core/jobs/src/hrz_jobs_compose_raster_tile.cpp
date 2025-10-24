@@ -728,7 +728,7 @@ hrz::JobResult run(
             int in_max_x = in_min_x + (1 << -lod_diff) - 1;
             int in_max_y = in_min_y + (1 << -lod_diff) - 1;
 
-            lm::ibbox2 in_bbox = {{in_min_x, in_min_y}, {in_max_x, in_max_y}};
+            lm::ibbox2 in_bbox{{in_min_x, in_min_y}, {in_max_x, in_max_y}};
 
             covered_borders |= lm::contains(in_bbox, lm::ivec2{out_x - 1, out_y - 1}) ? 1 << 0 : 0;
             covered_borders |= lm::contains(in_bbox, lm::ivec2{out_x + 0, out_y - 1}) ? 1 << 1 : 0;

@@ -134,7 +134,7 @@ struct Glyph
         float v0 = (in_texture_index / glyphs_per_row) / (float)glyphs_per_row + margin;
         float v1 = v0 + SDF_SIZE / (float)TEXTURE_SIZE;
 
-        return {{u0, v0}, {u1, v1}};
+        return lm::bbox2{{u0, v0}, {u1, v1}};
     }
 };
 

@@ -108,10 +108,10 @@ bool FrustumCuller::intersects(const OrientedBoundingBox& bbox) const
 {
     // See https://gamedev.stackexchange.com/a/44501
 
-    lm::dmat3 orientation = {
-        {bbox.u_axis.x, bbox.v_axis.x, bbox.w_axis.x},
-        {bbox.u_axis.y, bbox.v_axis.y, bbox.w_axis.y},
-        {bbox.u_axis.z, bbox.v_axis.z, bbox.w_axis.z},
+    lm::dmat3 orientation{
+        lm::dvec3{bbox.u_axis.x, bbox.v_axis.x, bbox.w_axis.x},
+        lm::dvec3{bbox.u_axis.y, bbox.v_axis.y, bbox.w_axis.y},
+        lm::dvec3{bbox.u_axis.z, bbox.v_axis.z, bbox.w_axis.z},
     };
 
     auto classify = [&](const lm::dvec4& plane)

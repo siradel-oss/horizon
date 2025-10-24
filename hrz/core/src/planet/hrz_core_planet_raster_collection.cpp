@@ -141,7 +141,7 @@ lm::dbbox2 project_to_web_mercator(const hrz_proto::GeographicBounds& wgs84_boun
         }
     }
 
-    return {
+    return lm::dbbox2{
         hrz::geo_to_web_mercator(GeoPosition2{display_bounds.south, display_bounds.west}),
         hrz::geo_to_web_mercator(GeoPosition2{display_bounds.north, display_bounds.east})};
 }

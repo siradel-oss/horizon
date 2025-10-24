@@ -377,7 +377,7 @@ VectorDataLoader::LayerModel VectorDataLoader::make_model(
             // only want them to be retrieved from the primary source.
             if (s == LayerModel::PRIMARY_SOURCE || !it.second.is_feature_id)
             {
-                model.attributes.insert({it.first, model.data_sources.size()});
+                model.attributes.insert({it.first, (uint32_t)model.data_sources.size()});
             }
         }
 

@@ -84,7 +84,7 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
     lm::vec2 full_size_no_scale =
         (sprite.full_size_stretch * stretch_factor + sprite.full_size_fixed);
 
-    lm::bbox2 visual_rect = {{}, full_size_no_scale};
+    lm::bbox2 visual_rect{{}, full_size_no_scale};
     visual_rect = transform_rect_2d_no_rotation(visual_rect, transform);
 
     if (element.anchor_index.has_value())

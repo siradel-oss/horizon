@@ -63,7 +63,7 @@ hrz::JobResult run(
         return hrz::JobResult::FAILURE;
     }
 
-    lm::dbbox2 bounds = {
+    lm::dbbox2 bounds{
         {
             bbox_node.attribute("minx").as_double(),
             bbox_node.attribute("miny").as_double(),

@@ -365,7 +365,7 @@ bool intersects_space_subset(
         // See https://gamedev.stackexchange.com/a/44501
         //     https://iquilezles.org/articles/frustumcorrect/
 
-        lm::dmat3 orientation = {
+        lm::dmat3 orientation{
             {box.u_axis.x, box.v_axis.x, box.w_axis.x},
             {box.u_axis.y, box.v_axis.y, box.w_axis.y},
             {box.u_axis.z, box.v_axis.z, box.w_axis.z},
@@ -517,24 +517,25 @@ BoundingVolume transform_bounding_volume(
 
     auto transform_box = [](const BoundingVolume::Box& box, const lm::dmat4& transform)
     {
-#define TRANSFORM_BOX_AXIS(x)                                                                  \
-    do                                                                                         \
-    {                                                                                          \
-        bool has_zero_length = box.x##_half_length <= std::numeric_limits<double>::epsilon();  \
-        lm::dvec4 half_##x##_axis =                                                            \
-            has_zero_length ? box.x##_axis : lm::dvec4(box.x##_axis * box.x##_half_length, 0); \
-                                                                                               \
-        half_##x##_axis = transform * half_##x##_axis;                                         \
-        transformed_box.x##_half_length = lm::length(half_##x##_axis);                         \
-                                                                                               \
-        if (transformed_box.x##_half_length > std::numeric_limits<double>::epsilon())          \
-        {                                                                                      \
-            transformed_box.x##_axis = half_##x##_axis.xyz / transformed_box.x##_half_length;  \
-        }                                                                                      \
-        else                                                                                   \
-        {                                                                                      \
-            transformed_box.x##_axis = half_##x##_axis.xyz;                                    \
-        }                                                                                      \
+#define TRANSFORM_BOX_AXIS(x)                                                                 \
+    do                                                                                        \
+    {                                                                                         \
+        bool has_zero_length = box.x##_half_length <= std::numeric_limits<double>::epsilon(); \
+        lm::dvec4 half_##x##_axis = has_zero_length                                           \
+            ? lm::dvec4(box.x##_axis)                                                         \
+            : lm::dvec4(box.x##_axis * box.x##_half_length);                                  \
+                                                                                              \
+        half_##x##_axis = transform * half_##x##_axis;                                        \
+        transformed_box.x##_half_length = lm::length(half_##x##_axis);                        \
+                                                                                              \
+        if (transformed_box.x##_half_length > std::numeric_limits<double>::epsilon())         \
+        {                                                                                     \
+            transformed_box.x##_axis = half_##x##_axis.xyz / transformed_box.x##_half_length; \
+        }                                                                                     \
+        else                                                                                  \
+        {                                                                                     \
+            transformed_box.x##_axis = half_##x##_axis.xyz;                                   \
+        }                                                                                     \
     } while (0)
         BoundingVolume::Box transformed_box;
         transformed_box.center = (transform * lm::dvec4(box.center, 1)).xyz;

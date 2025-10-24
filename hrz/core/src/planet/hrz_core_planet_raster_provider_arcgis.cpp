@@ -91,7 +91,7 @@ struct ExportMapUrlGenerator : public hrz::TileUrlGenerator
         else
         {
             auto bounds = hrz::geodetic_tile_bounds({x, y, (uint8_t)z});
-            tile_bbox = {
+            tile_bbox = lm::dbbox2{
                 {lm::degrees(bounds.west), lm::degrees(bounds.south)},
                 {lm::degrees(bounds.east), lm::degrees(bounds.north)}};
         }
@@ -141,7 +141,7 @@ struct ExportImageUrlGenerator : public hrz::TileUrlGenerator
         else
         {
             auto bounds = hrz::geodetic_tile_bounds({x, y, (uint8_t)z});
-            tile_bbox = {
+            tile_bbox = lm::dbbox2{
                 {lm::degrees(bounds.west), lm::degrees(bounds.south)},
                 {lm::degrees(bounds.east), lm::degrees(bounds.north)}};
         }
@@ -589,7 +589,7 @@ private:
             if (!std::isnan(x_min) && !std::isnan(y_min) && !std::isnan(x_max) && !std::isnan(y_max)
                 && x_max > x_min && y_max > y_min)
             {
-                full_extent = {{{x_min, y_min}, {x_max, y_max}}};
+                full_extent = lm::dbbox2{{x_min, y_min}, {x_max, y_max}};
             }
         }
 
@@ -939,7 +939,7 @@ private:
         {
             HRZ_LOG_WARNING("No extents are defined.");
             extent.srid = 3857;
-            extent.bounds = {{0, 0}, {0, 0}};
+            extent.bounds = lm::dbbox2{{0, 0}, {0, 0}};
         }
 
         if (extent.srid != (uint32_t)srid)

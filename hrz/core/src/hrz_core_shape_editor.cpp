@@ -4761,7 +4761,7 @@ std::vector<lm::vec3> generate_control_points_instance_buffer(
     {
         const auto& position = shape.control_points.at(i);
         ecef_positions.push_back(hrz::geo_to_ecef(position));
-        web_mercator_positions.push_back(hrz::geo_to_web_mercator_pixels(position));
+        web_mercator_positions.emplace_back(hrz::geo_to_web_mercator_pixels(position), 0);
         ground_normals[i] = lm::vec3(hrz::geo_to_normal(position));
     }
 

@@ -396,7 +396,7 @@ private:
                         uint32_t end_x = hrz::json::get_int_or(range, "endX", max_x);
                         uint32_t end_y = hrz::json::get_int_or(range, "endY", max_y);
 
-                        lm::ubbox2 bbox = {{start_x, start_y}, {end_x, end_y}};
+                        lm::ubbox2 bbox{{start_x, start_y}, {end_x, end_y}};
                         available_tiles.at(level).push_back(bbox);
                     }
                 }
