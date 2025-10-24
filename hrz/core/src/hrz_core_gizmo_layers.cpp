@@ -880,8 +880,6 @@ struct Part
     explicit Part(GizmoPartKind id) : id(id), axis(part_to_axis(id)), action(part_to_action(id)) {}
 
     constexpr bool operator==(const Part& other) const { return id == other.id; }
-
-    constexpr bool operator!=(const Part& other) const { return id != other.id; }
 };
 
 struct State

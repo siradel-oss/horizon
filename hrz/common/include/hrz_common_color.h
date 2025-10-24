@@ -35,22 +35,18 @@ static inline uint8_t linear_f32_to_srgb_u8(float c)
     return linear_to_srgb_lut[idx];
 }
 
-template<typename T>
+template<std::floating_point T>
 static inline T srgb_to_linear(T c)
 {
-    static_assert(std::is_floating_point<T>::value, "T must be a floating point type");
-
     if (c <= T(0.04045))
         return c * T(1.0 / 12.92);
     else
         return std::pow((c + T(0.055)) * (T(1.0) / T(1.055)), T(2.4));
 }
 
-template<typename T>
+template<std::floating_point T>
 static inline T linear_to_srgb(T c)
 {
-    static_assert(std::is_floating_point<T>::value, "T must be a floating point type");
-
     if (c <= T(0.0031308))
         return c * T(12.92);
     else

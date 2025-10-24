@@ -14,7 +14,6 @@ struct uint128
     uint64_t high;
 
     friend constexpr bool operator==(uint128 a, uint128 b) = default;
-    friend constexpr bool operator!=(uint128 a, uint128 b) = default;
 
     friend constexpr std::strong_ordering operator<=>(uint128 a, uint128 b)
     {

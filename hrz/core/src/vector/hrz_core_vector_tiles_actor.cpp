@@ -895,7 +895,7 @@ struct VectorTilesActor : public Actor
                         auto& new_repr = message.repr;
                         auto type = new_repr.type();
                         auto id = new_repr.id();
-                        auto name = new_repr.name();
+                        const auto& name = new_repr.name();
 
                         StylingReprRef ref;
                         ref.type = type;
@@ -950,7 +950,7 @@ struct VectorTilesActor : public Actor
 
                             auto type = repr.type();
                             auto id = repr.id();
-                            auto name = repr.name();
+                            const auto& name = repr.name();
 
                             old_repr_id = repr_config.id;
                             new_repr_id = id;

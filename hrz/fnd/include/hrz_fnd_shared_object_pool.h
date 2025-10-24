@@ -740,8 +740,6 @@ public:
 
         bool operator==(const iterator& it) const { return it.pool_it == pool_it; }
 
-        bool operator!=(const iterator& it) const { return it.pool_it != pool_it; }
-
     private:
         SharedObjectPool<T, ChunkSize>* shared_object_pool;
         ObjectPoolIterator pool_it;
@@ -778,8 +776,6 @@ public:
         const WeakRef operator*() const { WeakRef{shared_object_pool, (*pool_it).first}; }
 
         bool operator==(const const_iterator& it) const { return it.pool_it == pool_it; }
-
-        bool operator!=(const const_iterator& it) const { return it.pool_it != pool_it; }
 
     private:
         SharedObjectPool<T, ChunkSize>* shared_object_pool;

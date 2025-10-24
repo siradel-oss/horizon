@@ -2049,19 +2049,17 @@ lm::vec4 oklab_to_srgb(const lm::vec4& lms)
 
 lm::ubvec4 mix_srgb_colors_in_linear(const lm::ubvec4& x, const lm::ubvec4& y, float t)
 {
-    lm::vec4 x_lin = hrz::srgb_to_linear_lut(x);
-    lm::vec4 y_lin = hrz::srgb_to_linear_lut(y);
-    lm::vec4 mix_lin = (x_lin + y_lin) / 2.0f;
+    const lm::vec4 x_lin = hrz::srgb_to_linear_lut(x);
+    const lm::vec4 y_lin = hrz::srgb_to_linear_lut(y);
+    const lm::vec4 mix_lin = lm::mix(x_lin, y_lin, t);
     return hrz::linear_to_srgb_lut(mix_lin);
 }
 
 lm::ubvec4 mix_srgb_colors_in_oklab(const lm::ubvec4& x, const lm::ubvec4& y, float t)
 {
-    lm::vec4 x_oklab = srgb_to_oklab(convert_byte_color_to_rgba(x));
-    lm::vec4 y_oklab = srgb_to_oklab(convert_byte_color_to_rgba(y));
-
-    lm::vec4 mix_oklab = lm::mix(x_oklab, y_oklab, t);
-
+    const lm::vec4 x_oklab = srgb_to_oklab(convert_byte_color_to_rgba(x));
+    const lm::vec4 y_oklab = srgb_to_oklab(convert_byte_color_to_rgba(y));
+    const lm::vec4 mix_oklab = lm::mix(x_oklab, y_oklab, t);
     return convert_rgba_color_to_bytes(oklab_to_srgb(mix_oklab));
 }
 

@@ -319,8 +319,8 @@ struct SharedData
                 order[i] = i;
             }
 
-            std::sort(
-                order.begin(), order.end(),
+            std::ranges::sort(
+                order,
                 [&](size_t a, size_t b)
                 { return operations[a].timestamp_us < operations[b].timestamp_us; });
 
@@ -513,8 +513,7 @@ struct ThreadMetricsRegistry
                 }
 
                 auto& dst = data->_id_to_operations[pair.first];
-                std::ranges::copy(
-                    storage.operations.begin(), storage.operations.end(), std::back_inserter(dst));
+                std::ranges::copy(storage.operations, std::back_inserter(dst));
 
                 storage.operations.clear();
 

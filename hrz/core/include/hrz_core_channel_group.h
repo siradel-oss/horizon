@@ -108,8 +108,6 @@ public:
 
         bool operator==(const Iterator& other) const { return it == other.it; }
 
-        bool operator!=(const Iterator& other) const { return it != other.it; }
-
         const uint64_t& first() const { return it->first; }
 
         Channel<TSend, TReceive>& second() { return it->second; }

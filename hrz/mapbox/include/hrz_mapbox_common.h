@@ -219,23 +219,6 @@ static bool operator==(const Value& lhs, const Value& rhs)
     }
 }
 
-static bool operator!=(const Value& lhs, const Value& rhs)
-{
-    if (lhs.type != rhs.type)
-    {
-        return true;
-    }
-
-    switch (lhs.type)
-    {
-        case Value::Type::Bool: return lhs.b64 != rhs.b64;
-        case Value::Type::UInt: return lhs.u64 != rhs.u64;
-        case Value::Type::Double: return lhs.f64 != rhs.f64;
-        case Value::Type::String: return lhs.str != rhs.str;
-        default: assert(false && "Unhandled"); return false;
-    }
-}
-
 using NodeIndex = uint32_t;
 static constexpr NodeIndex NO_NODE = 0;
 

@@ -96,8 +96,6 @@ public:
 
         return true;
     }
-
-    inline bool operator!=(const StaticVector& other) const { return !(*this == other); }
 };
 
 } // namespace hrz

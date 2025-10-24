@@ -222,7 +222,7 @@ AttributionHandle register_attribution_group(
 
     // Then sort them to compute the group hash
     hrz::InlinedVector<AttributionHandle, 8> sorted = deduplicated_in_source_order;
-    std::sort(sorted.begin(), sorted.end());
+    std::ranges::sort(sorted);
 
     std::span<const AttributionHandle> sorted_span = sorted;
     hrz::uint128 hash = hrz::murmur3_x64_128(std::as_bytes(sorted_span));
