@@ -858,7 +858,7 @@ void do_post_link_steps(my::GLInstance* inst, my::GLShader* ptr)
             glUniform1i(location, ptr->sampler_defs[i].index);
             GL_ERROR();
         }
-#ifndef DISABLE_UNKNOWN_SAMPLER_WARNINGS
+#ifndef MYCELIUM_DISABLE_UNKNOWN_SAMPLER_WARNINGS
         else
         {
             MY_LOG_WARNING(

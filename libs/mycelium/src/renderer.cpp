@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <vector>
 
-#if MYCELIUM_NATIVE
+#if MYCELIUM_WITH_SSE
 #    include <xmmintrin.h>
 #endif
 
@@ -50,7 +50,7 @@ bool FrustumCuller::intersects(const lm::dvec3& p_dp, double radius_dp) const
     // the corners of the frustum that may not be culled but that should be.
     // At least we don't get any false negative...
 
-#if MYCELIUM_NATIVE
+#if MYCELIUM_WITH_SSE
     // All of this is exactly equivalent to the normal code below
     // except it doesn't do early exit (for obvious reasons...)
 

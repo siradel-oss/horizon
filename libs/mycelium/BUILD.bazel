@@ -34,7 +34,10 @@ DEPS = [
 LOCAL_DEFINES = [
     "MY_LOG_PREFIX=Mycelium",
 ] + select({
-    "//:release": ["DISABLE_UNKNOWN_SAMPLER_WARNINGS"],
+    "//:release": ["MYCELIUM_DISABLE_UNKNOWN_SAMPLER_WARNINGS"],
+    "//conditions:default": [],
+}) + select({
+    "@platforms//cpu:x86_64": ["MYCELIUM_WITH_SSE"],
     "//conditions:default": [],
 })
 
