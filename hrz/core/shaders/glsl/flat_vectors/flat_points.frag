@@ -32,10 +32,10 @@ void main()
     vec4 disc_color = vec4(v_color.rgb * v_color.a, v_color.a);
     vec4 outline_color = vec4(hrz_tile.disc_outline_color.rgb * hrz_tile.disc_outline_color.a, hrz_tile.disc_outline_color.a);
 
-    disc_color = disc_color * (1.0 - aastep(v_disc_dist, dist));
-    outline_color = outline_color * (aastep(v_disc_dist, dist) - aastep(0.5, dist));
+    float disc_to_outline_t = aastep(v_disc_dist, dist);
+    float outline_to_outside_t = aastep(0.5, dist);
 
-    vec4 color = mix_premultiplied_colors(disc_color, outline_color);
+    vec4 color = mix(mix(disc_color, outline_color, disc_to_outline_t), vec4(0.0), outline_to_outside_t);
 
     if (color.a == 0.0) discard;
 
