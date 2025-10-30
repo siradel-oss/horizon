@@ -104,6 +104,7 @@ private:
         hrz_proto::HttpHeaderList image_headers;
         image_loader::ImageH image = 0;
         my::ResourceHandle image_texture = my::ResourceHandle::null();
+        bool is_sprite = false;
 
         uint32_t blend_mode = 0;
         float blend_strength = 0;
@@ -136,7 +137,8 @@ private:
     my::ResourceHandle _visual_shader = my::ResourceHandle::null();
     my::ResourceHandle _picking_shader = my::ResourceHandle::null();
     my::ResourceHandle _selection_shader = my::ResourceHandle::null();
-    my::ResourceHandle _image_sampler = my::ResourceHandle::null();
+    my::ResourceHandle _simple_image_sampler = my::ResourceHandle::null();
+    my::ResourceHandle _sprite_image_sampler = my::ResourceHandle::null();
 
     std::vector<my::ResourceHandle> _unused_resources;
 

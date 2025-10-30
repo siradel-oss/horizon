@@ -198,14 +198,28 @@ void ImageElementSystem::init_render(Render* render)
         my::SamplerResource res;
         res.sampler.min_filter = my::SamplerParams::Filter::Linear;
         res.sampler.mag_filter = my::SamplerParams::Filter::Linear;
+        res.sampler.mipmap_filter = my::SamplerParams::Filter::Linear;
+        res.sampler.wrap_x = my::SamplerParams::Wrap::Clamp;
+        res.sampler.wrap_y = my::SamplerParams::Wrap::Clamp;
+        res.sampler.wrap_z = my::SamplerParams::Wrap::Clamp;
+        res.use_mipmaps = true;
+
+        _simple_image_sampler = render->rc->alloc(&res, hrz::monitoring::systems::Symbols);
+    }
+
+    {
+        my::SamplerResource res;
+        res.sampler.min_filter = my::SamplerParams::Filter::Linear;
+        res.sampler.mag_filter = my::SamplerParams::Filter::Linear;
         res.sampler.wrap_x = my::SamplerParams::Wrap::Clamp;
         res.sampler.wrap_y = my::SamplerParams::Wrap::Clamp;
         res.sampler.wrap_z = my::SamplerParams::Wrap::Clamp;
         // If we enable mipmaps, we can get awful looking lines in the sprites when
-        // regions are reduced because it fetches a lower mip level.
+        // regions are reduced because it fetches a lower mip level, or when
+        // multiple sprites bleed into one another.
         res.use_mipmaps = false;
 
-        _image_sampler = render->rc->alloc(&res, hrz::monitoring::systems::Symbols);
+        _sprite_image_sampler = render->rc->alloc(&res, hrz::monitoring::systems::Symbols);
     }
 }
 
@@ -217,7 +231,8 @@ void ImageElementSystem::deinit_render(Render* render)
     }
     _unused_resources.clear();
 
-    render->rc->dealloc(_image_sampler);
+    render->rc->dealloc(_simple_image_sampler);
+    render->rc->dealloc(_sprite_image_sampler);
 }
 
 // Structure used to build the cuts in a sprite that define stretchable and non-stretchable regions.
@@ -378,9 +393,11 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
     prototype.baking_params.alignment_prp.y =
         register_prp(alignment_y_prp_name, prototype.baking_params.default_alignment.y);
 
-    // Bake the sprite geomtries
+    // Bake the sprite geometries
     if (descriptor.sprites_size() > 0)
     {
+        prototype.is_sprite = true;
+
         SpriteCuts cuts_x, cuts_y;
         hrz::InlinedVector<int, 32> sprite_geometry_identity;
         hrz::flat_hash_map<hrz::uint128, int> geometry_identity_hash_to_index;
@@ -563,6 +580,8 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
     }
     else // No sprite, generate a dummy one
     {
+        prototype.is_sprite = false;
+
         prototype.vertex_buffer_data.push_back({{0, 0, 0, 0}, {0, 0}});
         prototype.vertex_buffer_data.push_back({{0, 0, 1, 0}, {1, 0}});
         prototype.vertex_buffer_data.push_back({{0, 0, 0, 1}, {0, 1}});
@@ -796,7 +815,8 @@ std::optional<ElementSystem::RenderableH> ImageElementSystem::make_renderable(
     renderable->data.culling_visibility_textures = culling_visibility_textures;
     renderable->data.data_texture_sampler = anchor_data_texture_sampler;
     renderable->data.image_texture = prototype->image_texture;
-    renderable->data.image_texture_sampler = _image_sampler;
+    renderable->data.image_texture_sampler =
+        prototype->is_sprite ? _sprite_image_sampler : _simple_image_sampler;
     renderable->data.visual_shader = _visual_shader;
     renderable->data.picking_shader = _picking_shader;
     renderable->data.selection_shader = _selection_shader;

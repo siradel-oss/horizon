@@ -18,7 +18,8 @@ static constexpr size_t InitialGlyphCapacity = 2048;
 
 // Process overview:
 //
-// Each font has its own glyph texture, containing signed distance fields (SDFs).
+// Each font has its own glyph texture, containing multi-channel signed distance
+// fields (MSDFs, but usually referred to as SDFs in the code base).
 // That texture is an atlas of bitmaps GLYPH_SIZE by GLYPH_SIZE pixels large.
 // Each bitmap contains an SDF for one glyph.
 //
@@ -26,8 +27,9 @@ static constexpr size_t InitialGlyphCapacity = 2048;
 // will be used, as well as their positions. This is achieved thanks to Harfbuzz
 // and is a highly complex operation for some scripts (like South Asian ones).
 //
-// Then all the glyphs that are not already in the font texture are rasterised
-// to SDFs with msdf.c (itself using stb_truetype) and added to the texture.
+// Then all the glyphs that are not already in the font texture are read from
+// the font file with stb_truetype to generate a shape structure for msdfgen,
+// then rasterised to SDFs with msdfgen, and finally added to the texture.
 //
 // Combining the glyph positions and the font atlas, meshes are generated. Each
 // glyph is drawn using a quad (actually a pair of triangles). The quads are
@@ -44,20 +46,21 @@ static constexpr size_t InitialGlyphCapacity = 2048;
 //
 // Each font uses an arbitrary scale when defining its glyphs. The same glyph
 // can be 200 units high or 3,000. This is internal to the font and irrespective
-// to how big the font is supposed to be compared to other fonts. The function
-// `stbtt_ScaleForPixelHeight()` is called to determine how each font should be
-// scaled in order for its characters to fit in a box of a given size.
+// to how big the font is supposed to be compared to other fonts. The bounds of
+// the msdfgen shape are used to determine how each glyph should be scaled in
+// order for its characters to fit in a box of a given size. (Not all glyphs in
+// a single font are rasterised to the same scale, so that large glyphs can fit
+// into their allocated area, and small glyphs use the most space available to
+// improve visual quality.) So the first scaling factor for a glyph maps from
+// the font's internal units to the size of the glyph's SDF.
 //
 // The font size is given in pixels by em. One em is about the height of the
-// text. Another function, `stbtt_ScaleForMappingEmToPixels()`, is called to
-// know how to scale the pixels from before in order to make the size of all
-// fonts match.
+// text. The `stbtt_ScaleForMappingEmToPixels()` is called to know how to scale
+// the font's internal units to ems. This is the second scaling factor.
 //
 // With these values we can make all glyphs fit into bitmaps whose size is pre-
 // determined, and scale these bitmaps so that the text size is consistent.
-// However, for additional visual quality, if a glyph is small, is it expanded
-// to fit the bitmap. So an additional scale (relative to the font pixel scale)
-// is associated with each glyph.
+// The scale factors for a glyph are combined in `Glyph::sdf_pixels_to_em`.
 
 struct TextRunBakingResult
 {

@@ -339,7 +339,7 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
     }
     left_bearing *= internal_units_to_sdf_pixels;
 
-    glyph.info.sdf_pixel_to_em = font.info.internal_units_to_em / internal_units_to_sdf_pixels;
+    glyph.info.sdf_pixels_to_em = font.info.internal_units_to_em / internal_units_to_sdf_pixels;
 
     //                   ┌────────────────────────────────────────────────────────┐
     //                   │             :    :                  :                  │
@@ -403,7 +403,7 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
 
     // Convert the offset to em and negate it, so that it can be simply added
     // to glyph positions when compositing text.
-    glyph.info.offset = -lm::vec2(offset_x_px, offset_y_px) * glyph.info.sdf_pixel_to_em;
+    glyph.info.offset = -lm::vec2(offset_x_px, offset_y_px) * glyph.info.sdf_pixels_to_em;
 
     if (msdf_is_empty)
     {
@@ -567,7 +567,7 @@ Glyph get_glyph_info(
     empty_glyph.is_blank = true;
     empty_glyph.in_font_index = in_font_index;
     empty_glyph.in_texture_index = std::numeric_limits<unsigned int>::max();
-    empty_glyph.sdf_pixel_to_em = 0;
+    empty_glyph.sdf_pixels_to_em = 0;
     empty_glyph.offset = lm::vec2(0, 0);
 
     auto font = rasterizer->fonts.get_object(parsed_font.font_handle);

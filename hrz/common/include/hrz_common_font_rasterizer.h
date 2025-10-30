@@ -122,13 +122,13 @@ struct Glyph
     uint32_t in_texture_index;
 
     // Converts from the size of one SDF pixel to em.
-    float sdf_pixel_to_em;
+    float sdf_pixels_to_em;
 
     // Offset in em from the top-left corner of the SDF to the origin of the
     // character (on the baseline, on the left of the character).
     lm::vec2 offset;
 
-    float get_sdf_size_in_em() const { return SDF_SIZE * sdf_pixel_to_em; }
+    float get_sdf_size_in_em() const { return SDF_SIZE * sdf_pixels_to_em; }
 
     lm::bbox2 get_uv() const
     {
