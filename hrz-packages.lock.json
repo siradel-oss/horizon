@@ -241,6 +241,16 @@
       "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/microui/9e20a618_0850aba860959c3e75fb3e97120ca92957f9d057.tar.gz"
     ]
   },
+  "msdfgen": {
+    "build_file": "//third_party:msdfgen.BUILD.bazel",
+    "digest": "24541c9fbb459e8c62adeb3eb22cb21fa07a4b5091e2ae1f041d144a4baf08cd",
+    "prefix": "msdfgen-1.12.1",
+    "type": "http_archive",
+    "urls": [
+      "https://github.com/Chlumsky/msdfgen/archive/v1.12.1.tar.gz",
+      "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/msdfgen/24541c9f_v1.12.1.tar.gz"
+    ]
+  },
   "pcg_basic": {
     "build_file": "//third_party:pcg_basic.BUILD.bazel",
     "digest": "7b601dd023c9dd56d5ae07f3151dbe72c992f17636a6d2d0b0ee949aa28c52f9",

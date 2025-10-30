@@ -160,6 +160,16 @@ http_archive(
     strip_prefix = "earcut.hpp-2.2.4",
 )
 http_archive(
+    name = "etcpak",
+    urls = [
+        "https://github.com/wolfpld/etcpak/archive/2.0.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/etcpak/dc7a1b23_2.0.tar.gz",
+    ],
+    sha256 = "dc7a1b23a039594b3d0e9d00581a7d3d2ef4b6656ad532f7ed2b844bd9b4ba39",
+    build_file = "//third_party:etcpak.BUILD.bazel",
+    strip_prefix = "etcpak-2.0",
+)
+http_archive(
     name = "fmtlib",
     urls = [
         "https://github.com/fmtlib/fmt/archive/12.0.0.tar.gz",
@@ -338,12 +348,12 @@ http_archive(
     strip_prefix = "zlib-1.3.1",
 )
 http_archive(
-    name = "etcpak",
+    name = "msdfgen",
     urls = [
-        "https://github.com/wolfpld/etcpak/archive/2.0.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/etcpak/dc7a1b23_2.0.tar.gz",
+        "https://github.com/Chlumsky/msdfgen/archive/v1.12.1.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/msdfgen/24541c9f_v1.12.1.tar.gz",
     ],
-    sha256 = "dc7a1b23a039594b3d0e9d00581a7d3d2ef4b6656ad532f7ed2b844bd9b4ba39",
-    build_file = "//third_party:etcpak.BUILD.bazel",
-    strip_prefix = "etcpak-2.0",
+    sha256 = "24541c9fbb459e8c62adeb3eb22cb21fa07a4b5091e2ae1f041d144a4baf08cd",
+    build_file = "//third_party:msdfgen.BUILD.bazel",
+    strip_prefix = "msdfgen-1.12.1",
 )

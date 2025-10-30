@@ -1,5 +1,3 @@
-#include "common/frag_processing.glsl"
-
 #define varying in
 #include "symbol/text/interface.glsl"
 
@@ -8,14 +6,41 @@
 
 #include "symbol/text/defs.glsl"
 
-#define DEFAULT_TEXT_EDGE 0.5
+uniform sampler2D u_font_texture;
 
-float median(float r, float g, float b)
+// Based on https://chlumsky.appspot.com/msdf-demo
+// Coverage to alpha from https://hikogui.org/2022/10/24/the-trouble-with-anti-aliasing.html
+
+#define DEFAULT_TEXT_EDGE 0.5
+#define SQRT1_2 0.707106781
+
+const float unit_range = float(HRZ_S_TEXT_SDF_PADDING * 2) / float(HRZ_S_TEXT_TEXTURE_SIZE);
+
+float median(vec3 v)
 {
-    return max(min(r, g), min(max(r, g), b));
+    return max(min(v.r, v.g), min(max(v.r, v.g), v.b));
 }
 
-uniform sampler2D u_font_texture;
+float screen_px_range(vec2 uv)
+{
+    // See https://github.com/Chlumsky/msdfgen/issues/22#issuecomment-237003707
+    vec2 dx_uv = dFdx(uv);
+    vec2 dy_uv = dFdy(uv);
+    float screen_tex_size = length(vec2(length(dx_uv), length(dy_uv))) * SQRT1_2;
+    return max(unit_range / screen_tex_size, 1.0);
+}
+
+float color_to_lightness(vec3 color)
+{
+    return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+}
+
+float coverage_to_alpha(float coverage, float sqrt_foreground)
+{
+    float coverage_sq = coverage * coverage;
+    float coverage_2 = coverage + coverage;
+    return mix(coverage_2 - coverage_sq, coverage_sq, sqrt_foreground);
+}
 
 void main()
 {
@@ -34,9 +59,16 @@ void main()
     float text_edge = DEFAULT_TEXT_EDGE - v_outline_width;
 #endif
 
-    vec3 tex_value = texture(u_font_texture, read_perspective_uv(v_uv)).rgb;
-    float dist = median(tex_value.r, tex_value.g, tex_value.b);
-    float alpha = aastep(text_edge, dist);
+    vec2 uv = read_perspective_uv(v_uv).xy;
+    float signed_distance = median(texture(u_font_texture, uv).rgb);
+    float screen_px_distance = screen_px_range(uv) * (signed_distance - text_edge);
+    float coverage = clamp(screen_px_distance + text_edge, 0.0, 1.0);
+
+#ifdef SYMBOL_TEXT_FILL
+    float alpha = coverage_to_alpha(coverage, color_to_lightness(v_color.rgb));
+#else
+    float alpha = coverage;
+#endif
 
 #ifdef SYMBOL_VISUAL
     vec4 color = v_color * alpha;

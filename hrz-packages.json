@@ -230,6 +230,13 @@
             "repo": "wolfpld/etcpak",
             "ref": "2.0",
             "build_file": "//third_party:etcpak.BUILD.bazel"
+        },
+        {
+            "name": "msdfgen",
+            "type": "github",
+            "repo": "Chlumsky/msdfgen",
+            "ref": "v1.12.1",
+            "build_file": "//third_party:msdfgen.BUILD.bazel"
         }
     ]
 }

@@ -8,11 +8,12 @@
 #include <hrz_fnd_maths.h>
 #include <hrz_fnd_thread.h>
 
-#include <msdf.h>
+#include <msdfgen/msdfgen.h>
 
+#include <array>
 #include <atomic>
 #include <cassert>
-#include <mutex>
+#include <shared_mutex>
 
 namespace hrz
 {
@@ -29,21 +30,9 @@ struct ParsedFont
 
 struct RasterizedFont
 {
-    using GlyphMap = hrz::flat_hash_map<uint32_t, Glyph>;
-
     std::variant<std::span<const std::byte>, blobs::BlobHandle> raw_data;
     FontInfo info;
-
-    // In order to allow retrieving info on an already rasterised glyph (which
-    // is the most common operation) without locking the mutex, the glyph map
-    // is double-buffered. `glyphs` always points to the front one (which can
-    // be read from, but not written to). The mutex is only locked when adding
-    // a new glyph.
-    // Index is in-font index.
-    GlyphMap glyph_map_0;
-    GlyphMap glyph_map_1;
-    std::atomic<GlyphMap*> glyphs;
-
+    hrz::flat_hash_map<uint32_t, Glyph> glyphs;
     uint32_t rasterized_glyph_count = 0;
 
     // The atomic boolean allows the main thread not to lock the mutex when
@@ -51,7 +40,7 @@ struct RasterizedFont
     std::vector<RasterizedGlyph> new_glyphs;
     std::atomic<bool> has_new_glyphs;
 
-    std::mutex mutex;
+    std::shared_mutex mutex;
 };
 } // namespace
 } // namespace font_rasterizer
@@ -96,7 +85,6 @@ Font& Font::operator=(Font&& other) noexcept
 
 namespace
 {
-
 std::optional<ParsedFont> parse_font(
     BlobAllocator* ba,
     std::variant<std::span<const std::byte>, blobs::BlobHandle>& raw_data)
@@ -219,6 +207,70 @@ FontInfo read_font_info(const ParsedFont& font)
     return info;
 }
 
+msdfgen::Shape stbtt_glyph_to_msdfgen_shape(const stbtt_fontinfo& font, int glyphIndex)
+{
+    stbtt_vertex* vertices = nullptr;
+    int numVerts = stbtt_GetGlyphShape(&font, glyphIndex, &vertices);
+
+    msdfgen::Shape shape;
+    std::optional<msdfgen::Contour> current_contour = std::nullopt;
+
+    for (int i = 0; i < numVerts; ++i)
+    {
+        stbtt_vertex& v = vertices[i];
+
+        switch (v.type)
+        {
+            case STBTT_vmove:
+                if (current_contour.has_value() && !current_contour->edges.empty())
+                {
+                    shape.contours.push_back(std::move(current_contour.value()));
+                }
+                current_contour = msdfgen::Contour();
+                break;
+
+            case STBTT_vline:
+                if (current_contour.has_value())
+                {
+                    current_contour->addEdge(msdfgen::EdgeHolder(
+                        msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
+                        msdfgen::Point2(v.x, v.y)));
+                }
+                break;
+
+            case STBTT_vcurve:
+                if (current_contour.has_value())
+                {
+                    current_contour->addEdge(msdfgen::EdgeHolder(
+                        msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
+                        msdfgen::Point2(v.cx, v.cy), msdfgen::Point2(v.x, v.y)));
+                }
+                break;
+
+            case STBTT_vcubic:
+                if (current_contour.has_value())
+                {
+                    current_contour->addEdge(msdfgen::EdgeHolder(
+                        msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
+                        msdfgen::Point2(v.cx, v.cy), msdfgen::Point2(v.cx1, v.cy1),
+                        msdfgen::Point2(v.x, v.y)));
+                }
+                break;
+        }
+    }
+
+    if (current_contour.has_value() && !current_contour->edges.empty())
+    {
+        shape.contours.push_back(std::move(current_contour.value()));
+        current_contour = std::nullopt;
+    }
+
+    stbtt_FreeShape(&font, vertices);
+    shape.normalize(); // Ensure winding and orientation are correct
+
+    return shape;
+}
+
 // The `info.in_texture_index` field of the returned value is unset.
 RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
 {
@@ -230,32 +282,71 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
     glyph.info.in_texture_index = std::numeric_limits<unsigned int>::max();
     glyph.info.offset = lm::vec2(0, 0);
 
-    // We target a glyph SDF scale that fits nicely into the slot according to the
-    // font metrics. This helps with having enough padding for the outline.
-    // The actual scale may be different if the character is smaller or larger.
-    float target_scale = font.info.internal_units_to_em * GLYPH_SIZE;
+    msdfgen::Shape shape = stbtt_glyph_to_msdfgen_shape(font.stbtt_font, in_font_index);
 
-    ex_metrics_t metrics;
-    lm::vec3* float_raster = (lm::vec3*)ex_msdf_glyph(
-        &font.stbtt_font, in_font_index, target_scale, GLYPH_SLOT_SIZE, GLYPH_SLOT_SIZE, SDF_MARGIN,
-        SDF_PADDING, (int)true, &metrics);
+    std::array<lm::vec3, RasterizedGlyph::RASTER_SIZE> msdf;
 
-    // Convert from the target scale to the actual scale. These scales convert
-    // from the font's internal unit to SDF pixels.
-    // target_scale = font.info.internal_to_em * GLYPH_SIZE
-    // actual_scale = metrics.scale
-    // scale_ratio = target_scale / actual_scale
-    //             = (font.info.internal_to_em * GLYPH_SIZE) / metrics.scale
-    // glyph sdf_pixel_to_em = scale_ratio / GLYPH_SIZE
-    // After simplifying we have:
-    glyph.info.sdf_pixel_to_em = font.info.internal_units_to_em / metrics.scale;
+    bool msdf_is_empty = true;
+    double internal_units_to_sdf_pixels = 1.0;
+
+    if (!shape.contours.empty())
+    {
+        msdfgen::edgeColoringByDistance(shape, 3.0);
+
+        msdfgen::Shape::Bounds bounds = shape.getBounds();
+
+        // The scale of the glyph (`internal_units_to_sdf_pixels`) is calculated
+        // so that it uses the most space in the texture it can, while leaving
+        // enough space around the glyph to fit the padding.
+
+        double padding_in_font_units = SDF_PADDING / (GLYPH_SIZE * font.info.internal_units_to_em);
+
+        double width = bounds.r - bounds.l + padding_in_font_units * 2.0;
+        double height = bounds.t - bounds.b + padding_in_font_units * 2.0;
+
+        double scale_x = SDF_SIZE / width;
+        double scale_y = SDF_SIZE / height;
+        internal_units_to_sdf_pixels = std::min(scale_x, scale_y);
+
+        double center_x = (GLYPH_SLOT_SIZE * 0.5) / internal_units_to_sdf_pixels;
+        double center_y = (GLYPH_SLOT_SIZE * 0.5) / internal_units_to_sdf_pixels;
+
+        double shape_center_x = (bounds.l + bounds.r) * 0.5;
+        double shape_center_y = (bounds.b + bounds.t) * 0.5;
+
+        msdfgen::Vector2 translate{center_x - shape_center_x, center_y - shape_center_y};
+
+        msdfgen::BitmapRef<float, 3> msdf_ref(
+            (float*)msdf.data(), GLYPH_SLOT_SIZE, GLYPH_SLOT_SIZE);
+
+        // Generate MSDF using twice the padding in font units as the range.
+        // The range extends from -range/2 to +range/2, so we need 2x padding to get padding
+        // distance in each direction
+        msdfgen::generateMSDF(
+            msdf_ref, shape, padding_in_font_units * 2.0, internal_units_to_sdf_pixels, translate);
+
+        msdf_is_empty = false;
+    }
+
+    int left, bottom, right, top;
+    stbtt_GetGlyphBox(&font.stbtt_font, in_font_index, &left, &bottom, &right, &top);
+
+    double left_bearing = 0.0;
+    {
+        int advance_width, left_bearing_int;
+        stbtt_GetGlyphHMetrics(&font.stbtt_font, in_font_index, &advance_width, &left_bearing_int);
+        left_bearing = left_bearing_int;
+    }
+    left_bearing *= internal_units_to_sdf_pixels;
+
+    glyph.info.sdf_pixel_to_em = font.info.internal_units_to_em / internal_units_to_sdf_pixels;
 
     //                   ┌────────────────────────────────────────────────────────┐
     //                   │             :    :                  :                  │
     //        ascent ····│························································│
     //                   │             :    :                  :                  │
     //                   │             :    :                  :                  │
-    //           iy1 ····│························xxxxxxxxxxx·····················│
+    //           top ····│························xxxxxxxxxxx·····················│
     //                   │             :    :   xx           xx:                  │
     //                   │             :    : xx               x                  │
     //                   │             :    :x                 :                  │
@@ -274,59 +365,64 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
     //                   │             :    :        xxxxx     :                  │
     //                   │             :    :             x    :                  │
     //                   │             :    :             x    :                  │
-    //           iy0 ····│·························xxxxxxx     :                  │
-    //       descent ····│························································│
+    //        bottom ····│·························xxxxxxx.....:..................│
     //                   │             :    :                  :                  │
+    //       descent ····│························································│
     //                   │             :    :                  :                  │
     //                   │             :    :                  :                  │
     //                   └────────────────────────────────────────────────────────┘
     //                                 :    :                  :
     //                                 :    :                  :
     //                                 :    :                  :
-    //                       left_bearing  ix0                ix1
+    //                       left_bearing  left                right
     //
-    // ix0, ix1, iy0, iy1 from the metrics are in the font's internal units.
-    // left_bearing from metrics is in SDF pixels. (The returned metrics
-    // from ex_msdf_glyph() are not very consistent.)
-    // Ascent and descent are in em. They are the highest and lowest glyphs
+    // `left`, `right`, `bottom`, and `top` are in the font's internal units.
+    // `left_bearing` is in SDF pixels, as it is multiplied by
+    // `internal_units_to_sdf_pixels`.
+    // The advance from the font metrics is not used, as Harfbuzz provides the
+    // placements when shaping.
+    // `ascent` and `descent` are in em. They are the highest and lowest glyphs
     // can go in the font.
-    // descent is negative for glyphs that reach below the baseline.
-    // left_bearing can be negative, in which case it is to the right of ix0.
+    // `descent` is negative for glyphs that reach below the baseline.
+    // `left_bearing` can be negative, in which case it is to the right of
+    // `left`.
     //
     // The origin of the glyph, or its pen position, is on the baseline and to
-    // the left of the glyph (i.e. at coordinates (i0 - left_bearing, 0) in
-    // internal font units). It is marked @ in the diagram. All shaping posi-
+    // the left of the glyph (i.e. at coordinates (`left` - `left_bearing`, 0)
+    // in internal font units). It is marked @ in the diagram. All shaping posi-
     // tions (what comes out of Harfbuzz) is relative to this position.
     //
     // The glyph is centered in its SDF, but we want to provide a way to place
     // the glyph according to its origin. The offset allows translating from
     // the top-left corner of the SDF to the origin.
     float offset_x_px =
-        (SDF_SIZE * 0.5f - (metrics.ix1 - metrics.ix0) * metrics.scale * 0.5f
-         - metrics.left_bearing);
+        (SDF_SIZE * 0.5f - (right - left) * internal_units_to_sdf_pixels * 0.5f - left_bearing);
     float offset_y_px =
-        ((SDF_SIZE * 0.5f) + (metrics.iy1 - metrics.iy0) * metrics.scale * 0.5f
-         + metrics.iy0 * metrics.scale);
+        ((SDF_SIZE * 0.5f) + (top - bottom) * internal_units_to_sdf_pixels * 0.5f
+         + bottom * internal_units_to_sdf_pixels);
 
     // Convert the offset to em and negate it, so that it can be simply added
     // to glyph positions when compositing text.
     glyph.info.offset = -lm::vec2(offset_x_px, offset_y_px) * glyph.info.sdf_pixel_to_em;
 
-    if (float_raster == nullptr)
+    if (msdf_is_empty)
     {
         // The glyph has no graphical representation, i.e. it's blank.
         return glyph;
     }
 
-    // Some SDFs are inside-out, I don't know why.
-    // The first pixel is always outside the glyph, so by checking
-    // its value we can know whether the SDF is inverted or not.
-    //      -tpetillon, 2020-08-20
-    lm::vec3 first_pixel = float_raster[0];
-    float first_value = std::max(
-        std::min(first_pixel.r, first_pixel.g),
-        std::min(std::max(first_pixel.r, first_pixel.g), first_pixel.b));
-    bool is_inverted = first_value > 0.5f;
+    // Not all fonts have the same winding order for their glyph geometries.
+    // This means the SDF can sometimes be inverted.
+    // The first pixel is always outside the glyph, so by checking its value
+    // we can determine whether the SDF is inverted or not.
+    // See https://github.com/Chlumsky/msdfgen/issues/15#issuecomment-278786745
+    // The msdfgen executable uses `SimpleTrueShapeDistanceFinder::oneShotDistance`
+    // but it's simpler and much likely faster to just check the SDF.
+    auto median = [](const lm::vec3& c)
+    { return std::max(std::min(c.r, c.g), std::min(std::max(c.r, c.g), c.b)); };
+
+    float first_value = median(msdf[0]);
+    bool sdf_is_inverted = first_value > 0.5f;
 
     for (unsigned int y = 0; y < GLYPH_SLOT_SIZE; ++y)
     {
@@ -334,17 +430,14 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
         {
             auto to_byte = [&](float f)
             {
-                f = is_inverted ? 0.5f - f : f;
-                return (uint8_t)std::round(
-                    hrz::clamp((f / GLYPH_SLOT_SIZE) * 255.0f + 127.0f, 0.0f, 255.0f));
+                f = sdf_is_inverted ? 1.0f - f : f;
+                return (uint8_t)std::round(hrz::clamp(f * 255.0f, 0.0f, 255.0f));
             };
 
-            lm::vec3 f = float_raster[y * GLYPH_SLOT_SIZE + x];
+            lm::vec3 f = msdf[(GLYPH_SLOT_SIZE - 1 - y) * GLYPH_SLOT_SIZE + x]; // Flip Y axis
             glyph.raster[y * GLYPH_SLOT_SIZE + x] = {to_byte(f.x), to_byte(f.y), to_byte(f.z)};
         }
     }
-
-    free(float_raster);
 
     glyph.info.is_blank = false;
 
@@ -383,8 +476,6 @@ std::optional<FontHandle> add_font(
 
     font->raw_data = std::move(raw_data);
     font->info = read_font_info(parsed_font_opt.value());
-    font->glyphs = &font->glyph_map_0;
-    font->has_new_glyphs = false;
 
     return handle;
 }
@@ -409,8 +500,6 @@ std::optional<FontHandle> add_font(
 
     font->raw_data = std::move(raw_data);
     font->info = read_font_info(parsed_font_opt.value());
-    font->glyphs = &font->glyph_map_0;
-    font->has_new_glyphs = false;
 
     return handle;
 }
@@ -490,10 +579,10 @@ Glyph get_glyph_info(
     }
 
     {
-        auto glyphs = font->glyphs.load(std::memory_order_acquire);
+        HRZ_SCOPED_SHARED_LOCK(font->mutex);
 
-        auto it = glyphs->find(in_font_index);
-        if (it != glyphs->end())
+        auto it = font->glyphs.find(in_font_index);
+        if (it != font->glyphs.end())
         {
             return it->second;
         }
@@ -501,20 +590,19 @@ Glyph get_glyph_info(
 
     auto new_glyph = rasterize_glyph(parsed_font, in_font_index);
 
-    HRZ_SCOPED_LOCK(font->mutex);
+    HRZ_SCOPED_EXCLUSIVE_LOCK(font->mutex);
 
-    // The glyph may have been added by another thread during rasterisation,
-    // so we must check for its presence again.
-
-    auto front_glyph_map = font->glyphs.load(std::memory_order_acquire);
-
-    auto it = front_glyph_map->find(in_font_index);
-    if (it != front_glyph_map->end())
     {
-        return it->second;
+        // Another thread may have rasterised the glyph and inserted
+        // it in the map since it was checked above, so check again.
+        auto it = font->glyphs.find(in_font_index);
+        if (it != font->glyphs.end())
+        {
+            return it->second;
+        }
     }
 
-    if (front_glyph_map->size() >= MAX_GLYPHS_PER_FONT)
+    if (font->glyphs.size() >= MAX_GLYPHS_PER_FONT)
     {
         HRZ_LOG_WARNING(
             "Cannot rasterize glyph at index {}: No more space available", in_font_index);
@@ -527,13 +615,7 @@ Glyph get_glyph_info(
         font->rasterized_glyph_count += 1;
     }
 
-    auto back_glyph_map =
-        front_glyph_map == &font->glyph_map_0 ? &font->glyph_map_1 : &font->glyph_map_0;
-
-    back_glyph_map->insert({in_font_index, new_glyph.info});
-    std::swap(front_glyph_map, back_glyph_map);
-    font->glyphs.store(front_glyph_map, std::memory_order_release);
-    back_glyph_map->insert({in_font_index, new_glyph.info});
+    font->glyphs.insert({in_font_index, new_glyph.info});
 
     font->new_glyphs.push_back(new_glyph);
     font->has_new_glyphs.store(true, std::memory_order_release);
@@ -560,7 +642,7 @@ std::optional<std::vector<RasterizedGlyph>> get_new_glyphs(
         return std::nullopt;
     }
 
-    HRZ_SCOPED_LOCK(font->mutex);
+    HRZ_SCOPED_EXCLUSIVE_LOCK(font->mutex);
 
     assert(!font->new_glyphs.empty());
 

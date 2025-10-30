@@ -486,7 +486,7 @@ void generate_roof_geometry(
         rings.reserve(linestrings.size());
 
         size_t v_index = 0;
-        for (const auto [start_v_index, linestring_size] : linestrings)
+        for (const auto& [start_v_index, linestring_size] : linestrings)
         {
             for (size_t i = 0; i < linestring_size; ++i)
             {
@@ -513,7 +513,7 @@ void generate_roof_geometry(
         rings.reserve(linestrings.size());
 
         size_t v_index = 0;
-        for (const auto [start_v_index, linestring_size] : linestrings)
+        for (const auto& [start_v_index, linestring_size] : linestrings)
         {
             const std::span<const VertexWithBevelInfo> vbis_ring(
                 vbis.data() + start_v_index, linestring_size);
@@ -1048,7 +1048,7 @@ hrz::JobResult run(
             if (!info.double_sided_roof)
             {
                 // Generate walls geometry for each linestring
-                for (const auto [index_ring_start, linestring_size] : linestrings)
+                for (const auto& [index_ring_start, linestring_size] : linestrings)
                 {
                     auto bevel_info_span = std::span<VertexWithBevelInfo>(
                         vertices_bevel_info.data() + index_ring_start, linestring_size);

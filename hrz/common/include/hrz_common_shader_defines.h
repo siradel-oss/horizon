@@ -33,6 +33,12 @@
 #define HRZ_S_CAMERA_HEIGHT_FAR_OFFSET 11000.0
 
 // If you change this, also change the documentation for
+// the maximum text outline width, in text_symbol_element.md.
+// It is computed as SDF_PADDING / GLYPH_SIZE.
+#define HRZ_S_TEXT_SDF_PADDING 6
+#define HRZ_S_TEXT_TEXTURE_SIZE 2024
+
+// If you change this, also change the documentation for
 // HrzProtocol.Material.data_texture_palette and
 // HrzProtocol.HeatmapVectorRepr.numeric_palette.
 // Also the heatmaps.md and dynamic_materials.md doc pages.

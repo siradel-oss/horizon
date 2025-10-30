@@ -669,6 +669,24 @@ ElementGeometry SymbolBaker::TextVisitor::visit_element(
             outline_em_size /= font_size;
         }
 
+        // The outline can only extend into the SDF's padding, so its size is clamped
+        // to the edge of the padding.
+        outline_em_size = std::min(
+            outline_em_size,
+            (float)hrz::font_rasterizer::SDF_PADDING / hrz::font_rasterizer::GLYPH_SIZE);
+
+        double padding_in_font_units = hrz::font_rasterizer::SDF_PADDING
+            / (hrz::font_rasterizer::GLYPH_SIZE * font.info.internal_units_to_em);
+        float outline_size =
+            (outline_em_size / font.info.internal_units_to_em) / padding_in_font_units;
+        outline_size *= 0.5f;
+
+        // Extenting the outline right next to the edge of the SDF makes the edges of
+        // the rendered outline jaggy. So we leave a small gap.
+        // (The value has been determined empirically, as a balance between edge
+        // smoothness and loss of maximum width.)
+        outline_size = hrz::clamp(outline_size, 0.0f, 0.5f - (6.0f / 255.0f));
+
         auto text_size_opt = bake_text(
             text_index, text, font, font_size, outline_em_size, alignment, line_spacing,
             constraints.min.x, constraints.max.x, constraints.max.y, instances.glyph_positions_uvs,
@@ -681,7 +699,7 @@ ElementGeometry SymbolBaker::TextVisitor::visit_element(
 
         instances.transforms.push_back(lm::mat4::identity());
         instances.anchor_indices.push_back(element.anchor_index.value());
-        instances.outline_widths.push_back(outline_em_size * 0.5f);
+        instances.outline_widths.push_back(outline_size);
         instances.fill_colors.push_back(fill_color_srgb);
         instances.outline_colors.push_back(outline_color_srgb);
 

@@ -345,6 +345,7 @@ cc_library(
     ],
 )
 
+# Equivalent to HB_TINY, sans HB_NO_MT.
 cc_library(
     name = "harfbuzz_tiny",
     hdrs = HARFBUZZ_HDRS,
@@ -353,6 +354,11 @@ cc_library(
         "src",
     ],
     local_defines = [
-        "HB_TINY",
+        "HB_LEAN",
+        "HB_MINI",
+        "HB_OPTIMIZE_SIZE",
+        "HB_OPTIMIZE_SIZE_MORE",
+        "HB_MINIMIZE_MEMORY_USAGE",
+        "HB_NO_UCD_UNASSIGNED",
     ],
 )

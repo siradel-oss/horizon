@@ -184,6 +184,11 @@ alias(
 )
 
 alias(
+    name = "msdfgen",
+    actual = "@msdfgen//:msdfgen",
+)
+
+alias(
     name = "buildifier",
     actual = select({
         "//:os_windows": "@buildifier_windows//file:downloaded",
@@ -216,7 +221,7 @@ LICENSES_DICT = {
     "licenses/libcurl.txt": "libcurl",
     "@lz4//:LICENSE": "LZ4",
     "@microui//:LICENSE": "microui",
-    "//third_party/msdf:LICENSE": "MSDFGen",
+    "@msdfgen//:LICENSE.txt": "msdfgen",
     "@pcg_basic//:LICENSE.txt": "PCG",
     "@protobuf//:LICENSE": "Protocol Buffers",
     "@pugixml//:LICENSE.md": "pugixml",

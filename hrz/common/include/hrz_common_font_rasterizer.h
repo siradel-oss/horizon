@@ -1,8 +1,10 @@
 #pragma once
 
 #include "hrz_common_blob_allocator.h"
+#include "hrz_common_shader_defines.h"
 #include "hrz_common_text.h"
-#include "hrz_fnd_variant.h"
+
+#include <hrz_fnd_variant.h>
 
 #include <hb.h>
 #include <stb_truetype.h>
@@ -20,7 +22,7 @@ namespace font_rasterizer
 {
 // Size in pixels of the side of the square region
 // allocated to each glyph in the font texture.
-constexpr unsigned int GLYPH_SLOT_SIZE = 40;
+constexpr unsigned int GLYPH_SLOT_SIZE = 44;
 
 // Margin around each glyph SDF, to avoid errors due to
 // linear texture filtering using values from neighbours.
@@ -33,13 +35,17 @@ constexpr unsigned int SDF_SIZE = GLYPH_SLOT_SIZE - SDF_MARGIN * 2;
 
 // Defines the size of the region around each glyph where
 // the SDF extends. This is used to display the outline.
-constexpr unsigned int SDF_PADDING = 4;
+constexpr unsigned int SDF_PADDING = HRZ_S_TEXT_SDF_PADDING;
 
 // Actual size of the glyph in the SDF.
+// The maximum padding in ems is derived from the ratio between
+// GLYPH_SIZE and SDF_SIZE. If they are changed, the documentation
+// must be updated.
 constexpr unsigned int GLYPH_SIZE = SDF_SIZE - SDF_PADDING * 2;
 
-constexpr unsigned int GLYPHS_PER_ROW = 50;
+constexpr unsigned int GLYPHS_PER_ROW = 46;
 constexpr uint32_t TEXTURE_SIZE = GLYPH_SLOT_SIZE * GLYPHS_PER_ROW;
+static_assert(TEXTURE_SIZE == HRZ_S_TEXT_TEXTURE_SIZE);
 constexpr unsigned int MAX_GLYPHS_PER_FONT = GLYPHS_PER_ROW * GLYPHS_PER_ROW;
 
 using FontHandle = uint64_t;

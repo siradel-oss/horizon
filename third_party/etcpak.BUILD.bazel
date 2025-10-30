@@ -2,7 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "etcpak",
-    srcs = glob([
+    srcs = [
         "bc7enc.cpp",
         "Dither.cpp",
         "Dither.hpp",
@@ -14,7 +14,7 @@ cc_library(
         "Tables.cpp",
         "Tables.hpp",
         "Vector.hpp",
-    ]),
+    ],
     hdrs = [
         "bc7enc.h",
         "ProcessDxtc.hpp",
