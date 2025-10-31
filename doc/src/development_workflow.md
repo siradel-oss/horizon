@@ -51,14 +51,14 @@ There are no rule for what should increment the major or patch number, but gener
     - `python3 tools/build_info/set_version.py a.b.c`
 - Update the changelog:
     - Merge all unreleased changelog fragments:
-        - `python changelogs/changelog.py merge_into changelogs/a.b.c.md a.b.c changelogs/unreleased/*.md`
+        - `python3 changelogs/changelog.py merge_into changelogs/a.b.c.md a.b.c changelogs/unreleased/*.md`
     - Reorder the changelog entries so that their order makes sense. More important changes should be higher in each list.
     - Changelog entries that refer to the same systems should be grouped together. See the [changelog guidelines](guidelines/changelog.md).
     - Check that upgrade notes have been filled in the merged file.
     - Delete all unreleased changelog fragments from `changelogs/unreleased`:
         - `git rm changelogs/unreleased/*.md`
 - Format everything:
-    - `python tools/format.py`
+    - `python3 tools/format.py`
 - Check the diff:
     - `git diff`
     - The only changes should be the version numbers in `version.bzl` and `.gitlab-ci.yml`, as well as the changelogs.
@@ -82,7 +82,7 @@ There are no rule for what should increment the major or patch number, but gener
     - Select the tag `va.b.c`.
     - Set the release title to “Release a.b.c”.
     - Set the date to the present day.
-    - In the release notes field, put the relevant section of the `CHANGELOG.md` file, as well as anything you deem useful. (Don’t include the line with the version number and the date.)
+    - In the release notes field, put the relevant section of the `a.b.c.md` changelog file, as well as anything you deem useful. (Don’t include the line with the version number and the date.)
 - Publish the version to the open-source repository.
     - First publish the `release_a.b.c` branch at the point where it diverged from `master` or `maintenance_a.b`. (See the “[Publishing a branch to the open-source repository](open_source.md#publishing-a-branch-to-the-open-source-repository)” section below.)
     - Then `//ci/oss_publish:publish`:
