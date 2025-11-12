@@ -397,7 +397,8 @@ class Report:
 
         return root
 
-class ViewerExitCode(IntEnum):
+# Unknown exit codes can happen when the viewer crashes.
+class ViewerExitCode:
     Ok = 0
     MissingArguments = 1
     InvalidArguments = 2
@@ -406,6 +407,32 @@ class ViewerExitCode(IntEnum):
     InvalidInput = 5
     FailedMigration = 6
     Timeout = 7
+    Unknown = -1
+
+    _names = {
+        0: "Ok",
+        1: "MissingArguments",
+        2: "InvalidArguments",
+        3: "FailedInitialization",
+        4: "MissingInput",
+        5: "InvalidInput",
+        6: "FailedMigration",
+        7: "Timeout",
+        -1: "Unknown"
+    }
+
+    def __init__(self, value):
+        self.raw_value = value
+        self.value = value if value in self._names else self.Unknown
+        self.name = self._names.get(self.value, "Unknown")
+
+    def __eq__(self, other):
+        if isinstance(other, ViewerExitCode):
+            return self.value == other.value
+        return self.value == other
+
+    def __repr__(self):
+        return f"ViewerExitCode.{self.name}"
 
 def get_git_info():
     global BRANCH
@@ -483,7 +510,7 @@ def generate_ref_image(test, output_dir):
         if return_code == ViewerExitCode.Ok:
             shutil.copyfile(get_capture_path(output_dir, test.name), get_ref_image_path(test.name, test.type))
         else:
-            print(f"ERROR: Couldn't generate reference image for '{test.name}', return code: {return_code.name} ({return_code.value})")
+            print(f"ERROR: Couldn't generate reference image for '{test.name}', return code: {return_code.name} ({return_code.raw_value})")
     else:
         print(f"ERROR: Couldn't generate reference image for '{test.name}', no input found.")
 
@@ -599,7 +626,7 @@ def run_tests_in_context(ctx):
                 error_type = Result.ErrorType.Viewer
 
                 if VERBOSE:
-                    print(f"Viewer error, return code: {return_code.name} ({return_code.value})")
+                    print(f"Viewer error, return code: {return_code.name} ({return_code.raw_value})")
 
         duration = time.time_ns() / 1_000_000_000 - start_time
         total_duration += duration

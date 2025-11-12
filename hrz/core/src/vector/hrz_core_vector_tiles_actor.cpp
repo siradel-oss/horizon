@@ -1600,7 +1600,7 @@ struct VectorTilesActor : public Actor
 
             traverse_tile_node_for_visibility_set(
                 _root_tile_id, _cullers.value(), visibility_set_builder, _visible_in, _visible_in,
-                false, ba, js);
+                false, false, ba, js);
 
             auto visibility_set = std::move(visibility_set_builder).build();
 
@@ -2881,6 +2881,7 @@ struct VectorTilesActor : public Actor
         SceneViewBitset visiting_in,
         SceneViewBitset refining_in,
         bool has_fallback,
+        bool has_visible_fallback,
         BlobAllocator* ba,
         JobScheduler* js)
     {
@@ -2906,7 +2907,6 @@ struct VectorTilesActor : public Actor
             || node.coords.lod > _layer_max_lod || node.coords.lod > _data_max_lod)
         {
             good_state_in = visiting_in;
-            error_in = visiting_in;
             visible_in.reset();
             refining_in.reset();
         }
@@ -3007,10 +3007,21 @@ struct VectorTilesActor : public Actor
         {
             const TileContent& content = node.content.value();
 
+            if (content.display_status == TileContent::DisplayStatus::Displayable)
+            {
+                this_is_drawable = true;
+            }
+            else if (
+                content.display_status == TileContent::DisplayStatus::Error
+                && _missing_tile_policy == hrz_proto::MissingTilePolicy::USE_EMPTY_TILE)
+            {
+                this_is_drawable = true;
+            }
+
             if (content.display_status == TileContent::DisplayStatus::Displayable
                 || content.display_status == TileContent::DisplayStatus::Error)
             {
-                this_is_drawable = true;
+                has_fallback = true;
             }
 
             if (content.display_status == TileContent::DisplayStatus::Error)
@@ -3025,7 +3036,7 @@ struct VectorTilesActor : public Actor
             SceneViewBitset draw_this_in = (!refining_in) & visible_in;
             draw_in |= draw_this_in;
             good_state_in |= draw_this_in;
-            has_fallback = true;
+            has_visible_fallback = true;
         }
 
         // If we do need to go deeper or we have no parent tile to fall back on to,
@@ -3038,15 +3049,16 @@ struct VectorTilesActor : public Actor
             if (should_go_deeper_in.any())
             {
                 SceneViewBitset children_are_ok_in = should_go_deeper_in;
-                SceneViewBitset children_error_in = should_go_deeper_in;
+                SceneViewBitset children_error_in;
 
                 for (auto child_tile_id : node.children.value())
                 {
                     auto res = traverse_tile_node_for_visibility_set(
                         child_tile_id, view_cullers, visibility_set, should_go_deeper_in,
-                        refining_in & should_go_deeper_in, has_fallback, ba, js);
+                        refining_in & should_go_deeper_in, has_fallback, has_visible_fallback, ba,
+                        js);
                     children_are_ok_in &= res.first;
-                    children_error_in &= res.second;
+                    children_error_in |= res.second;
                 }
 
                 node.last_time_children_visited_ms = now;
