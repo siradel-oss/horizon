@@ -190,12 +190,10 @@ RenderRequest _update_layer(
     auto layer = _get_layer(system, layer_id);
     if (!layer) return render_request;
 
-    SceneModelAccessor accessor(model);
-
     hrz_proto::LayerHandle handle;
     handle.set_opaque(layer_id);
 
-    hrz_proto::SingleModelLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
+    hrz_proto::SingleModelLayerPathBuilder<SceneModelAccessor> builder(model, handle);
 
     bool force_resynchronize_all_materials = false;
 
@@ -560,10 +558,8 @@ void register_layer(SingleModelLayerSystem* system, SceneModel* model, uint64_t 
         data.mutable_material_properties()->set_overlay_opacity(1.0f);
         data.mutable_material_properties()->set_apply_feature_color_to_overlay(true);
 
-        SceneModelAccessor accessor(model);
-        hrz_proto::SingleModelLayerPathBuilder<SceneModelAccessor> builder(
-            accessor, root.single_model_layer());
-        builder.set(data);
+        hrz_proto::SingleModelLayerPathBuilder<SceneModelAccessor>(model, root.single_model_layer())
+            .set(data);
 
         layer->transform_updated = true;
         layer->clip_id_updated = true;

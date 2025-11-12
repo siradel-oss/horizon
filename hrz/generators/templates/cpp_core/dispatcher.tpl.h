@@ -1,6 +1,7 @@
 #pragma once
 
-#include <hrz_protocol_all.h>
+#include <memory>
+#include <hrz_services.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

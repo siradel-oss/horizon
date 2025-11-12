@@ -479,6 +479,13 @@ class Generator : public google::protobuf::compiler::CodeGenerator
             printer.Print("        <filename>$filename$</filename>\n", "filename", file->name());
             printer.Print("        <package>$package$</package>\n", "package", file->package());
 
+            for (int i = 0; i < file->dependency_count(); ++i)
+            {
+                printer.Print(
+                    "        <dependency>$dependency$</dependency>\n", "dependency",
+                    file->dependency(i)->name());
+            }
+
             for (int i = 0; i < file->service_count(); ++i)
             {
                 print_service(printer, file->service(i));

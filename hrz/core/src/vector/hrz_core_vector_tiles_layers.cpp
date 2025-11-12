@@ -194,12 +194,10 @@ RenderRequest _update_layer(
     auto layer = _get_layer(system, global_layer_id);
     if (!layer) return render_request;
 
-    hrz::SceneModelAccessor accessor(model);
-
     hrz_proto::LayerHandle layer_handle;
     layer_handle.set_opaque(global_layer_id);
 
-    hrz_proto::VectorTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, layer_handle);
+    hrz_proto::VectorTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(model, layer_handle);
 
     if (layer->layer_updated)
     {
@@ -609,10 +607,9 @@ void register_layer(
         data.mutable_style()->set_rng_seed(0);
         data.mutable_scene_views()->set_bits((1u << SCENE_VIEW_COUNT) - 1u);
 
-        hrz::SceneModelAccessor accessor(model);
-        hrz_proto::VectorTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(
-            accessor, root.vector_tiles_layer());
-        builder.set(data);
+        hrz_proto::VectorTilesLayerPathBuilder<hrz::SceneModelAccessor>(
+            model, root.vector_tiles_layer())
+            .set(data);
     }
 }
 

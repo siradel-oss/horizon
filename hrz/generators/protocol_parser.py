@@ -29,12 +29,22 @@ def parse(input_file_name):
     protocol["files"] = []
 
     for proto_file in root.iter("file"):
-        protocol["files"].append(proto_file.find("filename").text[:-6])
+        file_basename = proto_file.find("filename").text[:-6]
+        dependencies = []
+
+        for dep in proto_file.iter("dependency"):
+            dependencies.append(dep.text[:-6])
+
+        protocol["files"].append({
+            "name": file_basename,
+            "dependencies": dependencies,
+        })
 
         package = proto_file.find("package").text
 
         for s in proto_file.iter("service"):
             service = {}
+            service["file"] = file_basename
             service["full_name"] = s.find("full_name").text
             service["name"] = remove_package(service["full_name"], package)
             service["package"] = package
@@ -56,6 +66,7 @@ def parse(input_file_name):
 
         for e in proto_file.iter("enum"):
             enum = {}
+            enum["file"] = file_basename
             enum["full_name"] = e.find("full_name").text
             enum["name"] = remove_package(enum["full_name"], package)
             enum["package"] = package
@@ -80,6 +91,7 @@ def parse(input_file_name):
 
         for m in proto_file.iter("message"):
             msg = {}
+            msg["file"] = file_basename
             msg["full_name"] = m.find("full_name").text
             msg["name"] = remove_package(msg["full_name"], package)
             msg["package"] = package

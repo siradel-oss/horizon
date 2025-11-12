@@ -61,24 +61,28 @@ struct SceneModelArraySync : public ::testing::Test
         template<typename T>
         uint32_t add(const hrz_proto::Path& path, const T&)
         {
-            _sync->notify_model_update(hrz::scene_model::UpdateType::Add, path);
+            _sync->notify_model_update(
+                hrz::scene_model::UpdateType::Add, hrz::scene_model::ThreeDTilesLayerPath(path));
             return 0;
         }
 
         template<typename T>
         void set(const hrz_proto::Path& path, const T&)
         {
-            _sync->notify_model_update(hrz::scene_model::UpdateType::Set, path);
+            _sync->notify_model_update(
+                hrz::scene_model::UpdateType::Set, hrz::scene_model::ThreeDTilesLayerPath(path));
         }
 
         void set_raw(hrz_proto::Path&& path, std::string_view raw)
         {
-            _sync->notify_model_update(hrz::scene_model::UpdateType::Set, path);
+            _sync->notify_model_update(
+                hrz::scene_model::UpdateType::Set, hrz::scene_model::ThreeDTilesLayerPath(path));
         }
 
         uint32_t remove(hrz_proto::Path&& path)
         {
-            _sync->notify_model_update(hrz::scene_model::UpdateType::Remove, path);
+            _sync->notify_model_update(
+                hrz::scene_model::UpdateType::Remove, hrz::scene_model::ThreeDTilesLayerPath(path));
             return 0;
         }
     };
@@ -94,10 +98,9 @@ struct SceneModelArraySync : public ::testing::Test
             material->set_name(name);
         }
 
-        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy> path_builder(
-            AccessorProxy(&this->_sync), hrz_proto::LayerHandle());
-
-        path_builder.set(_container);
+        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy>(
+            AccessorProxy(&this->_sync), hrz_proto::LayerHandle())
+            .set(_container);
     }
 
     void add_material(const char* material_name)
@@ -105,30 +108,29 @@ struct SceneModelArraySync : public ::testing::Test
         hrz_proto::Material* material = _container.add_materials();
         material->set_name(material_name);
 
-        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy> path_builder(
-            AccessorProxy(&this->_sync), hrz_proto::LayerHandle());
-
-        path_builder.add_materials(*material);
+        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy>(
+            AccessorProxy(&this->_sync), hrz_proto::LayerHandle())
+            .add_materials(*material);
     }
 
     void update_material(size_t index, const char* material_name)
     {
         _container.mutable_materials(index)->set_name(material_name);
 
-        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy> path_builder(
-            AccessorProxy(&this->_sync), hrz_proto::LayerHandle());
-
-        path_builder.materials((uint32_t)index).name().set(material_name);
+        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy>(
+            AccessorProxy(&this->_sync), hrz_proto::LayerHandle())
+            .materials((uint32_t)index)
+            .name()
+            .set(material_name);
     }
 
     void remove_material(size_t index)
     {
         _container.mutable_materials()->erase(_container.mutable_materials()->begin() + index);
 
-        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy> path_builder(
-            AccessorProxy(&this->_sync), hrz_proto::LayerHandle());
-
-        path_builder.remove_materials((uint32_t)index);
+        hrz_proto::ThreeDTilesLayerPathBuilder<AccessorProxy>(
+            AccessorProxy(&this->_sync), hrz_proto::LayerHandle())
+            .remove_materials((uint32_t)index);
     }
 
     bool is_synchronized()

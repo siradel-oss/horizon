@@ -11,16 +11,9 @@
 namespace hrz_jobs
 {
 
-{% set ns = namespace(params_message=null, response_message=null, params_message_type="", response_message_type="") %}
+{% for job in jobs %}
 
-{% for e in protocol.enums %}
-
-{% if e["full_name"] == "HrzJobsProtocol.JobType" %}
-
-
-{% for v in e["values"] %}
-
-namespace {{ v.name|lower }}
+namespace {{ job.name }}
 {
 
 hrz::JobResult run(
@@ -28,12 +21,12 @@ hrz::JobResult run(
     std::any& response,
     const JobContext& context)
 {
-    const {{ v.params_type }}* typed_params = std::any_cast<{{ v.params_type }}>(&params);
+    const {{ job.params_type }}* typed_params = std::any_cast<{{ job.params_type }}>(&params);
 
     if (typed_params != nullptr)
     {
-        response = std::make_any<{{ v.response_type }}>();
-        {{ v.response_type }}& typed_response = std::any_cast<{{ v.response_type }}&>(response);
+        response = std::make_any<{{ job.response_type }}>();
+        {{ job.response_type }}& typed_response = std::any_cast<{{ job.response_type }}&>(response);
         hrz::JobResult result = run(*typed_params, typed_response, context);
         return result;
     }
@@ -43,17 +36,17 @@ hrz::JobResult run(
     }
 }
 
-}
+} // namespace {{ job.name }}
 
 {% endfor %}
 
-JobFunctionPtr get_job_function(HrzJobsProtocol::JobType job_type)
+JobFunctionPtr get_job_function(JobType job_type)
 {
     switch (job_type)
     {
-        {% for v in e["values"] %}
-        case HrzJobsProtocol::JobType::{{ v["name"] }}:
-            return {{ v["name"]|lower }}::run;
+        {% for job in jobs %}
+        case {{ job.name|upper }}:
+            return &{{ job.name }}::run;
         {% endfor %}
         default:
             // @Todo Log?
@@ -61,7 +54,4 @@ JobFunctionPtr get_job_function(HrzJobsProtocol::JobType job_type)
     }
 }
 
-{% endif %}
-{% endfor %}
-
-}
+} // namespace hrz_jobs

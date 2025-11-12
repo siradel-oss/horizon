@@ -11,7 +11,6 @@
 #include <hrz_fnd_gen_index_pool.h>
 #include <hrz_fnd_gen_object_pool.h>
 #include <hrz_fnd_hash.h>
-#include <hrz_jobs_protocol.h>
 #include <hrz_jobs_tickets.h>
 
 #include <mycelium_backend.h>

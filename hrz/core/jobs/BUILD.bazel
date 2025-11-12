@@ -1,99 +1,21 @@
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 hrz_genrule(
-    name = "generate_proto",
-    srcs = [
-        "proto/geobuf.proto",
-        "proto/hrz_jobs.proto",
-        "proto/vector_tile.proto",
-        "//hrz/proto:protos",
-    ],
-    outs = [
-        "proto/geobuf.pb.cc",
-        "proto/geobuf.pb.h",
-        "proto/hrz_jobs.pb.cc",
-        "proto/hrz_jobs.pb.h",
-        "proto/vector_tile.pb.cc",
-        "proto/vector_tile.pb.h",
-    ],
-    cmd = "$(location //third_party:protoc) -Ihrz/proto -Ihrz/core/jobs/proto hrz/core/jobs/proto/hrz_jobs.proto hrz/core/jobs/proto/vector_tile.proto hrz/core/jobs/proto/geobuf.proto --cpp_out=$(@D)/proto",
-    tools = [
-        "//third_party:protoc",
-    ],
-)
-
-cc_library(
-    name = "proto",
-    srcs = [
-        "proto/geobuf.pb.cc",
-        "proto/geobuf.pb.h",
-        "proto/hrz_jobs.pb.cc",
-        "proto/hrz_jobs.pb.h",
-        "proto/vector_tile.pb.cc",
-        "proto/vector_tile.pb.h",
-    ],
-    hdrs = [
-        "include/hrz_jobs_enum_names.h",
-        "include/hrz_jobs_protocol.h",
-    ],
-    includes = [
-        "include",
-        "proto",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//hrz/cpp_protocol:hrz_cpp_protocol",
-        "//third_party:libprotobuf-lite",
-    ],
-)
-
-hrz_genrule(
-    name = "proto_xml_protocol",
-    srcs = [
-        "proto/geobuf.proto",
-        "proto/hrz_jobs.proto",
-        "proto/vector_tile.proto",
-        "//hrz/proto:protos",
-    ],
-    outs = [
-        "proto/hrz_protocol.xml",
-    ],
-    cmd = "$(execpath //third_party:protoc) -Ihrz/proto -Ihrz/core/jobs/proto hrz/core/jobs/proto/hrz_jobs.proto --plugin=protoc-gen-xml_desc=$(execpath //hrz/xml_desc_generator:xml_desc_generator) --xml_desc_out=$(@D)",
-    tools = [
-        "//hrz/xml_desc_generator",
-        "//third_party:protoc",
-    ],
-)
-
-hrz_genrule(
     name = "generate_templates",
     srcs = [
-        ":proto/hrz_protocol.xml",
+        ":manifest.json",
         "//hrz/generators:job_declarations_tpl",
     ],
     outs = [
         "include/hrz_jobs_declarations.h",
         "include/hrz_jobs_enum_names.h",
         "include/hrz_jobs_tickets.h",
+        "include/hrz_jobs_type.h",
         "src/hrz_jobs_declarations.cpp",
         "src/hrz_jobs_tickets.cpp",
     ],
-    cmd = "$(location //hrz/generators:generator) $(location :proto/hrz_protocol.xml) job_declarations $(@D)",
+    cmd = "$(location //hrz/generators:generator) $(location :manifest.json) job_declarations $(@D)",
     tools = ["//hrz/generators:generator"],
-)
-
-filegroup(
-    name = "declarations_hdrs",
-    srcs = [
-        "include/hrz_jobs_declarations.h",
-    ],
-)
-
-filegroup(
-    name = "declarations_srcs",
-    srcs = [
-        "src/hrz_jobs_declarations.cpp",
-    ],
 )
 
 cc_library(
@@ -104,7 +26,6 @@ cc_library(
         "include/hrz_jobs_executor.h",
         "include/hrz_jobs_feature_clamping.h",
         "include/hrz_jobs_ogc_utils.h",
-        "include/hrz_jobs_protocol.h",
         "include/hrz_jobs_rasterizer.h",
         "include/hrz_jobs_vector_repr_common.h",
         "include/symbol/hrz_jobs_symbol_baker.h",
@@ -119,6 +40,7 @@ cc_library(
         "src/hrz_jobs_compose_raster_tile.cpp",
         "src/hrz_jobs_compress_blob_image.cpp",
         "src/hrz_jobs_cull_symbols.cpp",
+        "src/hrz_jobs_declarations.cpp",
         "src/hrz_jobs_decode_batch_table.cpp",
         "src/hrz_jobs_decode_blob_image.cpp",
         "src/hrz_jobs_decode_cesium_terrain_tile.cpp",
@@ -151,12 +73,12 @@ cc_library(
         "src/symbol/hrz_jobs_symbol_leader_line.cpp",
         "src/symbol/hrz_jobs_symbol_placeholder.cpp",
         "src/symbol/hrz_jobs_symbol_text.cpp",
-        ":declarations_hdrs",
-        ":declarations_srcs",
     ],
     hdrs = [
+        "include/hrz_jobs_declarations.h",
+        "include/hrz_jobs_enum_names.h",
         "include/hrz_jobs_executor.h",
-        ":declarations_hdrs",
+        "include/hrz_jobs_type.h",
     ],
     copts = select({
         "//:os_windows": [],
@@ -177,7 +99,6 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        ":proto",
         "//hrz/common:hrz_common",
         "//hrz/cpp_protocol:hrz_cpp_protocol",
         "//hrz/fnd:hrz_fnd",
@@ -192,7 +113,9 @@ cc_library(
         "//third_party:libwebp",
         "//third_party:pugixml",
         "//third_party:rapidjson",
+        "//third_party/geobuf",
         "//third_party/stb_image",
+        "//third_party/vector_tile",
     ],
 )
 

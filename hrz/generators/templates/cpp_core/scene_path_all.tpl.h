@@ -6,7 +6,6 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz_services.h"
-{% for f in files %}
-#include "{{ f.name }}.pb.h"
+{% for f in protocol.files %}
+#include "hrz_core_{{ f.name[4:] }}_scene_path.h"
 {% endfor %}

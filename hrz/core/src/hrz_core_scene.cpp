@@ -867,9 +867,8 @@ Scene* create(
         root.set_scene_view_settings(view);
         scene_model::register_element(scene->model, root);
 
-        SceneModelAccessor accessor(scene->model);
-        hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor> builder(accessor, view);
-        builder.set(scene_view_settings);
+        hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor>(scene->model, view)
+            .set(scene_view_settings);
     };
 
     for (size_t i = 0; i < (size_t)SCENE_VIEW_COUNT; ++i)
@@ -877,11 +876,7 @@ Scene* create(
         register_scene_view((hrz_proto::SceneViewIndex)(hrz_proto::SCENE_VIEW_0 + i));
     }
 
-    SceneModelAccessor accessor(scene->model);
-    {
-        hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor> builder(accessor);
-        builder.set(scene_settings);
-    }
+    hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor>(scene->model).set(scene_settings);
 
     auto register_camera = [&](hrz_proto::CameraIndex camera)
     {
@@ -889,9 +884,8 @@ Scene* create(
         root.set_camera_settings(camera);
         scene_model::register_element(scene->model, root);
 
-        SceneModelAccessor accessor(scene->model);
-        hrz_proto::CameraSettingsPathBuilder<SceneModelAccessor> builder(accessor, camera);
-        builder.set(camera_settings);
+        hrz_proto::CameraSettingsPathBuilder<SceneModelAccessor>(scene->model, camera)
+            .set(camera_settings);
 
         scene->cameras[camera] = camera::create(
             camera, camera_settings.fovy(), camera_settings.user_controls_inertia(),
@@ -919,7 +913,7 @@ Scene* create(
     // Notify all subsystems so they can fetch their default data.
     {
         auto path_builder = hrz_proto::SceneSettingsPathBuilder<int>(0);
-        auto path = scene_model::SceneSettingsPath(path_builder._path);
+        auto path = scene_model::SceneSettingsPath(path_builder.get_path());
         notify_model_update(scene, scene_model::UpdateType::Set, path);
     }
 
@@ -1084,9 +1078,7 @@ void update_from_model(Scene* scene, AssetsLoader* al, BlobAllocator* ba, JobSch
 {
     HRZ_SCOPED_SAMPLE("scene update from model");
 
-    SceneModelAccessor accessor(scene->model);
-    hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor> builder(accessor);
-    auto settings = builder.get();
+    auto settings = hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor>(scene->model).get();
 
     scene->main_view = settings.main_view();
     uint32_t bitset = settings.active_views().bits();
@@ -1281,8 +1273,6 @@ void work(
         scene->got_resize_event = false;
     }
 
-    hrz::SceneModelAccessor accessor(scene->model);
-
     std::array<PickingSystem*, hrz::SCENE_VIEW_COUNT> picking_systems{};
     std::array<hrz_proto::CameraIndex, hrz::SCENE_VIEW_COUNT> view_to_camera_index{};
     std::array<ViewportInfo, hrz::SCENE_VIEW_COUNT> view_to_viewport_info{};
@@ -1290,9 +1280,10 @@ void work(
 
     for (const auto& view : scene->views)
     {
-        hrz_proto::SceneViewSettingsPathBuilder<hrz::SceneModelAccessor> builder(
-            accessor, view.first);
-        auto camera_index = builder.camera().get();
+        auto camera_index = hrz_proto::SceneViewSettingsPathBuilder<hrz::SceneModelAccessor>(
+                                scene->model, view.first)
+                                .camera()
+                                .get();
 
         if (camera_index >= 0 && (size_t)camera_index < hrz::CAMERA_COUNT)
         {
@@ -2738,21 +2729,18 @@ void dump_scene(
     output.set_name(input.scene_name());
     output.set_version(hrz::scene_dump::SceneModelVersion);
 
-    ConstSceneModelAccessor accessor(scene->model);
-
-    {
-        hrz_proto::SceneSettingsPathBuilder<ConstSceneModelAccessor> builder(accessor);
-        output.mutable_scene_settings()->MergeFrom(builder.get());
-    }
+    output.mutable_scene_settings()->MergeFrom(
+        hrz_proto::SceneSettingsPathBuilder<ConstSceneModelAccessor>(scene->model).get());
 
     for (const auto& view : scene->views)
     {
         auto* output_view = output.add_scene_view_settings();
         output_view->set_index(view.first);
 
-        hrz_proto::SceneViewSettingsPathBuilder<ConstSceneModelAccessor> builder(
-            accessor, view.first);
-        output_view->mutable_settings()->MergeFrom(builder.get());
+        output_view->mutable_settings()->MergeFrom(
+            hrz_proto::SceneViewSettingsPathBuilder<ConstSceneModelAccessor>(
+                scene->model, view.first)
+                .get());
     }
 
     for (unsigned int i = 0; i < CAMERA_COUNT; ++i)
@@ -2763,9 +2751,10 @@ void dump_scene(
             auto* output_cam = output.add_camera_settings();
             output_cam->set_index((hrz_proto::CameraIndex)i);
 
-            hrz_proto::CameraSettingsPathBuilder<ConstSceneModelAccessor> builder(
-                accessor, (hrz_proto::CameraIndex)i);
-            output_cam->mutable_settings()->MergeFrom(builder.get());
+            output_cam->mutable_settings()->MergeFrom(
+                hrz_proto::CameraSettingsPathBuilder<ConstSceneModelAccessor>(
+                    scene->model, (hrz_proto::CameraIndex)i)
+                    .get());
         }
     }
 
@@ -2801,71 +2790,81 @@ void dump_scene(
         {
             case hrz_proto::LayerType::SINGLE_MODEL:
             {
-                hrz_proto::SingleModelLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_single_model()->MergeFrom(builder.get());
+                output_layer->mutable_single_model()->MergeFrom(
+                    hrz_proto::SingleModelLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::DTM_RASTER:
             {
-                hrz_proto::DtmRasterLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_dtm_raster()->MergeFrom(builder.get());
+                output_layer->mutable_dtm_raster()->MergeFrom(
+                    hrz_proto::DtmRasterLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::IMAGERY_RASTER:
             {
-                hrz_proto::ImageryRasterLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_imagery_raster()->MergeFrom(builder.get());
+                output_layer->mutable_imagery_raster()->MergeFrom(
+                    hrz_proto::ImageryRasterLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::VECTOR_DATA:
             {
-                hrz_proto::VectorDataLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_vector_data()->MergeFrom(builder.get());
+                output_layer->mutable_vector_data()->MergeFrom(
+                    hrz_proto::VectorDataLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::VECTOR_TILES:
             {
-                hrz_proto::VectorTilesLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_vector_tiles()->MergeFrom(builder.get());
+                output_layer->mutable_vector_tiles()->MergeFrom(
+                    hrz_proto::VectorTilesLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::IN_MEMORY_VECTOR_SOURCE:
             {
-                hrz_proto::InMemoryVectorSourceLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_in_memory_vector_source()->MergeFrom(builder.get());
+                output_layer->mutable_in_memory_vector_source()->MergeFrom(
+                    hrz_proto::InMemoryVectorSourceLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::THREE_D_TILES:
             {
-                hrz_proto::ThreeDTilesLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_three_d_tiles()->MergeFrom(builder.get());
+                output_layer->mutable_three_d_tiles()->MergeFrom(
+                    hrz_proto::ThreeDTilesLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::EDITABLE_SHAPE:
             {
-                hrz_proto::EditableShapeLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_editable_shape()->MergeFrom(builder.get());
+                output_layer->mutable_editable_shape()->MergeFrom(
+                    hrz_proto::EditableShapeLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::GIZMO:
             {
-                hrz_proto::GizmoLayerPathBuilder<ConstSceneModelAccessor> builder(accessor, handle);
-                output_layer->mutable_gizmo()->MergeFrom(builder.get());
+                output_layer->mutable_gizmo()->MergeFrom(
+                    hrz_proto::GizmoLayerPathBuilder<ConstSceneModelAccessor>(scene->model, handle)
+                        .get());
                 break;
             }
             case hrz_proto::LayerType::CLIPPING_PLANE:
             {
-                hrz_proto::ClippingPlaneLayerPathBuilder<ConstSceneModelAccessor> builder(
-                    accessor, handle);
-                output_layer->mutable_clipping_plane()->MergeFrom(builder.get());
+                output_layer->mutable_clipping_plane()->MergeFrom(
+                    hrz_proto::ClippingPlaneLayerPathBuilder<ConstSceneModelAccessor>(
+                        scene->model, handle)
+                        .get());
                 break;
             }
             default:
@@ -2925,20 +2924,20 @@ void load_scene_dump(
 
     if (dump.has_scene_settings())
     {
-        hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor> builder(accessor);
-        set_model_msg(builder._path, dump.scene_settings());
+        hrz_proto::SceneSettingsPathBuilder<int> builder(0);
+        set_model_msg(builder.get_path(), dump.scene_settings());
     }
 
     for (const auto& view : dump.scene_view_settings())
     {
-        hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor> builder(accessor, view.index());
-        set_model_msg(builder._path, view.settings());
+        hrz_proto::SceneViewSettingsPathBuilder<int> builder(0, view.index());
+        set_model_msg(builder.get_path(), view.settings());
     }
 
     for (const auto& cam : dump.camera_settings())
     {
-        hrz_proto::CameraSettingsPathBuilder<SceneModelAccessor> builder(accessor, cam.index());
-        set_model_msg(builder._path, cam.settings());
+        hrz_proto::CameraSettingsPathBuilder<int> builder(0, cam.index());
+        set_model_msg(builder.get_path(), cam.settings());
     }
 
     hrz_proto::OrbitCameraTransition camera_transition;
@@ -2978,9 +2977,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::SINGLE_MODEL;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::SingleModelLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.single_model());
+                hrz_proto::SingleModelLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.single_model());
                 break;
             }
             case hrz_proto::LayerDump::kDtmRaster:
@@ -2988,8 +2986,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::DTM_RASTER;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::DtmRasterLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
-                set_model_msg(builder._path, layer.dtm_raster());
+                hrz_proto::DtmRasterLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.dtm_raster());
                 break;
             }
             case hrz_proto::LayerDump::kImageryRaster:
@@ -2997,9 +2995,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::IMAGERY_RASTER;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::ImageryRasterLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.imagery_raster());
+                hrz_proto::ImageryRasterLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.imagery_raster());
                 break;
             }
             case hrz_proto::LayerDump::kVectorData:
@@ -3007,8 +3004,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::VECTOR_DATA;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::VectorDataLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
-                set_model_msg(builder._path, layer.vector_data());
+                hrz_proto::VectorDataLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.vector_data());
                 break;
             }
             case hrz_proto::LayerDump::kVectorTiles:
@@ -3016,9 +3013,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::VECTOR_TILES;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::VectorTilesLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.vector_tiles());
+                hrz_proto::VectorTilesLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.vector_tiles());
                 break;
             }
             case hrz_proto::LayerDump::kInMemoryVectorSource:
@@ -3026,9 +3022,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::IN_MEMORY_VECTOR_SOURCE;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::InMemoryVectorSourceLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.in_memory_vector_source());
+                hrz_proto::InMemoryVectorSourceLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.in_memory_vector_source());
                 break;
             }
             case hrz_proto::LayerDump::kThreeDTiles:
@@ -3036,9 +3031,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::THREE_D_TILES;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::ThreeDTilesLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.three_d_tiles());
+                hrz_proto::ThreeDTilesLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.three_d_tiles());
                 break;
             }
             case hrz_proto::LayerDump::kEditableShape:
@@ -3046,9 +3040,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::EDITABLE_SHAPE;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::EditableShapeLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.editable_shape());
+                hrz_proto::EditableShapeLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.editable_shape());
                 break;
             }
             case hrz_proto::LayerDump::kGizmo:
@@ -3056,8 +3049,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::GIZMO;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::GizmoLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
-                set_model_msg(builder._path, layer.gizmo());
+                hrz_proto::GizmoLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.gizmo());
                 break;
             }
             case hrz_proto::LayerDump::kClippingPlane:
@@ -3065,9 +3058,8 @@ void load_scene_dump(
                 layer_type = hrz_proto::LayerType::CLIPPING_PLANE;
                 handle.set_opaque(create_layer(scene, layer_type, layer.name(), ar));
 
-                hrz_proto::ClippingPlaneLayerPathBuilder<SceneModelAccessor> builder(
-                    accessor, handle);
-                set_model_msg(builder._path, layer.clipping_plane());
+                hrz_proto::ClippingPlaneLayerPathBuilder<int> builder(0, handle);
+                set_model_msg(builder.get_path(), layer.clipping_plane());
                 break;
             }
             default:

@@ -55,7 +55,7 @@ struct Job
 {
     uint32_t id;
     std::atomic<job_scheduler::JobStatus> status;
-    hrz_jobs_proto::JobType type;
+    hrz_jobs::JobType type;
     std::any parameters;
     hrz::monitoring::ResourceOwner resource_owner;
     hrz::JobResult result;
@@ -278,7 +278,7 @@ void destroy(JobScheduler* scheduler, bool leak_workers)
 
 Ticket add_job(
     JobScheduler* scheduler,
-    hrz_jobs_proto::JobType job_type,
+    hrz_jobs::JobType job_type,
     std::any& parameters,
     const hrz::monitoring::ResourceOwner& resource_owner)
 {
@@ -376,7 +376,7 @@ JobStatus get_job_status(JobScheduler* scheduler, Ticket ticket)
     return get_job_status(job);
 }
 
-hrz_jobs_proto::JobType get_job_type(JobScheduler* scheduler, Ticket ticket)
+hrz_jobs::JobType get_job_type(JobScheduler* scheduler, Ticket ticket)
 {
     assert(scheduler);
 
@@ -481,7 +481,7 @@ void dev_ui(JobScheduler* scheduler, mu_Context* ctx, const char* window_name)
                     auto job = scheduler->job_pool.get_object(ticket);
                     if (job)
                     {
-                        mu_text(ctx, hrz_jobs_proto::JobType_Name(job->type));
+                        mu_text(ctx, hrz_jobs::job_type_name(job->type));
                     }
                     else
                     {

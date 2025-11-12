@@ -7,7 +7,6 @@
 #include <hrz_fnd_defines.h>
 #include <hrz_fnd_flat_hash_set.h>
 #include <hrz_fnd_log.h>
-#include <hrz_jobs_protocol.h>
 
 #include <gtest/gtest.h>
 

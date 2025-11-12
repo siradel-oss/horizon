@@ -1,6 +1,7 @@
 #pragma once
 
-#include <hrz_protocol_all.h>
+#include <hrz_scene_model.pb.h>
+#include <hrz_services.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -95,7 +96,7 @@ public:
     SceneModelAccessor(const SceneModelAccessor&) = default;
 
     template<typename T>
-    void set(hrz_proto::Path&& path, const T& payload)
+    void set(hrz_proto::Path path, const T& payload)
     {
         hrz_proto::SceneModelSet msg_in;
         *msg_in.mutable_path() = std::move(path);
@@ -106,11 +107,11 @@ public:
         _api->scene_model_service.set(msg_in, v);
     }
 
-    void set_raw(hrz_proto::Path&& path, const std::string& data)
+    void set_raw(hrz_proto::Path path, std::string data)
     {
         hrz_proto::SceneModelSet msg_in;
         *msg_in.mutable_path() = std::move(path);
-        msg_in.set_payload(data);
+        msg_in.set_payload(std::move(data));
 
         hrz_proto::Void v;
 
@@ -118,10 +119,10 @@ public:
     }
 
     template<typename T>
-    T get(hrz_proto::Path&& path)
+    T get(const hrz_proto::Path& path)
     {
         hrz_proto::BytesValue response;
-        _api->scene_model_service.get(std::move(path), response);
+        _api->scene_model_service.get(path, response);
 
         T value;
         value.ParseFromString(response.value());
@@ -129,16 +130,17 @@ public:
         return value;
     }
 
-    std::string get_raw(hrz_proto::Path&& path)
+    std::string get_raw(const hrz_proto::Path& path)
     {
         hrz_proto::BytesValue response;
-        _api->scene_model_service.get(std::move(path), response);
+        _api->scene_model_service.get(path, response);
 
-        return std::move(response.value());
+        std::unique_ptr<std::string> str_ptr(response.release_value());
+        return std::move(*str_ptr);
     }
 
     template<typename T>
-    uint32_t add(hrz_proto::Path&& path, const T& payload)
+    uint32_t add(hrz_proto::Path path, const T& payload)
     {
         hrz_proto::SceneModelSet msg_in;
         *msg_in.mutable_path() = std::move(path);
@@ -149,25 +151,25 @@ public:
         return count.value();
     }
 
-    uint32_t add_raw(hrz_proto::Path&& path, const std::string& data)
+    uint32_t add_raw(hrz_proto::Path path, std::string data)
     {
         hrz_proto::SceneModelSet msg_in;
         *msg_in.mutable_path() = std::move(path);
-        msg_in.set_payload(data);
+        msg_in.set_payload(std::move(data));
 
         hrz_proto::UInt32Value count;
         _api->scene_model_service.add(msg_in, count);
         return count.value();
     }
 
-    uint32_t remove(hrz_proto::Path&& path)
+    uint32_t remove(const hrz_proto::Path& path)
     {
         hrz_proto::UInt32Value count;
         _api->scene_model_service.remove(path, count);
         return count.value();
     }
 
-    uint32_t count(hrz_proto::Path&& path)
+    uint32_t count(const hrz_proto::Path& path)
     {
         hrz_proto::UInt32Value count;
         _api->scene_model_service.count(path, count);

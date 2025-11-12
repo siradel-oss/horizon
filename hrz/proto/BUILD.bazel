@@ -4,13 +4,13 @@ load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 copy_to_bin(
     name = "protos_bin",
-    srcs = list_proto_files("", ".proto"),
+    srcs = list_proto_files("hrz_", ".proto"),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "protos",
-    srcs = list_proto_files("", ".proto"),
+    srcs = list_proto_files("hrz_", ".proto"),
     visibility = ["//visibility:public"],
 )
 

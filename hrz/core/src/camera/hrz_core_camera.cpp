@@ -352,9 +352,9 @@ public:
     {
         if (_camera_settings_changed)
         {
-            SceneModelAccessor acc(model);
-            hrz_proto::CameraSettingsPathBuilder<SceneModelAccessor> builder(acc, _index);
-            auto settings = builder.get();
+            auto settings =
+                hrz_proto::CameraSettingsPathBuilder<SceneModelAccessor>(model, _index).get();
+
             _baked_info.fovy = lm::radians(settings.fovy());
             _energy_half_time = EnergyHalfTime{
                 std::max(kMinInertia, (double)settings.user_controls_inertia()),

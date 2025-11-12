@@ -8,7 +8,6 @@
 #include <hrz_common_blob_array.h>
 #include <hrz_common_tile_coords.h>
 #include <hrz_common_vector_data.h>
-#include <hrz_jobs_protocol.h>
 
 #include <cstdint>
 #include <span>

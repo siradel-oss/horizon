@@ -978,10 +978,9 @@ void register_layer(InMemoryVectorDataBase* system, SceneModel* model, uint64_t 
             hrz_proto::SrsDescriptorType::PROJ4_STRING_DESCRIPTOR);
         data.mutable_projection()->set_descriptor_(hrz_proj::lonlat_deg_proj_str);
 
-        hrz::SceneModelAccessor accessor(model);
-        hrz_proto::InMemoryVectorSourceLayerPathBuilder<hrz::SceneModelAccessor> builder(
-            accessor, root.in_memory_vector_source_layer());
-        builder.set(data);
+        hrz_proto::InMemoryVectorSourceLayerPathBuilder<hrz::SceneModelAccessor>(
+            model, root.in_memory_vector_source_layer())
+            .set(data);
 
         // Activate layer if there no active layer with id 0.
         auto it_active = system->active_layers.find(0);
@@ -1314,13 +1313,11 @@ void work(
         LayerPoolH layer_pool_handle = it.second;
         Layer* layer = _get_layer(system, layer_model_handle);
 
-        hrz::SceneModelAccessor accessor(model);
-
         hrz_proto::LayerHandle scene_model_handle;
         scene_model_handle.set_opaque(layer_model_handle);
 
         hrz_proto::InMemoryVectorSourceLayerPathBuilder<hrz::SceneModelAccessor> builder(
-            accessor, scene_model_handle);
+            model, scene_model_handle);
 
         bool restart_all_trackers = false;
 

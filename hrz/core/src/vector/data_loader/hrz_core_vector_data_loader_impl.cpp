@@ -542,10 +542,9 @@ void VectorDataLoader::register_layer(SceneModel* scene_model, uint64_t layer_ha
     hrz_proto::VectorDataLayer layer;
     layer.set_id(layer_id);
 
-    hrz::SceneModelAccessor accessor(scene_model);
-    hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor> builder(
-        accessor, root.vector_data_layer());
-    builder.set(layer);
+    hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor>(
+        scene_model, root.vector_data_layer())
+        .set(layer);
 
     layer_handles_to_layer_ids.insert({layer_handle, layer_id});
     created_model_layers.insert(layer_handle);
@@ -1066,10 +1065,9 @@ bool VectorDataLoader::update_source_headers(
 
         auto& model = model_opt.value();
 
-        hrz::SceneModelAccessor accessor(scene_model);
         hrz_proto::LayerHandle handle;
         handle.set_opaque(layer_handle);
-        hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, handle);
+        hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor> builder(scene_model, handle);
 
         auto& data_source = model.data_sources.at(source_index);
         if (data_source.has_tiled_data_provider())
@@ -1256,11 +1254,13 @@ void VectorDataLoader::update_layers_from_model(SceneModel* scene_model)
 
         uint32_t previous_layer_id = layer_it->second;
 
-        hrz::SceneModelAccessor accessor(scene_model);
         hrz_proto::LayerHandle handle;
         handle.set_opaque(layer_handle);
-        hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, handle);
-        uint32_t new_layer_id = builder.id().get();
+
+        uint32_t new_layer_id =
+            hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor>(scene_model, handle)
+                .id()
+                .get();
 
         if (new_layer_id == previous_layer_id)
         {

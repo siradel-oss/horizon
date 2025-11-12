@@ -2926,10 +2926,11 @@ struct PlanetGeometry
 
         if (model_updated)
         {
-            SceneModelAccessor accessor(model);
-            hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor> builder(
-                accessor, model_scene_view_index);
-            auto settings = builder.terrain().get();
+            auto settings = hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor>(
+                                model, model_scene_view_index)
+                                .terrain()
+                                .get();
+
             is_opaque = settings.terrain_opacity() >= 1.0f;
             use_adaptive_resolution = settings.experimental_adaptive_resolution();
             model_updated = false;

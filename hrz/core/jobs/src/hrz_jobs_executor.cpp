@@ -10,7 +10,7 @@ namespace hrz_jobs::executor
 {
 hrz::JobResult run_job(
     uint32_t job_id,
-    hrz_jobs_proto::JobType job_type,
+    hrz_jobs::JobType job_type,
     const std::any& params,
     std::any& response,
     const JobContext& context)
@@ -26,7 +26,7 @@ hrz::JobResult run_job(
     }
     else
     {
-        HRZ_LOG_ERROR("Unknown job type {}: {}", job_id, hrz_jobs_proto::JobType_Name(job_type));
+        HRZ_LOG_ERROR("Unknown job type {}: {}", job_id, hrz_jobs::job_type_name(job_type));
 
         return hrz::JobResult::FAILURE;
     }

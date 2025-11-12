@@ -1,0 +1,167 @@
+{
+  "test_job_1": {
+    "params_type": "struct hrz::test::TestJob1Params",
+    "response_type": "struct hrz::test::TestJob1Response",
+    "documentation": "Test job 1"
+  },
+  "test_job_2": {
+    "params_type": "struct hrz::test::TestJob2Params",
+    "response_type": "struct hrz::test::TestJob2Response",
+    "documentation": "Test job 2"
+  },
+  "process_feedback_texture": {
+    "params_type": "struct hrz::planet::FeedbackData",
+    "response_type": "struct hrz::planet::TileList",
+    "documentation": ""
+  },
+  "reproject_raster_tile": {
+    "params_type": "struct hrz::planet::RasterTileReprojParams",
+    "response_type": "struct hrz::planet::ReprojectedTiles",
+    "documentation": ""
+  },
+  "generate_mipmaps": {
+    "params_type": "struct hrz::planet::MipmapGenerationParams",
+    "response_type": "struct hrz::planet::Mipmaps",
+    "documentation": ""
+  },
+  "compose_raster_tile": {
+    "params_type": "struct hrz::planet::RasterTileCompositionParams",
+    "response_type": "class hrz::planet::RasterTileCompositionResponse",
+    "documentation": ""
+  },
+  "decode_vector_tile": {
+    "params_type": "struct hrz::vector_data::EncodedVectorTile",
+    "response_type": "struct hrz::vector_data::DecodedVectorTile",
+    "documentation": ""
+  },
+  "bake_extruded_vector_geometry": {
+    "params_type": "struct hrz::vt::ExtrudedVectorData",
+    "response_type": "struct hrz::vt::ExtrudedVectorGeometry",
+    "documentation": ""
+  },
+  "bake_3d_model_geometry": {
+    "params_type": "struct hrz::vt::ModelData",
+    "response_type": "struct hrz::vt::ModelGeometry",
+    "documentation": ""
+  },
+  "bake_flat_vector_geometry": {
+    "params_type": "struct hrz::vt::FlatVectorData",
+    "response_type": "struct hrz::vt::FlatVectorGeometry",
+    "documentation": ""
+  },
+  "cull_points_query": {
+    "params_type": "struct hrz::planet::CullPointsQueryParams",
+    "response_type": "struct hrz::planet::CulledPointsQuery",
+    "documentation": ""
+  },
+  "sample_points_query": {
+    "params_type": "struct hrz::planet::SamplePointsQueryParams",
+    "response_type": "struct hrz::planet::SampledPointsQuery",
+    "documentation": ""
+  },
+  "parse_tilemap_resource": {
+    "params_type": "struct hrz::planet::TilemapResourceParams",
+    "response_type": "struct hrz::planet::TilemapResourceResponse",
+    "documentation": ""
+  },
+  "style_features": {
+    "params_type": "struct hrz::style::FeaturesStylingData",
+    "response_type": "struct hrz::style::StylingResult",
+    "documentation": ""
+  },
+  "palettize_image": {
+    "params_type": "struct hrz::planet::PalettizeImageParams",
+    "response_type": "class hrz::BlobImage",
+    "documentation": ""
+  },
+  "bake_cylinder_vector_geometry": {
+    "params_type": "struct hrz::vt::CylinderVectorData",
+    "response_type": "struct hrz::vt::CylinderVectorGeometry",
+    "documentation": ""
+  },
+  "decode_three_d_tiles_tileset": {
+    "params_type": "struct hrz::three_d_tiles::EncodedThreeDTilesTileset",
+    "response_type": "struct hrz::three_d_tiles::ThreeDTilesTilesetDescriptor",
+    "documentation": ""
+  },
+  "decompress_draco_mesh": {
+    "params_type": "struct hrz::blobs::BlobHandle",
+    "response_type": "struct hrz::model::Mesh",
+    "documentation": ""
+  },
+  "parse_wmts_resource": {
+    "params_type": "struct hrz::planet::WmtsResourceParams",
+    "response_type": "struct hrz::planet::WmtsResourceResponse",
+    "documentation": ""
+  },
+  "parse_wms_resource": {
+    "params_type": "struct hrz::planet::WmsResourceParams",
+    "response_type": "struct hrz::planet::WmsResourceResponse",
+    "documentation": ""
+  },
+  "rasterize_cesium_terrain_tile": {
+    "params_type": "struct hrz::planet::CesiumTerrainTileData",
+    "response_type": "class hrz::BlobImage",
+    "documentation": ""
+  },
+  "decode_blob_image": {
+    "params_type": "struct hrz::BlobImageDecodingParams",
+    "response_type": "class hrz::BlobImage",
+    "documentation": "Decodes an image. The input data is the encoded image, as a blob. The image type is guessed from the data. For supported input formats, see https://github.com/nothings/stb/blob/master/stb_image.h. 1, 2, 3 and 4 channels are supported. The output data is the decoded blob image, with one byte per channel per pixel."
+  },
+  "join_vector_data": {
+    "params_type": "struct hrz::vector_data::UnjoinedVectorData",
+    "response_type": "class hrz::vector_data::JoinedVectorData",
+    "documentation": ""
+  },
+  "decode_three_d_tiles_batch_table": {
+    "params_type": "struct hrz::three_d_tiles::EncodedBatchTable",
+    "response_type": "struct hrz::three_d_tiles::DecodedBatchTable",
+    "documentation": ""
+  },
+  "move_client_vector_data_to_blobs": {
+    "params_type": "struct hrz::vector_data::RawClientVectorData",
+    "response_type": "struct hrz::vector_data::DecodedVectorTile",
+    "documentation": ""
+  },
+  "compress_blob_image": {
+    "params_type": "struct hrz::BlobImageCompressionParams",
+    "response_type": "class hrz::BlobImage",
+    "documentation": ""
+  },
+  "bake_heatmap_geometry": {
+    "params_type": "struct hrz::vt::HeatmapData",
+    "response_type": "struct hrz::vt::HeatmapGeometry",
+    "documentation": ""
+  },
+  "bake_symbols": {
+    "params_type": "struct hrz::vt::SymbolBakingData",
+    "response_type": "struct hrz::vt::BakedSymbols",
+    "documentation": ""
+  },
+  "parse_mvt": {
+    "params_type": "struct hrz::blobs::BlobHandle",
+    "response_type": "struct hrz::vector_data::ParsedMvt",
+    "documentation": ""
+  },
+  "cull_symbols": {
+    "params_type": "struct hrz::vt::SymbolCullingParams",
+    "response_type": "struct hrz::vt::SymbolCullingResponse",
+    "documentation": ""
+  },
+  "build_aabb_tree": {
+    "params_type": "struct hrz::vector_data::VectorTileGeometry",
+    "response_type": "struct hrz::vector_data::AabbTree",
+    "documentation": ""
+  },
+  "extract_vector_tile": {
+    "params_type": "struct hrz::vector_data::VectorTileExtractionParams",
+    "response_type": "struct hrz::vector_data::DecodedVectorTile",
+    "documentation": ""
+  },
+  "decompress_blob": {
+    "params_type": "struct hrz::DecompressBlobParams",
+    "response_type": "struct hrz::blobs::BlobHandle",
+    "documentation": ""
+  }
+}

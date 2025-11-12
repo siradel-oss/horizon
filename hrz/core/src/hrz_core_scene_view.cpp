@@ -2505,8 +2505,9 @@ SceneView* create_scene_view(
 
     {
         auto path_builder = hrz_proto::SceneViewSettingsPathBuilder<int>(0, view_index);
-        auto path = scene_model::SceneViewSettingsPath(path_builder._path);
-        notify_model_update(view, scene_model::UpdateType::Set, path);
+        notify_model_update(
+            view, scene_model::UpdateType::Set,
+            scene_model::SceneViewSettingsPath(path_builder.get_path()));
     }
 
     refresh_camera_and_viewport(view, scene_model, canvas_size, device_pixel_ratio);

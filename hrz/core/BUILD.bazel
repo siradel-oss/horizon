@@ -1,4 +1,5 @@
 load("//:version.bzl", "HRZ_VERSION")
+load("//hrz/proto:list_proto_files.bzl", "list_proto_files")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg", "make_template")
@@ -15,9 +16,10 @@ GENERATED_TEMPLATES_SRCS = [
 GENERATED_TEMPLATES_HDRS = [
     "include/hrz_core_rpc_dispatcher.h",
     "include/hrz_core_scene_path.h",
+    "include/hrz_core_scene_path_common.h",
     "include/hrz_core_scene_model_accessor.h",
     "include/hrz_core_client_messages.h",
-]
+] + list_proto_files("include/hrz_core_", "_scene_path.h")
 
 hrz_genrule(
     name = "generate_templates",
@@ -333,7 +335,6 @@ cc_library(
     deps = [
         "//hrz/common:hrz_common",
         "//hrz/core/jobs:hrz_core_jobs",
-        "//hrz/core/jobs:proto",
         "//hrz/core/platform:hrz_core_platform",
         "//hrz/core/resources",
         "//hrz/core/shaders",

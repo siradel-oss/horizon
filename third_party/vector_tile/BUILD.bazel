@@ -1,0 +1,33 @@
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+
+hrz_genrule(
+    name = "generate_proto",
+    srcs = [
+        "vector_tile.proto",
+    ],
+    outs = [
+        "gen/vector_tile.pb.cc",
+        "gen/vector_tile.pb.h",
+    ],
+    cmd = "$(location //third_party:protoc) -Ithird_party/vector_tile $(location vector_tile.proto) --cpp_out=$(@D)/gen",
+    tools = [
+        "//third_party:protoc",
+    ],
+)
+
+cc_library(
+    name = "vector_tile",
+    srcs = [
+        "gen/vector_tile.pb.cc",
+    ],
+    hdrs = [
+        "gen/vector_tile.pb.h",
+    ],
+    includes = [
+        "gen",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party:libprotobuf-lite",
+    ],
+)

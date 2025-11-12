@@ -1,0 +1,33 @@
+load("//tools/bazel:genrule.bzl", "hrz_genrule")
+
+hrz_genrule(
+    name = "generate_proto",
+    srcs = [
+        "geobuf.proto",
+    ],
+    outs = [
+        "gen/geobuf.pb.cc",
+        "gen/geobuf.pb.h",
+    ],
+    cmd = "$(location //third_party:protoc) -Ithird_party/geobuf $(location geobuf.proto) --cpp_out=$(@D)/gen",
+    tools = [
+        "//third_party:protoc",
+    ],
+)
+
+cc_library(
+    name = "geobuf",
+    srcs = [
+        "gen/geobuf.pb.cc",
+    ],
+    hdrs = [
+        "gen/geobuf.pb.h",
+    ],
+    includes = [
+        "gen",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party:libprotobuf-lite",
+    ],
+)

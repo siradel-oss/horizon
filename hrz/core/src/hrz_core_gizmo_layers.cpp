@@ -1956,13 +1956,12 @@ public:
             send_message(mq, true);
 
             // Update the scene model when action has ended.
-            hrz::SceneModelAccessor accessor(scene_model);
             hrz_proto::LayerHandle handle;
             handle.set_opaque(layer_id);
-            hrz_proto::GizmoLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, handle);
+
+            hrz_proto::GizmoLayerPathBuilder<hrz::SceneModelAccessor> builder(scene_model, handle);
 
             hrz_proto::GizmoLayer layer = builder.clone().get();
-
             layer.mutable_position()->set_latitude(lm::degrees(_position.lat));
             layer.mutable_position()->set_longitude(lm::degrees(_position.lon));
             layer.mutable_position()->set_altitude(_position.alt);
@@ -1971,7 +1970,7 @@ public:
             layer.mutable_rotation()->set_z(_local_rotation.z);
             layer.mutable_rotation()->set_w(_local_rotation.w);
 
-            builder.set(layer);
+            std::move(builder).set(layer);
 
             _state.action_end = false;
 
@@ -2558,9 +2557,8 @@ void register_layer(GizmoLayerSystem* system, SceneModel* scene_model, uint64_t 
     hrz_proto::GizmoLayer layer_data = default_layer_data();
     layer->gizmo.update_from_model(layer_data);
 
-    SceneModelAccessor accessor(scene_model);
-    hrz_proto::GizmoLayerPathBuilder<SceneModelAccessor> builder(accessor, root.gizmo_layer());
-    builder.set(layer_data);
+    hrz_proto::GizmoLayerPathBuilder<hrz::SceneModelAccessor>(scene_model, root.gizmo_layer())
+        .set(layer_data);
 }
 
 void unregister_layer(GizmoLayerSystem* system, uint64_t layer_id)
@@ -2604,12 +2602,14 @@ RenderRequest work(
             Layer* layer = system->layer_pool.get_object(it->second);
             if (!layer) continue;
 
-            SceneModelAccessor accessor(scene_model);
             hrz_proto::LayerHandle handle;
             handle.set_opaque(layer_id);
-            hrz_proto::GizmoLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
 
-            layer->gizmo.update_from_model(builder.clone().get());
+            auto model =
+                hrz_proto::GizmoLayerPathBuilder<hrz::SceneModelAccessor>(scene_model, handle)
+                    .get();
+
+            layer->gizmo.update_from_model(model);
             render_request.request_visual_render();
         }
     }

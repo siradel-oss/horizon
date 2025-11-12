@@ -1761,10 +1761,10 @@ void update_shape_model(
     SceneModel* scene_model,
     ClientMessageQueue* mq)
 {
-    hrz::SceneModelAccessor accessor(scene_model);
     hrz_proto::LayerHandle handle;
     handle.set_opaque(shape.global_layer_id);
-    hrz_proto::EditableShapeLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, handle);
+
+    hrz_proto::EditableShapeLayerPathBuilder<hrz::SceneModelAccessor> builder(scene_model, handle);
 
     hrz_proto::EditableShapeLayer layer = builder.clone().get();
     auto geometry = layer.mutable_geometry();
@@ -1814,7 +1814,7 @@ void update_shape_model(
         }
     }
 
-    builder.set(layer);
+    std::move(builder).set(layer);
 
     hrz_proto::ShapeEditorMessage message;
     message.set_type(hrz_proto::ShapeEditorUpdateType::SHAPE_GEOMETRY_UPDATE);
@@ -2275,10 +2275,9 @@ void register_layer(ShapeEditor* editor, SceneModel* scene_model, uint64_t globa
     data.set_visible(shape->is_visible);
     data.mutable_scene_views()->set_bits(shape->scene_views_bitset);
 
-    SceneModelAccessor accessor(scene_model);
-    hrz_proto::EditableShapeLayerPathBuilder<SceneModelAccessor> builder(
-        accessor, root.editable_shape_layer());
-    builder.set(data);
+    hrz_proto::EditableShapeLayerPathBuilder<SceneModelAccessor>(
+        scene_model, root.editable_shape_layer())
+        .set(data);
 }
 
 void unregister_layer(ShapeEditor* editor, uint64_t global_layer_id)
@@ -2505,12 +2504,10 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
 
         auto& shape = *shape_ptr;
 
-        SceneModelAccessor accessor(scene_model);
-
         hrz_proto::LayerHandle handle;
         handle.set_opaque(shape.global_layer_id);
 
-        hrz_proto::EditableShapeLayerPathBuilder<SceneModelAccessor> builder(accessor, handle);
+        hrz_proto::EditableShapeLayerPathBuilder<SceneModelAccessor> builder(scene_model, handle);
 
         if (shape.geometry_updated)
         {

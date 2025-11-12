@@ -130,10 +130,10 @@ void update(
 
     if (sys->model_updated)
     {
-        SceneModelAccessor accessor(model);
-        hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor> builder(
-            accessor, sys->model_scene_view);
-        hrz_proto::AmbientSettings settings = builder.ambient().get();
+        auto settings = hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor>(
+                            model, sys->model_scene_view)
+                            .ambient()
+                            .get();
 
         sys->shadows_enabled = settings.lighting().cast_shadows()
             && settings.lighting().receive_shadows() && settings.lighting().enable_lighting();

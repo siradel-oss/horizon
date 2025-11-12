@@ -122,8 +122,7 @@ TEST(JobScheduler, get_job_type)
     params1.b = 11;
     auto job1 = hrz_jobs::add_job_test_job_1(job_scheduler, params1, {});
 
-    EXPECT_EQ(
-        hrz::job_scheduler::get_job_type(job_scheduler, job1.ticket), hrz_jobs_proto::TEST_JOB_1);
+    EXPECT_EQ(hrz::job_scheduler::get_job_type(job_scheduler, job1.ticket), hrz_jobs::TEST_JOB_1);
 
     while (!hrz_jobs::is_job_finished(job_scheduler, job1))
     {
@@ -132,8 +131,7 @@ TEST(JobScheduler, get_job_type)
     EXPECT_EQ(
         hrz_jobs::get_job_status(job_scheduler, job1), job_scheduler::JobStatus::Finished_Success);
 
-    EXPECT_EQ(
-        hrz::job_scheduler::get_job_type(job_scheduler, job1.ticket), hrz_jobs_proto::TEST_JOB_1);
+    EXPECT_EQ(hrz::job_scheduler::get_job_type(job_scheduler, job1.ticket), hrz_jobs::TEST_JOB_1);
 
     TestJob1Response response;
     hrz_jobs::get_job_response(job_scheduler, job1, response);
@@ -159,8 +157,7 @@ TEST(JobScheduler, get_job_status)
     EXPECT_EQ(
         hrz_jobs::get_job_status(job_scheduler, job1), job_scheduler::JobStatus::Finished_Success);
 
-    EXPECT_EQ(
-        hrz::job_scheduler::get_job_type(job_scheduler, job1.ticket), hrz_jobs_proto::TEST_JOB_1);
+    EXPECT_EQ(hrz::job_scheduler::get_job_type(job_scheduler, job1.ticket), hrz_jobs::TEST_JOB_1);
 
     TestJob1Response response;
     hrz_jobs::get_job_response(job_scheduler, job1, response);

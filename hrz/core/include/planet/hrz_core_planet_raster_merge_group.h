@@ -17,7 +17,6 @@
 #include <hrz_fnd_hash.h>
 #include <hrz_fnd_node_hash_map.h>
 #include <hrz_fnd_unique_vector.h>
-#include <hrz_jobs_protocol.h>
 #include <hrz_protocol_all.h>
 
 #include <cstdint>

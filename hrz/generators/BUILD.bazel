@@ -55,6 +55,8 @@ filegroup(
     name = "cpp_protocol_tpl",
     srcs = [
         "templates/cpp_protocol/path_builder.tpl.h",
+        "templates/cpp_protocol/path_builder_all.tpl.h",
+        "templates/cpp_protocol/path_builder_common.tpl.h",
         "templates/cpp_protocol/protocol_all.tpl.h",
         "templates/cpp_protocol/services.tpl.h",
     ],
@@ -72,6 +74,8 @@ filegroup(
         "templates/cpp_core/scene_model_accessor.tpl.h",
         "templates/cpp_core/scene_path.tpl.cpp",
         "templates/cpp_core/scene_path.tpl.h",
+        "templates/cpp_core/scene_path_all.tpl.h",
+        "templates/cpp_core/scene_path_common.tpl.h",
         "templates/cpp_core/style_enums.tpl.cpp",
     ],
     visibility = ["//visibility:public"],
@@ -94,6 +98,7 @@ filegroup(
         "templates/jobs/enum_names.tpl.h",
         "templates/jobs/tickets.tpl.cpp",
         "templates/jobs/tickets.tpl.h",
+        "templates/jobs/type.tpl.h",
     ],
     visibility = ["//visibility:public"],
 )

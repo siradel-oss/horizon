@@ -270,10 +270,10 @@ RenderRequest update(ViewshedsSystem* sys, const CameraViewInfo& cam, SceneModel
 
     if (sys->model_updated)
     {
-        SceneModelAccessor accessor(model);
-        hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor> builder(
-            accessor, sys->model_scene_view);
-        hrz_proto::ViewshedSettings settings = builder.viewshed().get();
+        auto settings = hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor>(
+                            model, sys->model_scene_view)
+                            .viewshed()
+                            .get();
 
         //@Todo Extends it for multiple Viewsheds
         sys->viewshed_enabled = settings.enable_viewshed();

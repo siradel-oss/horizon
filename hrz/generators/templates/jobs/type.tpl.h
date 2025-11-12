@@ -6,7 +6,14 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz_services.h"
-{% for f in files %}
-#include "{{ f.name }}.pb.h"
+namespace hrz_jobs
+{
+
+enum JobType
+{
+{% for job in jobs %}
+    {{ job.name|upper }},
 {% endfor %}
+};
+
+} // namespace hrz_jobs

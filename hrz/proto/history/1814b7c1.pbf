@@ -1,28 +1,4 @@
 
-÷
-hrz_wrappers.protoHrzProtocol"#
-DoubleValue
-value (Rvalue""
-
-FloatValue
-value (Rvalue""
-
-Int64Value
-value (Rvalue"#
-UInt64Value
-value (Rvalue""
-
-Int32Value
-value (Rvalue"#
-UInt32Value
-value (Rvalue"!
-	BoolValue
-value (Rvalue"#
-StringValue
-value (	Rvalue""
-
-BytesValue
-value (RvalueBHøbproto3
 †š
 hrz_types.protoHrzProtocol"
 Void"#
@@ -700,336 +676,30 @@ DTM_RASTER
 RenameLayer.HrzProtocol.LayerRenameInfo.HrzProtocol.Void8
 GetLayer.HrzProtocol.LayerHandle.HrzProtocol.Layer:
 GetAllLayers.HrzProtocol.Void.HrzProtocol.LayerArrayBHøbproto3
-÷
-hrz_picking.protoHrzProtocolhrz_types.protohrz_layers.proto"$
+÷
+hrz_wrappers.protoHrzProtocol"#
+DoubleValue
+value (Rvalue""
 
-PickTicket
-opaque (Ropaque"(
-PickAreaTicket
-opaque (Ropaque"÷
-RasterPickResult;
-image_format (2.HrzProtocol.ImageFormatRimageFormat;
-raster_position (2.HrzProtocol.Vec2dRrasterPosition9
-pixel_position (2.HrzProtocol.Vec2dRpixelPosition
-nodata (Rnodata-
-nothinge (2.HrzProtocol.VoidH Rnothing*
-colori (2.HrzProtocol.ColorH Rcolor
-numberj (H RnumberB	
-payloadJJfgJghJhi"B
-HeatmapPickResult
-repr_id (RreprId
-value (Rvalue" 
-VectorPickResult5
+FloatValue
+value (Rvalue""
 
-feature_id (2.HrzProtocol.FeatureIdR	featureIdF
-feature_anchor (2.HrzProtocol.GeographicPositionRfeatureAnchor
-ids (Rids3
-values (2.HrzProtocol.AttributeValueRvalues:
-heatmaps (2.HrzProtocol.HeatmapPickResultRheatmapsJJ"¤
-ThreeDTilesPickResult5
+Int64Value
+value (Rvalue"#
+UInt64Value
+value (Rvalue""
 
-feature_id	 (2.HrzProtocol.FeatureIdR	featureId.
-position (2.HrzProtocol.Vec3dRposition
-tile_url (	RtileUrl
-names (	Rnames3
-values (2.HrzProtocol.AttributeValueRvalues,
-data_texture_value (RdataTextureValueJJJ"H
-SingleModelPickingResult,
-data_texture_value (RdataTextureValue"û
-PickLayerResult(
-layer (2.HrzProtocol.LayerRlayer7
-rastere (2.HrzProtocol.RasterPickResultH Rraster7
-vectorf (2.HrzProtocol.VectorPickResultH Rvector=
-modelg (2%.HrzProtocol.SingleModelPickingResultH RmodelF
-three_d_tileh (2".HrzProtocol.ThreeDTilesPickResultH R
-threeDTile:
-editable_shapei (2.HrzProtocol.VoidH ReditableShapeB	
-payload"‚
-PickResults;
-position (2.HrzProtocol.GeographicPositionRposition6
-results (2.HrzProtocol.PickLayerResultRresultsBHøbproto3
-Ø
-hrz_input.protoHrzProtocol"¢
-EventC
-window_closed (2.HrzProtocol.Event.NoPayloadH RwindowClosedK
-window_resized (2".HrzProtocol.Event.WindowSizeEventH RwindowResizedA
-	character (2!.HrzProtocol.Event.CharacterEventH R	character=
-key_down (2 .HrzProtocol.Event.KeyboardEventH RkeyDown9
-key_up (2 .HrzProtocol.Event.KeyboardEventH RkeyUpB
+Int32Value
+value (Rvalue"#
+UInt32Value
+value (Rvalue"!
+	BoolValue
+value (Rvalue"#
+StringValue
+value (	Rvalue""
 
-mouse_move (2!.HrzProtocol.Event.MouseMoveEventH R	mouseMoveE
-mouse_wheel (2".HrzProtocol.Event.MouseWheelEventH R
-mouseWheelQ
-mouse_button_down (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonDownM
-mouse_button_up	 (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonUp`
-mouse_button_double_click
- (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonDoubleClick?
-mouse_leave (2.HrzProtocol.Event.NoPayloadH R
-mouseLeave@
-touch_start (2.HrzProtocol.Event.TouchEventH R
-touchStart<
-	touch_end (2.HrzProtocol.Event.TouchEventH RtouchEnd>
-
-touch_move (2.HrzProtocol.Event.TouchEventH R	touchMoveB
-touch_cancel (2.HrzProtocol.Event.TouchEventH RtouchCancel<
-CharacterEvent
-char (Rchar
-repeat (Rrepeat3
-KeyboardEvent"
-key (2.HrzProtocol.KeyRkeyL
-MouseMoveEvent
-x (Rx
-y (Ry
-dx (Rdx
-dy (RdyC
-MouseWheelEvent
-x (Rx
-y (Ry
-wheel (Rwheel`
-MouseButtonEvent
-x (Rx
-y (Ry0
-button (2.HrzProtocol.MouseButtonRbutton8
-
-TouchEvent
-x (Rx
-y (Ry
-id (Rid?
-WindowSizeEvent
-width (Rwidth
-height (Rheight
-	NoPayloadB
-kind*Ê
-Key
-
-K_NONE 
-K_ESCAPE
-K_F1
-K_F2
-K_F3
-K_F4
-K_F5
-K_F6
-K_F7
-K_F8	
-K_F9
-	
-K_F10	
-K_F11	
-K_F12
-K_0
-K_1
-K_2
-K_3
-K_4
-K_5
-K_6
-K_7
-K_8
-K_9
-K_A
-K_B
-K_C
-K_D
-K_E
-K_F
-K_G
-K_H
-K_I 
-K_J!
-K_K"
-K_L#
-K_M$
-K_N%
-K_O&
-K_P'
-K_Q(
-K_R)
-K_S*
-K_T+
-K_U,
-K_V-
-K_W.
-K_X/
-K_Y0
-K_Z1	
-K_TAB2
-
-K_CAPSLOCK3
-K_SHIFT4
-
-K_CTRL5	
-K_ALT6
-K_SPACE7
-K_BACKSPACE8
-K_ENTER9
-K_UP:
-
-K_DOWN;
-
-K_LEFT<
-K_RIGHT=
-K_INSERT>
-K_DELETE?
-
-K_HOME@	
-K_ENDA
-	K_PAGE_UPB
-K_PAGE_DOWNC*7
-MouseButton
-MB_LEFT 
-	MB_MIDDLE
-MB_RIGHTBHøbproto3
-ì0
-hrz_viewer.protoHrzProtocolhrz_types.protohrz_picking.protohrz_wrappers.protohrz_layers.protohrz_input.proto"y
-FeatureReference.
-layer (2.HrzProtocol.LayerHandleRlayer5
-
-feature_id (2.HrzProtocol.FeatureIdR	featureId"N
-FeatureReferences9
-features (2.HrzProtocol.FeatureReferenceRfeatures"`
-
-KeyBinding"
-key (2.HrzProtocol.KeyRkey.
-action (2.HrzProtocol.KeyActionRaction"M
-KeyInteractionBindings3
-bindings (2.HrzProtocol.KeyBindingRbindings"ß
-
-ViewerOptions!
-worker_count (RworkerCount8
-run_actors_on_main_thread (RrunActorsOnMainThread(
-log_filter_level (RlogFilterLevel
-
-user_agent (	R	userAgentA
-graphics_level (2.HrzProtocol.GraphicsLevelRgraphicsLevelf
-graphics_settings_overrides (2&.HrzProtocol.GraphicsSettingsOverridesRgraphicsSettingsOverrides!
-force_render (RforceRender9
-force_flat_overlay_render (RforceFlatOverlayRender4
-disable_events_capture (RdisableEventsCapture1
-internal_integration	 (RinternalIntegrationF
-key_bindings
- (2#.HrzProtocol.KeyInteractionBindingsRkeyBindingsD
-raster_provider_tile_cache_size (RrasterProviderTileCacheSize1
-blob_memory_pool_size (RblobMemoryPoolSize/
-max_wasm_memory_size (RmaxWasmMemorySizeB
-use_system_allocator_for_blobs (RuseSystemAllocatorForBlobs1
-max_video_memory_size (RmaxVideoMemorySize3
-native_http_cache_size (RnativeHttpCacheSize0
-native_http_referrer (	RnativeHttpReferrer'
-disable_terrain (RdisableTerrain2
-disable_flat_overlays (RdisableFlatOverlays.
-show_loading_screen (RshowLoadingScreenY
-loading_screen_background_color (2.HrzProtocol.ColorRloadingScreenBackgroundColor8
-force_shader_compilation (RforceShaderCompilation,
-device_pixel_ratio (RdevicePixelRatioJJJJ"Ù
-GraphicsSettingsOverrides,
-shadows_enabled (H RshadowsEnabledˆ7
-shadows_cascade_count (HRshadowsCascadeCountˆ2
-atmosphere_enabled (HRatmosphereEnabledˆ;
-flat_overlay_resolution (HRflatOverlayResolutionˆ@
-flat_overlay_cascade_count (HRflatOverlayCascadeCountˆM
-!ui_elements_depth_peeling_enabled (HRuiElementsDepthPeelingEnabledˆ>
-imagery_merge_group_count (HRimageryMergeGroupCountˆ/
-raster_atlas_size (HRrasterAtlasSizeˆ[
-(raster_atlas_texture_compression_enabled	 (HR$rasterAtlasTextureCompressionEnabledˆB
-_shadows_enabledB
-_shadows_cascade_countB
-_atmosphere_enabledB
-_flat_overlay_resolutionB
-_flat_overlay_cascade_countB$
-"_ui_elements_depth_peeling_enabledB
-_imagery_merge_group_countB
-_raster_atlas_sizeB+
-)_raster_atlas_texture_compression_enabled"œ
-GraphicsSettings'
-shadows_enabled (RshadowsEnabled2
-shadows_cascade_count (RshadowsCascadeCount-
-atmosphere_enabled (RatmosphereEnabled6
-flat_overlay_resolution (RflatOverlayResolution;
-flat_overlay_cascade_count (RflatOverlayCascadeCountH
-!ui_elements_depth_peeling_enabled (RuiElementsDepthPeelingEnabled9
-imagery_merge_group_count (RimageryMergeGroupCount*
-raster_atlas_size (RrasterAtlasSizeV
-(raster_atlas_texture_compression_enabled	 (R$rasterAtlasTextureCompressionEnabled"¿
-ViewerConfiguration1
-blob_memory_pool_size (RblobMemoryPoolSize1
-max_video_memory_size (RmaxVideoMemorySize/
-max_wasm_memory_size (RmaxWasmMemorySizeE
-graphics_profile (2.HrzProtocol.GraphicsLevelRgraphicsProfileJ
-graphics_settings (2.HrzProtocol.GraphicsSettingsRgraphicsSettings"
-PickRequest+
-coords (2.HrzProtocol.Vec2uiRcoordsC
-included_rasters (2.HrzProtocol.LayerHandleRincludedRasters"f
-PickRequestResult 
-has_a_ticket (R
-hasATicket/
-ticket (2.HrzProtocol.PickTicketRticket"n
-PickAreaRequestResult 
-has_a_ticket (R
-hasATicket3
-ticket (2.HrzProtocol.PickAreaTicketRticket"”
-RasterDataFetchRequest;
-position (2.HrzProtocol.GeographicPositionRposition=
-raster_layers (2.HrzProtocol.LayerHandleRrasterLayers"/
-RasterDataFetchTicket
-opaque (Ropaque"u
-RasterDataFetchResult 
-has_a_ticket (R
-hasATicket:
-ticket (2".HrzProtocol.RasterDataFetchTicketRticket"³
-MouseHoverConfiguration)
-enable_highlight (RenableHighlight
-enable_info (R
-enableInfo*
-highlight_rate_ms (RhighlightRateMs 
-info_rate_ms (R
-infoRateMs":
-EventsStream*
-events (2.HrzProtocol.EventRevents*°
-ViewerInitStatus
-INIT_SUCCESS 
-FRAMEBUFFER_CREATION_ERROR'
-#RENDERING_API_MISSING_FEATURE_ERROR(
-$RENDERING_API_CONTEXT_CREATION_ERROR
-GRAPHICS_BACKEND_INIT_ERROR
-ALREADY_INITIALIZED%
-!BROWSER_FEATURES_NO_SHARED_MEMORY
-BROWSER_FEATURES_NO_ATOMICS
-NOT_ENOUGH_MEMORY*¾
-	KeyAction
-RESET_NORTH 
-TOGGLE_DEV_UI
-MOVE_DEV_UI
-DESELECT_ALL
-EDITOR_APPEND
-EDITOR_SELECT 
-EDITOR_DELETE_SELECTED_POINT
-TOGGLE_MONITORING
-MOD_KEY*l
-GraphicsLevel
-GraphicsLevelAuto 
-GraphicsLevelLow
-GraphicsLevelMedium
-GraphicsLevelHigh2Ù
-ViewerServiceG
-GetConfiguration.HrzProtocol.Void .HrzProtocol.ViewerConfiguration<
-ScheduleFrameCapture.HrzProtocol.Void.HrzProtocol.VoidF
-
-PickScreen.HrzProtocol.PickRequest.HrzProtocol.PickRequestResultH
-PickScreenArea.HrzProtocol.Bboxi".HrzProtocol.PickAreaRequestResultZ
-FetchRasterData#.HrzProtocol.RasterDataFetchRequest".HrzProtocol.RasterDataFetchResultN
-ConfigureMouseHover$.HrzProtocol.MouseHoverConfiguration.HrzProtocol.VoidJ
-SelectFeatures.HrzProtocol.FeatureReferences.HrzProtocol.UInt64ValueL
-DeselectFeatures.HrzProtocol.FeatureReferences.HrzProtocol.UInt64Value;
-DeselectAllFeatures.HrzProtocol.Void.HrzProtocol.Void6
-	IsWorking.HrzProtocol.Void.HrzProtocol.BoolValueG
-SetUserInteractionsEnabled.HrzProtocol.BoolValue.HrzProtocol.Void:
-
-SendEvents.HrzProtocol.EventsStream.HrzProtocol.Void8
-ToggleDevUi.HrzProtocol.Void.HrzProtocol.BoolValue9
-MoveDevUiToCursor.HrzProtocol.Void.HrzProtocol.Void6
-ClearHttpCache.HrzProtocol.Void.HrzProtocol.VoidB
-SetAttributionEnabled.HrzProtocol.BoolValue.HrzProtocol.VoidBHøbproto3
+BytesValue
+value (RvalueBHøbproto3
 ›‡
 hrz_scene_model.protoHrzProtocolhrz_types.protohrz_layers.protohrz_wrappers.proto"%
 SceneViewBitset
@@ -1867,40 +1537,6 @@ SKY_STATIC*x
 Add.HrzProtocol.SceneModelSet.HrzProtocol.UInt32Value5
 Remove.HrzProtocol.Path.HrzProtocol.UInt32Value4
 Count.HrzProtocol.Path.HrzProtocol.UInt32ValueBHøbproto3
- 
-hrz_shape_editor.protoHrzProtocolhrz_types.protohrz_layers.proto"@
-ShapeSelection.
-layer (2.HrzProtocol.LayerHandleRlayer")
-ControlPointIndex
-value (Rvalue"g
-ControlPointSelectionN
-control_point_index (2.HrzProtocol.ControlPointIndexRcontrolPointIndex"A
-ModeSelection0
-mode (2.HrzProtocol.ShapeEditorModeRmode"°
-ShapeInformation
-length (Rlength)
-polyline_lengths (RpolylineLengths%
-segment_counts (RsegmentCounts'
-segment_lengths (RsegmentLengths)
-segment_bearings (RsegmentBearings%
-segment_angles (RsegmentAngles
-area (Rarea#
-polygon_areas (RpolygonAreas*6
-ShapeEditorMode
-SELECTION_MODE 
-APPEND_MODE2Â
-ShapeEditorServiceB
-GetSelectedShape.HrzProtocol.Void.HrzProtocol.ShapeSelection=
-SelectShape.HrzProtocol.ShapeSelection.HrzProtocol.Void:
-LockShapeSelection.HrzProtocol.Void.HrzProtocol.Void<
-UnlockShapeSelection.HrzProtocol.Void.HrzProtocol.VoidP
-GetSelectedControlPoint.HrzProtocol.Void".HrzProtocol.ControlPointSelectionK
-SelectControlPoint".HrzProtocol.ControlPointSelection.HrzProtocol.Void?
-GetCurrentMode.HrzProtocol.Void.HrzProtocol.ModeSelection;
-
-SelectMode.HrzProtocol.ModeSelection.HrzProtocol.VoidN
-GetShapeInformation.HrzProtocol.LayerHandle.HrzProtocol.ShapeInformationB
-DeleteSelectedControlPoint.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3
 ó5
 hrz_camera.protoHrzProtocolhrz_types.protohrz_scene_model.proto"‹
 PositionalViewpoint;
@@ -2051,6 +1687,171 @@ $CameraContinuousMovementInterruption)
 EndContinuousMovement.HrzProtocol.CameraMovement.HrzProtocol.Void>
 
 ResetNorth.HrzProtocol.ResetNorthParams.HrzProtocol.VoidBHøbproto3
+¶	
+hrz_client_data.protoHrzProtocolhrz_types.proto"
+ClientFeatureGeometry3
+type (2.HrzProtocol.VectorGeometryTypeRtype
+coords (Rcoords)
+linestring_sizes (RlinestringSizes"—
+ClientFeature>
+geometry (2".HrzProtocol.ClientFeatureGeometryRgeometryF
+attribute_values (2.HrzProtocol.AttributeValueRattributeValues"£
+VectorDataRequestResponse
+ticket (Rticket
+error (Rerror6
+features (2.HrzProtocol.ClientFeatureRfeatures 
+attribution (	Rattribution"¼
+VectorDataInvalidation/
+vector_data_layer_id (RvectorDataLayerId7
+vector_data_source_index (RvectorDataSourceIndex:
+tile_coordse (2.HrzProtocol.TileCoordsH R
+tileCoords:
+feature_idsf (2.HrzProtocol.FeatureIdsH R
+featureIds3
+
+everythingg (2.HrzProtocol.VoidH R
+everythingB
+	selection"_
+AssetRequestResponse
+ticket (Rticket
+data (Rdata
+	mime_type (	RmimeType2ý
+ClientDataServiceN
+ProvideVectorData&.HrzProtocol.VectorDataRequestResponse.HrzProtocol.VoidN
+InvalidateVectorData#.HrzProtocol.VectorDataInvalidation.HrzProtocol.VoidH
+ProvideAssetData!.HrzProtocol.AssetRequestResponse.HrzProtocol.VoidBHøbproto3
+Ø
+hrz_input.protoHrzProtocol"¢
+EventC
+window_closed (2.HrzProtocol.Event.NoPayloadH RwindowClosedK
+window_resized (2".HrzProtocol.Event.WindowSizeEventH RwindowResizedA
+	character (2!.HrzProtocol.Event.CharacterEventH R	character=
+key_down (2 .HrzProtocol.Event.KeyboardEventH RkeyDown9
+key_up (2 .HrzProtocol.Event.KeyboardEventH RkeyUpB
+
+mouse_move (2!.HrzProtocol.Event.MouseMoveEventH R	mouseMoveE
+mouse_wheel (2".HrzProtocol.Event.MouseWheelEventH R
+mouseWheelQ
+mouse_button_down (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonDownM
+mouse_button_up	 (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonUp`
+mouse_button_double_click
+ (2#.HrzProtocol.Event.MouseButtonEventH RmouseButtonDoubleClick?
+mouse_leave (2.HrzProtocol.Event.NoPayloadH R
+mouseLeave@
+touch_start (2.HrzProtocol.Event.TouchEventH R
+touchStart<
+	touch_end (2.HrzProtocol.Event.TouchEventH RtouchEnd>
+
+touch_move (2.HrzProtocol.Event.TouchEventH R	touchMoveB
+touch_cancel (2.HrzProtocol.Event.TouchEventH RtouchCancel<
+CharacterEvent
+char (Rchar
+repeat (Rrepeat3
+KeyboardEvent"
+key (2.HrzProtocol.KeyRkeyL
+MouseMoveEvent
+x (Rx
+y (Ry
+dx (Rdx
+dy (RdyC
+MouseWheelEvent
+x (Rx
+y (Ry
+wheel (Rwheel`
+MouseButtonEvent
+x (Rx
+y (Ry0
+button (2.HrzProtocol.MouseButtonRbutton8
+
+TouchEvent
+x (Rx
+y (Ry
+id (Rid?
+WindowSizeEvent
+width (Rwidth
+height (Rheight
+	NoPayloadB
+kind*Ê
+Key
+
+K_NONE 
+K_ESCAPE
+K_F1
+K_F2
+K_F3
+K_F4
+K_F5
+K_F6
+K_F7
+K_F8	
+K_F9
+	
+K_F10	
+K_F11	
+K_F12
+K_0
+K_1
+K_2
+K_3
+K_4
+K_5
+K_6
+K_7
+K_8
+K_9
+K_A
+K_B
+K_C
+K_D
+K_E
+K_F
+K_G
+K_H
+K_I 
+K_J!
+K_K"
+K_L#
+K_M$
+K_N%
+K_O&
+K_P'
+K_Q(
+K_R)
+K_S*
+K_T+
+K_U,
+K_V-
+K_W.
+K_X/
+K_Y0
+K_Z1	
+K_TAB2
+
+K_CAPSLOCK3
+K_SHIFT4
+
+K_CTRL5	
+K_ALT6
+K_SPACE7
+K_BACKSPACE8
+K_ENTER9
+K_UP:
+
+K_DOWN;
+
+K_LEFT<
+K_RIGHT=
+K_INSERT>
+K_DELETE?
+
+K_HOME@	
+K_ENDA
+	K_PAGE_UPB
+K_PAGE_DOWNC*7
+MouseButton
+MB_LEFT 
+	MB_MIDDLE
+MB_RIGHTBHøbproto3
 Á
 hrz_mapbox.protoHrzProtocolhrz_layers.protohrz_types.protohrz_camera.proto"¬
 MapboxTranslationParams
@@ -2084,6 +1885,238 @@ style_json (	R	styleJson>
 MAPBOX_DOWNLOAD_FAILURE2m
 MapboxService\
 TranslateScene$.HrzProtocol.MapboxTranslationParams$.HrzProtocol.MapboxTranslationTicketBHøbproto3
+÷
+hrz_picking.protoHrzProtocolhrz_types.protohrz_layers.proto"$
+
+PickTicket
+opaque (Ropaque"(
+PickAreaTicket
+opaque (Ropaque"÷
+RasterPickResult;
+image_format (2.HrzProtocol.ImageFormatRimageFormat;
+raster_position (2.HrzProtocol.Vec2dRrasterPosition9
+pixel_position (2.HrzProtocol.Vec2dRpixelPosition
+nodata (Rnodata-
+nothinge (2.HrzProtocol.VoidH Rnothing*
+colori (2.HrzProtocol.ColorH Rcolor
+numberj (H RnumberB	
+payloadJJfgJghJhi"B
+HeatmapPickResult
+repr_id (RreprId
+value (Rvalue" 
+VectorPickResult5
+
+feature_id (2.HrzProtocol.FeatureIdR	featureIdF
+feature_anchor (2.HrzProtocol.GeographicPositionRfeatureAnchor
+ids (Rids3
+values (2.HrzProtocol.AttributeValueRvalues:
+heatmaps (2.HrzProtocol.HeatmapPickResultRheatmapsJJ"¤
+ThreeDTilesPickResult5
+
+feature_id	 (2.HrzProtocol.FeatureIdR	featureId.
+position (2.HrzProtocol.Vec3dRposition
+tile_url (	RtileUrl
+names (	Rnames3
+values (2.HrzProtocol.AttributeValueRvalues,
+data_texture_value (RdataTextureValueJJJ"H
+SingleModelPickingResult,
+data_texture_value (RdataTextureValue"û
+PickLayerResult(
+layer (2.HrzProtocol.LayerRlayer7
+rastere (2.HrzProtocol.RasterPickResultH Rraster7
+vectorf (2.HrzProtocol.VectorPickResultH Rvector=
+modelg (2%.HrzProtocol.SingleModelPickingResultH RmodelF
+three_d_tileh (2".HrzProtocol.ThreeDTilesPickResultH R
+threeDTile:
+editable_shapei (2.HrzProtocol.VoidH ReditableShapeB	
+payload"‚
+PickResults;
+position (2.HrzProtocol.GeographicPositionRposition6
+results (2.HrzProtocol.PickLayerResultRresultsBHøbproto3
+ 
+hrz_shape_editor.protoHrzProtocolhrz_types.protohrz_layers.proto"@
+ShapeSelection.
+layer (2.HrzProtocol.LayerHandleRlayer")
+ControlPointIndex
+value (Rvalue"g
+ControlPointSelectionN
+control_point_index (2.HrzProtocol.ControlPointIndexRcontrolPointIndex"A
+ModeSelection0
+mode (2.HrzProtocol.ShapeEditorModeRmode"°
+ShapeInformation
+length (Rlength)
+polyline_lengths (RpolylineLengths%
+segment_counts (RsegmentCounts'
+segment_lengths (RsegmentLengths)
+segment_bearings (RsegmentBearings%
+segment_angles (RsegmentAngles
+area (Rarea#
+polygon_areas (RpolygonAreas*6
+ShapeEditorMode
+SELECTION_MODE 
+APPEND_MODE2Â
+ShapeEditorServiceB
+GetSelectedShape.HrzProtocol.Void.HrzProtocol.ShapeSelection=
+SelectShape.HrzProtocol.ShapeSelection.HrzProtocol.Void:
+LockShapeSelection.HrzProtocol.Void.HrzProtocol.Void<
+UnlockShapeSelection.HrzProtocol.Void.HrzProtocol.VoidP
+GetSelectedControlPoint.HrzProtocol.Void".HrzProtocol.ControlPointSelectionK
+SelectControlPoint".HrzProtocol.ControlPointSelection.HrzProtocol.Void?
+GetCurrentMode.HrzProtocol.Void.HrzProtocol.ModeSelection;
+
+SelectMode.HrzProtocol.ModeSelection.HrzProtocol.VoidN
+GetShapeInformation.HrzProtocol.LayerHandle.HrzProtocol.ShapeInformationB
+DeleteSelectedControlPoint.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3
+ì0
+hrz_viewer.protoHrzProtocolhrz_types.protohrz_picking.protohrz_wrappers.protohrz_layers.protohrz_input.proto"y
+FeatureReference.
+layer (2.HrzProtocol.LayerHandleRlayer5
+
+feature_id (2.HrzProtocol.FeatureIdR	featureId"N
+FeatureReferences9
+features (2.HrzProtocol.FeatureReferenceRfeatures"`
+
+KeyBinding"
+key (2.HrzProtocol.KeyRkey.
+action (2.HrzProtocol.KeyActionRaction"M
+KeyInteractionBindings3
+bindings (2.HrzProtocol.KeyBindingRbindings"ß
+
+ViewerOptions!
+worker_count (RworkerCount8
+run_actors_on_main_thread (RrunActorsOnMainThread(
+log_filter_level (RlogFilterLevel
+
+user_agent (	R	userAgentA
+graphics_level (2.HrzProtocol.GraphicsLevelRgraphicsLevelf
+graphics_settings_overrides (2&.HrzProtocol.GraphicsSettingsOverridesRgraphicsSettingsOverrides!
+force_render (RforceRender9
+force_flat_overlay_render (RforceFlatOverlayRender4
+disable_events_capture (RdisableEventsCapture1
+internal_integration	 (RinternalIntegrationF
+key_bindings
+ (2#.HrzProtocol.KeyInteractionBindingsRkeyBindingsD
+raster_provider_tile_cache_size (RrasterProviderTileCacheSize1
+blob_memory_pool_size (RblobMemoryPoolSize/
+max_wasm_memory_size (RmaxWasmMemorySizeB
+use_system_allocator_for_blobs (RuseSystemAllocatorForBlobs1
+max_video_memory_size (RmaxVideoMemorySize3
+native_http_cache_size (RnativeHttpCacheSize0
+native_http_referrer (	RnativeHttpReferrer'
+disable_terrain (RdisableTerrain2
+disable_flat_overlays (RdisableFlatOverlays.
+show_loading_screen (RshowLoadingScreenY
+loading_screen_background_color (2.HrzProtocol.ColorRloadingScreenBackgroundColor8
+force_shader_compilation (RforceShaderCompilation,
+device_pixel_ratio (RdevicePixelRatioJJJJ"Ù
+GraphicsSettingsOverrides,
+shadows_enabled (H RshadowsEnabledˆ7
+shadows_cascade_count (HRshadowsCascadeCountˆ2
+atmosphere_enabled (HRatmosphereEnabledˆ;
+flat_overlay_resolution (HRflatOverlayResolutionˆ@
+flat_overlay_cascade_count (HRflatOverlayCascadeCountˆM
+!ui_elements_depth_peeling_enabled (HRuiElementsDepthPeelingEnabledˆ>
+imagery_merge_group_count (HRimageryMergeGroupCountˆ/
+raster_atlas_size (HRrasterAtlasSizeˆ[
+(raster_atlas_texture_compression_enabled	 (HR$rasterAtlasTextureCompressionEnabledˆB
+_shadows_enabledB
+_shadows_cascade_countB
+_atmosphere_enabledB
+_flat_overlay_resolutionB
+_flat_overlay_cascade_countB$
+"_ui_elements_depth_peeling_enabledB
+_imagery_merge_group_countB
+_raster_atlas_sizeB+
+)_raster_atlas_texture_compression_enabled"œ
+GraphicsSettings'
+shadows_enabled (RshadowsEnabled2
+shadows_cascade_count (RshadowsCascadeCount-
+atmosphere_enabled (RatmosphereEnabled6
+flat_overlay_resolution (RflatOverlayResolution;
+flat_overlay_cascade_count (RflatOverlayCascadeCountH
+!ui_elements_depth_peeling_enabled (RuiElementsDepthPeelingEnabled9
+imagery_merge_group_count (RimageryMergeGroupCount*
+raster_atlas_size (RrasterAtlasSizeV
+(raster_atlas_texture_compression_enabled	 (R$rasterAtlasTextureCompressionEnabled"¿
+ViewerConfiguration1
+blob_memory_pool_size (RblobMemoryPoolSize1
+max_video_memory_size (RmaxVideoMemorySize/
+max_wasm_memory_size (RmaxWasmMemorySizeE
+graphics_profile (2.HrzProtocol.GraphicsLevelRgraphicsProfileJ
+graphics_settings (2.HrzProtocol.GraphicsSettingsRgraphicsSettings"
+PickRequest+
+coords (2.HrzProtocol.Vec2uiRcoordsC
+included_rasters (2.HrzProtocol.LayerHandleRincludedRasters"f
+PickRequestResult 
+has_a_ticket (R
+hasATicket/
+ticket (2.HrzProtocol.PickTicketRticket"n
+PickAreaRequestResult 
+has_a_ticket (R
+hasATicket3
+ticket (2.HrzProtocol.PickAreaTicketRticket"”
+RasterDataFetchRequest;
+position (2.HrzProtocol.GeographicPositionRposition=
+raster_layers (2.HrzProtocol.LayerHandleRrasterLayers"/
+RasterDataFetchTicket
+opaque (Ropaque"u
+RasterDataFetchResult 
+has_a_ticket (R
+hasATicket:
+ticket (2".HrzProtocol.RasterDataFetchTicketRticket"³
+MouseHoverConfiguration)
+enable_highlight (RenableHighlight
+enable_info (R
+enableInfo*
+highlight_rate_ms (RhighlightRateMs 
+info_rate_ms (R
+infoRateMs":
+EventsStream*
+events (2.HrzProtocol.EventRevents*°
+ViewerInitStatus
+INIT_SUCCESS 
+FRAMEBUFFER_CREATION_ERROR'
+#RENDERING_API_MISSING_FEATURE_ERROR(
+$RENDERING_API_CONTEXT_CREATION_ERROR
+GRAPHICS_BACKEND_INIT_ERROR
+ALREADY_INITIALIZED%
+!BROWSER_FEATURES_NO_SHARED_MEMORY
+BROWSER_FEATURES_NO_ATOMICS
+NOT_ENOUGH_MEMORY*¾
+	KeyAction
+RESET_NORTH 
+TOGGLE_DEV_UI
+MOVE_DEV_UI
+DESELECT_ALL
+EDITOR_APPEND
+EDITOR_SELECT 
+EDITOR_DELETE_SELECTED_POINT
+TOGGLE_MONITORING
+MOD_KEY*l
+GraphicsLevel
+GraphicsLevelAuto 
+GraphicsLevelLow
+GraphicsLevelMedium
+GraphicsLevelHigh2Ù
+ViewerServiceG
+GetConfiguration.HrzProtocol.Void .HrzProtocol.ViewerConfiguration<
+ScheduleFrameCapture.HrzProtocol.Void.HrzProtocol.VoidF
+
+PickScreen.HrzProtocol.PickRequest.HrzProtocol.PickRequestResultH
+PickScreenArea.HrzProtocol.Bboxi".HrzProtocol.PickAreaRequestResultZ
+FetchRasterData#.HrzProtocol.RasterDataFetchRequest".HrzProtocol.RasterDataFetchResultN
+ConfigureMouseHover$.HrzProtocol.MouseHoverConfiguration.HrzProtocol.VoidJ
+SelectFeatures.HrzProtocol.FeatureReferences.HrzProtocol.UInt64ValueL
+DeselectFeatures.HrzProtocol.FeatureReferences.HrzProtocol.UInt64Value;
+DeselectAllFeatures.HrzProtocol.Void.HrzProtocol.Void6
+	IsWorking.HrzProtocol.Void.HrzProtocol.BoolValueG
+SetUserInteractionsEnabled.HrzProtocol.BoolValue.HrzProtocol.Void:
+
+SendEvents.HrzProtocol.EventsStream.HrzProtocol.Void8
+ToggleDevUi.HrzProtocol.Void.HrzProtocol.BoolValue9
+MoveDevUiToCursor.HrzProtocol.Void.HrzProtocol.Void6
+ClearHttpCache.HrzProtocol.Void.HrzProtocol.VoidB
+SetAttributionEnabled.HrzProtocol.BoolValue.HrzProtocol.VoidBHøbproto3
 ™'
 hrz_messages.protoHrzProtocolhrz_types.protohrz_picking.protohrz_layers.protohrz_shape_editor.protohrz_viewer.protohrz_mapbox.protohrz_camera.proto"x
 PickResultMessage/
@@ -2207,39 +2240,16 @@ queue_size (2.HrzProtocol.QueueSizeR	queueSize";
 MessageQueueServiceL
 DequeueMessages.HrzProtocol.DequeueParams.HrzProtocol.DequeuedMessages9
 GetQueueSize.HrzProtocol.Void.HrzProtocol.QueueSizeBHøbproto3
-¶	
-hrz_client_data.protoHrzProtocolhrz_types.proto"
-ClientFeatureGeometry3
-type (2.HrzProtocol.VectorGeometryTypeRtype
-coords (Rcoords)
-linestring_sizes (RlinestringSizes"—
-ClientFeature>
-geometry (2".HrzProtocol.ClientFeatureGeometryRgeometryF
-attribute_values (2.HrzProtocol.AttributeValueRattributeValues"£
-VectorDataRequestResponse
-ticket (Rticket
-error (Rerror6
-features (2.HrzProtocol.ClientFeatureRfeatures 
-attribution (	Rattribution"¼
-VectorDataInvalidation/
-vector_data_layer_id (RvectorDataLayerId7
-vector_data_source_index (RvectorDataSourceIndex:
-tile_coordse (2.HrzProtocol.TileCoordsH R
-tileCoords:
-feature_idsf (2.HrzProtocol.FeatureIdsH R
-featureIds3
-
-everythingg (2.HrzProtocol.VoidH R
-everythingB
-	selection"_
-AssetRequestResponse
-ticket (Rticket
-data (Rdata
-	mime_type (	RmimeType2ý
-ClientDataServiceN
-ProvideVectorData&.HrzProtocol.VectorDataRequestResponse.HrzProtocol.VoidN
-InvalidateVectorData#.HrzProtocol.VectorDataInvalidation.HrzProtocol.VoidH
-ProvideAssetData!.HrzProtocol.AssetRequestResponse.HrzProtocol.VoidBHøbproto3
+Æ
+hrz_monitoring.protoHrzProtocolhrz_types.protohrz_wrappers.proto2ì
+MonitoringServiceI
+SetMonitoringServerAddress.HrzProtocol.StringValue.HrzProtocol.VoidF
+ConnectToMonitoringServer.HrzProtocol.BoolValue.HrzProtocol.VoidE
+EnableMonitoringMessages.HrzProtocol.BoolValue.HrzProtocol.Void<
+EnableProfiling.HrzProtocol.BoolValue.HrzProtocol.Void:
+EnableMetrics.HrzProtocol.BoolValue.HrzProtocol.Void@
+MakeGpuResourcesSnapshot.HrzProtocol.Void.HrzProtocol.VoidA
+MakeBlobAllocatorSnapshot.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3
 þ
 hrz_scene_dump.protoHrzProtocolhrz_scene_model.protohrz_camera.protohrz_layers.proto"†
 SceneViewSettingsDump1
@@ -2291,13 +2301,3 @@ scene_name (	R	sceneNameJ"±
 SceneDumpServiceB
 	DumpScene.HrzProtocol.SceneDumpRequest.HrzProtocol.SceneDumpB
 LoadDump.HrzProtocol.SceneLoadRequest.HrzProtocol.LayerArrayBHøbproto3
-Æ
-hrz_monitoring.protoHrzProtocolhrz_types.protohrz_wrappers.proto2ì
-MonitoringServiceI
-SetMonitoringServerAddress.HrzProtocol.StringValue.HrzProtocol.VoidF
-ConnectToMonitoringServer.HrzProtocol.BoolValue.HrzProtocol.VoidE
-EnableMonitoringMessages.HrzProtocol.BoolValue.HrzProtocol.Void<
-EnableProfiling.HrzProtocol.BoolValue.HrzProtocol.Void:
-EnableMetrics.HrzProtocol.BoolValue.HrzProtocol.Void@
-MakeGpuResourcesSnapshot.HrzProtocol.Void.HrzProtocol.VoidA
-MakeBlobAllocatorSnapshot.HrzProtocol.Void.HrzProtocol.VoidBHøbproto3

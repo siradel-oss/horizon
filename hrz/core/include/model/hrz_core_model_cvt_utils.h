@@ -4,7 +4,6 @@
 
 #include <hrz_common_model.h>
 #include <hrz_fnd_log.h>
-#include <hrz_jobs_protocol.h>
 
 #include <mycelium_backend.h>
 

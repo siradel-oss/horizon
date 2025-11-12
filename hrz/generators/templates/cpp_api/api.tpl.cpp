@@ -1,5 +1,7 @@
 #include "hrz_api.h"
 
+#include <hrz_protocol_all.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //        THIS FILE HAS BEEN GENERATED FROM THE SPECS, DO NOT EDIT!!!         //

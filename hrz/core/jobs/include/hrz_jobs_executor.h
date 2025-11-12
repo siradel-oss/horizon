@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hrz_jobs_context.h"
-#include "hrz_jobs_protocol.h"
+#include "hrz_jobs_declarations.h"
 
 #include <hrz_common_job_result.h>
 #include <hrz_common_monitoring_defs.h>
@@ -41,7 +41,7 @@ namespace executor
 {
 hrz::JobResult run_job(
     uint32_t job_id,
-    hrz_jobs_proto::JobType job_type,
+    hrz_jobs::JobType job_type,
     const std::any& params,
     std::any& response,
     const JobContext& context);

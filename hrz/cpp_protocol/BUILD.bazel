@@ -3,28 +3,17 @@ load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg")
 
-filegroup(
-    name = "generated_hdrs",
-    srcs = list_proto_files("", ".pb.h"),
-)
-
-filegroup(
-    name = "generated_srcs",
-    srcs = list_proto_files("", ".pb.cc"),
-)
-
 hrz_genrule(
     name = "generate_proto",
     srcs = [
         "//hrz/proto:protos",
     ],
     outs =
-        list_proto_files("", ".pb.cc") +
-        list_proto_files("", ".pb.h"),
+        list_proto_files("hrz_", ".pb.cc") +
+        list_proto_files("hrz_", ".pb.h"),
     cmd = "$(location //third_party:protoc) -Ihrz/proto $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(@D) --hrz_out=$(@D)",
     tools = [
         "//hrz/cpp_protocol/protoc_plugin",
-        "//hrz/proto:protos",
         "//third_party:protoc",
     ],
 )
@@ -38,26 +27,28 @@ hrz_genrule(
     outs = [
         "hrz_protocol_all.h",
         "hrz_protocol_path_builder.h",
+        "hrz_protocol_path_builder_common.h",
         "hrz_services.h",
-    ],
+    ] + list_proto_files("hrz_protocol_", "_path_builder.h"),
     cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_protocol $(@D)",
     tools = [
         "//hrz/generators:generator",
     ],
 )
 
+PUBLIC_HEADERS = [
+    "hrz_protocol_all.h",
+    "hrz_protocol_path_builder.h",
+    "hrz_protocol_path_builder_common.h",
+    "hrz_services.h",
+] + list_proto_files("hrz_", ".pb.h") + list_proto_files("hrz_protocol_", "_path_builder.h")
+
 cc_library(
     name = "hrz_cpp_protocol",
-    srcs = [
-        ":generated_hdrs",
-        ":generated_srcs",
-    ],
-    hdrs = [
-        ":generate_templates",
-    ],
+    srcs = list_proto_files("hrz_", ".pb.cc"),
+    hdrs = PUBLIC_HEADERS,
     includes = [
         ".",
-        "include",
     ],
     linkstatic = True,
     visibility = ["//visibility:public"],
@@ -74,10 +65,7 @@ make_dbg(
 pkg_tar_aggregate(
     name = "pkg",
     dirs = {
-        "include": [
-            ":generated_hdrs",
-            ":generate_templates",
-        ],
+        "include": PUBLIC_HEADERS,
         "lib_release": [":hrz_cpp_protocol"],
         "lib_debug": [":hrz_cpp_protocol_dbg"],
         "": [

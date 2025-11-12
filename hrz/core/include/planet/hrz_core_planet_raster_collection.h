@@ -506,10 +506,11 @@ public:
 
     bool work_views(SceneModel* model)
     {
-        hrz::SceneModelAccessor accessor(model);
-        hrz_proto::SceneSettingsPathBuilder<hrz::SceneModelAccessor> path(accessor);
-        auto scene_settings = path.get();
-        uint32_t new_scene_views = scene_settings.active_views().bits();
+        uint32_t new_scene_views =
+            hrz_proto::SceneSettingsPathBuilder<hrz::SceneModelAccessor>(model)
+                .active_views()
+                .bits()
+                .get();
 
         if (new_scene_views != _scene_views)
         {
@@ -521,23 +522,26 @@ public:
         return false;
     }
 
-    bool work_rasters(SceneModel* model, AssetsLoader* al, BlobAllocator* ba, JobScheduler* js)
+    bool work_rasters(
+        SceneModel* scene_model,
+        AssetsLoader* al,
+        BlobAllocator* ba,
+        JobScheduler* js)
     {
         bool rasters_have_changed = false;
 
         if (_scene_views_updated)
         {
-            rasters_have_changed |= work_views(model);
+            rasters_have_changed |= work_views(scene_model);
             _scene_views_updated = false;
         }
 
         for (auto& raster_id : _created_rasters)
         {
-            hrz::SceneModelAccessor accessor(model);
             hrz_proto::LayerHandle handle;
             handle.set_opaque(raster_id);
 
-            LayerPathBuilder builder(accessor, handle);
+            LayerPathBuilder builder(scene_model, handle);
             auto raster_model = builder.clone().raster().get();
 
             if (details::raster_model_is_complete(raster_model, Traits::LAYER_TYPE))
@@ -562,7 +566,7 @@ public:
         for (uint64_t raster_id : _destroyed_rasters)
         {
             hrz_proto::PathRoot root = Traits::make_path_root(raster_id);
-            scene_model::unregister_element(model, root);
+            scene_model::unregister_element(scene_model, root);
 
             remove_raster(raster_id, al, ba, js);
             rasters_have_changed = true;
@@ -573,13 +577,11 @@ public:
             uint64_t raster_id = update.layer_id;
             auto& path = update.path;
 
-            hrz::SceneModelAccessor accessor(model);
             hrz_proto::LayerHandle handle;
             handle.set_opaque(update.layer_id);
 
-            LayerPathBuilder builder(accessor, handle);
+            auto model = LayerPathBuilder(scene_model, handle).get();
 
-            auto model = builder.get();
             const auto& raster_model = model.raster();
 
             bool is_visible = model.visible();
@@ -743,9 +745,7 @@ public:
         hrz_proto::LayerHandle handle;
         handle.set_opaque(layer_id);
 
-        hrz::SceneModelAccessor accessor(model);
-        LayerPathBuilder builder(accessor, handle);
-        builder.set(default_layer_data);
+        LayerPathBuilder(model, handle).set(default_layer_data);
 
         _created_rasters.push_back(layer_id);
     }

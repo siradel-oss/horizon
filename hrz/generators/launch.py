@@ -7,14 +7,16 @@ import re
 import json
 
 from hrz.generators import protocol_parser
-from hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data
+from hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data, remove_prefix
 
 generators = {}
 
-def generator(name):
+def generator(name, parser = protocol_parser.parse):
     def generator_inner(func):
-        generators[name] = func
-        return func
+        def wrapper(manifest_file, *args, **kwargs):
+            return func(parser(manifest_file), *args, **kwargs)
+        generators[name] = wrapper
+        return wrapper
     return generator_inner
 
 @generator("cpp_protocol")
@@ -25,8 +27,17 @@ def cpp_protocol_generator(protocol, tpl_env, output_dir, extra):
     output_template(protocol, tpl, output_dir, "hrz_protocol_all.h")
 
     tpl_data = prepare_api_tpl_data(protocol)
-    tpl = tpl_env.get_template("cpp_protocol/path_builder.tpl.h")
+    tpl = tpl_env.get_template("cpp_protocol/path_builder_common.tpl.h")
+    output_template(tpl_data, tpl, output_dir, "hrz_protocol_path_builder_common.h")
+    tpl = tpl_env.get_template("cpp_protocol/path_builder_all.tpl.h")
     output_template(tpl_data, tpl, output_dir, "hrz_protocol_path_builder.h")
+
+    tpl = tpl_env.get_template("cpp_protocol/path_builder.tpl.h")
+    for f in tpl_data["protocol"]["files"]:
+        tpl_data["filename"] = f["name"]
+        tpl_data["dependencies"] = f["dependencies"]
+        f = remove_prefix(f["name"], "hrz_")
+        output_template(tpl_data, tpl, output_dir, f"hrz_protocol_{f}_path_builder.h")
 
 @generator("cpp_core")
 def cpp_core_generator(protocol, tpl_env, output_dir, extra):
@@ -35,10 +46,6 @@ def cpp_core_generator(protocol, tpl_env, output_dir, extra):
     output_template(protocol, tpl, output_dir, "src/hrz_core_rpc_dispatcher.cpp")
     tpl = tpl_env.get_template("cpp_core/dispatcher.tpl.h")
     output_template(protocol, tpl, output_dir, "include/hrz_core_rpc_dispatcher.h")
-    tpl = tpl_env.get_template("cpp_core/scene_path.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_path.h")
-    tpl = tpl_env.get_template("cpp_core/scene_path.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "src/hrz_core_scene_path.cpp")
     tpl = tpl_env.get_template("cpp_core/scene_model_accessor.tpl.h")
     output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_model_accessor.h")
     tpl = tpl_env.get_template("cpp_core/scene_model_accessor.tpl.cpp")
@@ -49,6 +56,20 @@ def cpp_core_generator(protocol, tpl_env, output_dir, extra):
     output_template(tpl_data, tpl, output_dir, "include/hrz_core_client_messages.h")
     tpl = tpl_env.get_template("cpp_core/style_enums.tpl.cpp")
     output_template(tpl_data, tpl, output_dir, "include/hrz_core_style_enums.cpp")
+
+    tpl = tpl_env.get_template("cpp_core/scene_path.tpl.cpp")
+    output_template(tpl_data, tpl, output_dir, "src/hrz_core_scene_path.cpp")
+    tpl = tpl_env.get_template("cpp_core/scene_path_all.tpl.h")
+    output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_path.h")
+    tpl = tpl_env.get_template("cpp_core/scene_path_common.tpl.h")
+    output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_path_common.h")
+
+    tpl = tpl_env.get_template("cpp_core/scene_path.tpl.h")
+    for f in tpl_data["protocol"]["files"]:
+        tpl_data["filename"] = f["name"]
+        tpl_data["dependencies"] = f["dependencies"]
+        f = remove_prefix(f["name"], "hrz_")
+        output_template(tpl_data, tpl, output_dir, f"include/hrz_core_{f}_scene_path.h")
 
 @generator("cpp_api")
 def cpp_api_generator(protocol, tpl_env, output_dir, extra):
@@ -65,9 +86,18 @@ def ts_api_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("ts_api/api.tpl.ts")
     output_template(tpl_data, tpl, output_dir, "hrz_api.ts")
 
-@generator("job_declarations")
+def parse_jobs_manifest(file_path):
+    jobs_json = json.loads(open(file_path, "r", encoding="utf-8").read())
+    jobs = []
+    for (k, v) in jobs_json.items():
+        job_dict = {"name": k}
+        job_dict.update(v)
+        jobs.append(job_dict)
+    return jobs
+
+@generator("job_declarations", parser=parse_jobs_manifest)
 def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
-    tpl_data = prepare_api_tpl_data(protocol)
+    tpl_data = { "jobs": protocol }
     tpl = tpl_env.get_template("jobs/declarations.tpl.cpp")
     output_template(tpl_data, tpl, output_dir, "src/hrz_jobs_declarations.cpp")
     tpl = tpl_env.get_template("jobs/declarations.tpl.h")
@@ -78,6 +108,8 @@ def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
     output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_tickets.h")
     tpl = tpl_env.get_template("jobs/enum_names.tpl.h")
     output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_enum_names.h")
+    tpl = tpl_env.get_template("jobs/type.tpl.h")
+    output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_type.h")
 
 @generator("web_ui_info")
 def web_ui_info_generator(protocol, tpl_env, output_dir, extra):
@@ -486,10 +518,8 @@ def doc_reference_md_generator(protocol, tpl_env, output_dir, extra):
 
 @generator("style_enums_md")
 def style_enums_md_generator(protocol, tpl_env, output_dir, extra):
-    values = protocol.copy()
-
     tpl = tpl_env.get_template("documentation/style_enums.tpl.md")
-    output_template(values, tpl, output_dir, "style_enums.md")
+    output_template(protocol, tpl, output_dir, "style_enums.md")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
@@ -508,7 +538,6 @@ if __name__ == "__main__":
         print("File %s does not exist" % input_file_name)
         sys.exit(1)
 
-    protocol = protocol_parser.parse(input_file_name)
     tpl_env = prepare_env()
     gen = sys.argv[2]
 
@@ -516,10 +545,7 @@ if __name__ == "__main__":
     if len(sys.argv) >= 4:
         extra = sys.argv[4:]
 
-    if gen == "*":
-        for k, v in generators.items():
-            v(protocol, tpl_env, sys.argv[3], extra)
-    elif gen in generators:
-        generators[gen](protocol, tpl_env, sys.argv[3], extra)
+    if gen in generators:
+        generators[gen](input_file_name, tpl_env, sys.argv[3], extra)
     else:
         print("Unknown generator %s" % sys.argv[2])

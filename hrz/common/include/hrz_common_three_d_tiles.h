@@ -6,7 +6,6 @@
 #include <hrz_common_maths.h>
 #include <hrz_common_vector_data.h>
 #include <hrz_fnd_variant.h>
-#include <hrz_jobs_protocol.h>
 
 #include <lin_maths.h>
 

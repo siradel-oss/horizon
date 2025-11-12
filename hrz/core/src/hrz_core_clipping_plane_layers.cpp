@@ -255,10 +255,9 @@ void register_layer(ClippingPlaneLayerSystem* system, SceneModel* model, uint64_
 
         hrz_proto::ClippingPlaneLayer layer_data = _default_layer_data(layer->clip_id);
 
-        SceneModelAccessor accessor(model);
-        hrz_proto::ClippingPlaneLayerPathBuilder<SceneModelAccessor> builder(
-            accessor, root.clipping_plane_layer());
-        builder.set(layer_data);
+        hrz_proto::ClippingPlaneLayerPathBuilder<SceneModelAccessor>(
+            model, root.clipping_plane_layer())
+            .set(layer_data);
     }
 }
 

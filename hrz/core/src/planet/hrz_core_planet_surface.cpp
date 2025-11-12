@@ -550,12 +550,8 @@ struct PlanetSurface
 
         update_raster_data_fetch_progress();
 
-        auto make_raster_path_builder = [&]()
-        {
-            SceneModelAccessor accessor(model);
-            hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor> builder(accessor);
-            return builder.raster();
-        };
+        auto make_raster_path_builder = [model]()
+        { return hrz_proto::SceneSettingsPathBuilder<SceneModelAccessor>(model).raster(); };
 
         if (inclination_compensation_updated)
         {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz_jobs_protocol.h"
+#include "hrz_jobs_declarations.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -8,18 +8,18 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace hrz_jobs_proto
+namespace hrz_jobs
 {
-{% for e in protocol.enums %}
-static const char* {{ e.full_name|to_short_type_name }}_Name({{ e.full_name|to_short_type_name }} value)
+
+static const char* job_type_name(JobType value)
 {
     switch (value)
     {
-        {% for v in e["values"] %}
-        case {{ e.full_name|to_short_type_name }}::{{ v.name|to_cpp_enum_value_name(e.full_name) }}: return "{{ v.name }}";
+        {% for job in jobs %}
+        case {{ job.name|upper }}: return "{{ job.name }}";
         {% endfor %}
         default: return "<Unknown>";
     }
 }
-{% endfor %}
-}
+
+} // namespace hrz_jobs

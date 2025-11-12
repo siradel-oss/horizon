@@ -92,7 +92,6 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/core/jobs:proto",
         "//hrz/cpp_protocol:hrz_cpp_protocol",
         "//hrz/fnd:hrz_fnd",
         "//hrz/monitoring:hrz_monitoring",

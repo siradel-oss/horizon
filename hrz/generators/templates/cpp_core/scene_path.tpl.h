@@ -6,58 +6,59 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <assert.h>
-#include <cstdint>
+#include "hrz_core_scene_path_common.h"
+#include "hrz_core_wrappers_scene_path.h"
 
-#include <hrz_protocol_all.h>
-
-namespace hrz
-{
-
-struct Scene;
-
-namespace scene_model
-{
-
-struct SceneModelPath
-{
-    hrz_proto::Path _path;
-    int             _index = -1;
-
-    /* Return true if the path is usable. */
-    bool valid() const
-    {
-        return _path.parts_size() >= 0 &&
-            _index >= -1 && _index < _path.parts_size();
-    }
-
-    /* Return true if the end of this path has been reached. */
-    bool leaf() const
-    {
-        return valid() && _index == _path.parts_size() - 1;
-    }
-};
-
-{% for type in path_types %}
-struct {{ type.full_name|to_short_type_name }}Path;
+#include "{{ filename }}.pb.h"
+{% for f in dependencies %}
+#include "{{ f }}.pb.h"
 {% endfor %}
 
-{% for type in path_types %}
-struct {{ type.full_name|to_short_type_name }}Path : public SceneModelPath
-{
-    {% if type.is_path_root %}
-    {{ type.full_name|to_short_type_name }}Path() = default;
+{% for f in dependencies %}
+#include "hrz_core_{{ f[4:] }}_scene_path.h"
+{% endfor %}
 
-    {{ type.full_name|to_short_type_name }}Path(const ::hrz_proto::Path& path);
+namespace hrz::scene_model
+{
+
+{% for type in path_types if (type.is_path_leaf or type.is_enum or type.is_primitive) and type.file == filename %}
+{% set PathType = type.full_name|to_short_type_name + "Path" %}
+using {{ PathType }} = SceneModelLeafPath<{{ type.full_name|to_cpp_qualified_name }}>;
+{% endfor %}
+
+{% for type in path_types if not type.is_path_leaf and not type.is_enum and not type.is_primitive and type.file == filename %}
+{% set PathType = type.full_name|to_short_type_name + "Path" %}
+class {{ PathType }} : public SceneModelPath<{{ PathType }}>
+{
+public:
+    {% if type.is_path_root %}
+    {{ PathType }}() = default;
+
+    explicit {{ PathType }}(::hrz_proto::Path path) :
+        SceneModelPath<{{ PathType }}>(std::move(path), -1)
+    {
+        assert(_path.has_root());
+    }
 
     {% if type.path_root_type != "HrzProtocol.Void" %}
     ::{{ type.path_root_type|rejoin(".", "::") }} get_root() const;
     {% endif %}
     {% endif %}
 
-    std::string to_string();
+    {{ PathType }}(hrz_proto::Path path, int index) :
+        SceneModelPath<{{ PathType }}>(std::move(path), index)
+    {
+    }
 
-    {% if not type.is_path_leaf %}
+    static void to_string_inner(std::string&, std::span<const uint32_t>);
+
+    std::string to_string() const
+    {
+        return scene_model_path_to_string_generic(
+            std::span<const uint32_t>(this->_path.parts().data(), (size_t)this->_path.parts().size()),
+            to_string_inner);
+    }
+
     {% for f in type.fields %}
 
     /* Return true if this path points to either {{ f.name }} or a child of it. */
@@ -81,15 +82,12 @@ struct {{ type.full_name|to_short_type_name }}Path : public SceneModelPath
      *  Go down the hierarchy through the field {{ f.name }}.
      *  A new instance is returned and this instance gets invalidated.
      */
-    {{ f.type|to_short_type_name }}Path {{ f.name }}();
+    {{ f.type|to_short_type_name }}Path {{ f.name }}() &&;
     {% endif %}
 
     {% endfor %}
-    {% endif %}
-    /* Return a new instance representing the same path. */
-    {{ type.full_name|to_short_type_name }}Path clone() const;
 };
 
 {% endfor %}
 
-}}
+} // namespace hrz::scene_model

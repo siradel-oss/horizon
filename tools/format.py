@@ -105,7 +105,7 @@ elif mode == "staged":
             all_files.append(f)
 elif mode == "jj":
     files = subprocess.check_output(["jj", "show", "-r", "@", "-s", "-T", "''", "--no-pager", "--color", "never"]).decode("utf-8").splitlines()
-    use_ops = ["A", "M", "R"]
+    use_ops = ["A", "M", "R", "C"]
     skip_ops = ["D"]
     for f in files:
         op = f[0]
@@ -115,7 +115,7 @@ elif mode == "jj":
             raise RuntimeError(f"Unexpected operation '{op}' in JJ output, expected one of {use_ops}")
 
         filename = f[2:]
-        if op == "R":
+        if op in ("R", "C"):
             # Change hrz\doc\{doc_internal => doc}\img\impostors.png
             # to hrz\doc\doc\img\impostors.png
             filename = re.sub(r"\{[^{}]*=>\s*([^{}]+)\}", r"\1", filename)

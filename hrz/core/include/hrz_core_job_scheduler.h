@@ -1,8 +1,7 @@
 #pragma once
 
-#include "hrz_jobs_protocol.h"
-
 #include <hrz_common_monitoring_defs.h>
+#include <hrz_jobs_type.h>
 
 #include <any>
 #include <cassert>
@@ -66,7 +65,7 @@ void destroy(JobScheduler*, bool leak_workers);
  */
 Ticket add_job(
     JobScheduler*,
-    hrz_jobs_proto::JobType,
+    hrz_jobs::JobType,
     std::any& parameters,
     const hrz::monitoring::ResourceOwner& owner);
 
@@ -94,7 +93,7 @@ JobStatus get_job_status(JobScheduler*, Ticket);
 /**
  * Return the type of the job.
  */
-hrz_jobs_proto::JobType get_job_type(JobScheduler*, Ticket);
+hrz_jobs::JobType get_job_type(JobScheduler*, Ticket);
 
 /**
  * Get the response of the job.

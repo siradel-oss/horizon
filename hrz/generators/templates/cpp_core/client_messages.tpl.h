@@ -6,47 +6,28 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <hrz_protocol_all.h>
-
 namespace hrz
 {
-
 struct ClientMessageQueue;
+} // namespace hrz
 
-namespace client_message_queue
+
+{% for msg in client_messages %}
+namespace {{ msg.message.package|rejoin(".", "::") }} { class {{ msg.message.name|rejoin(".", "::") }}; }
+{% endfor %}
+
+
+namespace hrz::client_message_queue
 {
-
-{% set ns = namespace(typed_message_message=null, params_message_type="") %}
-
-{% for m in protocol.messages %}
-{% if m["full_name"] == "HrzProtocol.TypedMessage" %}
-{% set ns.typed_message_message = m %}
-{% endif %}
-{% endfor %}
-
-{% for e in protocol.enums %}
-{% if e["full_name"] == "HrzProtocol.MessageType" %}
-{% for v in e["values"] %}
-
-{% for f in ns.typed_message_message["fields"] %}
-{% if f["name"] == v.params_field_name %}
-{% set ns.params_message_type = f["type"] %}
-{% endif %}
-{% endfor %}
-
+{% for msg in client_messages %}
     /**
-     * Push a new message of type {{ v.name }}{{ " (\"" + v.label + "\")" if v.label != v.name }} at the end of the queue.
-{% if v.documentation %}
+     * Push a new message of type {{ msg.enum_value.name }} at the end of the queue.
+{% if msg.enum_value.documentation %}
      *
-     * {{ v.documentation|indent_prefix(4, " * ") }}
+     * {{ msg.enum_value.documentation|indent_prefix(4, " * ") }}
 {% endif %}
      */
-    void enqueue_{{ v.name|lower }}(ClientMessageQueue*, {{ ns.params_message_type|rejoin(".", "::") }}&&);
+    void enqueue_{{ msg.enum_value.name|lower }}(ClientMessageQueue*, {{ msg.message.full_name|rejoin(".", "::") }}&&);
 
 {% endfor %}
-{% endif %}
-{% endfor %}
-
-}
-
-}
+} // namespace hrz::client_message_queue

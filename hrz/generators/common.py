@@ -79,13 +79,7 @@ def to_cpp_forward_declaration(value):
         value = value[6:]
 
     elements = value.split("::")
-    declaration = ""
-    for i in range(0, len(elements) - 1):
-        declaration += "namespace " + elements[i] + " { "
-    declaration += type + " " + elements[-1] + ";"
-    for i in range(0, len(elements) - 1):
-        declaration += " }"
-    return declaration
+    return f'namespace {"::".join(elements[0:-1])} {{ {type} {elements[-1]}; }}'
 
 def to_ts_type(value):
     if value in PB_PRIMITIVE_TYPES:
@@ -108,7 +102,7 @@ def to_cs_type(value):
 
 def indent_prefix(text, indent = 0, prefix = ""):
     if text == "":
-        return
+        return ""
     line_prefix = "\n" + " " * indent + prefix
     lines = text.split("\n")
     return line_prefix.join(lines)
@@ -155,6 +149,11 @@ def prepare_env():
     tpl_env.trim_blocks = True
     tpl_env.lstrip_blocks = True
     return tpl_env
+
+def remove_prefix(value: str, prefix: str) -> str:
+    if value.startswith(prefix):
+        return value[len(prefix):]
+    return value
 
 def output_template(value, tpl, output_path, name):
     output_path = Path(output_path)
@@ -256,66 +255,83 @@ CS_PRIMITIVE_TYPES = {
     "bytes": "ByteString",
 }
 
-def gather_primitive_types(path_types):
-    for primitive_type in PB_PRIMITIVE_TYPES:
-        path_types.append({
-            "type": primitive_type,
-            "full_name": primitive_type,
-            "is_primitive": True,
-            "is_enum": False
-        })
-
-def gather_path_types(messages, enums, message_type, path_types, type_full_names = []):
-    if message_type in PB_PRIMITIVE_TYPES or message_type in enums:
+def gather_path_types(protocol, enum_names, message_type, gathered_path_types, to_forward_declare, visited_types = [], visit_stack = []):
+    if message_type in visit_stack:
+        # Circular dependency
+        if not message_type in to_forward_declare:
+            to_forward_declare.append(message_type)
         return
 
-    if message_type in type_full_names:
+    if message_type in visited_types:
         # Prevent infinite recursion
         return
+    visited_types.append(message_type)
 
-    root_msg = next((m for m in messages if m["full_name"] == message_type), None)
-    if root_msg == None:
-        return
+    enum_type = next((e for e in protocol["enums"] if e["full_name"] == message_type), None)
+    msg_type = next((m for m in protocol["messages"] if m["full_name"] == message_type), None)
 
-    root_msg["is_primitive"] = False
-    root_msg["is_enum"] = False
+    if message_type in PB_PRIMITIVE_TYPES:
+        primitive_type = {
+            "is_primitive": True,
+            "is_enum": False,
+            "type": message_type,
+            "full_name": message_type,
+            "file": "hrz_wrappers",
+        }
+        gathered_path_types.append(primitive_type)
+    elif enum_type != None:
+        enum_type["type"] = message_type
+        enum_type["is_primitive"] = False
+        enum_type["is_enum"] = True
+        gathered_path_types.append(enum_type)
+    elif msg_type != None:
+        msg_type["is_primitive"] = False
+        msg_type["is_enum"] = False
+        if not msg_type["is_path_leaf"]:
+            if any(f for f in msg_type["fields"] if f["union"] != None):
+                print("Unions are not supported in paths (%s)" % message_type)
+                sys.exit(1)
 
-    if not any((m for m in path_types if m["full_name"] == message_type)):
-        path_types.append(root_msg)
-        type_full_names.append(message_type)
+            for f in msg_type["fields"]:
+                f["is_primitive"] = f["type"] in PB_PRIMITIVE_TYPES
+                f["is_enum"] = f["type"] in enum_names
+                gather_path_types(protocol, enum_names, f["type"], gathered_path_types, to_forward_declare, visited_types, visit_stack + [message_type])
+        gathered_path_types.append(msg_type)
 
-    if not root_msg["is_path_leaf"]:
-        if any(f for f in root_msg["fields"] if f["union"] != None):
-            print("Unions are not supported in paths (%s)" % message_type)
-            sys.exit(1)
+def find_by_full_name(full_name, collection):
+    return next((item for item in collection if item["full_name"] == full_name))
 
-        for f in root_msg["fields"]:
-            f["is_primitive"] = f["type"] in PB_PRIMITIVE_TYPES
-            f["is_enum"] = f["type"] in enums
-            gather_path_types(messages, enums, f["type"], path_types, type_full_names)
+def gather_client_messages(protocol):
+    client_typed_message = find_by_full_name("HrzProtocol.TypedMessage", protocol["messages"])
+    client_message_type_enum = find_by_full_name("HrzProtocol.MessageType", protocol["enums"])
 
-def gather_enums(enums, path_types):
-    for enum in enums:
-        path_types.append({
-            "type": enum["full_name"],
-            "full_name": enum["full_name"],
-            "is_primitive": False,
-            "is_enum": True
-        })
+    client_messages = []
+    for enum_value in client_message_type_enum["values"]:
+        for field in client_typed_message["fields"]:
+            if field["name"] == enum_value["params_field_name"]:
+                message = find_by_full_name(field["type"], protocol["messages"])
+                client_messages.append({
+                    "enum_value": enum_value,
+                    "message": message,
+                })
+                break
+
+    return client_messages
 
 def prepare_api_tpl_data(protocol):
     root_types = {msg["full_name"]: msg["path_root"] for msg in protocol["messages"] if msg["is_path_root"]}
     path_types = []
+    to_forward_declare = []
 
     enum_names = [e["full_name"] for e in protocol["enums"]]
 
-    gather_primitive_types(path_types)
-    gather_enums(protocol["enums"], path_types)
     for root_type in root_types:
-        gather_path_types(protocol["messages"], enum_names, root_type, path_types)
+        gather_path_types(protocol, enum_names, root_type, path_types, to_forward_declare)
 
     return {
         "protocol": protocol,
         "path_types": path_types,
         "enum_names": enum_names,
+        "client_messages": gather_client_messages(protocol),
+        "to_forward_declare": to_forward_declare,
     }

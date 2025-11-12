@@ -6931,13 +6931,11 @@ RenderRequest _update_layer(
     auto layer = _get_layer(system, global_layer_id);
     if (!layer) return render_request;
 
-    hrz::SceneModelAccessor accessor(model);
-
     hrz_proto::LayerHandle scene_model_handle;
     scene_model_handle.set_opaque(global_layer_id);
 
     hrz_proto::ThreeDTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(
-        accessor, scene_model_handle);
+        model, scene_model_handle);
 
     LayerH internal_layer_handle = system->global_layer_id_to_handle.at(global_layer_id);
 
@@ -7366,10 +7364,9 @@ void register_layer(ThreeDTilesLayerSystem* system, SceneModel* model, uint64_t 
         data.mutable_material_properties()->set_feature_color_blend_mode(hrz_proto::BLEND_MULTIPLY);
         data.mutable_material_properties()->set_feature_color_blend_strength(1.0);
 
-        hrz::SceneModelAccessor accessor(model);
-        hrz_proto::ThreeDTilesLayerPathBuilder<hrz::SceneModelAccessor> builder(
-            accessor, root.three_d_tiles_layer());
-        builder.set(data);
+        hrz_proto::ThreeDTilesLayerPathBuilder<hrz::SceneModelAccessor>(
+            model, root.three_d_tiles_layer())
+            .set(data);
     }
 }
 

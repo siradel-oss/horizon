@@ -1666,10 +1666,10 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
     if (sky->model_updated)
     {
-        SceneModelAccessor accessor(model);
-        hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor> builder(
-            accessor, sky->model_scene_view);
-        hrz_proto::AmbientSettings settings = builder.ambient().get();
+        auto settings = hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor>(
+                            model, sky->model_scene_view)
+                            .ambient()
+                            .get();
 
         sky->day = settings.sun().direction().day_of_year();
         sky->sun_direction_mode = settings.sun().direction().mode();

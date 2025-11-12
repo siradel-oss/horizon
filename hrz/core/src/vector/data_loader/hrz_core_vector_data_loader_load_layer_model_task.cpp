@@ -93,14 +93,16 @@ void VectorDataLoader::work_new_task<VectorDataLoader::Task::LoadLayerModel>(
     {
         uint64_t layer_handle = layer_handle_it->second;
 
-        hrz::SceneModelAccessor accessor(scene_model);
         hrz_proto::LayerHandle handle;
         handle.set_opaque(layer_handle);
-        hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor> builder(accessor, handle);
+
+        auto source_model =
+            hrz_proto::VectorDataLayerPathBuilder<hrz::SceneModelAccessor>(scene_model, handle)
+                .get();
 
         task_data.layer_model = layer_models.alloc();
         auto& layer_model = task_data.layer_model.value();
-        layer_model = make_model(attributions, builder.get(), layer_handle);
+        layer_model = make_model(attributions, source_model, layer_handle);
 
         for (uint32_t s = 0; s < layer_model.data_sources.size(); ++s)
         {
