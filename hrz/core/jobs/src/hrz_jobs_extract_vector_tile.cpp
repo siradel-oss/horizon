@@ -7,6 +7,8 @@
 #include <hrz_fnd_inlined_vector.h>
 #include <hrz_fnd_log.h>
 
+#include <optional>
+
 namespace hrz_jobs::extract_vector_tile
 {
 namespace
@@ -111,8 +113,27 @@ inline lm::dvec3 intersect(const lm::dvec3& a, const lm::dvec3& b, uint32_t axis
 
     auto res = lm::mix(a, b, t);
 
-    // Without this, some polygons could be malformed.
+    // When polygons are clipped, they are shrunk tightly to the tile
+    // border. In some cases, such as when there are holes, with inner
+    // linestrings, multiple points can be clipped to the same position.
+    // Some representation systems, such as those that triangulate
+    // polygons, rely on these similar positions having the same exact
+    // X and Y coordinates.
+    // The operations below ensure the exact tile border values are used.
+
     res.m[axis] = k;
+
+    for (uint32_t i = 0; i < 3; ++i)
+    {
+        if (i != axis)
+        {
+            if (a.m[i] == b.m[i])
+            {
+                res.m[i] = a.m[i];
+            }
+        }
+    }
+
     return res;
 }
 
@@ -121,17 +142,20 @@ struct ClippedFeature
     std::vector<lm::dvec3> points;
     std::vector<size_t> linestring_sizes;
     size_t current_linestring_size = 0;
+    std::optional<lm::dvec3> previous_point = std::nullopt; // On the current linestring
 
     inline void push_point(lm::dvec3 point)
     {
-        if (!points.empty()
-            && lm::length2(point - points.back()) <= std::numeric_limits<double>::epsilon())
+        if (previous_point.has_value()
+            && lm::length2(point - previous_point.value())
+                <= std::numeric_limits<double>::epsilon())
         {
             return;
         }
 
         points.push_back(point);
         current_linestring_size++;
+        previous_point = {point};
     }
 
     inline void clear_linestring()
@@ -140,6 +164,7 @@ struct ClippedFeature
         {
             points.resize(points.size() - current_linestring_size);
             current_linestring_size = 0;
+            previous_point = std::nullopt;
         }
     }
 
@@ -149,6 +174,7 @@ struct ClippedFeature
         {
             linestring_sizes.push_back(current_linestring_size);
             current_linestring_size = 0;
+            previous_point = std::nullopt;
         }
     }
 };
