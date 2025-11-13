@@ -27,15 +27,15 @@ hrz_genrule(
 cc_library(
     name = "proj_lite",
     srcs = [
-        "include/proj_lite_internal/common.h",
-        "include/proj_lite_internal/constants.h",
-        "include/proj_lite_internal/crs_database.h",
-        "include/proj_lite_internal/database.h",
-        "include/proj_lite_internal/projection.h",
-        "include/proj_lite_internal/string_span.h",
         "src/crs_database.c",
         "src/crs_database_data.c",
         "src/database.c",
+        "src/internal/common.h",
+        "src/internal/constants.h",
+        "src/internal/crs_database.h",
+        "src/internal/database.h",
+        "src/internal/projection.h",
+        "src/internal/string_span.h",
         "src/parse_proj_string.c",
         "src/projection.c",
         "src/projections/geocent.c",
@@ -49,10 +49,10 @@ cc_library(
         "src/transform.c",
     ],
     hdrs = [
-        "include/proj_lite.h",
+        "src/proj_lite.h",
     ],
     includes = [
-        "include",
+        "src",
     ],
     visibility = ["//visibility:public"],
 )

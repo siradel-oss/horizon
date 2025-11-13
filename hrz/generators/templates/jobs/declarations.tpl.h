@@ -1,9 +1,9 @@
 #pragma once
 
-#include "hrz_jobs_context.h"
-#include "hrz_jobs_type.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/jobs_type.h"
 
-#include <hrz_common_job_result.h>
+#include "hrz/common/job_result.h"
 #include <any>
 
 ////////////////////////////////////////////////////////////////////////////////

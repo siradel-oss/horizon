@@ -1,4 +1,4 @@
-#include "hrz_core_client_messages.h"
+#include "hrz/core/client_messages.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -6,9 +6,9 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz_core_client_message_queue.h"
+#include "hrz/core/client_message_queue.h"
 
-#include <hrz_messages.pb.h>
+#include "hrz/protocol/messages.pb.h"
 
 namespace hrz::client_message_queue
 {

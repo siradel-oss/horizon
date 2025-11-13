@@ -1,4 +1,4 @@
-#include <hrz_monitoring.h>
+#include "hrz/monitoring/monitoring.h"
 
 #include <google/protobuf/arena.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>

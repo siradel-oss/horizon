@@ -5,13 +5,13 @@ import shutil
 import sys
 from pathlib import Path
 
-from hrz.proto.history.manifest import Manifest
+from hrz.protocol.history.manifest import Manifest
 
 BZL_CONFIG = "--config=" + platform.system().lower()
 
 INITIAL_HASH = "0000000000000000000000000000000000000000000000000000000000000000"
-DESCRIPTORS_PATH = "hrz/proto/history"
-MANIFEST_PATH = "hrz/proto/history/versions_manifest.csv"
+DESCRIPTORS_PATH = "hrz/protocol/history"
+MANIFEST_PATH = "hrz/protocol/history/versions_manifest.csv"
 
 def compute_file_hash(path):
     file_content = None
@@ -23,7 +23,7 @@ def compute_file_hash(path):
 
 def build_current_descriptor_set():
     ret = subprocess.run(
-        ["bazel", "build", "//hrz/proto:descriptor_set.pbf", BZL_CONFIG],
+        ["bazel", "build", "//hrz/protocol:descriptor_set.pbf", BZL_CONFIG],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
 
@@ -35,7 +35,7 @@ def build_current_descriptor_set():
 
 def save_current_descriptor_set(id):
     build_current_descriptor_set()
-    src_file = "bazel-bin/hrz/proto/descriptor_set.pbf"
+    src_file = "bazel-bin/hrz/protocol/descriptor_set.pbf"
     dst_file = f"{DESCRIPTORS_PATH}/{id}.pbf"
     shutil.copyfile(src_file, dst_file)
 

@@ -1,6 +1,6 @@
-#include "proj_lite_internal/projection.h"
+#include "internal/projection.h"
 
-#include "proj_lite_internal/constants.h"
+#include "internal/constants.h"
 
 // Implemented
 // tmerc        1839

@@ -1,4 +1,4 @@
-#include "hrz_core_scene_path.h"
+#include "hrz/core/scene_path/scene_path.h"
 
 #include <utility>
 #include <fmt/format.h>

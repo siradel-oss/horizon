@@ -6,7 +6,7 @@ from python.runfiles import Runfiles
 from pathlib import Path
 
 sys.path.append("")
-from hrz.proto.history.manifest import Manifest, read_manifest
+from hrz.protocol.history.manifest import Manifest, read_manifest
 
 MANIFEST: Manifest = None
 

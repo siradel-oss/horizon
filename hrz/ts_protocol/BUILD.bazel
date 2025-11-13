@@ -19,7 +19,7 @@ npm_link_all_packages(name = "node_modules")
 pbjs_bin.pbjs(
     name = "generate_js",
     srcs = PROTOBUFJS_CLI_DEPS + [
-        "//hrz/proto:protos",
+        "//hrz/protocol:protos",
     ],
     outs = [
         "dist/hrz_protocol_unpatched.js",
@@ -30,7 +30,9 @@ pbjs_bin.pbjs(
         "static-module",
         "-w",
         "es6",
-        "$(locations //hrz/proto:protos)",
+        "$(locations //hrz/protocol:protos)",
+        "-p",
+        ".",
         "-o",
         "$@",
     ],

@@ -1,9 +1,9 @@
-#include "hrz_core_rpc_dispatcher.h"
-#include "hrz_core.h"
+#include "hrz/core/rpc_dispatcher.h"
+#include "hrz/core/core.h"
 
 #include <google/protobuf/arena.h>
-#include <hrz_protocol_all.h>
-#include <hrz_common_profiling.h>
+#include "hrz/protocol/all.h"
+#include "hrz/common/profiling.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

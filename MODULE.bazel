@@ -107,11 +107,11 @@ register_toolchains(
     "//:glslc_es_linux_toolchain",
 )
 
-make_versions_list = use_repo_rule("//hrz/proto/history:make_versions_list.bzl", "make_versions_list")
+make_versions_list = use_repo_rule("//hrz/protocol/history:make_versions_list.bzl", "make_versions_list")
 
 make_versions_list(
     name = "model_versions_list",
-    manifest = "//hrz/proto/history:versions_manifest.csv",
+    manifest = "//hrz/protocol/history:versions_manifest.csv",
     var_name = "MODEL_VERSIONS_LIST",
 )
 

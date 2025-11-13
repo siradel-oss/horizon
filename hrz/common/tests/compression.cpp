@@ -1,6 +1,6 @@
-#include "rules_cc/cc/runfiles/runfiles.h"
+#include "hrz/common/compression.h"
 
-#include <hrz_common_compression.h>
+#include "rules_cc/cc/runfiles/runfiles.h"
 
 #include <gtest/gtest.h>
 
@@ -43,9 +43,9 @@ std::optional<std::vector<std::byte>> read_file(const char* path)
 TEST_F(Compression, DecompressGzip)
 {
     auto reference =
-        read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt").c_str());
+        read_file(_runfiles->Rlocation("horizon/hrz/common/tests_data/lorem_ipsum.txt").c_str());
     auto compressed =
-        read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt.gz").c_str());
+        read_file(_runfiles->Rlocation("horizon/hrz/common/tests_data/lorem_ipsum.txt.gz").c_str());
 
     std::vector<std::byte> decompressed;
     auto callback = [&](std::span<const std::byte> chunk)
@@ -62,9 +62,9 @@ TEST_F(Compression, DecompressGzip)
 TEST_F(Compression, DecompressBrotli)
 {
     auto reference =
-        read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt").c_str());
+        read_file(_runfiles->Rlocation("horizon/hrz/common/tests_data/lorem_ipsum.txt").c_str());
     auto compressed =
-        read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt.br").c_str());
+        read_file(_runfiles->Rlocation("horizon/hrz/common/tests_data/lorem_ipsum.txt.br").c_str());
 
     std::vector<std::byte> decompressed;
     auto callback = [&](std::span<const std::byte> chunk)
@@ -81,9 +81,9 @@ TEST_F(Compression, DecompressBrotli)
 TEST_F(Compression, DecompressZstd)
 {
     auto reference =
-        read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt").c_str());
-    auto compressed =
-        read_file(_runfiles->Rlocation("horizon/hrz/common/test_data/lorem_ipsum.txt.zst").c_str());
+        read_file(_runfiles->Rlocation("horizon/hrz/common/tests_data/lorem_ipsum.txt").c_str());
+    auto compressed = read_file(
+        _runfiles->Rlocation("horizon/hrz/common/tests_data/lorem_ipsum.txt.zst").c_str());
 
     std::vector<std::byte> decompressed;
     auto callback = [&](std::span<const std::byte> chunk)

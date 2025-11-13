@@ -1,8 +1,8 @@
-#include <hrz_core_backend.h>
-#include <hrz_migration.h>
-#include <hrz_protocol_all.h>
-#include <hrz_protocol_path_builder.h>
-#include <hrz_scene_model_version.h>
+#include "hrz/core/backend.h"
+#include "hrz/protocol/all.h"
+#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/scene_model_version.h"
+#include "hrz/scene_dump/migration.h"
 
 #include <argparser.h>
 #include <inttypes.h>

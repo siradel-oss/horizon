@@ -4,9 +4,9 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz_core_style_enums.h"
+#include "hrz/core/style/enums.h"
 
-#include <hrz_protocol_all.h>
+#include "hrz/protocol/all.h"
 
 namespace hrz::style
 {

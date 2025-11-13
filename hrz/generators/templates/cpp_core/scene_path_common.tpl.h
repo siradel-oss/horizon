@@ -9,8 +9,8 @@
 #include <assert.h>
 #include <cstdint>
 
-#include <hrz_fnd_function_ref.h>
-#include <hrz_protocol_all.h> // @Todo(1209) Replace with something that only imports Path
+#include "hrz/fnd/function_ref.h"
+#include "hrz/protocol/all.h" // @Todo(1209) Replace with something that only imports Path
 
 namespace hrz
 {

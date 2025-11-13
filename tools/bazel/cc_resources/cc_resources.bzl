@@ -79,6 +79,5 @@ def cc_resources(name, namespace, header_name, files, **kwargs):
         name = name,
         srcs = [":" + name + "_gen_srcs"],
         hdrs = [":" + name + "_gen_hdrs"],
-        includes = ["."],
         **kwargs
     )

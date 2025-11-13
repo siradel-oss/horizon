@@ -6,7 +6,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <hrz_protocol_all.h>
+#include "hrz/protocol/all.h"
 #include <span>
 #include <string_view>
 

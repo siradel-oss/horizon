@@ -1,4 +1,4 @@
-#include <hrz_common_tile_coords.h>
+#include "hrz/common/tile_coords.h"
 
 #include <gtest/gtest.h>
 

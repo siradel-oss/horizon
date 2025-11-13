@@ -276,7 +276,7 @@ def gather_path_types(protocol, enum_names, message_type, gathered_path_types, t
             "is_enum": False,
             "type": message_type,
             "full_name": message_type,
-            "file": "hrz_wrappers",
+            "file": "hrz/protocol/wrappers",
         }
         gathered_path_types.append(primitive_type)
     elif enum_type != None:

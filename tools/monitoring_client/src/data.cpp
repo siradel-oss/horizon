@@ -1,7 +1,7 @@
 #include "data.h"
 
-#include <hrz_fnd_format.h>
-#include <hrz_fnd_hash.h>
+#include "hrz/fnd/format.h"
+#include "hrz/fnd/hash.h"
 
 #include <algorithm>
 #include <cassert>

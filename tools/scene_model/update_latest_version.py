@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 sys.path.append("")
-from hrz.proto.history.manifest import read_manifest, compute_hash
+from hrz.protocol.history.manifest import read_manifest, compute_hash
 
 from common import MANIFEST_PATH, INITIAL_HASH, save_current_descriptor_set, compute_file_hash
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     if resp.lower() == "yes":
         print("Updating the descriptor set")
         save_current_descriptor_set(id)
-        descriptor_hash = compute_file_hash(f"hrz/proto/history/{id}.pbf")
+        descriptor_hash = compute_file_hash(f"hrz/protocol/history/{id}.pbf")
         last_hash = INITIAL_HASH
         if len(MANIFEST) >= 2:
             last_hash = MANIFEST.entries[-2].chain_hash

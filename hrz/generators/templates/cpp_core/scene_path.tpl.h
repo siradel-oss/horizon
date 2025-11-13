@@ -6,8 +6,8 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz_core_scene_path_common.h"
-#include "hrz_core_wrappers_scene_path.h"
+#include "hrz/core/scene_path/common.h"
+#include "hrz/core/scene_path/wrappers_paths.h"
 
 #include "{{ filename }}.pb.h"
 {% for f in dependencies %}
@@ -15,7 +15,7 @@
 {% endfor %}
 
 {% for f in dependencies %}
-#include "hrz_core_{{ f[4:] }}_scene_path.h"
+#include "hrz/core/scene_path/{{ f[13:] }}_paths.h"
 {% endfor %}
 
 namespace hrz::scene_model

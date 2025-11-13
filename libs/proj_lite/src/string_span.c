@@ -1,4 +1,4 @@
-#include "proj_lite_internal/string_span.h"
+#include "internal/string_span.h"
 
 #include <stdlib.h>
 

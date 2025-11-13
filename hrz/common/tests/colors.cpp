@@ -1,4 +1,4 @@
-#include "hrz_common_color.h"
+#include "hrz/common/color.h"
 
 #include <gtest/gtest.h>
 

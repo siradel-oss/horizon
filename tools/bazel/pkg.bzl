@@ -2,15 +2,34 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load(":os_info.bzl", "OsInfo")
 
-"""
-dirs has this structure:
-{
-    "folder": ["label1", "label2, ...],
-    ...
-}
-"""
+def make_dirs_structure(files, strip_prefix, add_prefix):
+    """
+    Args:
+        files: list of files paths as strings
+        strip_prefix: string to strip from the beginning of each file path
+        add_prefix: string to add at the beginning of each file path
+    Returns:
+        A dict mapping from folder paths to list of file paths.
+    """
+    dirs = {}
+    for f in files:
+        if not f.startswith(strip_prefix):
+            fail("File '%s' does not start with prefix '%s'" % (f, strip_prefix))
+        relative_path = f[len(strip_prefix):]
+        folder = add_prefix + relative_path.rsplit("/", 1)[0] if "/" in relative_path else add_prefix
+        if folder not in dirs:
+            dirs[folder] = []
+        dirs[folder].append(f)
+    return dirs
 
 def pkg_tar_aggregate(name, extension = "tar.gz", dirs = {}, visibility = ["//visibility:public"]):
+    """
+    dirs has this structure:
+    {
+        "folder": ["label1", "label2, ...],
+        ...
+    }
+    """
     deps = []
     for d in dirs:
         pkg_name = name + "_" + d.replace("/", "_")

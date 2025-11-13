@@ -1,8 +1,7 @@
 #include "server.h"
 
 #include "data.h"
-
-#include <hrz_monitoring.h>
+#include "hrz/monitoring/monitoring.h"
 
 #include <ws_server.h>
 

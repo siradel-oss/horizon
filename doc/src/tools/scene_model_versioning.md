@@ -8,7 +8,7 @@ This documents explains the various mechanisms and tools that can be used to mak
 * **Descriptor set**: A descriptor set is the reflection data of Protocol Buffers definitions, in their serialized format.
 * **Scene dump**: A scene dump is a dump of the entire scene model at a given time. It includes things like, camera position, layers definitions, settings, etc.
 * **Scene model version**: A version of the scene model is a uniquely identifiable state of the scene model definition that has known previous and next states. A version is defined by its ID (a 32-bit integer, often written as a string of 8 hex digits), and a description. A version is created every time the scene model is modified in a way that makes it incompatible with the previous version using the standard Protocol Buffers compatibility mechanisms.
-* **Scene model versions manifest**: This file (`//hrz/proto/history:versions_manifest.csv`) stores the list of all known scene model versions in chronological order. It contains a hash that can be used to check the consistency of the versions: namely that each version has indeed been created for its specific ancestor. This is important for migrations (see below).
+* **Scene model versions manifest**: This file (`//hrz/protocol/history:versions_manifest.csv`) stores the list of all known scene model versions in chronological order. It contains a hash that can be used to check the consistency of the versions: namely that each version has indeed been created for its specific ancestor. This is important for migrations (see below).
 * **Migration**: Migrations are short program designed to transform a scene dump from a specific version such that it is compatible with the next version.
 
 ## General principles
@@ -81,7 +81,7 @@ In order to maintain strict ordering of the versions, merging and rebasing requi
 - Here is how to fix this:
     1. Resolve the merge conflicts in the manifest file by deleting the line of your version. This file should now be in the exact same state as master.
     1. Also reset the existing static scenes to the version from master if they diverged. They will be re-migrated to the new version later.
-    2. Delete the descriptor set file corresponding to your version (`C.pbf`) from `//hrz/proto/history`.
+    2. Delete the descriptor set file corresponding to your version (`C.pbf`) from `//hrz/protocol/history`.
     3. Create a new version we'll call D.
     4. Edit the `A_to_C` migration so that it is now `B_to_D` (both prototype and migration code).
     5. Set the version of your scenes that have version C to A (the last common version with B) using the `tools/scene_dump/set_dump_version.py` tool. This will allow migration `A_to_B` to run.

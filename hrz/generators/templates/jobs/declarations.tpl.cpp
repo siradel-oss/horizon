@@ -1,6 +1,6 @@
-#include "hrz_jobs_declarations.h"
+#include "hrz/core/jobs/jobs_declarations.h"
 
-#include <hrz_common_job_params.h>
+#include "hrz/common/job_params.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

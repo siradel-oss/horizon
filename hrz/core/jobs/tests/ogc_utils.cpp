@@ -1,4 +1,4 @@
-#include "hrz_jobs_ogc_utils.h"
+#include "hrz/core/jobs/ogc_utils.h"
 
 #include <gtest/gtest.h>
 #include <pugixml/pugixml.hpp>

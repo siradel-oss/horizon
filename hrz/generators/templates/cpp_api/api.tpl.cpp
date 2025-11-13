@@ -1,6 +1,6 @@
-#include "hrz_api.h"
+#include "hrz/api/api.h"
 
-#include <hrz_protocol_all.h>
+#include "hrz/protocol/all.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

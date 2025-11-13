@@ -3,12 +3,12 @@ load("//tools/bazel:genrule.bzl", "hrz_genrule")
 hrz_genrule(
     name = "proto_xml_protocol",
     srcs = [
-        "//hrz/proto:protos",
+        "//hrz/protocol:protos",
     ],
     outs = [
         "hrz_protocol.xml",
     ],
-    cmd = "$(execpath //third_party:protoc) -Ihrz/proto $(SRCS) --plugin=protoc-gen-xml_desc=$(execpath //hrz/xml_desc_generator:xml_desc_generator) --xml_desc_out=$(@D)",
+    cmd = "$(execpath //third_party:protoc) $(SRCS) --plugin=protoc-gen-xml_desc=$(execpath //hrz/xml_desc_generator:xml_desc_generator) --xml_desc_out=$(@D)",
     tools = [
         "//hrz/xml_desc_generator",
         "//third_party:protoc",

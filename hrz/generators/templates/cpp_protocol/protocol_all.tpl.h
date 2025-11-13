@@ -6,7 +6,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz_services.h"
+#include "hrz/protocol/services.h"
 {% for f in files %}
-#include "{{ f.name }}.pb.h"
+#include "hrz/protocol/{{ f.name[13:] }}.pb.h"
 {% endfor %}

@@ -1,7 +1,7 @@
-#include "hrz_jobs_tickets.h"
+#include "hrz/core/jobs/jobs_tickets.h"
 
-#include <hrz_common_job_params.h>
-#include <hrz_common_monitoring_defs.h>
+#include "hrz/common/job_params.h"
+#include "hrz/common/monitoring_defs.h"
 #include <any>
 
 #include <cassert>

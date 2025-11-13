@@ -9,6 +9,6 @@ cc_library(
     includes = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/fnd:hrz_fnd",
+        "//hrz/fnd",
     ],
 )

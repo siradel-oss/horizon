@@ -1,8 +1,7 @@
 #ifdef __linux__
 
+#    include "hrz/branding/icons.h"
 #    include "wsi.h"
-
-#    include <hrz_icons.h>
 
 #    include <X11/Xlib.h>
 #    include <X11/Xutil.h>

@@ -1,8 +1,7 @@
 #ifdef _WIN32
 
+#    include "hrz/branding/icons.h"
 #    include "wsi.h"
-
-#    include <hrz_icons.h>
 
 #    include <assert.h>
 #    include <stb_image.h>

@@ -1,20 +1,14 @@
 cc_library(
-    name = "hrz_http_cache",
+    name = "http_cache",
     srcs = [
-        "src/hrz_http_cache.cpp",
+        "http_cache.cpp",
     ],
     hdrs = [
-        "include/hrz_http_cache.h",
-    ],
-    includes = [
-        "include",
-    ],
-    local_defines = [
-        "HRZ_LOG_PREFIX=HrzHttpCache",
+        "http_cache.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/fnd:hrz_fnd",
+        "//hrz/fnd",
         "//third_party:microui",
     ],
 )
@@ -28,7 +22,7 @@ cc_test(
     linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
-        ":hrz_http_cache",
+        ":http_cache",
         "//third_party:gtest",
         "//third_party:gtest_main",
     ],

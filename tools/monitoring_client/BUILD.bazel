@@ -61,13 +61,10 @@ cc_binary(
         ],
         "//conditions:default": [],
     }),
-    local_defines = [
-        "HRZ_LOG_PREFIX=HrzMonitoring",
-    ],
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/fnd:hrz_fnd",
-        "//hrz/monitoring:hrz_monitoring",
+        "//hrz/fnd",
+        "//hrz/monitoring",
         "//libs/lm",
         "//libs/ws:ws_server",
         "//third_party:dear_imgui",

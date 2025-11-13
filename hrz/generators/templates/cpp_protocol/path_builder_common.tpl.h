@@ -8,8 +8,8 @@
 
 #include <concepts>
 
-#include "hrz_scene_model.pb.h"
-#include "hrz_wrappers.pb.h"
+#include "hrz/protocol/scene_model.pb.h"
+#include "hrz/protocol/wrappers.pb.h"
 
 namespace hrz_proto
 {

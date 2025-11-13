@@ -1,7 +1,7 @@
-#include "hrz_core.h"
-#include "hrz_core_scene_model_accessor.h"
+#include "hrz/core/core.h"
+#include "hrz/core/scene_model_accessor.h"
 
-#include <hrz_fnd_log.h>
+#include "hrz/fnd/log.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

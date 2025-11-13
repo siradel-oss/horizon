@@ -1,17 +1,17 @@
-load("//hrz/proto:list_proto_files.bzl", "list_proto_files")
+load("//hrz/protocol:list_proto_files.bzl", "list_proto_files")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
-load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
+load("//tools/bazel:pkg.bzl", "make_dirs_structure", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg")
 
 hrz_genrule(
     name = "generate_proto",
     srcs = [
-        "//hrz/proto:protos",
+        "//hrz/protocol:protos",
     ],
     outs =
-        list_proto_files("hrz_", ".pb.cc") +
-        list_proto_files("hrz_", ".pb.h"),
-    cmd = "$(location //third_party:protoc) -Ihrz/proto $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(@D) --hrz_out=$(@D)",
+        list_proto_files("gen/hrz/protocol/", ".pb.cc") +
+        list_proto_files("gen/hrz/protocol/", ".pb.h"),
+    cmd = "$(location //third_party:protoc) $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(@D)/gen --hrz_out=$(@D)/gen",
     tools = [
         "//hrz/cpp_protocol/protoc_plugin",
         "//third_party:protoc",
@@ -25,11 +25,11 @@ hrz_genrule(
         "//hrz/generators:cpp_protocol_tpl",
     ],
     outs = [
-        "hrz_protocol_all.h",
-        "hrz_protocol_path_builder.h",
-        "hrz_protocol_path_builder_common.h",
-        "hrz_services.h",
-    ] + list_proto_files("hrz_protocol_", "_path_builder.h"),
+        "gen/hrz/protocol/all.h",
+        "gen/hrz/protocol/path_builder.h",
+        "gen/hrz/protocol/path_builder_common.h",
+        "gen/hrz/protocol/services.h",
+    ] + list_proto_files("gen/hrz/protocol/path_builder/", ".h"),
     cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_protocol $(@D)",
     tools = [
         "//hrz/generators:generator",
@@ -37,18 +37,18 @@ hrz_genrule(
 )
 
 PUBLIC_HEADERS = [
-    "hrz_protocol_all.h",
-    "hrz_protocol_path_builder.h",
-    "hrz_protocol_path_builder_common.h",
-    "hrz_services.h",
-] + list_proto_files("hrz_", ".pb.h") + list_proto_files("hrz_protocol_", "_path_builder.h")
+    "gen/hrz/protocol/all.h",
+    "gen/hrz/protocol/path_builder.h",
+    "gen/hrz/protocol/path_builder_common.h",
+    "gen/hrz/protocol/services.h",
+] + list_proto_files("gen/hrz/protocol/", ".pb.h") + list_proto_files("gen/hrz/protocol/path_builder/", ".h")
 
 cc_library(
-    name = "hrz_cpp_protocol",
-    srcs = list_proto_files("hrz_", ".pb.cc"),
+    name = "hrz_protocol",
+    srcs = list_proto_files("gen/hrz/protocol/", ".pb.cc"),
     hdrs = PUBLIC_HEADERS,
     includes = [
-        ".",
+        "gen",
     ],
     linkstatic = True,
     visibility = ["//visibility:public"],
@@ -57,20 +57,29 @@ cc_library(
     ],
 )
 
+alias(
+    name = "cpp_protocol",
+    actual = ":hrz_protocol",
+    visibility = ["//visibility:public"],
+)
+
 make_dbg(
-    name = "hrz_cpp_protocol_dbg",
-    cc_target = ":hrz_cpp_protocol",
+    name = "hrz_protocol_dbg",
+    cc_target = ":hrz_protocol",
 )
 
 pkg_tar_aggregate(
     name = "pkg",
     dirs = {
-        "include": PUBLIC_HEADERS,
-        "lib_release": [":hrz_cpp_protocol"],
-        "lib_debug": [":hrz_cpp_protocol_dbg"],
+        "lib_release": [":hrz_protocol"],
+        "lib_debug": [":hrz_protocol_dbg"],
         "": [
             "//:LICENSE",
         ],
-    },
+    } | make_dirs_structure(
+        PUBLIC_HEADERS,
+        "gen/",
+        "include/",
+    ),
     extension = "tar.gz",
 )

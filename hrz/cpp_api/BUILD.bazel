@@ -4,12 +4,12 @@ load("//tools/bazel:utils.bzl", "make_dbg")
 
 filegroup(
     name = "generated_hdrs",
-    srcs = ["hrz_api.h"],
+    srcs = ["api.h"],
 )
 
 filegroup(
     name = "generated_srcs",
-    srcs = ["hrz_api.cpp"],
+    srcs = ["api.cpp"],
 )
 
 hrz_genrule(
@@ -19,41 +19,47 @@ hrz_genrule(
         "//hrz/generators:cpp_api_tpl",
     ],
     outs = [
-        "hrz_api.cpp",
-        "hrz_api.h",
+        "api.cpp",
+        "api.h",
     ],
     cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_api $(@D)",
     tools = ["//hrz/generators:generator"],
 )
 
 cc_library(
-    name = "hrz_cpp_api",
+    name = "hrz_api",
     srcs = [
         ":generated_srcs",
     ],
     hdrs = [
         ":generated_hdrs",
     ],
-    includes = ["."],
+    include_prefix = "hrz/api",
     linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/cpp_protocol:hrz_cpp_protocol",
-        "//hrz/fnd:hrz_fnd",
+        "//hrz/cpp_protocol",
+        "//hrz/fnd",
     ],
 )
 
+alias(
+    name = "cpp_api",
+    actual = ":hrz_api",
+    visibility = ["//visibility:public"],
+)
+
 make_dbg(
-    name = "hrz_cpp_api_dbg",
-    cc_target = ":hrz_cpp_api",
+    name = "hrz_api_dbg",
+    cc_target = ":hrz_api",
 )
 
 pkg_tar_aggregate(
     name = "pkg",
     dirs = {
-        "include": [":generated_hdrs"],
-        "lib_release": [":hrz_cpp_api"],
-        "lib_debug": [":hrz_cpp_api_dbg"],
+        "include/hrz/api": [":generated_hdrs"],
+        "lib_release": [":hrz_api"],
+        "lib_debug": [":hrz_api_dbg"],
         "": [
             "//:LICENSE",
         ],

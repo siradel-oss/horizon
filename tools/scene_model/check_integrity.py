@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("")
-from hrz.proto.history.manifest import read_manifest, compute_hash
+from hrz.protocol.history.manifest import read_manifest, compute_hash
 
 from common import MANIFEST_PATH, INITIAL_HASH, DESCRIPTORS_PATH, compute_file_hash, build_current_descriptor_set
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     build_current_descriptor_set()
 
     hash1 = compute_file_hash(f"{DESCRIPTORS_PATH}/{MANIFEST.last_entry().id}.pbf")
-    hash2 = compute_file_hash("bazel-bin/hrz/proto/descriptor_set.pbf")
+    hash2 = compute_file_hash("bazel-bin/hrz/protocol/descriptor_set.pbf")
 
     if hash1 != hash2:
         print("The current latest version of the descriptor set in the manifest doesn't match the current scene model.")

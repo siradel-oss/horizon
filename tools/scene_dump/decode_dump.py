@@ -6,11 +6,11 @@ import platform
 from pathlib import Path
 
 sys.path.append("")
-from hrz.proto.history.manifest import Manifest, read_manifest
+from hrz.protocol.history.manifest import Manifest, read_manifest
 
 BZL_CONFIG = "--config=" + platform.system().lower()
 
-MANIFEST_PATH = "hrz/proto/history/versions_manifest.csv"
+MANIFEST_PATH = "hrz/protocol/history/versions_manifest.csv"
 MANIFEST: Manifest = None
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         print("Version ID not in manifest")
         sys.exit(1)
 
-    descriptor_path = Path(f"hrz/proto/history/{version}.pbf").absolute()
+    descriptor_path = Path(f"hrz/protocol/history/{version}.pbf").absolute()
 
     ret = subprocess.run(
         ["bazel", "run", "//third_party:protoc", BZL_CONFIG, "--", "--descriptor_set_in=" + str(descriptor_path), "--decode=HrzProtocol.SceneDump"],

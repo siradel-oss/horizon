@@ -106,8 +106,8 @@ In C++, initializing the engine happens by calling the `hrz_core::Backend::creat
 
 ```cpp
 #include <windows.h>
-#include <hrz_core_backend.h>
-#include <hrz_protocol_all.h>
+#include "hrz/core/backend.h"
+#include "hrz/protocol/all.h"
 
 void run_horizon(HINSTANCE instance, HWND window, const hrz_proto::ViewerOptions& options)
 {

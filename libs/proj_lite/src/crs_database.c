@@ -1,4 +1,4 @@
-#include "proj_lite_internal/crs_database.h"
+#include "internal/crs_database.h"
 
 #include "proj_lite.h"
 

@@ -5,11 +5,11 @@ py_binary(
     name = "gen",
     srcs = ["gen.py"],
     data = [
-        "//hrz/proto/history:versions_manifest.csv",
+        "//hrz/protocol/history:versions_manifest.csv",
         "//hrz/scene_dump/templates:all",
     ],
     deps = [
-        "//hrz/proto/history:manifest",
+        "//hrz/protocol/history:manifest",
         "@pypi//jinja2",
         "@rules_python//python/runfiles",
     ],
@@ -18,25 +18,22 @@ py_binary(
 hrz_genrule(
     name = "generate_migrations_list",
     srcs = [
-        "//hrz/proto/history:versions_manifest.csv",
+        "//hrz/protocol/history:versions_manifest.csv",
     ],
     outs = [
-        "include/hrz_migrations_list.h",
+        "migrations_list.h",
     ],
-    cmd = "$(location gen) -m $(location //hrz/proto/history:versions_manifest.csv) gen-cpp-migrations-list $@",
+    cmd = "$(location gen) -m $(location //hrz/protocol/history:versions_manifest.csv) gen-cpp-migrations-list $@",
     tools = [":gen"],
 )
 
 cc_library(
     name = "utils",
     srcs = [
-        "src/scene_dump_utils.cpp",
+        "utils.cpp",
     ],
     hdrs = [
-        "include/hrz_scene_dump_utils.h",
-    ],
-    includes = [
-        "include",
+        "utils.h",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -48,19 +45,19 @@ cc_library(
 cc_library(
     name = "migration",
     srcs = [
-        "include/dynamic_message.h",
-        "include/hrz_migrations_list.h",
-        "src/migration.cpp",
-        "src/migrations.cpp",
+        "dynamic_message.h",
+        "migration.cpp",
+        "migrations.cpp",
+        "migrations_list.h",
     ],
     hdrs = [
-        "include/hrz_migration.h",
+        "migration.h",
     ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
-        "//hrz/proto/history:hrz_descriptor_sets_list",
-        "//hrz/proto/history:hrz_scene_model_version",
+        "//hrz/protocol/history:descriptor_sets_list",
+        "//hrz/protocol/history:scene_model_version",
     ],
 )

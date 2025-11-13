@@ -7,5 +7,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 {% for f in protocol.files %}
-#include "hrz_protocol_{{ f.name[4:] }}_path_builder.h"
+#include "hrz/protocol/path_builder/{{ f.name[13:] }}.h"
 {% endfor %}

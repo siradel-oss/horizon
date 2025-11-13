@@ -1,26 +1,28 @@
 SRCS = [
-    "src/instance.cpp",
-    "src/log.cpp",
-    "src/resource_context.cpp",
-    "src/render_context.cpp",
-    "src/renderer.cpp",
-    "src/resource_binder.cpp",
-    "src/render_graph.cpp",
-    "include/log.h",
-    "include/pool.h",
-    "include/arena.h",
-    "include/instance.h",
-    "include/intern_string.h",
-    "include/conv.h",
+    "instance.cpp",
+    "internal/log.cpp",
+    "resource_context.cpp",
+    "render_context.cpp",
+    "renderer.cpp",
+    "resource_binder.cpp",
+    "render_graph.cpp",
+    "internal/log.h",
+    "internal/pool.h",
+    "internal/arena.h",
+    "internal/instance.h",
+    "internal/intern_string.h",
+    "internal/conv.h",
+    "internal/conv.cpp",
 ]
 
 HDRS = [
-    "include/mycelium.h",
-    "include/mycelium_types.h",
-    "include/mycelium_log.h",
-    "include/mycelium_backend.h",
-    "include/mycelium_renderer.h",
-    "include/mycelium_render_graph.h",
+    "mycelium.h",
+    "types.h",
+    "log.h",
+    "backend.h",
+    "renderer.h",
+    "render_graph.h",
+    "properties.h",
 ]
 
 DEPS = [
@@ -31,9 +33,7 @@ DEPS = [
     "//third_party:fmtlib",
 ]
 
-LOCAL_DEFINES = [
-    "MY_LOG_PREFIX=Mycelium",
-] + select({
+LOCAL_DEFINES = select({
     "//:release": ["MYCELIUM_DISABLE_UNKNOWN_SAMPLER_WARNINGS"],
     "//conditions:default": [],
 }) + select({
@@ -48,7 +48,6 @@ cc_library(
     implementation_deps = [
         "//third_party/glad:core_33",
     ],
-    includes = ["include"],
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_CORE_33=1",
         "MYCELIUM_GL_DESKTOP=1",
@@ -56,6 +55,7 @@ cc_library(
         "MYCELIUM_GLSL_VERSION=330",
         "MYCELIUM_GLSL_PROFILE=core",
     ],
+    strip_include_prefix = "/libs",
     visibility = ["//visibility:public"],
     deps = DEPS,
 )
@@ -67,7 +67,6 @@ cc_library(
     implementation_deps = [
         "//third_party/glad:es_30",
     ],
-    includes = ["include"],
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_ES_30=1",
         "MYCELIUM_GL_ES=1",
@@ -75,6 +74,7 @@ cc_library(
         "MYCELIUM_GLSL_VERSION=300",
         "MYCELIUM_GLSL_PROFILE=es",
     ],
+    strip_include_prefix = "/libs",
     visibility = ["//visibility:public"],
     deps = DEPS,
 )
@@ -86,13 +86,13 @@ cc_library(
     implementation_deps = [
         "//libs/mycelium/js",
     ],
-    includes = ["include"],
     local_defines = LOCAL_DEFINES + [
         "MYCELIUM_WEBGL_2=1",
         "MYCELIUM_GL_ES=1",
         "MYCELIUM_GLSL_VERSION=300",
         "MYCELIUM_GLSL_PROFILE=es",
     ],
+    strip_include_prefix = "/libs",
     visibility = ["//visibility:public"],
     deps = DEPS,
 )

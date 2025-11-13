@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz_jobs_declarations.h"
+#include "hrz/core/jobs/jobs_declarations.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

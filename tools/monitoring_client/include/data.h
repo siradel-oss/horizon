@@ -1,8 +1,8 @@
 #pragma once
 
-#include <hrz_fnd_flat_hash_map.h>
-#include <hrz_fnd_flat_hash_set.h>
-#include <hrz_monitoring.h>
+#include "hrz/fnd/flat_hash_map.h"
+#include "hrz/fnd/flat_hash_set.h"
+#include "hrz/monitoring/monitoring.h"
 
 #include <functional>
 #include <map>

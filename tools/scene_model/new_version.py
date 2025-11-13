@@ -5,7 +5,7 @@ import random
 from pathlib import Path
 
 sys.path.append("")
-from hrz.proto.history.manifest import ManifestEntry, read_manifest, compute_hash
+from hrz.protocol.history.manifest import ManifestEntry, read_manifest, compute_hash
 from common import MANIFEST_PATH, save_current_descriptor_set, compute_file_hash
 
 def make_id():
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     print("Building protocol descriptor set...")
     save_current_descriptor_set(id)
-    descriptor_hash = compute_file_hash(f"hrz/proto/history/{id}.pbf")
+    descriptor_hash = compute_file_hash(f"hrz/protocol/history/{id}.pbf")
 
     print("Registering version...")
     print("")

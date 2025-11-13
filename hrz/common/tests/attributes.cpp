@@ -1,4 +1,4 @@
-#include <hrz_common_attributes.h>
+#include "hrz/common/attributes.h"
 
 #include <gtest/gtest.h>
 

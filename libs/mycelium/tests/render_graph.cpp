@@ -1,5 +1,6 @@
+#include "mycelium/mycelium.h"
+
 #include <gtest/gtest.h>
-#include <mycelium.h>
 
 #include <memory>
 #include <span>

@@ -9,6 +9,7 @@ cc_resources(
         "logo_monitoring_96.png": "Icon96",
     },
     header_name = "monitoring_client_resources.h",
+    includes = ["."],
     namespace = "res",
     visibility = ["//visibility:public"],
 )

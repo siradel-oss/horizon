@@ -49,6 +49,7 @@ build:wasm_linux --host_cxxopt=-std=c++20
 startup --windows_enable_symlinks
 build --enable_runfiles
 run --enable_runfiles
+test --enable_runfiles
 
 build --experimental_cc_implementation_deps
 

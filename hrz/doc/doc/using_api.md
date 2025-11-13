@@ -16,7 +16,7 @@ In C++, the backend is expected as a shared pointer by the API. Note that other 
 In C++ only, both input and output are method arguments. This allows the user to control memory allocation by using a [protobuf arena](https://developers.google.com/protocol-buffers/docs/reference/arenas).
 
 ```cpp
-#include <hrz_api.h>
+#include "hrz/api/api.h"
 
 void main()
 {

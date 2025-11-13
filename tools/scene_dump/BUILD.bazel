@@ -1,7 +1,7 @@
 cc_binary(
     name = "get_dump_version",
     srcs = [
-        "src/get_dump_version.cpp",
+        "get_dump_version.cpp",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -12,7 +12,7 @@ cc_binary(
 cc_binary(
     name = "set_dump_version",
     srcs = [
-        "src/set_dump_version.cpp",
+        "set_dump_version.cpp",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -23,7 +23,7 @@ cc_binary(
 cc_binary(
     name = "migrate_dump",
     srcs = [
-        "src/migrate_dump.cpp",
+        "migrate_dump.cpp",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -35,11 +35,11 @@ cc_binary(
 cc_binary(
     name = "edit_dump",
     srcs = [
-        "src/edit_dump.cpp",
+        "edit_dump.cpp",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/cpp_protocol:hrz_cpp_protocol",
+        "//hrz/cpp_protocol",
         "//hrz/scene_dump:migration",
         "//hrz/scene_dump:utils",
         "//third_party:fmtlib",

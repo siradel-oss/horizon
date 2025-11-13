@@ -7,7 +7,7 @@ cc_resources(
         "devui_font_atlas.png": "DevUiFontAtlas",
         "hrz_logo.rgba": "HrzLogo",
     },
-    header_name = "hrz_core_resources.h",
+    header_name = "resources.h",
     namespace = "hrz_res",
     visibility = ["//hrz/core:__subpackages__"],
 )

@@ -1,5 +1,6 @@
-#include <hrz_fnd_mem.h>
-#include <hrz_fnd_varint.h>
+#include "hrz/fnd/varint.h"
+
+#include "hrz/fnd/mem.h"
 
 #include <gtest/gtest.h>
 

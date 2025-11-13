@@ -1,9 +1,8 @@
 #include "data.h"
+#include "hrz/monitoring/monitoring.h"
 #include "server.h"
 #include "ui/ui_context.h"
 #include "userdata.h"
-
-#include <hrz_monitoring.h>
 
 #include <monitoring_client_resources.h>
 #include <stb_image.h>

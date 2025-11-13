@@ -1,9 +1,9 @@
 #pragma once
 
-#include "hrz_jobs_declarations.h"
-#include "hrz_core_job_scheduler.h"
+#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/job_scheduler.h"
 
-#include <hrz_common_monitoring_defs.h>
+#include "hrz/common/monitoring_defs.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

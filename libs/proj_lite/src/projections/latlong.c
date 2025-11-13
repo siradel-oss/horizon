@@ -1,4 +1,4 @@
-#include "proj_lite_internal/projection.h"
+#include "internal/projection.h"
 
 static int fwd(
     const pl_ProjectionDataOpaque* opq,

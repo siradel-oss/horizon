@@ -1,7 +1,7 @@
 #pragma once
 
-#include <hrz_scene_model.pb.h>
-#include <hrz_services.h>
+#include "hrz/protocol/scene_model.pb.h"
+#include "hrz/protocol/services.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -42,6 +42,8 @@ private:
 class Backend
 {
 public:
+    virtual ~Backend() = default;
+
     virtual std::vector<uint8_t> rpc(
         uint32_t service,
         uint32_t method,

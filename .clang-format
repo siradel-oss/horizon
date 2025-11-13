@@ -67,8 +67,6 @@ IncludeBlocks:   Regroup
 IncludeCategories:
   - Regex: '^"'
     Priority: 1
-  - Regex: '^<hrz_'
-    Priority: 2
   - Regex: '^<std'
     Priority: 10
   - Regex: '^<[A-Za-z0-9_]+>$'

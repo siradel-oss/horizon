@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("")
-from hrz.proto.history.manifest import read_manifest
+from hrz.protocol.history.manifest import read_manifest
 
 from common import MANIFEST_PATH, gather_unused_descriptors
 

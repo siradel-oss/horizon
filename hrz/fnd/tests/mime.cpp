@@ -1,4 +1,4 @@
-#include "hrz_fnd_mime.h"
+#include "hrz/fnd/mime.h"
 
 #include <gtest/gtest.h>
 

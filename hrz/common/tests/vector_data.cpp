@@ -1,4 +1,4 @@
-#include "hrz_common_vector_data.h"
+#include "hrz/common/vector_data.h"
 
 #include <gtest/gtest.h>
 

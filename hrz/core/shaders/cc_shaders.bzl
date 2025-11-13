@@ -20,8 +20,8 @@ def _create_cpp_file_from_shader(ctx, ns, name, stage, f):
     return cpp_file
 
 def _cc_shaders_collection_impl(ctx):
-    header_file = ctx.actions.declare_file("include/" + ctx.label.name + ".h")
-    source_file = ctx.actions.declare_file("src/" + ctx.label.name + ".cpp")
+    header_file = ctx.actions.declare_file(ctx.label.name + ".h")
+    source_file = ctx.actions.declare_file(ctx.label.name + ".cpp")
     source_files = [source_file]
     header_files = [header_file]
 
@@ -43,8 +43,8 @@ def _cc_shaders_collection_impl(ctx):
 
     header_content += "}\n"
 
-    source_content = "#include \"" + ctx.label.name + ".h\"\n"
-    source_content += "#include \"hrz_shaders_decompressor.h\"\n"
+    source_content = "#include \"" + ctx.label.package + "/" + ctx.label.name + ".h\"\n"
+    source_content += "#include \"hrz/core/shaders/decompressor.h\"\n"
     source_content += "namespace " + ctx.attr.namespace + " {\n"
     for p in ctx.attr.programs:
         name = p[GlslProgramInfo].name

@@ -26,7 +26,7 @@
   },
   "compose_raster_tile": {
     "params_type": "struct hrz::planet::RasterTileCompositionParams",
-    "response_type": "class hrz::planet::RasterTileCompositionResponse",
+    "response_type": "struct hrz::planet::RasterTileCompositionResponse",
     "documentation": ""
   },
   "decode_vector_tile": {
@@ -111,7 +111,7 @@
   },
   "join_vector_data": {
     "params_type": "struct hrz::vector_data::UnjoinedVectorData",
-    "response_type": "class hrz::vector_data::JoinedVectorData",
+    "response_type": "struct hrz::vector_data::JoinedVectorData",
     "documentation": ""
   },
   "decode_three_d_tiles_batch_table": {

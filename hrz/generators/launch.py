@@ -22,62 +22,61 @@ def generator(name, parser = protocol_parser.parse):
 @generator("cpp_protocol")
 def cpp_protocol_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("cpp_protocol/services.tpl.h")
-    output_template(protocol, tpl, output_dir, "hrz_services.h")
+    output_template(protocol, tpl, output_dir, "gen/hrz/protocol/services.h")
     tpl = tpl_env.get_template("cpp_protocol/protocol_all.tpl.h")
-    output_template(protocol, tpl, output_dir, "hrz_protocol_all.h")
+    output_template(protocol, tpl, output_dir, "gen/hrz/protocol/all.h")
 
     tpl_data = prepare_api_tpl_data(protocol)
     tpl = tpl_env.get_template("cpp_protocol/path_builder_common.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "hrz_protocol_path_builder_common.h")
+    output_template(tpl_data, tpl, output_dir, "gen/hrz/protocol/path_builder_common.h")
     tpl = tpl_env.get_template("cpp_protocol/path_builder_all.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "hrz_protocol_path_builder.h")
+    output_template(tpl_data, tpl, output_dir, "gen/hrz/protocol/path_builder.h")
 
     tpl = tpl_env.get_template("cpp_protocol/path_builder.tpl.h")
     for f in tpl_data["protocol"]["files"]:
         tpl_data["filename"] = f["name"]
         tpl_data["dependencies"] = f["dependencies"]
-        f = remove_prefix(f["name"], "hrz_")
-        output_template(tpl_data, tpl, output_dir, f"hrz_protocol_{f}_path_builder.h")
+        f = remove_prefix(f["name"], "hrz/protocol/")
+        output_template(tpl_data, tpl, output_dir, f"gen/hrz/protocol/path_builder/{f}.h")
 
 @generator("cpp_core")
 def cpp_core_generator(protocol, tpl_env, output_dir, extra):
     tpl_data = prepare_api_tpl_data(protocol)
     tpl = tpl_env.get_template("cpp_core/dispatcher.tpl.cpp")
-    output_template(protocol, tpl, output_dir, "src/hrz_core_rpc_dispatcher.cpp")
+    output_template(protocol, tpl, output_dir, "rpc_dispatcher.cpp")
     tpl = tpl_env.get_template("cpp_core/dispatcher.tpl.h")
-    output_template(protocol, tpl, output_dir, "include/hrz_core_rpc_dispatcher.h")
+    output_template(protocol, tpl, output_dir, "rpc_dispatcher.h")
     tpl = tpl_env.get_template("cpp_core/scene_model_accessor.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_model_accessor.h")
+    output_template(tpl_data, tpl, output_dir, "scene_model_accessor.h")
     tpl = tpl_env.get_template("cpp_core/scene_model_accessor.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "src/hrz_core_scene_model_accessor.cpp")
+    output_template(tpl_data, tpl, output_dir, "scene_model_accessor.cpp")
     tpl = tpl_env.get_template("cpp_core/client_messages.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "src/hrz_core_client_messages.cpp")
+    output_template(tpl_data, tpl, output_dir, "client_messages.cpp")
     tpl = tpl_env.get_template("cpp_core/client_messages.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_core_client_messages.h")
+    output_template(tpl_data, tpl, output_dir, "client_messages.h")
     tpl = tpl_env.get_template("cpp_core/style_enums.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_core_style_enums.cpp")
+    output_template(tpl_data, tpl, output_dir, "style/enums.cpp")
 
     tpl = tpl_env.get_template("cpp_core/scene_path.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "src/hrz_core_scene_path.cpp")
+    output_template(tpl_data, tpl, output_dir, "scene_path/scene_path.cpp")
     tpl = tpl_env.get_template("cpp_core/scene_path_all.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_path.h")
+    output_template(tpl_data, tpl, output_dir, "scene_path/scene_path.h")
     tpl = tpl_env.get_template("cpp_core/scene_path_common.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_core_scene_path_common.h")
-
+    output_template(tpl_data, tpl, output_dir, "scene_path/common.h")
     tpl = tpl_env.get_template("cpp_core/scene_path.tpl.h")
     for f in tpl_data["protocol"]["files"]:
         tpl_data["filename"] = f["name"]
         tpl_data["dependencies"] = f["dependencies"]
-        f = remove_prefix(f["name"], "hrz_")
-        output_template(tpl_data, tpl, output_dir, f"include/hrz_core_{f}_scene_path.h")
+        f = remove_prefix(f["name"], "hrz/protocol/")
+        output_template(tpl_data, tpl, output_dir, f"scene_path/{f}_paths.h")
 
 @generator("cpp_api")
 def cpp_api_generator(protocol, tpl_env, output_dir, extra):
     tpl_data = prepare_api_tpl_data(protocol)
     tpl_cpp = tpl_env.get_template("cpp_api/api.tpl.cpp")
-    output_template(tpl_data, tpl_cpp, output_dir, "hrz_api.cpp")
+    output_template(tpl_data, tpl_cpp, output_dir, "api.cpp")
     tpl_h = tpl_env.get_template("cpp_api/api.tpl.h")
-    output_template(tpl_data, tpl_h, output_dir, "hrz_api.h")
+    output_template(tpl_data, tpl_h, output_dir, "api.h")
 
 @generator("ts_api")
 def ts_api_generator(protocol, tpl_env, output_dir, extra):
@@ -99,17 +98,17 @@ def parse_jobs_manifest(file_path):
 def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
     tpl_data = { "jobs": protocol }
     tpl = tpl_env.get_template("jobs/declarations.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "src/hrz_jobs_declarations.cpp")
+    output_template(tpl_data, tpl, output_dir, "jobs_declarations.cpp")
     tpl = tpl_env.get_template("jobs/declarations.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_declarations.h")
+    output_template(tpl_data, tpl, output_dir, "jobs_declarations.h")
     tpl = tpl_env.get_template("jobs/tickets.tpl.cpp")
-    output_template(tpl_data, tpl, output_dir, "src/hrz_jobs_tickets.cpp")
+    output_template(tpl_data, tpl, output_dir, "jobs_tickets.cpp")
     tpl = tpl_env.get_template("jobs/tickets.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_tickets.h")
+    output_template(tpl_data, tpl, output_dir, "jobs_tickets.h")
     tpl = tpl_env.get_template("jobs/enum_names.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_enum_names.h")
+    output_template(tpl_data, tpl, output_dir, "jobs_enum_names.h")
     tpl = tpl_env.get_template("jobs/type.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "include/hrz_jobs_type.h")
+    output_template(tpl_data, tpl, output_dir, "jobs_type.h")
 
 @generator("web_ui_info")
 def web_ui_info_generator(protocol, tpl_env, output_dir, extra):

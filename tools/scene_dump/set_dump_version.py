@@ -6,11 +6,11 @@ import platform
 from pathlib import Path
 
 sys.path.append("")
-from hrz.proto.history.manifest import Manifest, read_manifest
+from hrz.protocol.history.manifest import Manifest, read_manifest
 
 BZL_CONFIG = "--config=" + platform.system().lower()
 
-MANIFEST_PATH = "hrz/proto/history/versions_manifest.csv"
+MANIFEST_PATH = "hrz/protocol/history/versions_manifest.csv"
 MANIFEST: Manifest = None
 
 if __name__ == "__main__":

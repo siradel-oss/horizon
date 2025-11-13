@@ -1,5 +1,5 @@
-#include "proj_lite_internal/common.h"
-#include "proj_lite_internal/projection.h"
+#include "internal/common.h"
+#include "internal/projection.h"
 
 #include <float.h>
 #include <math.h>

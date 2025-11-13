@@ -2,56 +2,43 @@ load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 filegroup(
     name = "proto",
-    srcs = ["proto/hrz_monitoring_interface.proto"],
+    srcs = ["interface.proto"],
     visibility = ["//visibility:public"],
 )
 
 hrz_genrule(
     name = "generate_proto",
     srcs = [
-        "proto/hrz_monitoring_interface.proto",
+        "interface.proto",
     ],
     outs = [
-        "proto/hrz_monitoring_interface.pb.cc",
-        "proto/hrz_monitoring_interface.pb.h",
+        "interface.pb.cc",
+        "interface.pb.h",
     ],
-    cmd = "$(location //third_party:protoc) -Ihrz/monitoring/proto hrz/monitoring/proto/hrz_monitoring_interface.proto --cpp_out=$(@D)/proto",
+    cmd = "$(location //third_party:protoc) $(location interface.proto) --cpp_out=$(BINDIR)",
     tools = [
         "//third_party:protoc",
     ],
 )
 
 cc_library(
-    name = "hrz_monitoring_proto",
+    name = "monitoring",
     srcs = [
-        "proto/hrz_monitoring_interface.pb.cc",
-        "proto/hrz_monitoring_interface.pb.h",
+        "interface.pb.cc",
+        "monitoring.cpp",
     ],
     hdrs = [
-        "include/hrz_monitoring_protocol.h",
+        "interface.pb.h",
+        "monitoring.h",
+        "protocol.h",
     ],
-    includes = [
-        "include",
-        "proto",
-    ],
-    deps = [
-        "//third_party:libprotobuf-lite",
-    ],
-)
-
-cc_library(
-    name = "hrz_monitoring",
-    srcs = [
-        "src/hrz_monitoring.cpp",
-    ],
-    hdrs = [
-        "include/hrz_monitoring.h",
-    ],
-    includes = ["include"],
+    # Windows still has issues with generated files in the same location as
+    # regular files, so we need to isolate them using an include prefix.
+    include_prefix = package_name(),
     visibility = ["//visibility:public"],
     deps = [
-        ":hrz_monitoring_proto",
-        "//hrz/fnd:hrz_fnd",
+        "//hrz/fnd",
+        "//third_party:libprotobuf-lite",
     ],
 )
 
@@ -64,7 +51,7 @@ cc_test(
     linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
-        ":hrz_monitoring",
+        ":monitoring",
         "//third_party:gtest",
         "//third_party:gtest_main",
     ],

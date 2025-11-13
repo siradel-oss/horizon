@@ -39,7 +39,7 @@ constexpr T sign(T v)
 
 // @@VECTOR_TYPES
 
-template<typename T, size_t N>
+template<typename T, int N>
 struct Vector;
 
 template<typename T>
@@ -282,7 +282,7 @@ using usvec2 = Vector<uint16_t, 2>;
 using usvec3 = Vector<uint16_t, 3>;
 using usvec4 = Vector<uint16_t, 4>;
 
-template<typename T, size_t N>
+template<typename T, int N>
 struct Matrix;
 
 template<typename T>
@@ -321,6 +321,8 @@ struct Matrix<T, 2>
     }
 
     constexpr explicit Matrix(T v) : x{v}, y{v} {}
+
+    constexpr Matrix(T e0, T e1, T e2, T e3) : e{e0, e1, e2, e3} {}
 
     static constexpr Matrix<T, 2> identity()
     {
@@ -373,6 +375,11 @@ struct Matrix<T, 3>
     }
 
     constexpr explicit Matrix(T v) : x{v}, y{v}, z{v} {}
+
+    constexpr Matrix(T e0, T e1, T e2, T e3, T e4, T e5, T e6, T e7, T e8) :
+        e{e0, e1, e2, e3, e4, e5, e6, e7, e8}
+    {
+    }
 
     static constexpr Matrix<T, 3> identity()
     {
@@ -427,6 +434,27 @@ struct Matrix<T, 4>
     }
 
     constexpr explicit Matrix(T v) : x{v}, y{v}, z{v}, w{v} {}
+
+    constexpr Matrix(
+        T e0,
+        T e1,
+        T e2,
+        T e3,
+        T e4,
+        T e5,
+        T e6,
+        T e7,
+        T e8,
+        T e9,
+        T e10,
+        T e11,
+        T e12,
+        T e13,
+        T e14,
+        T e15) :
+        e{e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15}
+    {
+    }
 
     static constexpr Matrix<T, 4> identity()
     {
@@ -647,113 +675,129 @@ struct ClampOp
 
 // @@OPERATORS
 
-template<typename... T, size_t N>
-constexpr auto apply(Operator<T...> auto f, const Vector<T, N>&... v)
+// We would like to use T... but we can't control how multiple parameter packs are expanded at once.
+// So we specialize this for 1, 2, and 3 inputs.
+
+template<typename T, int N, int... Ns>
+constexpr auto apply(std::integer_sequence<int, Ns...>, Operator<T> auto f, const Vector<T, N>& v)
 {
-    Vector<typename decltype(f)::ResultType, N> c;
-    for (size_t i = 0; i < N; ++i)
-    {
-        c.m[i] = f(v.m[i]...);
-    }
-    return c;
+    return Vector<typename decltype(f)::ResultType, N>{f(v.m[Ns])...};
+}
+
+template<typename U, typename V, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V> auto f,
+    const Vector<U, N>& u,
+    const Vector<V, N>& v)
+{
+    return Vector<typename decltype(f)::ResultType, N>{f(u.m[Ns], v.m[Ns])...};
+}
+
+template<typename U, typename V, typename W, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V, W> auto f,
+    const Vector<U, N>& u,
+    const Vector<V, N>& v,
+    const Vector<W, N>& w)
+{
+    return Vector<typename decltype(f)::ResultType, N>{f(u.m[Ns], v.m[Ns], w.m[Ns])...};
+}
+
+template<typename U, typename V, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V> auto f,
+    const Matrix<U, N>& mu,
+    const Matrix<V, N>& mv)
+{
+    return Matrix<typename decltype(f)::ResultType, N>{f(mu.e[Ns], mv.e[Ns])...};
 }
 
 // Optimize vector-scalar and scalar-vector operations because they are fairly common
 // and this avoids having to create a temporary vector of the scalar value.
 // Same for matrices.
 
-template<typename U, Arithmetic V, size_t N>
-constexpr auto apply(Operator<U, V> auto f, const Vector<U, N>& u, V v)
+template<typename U, Arithmetic V, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V> auto f,
+    const Vector<U, N>& u,
+    V v)
 {
-    Vector<typename decltype(f)::ResultType, N> c;
-    for (size_t i = 0; i < N; ++i)
-    {
-        c.m[i] = f(u.m[i], v);
-    }
-    return c;
+    return Vector<typename decltype(f)::ResultType, N>{f(u.m[Ns], v)...};
 }
 
-template<Arithmetic U, typename V, size_t N>
-constexpr auto apply(Operator<U, V> auto f, U u, const Vector<V, N>& v)
+template<Arithmetic U, typename V, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V> auto f,
+    U u,
+    const Vector<V, N>& v)
 {
-    Vector<typename decltype(f)::ResultType, N> c;
-    for (size_t i = 0; i < N; ++i)
-    {
-        c.m[i] = f(u, v.m[i]);
-    }
-    return c;
+    return Vector<typename decltype(f)::ResultType, N>{f(u, v.m[Ns])...};
 }
 
-template<typename... T, size_t N>
-constexpr auto apply(Operator<T...> auto f, const Matrix<T, N>&... m)
+template<typename U, Arithmetic V, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V> auto f,
+    const Matrix<U, N>& u,
+    V v)
 {
-    Matrix<typename decltype(f)::ResultType, N> c;
-    for (size_t i = 0; i < N * N; ++i)
-    {
-        c.e[i] = f(m.e[i]...);
-    }
-    return c;
+    return Matrix<typename decltype(f)::ResultType, N>{f(u.e[Ns], v)...};
 }
 
-template<typename U, Arithmetic V, size_t N>
-constexpr auto apply(Operator<U, V> auto f, const Matrix<U, N>& u, V v)
+template<Arithmetic U, typename V, int N, int... Ns>
+constexpr auto apply(
+    std::integer_sequence<int, Ns...>,
+    Operator<U, V> auto f,
+    U u,
+    const Matrix<V, N>& v)
 {
-    Matrix<typename decltype(f)::ResultType, N> c;
-    for (size_t i = 0; i < N * N; ++i)
-    {
-        c.e[i] = f(u.e[i], v);
-    }
-    return c;
+    return Matrix<typename decltype(f)::ResultType, N>{f(u, v.e[Ns])...};
 }
 
-template<Arithmetic U, typename V, size_t N>
-constexpr auto apply(Operator<U, V> auto f, U u, const Matrix<V, N>& v)
+template<typename T, int N, int... Ns>
+constexpr auto fold(
+    std::integer_sequence<int, Ns...>,
+    FoldOperator<T> auto f,
+    const Vector<T, N>& v,
+    T result)
 {
-    Matrix<typename decltype(f)::ResultType, N> c;
-    for (size_t i = 0; i < N * N; ++i)
-    {
-        c.e[i] = f(u, v.e[i]);
-    }
-    return c;
-}
-
-template<typename T, size_t N>
-constexpr auto fold(FoldOperator<T> auto f, const Vector<T, N>& v, T result)
-{
-    for (size_t i = 0; i < N; ++i)
-    {
-        result = f(result, v.m[i]);
-    }
+    ((result = f(result, v.m[Ns])), ...);
     return result;
 }
 
-template<typename T, size_t N>
-constexpr auto fold(FoldOperator<T> auto f, const Matrix<T, N>& v, T result)
+template<typename T, int N, int... Ns>
+constexpr auto fold(
+    std::integer_sequence<int, Ns...>,
+    FoldOperator<T> auto f,
+    const Matrix<T, N>& v,
+    T result)
 {
-    for (size_t i = 0; i < N * N; ++i)
-    {
-        result = f(result, v.e[i]);
-    }
+    ((result = f(result, v.e[Ns])), ...);
     return result;
 }
 
 // @@COMPONENTWISE
 
-#define IMPL_VEC_BINARY_OP_WITH_SCALAR(OP, NAME)                      \
-    template<typename U, typename V, size_t N>                        \
-    constexpr auto NAME(const Vector<U, N>& a, const Vector<V, N>& b) \
-    {                                                                 \
-        return apply(OP<U, V>{}, a, b);                               \
-    }                                                                 \
-    template<typename U, Arithmetic V, size_t N>                      \
-    constexpr auto NAME(const Vector<U, N>& a, V b)                   \
-    {                                                                 \
-        return apply(OP<U, V>{}, a, b);                               \
-    }                                                                 \
-    template<Arithmetic U, typename V, size_t N>                      \
-    constexpr auto NAME(U a, const Vector<V, N>& b)                   \
-    {                                                                 \
-        return apply(OP<U, V>{}, a, b);                               \
+#define IMPL_VEC_BINARY_OP_WITH_SCALAR(OP, NAME)                              \
+    template<typename U, typename V, int N>                                   \
+    constexpr auto NAME(const Vector<U, N>& a, const Vector<V, N>& b)         \
+    {                                                                         \
+        return apply(std::make_integer_sequence<int, N>{}, OP<U, V>{}, a, b); \
+    }                                                                         \
+    template<typename U, Arithmetic V, int N>                                 \
+    constexpr auto NAME(const Vector<U, N>& a, V b)                           \
+    {                                                                         \
+        return apply(std::make_integer_sequence<int, N>{}, OP<U, V>{}, a, b); \
+    }                                                                         \
+    template<Arithmetic U, typename V, int N>                                 \
+    constexpr auto NAME(U a, const Vector<V, N>& b)                           \
+    {                                                                         \
+        return apply(std::make_integer_sequence<int, N>{}, OP<U, V>{}, a, b); \
     }
 IMPL_VEC_BINARY_OP_WITH_SCALAR(AddOp, operator+)
 IMPL_VEC_BINARY_OP_WITH_SCALAR(SubOp, operator-)
@@ -769,91 +813,91 @@ IMPL_VEC_BINARY_OP_WITH_SCALAR(AndOp, operator&&)
 IMPL_VEC_BINARY_OP_WITH_SCALAR(OrOp, operator||)
 #undef IMPL_VEC_BINARY_OP_WITH_SCALAR
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N>& operator+=(Vector<T, N>& a, const Vector<T, N>& b)
 {
-    a = apply(AddOp<T>{}, a, b);
+    a = apply(std::make_integer_sequence<int, N>{}, AddOp<T>{}, a, b);
     return a;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N>& operator-=(Vector<T, N>& a, const Vector<T, N>& b)
 {
-    a = apply(SubOp<T>{}, a, b);
+    a = apply(std::make_integer_sequence<int, N>{}, SubOp<T>{}, a, b);
     return a;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const Vector<T, N>& v)
 {
-    a = apply(MulOp<T>{}, a, v);
+    a = apply(std::make_integer_sequence<int, N>{}, MulOp<T>{}, a, v);
     return a;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N>& operator*=(Vector<T, N>& a, T v)
 {
-    a = apply(MulOp<T>{}, a, v);
+    a = apply(std::make_integer_sequence<int, N>{}, MulOp<T>{}, a, v);
     return a;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const Vector<T, N>& v)
 {
-    a = apply(DivOp<T>{}, a, v);
+    a = apply(std::make_integer_sequence<int, N>{}, DivOp<T>{}, a, v);
     return a;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N>& operator/=(Vector<T, N>& a, T v)
 {
-    a = apply(DivOp<T>{}, a, v);
+    a = apply(std::make_integer_sequence<int, N>{}, DivOp<T>{}, a, v);
     return a;
 }
 
-template<typename U, Arithmetic V, size_t N>
+template<typename U, Arithmetic V, int N>
 constexpr auto operator*(const Matrix<U, N>& a, V b)
 {
-    return apply(MulOp<U, V>{}, a, b);
+    return apply(std::make_integer_sequence<int, N * N>{}, MulOp<U, V>{}, a, b);
 }
 
-template<Arithmetic U, typename V, size_t N>
+template<Arithmetic U, typename V, int N>
 constexpr auto operator*(U a, const Matrix<V, N>& b)
 {
-    return apply(MulOp<U, V>{}, a, b);
+    return apply(std::make_integer_sequence<int, N * N>{}, MulOp<U, V>{}, a, b);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Matrix<T, N>& operator*=(Matrix<T, N>& a, T b)
 {
-    a = apply(MulOp<T>{}, a, b);
+    a = apply(std::make_integer_sequence<int, N * N>{}, MulOp<T>{}, a, b);
     return a;
 }
 
-template<typename U, Arithmetic V, size_t N>
+template<typename U, Arithmetic V, int N>
 constexpr auto operator/(const Matrix<U, N>& a, V b)
 {
-    return apply(DivOp<U, V>{}, a, b);
+    return apply(std::make_integer_sequence<int, N * N>{}, DivOp<U, V>{}, a, b);
 }
 
-template<Arithmetic U, typename V, size_t N>
+template<Arithmetic U, typename V, int N>
 constexpr auto operator/(U a, const Matrix<V, N>& b)
 {
-    return apply(DivOp<U, V>{}, a, b);
+    return apply(std::make_integer_sequence<int, N * N>{}, DivOp<U, V>{}, a, b);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Matrix<T, N>& operator/=(Matrix<T, N>& a, T b)
 {
-    a = apply(DivOp<T>{}, a, b);
+    a = apply(std::make_integer_sequence<int, N * N>{}, DivOp<T>{}, a, b);
     return a;
 }
 
-#define IMPL_VEC_UNARY_OP(OP, NAME)            \
-    template<typename T, size_t N>             \
-    constexpr auto NAME(const Vector<T, N>& v) \
-    {                                          \
-        return apply(OP<T>{}, v);              \
+#define IMPL_VEC_UNARY_OP(OP, NAME)                                     \
+    template<typename T, int N>                                         \
+    constexpr auto NAME(const Vector<T, N>& v)                          \
+    {                                                                   \
+        return apply(std::make_integer_sequence<int, N>{}, OP<T>{}, v); \
     }
 IMPL_VEC_UNARY_OP(NegOp, operator-)
 IMPL_VEC_UNARY_OP(NotOp, operator!)
@@ -874,21 +918,21 @@ IMPL_VEC_UNARY_OP(AcosOp, acos)
 IMPL_VEC_UNARY_OP(AtanOp, atan)
 #undef IMPL_VEC_UNARY_OP
 
-#define IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(OP, NAME)            \
-    template<typename T, size_t N>                                    \
-    constexpr auto NAME(const Vector<T, N>& a, const Vector<T, N>& b) \
-    {                                                                 \
-        return apply(OP<T>{}, a, b);                                  \
-    }                                                                 \
-    template<typename T, size_t N>                                    \
-    constexpr auto NAME(const Vector<T, N>& a, T b)                   \
-    {                                                                 \
-        return apply(OP<T>{}, a, b);                                  \
-    }                                                                 \
-    template<typename T, size_t N>                                    \
-    constexpr auto NAME(T a, const Vector<T, N>& b)                   \
-    {                                                                 \
-        return apply(OP<T>{}, a, b);                                  \
+#define IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(OP, NAME)                 \
+    template<typename T, int N>                                            \
+    constexpr auto NAME(const Vector<T, N>& a, const Vector<T, N>& b)      \
+    {                                                                      \
+        return apply(std::make_integer_sequence<int, N>{}, OP<T>{}, a, b); \
+    }                                                                      \
+    template<typename T, int N>                                            \
+    constexpr auto NAME(const Vector<T, N>& a, T b)                        \
+    {                                                                      \
+        return apply(std::make_integer_sequence<int, N>{}, OP<T>{}, a, b); \
+    }                                                                      \
+    template<typename T, int N>                                            \
+    constexpr auto NAME(T a, const Vector<T, N>& b)                        \
+    {                                                                      \
+        return apply(std::make_integer_sequence<int, N>{}, OP<T>{}, a, b); \
     }
 IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(FmodOp, fmod)
 IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(PowOp, pow)
@@ -898,21 +942,21 @@ IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE(MaxOp, max)
 #undef IMPL_VEC_BINARY_OP_WITH_SCALAR_SAME_TYPE
 
 #define IMPL_VEC_TERNARY_OP(OP, NAME)                                              \
-    template<typename T, size_t N>                                                 \
+    template<typename T, int N>                                                    \
     auto NAME(const Vector<T, N>& a, const Vector<T, N>& b, const Vector<T, N>& c) \
     {                                                                              \
-        return apply(OP<T>{}, a, b, c);                                            \
+        return apply(std::make_integer_sequence<int, N>{}, OP<T>{}, a, b, c);      \
     }
 IMPL_VEC_TERNARY_OP(ClampOp, clamp)
 #undef IMPL_VEC_TERNARY_OP
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, const Vector<T, N>& a)
 {
     return x * (Vector<T, N>(1) - a) + y * a;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, T a)
 {
     return x * ((T)1 - a) + y * a;
@@ -920,91 +964,82 @@ constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, T a)
 
 // @@VECTOR_ARITHMETIC
 
-template<typename U, typename V, size_t N>
+template<typename U, typename V, int N>
 constexpr auto operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
 {
-    Vector<typename MulOp<U, V>::ResultType, N> v(0);
-    for (size_t i = 0; i < N; ++i)
-    {
-        v += a.col[i] * b.m[i];
-    }
-    return v;
+    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>) {
+        return Vector<typename MulOp<U, V>::ResultType, N>{((a.col[Ns] * b.m[Ns]) + ...)};
+    }(std::make_integer_sequence<int, N>{});
 }
 
-template<typename U, typename V, size_t N>
+template<typename U, typename V, int N>
 constexpr auto operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
-    Matrix<typename MulOp<U, V>::ResultType, N> v;
-    for (size_t i = 0; i < N; ++i)
-    {
-        v.col[i] = a * b.col[i];
-    }
-    return v;
+    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>) {
+        return Matrix<typename MulOp<U, V>::ResultType, N>{a * b.col[Ns]...};
+    }(std::make_integer_sequence<int, N>{});
 }
 
 // @@FOLD_OPERATORS
 
-template<size_t N>
+template<int N>
 constexpr bool any(const Vector<bool, N>& v)
 {
-    return fold(OrOp<bool>{}, v, false);
+    return fold(std::make_integer_sequence<int, N>{}, OrOp<bool>{}, v, false);
 }
 
-template<size_t N>
+template<int N>
 constexpr bool all(const Vector<bool, N>& v)
 {
-    return fold(AndOp<bool>{}, v, true);
+    return fold(std::make_integer_sequence<int, N>{}, AndOp<bool>{}, v, true);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr T minelem(const Vector<T, N>& v)
 {
-    return fold(MinOp<T>{}, v, v.m[0]);
+    return fold(std::make_integer_sequence<int, N>{}, MinOp<T>{}, v, v.m[0]);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr T maxelem(const Vector<T, N>& v)
 {
-    return fold(MaxOp<T>{}, v, v.m[0]);
+    return fold(std::make_integer_sequence<int, N>{}, MaxOp<T>{}, v, v.m[0]);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr T sum(const Vector<T, N>& v)
 {
-    return fold(AddOp<T>{}, v, T{0});
+    return fold(std::make_integer_sequence<int, N>{}, AddOp<T>{}, v, T{0});
 }
 
 // @@VECTOR_OPERATORS
 
-template<typename U, typename V, size_t N>
+template<typename U, typename V, int N>
 constexpr bool operator==(const Vector<U, N>& a, const Vector<V, N>& b)
 {
-    for (int i = 0; i < N; ++i)
-    {
-        if (a.m[i] != b.m[i]) return false;
-    }
-    return true;
+    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>)
+    { return ((a.m[Ns] == b.m[Ns]) && ...); }(std::make_integer_sequence<int, N>{});
 }
 
-template<typename U, typename V, size_t N, typename R = typename MulOp<U, V>::ResultType>
+template<typename U, typename V, int N, typename R = typename MulOp<U, V>::ResultType>
 constexpr R dot(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return sum(a * b);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 T length2(const Vector<T, N>& v)
 {
     return dot(v, v);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 T length(const Vector<T, N>& v)
 {
     return std::sqrt(length2(v));
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 Vector<T, N> normalize(const Vector<T, N>& v)
 {
     T inv_length = (T)1 / length(v);
@@ -1018,25 +1053,22 @@ auto cross(const Vector<U, 3>& a, const Vector<V, 3>& b)
         a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 bool has_nan(const Vector<T, N>& v)
 {
-    for (int i = 0; i < N; ++i)
-    {
-        if (std::isnan(v.m[i])) return true;
-    }
-    return false;
+    return [&v]<int... Ns>(std::integer_sequence<int, Ns...>)
+    { return ((std::isnan(v.m[Ns]) || ...)); }(std::make_integer_sequence<int, N>{});
 }
 
 // @@MATRIX_OPERATORS
 
-template<typename T, size_t N>
+template<typename T, int N>
 Matrix<T, N> transpose(const Matrix<T, N>& m)
 {
     Matrix<T, N> t(m);
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
     {
-        for (size_t j = 0; j < i; ++i)
+        for (int j = 0; j < i; ++i)
         {
             T tmp = t[i][j];
             t[i][j] = t[j][i];
@@ -1166,21 +1198,18 @@ constexpr Matrix<T, 4> adjugate(const Matrix<T, 4>& m)
                 + m.z.x * (m.x.y * m.y.z - m.x.z * m.y.y)});
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 Matrix<T, N> inverse(const Matrix<T, N>& m)
 {
     T inv_det = (T)1 / determinant(m);
     return lm::adjugate(m) * inv_det;
 }
 
-template<typename U, typename V, size_t N>
+template<typename U, typename V, int N>
 constexpr bool operator==(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
-    for (int i = 0; i < N; ++i)
-    {
-        if (a.col[i] != b.col[i]) return false;
-    }
-    return true;
+    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>)
+    { return ((a.e[Ns] == b.e[Ns]) && ...); }(std::make_integer_sequence<int, N * N>{});
 }
 
 // @@MATRIX_CONSTRUCT
@@ -1681,7 +1710,7 @@ Matrix<T, 4> transform_matrix(const DualQuaternion<T>& q)
 
 // @@BOUNDINGBOXES
 
-template<typename T, size_t N>
+template<typename T, int N>
 struct Bbox
 {
     Vector<T, N> min;
@@ -1731,44 +1760,44 @@ using ulbbox3 = Bbox<uint64_t, 3>;
 using dbbox2 = Bbox<double, 2>;
 using dbbox3 = Bbox<double, 3>;
 
-template<typename U, typename V, size_t N>
+template<typename U, typename V, int N>
 constexpr bool operator==(const Bbox<U, N>& a, const Bbox<V, N>& b)
 {
     return a.min == b.min && a.max == b.max;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N> size(const Bbox<T, N>& bb)
 {
     return bb.max - bb.min;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr T area(const Bbox<T, N>& bb)
 {
     auto bb_size = size(bb);
     return bb_size.x * bb_size.y;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N> center(const Bbox<T, N>& bb)
 {
     return (bb.min + bb.max) / (T)2;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 inline T radius(const Bbox<T, N>& bb)
 {
     return std::sqrt(radius2(bb));
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 inline T radius2(const Bbox<T, N>& bb)
 {
     return 0.25 * (length2(abs(bb.max - bb.min)));
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr bool intersect(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     return !(
@@ -1778,7 +1807,7 @@ constexpr bool intersect(const Bbox<T, N>& left, const Bbox<T, N>& right)
 
 // Consider the intervals as open.
 // @Todo Should the openness be part of the bbox definition?
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr bool intersect_open(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     return !(
@@ -1786,33 +1815,33 @@ constexpr bool intersect_open(const Bbox<T, N>& left, const Bbox<T, N>& right)
         || left.min.y >= right.max.y);
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Bbox<T, N> intersection(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     return Bbox<T, N>(max(left.min, right.min), min(left.max, right.max));
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Bbox<T, N> expand(const Bbox<T, N>& bbox, const Vector<T, N>& v)
 {
     return Bbox<T, N>(min(bbox.min, v), max(bbox.max, v));
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Bbox<T, N> merge(const Bbox<T, N>& left, const Bbox<T, N>& right)
 {
     Bbox<T, N> res{min(left.min, right.min), max(left.max, right.max)};
     return res;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Bbox<T, N> merge(const Vector<T, N>& a, const Vector<T, N>& b)
 {
     Bbox<T, N> res{min(a, b), max(a, b)};
     return res;
 }
 
-template<typename T, typename U, size_t N>
+template<typename T, typename U, int N>
 constexpr bool contains(const Bbox<T, N>& bbox, const Vector<U, N>& v)
 {
     bool is_inside = true;
@@ -1823,7 +1852,7 @@ constexpr bool contains(const Bbox<T, N>& bbox, const Vector<U, N>& v)
     return is_inside;
 }
 
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr bool is_valid(const Bbox<T, N>& bbox)
 {
     return all(bbox.min <= bbox.max);
@@ -1837,11 +1866,11 @@ constexpr bool is_valid(const Bbox<T, N>& bbox)
 // upper-right. If you cross your fingers hard enough, your compiler may
 // optimize this away. Clang accepts constexpr on this function but not all
 // compilers do for now.
-template<typename T, size_t N>
+template<typename T, int N>
 constexpr Vector<T, N> corner(const Bbox<T, N>& bbox, uint32_t mask)
 {
     Vector<T, N> c;
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
     {
         c.m[i] = (mask & (1U << i)) ? bbox.max.m[i] : bbox.min.m[i];
     }

@@ -1,7 +1,8 @@
-#include <hrz_fnd_flat_hash_set.h>
-#include <hrz_fnd_http.h>
-#include <hrz_fnd_string_utils.h>
-#include <hrz_http_cache.h>
+#include "hrz/http_cache/http_cache.h"
+
+#include "hrz/fnd/flat_hash_set.h"
+#include "hrz/fnd/http.h"
+#include "hrz/fnd/string_utils.h"
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>

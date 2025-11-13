@@ -1,5 +1,5 @@
-#include <hrz_fnd_mem.h>
-#include <hrz_fnd_string_utils.h>
+#include "hrz/fnd/mem.h"
+#include "hrz/fnd/string_utils.h"
 
 #include <gtest/gtest.h>
 

@@ -7,5 +7,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 {% for f in protocol.files %}
-#include "hrz_core_{{ f.name[4:] }}_scene_path.h"
+#include "hrz/core/scene_path/{{ f.name[13:] }}_paths.h"
 {% endfor %}

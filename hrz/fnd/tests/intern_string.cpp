@@ -1,4 +1,4 @@
-#include <hrz_fnd_intern_string.h>
+#include "hrz/fnd/intern_string.h"
 
 #include <gtest/gtest.h>
 

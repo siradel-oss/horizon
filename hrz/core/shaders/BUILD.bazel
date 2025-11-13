@@ -5,7 +5,7 @@ load(":cc_shaders.bzl", "cc_shaders_collection")
 
 copy_file(
     name = "copy",
-    src = "//hrz/common:include/hrz_common_shader_defines.h",
+    src = "//hrz/common:shader_defines.h",
     out = "glsl/defines.glsl",
 )
 
@@ -1082,7 +1082,7 @@ glsl_program(
 )
 
 cc_shaders_collection(
-    name = "hrz_core_shaders",
+    name = "collection",
     namespace = "hrz_shaders",
     programs = [
         ":Gltf",
@@ -1195,27 +1195,26 @@ cc_shaders_collection(
 
 filegroup(
     name = "shaders_srcs",
-    srcs = [":hrz_core_shaders"],
+    srcs = [":collection"],
     output_group = "srcs",
 )
 
 filegroup(
     name = "shaders_hdrs",
-    srcs = [":hrz_core_shaders"],
+    srcs = [":collection"],
     output_group = "hdrs",
 )
 
 cc_library(
     name = "shaders",
     srcs = [
-        "include/hrz_shaders_decompressor.h",
-        "src/hrz_shaders_decompressor.cpp",
+        "decompressor.cpp",
+        "decompressor.h",
         ":shaders_srcs",
     ],
     hdrs = [
         ":shaders_hdrs",
     ],
-    includes = ["include"],
     visibility = ["//hrz/core:__subpackages__"],
     deps = [
         "//third_party:lz4",

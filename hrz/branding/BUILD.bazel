@@ -22,7 +22,7 @@ cc_resources(
         "favicon-32x32.png": "Icon32",
         "favicon-16x16.png": "Icon16",
     },
-    header_name = "hrz_icons.h",
+    header_name = "icons.h",
     namespace = "hrz_icons",
     visibility = ["//visibility:public"],
 )

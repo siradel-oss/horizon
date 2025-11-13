@@ -112,8 +112,7 @@ vec3 get_normal()
     }
     else
     {
-        if (gl_FrontFacing) return v_normal;
-        else return -v_normal;
+        return v_normal;
     }
 }
 #endif

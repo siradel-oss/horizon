@@ -1,7 +1,7 @@
+#include "internal/constants.h"
+#include "internal/database.h"
+#include "internal/projection.h"
 #include "proj_lite.h"
-#include "proj_lite_internal/constants.h"
-#include "proj_lite_internal/database.h"
-#include "proj_lite_internal/projection.h"
 
 #include <stdio.h>
 

@@ -235,6 +235,12 @@ def _cmakelists_aspect_impl(target, ctx):
                     path += "external/" + target.label.workspace_name + "/"
                 paths.append(path)
 
+                if uses_generated_files:
+                    path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
+                    if target.label.workspace_name:
+                        path += "external/" + target.label.workspace_name + "/"
+                    paths.append(path)
+
         cmake_commands.append(
             struct(
                 command = "target_include_directories",

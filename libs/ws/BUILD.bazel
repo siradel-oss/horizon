@@ -1,22 +1,22 @@
 cc_library(
     name = "ws_common",
     hdrs = [
-        "include/ws_common.h",
+        "ws_common.h",
     ],
-    includes = ["include"],
+    includes = ["."],
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "ws_server",
     srcs = select({
-        "//:os_native": ["src/ws_server_native.cpp"],
+        "//:os_native": ["ws_server_native.cpp"],
         "//conditions:default": [],
     }),
     hdrs = [
-        "include/ws_server.h",
+        "ws_server.h",
     ],
-    includes = ["include"],
+    includes = ["."],
     visibility = ["//visibility:public"],
     deps = select({
         "//:os_native": ["//third_party:websocketpp"],
@@ -29,14 +29,14 @@ cc_library(
 cc_library(
     name = "ws_client",
     srcs = select({
-        "//:os_native": ["src/ws_client_native.cpp"],
-        "//:os_web": ["src/ws_client_emscripten.cpp"],
+        "//:os_native": ["ws_client_native.cpp"],
+        "//:os_web": ["ws_client_emscripten.cpp"],
         "//conditions:default": [],
     }),
     hdrs = [
-        "include/ws_client.h",
+        "ws_client.h",
     ],
-    includes = ["include"],
+    includes = ["."],
     visibility = ["//visibility:public"],
     deps = select({
         "//:os_native": ["//third_party:websocketpp"],
@@ -49,7 +49,7 @@ cc_library(
 cc_binary(
     name = "ws_echo_server",
     srcs = [
-        "src/ws_echo_server.cpp",
+        "ws_echo_server.cpp",
     ],
     visibility = ["//visibility:public"],
     deps = [

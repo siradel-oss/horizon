@@ -1,6 +1,6 @@
-#include "proj_lite_internal/database.h"
+#include "internal/database.h"
 
-#include "proj_lite_internal/constants.h"
+#include "internal/constants.h"
 
 #define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
 

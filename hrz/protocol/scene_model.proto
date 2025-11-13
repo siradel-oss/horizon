@@ -1,0 +1,2183 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/types.proto";
+import "hrz/protocol/layers.proto";
+import "hrz/protocol/wrappers.proto";
+
+enum SceneViewIndex {
+    SCENE_VIEW_0 = 0;
+    SCENE_VIEW_1 = 1;
+}
+
+// In a bitset, each bit represents a scene view, starting with the least
+// significant bit.  For instance scene view 0 is 1, scene view 1 is 2, scene
+// view 2 is 4, etc.  It can be used to select a set of scene views.
+message SceneViewBitset { uint32 bits = 1; }
+
+enum CameraIndex {
+    CAMERA_0 = 0;
+    CAMERA_1 = 1;
+}
+
+message LightingSettings {
+    reserved 2;
+
+    // Set to true to enable diffuse lighting and receiving shadows.
+    bool enable_lighting = 1;
+
+    // Set to true to cast shadows on other objects and itself.
+    bool cast_shadows    = 3;
+
+    // Set to true to receive shadows from other objects and itself.
+    bool receive_shadows = 4;
+}
+
+message PathRoot {
+    reserved 200;
+
+    oneof kind {
+        // Points to a [[SingleModelLayer]] message.
+        LayerHandle    single_model_layer            = 1;
+
+        // Points to a [[DtmRasterLayer]] message.
+        LayerHandle    dtm_raster_layer              = 2;
+
+        // Points to an [[ImageryRasterLayer]] message.
+        LayerHandle    imagery_raster_layer          = 3;
+
+        // Points to a [[VectorDataLayer]] message.
+        LayerHandle    vector_data_layer             = 4;
+
+        // Points to a [[VectorTilesLayer]] message.
+        LayerHandle    vector_tiles_layer            = 5;
+
+        // Points to a [[ThreeDTilesLayer]] message.
+        LayerHandle    three_d_tiles_layer           = 6;
+
+        // Points to a [[ClippingPlaneLayer]] message.
+        LayerHandle    clipping_plane_layer          = 7;
+
+        // Points to an [[InMemoryVectorSourceLayer]] message.
+        LayerHandle    in_memory_vector_source_layer = 8;
+
+        // Points to a [[GizmoLayer]] message.
+        LayerHandle    gizmo_layer                   = 9;
+
+        // Points to an [[EditableShapeLayer]] message.
+        LayerHandle    editable_shape_layer          = 10;
+
+        // Points to a single [[SceneSettings]] message.
+        Void           scene_settings                = 100;
+
+        // Points to a [[SceneViewSettings]] message.
+        SceneViewIndex scene_view_settings           = 103;
+
+        // Points to a [[CameraSettings]] message.
+        CameraIndex    camera_settings               = 101;
+    }
+}
+
+// A path is composed of a root and a list of numbers that point to a specific
+// part of the scene model.
+//
+// The root points to a specific tree in the scene model. See [[PathRoot]].
+//
+// To explain the parts array, we will consider the following
+// scene model tree:
+//
+// ```
+// my_layer
+// ├── name (#1)
+// └── palette (#2)
+//     ├── color_space (#1)
+//     └── color_points[] (#2)
+//         ├── [0]
+//         │   ├── r (#1)
+//         │   ├── g (#2)
+//         │   └── b (#3)
+//         └── [1]
+//             ├── r (#1)
+//             ├── g (#2)
+//             └── b (#3)
+// ```
+//
+// In this example, there is a root message with two fields (`name` and
+// `palette`). The palette itself has one field, `color_points`, which is an
+// array of colors. Each color has three fields: `r`, `g`, and `b`.
+//
+// The numbers denoted by a `#` character are the IDs of the fields, described
+// by the Protobuf schema (omitted here).
+//
+// A path is the concatenation of field numbers, starting from the root, that
+// points to a specific field. Examples:
+//
+// - The path to `name` would be `[1]`.
+// - The path to `palette` would be `[2]`.
+// - The path to `palette.color_space` would be `[2, 1]`.
+//
+// Pointing to an entire array (called the root of the array) is done by using
+// the field number of the array. This is used for methods that count or add
+// elements.
+//
+// - The path to `palette.color_points` would be `[2, 2]`.
+//
+// Pointing to a specific element of an array is done by using the field number
+// of the array, and the index of the element in the array. The index is
+// zero-based. The path then continues as normal.
+//
+// - The path to `palette.color_points[0]` would be `[2, 2, 0]`.
+// - The path to `palette.color_points[0].r` would be `[2, 2, 0, 1]`.
+// - The path to `palette.color_points[1].b` would be `[2, 2, 1, 3]`.
+message Path {
+    PathRoot        root  = 1;
+    repeated uint32 parts = 2;
+}
+
+message SceneModelSet {
+    Path  path    = 1;
+    bytes payload = 2;
+}
+
+// This service provides read and write access to the scene model.
+// It should not be used directly, but instead through the path builders API.
+// This is because there is no type-checking, and payloads are serialized,
+// which means that it is easy to make a mistake and send or receive the wrong
+// message type.
+//
+// Each method is a different access type to the scene model, and uses a path
+// to point to the location in the scene model that should be accessed.
+//
+// The `Get` and `Set` methods cannot operate on an entire array. Use the `Add`
+// and `Remove` methods instead, or mutate a parent message, or a single element
+// of the array.
+//
+// @service_id = 0x463fd4f6
+service SceneModelService {
+    // Retrieves a part of the scene model at the given path.
+    // The returned value is the Protobuf-serialized value, that should
+    // be deserialized using the appropriate message type.
+    //
+    // @method_id=0x1e48af60
+    rpc Get(Path) returns (BytesValue);
+
+    // Sets a part of the scene model at the given path.
+    // The payload is the Protobuf-serialized value, serialized with
+    // the appropriate message type.
+    //
+    // @method_id=0x81c38365
+    rpc Set(SceneModelSet) returns (Void);
+
+    // Adds a new element to an array in the scene model.
+    // The path must point to the root of an array (see the [[Path]]
+    // documentation), and the payload must be the Protobuf-serialized value of
+    // the element, serialized with the appropriate message type. The number of
+    // elements in the array after adding this new element is returned.
+    //
+    // @method_id=0x605469da
+    rpc Add(SceneModelSet) returns (UInt32Value);
+
+    // Removes an element from an array in the scene model.
+    // The path must point to the element in the array to be removed
+    // (see the [[Path]] documentation).
+    // The number of elements in the array after removing this element
+    // is returned.
+    //
+    // @method_id=0x7f555d53
+    rpc Remove(Path) returns (UInt32Value);
+
+    // Counts the number of elements in an array in the scene model.
+    // The path must point to the root of an array (see the [[Path]]
+    // documentation).
+    //
+    // @method_id=0x44987164
+    rpc Count(Path) returns (UInt32Value);
+}
+
+message TemplatedUrl {
+    string name = 1;
+    string url  = 2;
+}
+
+message Material {
+    // Name of the material. It must be unique.
+    // This is the identifier used to make the material active.
+    string                name                 = 4;
+
+    // Name of the material variant to use, as defined by
+    // the KHR_materials_variants extension.
+    string                variant_name         = 1;
+
+    // List of templated URLs to use for dynamic materials.
+    // See the SIRADEL_templated_image_url extension for more
+    // information.
+    repeated TemplatedUrl urls                 = 2;
+
+    // Palette used to colorize data textures (if any is used).
+    // WARNING: The number of color points is limited to 32.
+    NumericPalette        data_texture_palette = 3;
+}
+
+// Two materials can be displayed at once: the base and the overlay materials.
+// The overlay material can be disabled, and its opacity changed. It is
+// displayed on top of the base material. The feature color (for example the
+// instanced or batch color) can be applied either between the base and overlay
+// materials, or above everything if the `apply_feature_color_to_overlay` is set
+// to true.
+message MaterialProperties {
+    // Name of the activate material defined in the `materials` field of
+    // the layer.
+    // If this name doesn't map to a valid material, the model will be
+    // displayed with the default material defined in the source.
+    string    base_material                  = 1;
+
+    // Same as the base material, but for the overlay material.
+    string    overlay_material               = 2;
+
+    bool      enable_overlay                 = 3;
+    float     overlay_opacity                = 4;
+    bool      apply_feature_color_to_overlay = 5;
+
+    BlendMode feature_color_blend_mode       = 6;
+    float     feature_color_blend_strength   = 7;
+}
+
+// This is a layer that contains a simple 3D model. It has to be in glTF format.
+// @path_root="single_model_layer"
+message SingleModelLayer {
+    reserved 15;
+
+    string                        url                       = 1;
+    HttpHeaderList                http_headers              = 7;
+    string                        attribution               = 18;
+    // Pass main URL query parameters when requesting external resources,
+    // such as textures.
+    bool                          preserve_query_parameters = 16;
+    Transform                     transform                 = 2;
+    GeographicPosition            geographic                = 3;
+
+    // Automatically clamps the model to the ground. The altitude of the
+    // geographic position is used as the offset from the ground.
+    bool                          clamp_to_ground           = 13;
+
+    bool                          visible                   = 4;
+    Color                         color                     = 5;
+
+    repeated Material             materials                 = 14;
+    MaterialProperties            material_properties       = 17;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32                         loading_priority          = 6;
+
+    int32                         clip_id                   = 8;
+
+    // Select what views the model will be visible in.
+    SceneViewBitset               scene_views               = 9;
+
+    LayerVisibilityConstraintList visibility_constraints    = 10;
+
+    LightingSettings              lighting                  = 12;
+}
+
+// DTM raster layers represent an elevation map used to create the terrain.
+// @path_root="dtm_raster_layer"
+message DtmRasterLayer {
+    Raster                        raster                 = 1;
+
+    // This gives the order or raster layers in a group. A raster with a higher
+    // slot will take priority over rasters with a lower slot. Order is
+    // undefined between rasters of equal slot.
+    uint32                        slot                   = 3;
+    bool                          visible                = 4;
+    LayerVisibilityConstraintList visibility_constraints = 5;
+}
+
+// Imagery rasters overlaid on the terrain.
+// @path_root="imagery_raster_layer"
+message ImageryRasterLayer {
+    Raster                        raster                 = 1;
+    RasterGroup                   group                  = 2;
+
+    // This gives the order or raster layers in a group. A raster with a higher
+    // slot will take priority over rasters with a lower slot. Order is
+    // undefined between rasters of equal slot.
+    uint32                        slot                   = 3;
+    bool                          visible                = 4;
+    LayerVisibilityConstraintList visibility_constraints = 5;
+    SceneViewBitset               scene_views            = 6;
+}
+
+// @path_root="vector_data_layer"
+message VectorDataLayer {
+    reserved 3, 4, 5;
+
+    uint32                    id               = 1;
+
+    // Sources of vector data, that are combined to make up the layer's data.
+    // The first source is the primary source, and the others are secondary.
+    // The primary source defines the number and order of features. Data from
+    // secondary sources is joined to data from the primary source, and adapted
+    // if needed to match the primary source.
+    // Data can be joined in two ways:
+    //
+    // * The simplest way is to take geometries and attribute values in the
+    //   order they come from. Features from secondary sources can be deleted
+    //   if there are more in the secondary source than in the primary source.
+    //   Default (empty) features can be added if the secondary source has fewer
+    //   features than the primary source.
+    // * If both the primary and secondary sources have features IDs, data from
+    //   the secondary source can be reordered to match the primary source.
+    //   Features from the secondary source can be discarded if they have no
+    //   matching feature in the primary source, and default (empty) features
+    //   can be added if some features from the primary source have no matching
+    //   feature in the secondary source.
+    //   Feature IDs must be defined with the same attributes in both primary
+    //   and secondary sources, for joins by feature ID to be possible. When
+    //   this condition is met, joins by feature ID are automatically used.
+    repeated VectorDataSource sources          = 2;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32                     loading_priority = 6;
+}
+
+enum VectorReprType {
+    reserved 2, 4, 6;
+
+    // @label="None"
+    NULL_VECTOR_REPR              = 0;
+
+    // @label="Extruded geometry"
+    EXTRUDED_GEOMETRY_VECTOR_REPR = 1;
+
+    // @label="3D Model"
+    MODEL_VECTOR_REPR             = 3;
+
+    // @label="Cylinder"
+    CYLINDER_VECTOR_REPR          = 5;
+
+    // @label="Flat overlay"
+    FLAT_OVERLAY_VECTOR_REPR      = 7;
+
+    // @label="Heatmap"
+    HEATMAP_VECTOR_REPR           = 8;
+
+    // @label="Symbol"
+    SYMBOL_VECTOR_REPR            = 9;
+}
+
+message ExtrudedGeometryVectorRepr {
+    reserved 1, 2, 3;
+
+    // Controls the height of the extrusion, in meters.
+    FloatProperty    extrusion       = 7;
+    // Controls the colour of the upper part of the 3D shape's facades.
+    ColorProperty    upper_color     = 8;
+    // Controls the colour of the lower part of the 3D shape's facades.
+    ColorProperty    lower_color     = 10;
+    // Controls the colour of the 3D shape's top face.
+    ColorProperty    roof_color      = 11;
+    // Elevation above the ground of the 3D shapes.
+    FloatProperty    altitude_offset = 9;
+
+    // Clip the geometry to the borders of the tiles. Useful for hiding margins
+    // often added by vector data tilers.
+    bool             clip_to_tile    = 12;
+
+    int32            clip_id         = 4;
+
+    LightingSettings lighting        = 6;
+
+    // When > 0, adds a bevel to the edges of the extruded shape.
+    // This is the width of the newly created beveled faces, in meters.
+    // This also makes edges with very large angles be shaded smoothly in
+    // order to match the appearance of the beveled edges.
+    //
+    // Note that setting this too high might create geometry artifacts.
+    //
+    // Warning: This has a significant effect on memory usage. Expect double
+    // the memory usage when this is enabled, no matter the size of the bevel.
+    //
+    // Note: This option might be implicitly disabled for some features when
+    // they require additional tessellation for conforming to the planet's
+    // curvature, or when there is not enough room for the bevel.
+    float            bevel_width     = 13;
+}
+
+enum PolylineSide {
+    // @label="Inside and outside"
+    SIDE_BOTH    = 0;
+
+    // @label="Inside"
+    SIDE_INSIDE  = 1;
+
+    // @label="Outside"
+    SIDE_OUTSIDE = 2;
+}
+
+enum InWorldSizeUnit {
+    // @label="Size in meters"
+    IN_WORLD_SIZE_IN_METERS = 0;
+
+    // In logical pixels.
+    // @label="Size in pixels"
+    IN_WORLD_SIZE_IN_PIXELS = 1;
+}
+
+enum DashMode {
+    // @label="Disable dashes"
+    DASH_DISABLED         = 0;
+
+    // @label="Enable filled dashes"
+    DASH_ENABLED_FILLED   = 1;
+
+    // @label="Enable gradient dashes"
+    DASH_ENABLED_GRADIENT = 2;
+}
+
+enum DashSizeUnit {
+    // @label="Size in meters"
+    DASH_SIZE_IN_METERS                   = 0;
+    // In logical pixels.
+    // @label="Size in pixels"
+    DASH_SIZE_IN_PIXELS                   = 1;
+    // @label="Size relative to polyline length"
+    DASH_SIZE_RELATIVE_TO_POLYLINE_LENGTH = 2;
+}
+
+enum PolygonPatternSizeUnit {
+    // @label="Size in meters"
+    POLYGON_PATTERN_SIZE_IN_METERS                    = 0;
+
+    // In logical pixels.
+    // @label="Size in pixels"
+    POLYGON_PATTERN_SIZE_IN_PIXELS                    = 1;
+
+    // Scale applied to the size of the sprite, considering that
+    // size to be meters.
+    // @label="Size relative to sprite size, in meters"
+    POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_METERS = 2;
+
+    // Scale applied to the size of the sprite, considering that size to be
+    // logical pixels.
+    // @label="Size relative to sprite size, in pixels"
+    POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_PIXELS = 3;
+}
+
+enum PolygonPatternTilingType {
+    // The pattern instances form a consistent grid, but their size vary
+    // considerably, and becomes very small towards the poles.
+    // @label="Favour pattern grid"
+    POLYGON_PATTERN_FAVOR_GRID = 0;
+
+    // Pattern instances at different latitude can have different scales,
+    // breaking the grid, in order to give them more consistent sizes. A
+    // reference latitude is used to avoid having a scale break at an
+    // inconvenient place.
+    // @label="Favour pattern size"
+    POLYGON_PATTERN_FAVOR_SIZE = 1;
+}
+
+enum PolygonPatternReferenceLatitudeType {
+    // Pattern instances have a size close to the intended one near the given
+    // latitude, and scale breaks are as far as possible from this latitude.
+    // Scale breaks are fixed.
+    // Use this option when the scene has a consistent focus on a small(ish)
+    // area.
+    // @label="Fixed reference latitude"
+    POLYGON_PATTERN_FIXED_REFERENCE_LATITUDE   = 0;
+
+    // Pattern instances have a size close to the intended one near the camera
+    // position, and scale breaks are as far as possible from this latitude.
+    // However the positions of the scale breaks are readjusted dynamically and
+    // this can create temporal scale breaks as the camera moves. Use this
+    // option when the scene encompasses large areas.
+    // @label="Dynamic reference latitude"
+    POLYGON_PATTERN_DYNAMIC_REFERENCE_LATITUDE = 1;
+}
+
+message FlatOverlayVectorRepr {
+    reserved 1, 2, 6, 7, 10, 15, 16, 18;
+
+    // Controls the width of the line.
+    FloatProperty            line_width                   = 21;
+    // Controls the colour of the shape (either line or polygon).
+    ColorProperty            color                        = 22;
+    // Controls the radius of the disc (only for points vector data).
+    FloatProperty            disc_radius                  = 23;
+    // For polylines and outlines, controls the distance between the start of
+    // two dashes. Unit is `dash_period_unit`.
+    FloatProperty            dash_period                  = 24;
+    // For polylines and outlines, controls the length of the dashes. Unit is
+    // `dash_length_unit`.
+    FloatProperty            dash_length                  = 25;
+    // For polylines and outlines, controls the colour to display for the gaps
+    // in-between dashes.
+    ColorProperty            line_empty_color             = 26;
+    // For polylines and outlines, controls the speed (per second) at which
+    // dashes move from the first to last point of the line. Negative values
+    // will reverse the direction of the gradient if it is enabled. Unit is
+    // `animation_speed_unit` per second.
+    FloatProperty            animation_speed              = 27;
+
+    // Used to set the rendering order of the layer, features with a higher
+    // value are drawn on top of features with a lower value. For instance,
+    // features with the z-index value `1` are drawn over (and therefore can
+    // hide) features with the value `0`.
+    uint32                   z_index                      = 3;
+
+    // Clip the geometry to the borders of the tiles. Useful for hiding margins
+    // often added by vector data tilers.
+    bool                     clip_to_tile                 = 4;
+
+    // Draw the polygons as outlines instead of filling them in. Polylines
+    // properties apply.
+    bool                     polygons_outline             = 5;
+
+    // For polylines and outlines, controls the existence and appearance of the
+    // dashes.
+    DashMode                 dash_mode                    = 14;
+
+    // For polylines and outlines, controls the unit of the dash period.
+    DashSizeUnit             dash_period_unit             = 17;
+
+    // For polylines and outlines, controls the unit of the dash length.
+    DashSizeUnit             dash_length_unit             = 19;
+
+    // For polylines and outlines, draws the dashes, angle between segments, and
+    // the ends of polylines with a round shape. If disabled, angles that are
+    // not too sharp will be joined together like cylinders.
+    bool                     round_tips                   = 8;
+
+    // Indicates what sides of a polyline should be displayed. This can be used
+    // to only display one side of a polygon's outline.
+    PolylineSide             side                         = 9;
+
+    // Width of the discs outline for points data, in the same unit as the main
+    // radius.
+    float                    disc_outline_width           = 11;
+
+    // Colour of discs' outline.
+    Color                    disc_outline_color           = 12;
+
+    // Indicates whether the line width is expressed in meters or in pixels.
+    InWorldSizeUnit          line_width_unit              = 13;
+
+    // Indicates whether the disc radius is expressed in meters or in pixels.
+    InWorldSizeUnit          disc_radius_unit             = 42;
+
+    // For polylines and outlines, controls the unit per second of the animation
+    // property.
+    DashSizeUnit             animation_speed_unit         = 20;
+
+    // URL to the image containing either a single sprite or a sprite sheet, for
+    // patterns.
+    string                   pattern_image_url            = 28;
+    HttpHeaderList           pattern_image_http_headers   = 29;
+
+    // Definition of the sprites for patterns.
+    // Stretchable areas are not taken into account, each sprite is used as-is.
+    // If no sprites are defined, the whole pattern image is used.
+    repeated ImageSprite     pattern_sprites              = 30;
+
+    // Index of the sprite to use for polygon pattern.
+    IntProperty              polygon_pattern_sprite_index = 31;
+
+    // Name of the sprite to use for polygon pattern.
+    // If the name is valid, it overrides the sprite index property.
+    StringProperty           polygon_pattern_sprite_name  = 32;
+
+    // Size of the polygon pattern instances.
+    Vec2fProperty            polygon_pattern_size         = 33;
+
+    // Unit of the size of polygon pattern instances.
+    PolygonPatternSizeUnit   polygon_pattern_size_unit    = 34;
+
+    // Rotation in radians, counter-clockwise, of the polygon pattern instances.
+    FloatProperty            polygon_pattern_rotation     = 35;
+
+    // Controls how the polygon pattern grid is built, wrt. the curvature of the
+    // planet.
+    PolygonPatternTilingType polygon_pattern_tiling_type  = 36;
+
+    // Sets the reference latitude for building the polygon pattern grid to a
+    // static or dynamic value.
+    PolygonPatternReferenceLatitudeType
+                  polygon_pattern_reference_latitude_type = 37;
+
+    // Reference latitude, in WGS84 degrees, used to build the polygon pattern
+    // grid, when it is not dynamic.
+    float         polygon_pattern_reference_latitude      = 38;
+
+    // Color applied to the polygon pattern, according to the blend mode and
+    // strength.
+    ColorProperty polygon_pattern_color                   = 39;
+
+    // Controls how the polygon pattern color is blended into the pattern sprite
+    // colors.
+    BlendMode     polygon_pattern_color_blend_mode        = 40;
+
+    // Controls the strength of the blending of the polygon pattern color into
+    // the pattern sprite colors. Values are clamped between 0 and 1
+    // (inclusive).
+    FloatProperty polygon_pattern_color_blend_strength    = 41;
+}
+
+enum HeatmapAccumulationMode {
+    // The values are simply added together.
+    // This mode is accurate but can easily saturate the palette if it does not
+    // have a wide enough range. The values and not bounded, and neither is the
+    // palette.
+    //
+    // @label="Additive"
+    HEATMAP_ADDITIVE         = 0;
+
+    // The values are alpha-blended together using their value as weight.
+    // This mode is much harder to saturate, and this keeps the heatmap readable
+    // in areas of high density. The values should be in the [0, 1] range, and
+    // so should the palette. Failing to do so is undefined behaviour.
+    //
+    // @label="Weighted blended"
+    HEATMAP_WEIGHTED_BLENDED = 1;
+}
+
+message HeatmapVectorRepr {
+    reserved 1, 2;
+
+    // Controls the radius of the disc-shaped area where the feature contributes
+    // its value.
+    FloatProperty           disc_radius           = 6;
+
+    // Controls the size of the blur applied to each point, relative to the disc
+    // radius.
+    float                   blur_size             = 8;
+
+    // Controls the value that will be contributed to the heatmap by the
+    // feature.
+    FloatProperty           value                 = 7;
+
+    // Indicates the unit of the `disc_radius` and `blur_size` properties.
+    InWorldSizeUnit         disc_radius_size_unit = 3;
+
+    // How point values are accumulated for the final colorization.
+    HeatmapAccumulationMode accumulation          = 9;
+
+    // Used to colorize the heatmap depending on the value of the points
+    // contributed by the different representations. WARNING: The number of
+    // color points is limited to 32.
+    NumericPalette          numeric_palette       = 4;
+
+    // Used to set the rendering order of the heatmap in relation to the other
+    // flat overlay representations. Higher Z-indices are drawn above lower
+    // ones.
+    uint32                  z_index               = 5;
+}
+
+message CylinderVectorRepr {
+    reserved 1, 2, 3, 8 to 11;
+
+    // Controls the colour of the cylinder.
+    ColorProperty    color                = 16;
+    // Controls the radius in meters of the cylinder.
+    FloatProperty    radius               = 17;
+    // Controls the offset of the entire polyline form the ground, in meters.
+    FloatProperty    altitude_offset      = 18;
+    // Controls the distance between the start of two dashes. Unit is
+    // `dash_period_unit`.
+    FloatProperty    dash_period          = 19;
+    // Controls the length of the dashes. Unit is `dash_length_unit`.
+    FloatProperty    dash_length          = 20;
+    // Controls the colour to display for the gaps in-between dashes.
+    ColorProperty    empty_color          = 21;
+    // Controls the speed (per second) at which dashes move from the first to
+    // last point of the line. Negative values will reverse the direction of the
+    // gradient if it is enabled. Unit is `animation_speed_unit` per second.
+    FloatProperty    animation_speed      = 22;
+
+    int32            clip_id              = 4;
+
+    LightingSettings lighting             = 6;
+
+    // Controls the existence and appearance of the dashes.
+    DashMode         dash_mode            = 7;
+
+    // Controls the unit of the dash period.
+    DashSizeUnit     dash_period_unit     = 12;
+
+    // Controls the unit of the dash length.
+    DashSizeUnit     dash_length_unit     = 14;
+
+    // Controls the unit per second of the animation speed.
+    DashSizeUnit     animation_speed_unit = 15;
+
+    // Used to make the insides of the cylinders visible. Note that there are
+    // transparency issues when used in conjunction with semi-transparent colors
+    // (any color with an alpha value that is not `0.0` or `1.0`).
+    bool             disable_face_culling = 13;
+}
+
+// This describes the order of extrinsic rotations for a rotation expressed
+// using Euler angles.
+// Any triple of extrinsic rotations is equivalent to intrinsic rotations by
+// the same angles but with inverted order of rotations, and vice-versa. For
+// instance, the intrinsic rotations x-y’-z″ by angles α, β, γ are equivalent
+// to the extrinsic rotations z-y-x by angles γ, β, α.
+enum EulerRotationOrder {
+    EULER_ZYX = 0;
+    EULER_ZXY = 1;
+    EULER_XYZ = 2;
+    EULER_XZY = 3;
+    EULER_YZX = 4;
+    EULER_YXZ = 5;
+}
+
+message ModelVectorRepr {
+    reserved 1 to 4;
+
+    // Controls the colour of the model. Set white for the original colour of
+    // the image.
+    ColorProperty      color                        = 16;
+    // Controls the size of the model. Set `(1, 1, 1)` for the default size.
+    Vec3fProperty      scale                        = 17;
+    // Controls the offset of the sprite in local North-East-Up (ENU) space. Set
+    // `(0, 0, 0)` for no offset (Note that `z=0` is the ground level).
+    Vec3fProperty      world_offset                 = 18;
+    // Controls the rotation of the model. Set `(0, 0, 0)` for no rotation.
+    Vec3fProperty      rotation                     = 19;
+
+    // URL of the model, in the glTF format.
+    string             url                          = 5;
+    HttpHeaderList     http_headers                 = 7;
+    // Pass main URL query parameters when requesting external resources,
+    // such as textures.
+    bool               preserve_query_parameters    = 12;
+    // Because there are competing conventions for which axis is up, and how the
+    // axes are oriented one to another, the `frame` property is needed in order
+    // to have the model be properly oriented.
+    CoordinatesFrame   frame                        = 6;
+    ImpostorParams     impostor_params              = 8;
+    int32              clip_id                      = 9;
+    LightingSettings   lighting                     = 11;
+
+    // Determine how the texture colour and the colour property are combined.
+    BlendMode          feature_color_blend_mode     = 13;
+    // The proportion of the colour property to combine with the texture colour.
+    float              feature_color_blend_strength = 14;
+
+    // The order in which to apply the three components of the model's rotation
+    // property.
+    EulerRotationOrder rotation_order               = 15;
+
+    // Discard symbols outside the borders of the tiles. Useful for hiding
+    // margins often added by vector data tilers.
+    bool               clip_to_tile                 = 20;
+}
+
+enum SymbolElementType {
+    // @label="Placeholder"
+    PLACEHOLDER_SYMBOL_ELEMENT     = 0;
+
+    // @label="Anchor"
+    ANCHOR_SYMBOL_ELEMENT          = 1;
+
+    // @label="Stack"
+    STACK_SYMBOL_ELEMENT           = 2;
+
+    // @label="Image"
+    IMAGE_SYMBOL_ELEMENT           = 3;
+
+    // @label="Padding"
+    PADDING_SYMBOL_ELEMENT         = 4;
+
+    // @label="Flex"
+    FLEX_SYMBOL_ELEMENT            = 5;
+
+    // @label="Sized box"
+    SIZED_BOX_SYMBOL_ELEMENT       = 6;
+
+    // @label="Flexible"
+    FLEXIBLE_SYMBOL_ELEMENT        = 7;
+
+    // @label="Stack expand"
+    STACK_EXPAND_SYMBOL_ELEMENT    = 8;
+
+    // @label="Align"
+    ALIGN_SYMBOL_ELEMENT           = 9;
+
+    // @label="Constrained box"
+    CONSTRAINED_BOX_SYMBOL_ELEMENT = 10;
+
+    // @label="Rotated box"
+    ROTATED_BOX_SYMBOL_ELEMENT     = 11;
+
+    // @label="Decorated shape"
+    DECORATED_SHAPE_SYMBOL_ELEMENT = 12;
+
+    // @label="Aspect ratio"
+    ASPECT_RATIO_SYMBOL_ELEMENT    = 13;
+
+    // @label="Fitted box"
+    FITTED_BOX_SYMBOL_ELEMENT      = 14;
+
+    // @label="Transform"
+    TRANSFORM_SYMBOL_ELEMENT       = 15;
+
+    // @label="Text"
+    TEXT_SYMBOL_ELEMENT            = 16;
+
+    // @label="Leader line"
+    LEADER_LINE_SYMBOL_ELEMENT     = 17;
+
+    // @label="Optional"
+    OPTIONAL_SYMBOL_ELEMENT        = 18;
+
+    // @label="Variant"
+    VARIANT_SYMBOL_ELEMENT         = 19;
+}
+
+message PlaceholderSymbolElement {
+    Vec2fProperty size  = 1;
+    ColorProperty color = 2;
+}
+
+enum SymbolSizeUnit {
+    // @label="Size in pixels"
+    SYMBOL_SIZE_IN_PIXELS = 0;
+    // @label="Size in meters"
+    SYMBOL_SIZE_IN_METERS = 1;
+}
+
+enum SymbolRelativeScaling {
+    // @label="No scaling (fixed size)"
+    SYMBOL_RELATIVE_SCALING_NONE          = 0;
+    // Scaling is applied relatively to the anchor's reference distance.
+    // @label="Relative to the reference distance"
+    SYMBOL_RELATIVE_SCALING_REF_DISTANCE  = 1;
+    // Scaling is applied relatively to the camera height.
+    // @label="Relative to the camera height"
+    SYMBOL_RELATIVE_SCALING_CAMERA_HEIGHT = 2;
+}
+
+enum SymbolAxisAlignment {
+    // @label="Align to screen"
+    AXIS_ALIGNMENT_SCREEN = 0;
+    // @label="Align to East (X axis) or Down (Y axis)"
+    AXIS_ALIGNMENT_WORLD  = 1;
+}
+
+message LeaderLineSymbolElement {
+    // Controls the colour of the line.
+    ColorProperty color         = 1;
+    // Offsets the target of the line from the feature position.
+    Vec3fProperty target_offset = 2;
+    // Width of the line in pixels.
+    float         width         = 3;
+}
+
+message AnchorSymbolElement {
+    reserved 13, 14;
+
+    // In East-North-up coordinates.
+    Vec3fProperty         position_offset                  = 1;
+    SymbolSizeUnit        position_offset_size_unit        = 2;
+
+    // How to scale the position offset according to the distance to the camera.
+    // Only when the position offset is in pixels.
+    SymbolRelativeScaling position_offset_relative_scaling = 16;
+
+    SymbolAxisAlignment   x_axis_alignment                 = 3;
+    SymbolAxisAlignment   y_axis_alignment                 = 4;
+
+    // If enabled, keeps the symbol readable when it's upside down or backwards.
+    bool                  keep_upright                     = 15;
+
+    // The rotation is applied in the symbol's space but with inverted Y:
+    // X points right, Y point to the top, Z points away from the symbol.
+    Vec3fProperty         rotation                         = 5;
+    // The order in which to apply the three components of the model's rotation.
+    EulerRotationOrder    rotation_order                   = 6;
+
+    // Selects the size unit of the anchor child element.
+    SymbolSizeUnit        element_size_unit                = 7;
+
+    // How to scale the element size according to the distance to the camera.
+    // Only when the element size is in pixels.
+    SymbolRelativeScaling element_size_relative_scaling    = 17;
+
+    // The alignment property lets the user define how the children should be
+    // positioned relative to the anchor. The alignment is specified relative
+    // to the size of the whole symbol. When `reset_layout` is set to true,
+    // this is equivalent to aligning relative to the child only. The default
+    // alignment makes the child center match the anchor position. An alignment
+    // of -1 or 1 perfectly aligns the child borders to the anchor.
+    Vec2fProperty         element_alignment                = 8;
+
+    // When set to true, this anchor acts a new root and completely ignores
+    // parent's transforms and layout. It also does not transmit its layout to
+    // the parent.
+    bool                  reset_layout                     = 18;
+
+    // The distance to the camera at which pixel unit is one logical pixel.
+    // When the camera moves closer or further away, the symbol pixel units
+    // are scaled, so that they appear to have a constant size in metres.
+    // That is to say, the symbol size (or offset) grows when the camera
+    // comes closer, and shrinks when it moves away.
+    float                 reference_distance               = 10;
+
+    // The minimum scale that can be applied to the pixel units.
+    // This prevents the symbol size (or offset) from being too small.
+    float                 min_relative_scale               = 11;
+
+    // The maximum scale that can be applied to the pixel units.
+    // This prevents the symbol size (or offset) from being too large.
+    float                 max_relative_scale               = 12;
+
+    // When set to true, this subtree is allowed to overlap other symbols.
+    bool                  can_overlap_other_symbols        = 19;
+
+    // When set to false, this subtree does not participate in hiding other
+    // symbols, and thus other symbols are allowed to overlap it.
+    bool                  hides_other_symbols              = 20;
+
+    // When set to true, this subtree is allowed to not be displayed,
+    // independently from the rest of the symbol, if it overlaps other symbols,
+    // so that the rest of the symbol can still be displayed.
+    bool                  is_optional                      = 21;
+
+    // The priority applied to the subtree during culling.
+    // Anchors cannot be hidden by symbols with a lower priority value, except
+    // if they belong to a representation of a higher z-index.
+    FloatProperty         culling_priority                 = 22;
+
+    SymbolElement         child                            = 9;
+}
+
+message StackSymbolElement {
+    Vec2fProperty          alignment = 1;
+    repeated SymbolElement children  = 2;
+}
+
+// Fits the child element to the size of the parent stack.
+// If the parent is not a stack, it has no effect.
+message StackExpandSymbolElement { SymbolElement child = 1; }
+
+// @path_leaf="true"
+message ImageSprite {
+    // The name of the sprite is optional. This is the name that can be used to
+    // refer to this sprite during styling.
+    string          name      = 1;
+
+    Vec2i           size      = 2;
+    Vec2i           offset    = 3;
+
+    // This defines the box in which content will be placed. Of course an image
+    // doesn't have content as it is a leaf node in the symbol elements tree.
+    // So this defines the region that we apply the parent's constraints to,
+    // and then whatever is outside that overflows outside.
+    Bboxi           content   = 4;
+
+    // Defines regions on the horizontal axis where the sprite can stretch.
+    repeated Rangei stretch_x = 5;
+
+    // Defines regions on the vertical axis where the sprite can stretch.
+    repeated Rangei stretch_y = 6;
+}
+
+message ImageSymbolElement {
+    string               url                  = 1;
+    HttpHeaderList       http_headers         = 2;
+    ColorProperty        color                = 3;
+
+    repeated ImageSprite sprites              = 7;
+
+    // If the `sprite_name` doesn't point to a valid sprite, the sprite in the
+    // `sprites` array at this index is used, if it is valid.
+    IntProperty          sprite_index         = 8;
+
+    // If this is defined and corresponds to a sprite name in the `sprites`
+    // array, that sprite is used.
+    StringProperty       sprite_name          = 9;
+
+    // Determines how the image colour and the colour property are combined.
+    BlendMode            color_blend_mode     = 4;
+    // The proportion of the colour property to combine with the image colour.
+    float                color_blend_strength = 5;
+
+    FloatProperty        scale                = 6;
+
+    // What axes will be taken into account to fit the content box to the
+    // constraints.
+    BoxFitAxes           fit_axes             = 10;
+
+    // What method to use to fit the content box to the constraints.
+    BoxFit               fit_mode             = 12;
+
+    // In the unlikely scenario where there is no way to make the content box
+    // small enough while satisfying other constraints to fit the parent's
+    // constraints, this indicated how to layout the extra space of the content
+    // box.
+    Vec2fProperty        alignment            = 11;
+}
+
+// Adds padding around the child element
+message PaddingSymbolElement {
+    SymbolElement child          = 1;
+
+    FloatProperty left_padding   = 2;
+    FloatProperty right_padding  = 3;
+    FloatProperty top_padding    = 4;
+    FloatProperty bottom_padding = 5;
+}
+
+// Direction of a flex layout
+enum FlexAxis {
+    // Start is left and end is right.
+    // @label="Horizontal"
+    FLEX_AXIS_HORIZONTAL = 0;
+    // Start is top and end is bottom.
+    // @label="Vertical"
+    FLEX_AXIS_VERTICAL   = 1;
+}
+
+// How elements are distributed on the main axis in a flex layout
+enum FlexMainAxisAlignment {
+    // Packs the children at the start of the axis.
+    // @label="Start"
+    FLEX_MAIN_AXIS_START         = 0;
+    // Packs the children at the end of the axis.
+    // @label="End"
+    FLEX_MAIN_AXIS_END           = 1;
+    // Packs the children at the center of the axis.
+    // @label="Center"
+    FLEX_MAIN_AXIS_CENTER        = 2;
+    // Distributes the free space between each children.
+    // @label="Space between"
+    FLEX_MAIN_AXIS_SPACE_BETWEEN = 3;
+    // Distributes the free space around each children.
+    // @label="Space around"
+    FLEX_MAIN_AXIS_SPACE_AROUND  = 4;
+    // Distributes the free space between each children and at the start and
+    // end.
+    // @label="Space evenly"
+    FLEX_MAIN_AXIS_SPACE_EVENLY  = 5;
+}
+
+// How elements are distributed on the cross axis in a flex layout
+enum FlexCrossAxisAlignment {
+    // Places the children at the start of the cross axis.
+    // @label="Start"
+    FLEX_CROSS_AXIS_START   = 0;
+    // Places the children at the end of the cross axis, depending on the
+    // maximum child size on the cross axis.
+    // @label="End"
+    FLEX_CROSS_AXIS_END     = 1;
+    // Places the children at the center of the cross axis, depending on the
+    // maximum child size on the cross axis.
+    // @label="Center"
+    FLEX_CROSS_AXIS_CENTER  = 2;
+    // Stretches the children elements to the maximum cross size given by the
+    // parent of the flex container.
+    // @label="Stretch"
+    FLEX_CROSS_AXIS_STRETCH = 3;
+}
+
+// Flex layout, lays out its children in a row or column.
+message FlexSymbolElement {
+    repeated SymbolElement children             = 1;
+
+    FlexAxis               main_axis            = 2;
+    FlexMainAxisAlignment  main_axis_alignment  = 3;
+    FlexCrossAxisAlignment cross_axis_alignment = 4;
+}
+
+enum FlexFit {
+    // The child only uses the minimum space required to satisfy its
+    // constraints.
+    // @label="Loose"
+    FLEX_FIT_LOOSE = 0;
+    // The child is forced to use all remaining space.
+    // @label="Tight"
+    FLEX_FIT_TIGHT = 1;
+}
+
+// Used to take up a relative amount of free space in a flex layout.
+// Can be used as a spacer with tight fit and empty child.
+// If the parent is not a Flex, this has no effect.
+message FlexibleSymbolElement {
+    SymbolElement child  = 1;
+
+    // In a layout, all factors of flexible elements are summed, and this gives
+    // the proportion of free space that is allocated to each child.
+    // When this is 0, this acts as a passthrough to the child.
+    float         factor = 2;
+
+    FlexFit       fit    = 3;
+}
+
+// Forces its child to have the given size.
+message SizedBoxSymbolElement {
+    SymbolElement child = 1;
+
+    Vec2fProperty size  = 2;
+}
+
+// Tightens the constraints set on its child by its parent.
+message ConstrainedBoxSymbolElement {
+    // Minimum size, set to `0` to avoid constraining it.
+    Vec2fProperty min_size = 1;
+    // Maximum size, set to `infinity` to avoid constraining it.
+    Vec2fProperty max_size = 2;
+    SymbolElement child    = 3;
+}
+
+// Aligns its child element inside itself. The alignment field gives the
+// relative position where (-1, -1) is the top left corner, (0, 0) the center
+// and (1, 1) the bottom right corner.
+message AlignSymbolElement {
+    Vec2fProperty alignment = 1;
+    SymbolElement child     = 2;
+}
+
+// Rotates the child element by the given number of quarter turns
+// counter-clockwise.
+message RotatedBoxSymbolElement {
+    IntProperty   quarter_turns = 1;
+    SymbolElement child         = 2;
+}
+
+enum DecoratedShapeType {
+    // @label="Circle"
+    DECORATED_SHAPE_CIRCLE          = 0;
+    // @label="Regular polygon"
+    DECORATED_SHAPE_REGULAR_POLYGON = 1;
+    // @label="Rectangle"
+    DECORATED_SHAPE_RECTANGLE       = 2;
+    // @label="Capsule"
+    DECORATED_SHAPE_CAPSULE         = 3;
+}
+
+message DecoratedRegularPolygon {
+    // Number of sides in the polygon. Only values of 3 and more have any
+    // effect. 3 is a triangle, 4 a diamond, 6 an hexagon, etc.
+    int32 sides = 1;
+
+    // "Star" factor between 0 and 1. At 0, the shape is just a regular polygon.
+    // Above 0, the edges are more and more shaped like a star.
+    float star  = 2;
+}
+
+message DecoratedShapeSymbolElement {
+
+    // Gives the mode to fit the shape relative to the received constraints.
+    BoxFit                  fit_mode        = 6;
+
+    // When using fit modes that respect the aspect ratio, this is the ratio
+    // value. Use 0 when you want to keep the aspect ratio of the received
+    // constraints.
+    float                   aspect_ratio    = 7;
+
+    // Used to align the decorated shape relative to the received constraints
+    // when necessary.
+    Vec2f                   alignment       = 8;
+
+    // Main colour of the shape.
+    ColorProperty           color           = 1;
+
+    // Border colour of the shape when the border size is not 0.
+    ColorProperty           border_color    = 2;
+
+    // Outline width of the shape in the unit defined by the anchor.
+    FloatProperty           border_size     = 3;
+
+    // Border radius to make the angles of polygons rounder. The unit
+    // is the one defined by the anchor.
+    FloatProperty           border_radius   = 4;
+
+    DecoratedShapeType      shape_type      = 5;
+
+    // oneof
+    DecoratedRegularPolygon regular_polygon = 101;
+}
+
+// Forces its child to use as much space as possible but also to respect the
+// aspect ratio. For this to work, the aspect ratio element must have loose
+// minimum constraints (ideally 0) but bounded maximum width and/or height. This
+// can be achieved by using an Align element to loosen constraints.
+message AspectRatioSymbolElement {
+    FloatProperty aspect_ratio = 1;
+    SymbolElement child        = 2;
+}
+
+enum BoxFit {
+    // Scales the child to fill the box while respecting its aspect ratio.
+    // @label="Contain"
+    BOX_FIT_CONTAIN    = 0;
+
+    // Scales the child to fill the box regardless of aspect ratio.
+    // @label="Fill"
+    BOX_FIT_FILL       = 1;
+
+    // Like the CONTAIN mode, but the child will not be scaled up, only down.
+    // @label="Scale down"
+    BOX_FIT_SCALE_DOWN = 2;
+
+    // Scales the child to cover the box (possibly overflowing its bounds)
+    // while respecting its aspect ratio.
+    // @label="Cover"
+    BOX_FIT_COVER      = 3;
+}
+
+enum BoxFitAxes {
+    // The content does not resize at all.
+    // @label="None"
+    BOX_FIT_AXES_NONE   = 0;
+
+    // The content uses only the width as constraint for the fitting.
+    // @label="Width"
+    BOX_FIT_AXES_WIDTH  = 1;
+
+    // The content uses only the height as constraint for the fitting.
+    // @label="Height"
+    BOX_FIT_AXES_HEIGHT = 2;
+
+    // The content uses both axes as constraints for the fitting.
+    // @label="Both"
+    BOX_FIT_AXES_BOTH   = 3;
+}
+
+// Layouts its child using loosened minimum constraints, resizing and aligning
+// it as necessary if the child is smaller that the minimum size of the fitted
+// box.
+message FittedBoxSymbolElement {
+    SymbolElement child     = 1;
+    BoxFit        fit       = 2;
+    Vec2fProperty alignment = 3;
+}
+
+enum TransformSymbolComponentType {
+    // @label="Translation"
+    TRANSFORM_SYMBOL_TRANSLATION = 0;
+    // @label="Rotation"
+    TRANSFORM_SYMBOL_ROTATION    = 1;
+    // @label="Scaling"
+    TRANSFORM_SYMBOL_SCALING     = 2;
+    // @label="Generic"
+    TRANSFORM_SYMBOL_GENERIC     = 3;
+}
+
+message TransformSymbolRotation {
+    EulerRotationOrder order    = 1;
+    Vec3fProperty      rotation = 2;
+}
+
+message TransformSymbolComponent {
+    TransformSymbolComponentType type        = 1;
+
+    // oneof
+    Vec3fProperty                translation = 2;
+    TransformSymbolRotation      rotation    = 3;
+    Vec3fProperty                scaling     = 4;
+    Mat4f                        generic     = 5;
+}
+
+// Visually transforms the child element using the transform given as an array
+// of component applied in the order they are defined.
+// 3D transforms are flattened.
+message TransformSymbolElement {
+    SymbolElement                     child      = 1;
+
+    // Transform center in absolute value with (0, 0) being the top-left
+    // corner. This can be used in addition to the alignment field.
+    Vec2fProperty                     origin     = 2;
+
+    // Transform center relative the the child size. (-1, -1) is the top-left
+    // corner. (1, 1) is bottom right. This can be used in addition to the
+    // origin field.
+    Vec2fProperty                     alignment  = 3;
+
+    repeated TransformSymbolComponent components = 4;
+}
+
+enum TextOutlineWidthUnit {
+    // Outline width is expressed in the em unit, which is a ratio of the font
+    // size. Texts with a larger font size have thicker outlines.
+    // @label="Em"
+    OUTLINE_WIDTH_IN_EM        = 0;
+
+    // Outline width is expressed in the same unit as the font size.
+    // Texts with small large font sizes have outlines of the same thickness.
+    // @label="Font size unit"
+    OUTLINE_WIDTH_IN_FONT_UNIT = 1;
+}
+
+message TextAlignmentProperty {
+    string        name          = 1;
+    TextAlignment default_value = 2;
+}
+
+message TextSymbolElement {
+    reserved 4, 6, 7;
+
+    // Controls the string that is displayed. Must be encoded in UTF-8.
+    StringProperty        text               = 1;
+    // Controls the size of the text, by setting the size of an em.
+    FloatProperty         font_size          = 2;
+    // Controls the colour of the characters.
+    // Non-opaque colours can lead to visual artefacts, as it is not compatible
+    // with text composition from multiple glyphs.
+    ColorProperty         text_color         = 3;
+    // Controls the width of the outline.
+    FloatProperty         outline_width      = 10;
+    // Controls the unit of the outline width.
+    TextOutlineWidthUnit  outline_width_unit = 11;
+    // Controls the colour of the outline.
+    // Non-opaque colours can lead to visual artefacts, as it is not compatible
+    // with text composition from multiple glyphs.
+    ColorProperty         outline_color      = 5;
+    // When a text comprises multiple lines, how the lines are aligned.
+    TextAlignmentProperty alignment          = 13;
+    // How much vertically spaced apart lines are, as a multiple of the default
+    // value set by the font. Use a value of 1 for the default line spacing,
+    // values greater than 1 for taller spacing. Must be greater or equal to 0.
+    FloatProperty         line_spacing       = 12;
+    // A URL to a TrueType, WOFF, or WOFF2 font file. This defines the
+    // appearance of the characters. Make sure the font contains the characters
+    // that are present in the feature property values. If no URL is provided,
+    // the default font will be used. (It only contains the most common Latin
+    // characters.)
+    string                font_url           = 8;
+    HttpHeaderList        font_http_headers  = 9;
+}
+
+// Optionally displays the child if the display_child property is non-zero.
+// This is equivalent to a "visible" property.
+message OptionalSymbolElement {
+    reserved 1;
+
+    BoolProperty  display_child = 3;
+    SymbolElement child         = 2;
+}
+
+// Displays one of the children based on the displayed_child_index property. If
+// the value of child_index doesn't correspond to a child, no child is used.
+message VariantSymbolElement {
+    IntProperty            displayed_child_index = 1;
+    repeated SymbolElement children              = 2;
+}
+
+// @path_leaf="true"
+message SymbolElement {
+    SymbolElementType           type            = 1;
+
+    // oneof
+    PlaceholderSymbolElement    placeholder     = 101;
+    AnchorSymbolElement         anchor          = 102;
+    StackSymbolElement          stack           = 103;
+    ImageSymbolElement          image           = 104;
+    PaddingSymbolElement        padding         = 105;
+    FlexSymbolElement           flex            = 106;
+    SizedBoxSymbolElement       sized_box       = 107;
+    FlexibleSymbolElement       flexible        = 108;
+    StackExpandSymbolElement    stack_expand    = 109;
+    AlignSymbolElement          align           = 110;
+    ConstrainedBoxSymbolElement constrained_box = 111;
+    RotatedBoxSymbolElement     rotated_box     = 112;
+    DecoratedShapeSymbolElement decorated_shape = 113;
+    AspectRatioSymbolElement    aspect_ratio    = 114;
+    FittedBoxSymbolElement      fitted_box      = 115;
+    TransformSymbolElement      transform       = 116;
+    TextSymbolElement           text            = 117;
+    OptionalSymbolElement       optional        = 118;
+    VariantSymbolElement        variant         = 119;
+    LeaderLineSymbolElement     leader_line     = 120;
+}
+
+message SymbolVectorRepr {
+    // 0 <= z-index < 65536
+    // Determines the draw order of symbols that are at the exact same distance
+    // from the camera, as well as their priority during culling in relation to
+    // other representations. Higher z-indices cannot be culled by lower
+    // z-indices. They are always drawn above when culling is disabled.
+    uint32        z_index                 = 1;
+
+    // Discard symbols outside the borders of the tiles. Useful for hiding
+    // margins often added by vector data tilers.
+    bool          clip_to_tile            = 4;
+
+    // Set to true to never occlude symbols by other elements in the scene. Only
+    // UI elements like gizmos and grids are allowed to be rendered on top of
+    // the symbols.
+    bool          ignore_world_occlusions = 3;
+
+    SymbolElement root_element            = 2;
+}
+
+message VectorRepr {
+    reserved 102, 104, 106;
+
+    VectorReprType             type                  = 1;
+
+    // Optional name for the representation. If this is set,
+    // it is possible to emit a feature with this representation using `emit
+    // "<name>";`.
+    string                     name                  = 2;
+
+    // Mandatory ID for this representation. This ID should be unique to this
+    // layer. It can be used with the `emit <id>;` instruction.
+    uint32                     id                    = 4;
+
+    SceneViewBitset            scene_views           = 3;
+
+    // oneof
+    ExtrudedGeometryVectorRepr extruded_geometry     = 101;
+    ModelVectorRepr            model                 = 103;
+    CylinderVectorRepr         cylinder              = 105;
+    FlatOverlayVectorRepr      flat_overlay_geometry = 107;
+    HeatmapVectorRepr          heatmap               = 108;
+    SymbolVectorRepr           symbol                = 109;
+}
+
+message StylingAttributeRef {
+    // This is the attribute ID defined in the vector data layer.
+    uint32 vector_data_attr_id = 1;
+
+    // This name will be used in the styling script.
+    string styling_name        = 2;
+}
+
+message VectorTilesSource {
+    uint32           vector_data_layer_id = 1;
+
+    // Set to true to override the zoom levels set on the vector data layer.
+    bool             override_levels      = 6;
+    // Minimum level of details of the tiles that are used, when overridden.
+    uint32           min_level            = 2;
+    // Maximum level of details of the tiles that are used, when overridden.
+    uint32           max_level            = 3;
+
+    // Set to true to override the bounds set on the vector data layer.
+    bool             override_bounds      = 5;
+    // Bounds in WGS84 (degrees) of the tiles that are used, when overridden.
+    GeographicBounds bounds               = 4;
+}
+
+message VectorTilesResolution {
+    reserved 1;
+    // Maximum error in pixels in logical pixels before refining a tile.
+    // The higher the value the later tiles will be refined.
+    float max_screen_space_error = 2;
+}
+
+message VectorTilesStyle {
+    repeated VectorRepr          representations             = 1;
+    string                       styling_script              = 2;
+
+    // Maps an attribute name in the styling script to an attribute ID from a
+    // vector data layer.
+    repeated StylingAttributeRef attributes                  = 3;
+    repeated Palette             palettes                    = 4;
+
+    // This is the name of the attribute in the styling script that will
+    // contain the z component of the anchor of the feature. This is the
+    // coordinate before clamping. Leave this empty if you don't need that. For
+    // polygons this is the centroid. For polylines this is the middle of the
+    // path.
+    string                       anchor_z_attribute_name     = 5;
+
+    // This is the name of the attribute in the styling script that will
+    // contains the type of feature. It is a uint attribute with 0 = points, 1 =
+    // polyline and 2 = polygon. Leave this empty if you don't need that.
+    string                       feature_type_attribute_name = 6;
+
+    // Name of the attribute in the styling script that will contain the angle
+    // at the anchor of the feature. For polygons and points this is always 0.
+    // For polylines, it's the orientation at the middle of the path. This is
+    // in radians. 0 is east, then it is encoded counter-clockwise.
+    string                       anchor_angle_attribute_name = 8;
+
+    // Seed to influence the pseudo-random number generation.
+    uint64                       rng_seed                    = 7;
+}
+
+// @path_root="vector_tiles_layer"
+message VectorTilesLayer {
+    reserved 8;
+
+    VectorTilesSource             source                 = 1;
+    MissingTilePolicy             missing_tile_policy    = 12;
+
+    // Enable to make the layer static. The representations of a static vector
+    // tile layer are not updated on data invalidation. In return they use less
+    // resources. Ideal for basemap layers.
+    bool                          static_tiles           = 11;
+
+    VectorTilesStyle              style                  = 2;
+    VectorClamping                clamping               = 3;
+    VectorTilesResolution         resolution             = 4;
+    bool                          visible                = 5;
+    int32                         clip_id                = 6;
+    LayerVisibilityConstraintList visibility_constraints = 7;
+    LightingSettings              lighting               = 9;
+
+    // This visibility bitset is AND-ed with the ones in the representations.
+    SceneViewBitset               scene_views            = 10;
+}
+
+message InMemoryVectorFeatureGeometry {
+    VectorGeometryType type             = 1;
+
+    // @Note we don't do "repeated Vec3d" to avoid allocating a lot of small
+    // objects when encoding or decoding, but it's essentially the
+    // same thing, just with everything inline.
+    repeated double    coords           = 2;
+
+    // Number of points for each linestring. Linestrings must not be closed.
+    // For polygons, exterior linestring must be counter-clockwise, and interior
+    // ones must be clockwise. This is used only for polygons and polylines.
+    repeated uint32    linestring_sizes = 3;
+}
+
+message InMemoryAttribute {
+    reserved 2, 3;
+
+    uint32             id            = 1;
+    bool               is_feature_id = 4;
+    AttributeTransform transform     = 5;
+}
+
+// This message is an almost duplicate of AttributeValue, with the
+// `oneof` removed, and must remain so.
+// Colors can be encoded as 0xaabbggrr in integer or number fields, or
+// as "#xxxxxx" or color names in the string field.
+// When no field is set, the value is considered null.
+// @Todo See if it could be interesting to allow `oneof`s in paths.
+message InMemoryAttributeValue {
+    reserved 1, 12, 13, 16;
+
+    optional bool     boolean_value = 11;
+    optional sfixed64 int64_value   = 17;
+    optional fixed64  uint64_value  = 18;
+    optional double   number_value  = 14;
+    optional string   string_value  = 15;
+}
+
+message InMemoryVectorFeature {
+    reserved 1, 2, 3;
+
+    InMemoryVectorFeatureGeometry   geometry         = 4;
+
+    // Must have one value for each attribute of the layer,
+    // in the correct order and with the correct types.
+    // Invalid or missing values are replaced by the default
+    // value of the type.
+    repeated InMemoryAttributeValue attribute_values = 5;
+}
+
+// @path_root="in_memory_vector_source_layer"
+message InMemoryVectorSourceLayer {
+    reserved 3;
+
+    uint32                         id          = 1;
+    SpatialReferenceSystem         projection  = 2;
+    string                         attribution = 6;
+
+    repeated InMemoryVectorFeature features    = 5;
+    repeated InMemoryAttribute     attributes  = 4;
+}
+
+enum ThreeDTileAttributeSource {
+    BATCH_TABLE_SOURCE       = 0;
+
+    VECTOR_DATA_LAYER_SOURCE = 1;
+
+    // Load the ID of the class of each batch to an attribute, when the
+    // `3DTILES_batch_table_hierarchy` extension is used.
+    BATCH_CLASS_ID_SOURCE    = 2;
+
+    // Load the name of the class of each batch to an attribute, when the
+    // `3DTILES_batch_table_hierarchy` extension is used.
+    BATCH_CLASS_NAME_SOURCE  = 3;
+}
+
+message ThreeDTileAttribute {
+    reserved 2, 3;
+
+    string                    name                = 1;
+
+    ThreeDTileAttributeSource source              = 6;
+
+    // Transformation to apply to attributes.
+    // This will not apply to attributes coming from a vector data layer.
+    // For those, use the transform defined in the vector data layer model.
+    AttributeTransform        transform           = 7;
+
+    // This is the attribute ID defined in the vector data layer.
+    uint32                    vector_data_attr_id = 4;
+    // Only for attributes that are not from the vector data layer.
+    bool                      is_feature_id       = 5;
+}
+
+// @path_root="three_d_tiles_layer"
+message ThreeDTilesLayer {
+    reserved 6, 21, 24, 25;
+
+    string                        url                       = 1;
+    HttpHeaderList                http_headers              = 13;
+    string                        attribution               = 29;
+
+    // Pass main URL query parameters when requesting tiles.
+    bool                          preserve_query_parameters = 22;
+
+    Transform                     transform                 = 2;
+    GeographicPosition            geographic_position       = 3;
+    bool                          apply_geographic_position = 4;
+    // Maximum screen-space error in pixels in logical pixels before refining a
+    // tile.
+    float                         max_screen_space_error    = 5;
+    // 0: no hysteresis, 0.25: medium hysteresis, 0.5: large hysteresis
+    float                         refinement_hysteresis     = 26;
+    uint32                        vector_data_layer_id      = 11;
+    repeated ThreeDTileAttribute  attributes                = 7;
+    repeated Palette              palettes                  = 8;
+    uint64                        rng_seed                  = 27;
+    string                        styling_script            = 9;
+    bool                          visible                   = 10;
+
+    repeated Material             materials                 = 20;
+    MaterialProperties            material_properties       = 23;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32                         loading_priority          = 12;
+
+    int32                         clip_id                   = 14;
+
+    // Select what views the layer will be visible in.
+    SceneViewBitset               scene_views               = 15;
+
+    LayerVisibilityConstraintList visibility_constraints    = 16;
+
+    LightingSettings              lighting                  = 18;
+
+    bool                          draw_under_flat_overlays  = 28;
+}
+
+// @path_root="clipping_plane_layer"
+message ClippingPlaneLayer {
+    int32              clip_id          = 1;
+    GeographicPosition origin_position  = 2;
+    Vec3f              normal           = 3;
+    Color              outline_color    = 4;
+    float              outline_distance = 5;
+
+    bool               show_plane       = 6;
+    Grid               grid             = 7;
+}
+
+enum GizmoReferenceFrame {
+    // Align the transformation on the world axes
+    WORLD_REFERENCE  = 0;
+    // Align the transformation on the object axes
+    OBJECT_REFERENCE = 1;
+}
+
+enum UiSizeUnit {
+    // @label="Size in meters"
+    UI_SIZE_IN_METERS          = 0;
+    // In logical pixels.
+    // @label="Size in pixels"
+    UI_SIZE_IN_PIXELS          = 1;
+    // @label="Size relative to screen"
+    UI_SIZE_RELATIVE_TO_SCREEN = 2;
+}
+
+enum GizmoComponentType {
+    // This component doesn't have any action attached to it. It is a visual
+    // help to know what the gizmo position is.
+    // @label="Origin"
+    GIZMO_ORIGIN                         = 0;
+    // @label="Translation axis X"
+    GIZMO_TRANSLATION_AXIS_X             = 1;
+    // @label="Translation axis Y"
+    GIZMO_TRANSLATION_AXIS_Y             = 2;
+    // @label="Translation axis Z"
+    GIZMO_TRANSLATION_AXIS_Z             = 3;
+    // @label="Translation plane X"
+    GIZMO_TRANSLATION_PLANE_X            = 4;
+    // @label="Translation plane Y"
+    GIZMO_TRANSLATION_PLANE_Y            = 5;
+    // @label="Translation plane Z"
+    GIZMO_TRANSLATION_PLANE_Z            = 6;
+    // @label="Translation plane camera plane"
+    GIZMO_TRANSLATION_PLANE_CAMERA_PLANE = 7;
+    // @label="Rotation ring X"
+    GIZMO_ROTATION_RING_X                = 8;
+    // @label="Rotation ring Y"
+    GIZMO_ROTATION_RING_Y                = 9;
+    // @label="Rotation ring Z"
+    GIZMO_ROTATION_RING_Z                = 10;
+    // @label="Rotation ring camera plane"
+    GIZMO_ROTATION_RING_CAMERA_PLANE     = 11;
+}
+
+message GizmoComponent {
+    GizmoComponentType  type            = 1;
+    GizmoReferenceFrame reference_frame = 2;
+}
+
+// @path_root="gizmo_layer"
+message GizmoLayer {
+    reserved 5, 6;
+
+    uint32                  id           = 1;
+    // Size of the gizmo. Unit is set with `size_unit`.
+    float                   size         = 2;
+    UiSizeUnit              size_unit    = 12;
+    // This is a padding in pixels added to the bounding box of the gizmo
+    // components allowing to change their logical size. It means that the
+    // interaction surface with components surface will be larger, or smaller,
+    // although the gizmo physical size doesn't change. It is particularly
+    // useful when using gizmos on touch devices. On such device increasing the
+    // overall size of the gizmo as well as the bounding boxes can help the
+    // interactions a lot. A `size` of 200 pixels with a `bbox_padding` of 20
+    // are good default values on touch devices. This is in logical pixels.
+    uint32                  bbox_padding = 10;
+    GeographicPosition      position     = 3;
+    Quat                    rotation     = 4;
+    // List of components to activate.
+    // If a component is present multiple times, the last configuration is used.
+    repeated GizmoComponent components   = 13;
+    // Select what views the gizmo will be visible in.
+    SceneViewBitset         scene_views  = 7;
+    bool                    visible      = 8;
+    // Parameters for the grid displayed when a gizmo is moved on a plane.
+    Grid                    grid         = 9;
+    // Parameters for the line displayed when a gizmo is moved along an axis.
+    Line                    line         = 11;
+}
+
+enum EditableShapeGeometryType {
+    // @label="Line"
+    EDITABLE_LINE     = 0;
+    // @label="Polyline"
+    EDITABLE_POLYLINE = 1;
+    // @label="Polygon"
+    EDITABLE_POLYGON  = 2;
+    // @label="Point"
+    EDITABLE_POINT    = 3;
+}
+
+enum EditableShapeLineType {
+    // @label="Geodesics"
+    EDITABLE_SHAPE_LINE_GEODESIC                           = 0;
+    // @label="Rhumb lines"
+    EDITABLE_SHAPE_LINE_RHUMB_LINE                         = 1;
+    // @label="Rhumb lines that do not cross the antimeridian"
+    EDITABLE_SHAPE_LINE_RHUMB_LINE_NOT_ACROSS_ANTIMERIDIAN = 2;
+}
+
+message EditableShapeGeometry {
+    EditableShapeGeometryType type             = 1;
+
+    EditableShapeLineType     line_type        = 4;
+
+    // @Note we don't do "repeated Vec2d" to avoid allocating a lot of small
+    // objects when encoding or decoding, but it's essentially the
+    // same thing, just with everything inline.
+    repeated double           coords           = 2;
+
+    // Number of points for each linestring. Linestrings must not be closed.
+    // Exterior linestring must be counter-clockwise, and interior ones must
+    // be clockwise.
+    // This is used only for polygons.
+    repeated uint32           linestring_sizes = 3;
+}
+
+enum EditableShapeModelUpdateFrequency {
+    // Update the model when a point is added, removed, or after it has been
+    // moved.
+    DEFAULT_MODEL_UPDATES = 0;
+    // Also update the model each time the mouse moves when dragging a point.
+    DRAG_MODEL_UPDATES    = 1;
+    // Also update the model each time the mouse moves when appending a new
+    // point.
+    APPEND_MODEL_UPDATES  = 2;
+}
+
+// @path_root="editable_shape_layer"
+message EditableShapeLayer {
+    EditableShapeGeometry             geometry                     = 1;
+    // Colour of the lines (polyline, or polygon outlines).
+    Color                             stroke_color                 = 2;
+    // Colour of the polygon interior.
+    Color                             fill_color                   = 3;
+    // Width of the lines or radius of the circles, in pixels in logical pixels.
+    float                             stroke_width                 = 4;
+    // Colour of the lines, when the shape is selected.
+    Color                             selected_stroke_color        = 9;
+    // Color of the polygon interior, when the shape is selected.
+    Color                             selected_fill_color          = 10;
+    // Width of the lines or radius of the circles, in pixels in logical pixels,
+    // when the shape is selected.
+    float                             selected_stroke_width        = 11;
+    // Size of the control points on screen, in pixels in logical pixels.
+    float                             control_point_size           = 14;
+    // Colour of the unselected control points at the vertices of the shape.
+    // Alpha is ignored.
+    Color                             control_point_color          = 15;
+    // Colour of the control points at the midpoint of each segment.
+    // Alpha is ignored.
+    Color                             midpoint_control_point_color = 16;
+    // Colour of the control points when selected.
+    // Alpha is ignored.
+    Color                             selected_control_point_color = 17;
+    // Show control points at the midpoint of each segment, that can be
+    // used to insert new points.
+    bool                              show_midpoint_control_points = 12;
+    // Set to true to show control points even when deselected.
+    bool                              always_show_control_points   = 13;
+    // Shapes with a high z-index will be drawn over shapes with a lower
+    // z-index.
+    uint32                            z_index                      = 5;
+    // Select what views the shape will be visible in.
+    SceneViewBitset                   scene_views                  = 6;
+    bool                              visible                      = 7;
+    EditableShapeModelUpdateFrequency model_update_frequency       = 8;
+}
+
+// @path_root="camera_settings"
+message CameraSettings {
+    // Vertical field of view in degrees.
+    float  fovy                      = 1;
+
+    // Half-time of the energy contained in the camera system, in seconds.
+    // For example if the camera moves at 1m/s then is requested to stop, it
+    // will take this duration for its velocity to be halved.
+    // This setting only affects user controls like mouse movements and touch
+    // controls.
+    // Default: 0.06
+    float  user_controls_inertia     = 2;
+
+    // Same as above but for the "movement" API.
+    // Default: 0.06
+    float  movements_inertia         = 3;
+
+    // Minimum distance between the camera and the terrain, in metres.
+    // Set to a positive value to prevent the camera from going underground.
+    // Takes DTM layers into account.
+    // Default: 2.0
+    double min_height_above_terrain  = 4;
+
+    // Time in seconds it takes for the camera to be back at its target minimum
+    // height above the terrain after it goes below it.
+    // Default: 0.06
+    float  terrain_collision_inertia = 5;
+}
+
+message TerrainSettings {
+    // The terrain color applied below the raster.
+    // Alpha is ignored.
+    Color            terrain_color                    = 5;
+
+    // The terrain opacity is applied to both the terrain and the rasters.
+    float            terrain_opacity                  = 1;
+
+    int32            clip_id                          = 2;
+
+    LightingSettings lighting                         = 4;
+
+    // Adapts the terrain resolution to the height of the camera above
+    // the terrain to improve terrain geometry at high elevations.
+    // This can improve scenes in mountainous regions.
+    // Warning: this is experimental, so it might crash,
+    // degrade performance, or disappear in the future.
+    bool             experimental_adaptive_resolution = 6;
+}
+
+enum SunDirectionMode {
+    // The direction is computed from the current date and time.
+    // @label="Relative to the date"
+    SUN_DIRECTION_RELATIVE_TO_DATE             = 0;
+    // The direction is explicitly given using azimuth and altitude angles.
+    // Counter-clockwise rotation, with azimuth 0 being North-aligned.
+    // @label="Relative to the cardinal frame"
+    SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME   = 1;
+    // The direction is explicitly given using azimuth and altitude angles.
+    // Counter-clockwise rotation, with azimuth 0 aligned towards the forward
+    // direction of the camera (or the up direction when it perfectly faces the
+    // Earth).
+    // @label="Relative to the tangential frame"
+    SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME = 2;
+}
+
+message SunDirection {
+    SunDirectionMode mode             = 1;
+
+    // Solar time at the camera position. 0 = midnight, 12 = noon.
+    // Used when `mode` is set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            local_solar_time = 2;
+    // 0 = January 1st.
+    // Used when mode is set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            day_of_year      = 3;
+
+    // Angle in radians within [0; 2π[ with the reference direction.
+    // Counterclockwise.
+    // Used when `mode` is not set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            azimuth          = 4;
+    // Angle in radians within [-π/2; π/2[ with the horizon.
+    // Used when `mode` is not set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            altitude         = 5;
+}
+
+enum SunLightingMode {
+    // @label="Simulated"
+    SUN_LIGHTING_SIMULATED = 0;
+    // @label="Static"
+    SUN_LIGHTING_STATIC    = 1;
+}
+
+enum AmbientLightingMode {
+    // @label="Simulated"
+    AMBIENT_LIGHTING_SIMULATED = 0;
+    // @label="Static"
+    AMBIENT_LIGHTING_STATIC    = 1;
+}
+
+enum SkyMode {
+    // @label="Simulated"
+    SKY_SIMULATED = 0;
+    // @label="Static"
+    SKY_STATIC    = 1;
+}
+
+enum StaticSkyColorTransitionUnit {
+    // @label="Metres"
+    STATIC_SKY_COLOR_TRANSITION_UNIT_METERS = 0;
+    // @label="Pixels"
+    STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS = 1;
+}
+
+message SkySettings {
+    SkyMode                      mode                                   = 1;
+
+    // Attenuates the strength of the impact of the sky on the planet when
+    // `mode` is `SKY_SIMULATED`. 0 is the default, realistic value. The maximum
+    // is 1.
+    float                        attenuation                            = 2;
+
+    // Color of the atmosphere used when `mode` is `SKY_STATIC`.
+    Color                        static_atmosphere_color                = 3;
+
+    // Color of the outer space used when `mode` is `SKY_STATIC`.
+    Color                        static_space_color                     = 4;
+
+    // Distance from the horizon at which the sky color starts transitioning
+    // from the atmosphere color to the space color.
+    // This is used only when `mode` is `SKY_STATIC`.
+    double                       static_color_transition_start_distance = 5;
+
+    // Distance from the horizon at which the sky color finishes transitioning
+    // from the atmosphere color to the space color.
+    // This is used only when `mode` is `SKY_STATIC`.
+    double                       static_color_transition_end_distance   = 6;
+
+    // Unit of the distances for the static sky color transition.
+    // This is used only when `mode` is `SKY_STATIC`.
+    StaticSkyColorTransitionUnit static_color_transition_distance_unit  = 7;
+}
+
+message SunSettings {
+    SunLightingMode mode         = 1;
+    SunDirection    direction    = 2;
+
+    // Only used when `mode` is `SUN_LIGHTING_STATIC`.
+    // Alpha is ignored.
+    Color           static_color = 3;
+}
+
+message AmbientLightingSettings {
+    AmbientLightingMode mode         = 1;
+
+    // Only used when `mode` is `AMBIENT_LIGHTING_STATIC`.
+    // Alpha is ignored.
+    Color               static_color = 2;
+}
+
+message FogSettings {
+    // The color towards which pixels of the scene are blended.
+    Color color          = 1;
+    // The speed at which fog reaches its maximal impact.
+    // The default value is one, at which it takes about a kilometer through
+    // the thickest layer of fog to reach the maximal impact.
+    float density        = 2;
+    // The distance at which the fog starts impacting the scene.
+    // Positions that are closer are completely unaffected by fog.
+    float start_distance = 3;
+    // The altitude at which the fog starts decreasing in in intensity.
+    // The decrease is exponential.
+    float falloff_start  = 4;
+    // The altitude at which the fog's impact becomes negligible.
+    float falloff_end    = 5;
+    // Whether the sky should be obscured by fog.
+    bool  apply_to_sky   = 6;
+}
+
+message AmbientSettings {
+    reserved 1, 2, 3, 4, 5, 6, 7, 8, 9, 12;
+
+    // Global lighting settings applied to the whole scene
+    LightingSettings        lighting            = 11;
+
+    // Controls the balance between sun lighting and ambient lighting.
+    // At 0.0, there is only ambient lighting.
+    // At 0.5, there are equal part sun and ambient lighting.
+    // At 1.0, there is only sun lighting.
+    float                   sun_ambient_balance = 13;
+
+    // Multiplies both sun and ambient lighting applied to the scene.
+    // The default value is 1.0.
+    float                   lighting_strength   = 14;
+
+    // Controls the intensity at which faces that are not fully exposed to the
+    // sun are deprived from its light. At 0, they stop receiving light as soon
+    // as they are perpendicular ot the sun direction. At 1, they stop receiving
+    // light when they face the opposite direction.
+    float                   wrap_lighting       = 15;
+
+    SkySettings             sky                 = 16;
+    SunSettings             sun                 = 17;
+    AmbientLightingSettings ambient_lighting    = 18;
+
+    FogSettings             primary_fog         = 19;
+    FogSettings             secondary_fog       = 20;
+
+    // This color is displayed under the transparent terrain.
+    Color                   underground_color   = 10;
+}
+
+message HighlightSettings {
+    Color selection_color             = 1;
+    float selection_outline_alpha     = 2;
+
+    // In pixels in logical pixels.
+    float selection_outline_size      = 3;
+
+    // This controls how much the highlight is attenuated when behind other
+    // objects, between 0 and 1. At 0 the highlight is invisible behind other
+    // objects, and at 1 it's fully visible.
+    float selection_occlusion_alpha   = 4;
+
+    Color mouse_hover_highlight_color = 5;
+}
+
+message ViewportSettings {
+    // Viewport size & location, normalized.
+    // This is the "full extent" of the camera view, combined with the
+    // `fovy` from the camera settings to create the perspective camera.
+    // (0, 0) is top-left corner. (1, 1) is bottom-right corner.
+    Bbox viewport = 1;
+
+    // Portion of the viewport that is visible.
+    // (0, 0) is top-left corner. (1, 1) is bottom-right corner.
+    //
+    // For instance if the viewport is ((0, 0), (1, 1)) and the scissor is
+    // ((0, 0), (0.5, 1)), only the left half of the camera will be visible.
+    //
+    // If the viewport is ((0, 0), (0.5, 1)) and the scissor is
+    // ((0, 0), (1, 1)), the full camera is visible but only on the left half of
+    // the screen.
+    Bbox scissor  = 2;
+}
+
+message ViewshedSettings {
+    bool               enable_viewshed              = 1;
+    // Whether or not display the wireframe representation of the viewshed.
+    bool               enable_wireframe             = 2;
+    // If true, draw the wireframe from the position of the viewshed point of
+    // view instead of the near plane.
+    bool               draw_wireframe_from_position = 12;
+    // Position of the point of view of the viewshed.
+    GeographicPosition position                     = 3;
+    // Horizontal orientation angle of the viewshed in radians.
+    float              bearing                      = 4;
+    // Vertical orientation angle of the viewshed in radians.
+    float              tilt                         = 5;
+    // Horizontal field of view in degrees. Must be < 120 degrees for a better
+    // quality.
+    float              hfov                         = 6;
+    // Ratio between width and height of the viewshed viewport.
+    float              aspect_ratio                 = 7;
+    // Factor applied to max distance to place near plane of the viewshed.
+    // Must be greater than 0 and less or equal to 1.
+    float              start                        = 8;
+    // Max distance of the viewshed in meters.
+    // If quality is not good, consider a higher start factor.
+    float              max_distance                 = 9;
+    Color              visible_color                = 10;
+    Color              hidden_color                 = 11;
+}
+
+message RasterSettings {
+    // Set to true to increase the raster LODs on inclined polygons.
+    // This makes the display sharper, but might be a bit noisier.
+    bool  compensate_inclination = 1;
+
+    // Set to true to smooth the raster LOD transitions when moving the camera.
+    bool  mix_lods               = 2;
+
+    // Max factor by which a pixel from the raster layers can be stretch on
+    // screen in logical pixels before the next LOD is loaded. The smaller the
+    // value the sooner raster layers are refined when zooming in. Usually
+    // between 1 and 2. Must be greater than 0.
+    float max_screen_space_error = 3;
+}
+
+// This contains all settings global to the scene.
+// @path_root="scene_settings"
+message SceneSettings {
+    SceneViewIndex  main_view    = 1;
+    SceneViewBitset active_views = 2;
+    RasterSettings  raster       = 3;
+}
+
+// This contains all settings global to a scene view.
+// @path_root="scene_view_settings"
+message SceneViewSettings {
+    CameraIndex       camera    = 1;
+    TerrainSettings   terrain   = 2;
+    AmbientSettings   ambient   = 3;
+    HighlightSettings highlight = 4;
+    ViewshedSettings  viewshed  = 5;
+    ViewportSettings  viewport  = 6;
+}
+
+message Grid {
+    // Extent of the plane. Unit is set with `extent_unit`.
+    float           extent      = 1;
+    UiSizeUnit      extent_unit = 5;
+
+    // This is the reference size of a grid cell in meters. Every square in the
+    // grid then has a size which is `10^LOD * cell_size` where LOD is
+    // automatically computed.
+    float           cell_size   = 2;
+    // Grid lines are always rendered with full opacity thus only use the RGB
+    // components. The grid background colour uses all the component. Therefore,
+    // the opacity can be set to 0 when only the grid lines need to be
+    // displayed.
+    Color           color       = 3;
+
+    SceneViewBitset scene_views = 4;
+}
+
+message Line {
+    // Extent of the line. Unit is set with `extent_unit`.
+    float           extent      = 1;
+    UiSizeUnit      extent_unit = 5;
+
+    // Width of the line in pixels in logical pixels.
+    float           width       = 2;
+    // Color of the line, all components are used.
+    Color           color       = 3;
+
+    SceneViewBitset scene_views = 4;
+}

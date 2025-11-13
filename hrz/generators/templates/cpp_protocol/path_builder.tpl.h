@@ -8,12 +8,12 @@
 
 #include <concepts>
 
-#include "hrz_protocol_path_builder_common.h"
-#include "hrz_protocol_wrappers_path_builder.h"
+#include "hrz/protocol/path_builder_common.h"
+#include "hrz/protocol/path_builder/wrappers.h"
 #include "{{ filename }}.pb.h"
 
 {% for f in dependencies %}
-#include "hrz_protocol_{{ f[4:] }}_path_builder.h"
+#include "hrz/protocol/path_builder/{{ f[13:] }}.h"
 {% endfor %}
 
 namespace hrz_proto

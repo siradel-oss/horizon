@@ -20,7 +20,7 @@ cc_binary(
     deps = [
         "//hrz/branding:icons",
         "//hrz/core:hrz_core",
-        "//hrz/cpp_api:hrz_cpp_api",
+        "//hrz/cpp_api",
         "//hrz/scene_dump:migration",
         "//libs/argparser",
         "//libs/ws:ws_server",
