@@ -2,17 +2,21 @@
 
 #include "hrz/common/metadata.h"
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/fnd/class.h"
 
 #include <mycelium/mycelium.h>
 
 #include <cstdint>
-#include <string_view>
 
 namespace hrz::monitoring
 {
 class GpuResourceMonitoring
 {
 public:
+    GpuResourceMonitoring() = default;
+    HRZ_DEFAULT_COPY_MOVE(GpuResourceMonitoring);
+    virtual ~GpuResourceMonitoring() = default;
+
     virtual void register_gpu_resource(
         my::ResourceHandle,
         my::Resource::Type,

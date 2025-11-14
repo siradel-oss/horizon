@@ -129,7 +129,7 @@ void message(Severity severity, std::string_view message, const std::source_loca
     std::string* str = &log_line->line;
     str->resize(MAX_MESSAGE_LENGTH);
 
-    const size_t length = (size_t)fmt::format_to_n(
+    const size_t length = fmt::format_to_n(
                               std::to_address(str->begin()), MAX_MESSAGE_LENGTH,
                               "[{:>4}:{:02}.{:03}] [{:^7}] ({}:{}) {}", minutes, seconds, millis,
                               _severity_to_string(severity), file, location.line(), message)

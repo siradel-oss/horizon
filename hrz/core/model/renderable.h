@@ -25,10 +25,10 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
 
     struct MeshRenderData
     {
-        uint32_t scene_views_bitset;
-        bool render_selection;
-        bool cast_shadows;
-        bool is_transparent;
+        uint32_t scene_views_bitset{};
+        bool render_selection{};
+        bool cast_shadows{};
+        bool is_transparent{};
 
         // Nothing is owned
         my::ResourceHandle ubo;

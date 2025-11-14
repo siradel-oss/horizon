@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/fnd/class.h"
 
 #include <cstdint>
 #include <span>
@@ -21,6 +22,10 @@ namespace hrz_jobs
 class JobContext
 {
 public:
+    JobContext() = default;
+    HRZ_DEFAULT_COPY_MOVE(JobContext);
+    virtual ~JobContext() = default;
+
     virtual int get_worker_id() const = 0;
     virtual hrz::BlobAllocator* get_blob_allocator() const = 0;
     virtual hrz::FontRasterizer* get_font_rasterizer() const = 0;

@@ -243,6 +243,10 @@ struct DtmRasterCollectionTraits
 class IRasterCollection
 {
 public:
+    IRasterCollection() = default;
+    HRZ_DEFAULT_COPY_MOVE(IRasterCollection);
+    virtual ~IRasterCollection() = default;
+
     virtual Raster* get_raster_by_id(uint64_t raster_id) = 0;
     virtual Raster* get_raster_by_index(size_t raster_index) = 0;
 
@@ -531,7 +535,8 @@ public:
 
         if (_scene_views_updated)
         {
-            rasters_have_changed |= work_views(scene_model);
+            // Be careful not to short-circuit!
+            rasters_have_changed = work_views(scene_model) || rasters_have_changed;
             _scene_views_updated = false;
         }
 

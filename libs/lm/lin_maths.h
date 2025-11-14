@@ -1068,7 +1068,7 @@ Matrix<T, N> transpose(const Matrix<T, N>& m)
     Matrix<T, N> t(m);
     for (int i = 0; i < N; ++i)
     {
-        for (int j = 0; j < i; ++i)
+        for (int j = 0; j < i; ++j)
         {
             T tmp = t[i][j];
             t[i][j] = t[j][i];

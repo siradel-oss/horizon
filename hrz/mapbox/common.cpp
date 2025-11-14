@@ -535,37 +535,38 @@ void generate_property_script(std::span<const Node> nodes, const Property& prp, 
 {
     switch (prp.type)
     {
-        case Property::Type::Generic:
+        using enum Property::Type;
+        case Generic:
             generate_internal_property_script(nodes, prp.generic, prp.styling_name, script);
             break;
 
-        case Property::Type::Vec2:
+        case Vec2:
             generate_internal_property_script(nodes, prp.vec2, prp.styling_name, script);
             break;
 
-        case Property::Type::Vec3:
+        case Vec3:
             generate_internal_property_script(nodes, prp.vec3, prp.styling_name, script);
             break;
 
-        case Property::Type::ColorWithOpacity:
+        case ColorWithOpacity:
             generate_internal_property_script(
                 nodes, prp.color_with_opacity, prp.styling_name, script);
             break;
 
-        case Property::Type::ExtrudedVectorColor:
+        case ExtrudedVectorColor:
             generate_internal_property_script(nodes, prp.extruded_color, prp.styling_name, script);
             break;
 
-        case Property::Type::SymbolAnchorAlignment:
+        case SymbolAnchorAlignment:
             generate_internal_property_script(
                 nodes, prp.symbol_anchor_alignment, prp.styling_name, script);
             break;
 
-        case Property::Type::TextAlignment:
+        case TextAlignment:
             generate_internal_property_script(nodes, prp.text_alignment, prp.styling_name, script);
             break;
 
-        case Property::Type::Invalid:
+        case Invalid:
         default: assert(false && "Unhandled"); return;
     }
 }
@@ -575,12 +576,13 @@ std::string to_string(Value value)
 {
     switch (value.type)
     {
-        case Value::Type::Bool: return value.b64 ? "true" : "false";
+        using enum Value::Type;
+        case Bool: return value.b64 ? "true" : "false";
         // UInt values are used for colors, so we format them in hexadecimal
-        case Value::Type::UInt: return fmt::format("{:#x}", value.u64);
+        case UInt: return fmt::format("{:#x}", value.u64);
         // Note: we prefer using fmt rather than std::to_string for the nicer formatting
         // (123.0 will result in 123 for fmt, or 123.000000 for std::to_string).
-        case Value::Type::Double:
+        case Double:
             if (std::floor(value.f64) == value.f64)
             {
                 // If the value has no decimal part, we still want to write
@@ -591,7 +593,7 @@ std::string to_string(Value value)
             {
                 return fmt::format("{}", value.f64);
             }
-        case Value::Type::String: return std::string(value.str.data(), value.str.size());
+        case String: return std::string(value.str.data(), value.str.size());
         default:
         {
             assert(false && "Unhandled case");

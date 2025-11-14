@@ -452,12 +452,12 @@ struct TextureLayout
         Array,
     };
 
-    Type type;
-    TextureFormat format;
-    uint32_t width;
-    uint32_t height;
-    uint32_t depth;
-    uint32_t levels;
+    Type type{};
+    TextureFormat format{};
+    uint32_t width{};
+    uint32_t height{};
+    uint32_t depth{};
+    uint32_t levels{};
 
     size_t get_level_byte_size(uint32_t level) const;
     size_t get_level_internal_byte_size(uint32_t level) const;
@@ -486,7 +486,7 @@ struct TextureResource : public Resource
     // The whole data span can be empty if all levels are empty.
     std::span<std::span<const std::byte>> data;
 
-    bool generate_mipmaps;
+    bool generate_mipmaps = false;
     bool is_render_graph_texture = false;
     const char* name = nullptr;
 };
@@ -1044,7 +1044,6 @@ public:
 
     virtual void configure_shaders_linking(const ShadersLinkingConfig&) = 0;
     virtual void advance_shaders_link(bool idle = false) = 0;
-    virtual ResourceHandle retrieve_shader(const char* name) const override = 0;
     virtual void add_global_shader_define(const char* name, const char* value = "") = 0;
 
     virtual bool is_texture_download_ready(uint64_t id) const = 0;

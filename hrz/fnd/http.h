@@ -130,6 +130,10 @@ public:
 class IHttpClock
 {
 public:
+    IHttpClock() = default;
+    HRZ_DEFAULT_COPY_MOVE(IHttpClock);
+    virtual ~IHttpClock() = default;
+
     virtual HttpTime now() const = 0;
 };
 

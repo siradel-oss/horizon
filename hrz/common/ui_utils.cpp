@@ -60,8 +60,8 @@ void add_tooltip(mu_Context* ctx, TooltipContext* tooltip_ctx, std::string_view 
     auto text_start = tooltip_ctx->tooltip_buffer.size();
     tooltip_ctx->tooltip_buffer.append(text);
 
-    tooltip_ctx->tooltips.push_back(
-        {text_start, text.size(), ctx->mouse_pos, mu_get_current_container(ctx)->rect});
+    tooltip_ctx->tooltips.emplace_back(
+        text_start, text.size(), ctx->mouse_pos, mu_get_current_container(ctx)->rect);
 }
 
 void draw_tooltips(mu_Context* ctx, TooltipContext* tooltip_ctx)

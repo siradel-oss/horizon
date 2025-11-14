@@ -808,9 +808,9 @@ namespace hrz::style
 
 bool is_random_function(Operator kind)
 {
-    return kind == Operator::RandUnifI || kind == Operator::RandUnifU || kind == Operator::RandUnifF
-        || kind == Operator::RandNormI || kind == Operator::RandNormU
-        || kind == Operator::RandNormF;
+    using enum Operator;
+    return kind == RandUnifI || kind == RandUnifU || kind == RandUnifF || kind == RandNormI
+        || kind == RandNormU || kind == RandNormF;
 }
 
 std::optional<uint8_t> get_func_operand_count(Operator kind)

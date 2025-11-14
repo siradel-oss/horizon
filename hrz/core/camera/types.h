@@ -8,7 +8,7 @@ namespace hrz
 {
 struct CameraInfo
 {
-    float fovy; // In radians
+    float fovy{}; // In radians
     lm::dvec3 pos;
     lm::dmat4 view;
     lm::dmat4 view_cc;
@@ -37,14 +37,14 @@ struct CameraInfo
 struct ViewportInfo
 {
     // Ratio from physical to logical pixels.
-    float device_pixel_ratio;
+    float device_pixel_ratio{};
 
     // Size of the full camera in physical pixels.
     lm::vec2 size;
     lm::bbox2 subfrustum;
 
-    double near;
-    double far;
+    double near{};
+    double far{};
 
     inline float aspect_ratio() const { return size.x / size.y; }
 

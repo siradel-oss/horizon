@@ -862,7 +862,7 @@ class OrbitManipulator : public CameraManipulator
         lm::vec2 _movement{};
 
         std::optional<double> _ellipsoid_altitude{};
-        CameraViewInfo _last_view_info;
+        CameraViewInfo _last_view_info{};
 
     protected:
         const hrz_proto::SceneViewIndex _view_index;

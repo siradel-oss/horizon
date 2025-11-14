@@ -71,8 +71,8 @@ private:
         return (const T*)(_data + index * _stride);
     }
 
-    BackingType* _data;
-    size_t _length;
-    size_t _stride;
+    BackingType* _data{};
+    size_t _length{};
+    size_t _stride{};
 };
 } // namespace hrz

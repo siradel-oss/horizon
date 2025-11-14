@@ -9,7 +9,7 @@ namespace hrz_jobs::parse_mvt
 hrz::JobResult run(
     const hrz::blobs::BlobHandle& raw_data_blob,
     hrz::vector_data::ParsedMvt& parsed_mvt,
-    const JobContext& context)
+    const JobContext&)
 {
     HRZ_SCOPED_SAMPLE("parse mvt job");
 
