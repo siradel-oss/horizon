@@ -5,7 +5,6 @@ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:protobufjs-cli/package_json.bzl", pbjs_bin = "bin")
 load("@tsconfig_util//:defs.bzl", "TSCONFIG")
-load("//third_party:protobufjs_cli_deps.bzl", "PROTOBUFJS_CLI_DEPS")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
 load("//tools/bazel:pkg.bzl", "structured_files_copy")
 load("//tools/bazel:utils.bzl", "merge_dicts")
@@ -18,7 +17,7 @@ npm_link_all_packages(name = "node_modules")
 
 pbjs_bin.pbjs(
     name = "generate_js",
-    srcs = PROTOBUFJS_CLI_DEPS + [
+    srcs = [
         "//hrz/protocol:protos",
     ],
     outs = [
@@ -51,7 +50,7 @@ expand_template(
 
 pbjs_bin.pbts(
     name = "generate_ts",
-    srcs = PROTOBUFJS_CLI_DEPS + [
+    srcs = [
         "dist/hrz_protocol.js",
     ],
     outs = [
