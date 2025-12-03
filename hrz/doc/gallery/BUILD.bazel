@@ -33,6 +33,7 @@ SCENES = [
     "rennes_iris_pop",
     "rennes_trees",
     "san_francisco_data_raster",
+    "wind_turbines",
     "world_street_map_arcgis",
 ]
 

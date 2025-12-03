@@ -7,6 +7,111 @@
 namespace my
 {
 
+template<typename ApplyFunctor>
+void apply_vertex_format(VertexFormat format, ApplyFunctor&& func)
+{
+    switch (format)
+    {
+        using enum VertexFormat;
+        case Int8: std::forward<ApplyFunctor>(func).template apply<int8_t, 1, false>(); break;
+        case Int8Norm: std::forward<ApplyFunctor>(func).template apply<int8_t, 1, true>(); break;
+        case UInt8: std::forward<ApplyFunctor>(func).template apply<uint8_t, 1, false>(); break;
+        case UInt8Norm: std::forward<ApplyFunctor>(func).template apply<uint8_t, 1, true>(); break;
+        case Int16: std::forward<ApplyFunctor>(func).template apply<int16_t, 1, false>(); break;
+        case Int16Norm: std::forward<ApplyFunctor>(func).template apply<int16_t, 1, true>(); break;
+        case UInt16: std::forward<ApplyFunctor>(func).template apply<uint16_t, 1, false>(); break;
+        case UInt16Norm:
+            std::forward<ApplyFunctor>(func).template apply<uint16_t, 1, true>();
+            break;
+        case Int32: std::forward<ApplyFunctor>(func).template apply<int32_t, 1, false>(); break;
+        case Int32Norm: std::forward<ApplyFunctor>(func).template apply<int32_t, 1, true>(); break;
+        case UInt32: std::forward<ApplyFunctor>(func).template apply<uint32_t, 1, false>(); break;
+        case UInt32Norm:
+            std::forward<ApplyFunctor>(func).template apply<uint32_t, 1, true>();
+            break;
+        case Float16: std::forward<ApplyFunctor>(func).template apply<float16_t, 1, false>(); break;
+        case Float32: std::forward<ApplyFunctor>(func).template apply<float, 1, false>(); break;
+        case Int8_2: std::forward<ApplyFunctor>(func).template apply<int8_t, 2, false>(); break;
+        case Int8Norm_2: std::forward<ApplyFunctor>(func).template apply<int8_t, 2, true>(); break;
+        case UInt8_2: std::forward<ApplyFunctor>(func).template apply<uint8_t, 2, false>(); break;
+        case UInt8Norm_2:
+            std::forward<ApplyFunctor>(func).template apply<uint8_t, 2, true>();
+            break;
+        case Int16_2: std::forward<ApplyFunctor>(func).template apply<int16_t, 2, false>(); break;
+        case Int16Norm_2:
+            std::forward<ApplyFunctor>(func).template apply<int16_t, 2, true>();
+            break;
+        case UInt16_2: std::forward<ApplyFunctor>(func).template apply<uint16_t, 2, false>(); break;
+        case UInt16Norm_2:
+            std::forward<ApplyFunctor>(func).template apply<uint16_t, 2, true>();
+            break;
+        case Int32_2: std::forward<ApplyFunctor>(func).template apply<int32_t, 2, false>(); break;
+        case Int32Norm_2:
+            std::forward<ApplyFunctor>(func).template apply<int32_t, 2, true>();
+            break;
+        case UInt32_2: std::forward<ApplyFunctor>(func).template apply<uint32_t, 2, false>(); break;
+        case UInt32Norm_2:
+            std::forward<ApplyFunctor>(func).template apply<uint32_t, 2, true>();
+            break;
+        case Float16_2:
+            std::forward<ApplyFunctor>(func).template apply<float16_t, 2, false>();
+            break;
+        case Float32_2: std::forward<ApplyFunctor>(func).template apply<float, 2, false>(); break;
+        case Int8_3: std::forward<ApplyFunctor>(func).template apply<int8_t, 3, false>(); break;
+        case Int8Norm_3: std::forward<ApplyFunctor>(func).template apply<int8_t, 3, true>(); break;
+        case UInt8_3: std::forward<ApplyFunctor>(func).template apply<uint8_t, 3, false>(); break;
+        case UInt8Norm_3:
+            std::forward<ApplyFunctor>(func).template apply<uint8_t, 3, true>();
+            break;
+        case Int16_3: std::forward<ApplyFunctor>(func).template apply<int16_t, 3, false>(); break;
+        case Int16Norm_3:
+            std::forward<ApplyFunctor>(func).template apply<int16_t, 3, true>();
+            break;
+        case UInt16_3: std::forward<ApplyFunctor>(func).template apply<uint16_t, 3, false>(); break;
+        case UInt16Norm_3:
+            std::forward<ApplyFunctor>(func).template apply<uint16_t, 3, true>();
+            break;
+        case Int32_3: std::forward<ApplyFunctor>(func).template apply<int32_t, 3, false>(); break;
+        case Int32Norm_3:
+            std::forward<ApplyFunctor>(func).template apply<int32_t, 3, true>();
+            break;
+        case UInt32_3: std::forward<ApplyFunctor>(func).template apply<uint32_t, 3, false>(); break;
+        case UInt32Norm_3:
+            std::forward<ApplyFunctor>(func).template apply<uint32_t, 3, true>();
+            break;
+        case Float16_3:
+            std::forward<ApplyFunctor>(func).template apply<float16_t, 3, false>();
+            break;
+        case Float32_3: std::forward<ApplyFunctor>(func).template apply<float, 3, false>(); break;
+        case Int8_4: std::forward<ApplyFunctor>(func).template apply<int8_t, 4, false>(); break;
+        case Int8Norm_4: std::forward<ApplyFunctor>(func).template apply<int8_t, 4, true>(); break;
+        case UInt8_4: std::forward<ApplyFunctor>(func).template apply<uint8_t, 4, false>(); break;
+        case UInt8Norm_4:
+            std::forward<ApplyFunctor>(func).template apply<uint8_t, 4, true>();
+            break;
+        case Int16_4: std::forward<ApplyFunctor>(func).template apply<int16_t, 4, false>(); break;
+        case Int16Norm_4:
+            std::forward<ApplyFunctor>(func).template apply<int16_t, 4, true>();
+            break;
+        case UInt16_4: std::forward<ApplyFunctor>(func).template apply<uint16_t, 4, false>(); break;
+        case UInt16Norm_4:
+            std::forward<ApplyFunctor>(func).template apply<uint16_t, 4, true>();
+            break;
+        case Int32_4: std::forward<ApplyFunctor>(func).template apply<int32_t, 4, false>(); break;
+        case Int32Norm_4:
+            std::forward<ApplyFunctor>(func).template apply<int32_t, 4, true>();
+            break;
+        case UInt32_4: std::forward<ApplyFunctor>(func).template apply<uint32_t, 4, false>(); break;
+        case UInt32Norm_4:
+            std::forward<ApplyFunctor>(func).template apply<uint32_t, 4, true>();
+            break;
+        case Float16_4:
+            std::forward<ApplyFunctor>(func).template apply<float16_t, 4, false>();
+            break;
+        case Float32_4: std::forward<ApplyFunctor>(func).template apply<float, 4, false>(); break;
+    }
+}
+
 constexpr VertexFormat to_normalized(VertexFormat format)
 {
     switch (format)

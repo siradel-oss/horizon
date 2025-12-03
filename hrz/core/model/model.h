@@ -160,8 +160,6 @@ BatchedModelGeometryH create_batched_model_geometry(
     std::span<const vector_data::FeatureIdHash> feature_id_hashes);
 void destroy(ModelPrototype*, ModelGeometryH);
 
-BSphere<double> compute_model_bsphere(ModelPrototype*, ModelGeometryH, const lm::dmat4& transform);
-
 void set_batched_selection(
     ModelPrototype*,
     BatchedModelGeometryH,
@@ -291,7 +289,13 @@ BatchedBakedModelH create_baked_model(
 void destroy(ModelPrototype*, BakedModelH);
 
 void work(ModelPrototype*, BakedModelH);
-RenderRequest work_gpu(ModelPrototype*, BakedModelH, SharedResources*, Render*);
+
+void set_animations(ModelPrototype*, BakedModelH, std::span<const std::string>);
+
+[[nodiscard]] RenderRequest work_gpu(ModelPrototype*, BakedModelH, SharedResources*, Render*);
+
+// Expensive!
+BSphere<double> compute_model_bsphere(ModelPrototype*, BakedModelH, const lm::dmat4& transform);
 
 enum class BakedModelStatus
 {
@@ -310,6 +314,8 @@ void work_gpu(ModelPrototype*, InstanceGroupH, Render*);
 struct DrawProperties
 {
     lm::dmat4 transform;
+    float animation_speed;
+    float animation_phase;
     render::LightingSettings lighting;
     int clip_id;
     lm::vec4 color;

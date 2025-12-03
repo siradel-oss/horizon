@@ -124,9 +124,9 @@ void main()
 
     mat4 instance_transform = instance_transform();
 
-    vec4 position = hrz_prim.geometry.transform * vec4(fetch_position(), 1);
-    position.xyz += hrz_prim.geometry.origin_low.xyz;
-    position.xyz += hrz_prim.geometry.origin_high.xyz;
+    vec4 position = hrz_prim_transform.transform * vec4(fetch_position(), 1);
+    position.xyz += hrz_prim_transform.origin_low.xyz;
+    position.xyz += hrz_prim_transform.origin_high.xyz;
     position = mat4(hrz_instance_group.linear_transform) * instance_transform * position;
 
     vec4 pos_cc = vec4(translate_relative_to_camera(position.xyz, hrz_instance_group.origin_low.xyz, hrz_instance_group.origin_high.xyz), 1);

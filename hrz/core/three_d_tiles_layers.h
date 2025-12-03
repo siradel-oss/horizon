@@ -112,6 +112,7 @@ std::optional<picking::FeatureReference> make_feature_reference(
     ThreeDTilesLayerSystem* system,
     const picking::ObjectReference& obj);
 
+[[nodiscard]]
 RenderRequest work_gpu(ThreeDTilesLayerSystem*, Render*, BlobAllocator*);
 
 void draw(ThreeDTilesLayerSystem*, Render*, AttributionRegistry*);

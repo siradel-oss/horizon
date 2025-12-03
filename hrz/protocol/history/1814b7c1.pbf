@@ -700,7 +700,7 @@ Int32Value
 
 BytesValue
 value (RvalueBHøbproto3
-¿‡
+çˆ
 hrz/protocol/scene_model.protoHrzProtocolhrz/protocol/types.protohrz/protocol/layers.protohrz/protocol/wrappers.proto"%
 SceneViewBitset
 bits (Rbits"
@@ -746,7 +746,11 @@ gizmoLayerL
 overlay_opacity (RoverlayOpacityB
 apply_feature_color_to_overlay (RapplyFeatureColorToOverlayO
 feature_color_blend_mode (2.HrzProtocol.BlendModeRfeatureColorBlendMode?
-feature_color_blend_strength (RfeatureColorBlendStrength"Ó
+feature_color_blend_strength (RfeatureColorBlendStrength"k
+ModelAnimation
+speed (Rspeed
+phase (Rphase-
+enabled_animations (	RenabledAnimations"Ž
 SingleModelLayer
 url (	Rurl>
 http_headers (2.HrzProtocol.HttpHeaderListRhttpHeaders 
@@ -760,7 +764,8 @@ geographic&
 visible (Rvisible(
 color (2.HrzProtocol.ColorRcolor3
 	materials (2.HrzProtocol.MaterialR	materialsP
-material_properties (2.HrzProtocol.MaterialPropertiesRmaterialProperties)
+material_properties (2.HrzProtocol.MaterialPropertiesRmaterialProperties9
+	animation (2.HrzProtocol.ModelAnimationR	animation)
 loading_priority (RloadingPriority
 clip_id (RclipId=
 scene_views	 (2.HrzProtocol.SceneViewBitsetR

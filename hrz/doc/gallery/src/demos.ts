@@ -121,3 +121,6 @@ registerDemo("polylineAnimation", PolylineAnimation);
 
 import LoadingScreen from "./demo/LoadingScreen.vue";
 registerDemo("loadingScreen", LoadingScreen);
+
+import ModelAnimations from "./demo/ModelAnimations.vue";
+registerDemo("modelAnimations", ModelAnimations);

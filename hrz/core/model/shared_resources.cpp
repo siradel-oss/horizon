@@ -1,6 +1,7 @@
 #include "hrz/core/model/shared_resources.h"
 
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/core/model/ubo_defs.h"
 #include "hrz/core/render.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
@@ -71,14 +72,16 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     static const my::IndexName ubos[] = {
         {UboFrame, "Frame"},
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
     };
 
     static const my::IndexName ubos_depth[] = {
         {UboFrame, "Frame"},
         {UboView, "View"},
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
     };
 
     hrz::StaticVector<my::IndexName, 32> samplers_visual;
@@ -197,7 +200,8 @@ static void collect_impostor_shaders(hrz::GpuResourceContext* rc)
 
     static const my::IndexName ubos[] = {
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
         {UboImpostorBaking, "BakeFrame"},
     };
 
@@ -263,7 +267,8 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     static const my::IndexName ubos[] = {
         {UboFrame, "Frame"},
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
         {UboGroupParams, "MeshInstanceGroup"},
     };
 
@@ -271,7 +276,8 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
         {UboFrame, "Frame"},
         {UboView, "View"},
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
         {UboGroupParams, "MeshInstanceGroup"},
     };
 
@@ -450,14 +456,16 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
         {hrz::UboFrame, "Frame"},
         {hrz::vector_flat_overlay::UboVectorOverlayCameras, "OverlayCamerasUniform"},
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
     };
 
     static const my::IndexName ubos_depth[] = {
         {UboFrame, "Frame"},
         {UboView, "View"},
         {UboMeshParams, "Mesh"},
-        {UboPrimitiveParams, "Primitive"},
+        {UboPrimitiveDrawParams, "PrimitiveDraw"},
+        {UboPrimitiveTransformParams, "PrimitiveTransform"},
     };
 
     hrz::StaticVector<my::IndexName, 32> visual_samplers;
@@ -636,6 +644,12 @@ static SharedResources* create_shared_resources_common(Render* render)
     SharedResources* sr = new SharedResources();
 
     sr->ubo_alignment = (uint32_t)render->my->get_uniform_buffer_offset_alignment();
+
+    sr->mesh_ubo_stride = render::compute_ubo_stride<MeshUniformData>(sr->ubo_alignment);
+    sr->primitive_draw_ubo_stride =
+        render::compute_ubo_stride<PrimitiveDrawUniformData>(sr->ubo_alignment);
+    sr->primitive_transform_ubo_stride =
+        render::compute_ubo_stride<PrimitiveTransformUniformData>(sr->ubo_alignment);
 
     sr->fallback_position_vertex_buffer =
         _build_constant_vertex_array<lm::vec3>({0, 0, 0}, my::VertexFormat::Float32_3, render);

@@ -1,15 +1,10 @@
 #pragma once
 
-#include "hrz/common/proto_maths.h"
 #include "hrz/core/model/model.h"
-#include "hrz/core/scene_model.h"
-#include "hrz/core/scene_model_array_sync.h"
-#include "hrz/core/scene_path/scene_path.h"
 #include "hrz/fnd/flat_hash_map.h"
+#include "hrz/fnd/function_ref.h"
 #include "hrz/fnd/gen_index_pool.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/string_utils.h"
-#include "hrz/protocol/path_builder.h"
 
 #include <algorithm>
 
@@ -270,7 +265,11 @@ public:
         _needs_to_update_active_model = true;
     }
 
-    RenderRequest update(ModelPrototype* proto, ModelGeometryHandleType geometry)
+    RenderRequest update(
+        ModelPrototype* proto,
+        ModelGeometryHandleType geometry,
+        std::optional<hrz::function_ref<void(BakedModelHandleType)>> on_baked_model_created =
+            std::nullopt)
     {
         RenderRequest render_request;
 
@@ -316,6 +315,11 @@ public:
                 BakedModelHandleType model = model::create_baked_model(
                     proto, geometry, base_material->material, overlay_model_material);
 
+                if (on_baked_model_created.has_value())
+                {
+                    on_baked_model_created.value()(model);
+                }
+
                 _models_cache.insert(std::make_pair(material_pair, model));
                 _active_model = model;
             }
@@ -335,6 +339,14 @@ public:
         return render_request;
     }
 
+    void iterate_all_baked_models(hrz::function_ref<void(BakedModelHandleType)> func) const
+    {
+        for (const auto& model : _models_cache)
+        {
+            func(model.second);
+        }
+    }
+
     inline void work(ModelPrototype* proto)
     {
         if (_active_model)
@@ -343,6 +355,7 @@ public:
         }
     }
 
+    [[nodiscard]]
     inline RenderRequest work_gpu(ModelPrototype* proto, SharedResources* sr, Render* render)
     {
         if (_active_model)

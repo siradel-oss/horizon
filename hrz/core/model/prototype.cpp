@@ -1,8 +1,5 @@
 #include "hrz/core/model/prototype.h"
 
-#include "hrz/fnd/string_utils.h"
-#include "hrz/fnd/url_utils.h"
-
 namespace
 {
 template<typename T, typename Index>
@@ -119,7 +116,7 @@ void destroy(
         case ModelPrototype::Error: break;
     }
 
-    model->gpu_resources.destroy_all(model->blob_library.get(), ba, js, to_destroy);
+    model->resources.destroy_all(model->blob_library.get(), ba, js, to_destroy);
 
     for (my::ResourceHandle res : model->to_destroy)
     {
@@ -179,7 +176,7 @@ void work(
         case ModelPrototype::DescriptorLoaded:
         {
             model->blob_library->work(al, ba);
-            model->gpu_resources.work(model->blob_library.get(), ba, js, imgdec, model->to_destroy);
+            model->resources.work(model->blob_library.get(), ba, js, imgdec, model->to_destroy);
             break;
         }
         default: break;
@@ -192,7 +189,7 @@ void work_gpu(ModelPrototype* model, BlobAllocator* ba, Render* render)
     {
         case ModelPrototype::DescriptorLoaded:
         {
-            model->gpu_resources.work_gpu(ba, model->blob_library.get(), render);
+            model->resources.work_gpu(ba, model->blob_library.get(), render);
             break;
         }
         default: break;
@@ -250,12 +247,14 @@ void ModelPrototype::start_loading_attribute(
     const auto* accessor = _get_ptr(descriptor.accessors, desc_attr.accessor);
     if (accessor && accessor->buffer_view.has_value() && !desc_attr.draco_attribute.has_value())
     {
-        int buffer_view = accessor->buffer_view.value();
+        const int buffer_view = accessor->buffer_view.value();
+        if (used_vertex_buffers->contains(buffer_view)) return;
+
         const auto* buffer_view_ptr = _get_ptr(descriptor.buffer_views, buffer_view);
 
         if (buffer_view_ptr)
         {
-            gpu_resources.vertex_buffers.acquire(buffer_view, blob_library.get(), &descriptor);
+            resources.vertex_buffers.acquire(buffer_view, blob_library.get(), &descriptor);
             used_vertex_buffers->add(buffer_view);
         }
     }
@@ -268,8 +267,10 @@ void ModelPrototype::start_loading_indices(
     const auto* accessor = _get_ptr(descriptor.accessors, desc_attr.accessor);
     if (accessor && accessor->buffer_view.has_value())
     {
-        int buffer_view = accessor->buffer_view.value();
-        gpu_resources.index_buffers.acquire(buffer_view, blob_library.get(), &descriptor);
+        const int buffer_view = accessor->buffer_view.value();
+        if (used_index_buffers->contains(buffer_view)) return;
+
+        resources.index_buffers.acquire(buffer_view, blob_library.get(), &descriptor);
         used_index_buffers->add(buffer_view);
     }
 }
@@ -278,7 +279,8 @@ void ModelPrototype::start_loading_draco_mesh(
     int draco_mesh_id,
     UsedResources<int>* used_draco_meshes)
 {
-    gpu_resources.draco_meshes.acquire(draco_mesh_id, blob_library.get(), &descriptor);
+    if (used_draco_meshes->contains(draco_mesh_id)) return;
+    resources.draco_meshes.acquire(draco_mesh_id, blob_library.get(), &descriptor);
     used_draco_meshes->add(draco_mesh_id);
 }
 
@@ -286,7 +288,8 @@ void ModelPrototype::start_loading_sampler(
     SamplerWithParams sampler,
     UsedResources<SamplerWithParams>* used_samplers)
 {
-    gpu_resources.samplers.acquire(sampler, blob_library.get(), &descriptor);
+    if (used_samplers->contains(sampler)) return;
+    resources.samplers.acquire(sampler, blob_library.get(), &descriptor);
     used_samplers->add(sampler);
 }
 
@@ -294,16 +297,24 @@ void ModelPrototype::start_loading_texture(
     TextureWithCfg texture,
     UsedResources<TextureWithCfg>* used_textures)
 {
-    gpu_resources.textures.acquire(texture, blob_library.get(), &descriptor);
+    if (used_textures->contains(texture)) return;
+    resources.textures.acquire(texture, blob_library.get(), &descriptor);
     used_textures->add(texture);
 }
 
-constexpr bool _is_finished_loading_gpu_resource(GpuResourceStatus status)
+void ModelPrototype::start_loading_animation(int animation_id, UsedResources<int>* used_animations)
+{
+    if (used_animations->contains(animation_id)) return;
+    resources.animations.acquire(animation_id, blob_library.get(), &descriptor);
+    used_animations->add(animation_id);
+}
+
+constexpr bool _is_finished_loading_resource(ResourceStatus status)
 {
     switch (status)
     {
-        case GpuResourceStatus::Error:
-        case GpuResourceStatus::Ready: return true;
+        case ResourceStatus::Error:
+        case ResourceStatus::Ready: return true;
         default: return false;
     }
 }
@@ -311,69 +322,80 @@ constexpr bool _is_finished_loading_gpu_resource(GpuResourceStatus status)
 void ModelPrototype::update_attributes_load_status(UsedResources<int>& used)
 {
     used.iterate_waiting_on(
-        [this](int key) -> bool {
-            return _is_finished_loading_gpu_resource(gpu_resources.vertex_buffers.get_status(key));
-        });
+        [this](int key) -> bool
+        { return _is_finished_loading_resource(resources.vertex_buffers.get_status(key)); });
 }
 
 void ModelPrototype::update_indices_load_status(UsedResources<int>& used)
 {
     used.iterate_waiting_on(
         [this](int key) -> bool
-        { return _is_finished_loading_gpu_resource(gpu_resources.index_buffers.get_status(key)); });
+        { return _is_finished_loading_resource(resources.index_buffers.get_status(key)); });
 }
 
 void ModelPrototype::update_draco_meshes_load_status(UsedResources<int>& used)
 {
     used.iterate_waiting_on(
         [this](int key) -> bool
-        { return _is_finished_loading_gpu_resource(gpu_resources.draco_meshes.get_status(key)); });
+        { return _is_finished_loading_resource(resources.draco_meshes.get_status(key)); });
 }
 
 void ModelPrototype::update_textures_load_status(UsedResources<TextureWithCfg>& used)
 {
     used.iterate_waiting_on(
         [this](TextureWithCfg key) -> bool
-        { return _is_finished_loading_gpu_resource(gpu_resources.textures.get_status(key)); });
+        { return _is_finished_loading_resource(resources.textures.get_status(key)); });
 }
 
 void ModelPrototype::update_samplers_load_status(UsedResources<SamplerWithParams>& used)
 {
     used.iterate_waiting_on(
         [this](SamplerWithParams key) -> bool
-        { return _is_finished_loading_gpu_resource(gpu_resources.samplers.get_status(key)); });
+        { return _is_finished_loading_resource(resources.samplers.get_status(key)); });
+}
+
+void ModelPrototype::update_animations_load_status(UsedResources<int>& used)
+{
+    used.iterate_waiting_on(
+        [this](int key) -> bool
+        { return _is_finished_loading_resource(resources.animations.get_status(key)); });
 }
 
 void ModelPrototype::release_attributes(UsedResources<int>& used)
 {
-    used.iterate_all([this](int id) { gpu_resources.vertex_buffers.release(id); });
+    used.iterate_all([this](int id) { resources.vertex_buffers.release(id); });
 }
 
 void ModelPrototype::release_indices(UsedResources<int>& used)
 {
-    used.iterate_all([this](int id) { gpu_resources.index_buffers.release(id); });
+    used.iterate_all([this](int id) { resources.index_buffers.release(id); });
 }
 
 void ModelPrototype::release_draco_meshes(UsedResources<int>& used)
 {
-    used.iterate_all([this](int id) { gpu_resources.draco_meshes.release(id); });
+    used.iterate_all([this](int id) { resources.draco_meshes.release(id); });
 }
 
 void ModelPrototype::release_textures(UsedResources<TextureWithCfg>& used)
 {
-    used.iterate_all([this](TextureWithCfg id) { gpu_resources.textures.release(id); });
+    used.iterate_all([this](TextureWithCfg id) { resources.textures.release(id); });
 }
 
 void ModelPrototype::release_samplers(UsedResources<SamplerWithParams>& used)
 {
-    used.iterate_all([this](SamplerWithParams id) { gpu_resources.samplers.release(id); });
+    used.iterate_all([this](SamplerWithParams id) { resources.samplers.release(id); });
+}
+
+void ModelPrototype::release_animations(UsedResources<int>& used)
+{
+    used.iterate_all([this](int id) { resources.animations.release(id); });
 }
 
 GpuDracoMeshResource* ModelPrototype::get_draco_mesh(int id)
 {
-    if (gpu_resources.draco_meshes.get_status(id) == GpuResourceStatus::Ready)
+    if (resources.draco_meshes.get_status(id) == ResourceStatus::Ready)
     {
-        return gpu_resources.draco_meshes.get(id);
+        return resources.draco_meshes.get(id);
     }
     else
     {

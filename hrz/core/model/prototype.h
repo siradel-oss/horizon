@@ -1,12 +1,10 @@
 #pragma once
 
-#include "hrz/core/data_texture.h"
 #include "hrz/core/model/baked.h"
 #include "hrz/core/model/geometry.h"
 #include "hrz/core/model/instance_group.h"
 #include "hrz/core/model/material.h"
 #include "hrz/core/model/model.h"
-#include "hrz/fnd/string_utils.h"
 
 namespace hrz::model
 {
@@ -36,7 +34,7 @@ struct ModelPrototype
     assets_loader::Ticket descriptor_load_ticket;
 
     std::unique_ptr<BlobLibrary> blob_library;
-    GpuResources gpu_resources;
+    Resources resources;
 
     ModelGeometryPool geometry_pool;
     ModelMaterialPool material_pool;
@@ -59,7 +57,7 @@ struct ModelPrototype
         additional_attribution(attribution),
         status(ModelPrototype::Error),
         blob_library(std::move(blob_library)),
-        gpu_resources(resource_owner)
+        resources(resource_owner)
     {
     }
 
@@ -89,17 +87,21 @@ struct ModelPrototype
         TextureWithCfg texture,
         UsedResources<TextureWithCfg>* used_textures);
 
+    void start_loading_animation(int animation_id, UsedResources<int>* used_animations);
+
     void update_attributes_load_status(UsedResources<int>&);
     void update_indices_load_status(UsedResources<int>&);
     void update_draco_meshes_load_status(UsedResources<int>&);
     void update_textures_load_status(UsedResources<TextureWithCfg>&);
     void update_samplers_load_status(UsedResources<SamplerWithParams>&);
+    void update_animations_load_status(UsedResources<int>&);
 
     void release_attributes(UsedResources<int>&);
     void release_indices(UsedResources<int>&);
     void release_draco_meshes(UsedResources<int>&);
     void release_textures(UsedResources<TextureWithCfg>&);
     void release_samplers(UsedResources<SamplerWithParams>&);
+    void release_animations(UsedResources<int>&);
 
     void iterate_primitives(const std::function<void(
                                 const ModelDescriptor::Mesh*,

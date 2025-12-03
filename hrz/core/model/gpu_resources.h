@@ -20,7 +20,7 @@ struct ImageDecoder;
 
 namespace model
 {
-enum class GpuResourceStatus
+enum class ResourceStatus
 {
     Loading, // Streaming-in in main memory, or being processed.
     Loaded,  // Ready to be uploaded to video memory.
@@ -37,7 +37,7 @@ struct GpuBufferResource
     size_t length;
     size_t stride;
 
-    GpuResourceStatus status;
+    ResourceStatus status;
 
     monitoring::ResourceOwner owner;
 
@@ -61,7 +61,7 @@ struct GpuBufferResource
         JobScheduler* js,
         std::vector<my::ResourceHandle>& to_destroy);
 
-    constexpr GpuResourceStatus get_status() const { return status; }
+    constexpr ResourceStatus get_status() const { return status; }
 };
 
 extern template struct GpuBufferResource<my::BufferResource::Vertex>;
@@ -114,16 +114,16 @@ struct GpuDracoMeshResource
         JobScheduler* js,
         std::vector<my::ResourceHandle>& to_destroy);
 
-    constexpr GpuResourceStatus get_status() const
+    constexpr ResourceStatus get_status() const
     {
         switch (status)
         {
-            case Status::LoadingBlob: return GpuResourceStatus::Loading;
-            case Status::DecodingMesh: return GpuResourceStatus::Loading;
-            case Status::UploadingData: return GpuResourceStatus::Loaded;
-            case Status::Ready: return GpuResourceStatus::Ready;
-            case Status::Error: return GpuResourceStatus::Error;
-            default: return GpuResourceStatus::Error;
+            case Status::LoadingBlob: return ResourceStatus::Loading;
+            case Status::DecodingMesh: return ResourceStatus::Loading;
+            case Status::UploadingData: return ResourceStatus::Loaded;
+            case Status::Ready: return ResourceStatus::Ready;
+            case Status::Error: return ResourceStatus::Error;
+            default: return ResourceStatus::Error;
         }
     }
 };
@@ -161,7 +161,7 @@ struct GpuSamplerResource
     bool can_use_linear_filtering;
     bool can_use_mipmaps;
     my::ResourceHandle render_handle;
-    GpuResourceStatus status;
+    ResourceStatus status;
 
     monitoring::ResourceOwner owner;
 
@@ -185,7 +185,7 @@ struct GpuSamplerResource
         JobScheduler* js,
         std::vector<my::ResourceHandle>& to_destroy);
 
-    constexpr GpuResourceStatus get_status() const { return status; }
+    constexpr ResourceStatus get_status() const { return status; }
 };
 
 struct TextureWithCfg
@@ -272,16 +272,16 @@ struct GpuTextureResource
         JobScheduler* js,
         std::vector<my::ResourceHandle>& to_destroy);
 
-    constexpr GpuResourceStatus get_status() const
+    constexpr ResourceStatus get_status() const
     {
         switch (status)
         {
-            case Status::LoadingCompressed: return GpuResourceStatus::Loading;
-            case Status::Decompressing: return GpuResourceStatus::Loading;
-            case Status::Uploading: return GpuResourceStatus::Loaded;
-            case Status::Ready: return GpuResourceStatus::Ready;
-            case Status::Error: return GpuResourceStatus::Error;
-            default: return GpuResourceStatus::Error;
+            case Status::LoadingCompressed: return ResourceStatus::Loading;
+            case Status::Decompressing: return ResourceStatus::Loading;
+            case Status::Uploading: return ResourceStatus::Loaded;
+            case Status::Ready: return ResourceStatus::Ready;
+            case Status::Error: return ResourceStatus::Error;
+            default: return ResourceStatus::Error;
         }
     }
 };
@@ -294,7 +294,7 @@ struct GpuTextureResource
  * Once they are uploading it means they are being transferred to the GPU.
  */
 template<typename Key, typename T>
-class GpuResourcesCollection
+class ResourcesCollection
 {
     using ResourceId = uint32_t;
 
@@ -347,7 +347,7 @@ class GpuResourcesCollection
     }
 
 public:
-    explicit GpuResourcesCollection(const monitoring::ResourceOwner& resource_owner) :
+    explicit ResourcesCollection(const monitoring::ResourceOwner& resource_owner) :
         _resource_owner(resource_owner)
     {
     }
@@ -367,12 +367,12 @@ public:
 
                 switch (obj->value.get_status())
                 {
-                    case GpuResourceStatus::Loading:
+                    case ResourceStatus::Loading:
                     {
                         _loading_resources.insert(key);
                         break;
                     }
-                    case GpuResourceStatus::Loaded:
+                    case ResourceStatus::Loaded:
                     {
                         _uploading_resources.insert(key);
                         break;
@@ -451,14 +451,14 @@ public:
 
             switch (resource->value.get_status())
             {
-                case GpuResourceStatus::Loaded:
+                case ResourceStatus::Loaded:
                 {
                     _uploading_resources.insert(*it);
                     _loading_resources.erase(it++);
                     break;
                 }
-                case GpuResourceStatus::Ready:
-                case GpuResourceStatus::Error:
+                case ResourceStatus::Ready:
+                case ResourceStatus::Error:
                 {
                     _loading_resources.erase(it++);
                     break;
@@ -502,8 +502,8 @@ public:
 
             switch (resource->value.get_status())
             {
-                case GpuResourceStatus::Ready:
-                case GpuResourceStatus::Error:
+                case ResourceStatus::Ready:
+                case ResourceStatus::Error:
                 {
                     _uploading_resources.erase(it++);
                     break;
@@ -537,7 +537,7 @@ public:
         _to_destroy.clear();
     }
 
-    GpuResourceStatus get_status(const Key& key) const
+    ResourceStatus get_status(const Key& key) const
     {
         const auto* resource = _get_inner(key);
         if (resource)
@@ -546,20 +546,20 @@ public:
         }
         else
         {
-            return GpuResourceStatus::Error;
+            return ResourceStatus::Error;
         }
     }
 };
 
-struct GpuResources
+struct Resources
 {
-    GpuResourcesCollection<int, GpuBufferResource<my::BufferResource::Vertex>> vertex_buffers;
-    GpuResourcesCollection<int, GpuBufferResource<my::BufferResource::Index>> index_buffers;
-    GpuResourcesCollection<int, GpuDracoMeshResource> draco_meshes;
-    GpuResourcesCollection<SamplerWithParams, GpuSamplerResource> samplers;
-    GpuResourcesCollection<TextureWithCfg, GpuTextureResource> textures;
+    ResourcesCollection<int, GpuBufferResource<my::BufferResource::Vertex>> vertex_buffers;
+    ResourcesCollection<int, GpuBufferResource<my::BufferResource::Index>> index_buffers;
+    ResourcesCollection<int, GpuDracoMeshResource> draco_meshes;
+    ResourcesCollection<SamplerWithParams, GpuSamplerResource> samplers;
+    ResourcesCollection<TextureWithCfg, GpuTextureResource> textures;
 
-    explicit GpuResources(const monitoring::ResourceOwner& resource_owner) :
+    explicit Resources(const monitoring::ResourceOwner& resource_owner) :
         vertex_buffers(resource_owner),
         index_buffers(resource_owner),
         draco_meshes(resource_owner),

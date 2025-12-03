@@ -244,7 +244,7 @@ emit add(attr("sprite_id"), 10000);
     The most efficient way of emitting representations is using a literal value. Using a dynamic value like an attribute is the slowest method, but sometimes cannot be avoided.
 
 !!! note
-    Only one representation can be emitted at a time, per evaluation context. For emitting more, using the `fork` instruction.
+    Only one representation can be emitted at a time, per evaluation context. For emitting more, use the `fork` instruction.
 
 ## Fork instruction
 

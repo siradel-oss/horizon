@@ -89,6 +89,22 @@ inline std::optional<int> as_int(const rapidjson::Value& node)
     }
 }
 
+inline std::optional<unsigned int> as_uint(const rapidjson::Value& node)
+{
+    if (!node.IsNumber())
+    {
+        return std::nullopt;
+    }
+    else if (!node.IsUint())
+    {
+        return static_cast<unsigned int>(node.GetFloat());
+    }
+    else
+    {
+        return node.GetUint();
+    }
+}
+
 inline std::optional<uint64_t> as_uint64(const rapidjson::Value& node)
 {
     if (!node.IsNumber())
@@ -152,7 +168,7 @@ size_t copy_array_values(
 size_t copy_array_values(
     std::span<float> values,
     const rapidjson::Value& array,
-    float default_value = 0.0f);
+    float default_value = 0.0F);
 size_t copy_array_values(
     std::span<double> values,
     const rapidjson::Value& array,
@@ -166,6 +182,19 @@ inline std::optional<int> get_int(const rapidjson::Value& node, const char* name
 inline int get_int_or(const rapidjson::Value& node, const char* name, int default_value)
 {
     return get_int(node, name).value_or(default_value);
+}
+
+inline std::optional<unsigned int> get_uint(const rapidjson::Value& node, const char* name)
+{
+    return as_uint(get_member_or_null(node, name));
+}
+
+inline unsigned int get_uint_or(
+    const rapidjson::Value& node,
+    const char* name,
+    unsigned int default_value)
+{
+    return get_uint(node, name).value_or(default_value);
 }
 
 inline std::optional<uint64_t> get_uint64(const rapidjson::Value& node, const char* name)
@@ -244,7 +273,7 @@ inline T get_str_enum_or(
     return get_str_enum(node, name, variants).value_or(default_value);
 }
 
-inline const size_t get_array_size(const rapidjson::Value& node, const char* array_name)
+inline size_t get_array_size(const rapidjson::Value& node, const char* array_name)
 {
     const auto& child = get_member_or_null(node, array_name);
     if (child.IsArray())

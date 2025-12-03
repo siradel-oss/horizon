@@ -1,11 +1,10 @@
 #pragma once
 
-#include "hrz/common/geo.h"
+#include "hrz/common/maths.h"
 #include "hrz/fnd/flat_hash_set.h"
+#include "hrz/fnd/function_ref.h"
 
 #include <mycelium/backend.h>
-
-#include <functional>
 
 namespace hrz::model
 {
@@ -43,7 +42,7 @@ struct UsedResources
     inline void add(const T& key) { waiting_on.insert(key); }
 
     // The callback must return true if the waiting is done, false otherwise.
-    inline void iterate_waiting_on(std::function<bool(const T&)> fn)
+    inline void iterate_waiting_on(hrz::function_ref<bool(const T&)> fn)
     {
         for (auto it = waiting_on.begin(); it != waiting_on.end();)
         {
@@ -59,7 +58,7 @@ struct UsedResources
         }
     }
 
-    inline void iterate_all(std::function<void(const T&)> fn)
+    inline void iterate_all(hrz::function_ref<void(const T&)> fn)
     {
         for (const T& key : waiting_on)
         {
@@ -73,6 +72,14 @@ struct UsedResources
     }
 
     constexpr bool all_ready() const { return waiting_on.empty(); }
+
+    bool contains(const T& key) const { return waiting_on.contains(key) || in_use.contains(key); }
+
+    void clear()
+    {
+        waiting_on.clear();
+        in_use.clear();
+    }
 };
 
 } // namespace hrz::model

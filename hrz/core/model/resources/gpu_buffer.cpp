@@ -1,4 +1,4 @@
-#include "hrz/core/model/gpu_resources.h"
+#include "hrz/core/model/resources/resource.h"
 #include "hrz/fnd/log.h"
 
 namespace hrz::model
@@ -48,7 +48,7 @@ GpuBufferResource<TYPE>::GpuBufferResource(
     offset_in_source_buffer(view.byte_offset),
     length(view.byte_length),
     stride(view.byte_stride),
-    status(GpuResourceStatus::Loading),
+    status(ResourceStatus::Loading),
     owner(owner_)
 {
     bl->acquire(blob_handle_, NullCfg);
@@ -61,7 +61,7 @@ void GpuBufferResource<TYPE>::work(
     JobScheduler* js,
     ImageDecoder*)
 {
-    if (status == GpuResourceStatus::Loading)
+    if (status == ResourceStatus::Loading)
     {
         assert(blob_handle.has_value());
 
@@ -71,17 +71,17 @@ void GpuBufferResource<TYPE>::work(
             case BlobLibrary::Unloaded:
             {
                 assert(!"Blob shouldn't be unloaded at this point");
-                status = GpuResourceStatus::Error;
+                status = ResourceStatus::Error;
                 break;
             }
             case BlobLibrary::Loaded:
             {
-                status = GpuResourceStatus::Loaded;
+                status = ResourceStatus::Loaded;
                 break;
             }
             case BlobLibrary::Error:
             {
-                status = GpuResourceStatus::Error;
+                status = ResourceStatus::Error;
                 break;
             }
             default: break;
@@ -92,7 +92,7 @@ void GpuBufferResource<TYPE>::work(
 template<my::BufferResource::BufferType TYPE>
 void GpuBufferResource<TYPE>::work_gpu(BlobAllocator* ba, BlobLibrary* bl, Render* render)
 {
-    if (status == GpuResourceStatus::Loaded)
+    if (status == ResourceStatus::Loaded)
     {
         assert(blob_handle.has_value());
 
@@ -113,7 +113,7 @@ void GpuBufferResource<TYPE>::work_gpu(BlobAllocator* ba, BlobLibrary* bl, Rende
                 {{"blob library base URL"_ss, bl->get_base_url().base()},
                  {"URI"_ss, bl->get_uri(blob_handle.value(), NullCfg)}});
 
-            status = render_handle.is_null() ? GpuResourceStatus::Error : GpuResourceStatus::Ready;
+            status = render_handle.is_null() ? ResourceStatus::Error : ResourceStatus::Ready;
 
             if (render_handle.is_null())
             {
@@ -122,7 +122,7 @@ void GpuBufferResource<TYPE>::work_gpu(BlobAllocator* ba, BlobLibrary* bl, Rende
         }
         else
         {
-            status = GpuResourceStatus::Error;
+            status = ResourceStatus::Error;
         }
 
         bl->release(blob_handle.value(), NullCfg);

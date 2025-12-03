@@ -1,11 +1,13 @@
 #include "hrz/core/model/geometry.h"
 
-#include "hrz/common/proto_maths.h"
 #include "hrz/core/model/cvt_utils.h"
 #include "hrz/core/model/prototype.h"
 
+namespace
+{
+
 template<typename T, typename Index>
-static constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
+constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
 {
     if (id >= 0 && (size_t)id < v.size())
     {
@@ -17,14 +19,19 @@ static constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
     }
 }
 
-namespace hrz::model
-{
-static ModelGeometry* _get_model_geometry(ModelPrototype* proto, ModelGeometryH handle)
+hrz::model::ModelGeometry* _get_model_geometry(
+    hrz::model::ModelPrototype* proto,
+    hrz::model::ModelGeometryH handle)
 {
     auto* ptr = proto->geometry_pool.get_object(handle.o);
     assert(ptr);
     return ptr ? ptr->get() : nullptr;
 }
+
+} // namespace
+
+namespace hrz::model
+{
 
 ModelGeometry::ModelGeometry(
     uint32_t object_id_offset,
@@ -36,28 +43,6 @@ ModelGeometry::ModelGeometry(
     _object_reference(object_reference),
     _feature_reference(feature_reference)
 {
-}
-
-BSphere<double> ModelGeometry::compute_bsphere(const lm::dmat4& transform) const
-{
-    bool has_result = false;
-    BSphere<double> result = {{0, 0, 0}, 0};
-
-    for (const auto& prim : _primitives)
-    {
-        auto bsphere = compute_bsphere_from_bbox(prim.bbox, transform * prim.transform);
-        if (!has_result)
-        {
-            result = bsphere;
-            has_result = true;
-        }
-        else
-        {
-            result = merge_bounding_spheres(result, bsphere);
-        }
-    }
-
-    return result;
 }
 
 void ModelGeometry::initialize(
@@ -162,17 +147,16 @@ void ModelGeometry::on_add_stream(size_t primitive_index, const my::VertexInputS
 bool ModelGeometry::build_primitive(
     ModelPrototype* proto,
     SharedResources* sr,
-    Render* render,
     const ModelDescriptor::MeshInstance& desc_mesh,
     const ModelDescriptor::Primitive& desc_prim)
 {
-    size_t primitive_index = _primitives.size();
+    const size_t primitive_index = _primitives.size();
     _primitives.emplace_back();
 
     const GpuDracoMeshResource* draco_mesh = nullptr;
     if (desc_prim.draco_buffer_view.has_value())
     {
-        int draco_id = desc_prim.draco_buffer_view.value();
+        const int draco_id = desc_prim.draco_buffer_view.value();
         draco_mesh = proto->get_draco_mesh(draco_id);
     }
 
@@ -241,7 +225,7 @@ bool ModelGeometry::build_primitive(
                     stream.stride = draco_attr.stride;
                     stream.rate = my::VertexRate::PerVertex;
 
-                    DracoCompressionType compression_type =
+                    const DracoCompressionType compression_type =
                         _convert_compression_type(draco_attr.compression);
 
                     if (compression_ubo_data)
@@ -275,12 +259,12 @@ bool ModelGeometry::build_primitive(
             }
             else if (accessor && accessor->buffer_view.has_value())
             {
-                int buffer_view = accessor->buffer_view.value();
-                const auto* buffer_view_res = proto->gpu_resources.vertex_buffers.get(buffer_view);
+                const int buffer_view = accessor->buffer_view.value();
+                const auto* buffer_view_res = proto->resources.vertex_buffers.get(buffer_view);
 
                 if (buffer_view_res
-                    && proto->gpu_resources.vertex_buffers.get_status(buffer_view)
-                        == GpuResourceStatus::Ready)
+                    && proto->resources.vertex_buffers.get_status(buffer_view)
+                        == ResourceStatus::Ready)
                 {
                     my::VertexInputStream stream;
                     stream.index = index;
@@ -384,15 +368,15 @@ bool ModelGeometry::build_primitive(
         }
         else if (accessor && accessor->buffer_view.has_value())
         {
-            int buffer_view_id = accessor->buffer_view.value();
-            const auto* buffer = proto->gpu_resources.index_buffers.get(buffer_view_id);
+            const int buffer_view_id = accessor->buffer_view.value();
+            const auto* buffer = proto->resources.index_buffers.get(buffer_view_id);
 
             if (buffer
-                && proto->gpu_resources.index_buffers.get_status(buffer_view_id)
-                    == GpuResourceStatus::Ready)
+                && proto->resources.index_buffers.get_status(buffer_view_id)
+                    == ResourceStatus::Ready)
             {
-                my::IndexType index_type = _get_index_type(accessor->type);
-                size_t index_size = my::index_size(index_type);
+                const my::IndexType index_type = _get_index_type(accessor->type);
+                const size_t index_size = my::index_size(index_type);
 
                 if (accessor->byte_offset % index_size != 0)
                 {
@@ -429,7 +413,7 @@ bool ModelGeometry::build_primitive(
         return false;
     }
 
-    prim.transform = desc_mesh.transform;
+    prim.node_instance_id = desc_mesh.node_instance_id;
     prim.bbox = bbox.value_or(lm::dbbox3());
 
     _primitives.back() = std::move(prim);
@@ -437,19 +421,22 @@ bool ModelGeometry::build_primitive(
     return true;
 }
 
-void ModelGeometry::build(ModelPrototype* proto, SharedResources* sr, Render* render)
+void ModelGeometry::build(ModelPrototype* proto, SharedResources* sr, Render*)
 {
     assert(_status == InternalStatus::Initialized);
 
-    bool all_primitive_built = true;
+    bool all_primitives_built = true;
 
     proto->iterate_primitives(
-        [this, proto, sr, render, &all_primitive_built](
+        [this, proto, sr, &all_primitives_built](
             const ModelDescriptor::Mesh*, const ModelDescriptor::MeshInstance* mesh_instance,
             const ModelDescriptor::Primitive* primitive)
-        { all_primitive_built &= build_primitive(proto, sr, render, *mesh_instance, *primitive); });
+        {
+            all_primitives_built =
+                build_primitive(proto, sr, *mesh_instance, *primitive) && all_primitives_built;
+        });
 
-    if (all_primitive_built)
+    if (all_primitives_built)
     {
         _status = InternalStatus::Built;
     }
@@ -526,9 +513,9 @@ BatchedModelGeometry::BatchedModelGeometry(
     }
 
     // Minimum 1 color (so that it's not invisible when we have batch length = 0)
-    size_t colors_count = std::max((size_t)1, batch_length);
-    std::span<lm::ubvec4> colors = _colors_texture.resize_and_get_data(colors_count);
-    std::fill_n(colors.data(), colors.size(), lm::ubvec4(0xffu)); // All white
+    const size_t colors_count = std::max((size_t)1, batch_length);
+    const std::span<lm::ubvec4> colors = _colors_texture.resize_and_get_data(colors_count);
+    std::fill_n(colors.data(), colors.size(), lm::ubvec4(0xffU)); // All white
 }
 
 void BatchedModelGeometry::destroy(ModelPrototype* proto)
@@ -711,19 +698,4 @@ void destroy(ModelPrototype* proto, ModelGeometryH handle)
     }
 }
 
-BSphere<double> compute_model_bsphere(
-    ModelPrototype* proto,
-    ModelGeometryH handle,
-    const lm::dmat4& transform)
-{
-    auto* geometry = _get_model_geometry(proto, handle);
-    if (geometry)
-    {
-        return geometry->compute_bsphere(transform);
-    }
-    else
-    {
-        return {};
-    }
-}
 } // namespace hrz::model

@@ -371,13 +371,13 @@ void advance_baking(
             || baked_status == model::BakedModelStatus::ReadyWithErrors)
         {
             process->model_bsphere = model::compute_model_bsphere(
-                model_prototype, process->model_geometry, process->draw_prps.transform);
+                model_prototype, process->baked_model, process->draw_prps.transform);
             process->status = BakingStatus::Baking;
         }
         else
         {
             model::work(model_prototype, process->baked_model);
-            model::work_gpu(model_prototype, process->baked_model, sr, render);
+            (void)model::work_gpu(model_prototype, process->baked_model, sr, render);
         }
     }
 

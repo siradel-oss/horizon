@@ -213,14 +213,14 @@ ModelMaterial::LoadStatus ModelMaterial::build_primitive_uv(
     if (desc_primitive.draco_buffer_view.has_value())
     {
         int draco_id = desc_primitive.draco_buffer_view.value();
-        auto draco_buffer_status_view = proto->gpu_resources.draco_meshes.get_status(draco_id);
-        if (draco_buffer_status_view == GpuResourceStatus::Ready)
+        auto draco_buffer_status_view = proto->resources.draco_meshes.get_status(draco_id);
+        if (draco_buffer_status_view == ResourceStatus::Ready)
         {
             draco_mesh = proto->get_draco_mesh(draco_id);
         }
         else
         {
-            if (draco_buffer_status_view != GpuResourceStatus::Error)
+            if (draco_buffer_status_view != ResourceStatus::Error)
             {
                 assert(false && "Invalid state");
             }
@@ -278,13 +278,12 @@ ModelMaterial::LoadStatus ModelMaterial::build_primitive_uv(
         else if (accessor && accessor->buffer_view.has_value())
         {
             int buffer_view = accessor->buffer_view.value();
-            const auto* buffer_view_res = proto->gpu_resources.vertex_buffers.get(buffer_view);
+            const auto* buffer_view_res = proto->resources.vertex_buffers.get(buffer_view);
 
             if (buffer_view_res)
             {
-                auto buffer_view_status =
-                    proto->gpu_resources.vertex_buffers.get_status(buffer_view);
-                if (buffer_view_status == GpuResourceStatus::Ready)
+                auto buffer_view_status = proto->resources.vertex_buffers.get_status(buffer_view);
+                if (buffer_view_status == ResourceStatus::Ready)
                 {
                     my::VertexInputStream stream;
                     stream.index = Uv0StreamIndex;
@@ -302,7 +301,7 @@ ModelMaterial::LoadStatus ModelMaterial::build_primitive_uv(
                 }
                 else
                 {
-                    if (buffer_view_status != GpuResourceStatus::Error)
+                    if (buffer_view_status != ResourceStatus::Error)
                     {
                         assert(false && "Invalid state");
                     }
@@ -369,10 +368,10 @@ RenderRequest ModelMaterial::build(ModelPrototype* proto, SharedResources* sr, R
             {
                 TextureWithCfg texture_id{prim.texture_to_load.value(), prim.is_data_texture, _cfg};
 
-                auto status = proto->gpu_resources.textures.get_status(texture_id);
-                if (status == GpuResourceStatus::Ready)
+                auto status = proto->resources.textures.get_status(texture_id);
+                if (status == ResourceStatus::Ready)
                 {
-                    const auto* texture = proto->gpu_resources.textures.get(texture_id);
+                    const auto* texture = proto->resources.textures.get(texture_id);
                     assert(texture);
 
                     prim.texture = texture->render_handle;
@@ -385,7 +384,7 @@ RenderRequest ModelMaterial::build(ModelPrototype* proto, SharedResources* sr, R
                         proto->start_loading_sampler(make_sampler_id(), &_used_samplers);
                     }
                 }
-                else if (status == GpuResourceStatus::Error)
+                else if (status == ResourceStatus::Error)
                 {
                     prim.texture_to_load.reset();
                     prim.sampler_to_load.reset();
@@ -404,17 +403,17 @@ RenderRequest ModelMaterial::build(ModelPrototype* proto, SharedResources* sr, R
             {
                 SamplerWithParams sampler_id = make_sampler_id();
 
-                auto status = proto->gpu_resources.samplers.get_status(sampler_id);
-                if (status == GpuResourceStatus::Ready)
+                auto status = proto->resources.samplers.get_status(sampler_id);
+                if (status == ResourceStatus::Ready)
                 {
-                    const auto* sampler = proto->gpu_resources.samplers.get(sampler_id);
+                    const auto* sampler = proto->resources.samplers.get(sampler_id);
                     assert(sampler);
 
                     prim.sampler = sampler->render_handle;
                     prim.sampler_to_load.reset();
                     something_happened = true;
                 }
-                else if (status == GpuResourceStatus::Error)
+                else if (status == ResourceStatus::Error)
                 {
                     prim.sampler_to_load.reset();
                     textures_status = LoadStatus::LoadedWithErrors;

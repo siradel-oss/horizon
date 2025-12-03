@@ -1,4 +1,4 @@
-#include "hrz/core/model/gpu_resources.h"
+#include "hrz/core/model/resources/resources.h"
 
 namespace hrz::model
 {
@@ -26,7 +26,7 @@ GpuSamplerResource::GpuSamplerResource(
     can_use_linear_filtering(can_use_linear_filtering),
     can_use_mipmaps(can_use_mipmaps),
     render_handle(my::ResourceHandle::null()),
-    status(GpuResourceStatus::Loaded),
+    status(ResourceStatus::Loaded),
     owner(owner)
 {
 }
@@ -35,7 +35,7 @@ void GpuSamplerResource::work(BlobLibrary*, BlobAllocator*, JobScheduler*, Image
 
 void GpuSamplerResource::work_gpu(BlobAllocator*, BlobLibrary* bl, Render* render)
 {
-    if (status == GpuResourceStatus::Loaded)
+    if (status == ResourceStatus::Loaded)
     {
         my::SamplerResource res;
         res.sampler.wrap_x = desc.wrap_s;
@@ -63,7 +63,7 @@ void GpuSamplerResource::work_gpu(BlobAllocator*, BlobLibrary* bl, Render* rende
         render_handle = render->rc->alloc(
             &res, owner, {{"blob library base URL"_ss, bl->get_base_url().base()}});
 
-        status = GpuResourceStatus::Ready;
+        status = ResourceStatus::Ready;
     }
 }
 

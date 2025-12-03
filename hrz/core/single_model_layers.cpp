@@ -11,12 +11,13 @@
 #include "hrz/core/picking_id_allocator.h"
 #include "hrz/core/planet/surface.h"
 #include "hrz/core/scene.h"
+#include "hrz/core/scene_model_array_sync.h"
 #include "hrz/core/selection.h"
 #include "hrz/core/visibility_constraints.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/gen_object_pool.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/scene_model.h"
 
 namespace
 {
@@ -89,6 +90,8 @@ struct SingleModelLayer
     bool clip_id_updated;
     bool visibility_constraints_updated;
     bool http_headers_updated;
+    bool animation_phase_speed_updated;
+    bool animations_updated;
 
     hrz_proto::LayerVisibilityConstraintList visibility_constraints;
 
@@ -97,8 +100,10 @@ struct SingleModelLayer
 
     bool clamping_enabled = true;
     bool needs_clamping = false;
-    float clamping_z = 0.0f; // The terrain elevation at the clamping point.
+    float clamping_z = 0.0F; // The terrain elevation at the clamping point.
     std::optional<hrz::planet::ElevationQueryTicket> elevation_query_ticket;
+
+    hrz::InlinedVector<std::string, 8> animations;
 
     constexpr bool should_work() const
     {
@@ -167,7 +172,7 @@ SingleModelLayer* _get_layer(SingleModelLayerSystem* system, uint64_t layer_id)
 void _update_transform(SingleModelLayer* layer)
 {
     auto geo_anchor = web_mercator_to_geo3(layer->anchor);
-    geo_anchor.alt += layer->clamping_enabled ? layer->clamping_z : 0.0f;
+    geo_anchor.alt += layer->clamping_enabled ? (double)layer->clamping_z : 0.0;
 
     auto geo_matrix = enu_to_ecef_transform_for_geo(geo_anchor);
     layer->draw_prps.transform = geo_matrix * layer->transform;
@@ -326,8 +331,6 @@ RenderRequest _update_layer(
         layer->active_materials_updated = false;
     }
 
-    render_request |= layer->materials.update(layer->model_prototype, layer->model_geometry);
-
     if (layer->overlay_material_properties_updated)
     {
         auto prps = builder.clone().material_properties().get();
@@ -348,10 +351,38 @@ RenderRequest _update_layer(
         layer->needs_clamping = layer->clamping_enabled;
         if (!layer->clamping_enabled)
         {
-            layer->clamping_z = 0.0f;
+            layer->clamping_z = 0.0F;
         }
         _update_transform(layer);
         layer->transform_updated = false;
+        render_request.request_visual_render();
+    }
+
+    if (layer->animation_phase_speed_updated)
+    {
+        layer->draw_prps.animation_phase = builder.clone().animation().phase().get();
+        layer->draw_prps.animation_speed = builder.clone().animation().speed().get();
+        layer->animation_phase_speed_updated = false;
+        render_request.request_visual_render();
+    }
+
+    if (layer->animations_updated)
+    {
+        const auto anims = builder.clone().animation().get();
+
+        layer->animations.clear();
+        layer->animations.reserve((size_t)anims.enabled_animations_size());
+
+        for (const auto& anim_name : anims.enabled_animations())
+        {
+            layer->animations.emplace_back(anim_name);
+        }
+
+        layer->materials.iterate_all_baked_models(
+            [layer](model::SingleBakedModelH baked_handle)
+            { model::set_animations(layer->model_prototype, baked_handle, layer->animations); });
+
+        layer->animations_updated = false;
         render_request.request_visual_render();
     }
 
@@ -392,6 +423,11 @@ RenderRequest _update_layer(
         layer->clip_id_updated = false;
         render_request.request_visual_render();
     }
+
+    render_request |= layer->materials.update(
+        layer->model_prototype, layer->model_geometry,
+        [layer](model::SingleBakedModelH baked_model_handle)
+        { model::set_animations(layer->model_prototype, baked_model_handle, layer->animations); });
 
     return render_request;
 }
@@ -439,6 +475,25 @@ void notify_model_update(
     if (path.is_transform() || path.is_geographic() || path.leaf())
     {
         layer->transform_updated = true;
+    }
+
+    if (path.is_animation())
+    {
+        const auto anim_path = path.clone().animation();
+        if (anim_path.is_phase() || anim_path.is_speed())
+        {
+            layer->animation_phase_speed_updated = true;
+        }
+        else
+        {
+            layer->animations_updated = true;
+            layer->animation_phase_speed_updated = true;
+        }
+    }
+    else if (path.leaf())
+    {
+        layer->animations_updated = true;
+        layer->animation_phase_speed_updated = true;
     }
 
     if (path.is_visible() || path.leaf())
@@ -540,13 +595,13 @@ void register_layer(SingleModelLayerSystem* system, SceneModel* model, uint64_t 
         layer->displayable_in_scene_views = (1 << SCENE_VIEW_COUNT) - 1;
         data.mutable_scene_views()->set_bits(layer->displayable_in_scene_views);
 
-        data.mutable_color()->set_r(1.0f);
-        data.mutable_color()->set_g(1.0f);
-        data.mutable_color()->set_b(1.0f);
-        data.mutable_color()->set_a(1.0f);
+        data.mutable_color()->set_r(1.0F);
+        data.mutable_color()->set_g(1.0F);
+        data.mutable_color()->set_b(1.0F);
+        data.mutable_color()->set_a(1.0F);
 
         data.mutable_material_properties()->set_feature_color_blend_mode(hrz_proto::BLEND_MULTIPLY);
-        data.mutable_material_properties()->set_feature_color_blend_strength(1.0f);
+        data.mutable_material_properties()->set_feature_color_blend_strength(1.0F);
 
         data.set_clip_id(-1);
 
@@ -554,7 +609,7 @@ void register_layer(SingleModelLayerSystem* system, SceneModel* model, uint64_t 
         data.mutable_lighting()->set_cast_shadows(true);
         data.mutable_lighting()->set_receive_shadows(true);
 
-        data.mutable_material_properties()->set_overlay_opacity(1.0f);
+        data.mutable_material_properties()->set_overlay_opacity(1.0F);
         data.mutable_material_properties()->set_apply_feature_color_to_overlay(true);
 
         hrz_proto::SingleModelLayerPathBuilder<SceneModelAccessor>(model, root.single_model_layer())
@@ -563,6 +618,8 @@ void register_layer(SingleModelLayerSystem* system, SceneModel* model, uint64_t 
         layer->transform_updated = true;
         layer->clip_id_updated = true;
         layer->appearance_updated = true;
+        layer->animation_phase_speed_updated = true;
+        layer->animations_updated = true;
     }
 }
 
@@ -712,7 +769,7 @@ RenderRequest _work_models(
                 }
                 else
                 {
-                    layer->clamping_z = 0.0f;
+                    layer->clamping_z = 0.0F;
                 }
                 _update_transform(layer);
                 render_request.request_visual_render();
@@ -847,8 +904,8 @@ RenderRequest work(
     render_request |=
         _unregister_layers(system, assets_loader, job_scheduler, blob_allocator, model, planet);
 
-    uint64_t new_terrain_version = planet::get_terrain_version(planet);
-    bool terrain_version_changed =
+    const uint64_t new_terrain_version = planet::get_terrain_version(planet);
+    const bool terrain_version_changed =
         new_terrain_version != std::exchange(system->last_terrain_version, new_terrain_version);
 
     for (auto layer_id : system->updated_layers)
@@ -879,10 +936,10 @@ RenderRequest work(
     {
         for (const auto& it : system->layer_ids_to_handles)
         {
-            uint64_t layer_id = it.first;
-            uint64_t layer_handle = it.second;
+            const uint64_t layer_id = it.first;
+            const uint64_t layer_handle = it.second;
 
-            bool selected = selection::selected_objects_count(selection, layer_id) > 0;
+            const bool selected = selection::selected_objects_count(selection, layer_id) > 0;
 
             SingleModelLayer* layer = system->layer_pool.get_object(layer_handle);
             assert(layer);
@@ -921,7 +978,7 @@ RenderRequest work_gpu(SingleModelLayerSystem* system, Render* render, BlobAlloc
 
     RenderRequest render_request;
 
-    for (my::ResourceHandle res : system->to_destroy)
+    for (const my::ResourceHandle res : system->to_destroy)
     {
         render->rc->dealloc(res);
     }
@@ -953,10 +1010,10 @@ void draw(SingleModelLayerSystem* system, Render* render, AttributionRegistry* a
 
         if (layer && layer->should_work())
         {
-            uint32_t display_in = layer->displayable_in_scene_views
+            const uint32_t display_in = layer->displayable_in_scene_views
                 & layer->visibility_constraints_result.satisfied_in;
 
-            auto active_model = layer->materials.get_active_model();
+            const auto active_model = layer->materials.get_active_model();
             if (display_in && active_model.has_value())
             {
                 model::draw(

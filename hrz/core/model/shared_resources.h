@@ -59,7 +59,8 @@ enum
 enum
 {
     UboMeshParams = hrz::vector_flat_overlay::UboVectorOverlayCameras + 1,
-    UboPrimitiveParams,
+    UboPrimitiveDrawParams,
+    UboPrimitiveTransformParams,
     UboGroupParams,
     UboImpostorBaking,
 };
@@ -67,6 +68,10 @@ enum
 struct SharedResources
 {
     uint32_t ubo_alignment;
+
+    size_t mesh_ubo_stride;
+    size_t primitive_draw_ubo_stride;
+    size_t primitive_transform_ubo_stride;
 
     my::ResourceHandle single_opaque_shader;
     my::ResourceHandle single_transparent_shader;

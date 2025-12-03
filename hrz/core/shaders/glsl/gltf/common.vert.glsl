@@ -20,8 +20,8 @@ void output_position(vec4 position_world_cc, vec4 position_view)
 
 void output_uv_and_color()
 {
-    v_uv_0 = fetch_uv(i_uv_0, i_compressed_uv_0, hrz_prim.materials[0].uv_compression);
-    v_uv_1 = fetch_uv(i_uv_1, i_compressed_uv_1, hrz_prim.materials[1].uv_compression);
+    v_uv_0 = fetch_uv(i_uv_0, i_compressed_uv_0, hrz_prim_draw.materials[0].uv_compression);
+    v_uv_1 = fetch_uv(i_uv_1, i_compressed_uv_1, hrz_prim_draw.materials[1].uv_compression);
     v_geometry_color = fetch_color();
 }
 
@@ -30,7 +30,7 @@ void output_normal(mat3 instance_normal_transform)
 {
     vec3 normal = fetch_normal();
     mat3 view_normal_matrix = mat3(hrz_frame.view_matrix);
-    v_normal = normalize(view_normal_matrix * instance_normal_transform * hrz_prim.geometry.normal_transform * normal);
+    v_normal = normalize(view_normal_matrix * instance_normal_transform * hrz_prim_transform.normal_transform * normal);
 }
 
 void output_geometry_decoration(vec3 cc_pos, vec3 view_pos, vec3 view_normal)

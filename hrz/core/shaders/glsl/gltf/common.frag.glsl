@@ -38,7 +38,7 @@ vec4 compute_texture_color(int material, sampler2D material_texture, in vec2 uv,
 {
     vec4 tex_color = texture(material_texture, uv);
 
-    if (hrz_prim.materials[material].use_data_texture)
+    if (hrz_prim_draw.materials[material].use_data_texture)
     {
         value = tex_color.r;
         tex_color = apply_material_palette(material, tex_color.r);
@@ -49,8 +49,8 @@ vec4 compute_texture_color(int material, sampler2D material_texture, in vec2 uv,
 
 vec4 compute_material_color(int material, in vec4 tex_color)
 {
-    vec4 color = tex_color * hrz_prim.materials[material].material_color;
-    color.a = handle_material_alpha_mode(hrz_prim.materials[material].alpha_mode, hrz_prim.materials[material].alpha_cutoff, color.a);
+    vec4 color = tex_color * hrz_prim_draw.materials[material].material_color;
+    color.a = handle_material_alpha_mode(hrz_prim_draw.materials[material].alpha_mode, hrz_prim_draw.materials[material].alpha_cutoff, color.a);
     return color;
 }
 
@@ -120,9 +120,9 @@ vec3 get_normal()
 #if defined(GLTF_VISUAL) && !defined(GLTF_IMPOSTOR)
 vec4 apply_color_decoration(vec4 color, vec3 normal, uvec3 feature_reference)
 {
-    if (hrz_prim.geometry.lighting_enabled)
+    if (hrz_prim_draw.geometry.lighting_enabled)
     {
-        color.rgb *= do_sun_lighting(normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_prim.geometry.receive_shadows);
+        color.rgb *= do_sun_lighting(normal, hrz_frame.view_sun_direction, v_altitude, v_normal_to_ground, hrz_prim_draw.geometry.receive_shadows);
     }
 
     color = compute_viewshed_color(color, normal);

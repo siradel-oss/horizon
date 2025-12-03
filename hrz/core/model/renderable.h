@@ -56,7 +56,9 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
         my::ResourceHandle samplers[MaterialCount];
         int shaders_collection; // Index in MeshRenderData.shaders_collections
 
-        uint32_t prim_ubo_offset;
+        uint32_t prim_draw_ubo_offset;
+        uint32_t prim_transform_ubo_offset;
+
         bool is_transparent;
     };
 
@@ -73,8 +75,10 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
 
         my::UboBinding ubo_bindings[] = {
             {UboMeshParams, data->mesh->ubo, 0, sizeof(MeshUniformData)},
-            {UboPrimitiveParams, data->mesh->ubo, data->prim_ubo_offset,
-             sizeof(PrimitiveUniformData)},
+            {UboPrimitiveDrawParams, data->mesh->ubo, data->prim_draw_ubo_offset,
+             sizeof(PrimitiveDrawUniformData)},
+            {UboPrimitiveTransformParams, data->mesh->ubo, data->prim_transform_ubo_offset,
+             sizeof(PrimitiveTransformUniformData)},
         };
         rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
 

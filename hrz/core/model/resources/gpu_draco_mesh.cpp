@@ -1,4 +1,4 @@
-#include "hrz/core/model/gpu_resources.h"
+#include "hrz/core/model/resources/resources.h"
 #include "hrz/fnd/log.h"
 
 namespace hrz::model

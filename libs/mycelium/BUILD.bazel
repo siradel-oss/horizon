@@ -101,6 +101,7 @@ cc_test(
     name = "tests",
     testonly = False,
     srcs = [
+        "tests/float16.cpp",
         "tests/render_graph.cpp",
     ],
     linkstatic = True,

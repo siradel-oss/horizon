@@ -39,19 +39,15 @@ layout(std140) uniform Mesh
     Palette materials[2];
 } hrz_mesh;
 
-struct PrimitiveGeometry
+struct PrimitiveDrawGeometry
 {
-    mat4 transform;
-    mat3 normal_transform;
-    vec4 origin_low;
-    vec4 origin_high;
     VertexCompressionParams position_compression;
     VertexCompressionParams normal_compression;
     bool lighting_enabled;
     bool receive_shadows;
 };
 
-struct PrimitiveMaterial
+struct PrimitiveDrawMaterial
 {
     vec4 material_color;
     uint alpha_mode;
@@ -60,11 +56,19 @@ struct PrimitiveMaterial
     VertexCompressionParams uv_compression;
 };
 
-layout(std140) uniform Primitive
+layout(std140) uniform PrimitiveDraw
 {
-    PrimitiveGeometry geometry;
-    PrimitiveMaterial materials[2];
-} hrz_prim;
+    PrimitiveDrawGeometry geometry;
+    PrimitiveDrawMaterial materials[2];
+} hrz_prim_draw;
+
+layout(std140) uniform PrimitiveTransform
+{
+    mat4 transform;
+    mat3 normal_transform;
+    vec4 origin_low;
+    vec4 origin_high;
+} hrz_prim_transform;
 
 #ifdef GLTF_INSTANCED
 layout(std140) uniform MeshInstanceGroup

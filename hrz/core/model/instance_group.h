@@ -1,8 +1,6 @@
 #pragma once
 
 #include "hrz/core/data_texture.h"
-#include "hrz/core/model/common.h"
-#include "hrz/core/model/gpu_resources.h"
 #include "hrz/core/model/model.h"
 #include "hrz/core/model/renderable.h"
 #include "hrz/core/selection_storage.h"

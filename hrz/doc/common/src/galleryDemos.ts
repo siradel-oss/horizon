@@ -160,4 +160,9 @@ export const DEFINITIONS: { [id: string]: Definition } = {
         tags: ["integration"],
         thumbnailFile: "loading_screen.webp",
     },
+    modelAnimations: {
+        title: "Model animations",
+        tags: ["model", "animation"],
+        thumbnailFile: "model_animations.webp",
+    },
 };

@@ -50,16 +50,16 @@ vec3 draco_quantized_octahedral_coords_to_unit_vector(vec2 encoded, vec2 scale)
 
 vec3 fetch_position()
 {
-    if (hrz_prim.geometry.position_compression.type == COMPRESSION_QUANTIZED)
+    if (hrz_prim_draw.geometry.position_compression.type == COMPRESSION_QUANTIZED)
     {
-        return vec3(i_compressed_position) * hrz_prim.geometry.position_compression.quantization_scale
-            + hrz_prim.geometry.position_compression.quantization_mins;
+        return vec3(i_compressed_position) * hrz_prim_draw.geometry.position_compression.quantization_scale
+            + hrz_prim_draw.geometry.position_compression.quantization_mins;
     }
-    else if (hrz_prim.geometry.position_compression.type == COMPRESSION_OCT_ENCODED)
+    else if (hrz_prim_draw.geometry.position_compression.type == COMPRESSION_OCT_ENCODED)
     {
         return draco_quantized_octahedral_coords_to_unit_vector(
             vec2(i_compressed_position.xy),
-            hrz_prim.geometry.position_compression.quantization_scale.xy);
+            hrz_prim_draw.geometry.position_compression.quantization_scale.xy);
     }
     else
     {
@@ -69,16 +69,16 @@ vec3 fetch_position()
 
 vec3 fetch_normal()
 {
-    if (hrz_prim.geometry.normal_compression.type == COMPRESSION_QUANTIZED)
+    if (hrz_prim_draw.geometry.normal_compression.type == COMPRESSION_QUANTIZED)
     {
-        return vec3(i_compressed_normal) * hrz_prim.geometry.normal_compression.quantization_scale
-            + hrz_prim.geometry.normal_compression.quantization_mins;
+        return vec3(i_compressed_normal) * hrz_prim_draw.geometry.normal_compression.quantization_scale
+            + hrz_prim_draw.geometry.normal_compression.quantization_mins;
     }
-    else if (hrz_prim.geometry.normal_compression.type == COMPRESSION_OCT_ENCODED)
+    else if (hrz_prim_draw.geometry.normal_compression.type == COMPRESSION_OCT_ENCODED)
     {
         return draco_quantized_octahedral_coords_to_unit_vector(
             vec2(i_compressed_normal.xy),
-            hrz_prim.geometry.normal_compression.quantization_scale.xy);
+            hrz_prim_draw.geometry.normal_compression.quantization_scale.xy);
     }
     else
     {

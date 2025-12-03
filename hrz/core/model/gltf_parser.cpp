@@ -1,10 +1,12 @@
 #include "hrz/common/profiling.h"
 #include "hrz/core/model/blob_library.h"
 #include "hrz/core/model/descriptor.h"
+#include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/string_utils.h"
 
+#include <mycelium/properties.h>
 #include <rapidjson/document.h>
 #include <rapidjson/encodings.h>
 #include <rapidjson/error/en.h>
@@ -40,12 +42,12 @@ enum GltfExtension
 
 const rapidjson::Value& _get_gltf_extension(const rapidjson::Value& json, GltfExtension ext)
 {
-    const auto& extensions_json = json::get_member_or_null(json, "extensions");
-    if (extensions_json.IsObject())
+    if (const auto& extensions_json = json::get_member_or_null(json, "extensions");
+        extensions_json.IsObject())
     {
-        const auto& extension_json =
-            json::get_member_or_null(extensions_json, s_supported_extensions[ext]);
-        if (extension_json.IsObject())
+        if (const auto& extension_json =
+                json::get_member_or_null(extensions_json, s_supported_extensions[ext]);
+            extension_json.IsObject())
         {
             return extension_json;
         }
@@ -53,14 +55,11 @@ const rapidjson::Value& _get_gltf_extension(const rapidjson::Value& json, GltfEx
     return json::NullValue;
 }
 
-void _parse_gltf_node(
-    const rapidjson::Value& nodes_json,
-    int node_id,
-    const lm::dmat4& parent_transform,
-    ModelDescriptor* descriptor)
+void _parse_gltf_node(const rapidjson::Value& node_json, ModelDescriptor* descriptor)
 {
-    const auto& node_json = json::get_nth_or_null(nodes_json, node_id);
-    if (node_json.IsNull() || !node_json.IsObject())
+    auto& node = descriptor->nodes.emplace_back();
+
+    if (!node_json.IsObject())
     {
         return;
     }
@@ -70,55 +69,73 @@ void _parse_gltf_node(
     const auto& scale_json = json::get_member_or_null(node_json, "scale");
     const auto& translation_json = json::get_member_or_null(node_json, "translation");
 
-    lm::dmat4 local_transform = lm::dmat4::identity();
-
-    // Extract the transform
     if (matrix_json.IsArray())
     {
-        json::copy_array_values(std::span<double>(local_transform.e), matrix_json);
+        lm::dmat4 matrix;
+        json::copy_array_values(std::span<double>(matrix.e), matrix_json);
+        node.transform.data = matrix;
     }
     else
     {
-        lm::dvec3 scale(1, 1, 1);
-        lm::dvec3 translation;
-        lm::dquat rotation;
+        ModelDescriptor::Transform::TRS trs;
 
         if (scale_json.IsArray())
         {
-            json::copy_array_values(std::span<double>(scale.m), scale_json);
+            json::copy_array_values(std::span<double>(trs.scale.m), scale_json);
         }
 
         if (translation_json.IsArray())
         {
-            json::copy_array_values(std::span<double>(translation.m), translation_json);
+            json::copy_array_values(std::span<double>(trs.translation.m), translation_json);
         }
 
         if (rotation_json.IsArray())
         {
-            json::copy_array_values(std::span<double>(rotation.m), rotation_json);
+            json::copy_array_values(std::span<double>(trs.rotation.m), rotation_json);
+            trs.rotation = lm::normalize(trs.rotation);
         }
 
-        local_transform =
-            lm::translation(translation) * lm::rotation_normalized(rotation) * lm::scaling(scale);
+        node.transform.data = trs;
+    }
+}
+
+void _parse_gltf_node_hierarchy(
+    const rapidjson::Value& nodes_json,
+    std::optional<int> parent_node_instance_id,
+    int node_id,
+    ModelDescriptor* descriptor)
+{
+    const auto& node_json = json::get_nth_or_null(nodes_json, node_id);
+    if (node_json.IsNull() || !node_json.IsObject())
+    {
+        return;
     }
 
-    const lm::dmat4 transform = parent_transform * local_transform;
+    const ModelDescriptor::NodeInstance node_instance{
+        .node_id = node_id,
+        .parent_node_instance_id = parent_node_instance_id,
+    };
 
-    // Parse the children
-    const auto& children_json = json::get_member_or_null(node_json, "children");
-    if (children_json.IsArray())
+    const int node_instance_id = (int)descriptor->node_instances.size();
+    descriptor->node_instances.push_back(node_instance);
+
+    if (const auto& children_json = json::get_member_or_null(node_json, "children");
+        children_json.IsArray())
     {
         for (const auto& child_json : children_json.GetArray())
         {
             if (!child_json.IsNumber()) continue;
             auto child_node_id = child_json.GetInt();
-            _parse_gltf_node(nodes_json, child_node_id, transform, descriptor);
+            _parse_gltf_node_hierarchy(nodes_json, node_instance_id, child_node_id, descriptor);
         }
     }
 
     if (const int mesh_id = json::get_int_or(node_json, "mesh", -1); mesh_id >= 0)
     {
-        descriptor->mesh_instances.push_back(ModelDescriptor::MeshInstance{transform, mesh_id});
+        descriptor->mesh_instances.push_back(ModelDescriptor::MeshInstance{
+            .node_instance_id = node_instance_id,
+            .mesh_id = mesh_id,
+        });
     }
 }
 
@@ -190,11 +207,12 @@ void _parse_gltf_primitive(const rapidjson::Value& prim_json, ModelDescriptor* d
 
     prim.material = json::get_int(prim_json, "material");
 
-    const auto& materials_variants_ext = _get_gltf_extension(prim_json, KHR_materials_variants);
-    if (materials_variants_ext.IsObject())
+    if (const auto& materials_variants_ext = _get_gltf_extension(prim_json, KHR_materials_variants);
+        materials_variants_ext.IsObject())
     {
-        const auto& mappings_json = json::get_member_or_null(materials_variants_ext, "mappings");
-        if (mappings_json.IsArray())
+        if (const auto& mappings_json =
+                json::get_member_or_null(materials_variants_ext, "mappings");
+            mappings_json.IsArray())
         {
             for (const auto& mapping_json : mappings_json.GetArray())
             {
@@ -226,13 +244,13 @@ void _parse_gltf_primitive(const rapidjson::Value& prim_json, ModelDescriptor* d
         }
     }
 
-    if (auto indices_opt = json::get_int(prim_json, "indices"))
+    if (auto indices_opt = json::get_int(prim_json, "indices"); indices_opt.has_value())
     {
         prim.indices = ModelDescriptor::Attribute{indices_opt.value(), std::nullopt};
     }
 
-    const auto& attribs_json = json::get_member_or_null(prim_json, "attributes");
-    if (attribs_json.IsObject())
+    if (const auto& attribs_json = json::get_member_or_null(prim_json, "attributes");
+        attribs_json.IsObject())
     {
         for (const auto& attrib : attribs_json.GetObject())
         {
@@ -246,29 +264,28 @@ void _parse_gltf_primitive(const rapidjson::Value& prim_json, ModelDescriptor* d
             auto* attribute_ptr = _get_primitive_attribute(&prim, name);
             attribute_ptr->accessor = attrib.value.GetInt();
         }
-    }
 
-    const auto& draco_json = _get_gltf_extension(prim_json, KHR_draco_mesh_compression);
-    if (draco_json.IsObject() && (prim.draco_buffer_view = json::get_int(draco_json, "bufferView")))
-    {
-        // This is a Draco-compressed mesh.
-        // Get the mappings between attribute ids inside the Draco mesh and accessors.
-
-        const auto& attribs_json = json::get_member_or_null(prim_json, "attributes");
-        const auto& draco_attribs_json = json::get_member_or_null(draco_json, "attributes");
-
-        if (attribs_json.IsObject() && draco_attribs_json.IsObject())
+        if (const auto& draco_json = _get_gltf_extension(prim_json, KHR_draco_mesh_compression);
+            draco_json.IsObject()
+            && (prim.draco_buffer_view = json::get_int(draco_json, "bufferView")))
         {
-            for (auto& attribute : draco_attribs_json.GetObject())
-            {
-                if (attribute.name.IsString() && attribute.value.IsNumber()
-                    && attribs_json.HasMember(attribute.name.GetString()))
-                {
-                    auto attribute_name = attribute.name.GetString();
-                    int draco_attribute_id = attribute.value.GetInt();
+            // This is a Draco-compressed mesh.
+            // Get the mappings between attribute ids inside the Draco mesh and accessors.
 
-                    auto* attr_ptr = _get_primitive_attribute(&prim, attribute_name);
-                    attr_ptr->draco_attribute = draco_attribute_id;
+            const auto& draco_attribs_json = json::get_member_or_null(draco_json, "attributes");
+            if (draco_attribs_json.IsObject())
+            {
+                for (auto& attribute : draco_attribs_json.GetObject())
+                {
+                    if (attribute.name.IsString() && attribute.value.IsNumber()
+                        && attribs_json.HasMember(attribute.name.GetString()))
+                    {
+                        auto attribute_name = attribute.name.GetString();
+                        int draco_attribute_id = attribute.value.GetInt();
+
+                        auto* attr_ptr = _get_primitive_attribute(&prim, attribute_name);
+                        attr_ptr->draco_attribute = draco_attribute_id;
+                    }
                 }
             }
         }
@@ -281,8 +298,8 @@ void _parse_gltf_mesh(const rapidjson::Value& mesh_json, ModelDescriptor* descri
 {
     const size_t prim_first = descriptor->primitives.size();
 
-    const auto& primitives_json = json::get_member_or_null(mesh_json, "primitives");
-    if (primitives_json.IsArray())
+    if (const auto& primitives_json = json::get_member_or_null(mesh_json, "primitives");
+        primitives_json.IsArray())
     {
         for (const auto& prim_json : primitives_json.GetArray())
         {
@@ -303,74 +320,71 @@ my::VertexFormat _get_vertex_format(int type, const char* layout, bool normalize
     constexpr uint32_t UINT32 = 5125;
     constexpr uint32_t FLOAT = 5126;
 
+    std::optional<my::VertexFormat> format;
+
     if (strcmp(layout, "SCALAR") == 0)
     {
         switch (type)
         {
-            case INT8: return normalized ? my::VertexFormat::Int8Norm : my::VertexFormat::Int8;
-            case UINT8: return normalized ? my::VertexFormat::UInt8Norm : my::VertexFormat::UInt8;
-            case INT16: return normalized ? my::VertexFormat::Int16Norm : my::VertexFormat::Int16;
-            case UINT16:
-                return normalized ? my::VertexFormat::UInt16Norm : my::VertexFormat::UInt16;
-            case UINT32: return my::VertexFormat::UInt32;
-            case FLOAT: return my::VertexFormat::Float32;
+            case INT8: format = my::VertexFormat::Int8; break;
+            case UINT8: format = my::VertexFormat::UInt8; break;
+            case INT16: format = my::VertexFormat::Int16; break;
+            case UINT16: format = my::VertexFormat::UInt16; break;
+            case UINT32: format = my::VertexFormat::UInt32; break;
+            case FLOAT: format = my::VertexFormat::Float32; break;
+            default:;
         }
     }
     else if (strcmp(layout, "VEC2") == 0)
     {
         switch (type)
         {
-            case INT8: return normalized ? my::VertexFormat::Int8Norm_2 : my::VertexFormat::Int8_2;
-            case UINT8:
-                return normalized ? my::VertexFormat::UInt8Norm_2 : my::VertexFormat::UInt8_2;
-            case INT16:
-                return normalized ? my::VertexFormat::Int16Norm_2 : my::VertexFormat::Int16_2;
-            case UINT16:
-                return normalized ? my::VertexFormat::UInt16Norm_2 : my::VertexFormat::UInt16_2;
-            case UINT32: return my::VertexFormat::UInt32_2;
-            case FLOAT: return my::VertexFormat::Float32_2;
+            case INT8: format = my::VertexFormat::Int8_2; break;
+            case UINT8: format = my::VertexFormat::UInt8_2; break;
+            case INT16: format = my::VertexFormat::Int16_2; break;
+            case UINT16: format = my::VertexFormat::UInt16_2; break;
+            case UINT32: format = my::VertexFormat::UInt32_2; break;
+            case FLOAT: format = my::VertexFormat::Float32_2; break;
+            default:;
         }
     }
     else if (strcmp(layout, "VEC3") == 0)
     {
         switch (type)
         {
-            case INT8: return normalized ? my::VertexFormat::Int8Norm_3 : my::VertexFormat::Int8_3;
-            case UINT8:
-                return normalized ? my::VertexFormat::UInt8Norm_3 : my::VertexFormat::UInt8_3;
-            case INT16:
-                return normalized ? my::VertexFormat::Int16Norm_3 : my::VertexFormat::Int16_3;
-            case UINT16:
-                return normalized ? my::VertexFormat::UInt16Norm_3 : my::VertexFormat::UInt16_3;
-            case UINT32: return my::VertexFormat::UInt32_3;
-            case FLOAT: return my::VertexFormat::Float32_3;
+            case INT8: format = my::VertexFormat::Int8_3; break;
+            case UINT8: format = my::VertexFormat::UInt8_3; break;
+            case INT16: format = my::VertexFormat::Int16_3; break;
+            case UINT16: format = my::VertexFormat::UInt16_3; break;
+            case UINT32: format = my::VertexFormat::UInt32_3; break;
+            case FLOAT: format = my::VertexFormat::Float32_3; break;
+            default:;
         }
     }
     else if (strcmp(layout, "VEC4") == 0)
     {
         switch (type)
         {
-            case INT8: return normalized ? my::VertexFormat::Int8Norm_4 : my::VertexFormat::Int8_4;
-            case UINT8:
-                return normalized ? my::VertexFormat::UInt8Norm_4 : my::VertexFormat::UInt8_4;
-            case INT16:
-                return normalized ? my::VertexFormat::Int16Norm_4 : my::VertexFormat::Int16_4;
-            case UINT16:
-                return normalized ? my::VertexFormat::UInt16Norm_4 : my::VertexFormat::UInt16_4;
-            case UINT32: return my::VertexFormat::UInt32_4;
-            case FLOAT: return my::VertexFormat::Float32_4;
+            case INT8: format = my::VertexFormat::Int8_4; break;
+            case UINT8: format = my::VertexFormat::UInt8_4; break;
+            case INT16: format = my::VertexFormat::Int16_4; break;
+            case UINT16: format = my::VertexFormat::UInt16_4; break;
+            case UINT32: format = my::VertexFormat::UInt32_4; break;
+            case FLOAT: format = my::VertexFormat::Float32_4; break;
+            default:;
         }
     }
+
     // @Note We don't support Matrix attributes.
     //      -slerouzic, 24 jan 2019
-    else
+
+    if (!format.has_value())
     {
-        HRZ_LOG_WARNING("Layout {} not supported", layout);
+        HRZ_LOG_WARNING("Layout {} with component type {} not supported", layout, type);
         return my::VertexFormat::UInt8Norm;
     }
 
-    HRZ_LOG_WARNING("Component type {} not supported", type);
-    return my::VertexFormat::UInt8Norm;
+    return normalized ? my::to_normalized(format.value()) : format.value();
 }
 
 void _parse_gltf_accessor(const rapidjson::Value& accessor_json, ModelDescriptor* descriptor)
@@ -380,8 +394,8 @@ void _parse_gltf_accessor(const rapidjson::Value& accessor_json, ModelDescriptor
     if (accessor_json.IsObject())
     {
         accessor.buffer_view = json::get_int(accessor_json, "bufferView");
-        accessor.byte_offset = json::get_int_or(accessor_json, "byteOffset", 0);
-        accessor.count = json::get_int_or(accessor_json, "count", 0);
+        accessor.byte_offset = json::get_uint_or(accessor_json, "byteOffset", 0);
+        accessor.count = json::get_uint_or(accessor_json, "count", 0);
 
         accessor.type = _get_vertex_format(
             json::get_int_or(accessor_json, "componentType", 0),
@@ -405,9 +419,9 @@ void _parse_gltf_buffer_view(const rapidjson::Value& view_json, ModelDescriptor*
     if (view_json.IsObject())
     {
         view.buffer = json::get_int_or(view_json, "buffer", 0);
-        view.byte_stride = json::get_int_or(view_json, "byteStride", 0);
-        view.byte_offset = json::get_int_or(view_json, "byteOffset", 0);
-        view.byte_length = json::get_int_or(view_json, "byteLength", 0);
+        view.byte_stride = json::get_uint_or(view_json, "byteStride", 0);
+        view.byte_offset = json::get_uint_or(view_json, "byteOffset", 0);
+        view.byte_length = json::get_uint_or(view_json, "byteLength", 0);
     }
 
     descriptor->buffer_views.push_back(view);
@@ -424,18 +438,17 @@ void _parse_gltf_buffer(
 
     if (buffer_json.IsObject())
     {
-        const std::string_view uri = json::get_str_or(buffer_json, "uri", "");
-        if (uri.empty())
+        if (const std::string_view uri = json::get_str_or(buffer_json, "uri", ""); !uri.empty())
+        {
+            buffer.blob = bl->add_blob_from_url(ba, uri, 0, priority);
+        }
+        else
         {
             // We will use the embedded resources buffers here
             buffer.blob = std::nullopt;
         }
-        else
-        {
-            buffer.blob = bl->add_blob_from_url(ba, uri, 0, priority);
-        }
 
-        buffer.byte_length = json::get_int_or(buffer_json, "byteLength", 0);
+        buffer.byte_length = json::get_uint_or(buffer_json, "byteLength", 0);
     }
 
     descriptor->buffers.push_back(buffer);
@@ -531,111 +544,110 @@ void _parse_gltf_image(
     uint32_t priority,
     ModelDescriptor* descriptor)
 {
-    ModelDescriptor::Image image;
+    ModelDescriptor::Image& image = descriptor->images.emplace_back();
 
-    if (image_json.IsObject())
+    if (!image_json.IsObject())
     {
-        const auto& templated_json = _get_gltf_extension(image_json, SIRADEL_templated_image_url);
-        if (templated_json.IsObject())
-        {
-            const std::string_view template_name =
-                json::get_str_or(templated_json, "templateName", "");
+        return;
+    }
 
-            std::vector<std::pair<std::string_view, std::string_view>> params;
-            const auto& params_json = json::get_member_or_null(templated_json, "parameters");
-            if (params_json.IsObject())
+    if (const auto& templated_json = _get_gltf_extension(image_json, SIRADEL_templated_image_url);
+        templated_json.IsObject())
+    {
+        std::vector<std::pair<std::string_view, std::string_view>> params;
+
+        if (const auto& params_json = json::get_member_or_null(templated_json, "parameters");
+            params_json.IsObject())
+        {
+            for (const auto& member : params_json.GetObject())
             {
-                for (const auto& member : params_json.GetObject())
+                assert(member.name.IsString());
+                if (member.value.IsString())
                 {
-                    assert(member.name.IsString());
-                    if (member.value.IsString())
-                    {
-                        params.emplace_back(member.name.GetString(), member.value.GetString());
-                    }
+                    params.emplace_back(member.name.GetString(), member.value.GetString());
                 }
             }
+        }
 
-            if (!template_name.empty())
-            {
-                image.blob =
-                    bl->add_templated_blob_from_parameters(template_name, params, priority);
-            }
-            else
-            {
-                image.blob = std::nullopt;
-            }
+        if (const std::string_view template_name =
+                json::get_str_or(templated_json, "templateName", "");
+            !template_name.empty())
+        {
+            image.blob = bl->add_templated_blob_from_parameters(template_name, params, priority);
         }
         else
         {
-            const std::string_view uri = json::get_str_or(image_json, "uri", "");
-            if (!uri.empty())
-            {
-                image.blob = bl->add_blob_from_url(ba, uri, 0, priority);
-            }
-            else
-            {
-                image.blob = std::nullopt;
-            }
-            image.buffer_view = json::get_int(image_json, "bufferView");
+            image.blob = std::nullopt;
         }
     }
-
-    descriptor->images.push_back(image);
+    else
+    {
+        const std::string_view uri = json::get_str_or(image_json, "uri", "");
+        if (!uri.empty())
+        {
+            image.blob = bl->add_blob_from_url(ba, uri, 0, priority);
+        }
+        else
+        {
+            image.blob = std::nullopt;
+        }
+        image.buffer_view = json::get_int(image_json, "bufferView");
+    }
 }
 
 void _parse_gltf_texture(const rapidjson::Value& texture_json, ModelDescriptor* descriptor)
 {
-    ModelDescriptor::Texture texture;
+    ModelDescriptor::Texture& texture = descriptor->textures.emplace_back();
 
-    if (texture_json.IsObject())
+    if (!texture_json.IsObject())
     {
-        texture.sampler = json::get_int(texture_json, "sampler");
-        texture.source = json::get_int(texture_json, "source");
+        return;
+    }
 
-        const auto& ktx2_json = _get_gltf_extension(texture_json, KHR_texture_basisu);
-        if (ktx2_json.IsObject())
-        {
-            auto ktx2_source = json::get_int(ktx2_json, "source");
-            if (ktx2_source.has_value())
-            {
-                texture.source = ktx2_source;
-            }
-        }
+    texture.sampler = json::get_int(texture_json, "sampler");
+    texture.source = json::get_int(texture_json, "source");
 
-        if (const auto& webp_json = _get_gltf_extension(texture_json, EXT_texture_webp);
-            webp_json.IsObject())
+    if (const auto& ktx2_json = _get_gltf_extension(texture_json, KHR_texture_basisu);
+        ktx2_json.IsObject())
+    {
+        auto ktx2_source = json::get_int(ktx2_json, "source");
+        if (ktx2_source.has_value())
         {
-            auto webp_source = json::get_int(webp_json, "source");
-            if (webp_source.has_value())
-            {
-                texture.source = webp_source;
-            }
-        }
-
-        const auto& data_texture_json = _get_gltf_extension(texture_json, SIRADEL_data_texture);
-        if (data_texture_json.IsObject())
-        {
-            auto data_interpretation = json::get_str(data_texture_json, "dataInterpretation");
-            if (data_interpretation.has_value())
-            {
-                if (std::strcmp(data_interpretation.value(), "rgba8BitsToFloat") == 0)
-                {
-                    texture.data_intepretation = hrz_proto::ImageFormat::R_F32;
-                }
-                else if (std::strcmp(data_interpretation.value(), "silicium") == 0)
-                {
-                    // This is undocumented.
-                    texture.data_intepretation = hrz_proto::ImageFormat::R_F32_SILICIUM;
-                }
-                else
-                {
-                    HRZ_LOG_WARNING("Unknown data interpretation: {}", data_interpretation.value());
-                }
-            }
+            texture.source = ktx2_source;
         }
     }
 
-    descriptor->textures.push_back(texture);
+    if (const auto& webp_json = _get_gltf_extension(texture_json, EXT_texture_webp);
+        webp_json.IsObject())
+    {
+        auto webp_source = json::get_int(webp_json, "source");
+        if (webp_source.has_value())
+        {
+            texture.source = webp_source;
+        }
+    }
+
+    if (const auto& data_texture_json = _get_gltf_extension(texture_json, SIRADEL_data_texture);
+        data_texture_json.IsObject())
+    {
+        auto data_interpretation = json::get_str(data_texture_json, "dataInterpretation");
+        if (data_interpretation.has_value())
+        {
+            if (std::strcmp(data_interpretation.value(), "rgba8BitsToFloat") == 0)
+            {
+                texture.data_intepretation = hrz_proto::ImageFormat::R_F32;
+            }
+            else if (std::strcmp(data_interpretation.value(), "silicium") == 0)
+            {
+                // This is undocumented.
+                texture.data_intepretation = hrz_proto::ImageFormat::R_F32_SILICIUM;
+            }
+            else
+            {
+                HRZ_LOG_WARNING("Unknown data interpretation: {}", data_interpretation.value());
+            }
+        }
+    }
 }
 
 ModelDescriptor::AlphaMode _convert_alpha_mode(const char* str)
@@ -656,57 +668,151 @@ ModelDescriptor::AlphaMode _convert_alpha_mode(const char* str)
 
 void _parse_gltf_material(const rapidjson::Value& material_json, ModelDescriptor* descriptor)
 {
-    ModelDescriptor::Material material;
+    ModelDescriptor::Material& material = descriptor->materials.emplace_back();
 
-    if (material_json.IsObject())
+    if (!material_json.IsObject())
     {
-        material.alpha_mode =
-            _convert_alpha_mode(json::get_str_or(material_json, "alphaMode", "OPAQUE"));
-        material.alpha_cutoff = json::get_float_or(material_json, "alphaCutoff", 0.5F);
-        material.double_sided = json::get_bool_or(material_json, "doubleSided", false);
-        material.material = ModelDescriptor::NoMaterial{};
+        return;
+    }
+    material.alpha_mode =
+        _convert_alpha_mode(json::get_str_or(material_json, "alphaMode", "OPAQUE"));
+    material.alpha_cutoff = json::get_float_or(material_json, "alphaCutoff", 0.5F);
+    material.double_sided = json::get_bool_or(material_json, "doubleSided", false);
+    material.material = ModelDescriptor::NoMaterial{};
 
-        const auto& pbr_json = json::get_member_or_null(material_json, "pbrMetallicRoughness");
-        const auto& data_texture_json = _get_gltf_extension(material_json, SIRADEL_data_texture);
+    if (const auto& pbr_json = json::get_member_or_null(material_json, "pbrMetallicRoughness");
+        pbr_json.IsObject())
+    {
+        ModelDescriptor::DiffuseMaterial diffuse_material;
 
-        if (pbr_json.IsObject())
+        json::copy_array_values(
+            std::span<float>(diffuse_material.color_factor.m),
+            json::get_member_or_null(pbr_json, "baseColorFactor"), 1.0F);
+
+        const auto& texture_info_json = json::get_member_or_null(pbr_json, "baseColorTexture");
+        diffuse_material.color_texture = json::get_int(texture_info_json, "index");
+        diffuse_material.uv_set = json::get_int_or(texture_info_json, "texCoord", 0);
+
+        material.material = diffuse_material;
+    }
+    else if (const auto& data_texture_json =
+                 _get_gltf_extension(material_json, SIRADEL_data_texture);
+             data_texture_json.IsObject())
+    {
+        ModelDescriptor::DataMaterial data_material;
+
+        const auto& texture_info_json = json::get_member_or_null(data_texture_json, "dataTexture");
+        data_material.data_texture = json::get_int(texture_info_json, "index");
+        data_material.uv_set = json::get_int_or(texture_info_json, "texCoord", 0);
+
+        material.material = data_material;
+        // @Todo(649) One day we'll want to get the alpha blend from the glTF model directly.
+        // But right now it's always OPAQUE in the files, which is incompatible with the
+        // requirements for MC3D.
+        material.alpha_mode = ModelDescriptor::AlphaMode::Blend;
+    }
+
+    if (const auto& unlit_json = _get_gltf_extension(material_json, KHR_materials_unlit);
+        !unlit_json.IsNull())
+    {
+        material.unlit = true;
+    }
+}
+
+bool _parse_gltf_animation(const rapidjson::Value& animation_json, ModelDescriptor* descriptor)
+{
+    if (!animation_json.IsObject()) return true;
+
+    ModelDescriptor::Animation animation;
+    animation.name = json::get_str_or(animation_json, "name", "");
+
+    if (const auto& samplers_json = json::get_member_or_null(animation_json, "samplers");
+        samplers_json.IsArray())
+    {
+        for (const auto& sampler_json : samplers_json.GetArray())
         {
-            ModelDescriptor::DiffuseMaterial diffuse_material;
+            ModelDescriptor::AnimationSampler sampler{};
+            sampler.timestamp_accessor = json::get_int_or(sampler_json, "input", -1);
+            sampler.value_accessor = json::get_int_or(sampler_json, "output", -1);
 
-            json::copy_array_values(
-                std::span<float>(diffuse_material.color_factor.m),
-                json::get_member_or_null(pbr_json, "baseColorFactor"), 1.0F);
+            if (sampler.timestamp_accessor < 0 || sampler.value_accessor < 0)
+            {
+                HRZ_LOG_ERROR("Invalid animation sampler accessors");
+                return false;
+            }
 
-            const auto& texture_info_json = json::get_member_or_null(pbr_json, "baseColorTexture");
-            diffuse_material.color_texture = json::get_int(texture_info_json, "index");
-            diffuse_material.uv_set = json::get_int_or(texture_info_json, "texCoord", 0);
+            const std::string_view interp_mode =
+                json::get_str_or(sampler_json, "interpolation", "LINEAR");
+            if (interp_mode == "LINEAR")
+            {
+                sampler.interpolation = AnimationInterpolation::Linear;
+            }
+            else if (interp_mode == "STEP")
+            {
+                sampler.interpolation = AnimationInterpolation::Step;
+            }
+            else if (interp_mode == "CUBICSPLINE")
+            {
+                sampler.interpolation = AnimationInterpolation::CubicSpline;
+            }
+            else
+            {
+                HRZ_LOG_WARNING(
+                    "Unsupported animation interpolation mode: {}, using linear", interp_mode);
+                sampler.interpolation = AnimationInterpolation::Linear;
+            }
 
-            material.material = diffuse_material;
-        }
-        else if (data_texture_json.IsObject())
-        {
-            ModelDescriptor::DataMaterial data_material;
-
-            const auto& texture_info_json =
-                json::get_member_or_null(data_texture_json, "dataTexture");
-            data_material.data_texture = json::get_int(texture_info_json, "index");
-            data_material.uv_set = json::get_int_or(texture_info_json, "texCoord", 0);
-
-            material.material = data_material;
-            // @Todo(649) One day we'll want to get the alpha blend from the glTF model directly.
-            // But right now it's always OPAQUE in the files, which is incompatible with the
-            // requirements for MC3D.
-            material.alpha_mode = ModelDescriptor::AlphaMode::Blend;
-        }
-
-        const auto& unlit_json = _get_gltf_extension(material_json, KHR_materials_unlit);
-        if (!unlit_json.IsNull())
-        {
-            material.unlit = true;
+            animation.samplers.push_back(sampler);
         }
     }
 
-    descriptor->materials.push_back(material);
+    if (const auto& channels_json = json::get_member_or_null(animation_json, "channels");
+        channels_json.IsArray())
+    {
+        for (const auto& channel_json : channels_json.GetArray())
+        {
+            const auto& target_json = json::get_member_or_null(channel_json, "target");
+            if (!target_json.IsObject())
+            {
+                HRZ_LOG_ERROR("Invalid animation channel target");
+                return false;
+            }
+
+            ModelDescriptor::AnimationChannel channel{};
+            channel.sampler = json::get_int_or(channel_json, "sampler", -1);
+            channel.target_node = json::get_int_or(target_json, "node", -1);
+
+            if (channel.sampler < 0 || channel.target_node < 0)
+            {
+                HRZ_LOG_ERROR("Invalid animation channel sampler or target node");
+                return false;
+            }
+
+            const std::string_view path = json::get_str_or(target_json, "path", "");
+            if (path == "translation")
+            {
+                channel.target_property = AnimationTargetProperty::Translation;
+            }
+            else if (path == "rotation")
+            {
+                channel.target_property = AnimationTargetProperty::Rotation;
+            }
+            else if (path == "scale")
+            {
+                channel.target_property = AnimationTargetProperty::Scale;
+            }
+            else
+            {
+                HRZ_LOG_WARNING("Unsupported animation target path: {}", path);
+                return false;
+            }
+
+            animation.channels.push_back(channel);
+        }
+    }
+
+    descriptor->animations.push_back(std::move(animation));
+    return true;
 }
 
 bool _parse_gltf_json(
@@ -745,8 +851,8 @@ bool _parse_gltf_json(
         all_attributions.push_back(additional_attribution);
     }
 
-    const auto& copyright = json::get_nested_member_or_null(root, {"asset", "copyright"});
-    if (copyright.IsString())
+    if (const auto& copyright = json::get_nested_member_or_null(root, {"asset", "copyright"});
+        copyright.IsString())
     {
         std::string_view copyright_str = hrz::str::trim_s(copyright.GetString());
 
@@ -779,8 +885,8 @@ bool _parse_gltf_json(
             attribution::register_attribution_group(attributions, all_attributions);
     }
 
-    const auto& required_ext_json = json::get_member_or_null(root, "extensionsRequired");
-    if (required_ext_json.IsArray())
+    if (const auto& required_ext_json = json::get_member_or_null(root, "extensionsRequired");
+        required_ext_json.IsArray())
     {
         for (const auto& ext_json : required_ext_json.GetArray())
         {
@@ -801,11 +907,11 @@ bool _parse_gltf_json(
         }
     }
 
-    const auto& material_variants_ext = _get_gltf_extension(root, KHR_materials_variants);
-    if (material_variants_ext.IsObject())
+    if (const auto& material_variants_ext = _get_gltf_extension(root, KHR_materials_variants);
+        material_variants_ext.IsObject())
     {
-        const auto& variants = json::get_member_or_null(material_variants_ext, "variants");
-        if (variants.IsArray())
+        if (const auto& variants = json::get_member_or_null(material_variants_ext, "variants");
+            variants.IsArray())
         {
             int variant_index = 0;
             for (const auto& variant : variants.GetArray())
@@ -830,16 +936,31 @@ bool _parse_gltf_json(
         }
     }
 
-    lm::dmat4 root_transform = lm::dmat4::identity();
-    const auto& cesium_rtc_ext = _get_gltf_extension(root, CESIUM_RTC);
-    if (cesium_rtc_ext.IsObject())
+    if (const auto& animations_json = json::get_member_or_null(root, "animations");
+        animations_json.IsArray())
     {
-        const auto& center_json = json::get_member_or_null(cesium_rtc_ext, "center");
-        if (center_json.IsArray())
+        for (const auto& animation_json : animations_json.GetArray())
+        {
+            if (!_parse_gltf_animation(animation_json, descriptor))
+            {
+                HRZ_LOG_ERROR("Failed to parse glTF animation");
+                return false;
+            }
+        }
+    }
+
+    descriptor->root_transform = lm::dmat4::identity();
+
+    if (const auto& cesium_rtc_ext = _get_gltf_extension(root, CESIUM_RTC);
+        cesium_rtc_ext.IsObject())
+    {
+        if (const auto& center_json = json::get_member_or_null(cesium_rtc_ext, "center");
+            center_json.IsArray())
         {
             lm::dvec3 rtc_center;
             json::copy_array_values(std::span<double>(rtc_center.m), center_json);
-            root_transform = lm::translation(lm::dvec3{rtc_center.x, rtc_center.z, -rtc_center.y});
+            descriptor->root_transform =
+                lm::translation(lm::dvec3{rtc_center.x, rtc_center.z, -rtc_center.y});
         }
     }
 
@@ -847,19 +968,27 @@ bool _parse_gltf_json(
     const auto& scene_json = json::get_nth_member_or_null(root, "scenes", scene_index);
     const auto& nodes_json = json::get_member_or_null(root, "nodes");
 
+    if (nodes_json.IsArray())
+    {
+        for (const auto& node_json : nodes_json.GetArray())
+        {
+            _parse_gltf_node(node_json, descriptor);
+        }
+        assert(nodes_json.GetArray().Size() == descriptor->nodes.size());
+    }
+
     const auto& root_nodes_json = json::get_member_or_null(scene_json, "nodes");
     if (root_nodes_json.IsArray() && nodes_json.IsArray())
     {
-        for (const auto& node_json : root_nodes_json.GetArray())
+        for (const auto& root_node_json : root_nodes_json.GetArray())
         {
-            if (!node_json.IsNumber()) continue;
-            const int node_id = node_json.GetInt();
-            _parse_gltf_node(nodes_json, node_id, root_transform, descriptor);
+            if (!root_node_json.IsNumber()) continue;
+            const int node_id = root_node_json.GetInt();
+            _parse_gltf_node_hierarchy(nodes_json, std::nullopt, node_id, descriptor);
         }
     }
 
-    const auto& meshes_json = json::get_member_or_null(root, "meshes");
-    if (meshes_json.IsArray())
+    if (const auto& meshes_json = json::get_member_or_null(root, "meshes"); meshes_json.IsArray())
     {
         for (const auto& mesh_json : meshes_json.GetArray())
         {
@@ -868,8 +997,8 @@ bool _parse_gltf_json(
         assert(meshes_json.GetArray().Size() == descriptor->meshes.size());
     }
 
-    const auto& accessors_json = json::get_member_or_null(root, "accessors");
-    if (accessors_json.IsArray())
+    if (const auto& accessors_json = json::get_member_or_null(root, "accessors");
+        accessors_json.IsArray())
     {
         for (const auto& accessor_json : accessors_json.GetArray())
         {
@@ -878,8 +1007,8 @@ bool _parse_gltf_json(
         assert(accessors_json.GetArray().Size() == descriptor->accessors.size());
     }
 
-    const auto& buffer_views_json = json::get_member_or_null(root, "bufferViews");
-    if (buffer_views_json.IsArray())
+    if (const auto& buffer_views_json = json::get_member_or_null(root, "bufferViews");
+        buffer_views_json.IsArray())
     {
         for (const auto& buffer_view_json : buffer_views_json.GetArray())
         {
@@ -888,8 +1017,8 @@ bool _parse_gltf_json(
         assert(buffer_views_json.GetArray().Size() == descriptor->buffer_views.size());
     }
 
-    const auto& buffers_json = json::get_member_or_null(root, "buffers");
-    if (buffers_json.IsArray())
+    if (const auto& buffers_json = json::get_member_or_null(root, "buffers");
+        buffers_json.IsArray())
     {
         for (const auto& buffer_json : buffers_json.GetArray())
         {
@@ -898,8 +1027,8 @@ bool _parse_gltf_json(
         assert(buffers_json.GetArray().Size() == descriptor->buffers.size());
     }
 
-    const auto& samplers_json = json::get_member_or_null(root, "samplers");
-    if (samplers_json.IsArray())
+    if (const auto& samplers_json = json::get_member_or_null(root, "samplers");
+        samplers_json.IsArray())
     {
         for (const auto& sampler_json : samplers_json.GetArray())
         {
@@ -908,8 +1037,7 @@ bool _parse_gltf_json(
         assert(samplers_json.GetArray().Size() == descriptor->samplers.size());
     }
 
-    const auto& images_json = json::get_member_or_null(root, "images");
-    if (images_json.IsArray())
+    if (const auto& images_json = json::get_member_or_null(root, "images"); images_json.IsArray())
     {
         for (const auto& image_json : images_json.GetArray())
         {
@@ -918,8 +1046,8 @@ bool _parse_gltf_json(
         assert(images_json.GetArray().Size() == descriptor->images.size());
     }
 
-    const auto& textures_json = json::get_member_or_null(root, "textures");
-    if (textures_json.IsArray())
+    if (const auto& textures_json = json::get_member_or_null(root, "textures");
+        textures_json.IsArray())
     {
         for (const auto& texture_json : textures_json.GetArray())
         {
@@ -928,8 +1056,8 @@ bool _parse_gltf_json(
         assert(textures_json.GetArray().Size() == descriptor->textures.size());
     }
 
-    const auto& materials_json = json::get_member_or_null(root, "materials");
-    if (materials_json.IsArray())
+    if (const auto& materials_json = json::get_member_or_null(root, "materials");
+        materials_json.IsArray())
     {
         for (const auto& material_json : materials_json.GetArray())
         {
@@ -989,106 +1117,107 @@ bool parse_gltf_descriptor(
         std::endian::native == std::endian::little, "UInt32 reads are little-endian only");
 
     auto gltf_size = gltf_blob.data_size();
-    if (gltf_size >= 12) // Enough room for the glb header
+    if (gltf_size < 12) // Enough room for the glb header
     {
-        auto gltf_data = gltf_blob.get_data();
-        const std::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
-        const std::span<const std::byte> magic = gltf_header.first(4);
+        return false;
+    }
 
-        uint32_t version = 0;
-        memcpy(&version, gltf_header.data() + 4, 4);
+    auto gltf_data = gltf_blob.get_data();
+    const std::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
+    const std::span<const std::byte> magic = gltf_header.first(4);
 
-        if (memcmp((const char*)magic.data(), "glTF", 4) == 0 && version == 2)
+    uint32_t version = 0;
+    memcpy(&version, gltf_header.data() + 4, 4);
+
+    if (memcmp((const char*)magic.data(), "glTF", 4) == 0 && version == 2)
+    {
+        // This is a glb.
+
+        uint32_t declared_size = 0;
+        memcpy(&declared_size, gltf_header.data() + 8, 4);
+
+        if (declared_size > gltf_size)
         {
-            // This is a glb.
+            return false;
+        }
 
-            uint32_t declared_size = 0;
-            memcpy(&declared_size, gltf_header.data() + 8, 4);
+        size_t current_offset = 12;
+        size_t json_data_offset = 0;
+        size_t json_data_length = 0;
+        bool malformed_file = false;
 
-            if (declared_size > gltf_size)
+        // Iterate through chunks.
+
+        while (current_offset < gltf_size && !malformed_file)
+        {
+            if (gltf_size - current_offset >= 8)
             {
-                return false;
-            }
+                auto chunk_header = gltf_data.subspan(current_offset, 8);
+                current_offset += 8;
 
-            size_t current_offset = 12;
-            size_t json_data_offset = 0;
-            size_t json_data_length = 0;
-            bool malformed_file = false;
+                uint32_t chunk_length = 0;
+                memcpy(&chunk_length, chunk_header.data(), 4);
 
-            // Iterate through chunks.
-
-            while (current_offset < gltf_size && !malformed_file)
-            {
-                if (gltf_size - current_offset >= 8)
+                if (current_offset + chunk_length > gltf_size)
                 {
-                    auto chunk_header = gltf_data.subspan(current_offset, 8);
-                    current_offset += 8;
+                    malformed_file = true;
+                    continue;
+                }
 
-                    uint32_t chunk_length = 0;
-                    memcpy(&chunk_length, chunk_header.data(), 4);
+                auto chunk_type = chunk_header.subspan(4, 4);
+                if (memcmp((const char*)chunk_type.data(), "JSON", 4) == 0)
+                {
+                    // JSON chunk
+                    json_data_offset = current_offset;
+                    json_data_length = chunk_length;
 
-                    if (current_offset + chunk_length > gltf_size)
+                    if (json_data_offset + json_data_length > gltf_size)
                     {
                         malformed_file = true;
                         continue;
                     }
-
-                    auto chunk_type = chunk_header.subspan(4, 4);
-                    if (memcmp((const char*)chunk_type.data(), "JSON", 4) == 0)
-                    {
-                        // JSON chunk
-                        json_data_offset = current_offset;
-                        json_data_length = chunk_length;
-
-                        if (json_data_offset + json_data_length > gltf_size)
-                        {
-                            malformed_file = true;
-                            continue;
-                        }
-                    }
-                    else if (memcmp((const char*)chunk_type.data(), "BIN\0", 4) == 0)
-                    {
-                        // Binary buffer chunk
-                        auto embedded_resources = blobs::make_sub_blob(
-                            hrz::unsafe("Offset and length are checked above"), ba, gltf_blob,
-                            current_offset, chunk_length);
-                        const size_t embedded_resources_offset = descriptor_offset + current_offset;
-
-                        descriptor->embedded_resources = bl->add_blob_from_url(
-                            ba, descriptor_url, embedded_resources_offset, buffers_priority,
-                            embedded_resources);
-                    }
-
-                    current_offset += chunk_length;
                 }
-                else
+                else if (memcmp((const char*)chunk_type.data(), "BIN\0", 4) == 0)
                 {
-                    break;
-                }
-            }
+                    // Binary buffer chunk
+                    auto embedded_resources = blobs::make_sub_blob(
+                        hrz::unsafe("Offset and length are checked above"), ba, gltf_blob,
+                        current_offset, chunk_length);
+                    const size_t embedded_resources_offset = descriptor_offset + current_offset;
 
-            if (!malformed_file && json_data_length > 0)
-            {
-                auto json_data_blob = blobs::make_sub_blob(
-                    hrz::unsafe("Offset and length are checked above"), ba, gltf_blob,
-                    json_data_offset, json_data_length);
-                return _parse_gltf_json(
-                    additional_attribution, json_data_blob, ba, bl, attributions, buffers_priority,
-                    textures_priority, descriptor);
+                    descriptor->embedded_resources = bl->add_blob_from_url(
+                        ba, descriptor_url, embedded_resources_offset, buffers_priority,
+                        embedded_resources);
+                }
+
+                current_offset += chunk_length;
             }
             else
             {
-                return false;
+                break;
             }
+        }
+
+        if (!malformed_file && json_data_length > 0)
+        {
+            auto json_data_blob = blobs::make_sub_blob(
+                hrz::unsafe("Offset and length are checked above"), ba, gltf_blob, json_data_offset,
+                json_data_length);
+            return _parse_gltf_json(
+                additional_attribution, json_data_blob, ba, bl, attributions, buffers_priority,
+                textures_priority, descriptor);
         }
         else
         {
-            // Not a glb, try and parse the resource as a glTF JSON.
-            return _parse_gltf_json(
-                additional_attribution, gltf_blob, ba, bl, attributions, buffers_priority,
-                textures_priority, descriptor);
+            return false;
         }
     }
-    return false;
+    else
+    {
+        // Not a glb, try and parse the resource as a glTF JSON.
+        return _parse_gltf_json(
+            additional_attribution, gltf_blob, ba, bl, attributions, buffers_priority,
+            textures_priority, descriptor);
+    }
 }
 } // namespace hrz::model

@@ -1049,7 +1049,7 @@ public:
             if (cfg)
             {
                 hrz::model::work_gpu(cfg->model_prototype, ctx.ba, ctx.render);
-                hrz::model::work_gpu(
+                render_request |= hrz::model::work_gpu(
                     cfg->model_prototype, cfg->baked_model, shared_resources, ctx.render);
             }
         }

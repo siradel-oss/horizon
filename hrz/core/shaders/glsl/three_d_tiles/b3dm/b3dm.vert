@@ -79,8 +79,8 @@ void main()
         return;
     }
 
-    vec4 position = hrz_prim.geometry.transform * vec4(fetch_position(), 1.0);
-    vec4 pos_cc = vec4(translate_relative_to_camera(position.xyz, hrz_prim.geometry.origin_low.xyz, hrz_prim.geometry.origin_high.xyz), 1.0);
+    vec4 position = hrz_prim_transform.transform * vec4(fetch_position(), 1.0);
+    vec4 pos_cc = vec4(translate_relative_to_camera(position.xyz, hrz_prim_transform.origin_low.xyz, hrz_prim_transform.origin_high.xyz), 1.0);
     vec4 view_pos = hrz_frame.view_cc_matrix * pos_cc;
 
     output_position(pos_cc, view_pos);

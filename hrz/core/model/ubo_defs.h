@@ -58,12 +58,8 @@ struct MeshUniformData
 
 HRZ_CHECK_UBO_SIZE(MeshUniformData);
 
-struct PrimitiveGeometryUniformData
+struct PrimitiveDrawGeometryUniformData
 {
-    lm::mat4 transform;
-    GlslStd140Mat3 normal_transform;
-    lm::vec4 origin_low;
-    lm::vec4 origin_high;
     HRZ_UBO_STRUCT_FIELD(VertexCompressionParamsUniformData) position_compression;
     HRZ_UBO_STRUCT_FIELD(VertexCompressionParamsUniformData) normal_compression;
     hrz::bool32 lighting_enabled;
@@ -71,9 +67,9 @@ struct PrimitiveGeometryUniformData
     uint32_t _padding[2];
 };
 
-HRZ_CHECK_UBO_SIZE(PrimitiveGeometryUniformData);
+HRZ_CHECK_UBO_SIZE(PrimitiveDrawGeometryUniformData);
 
-struct PrimitiveMaterialUniformData
+struct PrimitiveDrawMaterialUniformData
 {
     lm::vec4 material_color;
     uint32_t alpha_mode;
@@ -83,15 +79,25 @@ struct PrimitiveMaterialUniformData
     HRZ_UBO_STRUCT_FIELD(VertexCompressionParamsUniformData) uv_compression;
 };
 
-HRZ_CHECK_UBO_SIZE(PrimitiveMaterialUniformData);
+HRZ_CHECK_UBO_SIZE(PrimitiveDrawMaterialUniformData);
 
-struct PrimitiveUniformData
+struct PrimitiveDrawUniformData
 {
-    HRZ_UBO_STRUCT_FIELD(PrimitiveGeometryUniformData) geometry;
-    HRZ_UBO_STRUCT_FIELD(PrimitiveMaterialUniformData) materials[MaterialCount];
+    HRZ_UBO_STRUCT_FIELD(PrimitiveDrawGeometryUniformData) geometry;
+    HRZ_UBO_STRUCT_FIELD(PrimitiveDrawMaterialUniformData) materials[MaterialCount];
 };
 
-HRZ_CHECK_UBO_SIZE(PrimitiveUniformData);
+HRZ_CHECK_UBO_SIZE(PrimitiveDrawUniformData);
+
+struct PrimitiveTransformUniformData
+{
+    lm::mat4 transform;
+    GlslStd140Mat3 normal_transform;
+    lm::vec4 origin_low;
+    lm::vec4 origin_high;
+};
+
+HRZ_CHECK_UBO_SIZE(PrimitiveTransformUniformData);
 
 struct InstanceGroupUniformData
 {

@@ -19,7 +19,7 @@ void main()
     // cutoff to because other it messes with the alpha cutoff performed during
     // the impostor rendering. For instance, foliage with low opacity will not
     // be rendered and create trees without leaves.
-    vec4 color = v_geometry_color * tex_color * hrz_prim.materials[0].material_color * hrz_mesh.geometry.mesh_color.a;
+    vec4 color = v_geometry_color * tex_color * hrz_prim_draw.materials[0].material_color * hrz_mesh.geometry.mesh_color.a;
 
     vec4 material_color = compute_material_color(0, tex_color);
     handle_alpha_discard(material_color.a);

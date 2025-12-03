@@ -313,6 +313,8 @@ static const lm::dmat4 s_axes_transform = lm::dmat4(
     lm::dvec4(0, -1, 0, 0),
     lm::dvec4(0, 0, 0, 1));
 
+struct TilesetConfig;
+
 struct ThreeDTile
 {
     enum class LoadStatus
@@ -379,6 +381,8 @@ struct ThreeDTile
         render_self_in &= !bitset;
         render_children_in &= !bitset;
     }
+
+    hrz::SceneViewBitset draw_in(const TilesetConfig& config) const;
 
     uint32_t depth;
     uint32_t index;
@@ -685,6 +689,13 @@ struct Tileset
 
     hrz::metrics::MetricDesc requests_count_metric;
 };
+
+hrz::SceneViewBitset ThreeDTile::draw_in(const TilesetConfig& config) const
+{
+    return render_self_in & !culled_in
+        & hrz::SceneViewBitset(
+               config.visibility_constraints_result.satisfied_in & config.scene_views_bitset);
+}
 
 // This function is used to determine whether or not the root tile of an external
 // tileset can replace the parent tile (of content type `EXTERNAL_TILESET`.)
@@ -6267,12 +6278,15 @@ struct ThreeDTilesSystem
         return hrz::RenderRequest::visual();
     }
 
-    void _work_gpu_subtile_i3dm(
+    [[nodiscard]]
+    hrz::RenderRequest _work_gpu_subtile_i3dm(
         ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
         hrz::Render* render,
         hrz::BlobAllocator* ba)
     {
+        hrz::RenderRequest rr;
+
         auto& content = std::get<ThreeDTile::I3dmContent>(subtile.content);
         if (content.prototype != nullptr)
         {
@@ -6280,7 +6294,7 @@ struct ThreeDTilesSystem
 
             if (content.model)
             {
-                hrz::model::work_gpu(
+                rr |= hrz::model::work_gpu(
                     content.prototype, *content.model, _model_shared_resources_instanced, render);
             }
 
@@ -6313,6 +6327,8 @@ struct ThreeDTilesSystem
                 }
             }
         }
+
+        return rr;
     }
 
     static void _work_gpu_subtile_pnts(
@@ -6386,13 +6402,16 @@ struct ThreeDTilesSystem
         content.geometry = std::nullopt;
     }
 
-    void _work_gpu_subtile(
+    [[nodiscard]]
+    hrz::RenderRequest _work_gpu_subtile(
         Tileset* tileset,
         ThreeDTile& tile,
         ThreeDTile::Subtile& subtile,
         hrz::Render* render,
         hrz::BlobAllocator* ba)
     {
+        hrz::RenderRequest rr;
+
         std::visit(
             hrz::overload{
                 [&](ThreeDTile::B3dmContent& content)
@@ -6400,12 +6419,12 @@ struct ThreeDTilesSystem
                     if (content.prototype != nullptr)
                     {
                         hrz::model::work_gpu(content.prototype, ba, render);
-                        content.materials.work_gpu(
+                        rr |= content.materials.work_gpu(
                             content.prototype, _model_shared_resources, render);
                     }
                 },
                 [&](ThreeDTile::I3dmContent&)
-                { _work_gpu_subtile_i3dm(tile, subtile, render, ba); },
+                { rr |= _work_gpu_subtile_i3dm(tile, subtile, render, ba); },
                 [&](ThreeDTile::PntsContent&)
                 { _work_gpu_subtile_pnts(tileset, tile, subtile, render); },
                 [&](ThreeDTile::TilesetContent&)
@@ -6417,8 +6436,11 @@ struct ThreeDTilesSystem
                     // No action needed for std::monostate
                 }},
             subtile.content);
+
+        return rr;
     }
 
+    [[nodiscard]]
     hrz::RenderRequest work_gpu(hrz::Render* render, hrz::BlobAllocator* ba)
     {
         HRZ_SCOPED_SAMPLE("3D tiles system work gpu");
@@ -6435,6 +6457,8 @@ struct ThreeDTilesSystem
         for (auto handle : _loaded_tilesets)
         {
             auto tileset = _tilesets.get_object(handle);
+
+            if (!tileset->config->is_visible) continue;
 
             assert(tileset->status == Tileset::Status::LOADED);
 
@@ -6454,7 +6478,7 @@ struct ThreeDTilesSystem
                     if (subtile.styling_status != ThreeDTile::StylingStatus::IDLE)
                         has_non_idle_styling_status_subtiles = true;
 
-                    _work_gpu_subtile(tileset, tile, subtile, render, ba);
+                    render_request |= _work_gpu_subtile(tileset, tile, subtile, render, ba);
                 }
 
                 // The tile has finished loading. We only make it renderable
@@ -6490,19 +6514,17 @@ struct ThreeDTilesSystem
             auto tileset = _tilesets.get_object(handle);
             auto config = tileset->config;
 
+            if (!tileset->render || !config->is_visible) continue;
+
             assert(tileset->status == Tileset::Status::LOADED);
 
             for (auto tile_index : tileset->active_tiles)
             {
                 auto& tile = tileset->tiles.at(tile_index);
 
-                if (!config->is_visible || !tileset->render
-                    || tile.load_status != ThreeDTile::LoadStatus::RENDERABLE)
-                    continue;
+                if (tile.load_status != ThreeDTile::LoadStatus::RENDERABLE) continue;
 
-                hrz::SceneViewBitset draw_in = tile.render_self_in & !tile.culled_in
-                    & hrz::SceneViewBitset(config->visibility_constraints_result.satisfied_in
-                                           & config->scene_views_bitset);
+                hrz::SceneViewBitset draw_in = tile.draw_in(*config);
 
                 if (!draw_in.any()) continue;
 

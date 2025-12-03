@@ -3,12 +3,10 @@
 #include "hrz/core/data_texture.h"
 #include "hrz/core/model/common.h"
 #include "hrz/core/model/descriptor.h"
-#include "hrz/core/model/gpu_resources.h"
 #include "hrz/core/model/model.h"
 #include "hrz/core/model/renderable.h"
 #include "hrz/core/model/ubo_defs.h"
 #include "hrz/core/selection_storage.h"
-#include "hrz/fnd/observed.h"
 
 namespace hrz::model
 {
@@ -31,7 +29,7 @@ public:
         size_t stream_count = 0;
 
         lm::dbbox3 bbox;
-        lm::dmat4 transform;
+        int node_instance_id;
 
         my::DrawBatchInfo batch;
         my::ResourceHandle index_buffer;
@@ -68,7 +66,6 @@ private:
     bool build_primitive(
         ModelPrototype* proto,
         SharedResources* sr,
-        Render* render,
         const ModelDescriptor::MeshInstance& desc_mesh,
         const ModelDescriptor::Primitive& desc_prim);
 

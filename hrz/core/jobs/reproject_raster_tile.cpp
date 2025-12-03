@@ -91,7 +91,6 @@ void compute_tiled_mercator_reprojection(
     // Don't know why it happens but it does...
     if (params.tile_coords.lod >= CLIPMAP_LOD_COUNT)
     {
-        assert(false);
         return;
     }
 

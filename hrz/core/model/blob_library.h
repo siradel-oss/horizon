@@ -32,6 +32,12 @@ public:
         uint64_t o;
 
         constexpr bool operator==(const Handle& other) const = default;
+
+        template<typename H>
+        friend H AbslHashValue(H h, const Handle& k)
+        {
+            return H::combine(std::move(h), k.o);
+        }
     };
 
     struct ConfigH
