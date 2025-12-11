@@ -448,7 +448,7 @@ public:
 void hrz::parse_http_header_value(
     std::string_view str,
     char separator,
-    const std::function<bool(std::string_view, std::string_view)>& callback)
+    hrz::function_ref<bool(std::string_view, std::string_view)> callback)
 {
     HttpHeaderValueParser parse(str, separator);
 

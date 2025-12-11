@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/common/planet.h"
+#include "hrz/common/planet/tiled_raster_geometry.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/fnd/class.h"

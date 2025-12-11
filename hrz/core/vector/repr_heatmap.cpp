@@ -1,23 +1,22 @@
 #include "hrz/common/blob_array.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/palette.h"
-#include "hrz/common/proto_maths.h"
-#include "hrz/common/style.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/vector/flat_overlay.h"
 #include "hrz/core/vector/heatmaps.h"
 #include "hrz/core/vector/repr.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/thread.h"
 
 #include <optional>
 
@@ -134,7 +133,7 @@ struct TileGeometry
     hrz::BSphere<double> bsphere;
 
     // Positions are relative to the centre of the tile.
-    hrz::BlobArray<hrz::vt::HeatmapGeometry::PointInstance> point_data;
+    hrz::BlobArray<hrz_jobs::HeatmapGeometry::PointInstance> point_data;
 };
 
 struct TileId
@@ -169,7 +168,7 @@ struct Tile
     Status status;
 
     hrz_jobs::BakeHeatmapGeometryTicket bake_ticket;
-    std::optional<hrz::vt::HeatmapData> bake_data;
+    std::optional<hrz_jobs::HeatmapData> bake_data;
     std::optional<TileGeometry> geometry;
     std::optional<RenderableFeatures> renderable;
 
@@ -411,7 +410,7 @@ public:
         tile.layer_id = layer_id;
         tile.coords = coords;
 
-        hrz::vt::HeatmapData bake_data;
+        hrz_jobs::HeatmapData bake_data;
         bake_data.coords = coords;
 
         Config cfg = {};
@@ -524,7 +523,7 @@ public:
             if (hrz_jobs::get_job_status(ctx.js, tile->bake_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::vt::HeatmapGeometry response;
+                hrz_jobs::HeatmapGeometry response;
                 hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
 
                 TileGeometry geometry;
@@ -599,7 +598,7 @@ public:
 
         if (!geometry.point_data.empty())
         {
-            using Instance = hrz::vt::HeatmapGeometry::PointInstance;
+            using Instance = hrz_jobs::HeatmapGeometry::PointInstance;
 
             auto& renderable_data = renderable.data;
             auto geometry_data = geometry.point_data.get_data();

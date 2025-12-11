@@ -24,7 +24,7 @@ private:
 
         my::ResourceHandle ubo = my::ResourceHandle::null();
 
-        SymbolBakingData::Anchor baking_params;
+        hrz_jobs::SymbolBakingData::Anchor baking_params;
     };
 
     static constexpr hrz_proto::SymbolElementType ElementType =
@@ -76,7 +76,7 @@ public:
         return PrototypeStatus::Error;
     }
 
-    SymbolBakingData::ElementBakingParams get_prototype_baking_params(
+    hrz_jobs::SymbolBakingData::ElementBakingParams get_prototype_baking_params(
         PrototypeH prototype_handle) const override
     {
         if (prototype_handle.type != ElementType)
@@ -125,7 +125,7 @@ public:
         PrototypeH,
         uint64_t layer_id,
         TileCoords tile_coords,
-        BakedSymbols::ElementInstances&& baked_instances,
+        hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
         double bsphere_radius,
         lm::dvec3 bsphere_center,
         my::ResourceHandle tile_ubo,

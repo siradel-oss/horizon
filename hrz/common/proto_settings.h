@@ -1,10 +1,15 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+namespace HrzProtocol
+{
+class SceneViewSettings;
+class SceneSettings;
+class CameraSettings;
+} // namespace HrzProtocol
 
 namespace hrz
 {
-hrz_proto::SceneViewSettings default_scene_view_settings();
-hrz_proto::SceneSettings default_scene_settings();
-hrz_proto::CameraSettings default_camera_settings();
+void default_scene_view_settings(HrzProtocol::SceneViewSettings*);
+void default_scene_settings(HrzProtocol::SceneSettings*);
+void default_camera_settings(HrzProtocol::CameraSettings*);
 } // namespace hrz

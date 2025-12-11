@@ -1,10 +1,9 @@
-#include "hrz/common/model.h"
+#include "hrz/core/jobs/decompress_draco_mesh.h"
+
 #include "hrz/common/profiling.h"
 #include "hrz/core/jobs/jobs_declarations.h"
-#include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/fnd/string_utils.h"
 
 #include <draco/attributes/attribute_octahedron_transform.h>
 #include <draco/attributes/attribute_quantization_transform.h>
@@ -16,7 +15,7 @@
 #include <optional>
 #include <vector>
 
-using hrz::model::Mesh;
+using Mesh = hrz_jobs::DecompressedDracoMesh;
 
 namespace
 {
@@ -393,7 +392,7 @@ std::optional<hrz::blobs::BlobHandle> add_indices_to_response(
 
 namespace hrz_jobs::decompress_draco_mesh
 {
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const hrz::blobs::BlobHandle& compressed_mesh,
     Mesh& response,
     const JobContext& context)
@@ -410,13 +409,13 @@ hrz::JobResult run(
     {
         HRZ_LOG_ERROR(
             "Error while decoding compressed mesh: {}", geometry_type.status().error_msg_string());
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (geometry_type.value() != draco::TRIANGULAR_MESH)
     {
         HRZ_LOG_ERROR("Error: Only triangular meshes are supported");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     draco::Decoder decoder;
@@ -430,7 +429,7 @@ hrz::JobResult run(
     {
         HRZ_LOG_ERROR(
             "Error while decompressing mesh: {}", mesh_or_error.status().error_msg_string());
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto mesh = mesh_or_error.value().get();
@@ -487,7 +486,7 @@ hrz::JobResult run(
         hrz::blobs::allocate_blob_sync(context.get_blob_allocator(), total_buffer_size);
     if (!vertex_data_blob.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::blobs::register_metadata(
@@ -538,7 +537,7 @@ hrz::JobResult run(
     else
     {
         HRZ_LOG_ERROR("Too many indices: {}", index_count);
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     if (indices_blob.has_value())
     {
@@ -547,7 +546,7 @@ hrz::JobResult run(
     }
     else
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     for (const auto& mesh_attribute : attributes)
@@ -578,6 +577,6 @@ hrz::JobResult run(
     response.bounding_box.max.y = bounding_box.GetMaxPoint()[1];
     response.bounding_box.max.z = bounding_box.GetMaxPoint()[2];
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::decompress_draco_mesh

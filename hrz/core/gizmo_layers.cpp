@@ -12,14 +12,18 @@
 #include "hrz/core/events.h"
 #include "hrz/core/gestures.h"
 #include "hrz/core/grid.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resources.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/gizmo/message.pb.h"
+#include "hrz/protocol/path_builder/layer/gizmo_layer.h"
 
 #include <lin_maths.h>
 

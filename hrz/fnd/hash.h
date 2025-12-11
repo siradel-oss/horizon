@@ -1,10 +1,8 @@
 #pragma once
 
+#include "absl/hash/hash.h"
 #include "hrz/fnd/int128.h"
 
-#include <lin_maths.h>
-
-#include <functional>
 #include <span>
 #include <stdint.h>
 #include <string_view>
@@ -68,14 +66,13 @@ constexpr T hash_mix(std::span<T> hashes)
 template<typename T>
 constexpr size_t hash_value(const T& value)
 {
-    return std::hash<T>{}(value);
+    return absl::HashOf(value);
 }
 
 template<typename... Args>
 constexpr size_t hash_values(const Args&... value)
 {
-    size_t hashes[] = {hash_value(value)...};
-    return hash_mix(std::span<size_t>(hashes));
+    return absl::HashOf(value...);
 }
 
 // This computes a hash for a set of key value pairs.
@@ -84,46 +81,3 @@ constexpr size_t hash_values(const Args&... value)
 uint64_t hash_kv(std::span<const std::pair<std::string_view, std::string_view>>);
 
 } // namespace hrz
-
-namespace std
-{
-template<>
-struct hash<hrz::uint128>
-{
-    size_t operator()(const hrz::uint128& k) const
-    {
-        auto h = hash<uint64_t>{};
-        return hrz::hash_mix(h(k.low), h(k.high));
-    }
-};
-
-template<typename T, typename U>
-struct hash<std::pair<T, U>>
-{
-    size_t operator()(const std::pair<T, U>& x) const
-    {
-        return hrz::hash_mix(std::hash<T>()(x.first), std::hash<U>()(x.second));
-    }
-};
-
-template<typename T, int N>
-struct hash<lm::Vector<T, N>>
-{
-    size_t operator()(const lm::Vector<T, N>& other) const
-    {
-        std::span<const T> span(other.m);
-        return (size_t)hrz::murmur3_x64_64(std::as_bytes(span));
-    }
-};
-
-template<typename T, int N>
-struct hash<lm::Matrix<T, N>>
-{
-    size_t operator()(const lm::Matrix<T, N>& other) const
-    {
-        std::span<const T> span(other.e);
-        return (size_t)hrz::murmur3_x64_64(std::as_bytes(span));
-    }
-};
-
-} // namespace std

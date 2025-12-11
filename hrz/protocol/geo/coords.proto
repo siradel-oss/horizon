@@ -1,0 +1,36 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// Position in the WGS84 coordinates system in degrees.
+//
+// @path_leaf="true"
+message GeographicPosition {
+    double latitude  = 1;
+    double longitude = 2;
+    double altitude  = 3;
+}
+
+// Bounds in the WGS84 coordinates system in degrees.
+//
+// @path_leaf="true"
+message GeographicBounds {
+    double west  = 1;
+    double south = 2;
+    double east  = 3;
+    double north = 4;
+}
+
+// Bounds in the WGS84 coordinates system in degrees.
+// Heights in metres.
+//
+// @path_leaf="true"
+message GeographicVolumeBounds {
+    double west       = 1;
+    double south      = 2;
+    double east       = 3;
+    double north      = 4;
+    double min_height = 5;
+    double max_height = 6;
+}

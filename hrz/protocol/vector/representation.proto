@@ -1,0 +1,62 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/vector/extruded_repr.proto";
+import "hrz/protocol/vector/model_repr.proto";
+import "hrz/protocol/vector/cylinder_repr.proto";
+import "hrz/protocol/vector/flat_overlay_repr.proto";
+import "hrz/protocol/vector/heatmap_repr.proto";
+import "hrz/protocol/vector/symbol_repr.proto";
+
+enum VectorReprType {
+    reserved 2, 4, 6;
+
+    // @label="None"
+    NULL_VECTOR_REPR              = 0;
+
+    // @label="Extruded geometry"
+    EXTRUDED_GEOMETRY_VECTOR_REPR = 1;
+
+    // @label="3D Model"
+    MODEL_VECTOR_REPR             = 3;
+
+    // @label="Cylinder"
+    CYLINDER_VECTOR_REPR          = 5;
+
+    // @label="Flat overlay"
+    FLAT_OVERLAY_VECTOR_REPR      = 7;
+
+    // @label="Heatmap"
+    HEATMAP_VECTOR_REPR           = 8;
+
+    // @label="Symbol"
+    SYMBOL_VECTOR_REPR            = 9;
+}
+
+message VectorRepr {
+    reserved 102, 104, 106;
+
+    VectorReprType             type                  = 1;
+
+    // Optional name for the representation. If this is set,
+    // it is possible to emit a feature with this representation using `emit
+    // "<name>";`.
+    string                     name                  = 2;
+
+    // Mandatory ID for this representation. This ID should be unique to this
+    // layer. It can be used with the `emit <id>;` instruction.
+    uint32                     id                    = 4;
+
+    SceneViewBitset            scene_views           = 3;
+
+    // oneof
+    ExtrudedGeometryVectorRepr extruded_geometry     = 101;
+    ModelVectorRepr            model                 = 103;
+    CylinderVectorRepr         cylinder              = 105;
+    FlatOverlayVectorRepr      flat_overlay_geometry = 107;
+    HeatmapVectorRepr          heatmap               = 108;
+    SymbolVectorRepr           symbol                = 109;
+}

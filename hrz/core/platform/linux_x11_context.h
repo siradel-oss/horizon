@@ -2,7 +2,6 @@
 
 #include "hrz/core/platform/platform.h"
 #include "hrz/fnd/flat_hash_set.h"
-#include "hrz/protocol/all.h"
 
 #include <X11/XKBlib.h>
 #include <X11/Xatom.h>

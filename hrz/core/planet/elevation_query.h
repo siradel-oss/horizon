@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hrz/common/blob_array.h"
+#include "hrz/common/planet/elevation_query.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/core/channel.h"
 #include "hrz/core/channel_group.h"
@@ -9,10 +10,10 @@
 #include "hrz/core/planet/surface.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/variant.h"
 
 #include <deque>
 #include <optional>
+#include <variant>
 
 namespace hrz
 {

@@ -1,0 +1,25 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum DashMode {
+    // @label="Disable dashes"
+    DASH_DISABLED         = 0;
+
+    // @label="Enable filled dashes"
+    DASH_ENABLED_FILLED   = 1;
+
+    // @label="Enable gradient dashes"
+    DASH_ENABLED_GRADIENT = 2;
+}
+
+enum DashSizeUnit {
+    // @label="Size in meters"
+    DASH_SIZE_IN_METERS                   = 0;
+    // In logical pixels.
+    // @label="Size in pixels"
+    DASH_SIZE_IN_PIXELS                   = 1;
+    // @label="Size relative to polyline length"
+    DASH_SIZE_RELATIVE_TO_POLYLINE_LENGTH = 2;
+}

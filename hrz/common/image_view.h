@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/image.pb.h"
 
 #include <span>
 

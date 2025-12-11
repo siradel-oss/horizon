@@ -2,7 +2,10 @@
 
 #include "hrz/common/color.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resources.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"

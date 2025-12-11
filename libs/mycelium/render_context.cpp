@@ -19,7 +19,7 @@
 #include "internal/conv.h"
 #include "internal/instance.h"
 #include "internal/log.h"
-#include "mycelium/mycelium.h"
+#include "mycelium/properties.h"
 
 namespace my
 {

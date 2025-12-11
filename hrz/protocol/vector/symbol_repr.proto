@@ -1,0 +1,635 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/maths/geometry.proto";
+import "hrz/protocol/vector/image_sprite.proto";
+
+enum SymbolElementType {
+    // @label="Placeholder"
+    PLACEHOLDER_SYMBOL_ELEMENT     = 0;
+
+    // @label="Anchor"
+    ANCHOR_SYMBOL_ELEMENT          = 1;
+
+    // @label="Stack"
+    STACK_SYMBOL_ELEMENT           = 2;
+
+    // @label="Image"
+    IMAGE_SYMBOL_ELEMENT           = 3;
+
+    // @label="Padding"
+    PADDING_SYMBOL_ELEMENT         = 4;
+
+    // @label="Flex"
+    FLEX_SYMBOL_ELEMENT            = 5;
+
+    // @label="Sized box"
+    SIZED_BOX_SYMBOL_ELEMENT       = 6;
+
+    // @label="Flexible"
+    FLEXIBLE_SYMBOL_ELEMENT        = 7;
+
+    // @label="Stack expand"
+    STACK_EXPAND_SYMBOL_ELEMENT    = 8;
+
+    // @label="Align"
+    ALIGN_SYMBOL_ELEMENT           = 9;
+
+    // @label="Constrained box"
+    CONSTRAINED_BOX_SYMBOL_ELEMENT = 10;
+
+    // @label="Rotated box"
+    ROTATED_BOX_SYMBOL_ELEMENT     = 11;
+
+    // @label="Decorated shape"
+    DECORATED_SHAPE_SYMBOL_ELEMENT = 12;
+
+    // @label="Aspect ratio"
+    ASPECT_RATIO_SYMBOL_ELEMENT    = 13;
+
+    // @label="Fitted box"
+    FITTED_BOX_SYMBOL_ELEMENT      = 14;
+
+    // @label="Transform"
+    TRANSFORM_SYMBOL_ELEMENT       = 15;
+
+    // @label="Text"
+    TEXT_SYMBOL_ELEMENT            = 16;
+
+    // @label="Leader line"
+    LEADER_LINE_SYMBOL_ELEMENT     = 17;
+
+    // @label="Optional"
+    OPTIONAL_SYMBOL_ELEMENT        = 18;
+
+    // @label="Variant"
+    VARIANT_SYMBOL_ELEMENT         = 19;
+}
+
+enum SymbolSizeUnit {
+    // @label="Size in pixels"
+    SYMBOL_SIZE_IN_PIXELS = 0;
+    // @label="Size in meters"
+    SYMBOL_SIZE_IN_METERS = 1;
+}
+
+enum SymbolRelativeScaling {
+    // @label="No scaling (fixed size)"
+    SYMBOL_RELATIVE_SCALING_NONE          = 0;
+    // Scaling is applied relatively to the anchor's reference distance.
+    // @label="Relative to the reference distance"
+    SYMBOL_RELATIVE_SCALING_REF_DISTANCE  = 1;
+    // Scaling is applied relatively to the camera height.
+    // @label="Relative to the camera height"
+    SYMBOL_RELATIVE_SCALING_CAMERA_HEIGHT = 2;
+}
+
+enum SymbolAxisAlignment {
+    // @label="Align to screen"
+    AXIS_ALIGNMENT_SCREEN = 0;
+    // @label="Align to East (X axis) or Down (Y axis)"
+    AXIS_ALIGNMENT_WORLD  = 1;
+}
+
+message PlaceholderSymbolElement {
+    Vec2fProperty size  = 1;
+    ColorProperty color = 2;
+}
+
+message LeaderLineSymbolElement {
+    // Controls the colour of the line.
+    ColorProperty color         = 1;
+    // Offsets the target of the line from the feature position.
+    Vec3fProperty target_offset = 2;
+    // Width of the line in pixels.
+    float         width         = 3;
+}
+
+message AnchorSymbolElement {
+    reserved 13, 14;
+
+    // In East-North-up coordinates.
+    Vec3fProperty         position_offset                  = 1;
+    SymbolSizeUnit        position_offset_size_unit        = 2;
+
+    // How to scale the position offset according to the distance to the camera.
+    // Only when the position offset is in pixels.
+    SymbolRelativeScaling position_offset_relative_scaling = 16;
+
+    SymbolAxisAlignment   x_axis_alignment                 = 3;
+    SymbolAxisAlignment   y_axis_alignment                 = 4;
+
+    // If enabled, keeps the symbol readable when it's upside down or backwards.
+    bool                  keep_upright                     = 15;
+
+    // The rotation is applied in the symbol's space but with inverted Y:
+    // X points right, Y point to the top, Z points away from the symbol.
+    Vec3fProperty         rotation                         = 5;
+    // The order in which to apply the three components of the model's rotation.
+    EulerRotationOrder    rotation_order                   = 6;
+
+    // Selects the size unit of the anchor child element.
+    SymbolSizeUnit        element_size_unit                = 7;
+
+    // How to scale the element size according to the distance to the camera.
+    // Only when the element size is in pixels.
+    SymbolRelativeScaling element_size_relative_scaling    = 17;
+
+    // The alignment property lets the user define how the children should be
+    // positioned relative to the anchor. The alignment is specified relative
+    // to the size of the whole symbol. When `reset_layout` is set to true,
+    // this is equivalent to aligning relative to the child only. The default
+    // alignment makes the child center match the anchor position. An alignment
+    // of -1 or 1 perfectly aligns the child borders to the anchor.
+    Vec2fProperty         element_alignment                = 8;
+
+    // When set to true, this anchor acts a new root and completely ignores
+    // parent's transforms and layout. It also does not transmit its layout to
+    // the parent.
+    bool                  reset_layout                     = 18;
+
+    // The distance to the camera at which pixel unit is one logical pixel.
+    // When the camera moves closer or further away, the symbol pixel units
+    // are scaled, so that they appear to have a constant size in metres.
+    // That is to say, the symbol size (or offset) grows when the camera
+    // comes closer, and shrinks when it moves away.
+    float                 reference_distance               = 10;
+
+    // The minimum scale that can be applied to the pixel units.
+    // This prevents the symbol size (or offset) from being too small.
+    float                 min_relative_scale               = 11;
+
+    // The maximum scale that can be applied to the pixel units.
+    // This prevents the symbol size (or offset) from being too large.
+    float                 max_relative_scale               = 12;
+
+    // When set to true, this subtree is allowed to overlap other symbols.
+    bool                  can_overlap_other_symbols        = 19;
+
+    // When set to false, this subtree does not participate in hiding other
+    // symbols, and thus other symbols are allowed to overlap it.
+    bool                  hides_other_symbols              = 20;
+
+    // When set to true, this subtree is allowed to not be displayed,
+    // independently from the rest of the symbol, if it overlaps other symbols,
+    // so that the rest of the symbol can still be displayed.
+    bool                  is_optional                      = 21;
+
+    // The priority applied to the subtree during culling.
+    // Anchors cannot be hidden by symbols with a lower priority value, except
+    // if they belong to a representation of a higher z-index.
+    FloatProperty         culling_priority                 = 22;
+
+    SymbolElement         child                            = 9;
+}
+
+message StackSymbolElement {
+    Vec2fProperty          alignment = 1;
+    repeated SymbolElement children  = 2;
+}
+
+// Fits the child element to the size of the parent stack.
+// If the parent is not a stack, it has no effect.
+message StackExpandSymbolElement { SymbolElement child = 1; }
+
+message ImageSymbolElement {
+    string               url                  = 1;
+    HttpHeaderList       http_headers         = 2;
+    ColorProperty        color                = 3;
+
+    repeated ImageSprite sprites              = 7;
+
+    // If the `sprite_name` doesn't point to a valid sprite, the sprite in the
+    // `sprites` array at this index is used, if it is valid.
+    IntProperty          sprite_index         = 8;
+
+    // If this is defined and corresponds to a sprite name in the `sprites`
+    // array, that sprite is used.
+    StringProperty       sprite_name          = 9;
+
+    // Determines how the image colour and the colour property are combined.
+    BlendMode            color_blend_mode     = 4;
+    // The proportion of the colour property to combine with the image colour.
+    float                color_blend_strength = 5;
+
+    FloatProperty        scale                = 6;
+
+    // What axes will be taken into account to fit the content box to the
+    // constraints.
+    BoxFitAxes           fit_axes             = 10;
+
+    // What method to use to fit the content box to the constraints.
+    BoxFit               fit_mode             = 12;
+
+    // In the unlikely scenario where there is no way to make the content box
+    // small enough while satisfying other constraints to fit the parent's
+    // constraints, this indicated how to layout the extra space of the content
+    // box.
+    Vec2fProperty        alignment            = 11;
+}
+
+// Adds padding around the child element
+message PaddingSymbolElement {
+    SymbolElement child          = 1;
+
+    FloatProperty left_padding   = 2;
+    FloatProperty right_padding  = 3;
+    FloatProperty top_padding    = 4;
+    FloatProperty bottom_padding = 5;
+}
+
+// Direction of a flex layout
+enum FlexAxis {
+    // Start is left and end is right.
+    // @label="Horizontal"
+    FLEX_AXIS_HORIZONTAL = 0;
+    // Start is top and end is bottom.
+    // @label="Vertical"
+    FLEX_AXIS_VERTICAL   = 1;
+}
+
+// How elements are distributed on the main axis in a flex layout
+enum FlexMainAxisAlignment {
+    // Packs the children at the start of the axis.
+    // @label="Start"
+    FLEX_MAIN_AXIS_START         = 0;
+    // Packs the children at the end of the axis.
+    // @label="End"
+    FLEX_MAIN_AXIS_END           = 1;
+    // Packs the children at the center of the axis.
+    // @label="Center"
+    FLEX_MAIN_AXIS_CENTER        = 2;
+    // Distributes the free space between each children.
+    // @label="Space between"
+    FLEX_MAIN_AXIS_SPACE_BETWEEN = 3;
+    // Distributes the free space around each children.
+    // @label="Space around"
+    FLEX_MAIN_AXIS_SPACE_AROUND  = 4;
+    // Distributes the free space between each children and at the start and
+    // end.
+    // @label="Space evenly"
+    FLEX_MAIN_AXIS_SPACE_EVENLY  = 5;
+}
+
+// How elements are distributed on the cross axis in a flex layout
+enum FlexCrossAxisAlignment {
+    // Places the children at the start of the cross axis.
+    // @label="Start"
+    FLEX_CROSS_AXIS_START   = 0;
+    // Places the children at the end of the cross axis, depending on the
+    // maximum child size on the cross axis.
+    // @label="End"
+    FLEX_CROSS_AXIS_END     = 1;
+    // Places the children at the center of the cross axis, depending on the
+    // maximum child size on the cross axis.
+    // @label="Center"
+    FLEX_CROSS_AXIS_CENTER  = 2;
+    // Stretches the children elements to the maximum cross size given by the
+    // parent of the flex container.
+    // @label="Stretch"
+    FLEX_CROSS_AXIS_STRETCH = 3;
+}
+
+// Flex layout, lays out its children in a row or column.
+message FlexSymbolElement {
+    repeated SymbolElement children             = 1;
+
+    FlexAxis               main_axis            = 2;
+    FlexMainAxisAlignment  main_axis_alignment  = 3;
+    FlexCrossAxisAlignment cross_axis_alignment = 4;
+}
+
+enum FlexFit {
+    // The child only uses the minimum space required to satisfy its
+    // constraints.
+    // @label="Loose"
+    FLEX_FIT_LOOSE = 0;
+    // The child is forced to use all remaining space.
+    // @label="Tight"
+    FLEX_FIT_TIGHT = 1;
+}
+
+// Used to take up a relative amount of free space in a flex layout.
+// Can be used as a spacer with tight fit and empty child.
+// If the parent is not a Flex, this has no effect.
+message FlexibleSymbolElement {
+    SymbolElement child  = 1;
+
+    // In a layout, all factors of flexible elements are summed, and this gives
+    // the proportion of free space that is allocated to each child.
+    // When this is 0, this acts as a passthrough to the child.
+    float         factor = 2;
+
+    FlexFit       fit    = 3;
+}
+
+// Forces its child to have the given size.
+message SizedBoxSymbolElement {
+    SymbolElement child = 1;
+
+    Vec2fProperty size  = 2;
+}
+
+// Tightens the constraints set on its child by its parent.
+message ConstrainedBoxSymbolElement {
+    // Minimum size, set to `0` to avoid constraining it.
+    Vec2fProperty min_size = 1;
+    // Maximum size, set to `infinity` to avoid constraining it.
+    Vec2fProperty max_size = 2;
+    SymbolElement child    = 3;
+}
+
+// Aligns its child element inside itself. The alignment field gives the
+// relative position where (-1, -1) is the top left corner, (0, 0) the center
+// and (1, 1) the bottom right corner.
+message AlignSymbolElement {
+    Vec2fProperty alignment = 1;
+    SymbolElement child     = 2;
+}
+
+// Rotates the child element by the given number of quarter turns
+// counter-clockwise.
+message RotatedBoxSymbolElement {
+    IntProperty   quarter_turns = 1;
+    SymbolElement child         = 2;
+}
+
+enum DecoratedShapeType {
+    // @label="Circle"
+    DECORATED_SHAPE_CIRCLE          = 0;
+    // @label="Regular polygon"
+    DECORATED_SHAPE_REGULAR_POLYGON = 1;
+    // @label="Rectangle"
+    DECORATED_SHAPE_RECTANGLE       = 2;
+    // @label="Capsule"
+    DECORATED_SHAPE_CAPSULE         = 3;
+}
+
+message DecoratedRegularPolygon {
+    // Number of sides in the polygon. Only values of 3 and more have any
+    // effect. 3 is a triangle, 4 a diamond, 6 an hexagon, etc.
+    int32 sides = 1;
+
+    // "Star" factor between 0 and 1. At 0, the shape is just a regular polygon.
+    // Above 0, the edges are more and more shaped like a star.
+    float star  = 2;
+}
+
+message DecoratedShapeSymbolElement {
+
+    // Gives the mode to fit the shape relative to the received constraints.
+    BoxFit                  fit_mode        = 6;
+
+    // When using fit modes that respect the aspect ratio, this is the ratio
+    // value. Use 0 when you want to keep the aspect ratio of the received
+    // constraints.
+    float                   aspect_ratio    = 7;
+
+    // Used to align the decorated shape relative to the received constraints
+    // when necessary.
+    Vec2f                   alignment       = 8;
+
+    // Main colour of the shape.
+    ColorProperty           color           = 1;
+
+    // Border colour of the shape when the border size is not 0.
+    ColorProperty           border_color    = 2;
+
+    // Outline width of the shape in the unit defined by the anchor.
+    FloatProperty           border_size     = 3;
+
+    // Border radius to make the angles of polygons rounder. The unit
+    // is the one defined by the anchor.
+    FloatProperty           border_radius   = 4;
+
+    DecoratedShapeType      shape_type      = 5;
+
+    // oneof
+    DecoratedRegularPolygon regular_polygon = 101;
+}
+
+// Forces its child to use as much space as possible but also to respect the
+// aspect ratio. For this to work, the aspect ratio element must have loose
+// minimum constraints (ideally 0) but bounded maximum width and/or height. This
+// can be achieved by using an Align element to loosen constraints.
+message AspectRatioSymbolElement {
+    FloatProperty aspect_ratio = 1;
+    SymbolElement child        = 2;
+}
+
+enum BoxFit {
+    // Scales the child to fill the box while respecting its aspect ratio.
+    // @label="Contain"
+    BOX_FIT_CONTAIN    = 0;
+
+    // Scales the child to fill the box regardless of aspect ratio.
+    // @label="Fill"
+    BOX_FIT_FILL       = 1;
+
+    // Like the CONTAIN mode, but the child will not be scaled up, only down.
+    // @label="Scale down"
+    BOX_FIT_SCALE_DOWN = 2;
+
+    // Scales the child to cover the box (possibly overflowing its bounds)
+    // while respecting its aspect ratio.
+    // @label="Cover"
+    BOX_FIT_COVER      = 3;
+}
+
+enum BoxFitAxes {
+    // The content does not resize at all.
+    // @label="None"
+    BOX_FIT_AXES_NONE   = 0;
+
+    // The content uses only the width as constraint for the fitting.
+    // @label="Width"
+    BOX_FIT_AXES_WIDTH  = 1;
+
+    // The content uses only the height as constraint for the fitting.
+    // @label="Height"
+    BOX_FIT_AXES_HEIGHT = 2;
+
+    // The content uses both axes as constraints for the fitting.
+    // @label="Both"
+    BOX_FIT_AXES_BOTH   = 3;
+}
+
+// Layouts its child using loosened minimum constraints, resizing and aligning
+// it as necessary if the child is smaller that the minimum size of the fitted
+// box.
+message FittedBoxSymbolElement {
+    SymbolElement child     = 1;
+    BoxFit        fit       = 2;
+    Vec2fProperty alignment = 3;
+}
+
+enum TransformSymbolComponentType {
+    // @label="Translation"
+    TRANSFORM_SYMBOL_TRANSLATION = 0;
+    // @label="Rotation"
+    TRANSFORM_SYMBOL_ROTATION    = 1;
+    // @label="Scaling"
+    TRANSFORM_SYMBOL_SCALING     = 2;
+    // @label="Generic"
+    TRANSFORM_SYMBOL_GENERIC     = 3;
+}
+
+message TransformSymbolRotation {
+    EulerRotationOrder order    = 1;
+    Vec3fProperty      rotation = 2;
+}
+
+message TransformSymbolComponent {
+    TransformSymbolComponentType type        = 1;
+
+    // oneof
+    Vec3fProperty                translation = 2;
+    TransformSymbolRotation      rotation    = 3;
+    Vec3fProperty                scaling     = 4;
+    Mat4f                        generic     = 5;
+}
+
+// Visually transforms the child element using the transform given as an array
+// of component applied in the order they are defined.
+// 3D transforms are flattened.
+message TransformSymbolElement {
+    SymbolElement                     child      = 1;
+
+    // Transform center in absolute value with (0, 0) being the top-left
+    // corner. This can be used in addition to the alignment field.
+    Vec2fProperty                     origin     = 2;
+
+    // Transform center relative the the child size. (-1, -1) is the top-left
+    // corner. (1, 1) is bottom right. This can be used in addition to the
+    // origin field.
+    Vec2fProperty                     alignment  = 3;
+
+    repeated TransformSymbolComponent components = 4;
+}
+
+enum TextOutlineWidthUnit {
+    // Outline width is expressed in the em unit, which is a ratio of the font
+    // size. Texts with a larger font size have thicker outlines.
+    // @label="Em"
+    OUTLINE_WIDTH_IN_EM        = 0;
+
+    // Outline width is expressed in the same unit as the font size.
+    // Texts with small large font sizes have outlines of the same thickness.
+    // @label="Font size unit"
+    OUTLINE_WIDTH_IN_FONT_UNIT = 1;
+}
+
+// @expose_to_style="true"
+enum TextAlignment {
+    CENTERED      = 0;
+    LEFT_ALIGNED  = 1;
+    RIGHT_ALIGNED = 2;
+}
+
+message TextAlignmentProperty {
+    string        name          = 1;
+    TextAlignment default_value = 2;
+}
+
+message TextSymbolElement {
+    reserved 4, 6, 7;
+
+    // Controls the string that is displayed. Must be encoded in UTF-8.
+    StringProperty        text               = 1;
+    // Controls the size of the text, by setting the size of an em.
+    FloatProperty         font_size          = 2;
+    // Controls the colour of the characters.
+    // Non-opaque colours can lead to visual artefacts, as it is not compatible
+    // with text composition from multiple glyphs.
+    ColorProperty         text_color         = 3;
+    // Controls the width of the outline.
+    FloatProperty         outline_width      = 10;
+    // Controls the unit of the outline width.
+    TextOutlineWidthUnit  outline_width_unit = 11;
+    // Controls the colour of the outline.
+    // Non-opaque colours can lead to visual artefacts, as it is not compatible
+    // with text composition from multiple glyphs.
+    ColorProperty         outline_color      = 5;
+    // When a text comprises multiple lines, how the lines are aligned.
+    TextAlignmentProperty alignment          = 13;
+    // How much vertically spaced apart lines are, as a multiple of the default
+    // value set by the font. Use a value of 1 for the default line spacing,
+    // values greater than 1 for taller spacing. Must be greater or equal to 0.
+    FloatProperty         line_spacing       = 12;
+    // A URL to a TrueType, WOFF, or WOFF2 font file. This defines the
+    // appearance of the characters. Make sure the font contains the characters
+    // that are present in the feature property values. If no URL is provided,
+    // the default font will be used. (It only contains the most common Latin
+    // characters.)
+    string                font_url           = 8;
+    HttpHeaderList        font_http_headers  = 9;
+}
+
+// Optionally displays the child if the display_child property is non-zero.
+// This is equivalent to a "visible" property.
+message OptionalSymbolElement {
+    reserved 1;
+
+    BoolProperty  display_child = 3;
+    SymbolElement child         = 2;
+}
+
+// Displays one of the children based on the displayed_child_index property. If
+// the value of child_index doesn't correspond to a child, no child is used.
+message VariantSymbolElement {
+    IntProperty            displayed_child_index = 1;
+    repeated SymbolElement children              = 2;
+}
+
+// @path_leaf="true"
+message SymbolElement {
+    SymbolElementType           type            = 1;
+
+    // oneof
+    PlaceholderSymbolElement    placeholder     = 101;
+    AnchorSymbolElement         anchor          = 102;
+    StackSymbolElement          stack           = 103;
+    ImageSymbolElement          image           = 104;
+    PaddingSymbolElement        padding         = 105;
+    FlexSymbolElement           flex            = 106;
+    SizedBoxSymbolElement       sized_box       = 107;
+    FlexibleSymbolElement       flexible        = 108;
+    StackExpandSymbolElement    stack_expand    = 109;
+    AlignSymbolElement          align           = 110;
+    ConstrainedBoxSymbolElement constrained_box = 111;
+    RotatedBoxSymbolElement     rotated_box     = 112;
+    DecoratedShapeSymbolElement decorated_shape = 113;
+    AspectRatioSymbolElement    aspect_ratio    = 114;
+    FittedBoxSymbolElement      fitted_box      = 115;
+    TransformSymbolElement      transform       = 116;
+    TextSymbolElement           text            = 117;
+    OptionalSymbolElement       optional        = 118;
+    VariantSymbolElement        variant         = 119;
+    LeaderLineSymbolElement     leader_line     = 120;
+}
+
+message SymbolVectorRepr {
+    // 0 <= z-index < 65536
+    // Determines the draw order of symbols that are at the exact same distance
+    // from the camera, as well as their priority during culling in relation to
+    // other representations. Higher z-indices cannot be culled by lower
+    // z-indices. They are always drawn above when culling is disabled.
+    uint32        z_index                 = 1;
+
+    // Discard symbols outside the borders of the tiles. Useful for hiding
+    // margins often added by vector data tilers.
+    bool          clip_to_tile            = 4;
+
+    // Set to true to never occlude symbols by other elements in the scene. Only
+    // UI elements like gizmos and grids are allowed to be rendered on top of
+    // the symbols.
+    bool          ignore_world_occlusions = 3;
+
+    SymbolElement root_element            = 2;
+}

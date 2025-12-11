@@ -1,0 +1,11 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// @expose_to_style="true"
+enum VectorGeometryType {
+    POINT_GEOMETRY    = 0;
+    POLYLINE_GEOMETRY = 1;
+    POLYGON_GEOMETRY  = 2;
+}

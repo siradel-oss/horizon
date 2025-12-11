@@ -1,14 +1,11 @@
 #pragma once
 
 #include "hrz/common/palette.h"
-#include "hrz/core/data_texture.h"
 #include "hrz/core/model/common.h"
 #include "hrz/core/model/descriptor.h"
 #include "hrz/core/model/model.h"
-#include "hrz/core/model/renderable.h"
-#include "hrz/core/model/resources/resources.h"
-#include "hrz/core/selection_storage.h"
-#include "hrz/fnd/observed.h"
+#include "hrz/core/model/resources/resource.h"
+#include "hrz/protocol/3d_model/material.pb.h"
 
 namespace hrz::model
 {

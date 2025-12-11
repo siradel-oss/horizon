@@ -5,6 +5,7 @@
 #include "hrz/fnd/function_ref.h"
 #include "hrz/fnd/gen_index_pool.h"
 #include "hrz/fnd/gen_object_pool.h"
+#include "hrz/protocol/3d_model/material.pb.h"
 
 #include <algorithm>
 

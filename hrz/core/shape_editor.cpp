@@ -5,7 +5,7 @@
 #include "hrz/common/maths.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/triangulation.h"
+#include "hrz/common/triangulation.h" // IWYU pragma: keep
 #include "hrz/core/camera_height.h"
 #include "hrz/core/client_message_queue.h"
 #include "hrz/core/client_messages.h"
@@ -15,7 +15,10 @@
 #include "hrz/core/picking_id_allocator.h"
 #include "hrz/core/picking_system.h"
 #include "hrz/core/planet/geometry.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/fnd/array_view.h"
 #include "hrz/fnd/flat_hash_map.h"
@@ -24,8 +27,8 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/fnd/variant.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/editable_shape_layer.h"
+#include "hrz/protocol/shape_editor/message.pb.h"
 
 #include <earcut.hpp>
 
@@ -53,24 +56,14 @@ struct Edge
         edge.to = std::max(index0, index1);
         return edge;
     }
-};
-} // namespace
 
-namespace std
-{
-template<>
-struct hash<Edge>
-{
-    size_t operator()(const Edge& edge) const
+    template<typename H>
+    friend H AbslHashValue(H h, const Edge& edge)
     {
-        auto h = std::hash<size_t>{};
-        return hrz::hash_mix(h(edge.from), h(edge.to));
+        return H::combine(std::move(h), edge.from, edge.to);
     }
 };
-} // namespace std
 
-namespace
-{
 constexpr double MaxSegmentLength = 100000; // metres
 constexpr double MaxSegmentAngularLength = lm::radians(4.0);
 constexpr size_t MaxPolygonTriangles = (size_t)1 << 20;

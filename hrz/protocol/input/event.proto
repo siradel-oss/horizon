@@ -1,0 +1,73 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/input/defs.proto";
+
+message Event {
+    message CharacterEvent {
+        int32 char  = 1;
+        bool repeat = 2;
+    }
+
+    message KeyboardEvent { Key key = 1; }
+
+    // Mouse coordinates are relative to top-left corner, in logical pixels.
+    message MouseMoveEvent {
+        int32 x  = 1;
+        int32 y  = 2;
+        int32 dx = 3;
+        int32 dy = 4;
+    }
+
+    // Mouse coordinates are relative to top-left corner, in logical pixels.
+    // Positive = away from user
+    message MouseWheelEvent {
+        int32 x     = 1;
+        int32 y     = 2;
+        float wheel = 3;
+    }
+
+    // Mouse coordinates are relative to top-left corner, in logical pixels.
+    message MouseButtonEvent {
+        int32       x      = 1;
+        int32       y      = 2;
+        MouseButton button = 3;
+    }
+
+    // Touch coordinates are relative to top-left corner, in logical pixels.
+    message TouchEvent {
+        float x  = 1;
+        float y  = 2;
+        int32 id = 3;
+    }
+
+    // Size is in logical pixels.
+    message WindowSizeEvent {
+        int32 width  = 1;
+        int32 height = 2;
+    }
+
+    message NoPayload {}
+
+    oneof   kind {
+        NoPayload        window_closed             = 1;
+        WindowSizeEvent  window_resized            = 2;
+        CharacterEvent   character                 = 3;
+        KeyboardEvent    key_down                  = 4;
+        KeyboardEvent    key_up                    = 5;
+        MouseMoveEvent   mouse_move                = 6;
+        MouseWheelEvent  mouse_wheel               = 7;
+        MouseButtonEvent mouse_button_down         = 8;
+        MouseButtonEvent mouse_button_up           = 9;
+        MouseButtonEvent mouse_button_double_click = 10;
+        NoPayload        mouse_leave               = 11;
+        TouchEvent       touch_start               = 12;
+        TouchEvent       touch_end                 = 13;
+        TouchEvent       touch_move                = 14;
+        TouchEvent       touch_cancel              = 15;
+    }
+}
+
+message EventsStream { repeated Event events = 1; }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hrz/fnd/inlined_vector.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/color/palette.pb.h"
 
 #include <lin_maths.h>
 

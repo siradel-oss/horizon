@@ -1,0 +1,30 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/client_data/vector_data_request_response.proto";
+import "hrz/protocol/client_data/asset_request.proto";
+import "hrz/protocol/client_data/vector_data_invalidation.proto";
+import "hrz/protocol/types/primitive.proto";
+
+// @service_id=0x49a40811
+service ClientDataService {
+    // Respond to a vector data request with the requested features.
+    //
+    // @method_id=0x7b311f94
+    rpc ProvideVectorData(VectorDataRequestResponse) returns (Void);
+
+    // Signal that the vector data received from a data source is now
+    // considered to be invalid.
+    // This makes the engine query it again if still needed.
+    // Note that this is not limited to client-provided data sources.
+    //
+    // @method_id=0xcdbe2a05
+    rpc InvalidateVectorData(VectorDataInvalidation) returns (Void);
+
+    // Respond to an asset data request with the data.
+    //
+    // @method_id=0xfab6495a
+    rpc ProvideAssetData(AssetRequestResponse) returns (Void);
+}

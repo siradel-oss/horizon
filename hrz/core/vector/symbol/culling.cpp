@@ -1,20 +1,23 @@
 #include "hrz/core/vector/symbol/culling.h"
 
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
+#include "hrz/fnd/hash.h"
 #include "hrz/fnd/inlined_vector.h"
-#include "hrz/fnd/log.h"
-#include "hrz/fnd/time.h"
 
 namespace
 {
 static constexpr double CullDelayS = 0.6;
 
 static constexpr uint32_t BITSET_TEXTURE_WIDTH =
-    hrz::vt::SymbolCullingResponse::BITSET_TEXTURE_WIDTH;
+    hrz_jobs::SymbolCullingResponse::BITSET_TEXTURE_WIDTH;
 
 struct BitsetTexture
 {
@@ -147,8 +150,8 @@ struct SymbolCullingSystem
     struct Group
     {
         symbol_culling::GroupInfo group_info;
-        hrz::BlobArray<vt::BakedSymbols::AnchorSpan> anchor_spans;
-        hrz::BlobArray<vt::BakedSymbols::AnchorCulling> anchors;
+        hrz::BlobArray<hrz::vt::AnchorSpan> anchor_spans;
+        hrz::BlobArray<hrz::vt::AnchorCullingInfo> anchors;
 
         bool requires_culling;
 
@@ -156,8 +159,8 @@ struct SymbolCullingSystem
 
         Group(
             symbol_culling::GroupInfo&& group_info_,
-            hrz::BlobArray<vt::BakedSymbols::AnchorSpan> anchor_spans_,
-            hrz::BlobArray<vt::BakedSymbols::AnchorCulling> anchors_,
+            hrz::BlobArray<hrz::vt::AnchorSpan> anchor_spans_,
+            hrz::BlobArray<hrz::vt::AnchorCullingInfo> anchors_,
             bool ignore_occlusions,
             const hrz::monitoring::ResourceOwner& resource_owner,
             std::initializer_list<std::pair<hrz::MetadataString, hrz::MetadataString>> metadata) :
@@ -261,15 +264,16 @@ RenderRequest work(
 {
     RenderRequest render_request;
 
-    if (!sys->cull_ticket && (sys->last_cull_start_time_s + CullDelayS < hrz::now_frame_s())
+    if (!sys->cull_ticket
+        && (sys->last_cull_start_time_s + CullDelayS < hrz::clock::CurrentFrameRealTime.s)
         && sys->should_update())
     {
-        vt::SymbolCullingParams params;
+        hrz_jobs::SymbolCullingParams params;
         hrz::InlinedVector<my::FrustumCuller, SCENE_VIEW_COUNT> cullers;
 
         for (const auto& view_info : views_info)
         {
-            vt::SymbolCullingParams::ViewInfo out_view_info;
+            hrz_jobs::SymbolCullingParams::ViewInfo out_view_info;
             out_view_info.view_index = view_info.view;
             out_view_info.position = view_info.cam_view_info.cam.pos;
             out_view_info.view_cc = lm::mat4(view_info.cam_view_info.cam.view_cc);
@@ -306,7 +310,7 @@ RenderRequest work(
 
             if (visible_in_views.any())
             {
-                vt::SymbolCullingParams::Group out_group;
+                hrz_jobs::SymbolCullingParams::Group out_group;
                 out_group.handle = entry.first;
                 out_group.visible_in_views = visible_in_views.bits();
                 out_group.anchor_protos = group->group_info.anchors;
@@ -337,14 +341,14 @@ RenderRequest work(
         sys->cull_ticket =
             hrz_jobs::add_job_cull_symbols(js, params, hrz::monitoring::systems::Symbols);
         sys->last_cull_groups_drawn_hash = sys->saved_groups_drawn_hash;
-        sys->last_cull_start_time_s = hrz::now_frame_s();
+        sys->last_cull_start_time_s = hrz::clock::CurrentFrameRealTime.s;
     }
     else if (sys->cull_ticket && hrz_jobs::is_job_finished(js, sys->cull_ticket.value()))
     {
         auto ticket = std::exchange(sys->cull_ticket, std::nullopt).value();
         if (hrz_jobs::get_job_status(js, ticket) == job_scheduler::JobStatus::Finished_Success)
         {
-            hrz::vt::SymbolCullingResponse response;
+            hrz_jobs::SymbolCullingResponse response;
             hrz_jobs::get_job_response(js, ticket, response);
 
             for (uint64_t handle : sys->groups_with_some_symbols_shown)
@@ -405,7 +409,7 @@ RenderRequest work(
             sys->last_group_culled_frame = response.frame;
 
             render_request.request_visual_render(RenderRequest::VisualCause::SymbolCulling);
-            sys->last_frame_cull_updated = hrz::Render::CurrentFrame;
+            sys->last_frame_cull_updated = hrz::clock::CurrentFrameNumber;
         }
 
         hrz_jobs::cancel_job(js, ticket);
@@ -468,7 +472,7 @@ void draw(SymbolCullingSystem* sys, const RenderRequest& render_request)
         sys->saved_groups_drawn_hash = std::exchange(sys->new_groups_drawn_hash, 0);
 
         sys->saved_groups_frame = sys->new_groups_frame;
-        sys->last_frame_draw_requested = hrz::Render::CurrentFrame;
+        sys->last_frame_draw_requested = hrz::clock::CurrentFrameNumber;
     }
 }
 
@@ -481,8 +485,8 @@ bool is_working(SymbolCullingSystem* sys)
 GroupHandle register_group(
     SymbolCullingSystem* sys,
     GroupInfo&& group_info,
-    hrz::BlobArray<vt::BakedSymbols::AnchorSpan> anchor_spans,
-    hrz::BlobArray<vt::BakedSymbols::AnchorCulling> anchors,
+    hrz::BlobArray<hrz::vt::AnchorSpan> anchor_spans,
+    hrz::BlobArray<hrz::vt::AnchorCullingInfo> anchors,
     bool ignore_occlusions,
     const hrz::monitoring::ResourceOwner& resource_owner,
     std::initializer_list<std::pair<hrz::MetadataString, hrz::MetadataString>> metadata)
@@ -527,7 +531,7 @@ void schedule_draw_group(
         sys->new_groups_drawn.insert(std::make_pair(handle.o, views_visibility));
         sys->new_groups_drawn_hash =
             hrz::hash_values(sys->new_groups_drawn_hash, handle.o, views_visibility.bits());
-        sys->new_groups_frame = hrz::Render::CurrentFrame;
+        sys->new_groups_frame = hrz::clock::CurrentFrameNumber;
     }
 }
 

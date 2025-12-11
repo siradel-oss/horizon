@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include <algorithm>
-#include <memory>
 #include <span>
 #include <stddef.h>
 #include <stdint.h>

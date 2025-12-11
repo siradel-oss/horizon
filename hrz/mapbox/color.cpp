@@ -1,10 +1,8 @@
 #include "hrz/common/color.h"
 
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/string_utils.h"
 
 #include <cmath>
-#include <string>
 #include <string_view>
 
 #define CHECK_ERR(...)                                             \

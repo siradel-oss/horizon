@@ -4,9 +4,8 @@
 #include "hrz/common/image_processing.h"
 #include "hrz/common/image_view.h"
 #include "hrz/fnd/class.h"
-#include "hrz/fnd/log.h"
-#include "hrz/fnd/maths.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/raster/nodata.pb.h"
+#include "hrz/protocol/raster/sampling.pb.h"
 
 #include <assert.h>
 #include <lin_maths.h>
@@ -14,7 +13,6 @@
 #include <array>
 #include <bit>
 #include <memory>
-#include <span>
 #include <type_traits>
 
 namespace hrz::sampling

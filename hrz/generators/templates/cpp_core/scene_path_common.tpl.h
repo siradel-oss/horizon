@@ -10,7 +10,7 @@
 #include <cstdint>
 
 #include "hrz/fnd/function_ref.h"
-#include "hrz/protocol/all.h" // @Todo(1209) Replace with something that only imports Path
+#include "hrz/protocol/scene_model/path.pb.h"
 
 namespace hrz
 {
@@ -79,7 +79,7 @@ std::string scene_model_path_to_string_generic(
     std::span<const uint32_t> parts,
     hrz::function_ref<void(std::string&, std::span<const uint32_t>)> first_to_string_inner);
 
-// Here we forward-declare path builders for recursive types.
+// Here we forward-declare paths for recursive types.
 {% for type in to_forward_declare %}
 class {{ type|to_short_type_name }}Path;
 {% endfor %}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/identification/object_reference.proto";
+
+message MouseHoverInfoMessage {
+    // Position is in logical pixels.
+    Vec2i                screen_pos = 1;
+    // The position is set if the mouse hovers the planet or a feature.
+    GeographicPosition   geo_pos    = 2;
+    TypedObjectReference picked     = 3;
+}

@@ -6,8 +6,6 @@
 
 #include "hrz/core/style/enums.h"
 
-#include "hrz/protocol/all.h"
-
 namespace hrz::style
 {
 EnumFindResult find_enum_value_by_name(std::string_view enum_name, std::string_view value_name)

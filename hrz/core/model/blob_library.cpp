@@ -1,32 +1,14 @@
 #include "hrz/core/model/blob_library.h"
 
-#include "hrz/fnd/defines.h"
+#include "hrz/core/clock.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/gen_index_pool.h"
 #include "hrz/fnd/gen_object_pool.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/intern_string.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/string_utils.h"
-#include "hrz/fnd/time.h"
-#include "hrz/fnd/url_utils.h"
-#include "hrz/fnd/variant.h"
 
 #include <fmt/args.h>
-
-#include <algorithm>
-
-namespace std
-{
-template<>
-struct hash<hrz::model::BlobLibrary::Handle>
-{
-    inline size_t operator()(const hrz::model::BlobLibrary::Handle& k) const
-    {
-        return hash<uint64_t>()(k.o);
-    }
-};
-} // namespace std
 
 namespace hrz::model
 {
@@ -153,7 +135,7 @@ public:
         _base_url(std::move(base_url)),
         _http_headers(headers),
         _load_queue(load_queue),
-        _last_try_stream_out(hrz::now_frame_ms())
+        _last_try_stream_out(hrz::clock::CurrentFrameRealTime.ms)
     {
     }
 
@@ -262,7 +244,7 @@ public:
     void _can_be_streamed_out(uint64_t handle)
     {
         assert(_to_stream_out_since_ms.count(handle) == 0);
-        _to_stream_out_since_ms.insert(std::make_pair(handle, hrz::now_frame_ms()));
+        _to_stream_out_since_ms.insert(std::make_pair(handle, hrz::clock::CurrentFrameRealTime.ms));
     }
 
     void _cannot_be_streamed_out(uint64_t handle) { _to_stream_out_since_ms.erase(handle); }
@@ -513,7 +495,7 @@ public:
             }
         }
 
-        double now_ms = hrz::now_frame_ms();
+        double now_ms = hrz::clock::CurrentFrameRealTime.ms;
         if (now_ms - _last_try_stream_out > TRY_STREAM_OUT_EVERY_MS)
         {
             _last_try_stream_out = now_ms;

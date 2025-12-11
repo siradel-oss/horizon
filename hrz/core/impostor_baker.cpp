@@ -3,12 +3,13 @@
 #include "hrz/common/maths.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
+#include "hrz/protocol/3d_model/material.pb.h"
 
 namespace
 {

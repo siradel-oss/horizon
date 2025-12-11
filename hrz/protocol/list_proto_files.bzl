@@ -1,22 +1,7 @@
-_PROTO_FILES = [
-    "camera",
-    "client_data",
-    "input",
-    "layers",
-    "mapbox",
-    "messages",
-    "monitoring",
-    "picking",
-    "scene_dump",
-    "scene_model",
-    "shape_editor",
-    "types",
-    "viewer",
-    "wrappers",
-]
+load("@proto_files_list//:list.bzl", "PROTO_FILES")
 
 def list_proto_files(prefix, suffix):
     files = []
-    for base_name in _PROTO_FILES:
+    for base_name in PROTO_FILES:
         files.append(prefix + base_name + suffix)
     return files

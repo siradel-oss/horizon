@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <optional>
-#include <span>
 #include <type_traits>
 
 namespace hrz

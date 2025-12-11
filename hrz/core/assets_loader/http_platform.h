@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/fnd/http.h"
 
 namespace hrz::assets_loader

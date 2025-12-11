@@ -2,7 +2,7 @@
 
 #include "hrz/common/blob_image.h"
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
+#include "hrz/common/planet/tile_request.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/planet/raster_data_fetch_types.h"
@@ -13,10 +13,8 @@
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/node_hash_map.h"
 #include "hrz/fnd/unique_vector.h"
-#include "hrz/protocol/all.h"
 
 #include <cstdint>
 #include <limits>

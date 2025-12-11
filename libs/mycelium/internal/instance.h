@@ -11,11 +11,9 @@
 #endif
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/node_hash_map.h"
 #include "intern_string.h"
 #include "log.h"
-#include "mycelium/mycelium.h"
-#include "mycelium/properties.h"
+#include "mycelium/backend.h"
 #include "pool.h"
 
 #include <limits>

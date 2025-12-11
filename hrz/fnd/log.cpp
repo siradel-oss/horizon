@@ -1,12 +1,13 @@
 #include "hrz/fnd/log.h"
 
+#include "hrz/fnd/defines.h"
+
 #include <mutex>
 
 #if HRZ_EMSCRIPTEN
 #    include <emscripten/emscripten.h>
 #endif
 
-#include "hrz/fnd/path_utils.h"
 #include "hrz/fnd/time.h"
 
 namespace

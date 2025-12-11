@@ -1,0 +1,23 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum InWorldSizeUnit {
+    // @label="Size in meters"
+    IN_WORLD_SIZE_IN_METERS = 0;
+
+    // In logical pixels.
+    // @label="Size in pixels"
+    IN_WORLD_SIZE_IN_PIXELS = 1;
+}
+
+enum UiSizeUnit {
+    // @label="Size in meters"
+    UI_SIZE_IN_METERS          = 0;
+    // In logical pixels.
+    // @label="Size in pixels"
+    UI_SIZE_IN_PIXELS          = 1;
+    // @label="Size relative to screen"
+    UI_SIZE_RELATIVE_TO_SCREEN = 2;
+}

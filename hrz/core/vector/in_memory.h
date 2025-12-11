@@ -1,21 +1,24 @@
 #pragma once
 
-#include "hrz/common/blob_array.h"
 #include "hrz/common/tile_coords.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/feature_ids.h"
+#include "hrz/common/vector_data/tile.h"
 #include "hrz/core/attribution.h"
 #include "hrz/core/channel.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
 
 #include <cstdint>
-#include <span>
 #include <variant>
 
 namespace hrz
 {
 struct BlobAllocator;
 struct InMemoryVectorDataBase;
+
+namespace scene_model
+{
+class InMemoryVectorSourceLayerPath;
+}
 
 namespace vector_data
 {

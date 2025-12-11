@@ -5,8 +5,6 @@
 #include "hrz/core/camera/types.h"
 #include "hrz/core/camera/viewpoint.h"
 #include "hrz/core/events.h"
-#include "hrz/core/render.h"
-#include "hrz/protocol/all.h"
 
 #include <lin_maths.h>
 

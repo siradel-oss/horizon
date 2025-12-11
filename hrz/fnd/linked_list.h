@@ -1,7 +1,7 @@
 #pragma once
 
-#include <span>
-#include <utility>
+#include <cstddef>
+#include <type_traits>
 
 namespace hrz
 {

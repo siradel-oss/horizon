@@ -1,19 +1,19 @@
 #include "hrz/core/vector/heatmaps.h"
 
-#include "hrz/common/palette.h"
 #include "hrz/core/camera_height.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/palette_ubo.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/vector/flat_overlay.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
 
 #include <memory>
 

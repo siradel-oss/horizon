@@ -1,0 +1,70 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum GraphicsLevel {
+    // Lets the engine guess the best level for the current platform.
+    // @label="Auto"
+    GRAPHICS_LEVEL_AUTO   = 0;
+
+    // Best performance.
+    // @label="Low"
+    GRAPHICS_LEVEL_LOW    = 1;
+
+    // @label="Medium"
+    GRAPHICS_LEVEL_MEDIUM = 2;
+
+    // Best quality.
+    // @label="High"
+    GRAPHICS_LEVEL_HIGH   = 3;
+};
+
+message GraphicsSettingsOverrides {
+    // Whether the rendering of shadows can be enabled or not.
+    optional bool   shadows_enabled                          = 1;
+
+    // The amount of textures used for the rendering of shadows.
+    optional uint32 shadows_cascade_count                    = 2;
+
+    // Whether the rendering of the simulated atmosphere can be enabled or not.
+    // This controls the simulated sun, sky, and ambient lighting in the
+    // scene view ambient settings.
+    optional bool   atmosphere_enabled                       = 3;
+
+    // The size of the textures used for the rendering of flat overlays.
+    optional uint32 flat_overlay_resolution                  = 4;
+
+    // The amount of textures used for the rendering of flat overlays.
+    optional uint32 flat_overlay_cascade_count               = 5;
+
+    // Whether transparent UI elements are drawn with increased accuracy.
+    optional bool   ui_elements_depth_peeling_enabled        = 6;
+
+    // The amount of merge groups used for imagery rasters.
+    optional uint32 imagery_merge_group_count                = 7;
+
+    // The size of the textures used for imagery raster atlases.
+    optional uint32 raster_atlas_size                        = 8;
+
+    // Whether raster atlas textures can be compressed.
+    optional bool   raster_atlas_texture_compression_enabled = 9;
+}
+
+// See [[GraphicsSettingsOverrides]] for information about the different fields.
+message GraphicsSettings {
+    bool   shadows_enabled                          = 1;
+    uint32 shadows_cascade_count                    = 2;
+
+    bool   atmosphere_enabled                       = 3;
+
+    uint32 flat_overlay_resolution                  = 4;
+    uint32 flat_overlay_cascade_count               = 5;
+
+    bool   ui_elements_depth_peeling_enabled        = 6;
+
+    uint32 imagery_merge_group_count                = 7;
+
+    uint32 raster_atlas_size                        = 8;
+    bool   raster_atlas_texture_compression_enabled = 9;
+}

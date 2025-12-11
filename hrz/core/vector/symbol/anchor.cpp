@@ -2,6 +2,7 @@
 
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_maths.h"
+#include "hrz/core/render/context.h"
 
 namespace hrz::vt::symbol
 {

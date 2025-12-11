@@ -1,10 +1,8 @@
-#include "hrz/common/planet.h"
-#include "hrz/common/tickets.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/base_url.h"
+#include "hrz/core/jobs/parse_tilemap_resource.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
-#include "hrz/fnd/url_utils.h"
 
 #include <pugixml/pugixml.hpp>
 
@@ -199,7 +197,7 @@ public:
                 {
                     auto raw_data = assets_loader::get_blob(al, ba, download_ticket);
 
-                    TilemapResourceParams params;
+                    hrz_jobs::TilemapResourceParams params;
                     params.raw_xml = std::move(raw_data);
                     parsing_ticket = hrz_jobs::add_job_parse_tilemap_resource(
                         js, params, {monitoring::systems::PlanetSurface, raster_id});
@@ -222,7 +220,7 @@ public:
                 if (hrz_jobs::get_job_status(js, parsing_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    TilemapResourceResponse response;
+                    hrz_jobs::TilemapResourceResponse response;
                     hrz_jobs::get_job_response(js, parsing_ticket, response);
 
                     auto url_patterns = std::move(response.url_patterns);

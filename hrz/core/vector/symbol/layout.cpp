@@ -438,7 +438,7 @@ ElementSystem::PrototypeH TransformElementSystem::make_prototype(
 {
     assert(element_descriptor.type() == ElementType);
 
-    using Transform = SymbolBakingData::Transform;
+    using Transform = hrz_jobs::SymbolBakingData::Transform;
 
     const auto& descriptor = element_descriptor.transform();
 
@@ -541,7 +541,7 @@ void TransformElementSystem::unregister_properties(
     PrototypeH prototype_handle,
     const std::function<void(uint64_t prp_id)>& unregister_property) const
 {
-    using Transform = typename SymbolBakingData::Transform;
+    using Transform = typename hrz_jobs::SymbolBakingData::Transform;
 
     if (prototype_handle.type != ElementType) return;
 

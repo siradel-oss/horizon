@@ -1,0 +1,14 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/maths/maths.proto";
+
+message GizmoUpdateMessage {
+    uint32             id         = 1;
+    GeographicPosition geo_pos    = 2;
+    Quat               rotation   = 3;
+    bool               action_end = 4;
+}

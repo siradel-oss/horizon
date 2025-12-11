@@ -1,0 +1,29 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/scene/index.proto";
+
+message RasterSettings {
+    // Set to true to increase the raster LODs on inclined polygons.
+    // This makes the display sharper, but might be a bit noisier.
+    bool  compensate_inclination = 1;
+
+    // Set to true to smooth the raster LOD transitions when moving the camera.
+    bool  mix_lods               = 2;
+
+    // Max factor by which a pixel from the raster layers can be stretch on
+    // screen in logical pixels before the next LOD is loaded. The smaller the
+    // value the sooner raster layers are refined when zooming in. Usually
+    // between 1 and 2. Must be greater than 0.
+    float max_screen_space_error = 3;
+}
+
+// This contains all settings global to the scene.
+// @path_root="scene_settings"
+message SceneSettings {
+    SceneViewIndex  main_view    = 1;
+    SceneViewBitset active_views = 2;
+    RasterSettings  raster       = 3;
+}

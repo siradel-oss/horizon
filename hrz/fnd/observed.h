@@ -1,8 +1,7 @@
 #pragma once
 
-#include "absl/utility/utility.h"
+#include "hrz/fnd/function_ref.h"
 
-#include <functional>
 #include <utility>
 
 namespace hrz
@@ -22,13 +21,14 @@ public:
     Observed() = default;
 
     template<typename... Args>
-    Observed(std::in_place_t, Args&&... args) : _data(std::forward<Args>(args)...), _dirty(true)
+    explicit Observed(std::in_place_t, Args&&... args) :
+        _data(std::forward<Args>(args)...), _dirty(true)
     {
     }
 
     constexpr const T* operator->() const { return &_data; }
 
-    void mutate(std::function<void(T&)> fn)
+    void mutate(hrz::function_ref<void(T&)> fn)
     {
         T old = _data;
         fn(_data);

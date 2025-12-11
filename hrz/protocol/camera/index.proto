@@ -1,0 +1,11 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum CameraIndex {
+    CAMERA_0 = 0;
+    CAMERA_1 = 1;
+}
+
+message CameraIndexReference { CameraIndex camera = 1; }

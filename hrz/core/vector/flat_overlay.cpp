@@ -3,26 +3,24 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/camera/camera.h"
 #include "hrz/core/camera_height.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/global_flags.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/vector/heatmaps.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/fnd/time.h"
-
-#include <optional>
 
 extern "C"
 {
 #include <microui/microui.h>
 }
 
-#include <array>
 #include <limits>
-#include <sstream>
 
 namespace hrz
 {
@@ -360,7 +358,7 @@ struct VectorFlatOverlaySystem
 
         if (hrz::get_flag(hrz::Flag::ForceFlatOverlayRender)) return true;
 
-        const double elapsed_time_ms = hrz::now_frame_ms() - _last_visual_render_ms;
+        const double elapsed_time_ms = hrz::clock::CurrentFrameRealTime.ms - _last_visual_render_ms;
         if (_animation_render_requested)
         {
             return elapsed_time_ms > ANIMATION_RENDER_RATE_MS;
@@ -382,7 +380,7 @@ struct VectorFlatOverlaySystem
     {
         _visual_pass->request_render();
         _selection_pass->request_render();
-        _last_visual_render_ms = hrz::now_frame_ms();
+        _last_visual_render_ms = hrz::clock::CurrentFrameRealTime.ms;
         _visual_render_requested = false;
         _animation_render_requested = false;
     }

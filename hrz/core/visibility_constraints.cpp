@@ -2,8 +2,7 @@
 
 #include "hrz/common/geo.h"
 #include "hrz/common/proto_geo.h"
-#include "hrz/common/proto_maths.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
 #include "hrz/fnd/log.h"
 
 namespace hrz::layers

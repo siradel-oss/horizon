@@ -1,6 +1,8 @@
 #pragma once
 
-#include "hrz/common/style.h"
+#include "hrz/common/palette.h"
+#include "hrz/common/style/defs.h"
+#include "hrz/common/style/flat_ast.h"
 #include "hrz/fnd/intern_string.h"
 
 #include <memory>

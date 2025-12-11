@@ -2,13 +2,14 @@
 
 #include "hrz/common/font_rasterizer.h"
 #include "hrz/core/assets_loader/assets_loader.h"
-#include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/vector/symbol/element.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/http.h"
 
-#include <memory>
+#include <mycelium/renderer.h>
+
 #include <utility>
 
 namespace hrz::vt::symbol
@@ -22,25 +23,14 @@ struct FontReference
     {
         return headers.hash_content() == r.headers.hash_content() && url == r.url;
     }
-};
-} // namespace hrz::vt::symbol
 
-namespace std
-{
-template<>
-struct hash<hrz::vt::symbol::FontReference>
-{
-    size_t operator()(const hrz::vt::symbol::FontReference& k) const
+    template<typename H>
+    friend H AbslHashValue(H h, const FontReference& ref)
     {
-        auto str_hash = hash<std::string>{};
-        auto headers_hash = hash<hrz::HttpHeaders>{};
-        return hrz::hash_mix(str_hash(k.url), headers_hash(k.headers));
+        return H::combine(std::move(h), ref.url, ref.headers);
     }
 };
-} // namespace std
 
-namespace hrz::vt::symbol
-{
 struct TextRenderable : public my::Renderer::Renderable
 {
     // If non-indexed, non-instanced rendering was used, many vertices would have
@@ -194,7 +184,7 @@ private:
 
         my::ResourceHandle ubo = my::ResourceHandle::null();
 
-        SymbolBakingData::Text baking_params;
+        hrz_jobs::SymbolBakingData::Text baking_params;
     };
 
     using PrototypeIndexPool = hrz::GenIndexPool<RawPrototypeH, 32, 32>;
@@ -248,14 +238,14 @@ public:
 
     PrototypeStatus get_prototype_status(PrototypeH prototype_handle) const override;
 
-    SymbolBakingData::ElementBakingParams get_prototype_baking_params(
+    hrz_jobs::SymbolBakingData::ElementBakingParams get_prototype_baking_params(
         PrototypeH prototype_handle) const override;
 
     std::optional<RenderableH> make_renderable(
         PrototypeH prototype_handle,
         uint64_t layer_id,
         TileCoords tile_coords,
-        BakedSymbols::ElementInstances&& baked_instances,
+        hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
         double bsphere_radius,
         lm::dvec3 bsphere_center,
         my::ResourceHandle tile_ubo,

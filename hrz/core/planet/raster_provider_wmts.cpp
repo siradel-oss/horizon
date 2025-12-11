@@ -1,5 +1,4 @@
-#include "hrz/common/planet.h"
-#include "hrz/common/tickets.h"
+#include "hrz/core/jobs/parse_wmts_resource.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
 #include "hrz/fnd/string_utils.h"
@@ -213,7 +212,7 @@ public:
                 {
                     auto raw_data = assets_loader::get_blob(al, ba, download_ticket);
 
-                    WmtsResourceParams params;
+                    hrz_jobs::WmtsResourceParams params;
                     params.raw_xml = std::move(raw_data);
                     params.wmts_url = url;
                     params.layer_identifier = layer_identifier;
@@ -240,7 +239,7 @@ public:
                 if (hrz_jobs::get_job_status(js, parsing_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    WmtsResourceResponse response;
+                    hrz_jobs::WmtsResourceResponse response;
                     hrz_jobs::get_job_response(js, parsing_ticket, response);
 
                     fetcher = TileFetcher(

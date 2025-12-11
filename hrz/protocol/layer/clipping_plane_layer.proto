@@ -1,0 +1,21 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/layer/grid.proto";
+
+// @path_root="clipping_plane_layer"
+message ClippingPlaneLayer {
+    int32              clip_id          = 1;
+    GeographicPosition origin_position  = 2;
+    Vec3f              normal           = 3;
+    Color              outline_color    = 4;
+    float              outline_distance = 5;
+
+    bool               show_plane       = 6;
+    Grid               grid             = 7;
+}

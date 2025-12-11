@@ -3,11 +3,11 @@
 #include "hrz/common/profiling.h"
 #include "hrz/core/style/enums.h"
 #include "hrz/core/style/script.h"
+#include "hrz/fnd/char_utils.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/static_vector.h"
 #include "hrz/fnd/string_utils.h"
 
 #define CHECK_ERR(...)            \

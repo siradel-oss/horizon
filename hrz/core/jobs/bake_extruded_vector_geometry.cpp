@@ -2,16 +2,16 @@
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/triangulation.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/triangulation.h" // IWYU pragma: keep
+#include "hrz/common/vector_tiles/data_texture.h"
+#include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
 #include "hrz/core/jobs/clipping.h"
 #include "hrz/core/jobs/feature_clamping.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_repr_common.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/string_utils.h"
 
 #include <earcut.hpp>
 
@@ -40,7 +40,7 @@ static constexpr double kBevelMinWallLength = 1e-6;
 // Below this bevel width, we don't do any beveling.
 static constexpr float kBevelMinWidth = 1e-2F;
 
-using Vertex = hrz::vt::ExtrudedVectorGeometry::Vertex;
+using Vertex = hrz_jobs::ExtrudedVectorGeometry::Vertex;
 using VertexBuffer = hrz::BlobVector<Vertex>;
 
 struct GeometryBuilder
@@ -843,9 +843,9 @@ void generate_wall_geometry(
 
 } // anonymous namespace
 
-hrz::JobResult run(
-    const hrz::vt::ExtrudedVectorData& input,
-    hrz::vt::ExtrudedVectorGeometry& geometry,
+hrz_jobs::JobResult run(
+    const hrz_jobs::ExtrudedVectorData& input,
+    hrz_jobs::ExtrudedVectorGeometry& geometry,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("bake extruded geometry");
@@ -1120,7 +1120,7 @@ hrz::JobResult run(
     if (!vertex_array_opt.has_value() || !index_array_opt.has_value()
         || !positions_data_opt.has_value() || !feature_ids_data_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto positions_data = positions_data_opt.value();
 
@@ -1164,7 +1164,7 @@ hrz::JobResult run(
     geometry.feature_ids.register_blob_owner(
         context.get_blob_allocator(), context.get_resource_owner());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::bake_extruded_vector_geometry

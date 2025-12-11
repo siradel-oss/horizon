@@ -1,18 +1,20 @@
+#include "hrz/core/jobs/palettize_image.h"
+
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/color.h"
 #include "hrz/common/image_processing.h"
 #include "hrz/common/image_view.h"
 #include "hrz/common/palette.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/raster_sampling.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/log.h"
 
 namespace hrz_jobs::palettize_image
 {
-hrz::JobResult run(
-    const hrz::planet::PalettizeImageParams& params,
+hrz_jobs::JobResult run(
+    const hrz_jobs::PalettizeImageParams& params,
     hrz::BlobImage& response,
     const JobContext& context)
 {
@@ -22,7 +24,7 @@ hrz::JobResult run(
     {
         HRZ_LOG_ERROR("Unsupported image format");
         assert(false && "Unsupported image format");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto image_format = params.image.proto_format().value();
 
@@ -48,7 +50,7 @@ hrz::JobResult run(
             HRZ_LOG_ERROR(
                 "Unsupported image format: {}", hrz_proto::ImageFormat_Name(image_format));
             assert(false && "Unsupported image format");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
     }
 
     assert(my::format_channel_count(params.image.format()) == 1);
@@ -66,7 +68,7 @@ hrz::JobResult run(
     if (!output_image_blob_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate output image");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::blobs::register_owner(
@@ -108,7 +110,7 @@ hrz::JobResult run(
         HrzProtocol::ImageFormat::SRGBA_8, params.image.width(), params.image.height(),
         std::move(output_image_blob_opt.value()), context.get_blob_allocator());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::palettize_image

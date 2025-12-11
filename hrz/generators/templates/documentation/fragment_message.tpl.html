@@ -4,34 +4,29 @@
 {% block title %}{{ this.full_name|without_first(".") }}{% endblock %}
 {% block content %}
     <h2>Message <code>{{ type_link(this.full_name) }}</code></h2>
+    <p><em>Defined in <code><a href="{{ this.file|path_to_snake_case }}_proto.html">{{ this.file }}.proto</a></code>.</em></p>
     <p>{{ this.documentation }}</p>
-    <table>
-        <colgroup>
-             <col span="1" style="width: 33%;">
-        </colgroup>
-        <tr><th>Type</th><th>Description</th></tr>
-        {% for field in this.fields %}
-            <tr>
-                <td>
-                    <p>
-                        {% if not field.union is sameas None %}
-                            Union <code>{{ field.union }}</code>:
-                        {% endif %}
-                        {% if field.repeated %}Array of {% endif %}
-                        <code>{{ type_link(field.type) }}</code>
-                    </p>
-                </td>
-                <td>
-                    <p>
-                        <strong><code>{{ field.name }}</code></strong>
-                        {% if field.deprecated %} <em>(DEPRECATED)</em>{% endif %}
-                        {% if field.optional %} <em>(Optional)</em>{% endif %}
-                    </p>
-                    {% if field.documentation %}
-                        <p>{{ field.documentation }}</p>
-                    {% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
+    {% for field in this.fields %}
+        <hr />
+        <h5 id="field-{{ field.name }}">
+            <code>
+                {{ field.name }}:
+                {{ type_link(field.type) }}{% if field.repeated %}[]{% endif %}
+            </code>
+            {% if not field.union is sameas None %} (Part of union <code>{{ field.union }}</code>){% endif %}
+            {% if field.optional %} <em>(Optional)</em>{% endif %}
+            {% if field.deprecated %} <em>(DEPRECATED)</em>{% endif %}
+        </h5>
+        {% if field.documentation %}
+            <p>{{ field.documentation }}</p>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
+
+{% block toc %}
+<ul>
+    {% for field in this.fields|sort(attribute = "name") %}
+        <li><a href="#field-{{ field.name }}">{{ field.name }}</a></li>
+    {% endfor %}
+</ul>
 {% endblock %}

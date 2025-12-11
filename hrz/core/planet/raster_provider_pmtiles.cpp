@@ -1,6 +1,4 @@
-#include "hrz/common/fmt.h"
-#include "hrz/common/geo.h"
-#include "hrz/common/profiling.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
 #include "hrz/core/pmtiles.h"

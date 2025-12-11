@@ -1,11 +1,10 @@
 #pragma once
 
 #include "hrz/common/blob_vector.h"
-#include "hrz/common/job_result.h"
-#include "hrz/common/proto_maths.h"
-#include "hrz/common/vector_tiles.h"
 #include "hrz/core/jobs/context.h"
 #include "hrz/core/jobs/feature_clamping.h"
+#include "hrz/core/jobs/job_result.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/fnd/class.h"
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/log.h"
@@ -18,13 +17,13 @@
 
 namespace hrz_jobs::symbol
 {
-using PlaceholderInstance = hrz::vt::BakedSymbols::PlaceholderInstance;
-using AnchorGpu = hrz::vt::BakedSymbols::AnchorGpu;
-using AnchorCulling = hrz::vt::BakedSymbols::AnchorCulling;
-using AnchorSpan = hrz::vt::BakedSymbols::AnchorSpan;
-using ImageInstance = hrz::vt::BakedSymbols::ImageInstance;
-using DecoratedShapeInstance = hrz::vt::BakedSymbols::DecoratedShapeInstance;
-using LeaderLineInstance = hrz::vt::BakedSymbols::LeaderLineInstance;
+using PlaceholderInstance = hrz_jobs::BakedSymbols::PlaceholderInstance;
+using AnchorGpu = hrz_jobs::BakedSymbols::AnchorGpu;
+using AnchorCulling = hrz::vt::AnchorCullingInfo;
+using AnchorSpan = hrz::vt::AnchorSpan;
+using ImageInstance = hrz_jobs::BakedSymbols::ImageInstance;
+using DecoratedShapeInstance = hrz_jobs::BakedSymbols::DecoratedShapeInstance;
+using LeaderLineInstance = hrz_jobs::BakedSymbols::LeaderLineInstance;
 
 using Size = lm::vec2;
 
@@ -113,7 +112,7 @@ private:
         HRZ_DELETE_COPY_MOVE(ElementVisitor);
         virtual ~ElementVisitor() = default;
 
-        virtual hrz::JobResult init() { return hrz::JobResult::SUCCESS; }
+        virtual hrz_jobs::JobResult init() { return hrz_jobs::JobResult::SUCCESS; }
 
         virtual void deinit() {}
 
@@ -194,14 +193,14 @@ private:
         }
 
         // Only called for elements that have a z-index, i.e. visual elements.
-        virtual hrz::JobResult init_element_instances(
-            const hrz::vt::SymbolBakingData::Element& element)
+        virtual hrz_jobs::JobResult init_element_instances(
+            const hrz_jobs::SymbolBakingData::Element& element)
         {
-            return hrz::JobResult::SUCCESS;
+            return hrz_jobs::JobResult::SUCCESS;
         }
 
         virtual ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) = 0;
 
         // Call this function when visiting an element that has children, on each child.
@@ -244,7 +243,7 @@ private:
             return baker->element_instance_info.at(child_element_index).geometry.visual_rect;
         }
 
-        const hrz::vt::SymbolBakingData::Element& get_child(uint32_t index) const
+        const hrz_jobs::SymbolBakingData::Element& get_child(uint32_t index) const
         {
             return baker->params.elements[index];
         }
@@ -285,7 +284,7 @@ private:
         // allows not generating empty renderables.)
         // Visitors for visual elements must override this method, and make it return a value.
         // (If they don't fail.)
-        virtual std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>>
+        virtual std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>>
         get_element_instances_at_z_index(uint32_t z_index)
         {
             return std::nullopt;
@@ -301,16 +300,16 @@ private:
 
         hrz::flat_hash_map<uint32_t, hrz::BlobVector<PlaceholderInstance>> instances_by_z_index;
 
-        hrz::JobResult init_element_instances(
-            const hrz::vt::SymbolBakingData::Element& element) override;
+        hrz_jobs::JobResult init_element_instances(
+            const hrz_jobs::SymbolBakingData::Element& element) override;
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
         void finalize_element_instance(
             uint32_t z_index,
             uint32_t element_instance_index,
             const lm::mat4& global_transform) override;
-        std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>>
+        std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>>
         get_element_instances_at_z_index(uint32_t z_index) override;
     };
 
@@ -319,7 +318,7 @@ private:
         explicit AnchorVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -329,16 +328,16 @@ private:
 
         hrz::flat_hash_map<uint32_t, hrz::BlobVector<LeaderLineInstance>> instances_by_z_index;
 
-        hrz::JobResult init_element_instances(
-            const hrz::vt::SymbolBakingData::Element& element) override;
+        hrz_jobs::JobResult init_element_instances(
+            const hrz_jobs::SymbolBakingData::Element& element) override;
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
         void finalize_element_instance(
             uint32_t z_index,
             uint32_t element_instance_index,
             const lm::mat4& global_transform) override;
-        std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>>
+        std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>>
         get_element_instances_at_z_index(uint32_t z_index) override;
     };
 
@@ -347,7 +346,7 @@ private:
         explicit StackVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -356,7 +355,7 @@ private:
         explicit StackExpandVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -367,7 +366,7 @@ private:
             // This points to the job baking data. Used in finalize.
             // The baking data is retained during the whole job, so it has a longer lifetime than
             // the baker. So this is fine. If this becomes untrue someday, sorry for the headache.
-            std::span<const hrz::vt::SymbolBakingData::Image::SpriteGeometry> sprite_geometries;
+            std::span<const hrz_jobs::SymbolBakingData::Image::SpriteGeometry> sprite_geometries;
             std::vector<std::pair<uint32_t, int>> instance_index_geometry_index;
             hrz::BlobVector<ImageInstance> gpu_instances;
         };
@@ -376,16 +375,16 @@ private:
 
         explicit ImageVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
-        hrz::JobResult init_element_instances(
-            const hrz::vt::SymbolBakingData::Element& element) override;
+        hrz_jobs::JobResult init_element_instances(
+            const hrz_jobs::SymbolBakingData::Element& element) override;
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
         void finalize_element_instance(
             uint32_t z_index,
             uint32_t element_instance_index,
             const lm::mat4& global_transform) override;
-        std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>>
+        std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>>
         get_element_instances_at_z_index(uint32_t z_index) override;
     };
 
@@ -394,7 +393,7 @@ private:
         explicit PaddingVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -403,7 +402,7 @@ private:
         explicit SizedBoxVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -412,7 +411,7 @@ private:
         explicit FlexVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -421,7 +420,7 @@ private:
         explicit FlexibleVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -430,7 +429,7 @@ private:
         explicit ConstrainedBoxVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -439,7 +438,7 @@ private:
         explicit RotatedBoxVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -449,16 +448,16 @@ private:
 
         explicit DecoratedShapeVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
-        hrz::JobResult init_element_instances(
-            const hrz::vt::SymbolBakingData::Element& element) override;
+        hrz_jobs::JobResult init_element_instances(
+            const hrz_jobs::SymbolBakingData::Element& element) override;
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
         void finalize_element_instance(
             uint32_t z_index,
             uint32_t element_instance_index,
             const lm::mat4& global_transform) override;
-        std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>>
+        std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>>
         get_element_instances_at_z_index(uint32_t z_index) override;
     };
 
@@ -467,7 +466,7 @@ private:
         explicit AspectRatioVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -476,7 +475,7 @@ private:
         explicit FittedBoxVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -485,7 +484,7 @@ private:
         explicit TransformVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -499,7 +498,7 @@ private:
             hrz::BlobVector<float> outline_widths;
             hrz::BlobVector<lm::ubvec4> fill_colors;
             hrz::BlobVector<lm::ubvec4> outline_colors;
-            hrz::BlobVector<hrz::vt::BakedSymbols::TextInstances::GlyphPositionUv>
+            hrz::BlobVector<hrz_jobs::BakedSymbols::TextInstances::GlyphPositionUv>
                 glyph_positions_uvs;
             hrz::BlobVector<uint16_t> text_indices;
             bool has_non_zero_outline_width;
@@ -511,18 +510,18 @@ private:
 
         explicit TextVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
-        hrz::JobResult init() override;
+        hrz_jobs::JobResult init() override;
         void deinit() override;
-        hrz::JobResult init_element_instances(
-            const hrz::vt::SymbolBakingData::Element& element) override;
+        hrz_jobs::JobResult init_element_instances(
+            const hrz_jobs::SymbolBakingData::Element& element) override;
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
         void finalize_element_instance(
             uint32_t z_index,
             uint32_t element_instance_index,
             const lm::mat4& global_transform) override;
-        std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>>
+        std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>>
         get_element_instances_at_z_index(uint32_t z_index) override;
     };
 
@@ -531,7 +530,7 @@ private:
         explicit OptionalVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -540,7 +539,7 @@ private:
         explicit VariantVisitor(SymbolBaker* baker) : ElementVisitor(baker) {}
 
         ElementGeometry visit_element(
-            const hrz::vt::SymbolBakingData::Element& element,
+            const hrz_jobs::SymbolBakingData::Element& element,
             const SizeConstraints& constraints) override;
     };
 
@@ -571,7 +570,7 @@ private:
     hrz::flat_hash_map<hrz_proto::SymbolElementType, ElementVisitor*> element_visitors;
 
     // Input data
-    const hrz::vt::SymbolBakingData& params;
+    const hrz_jobs::SymbolBakingData& params;
 
     hrz::BlobArray<hrz::vector_data::VectorTileGeometry::Feature>::Data input_features;
     hrz::BlobArray<lm::dvec3>::Data input_points;
@@ -607,9 +606,9 @@ private:
     hrz::InlinedVector<std::optional<uint32_t>, 32> anchor_indices_to_baked_anchor_indices;
 
 public:
-    SymbolBaker(const hrz::vt::SymbolBakingData& params, const JobContext& context);
+    SymbolBaker(const hrz_jobs::SymbolBakingData& params, const JobContext& context);
 
-    hrz::JobResult bake(hrz::vt::BakedSymbols& baked_symbols);
+    hrz_jobs::JobResult bake(hrz_jobs::BakedSymbols& baked_symbols);
 
 private:
     ElementGeometry visit_element(uint32_t element_index, const SizeConstraints& constraints);

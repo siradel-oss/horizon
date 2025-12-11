@@ -1,8 +1,9 @@
 #include "hrz/common/profiling.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/global_flags.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
 #include "hrz/core/vector/repr.h"
-#include "hrz/fnd/thread.h"
+#include "hrz/fnd/log.h"
 
 namespace
 {
@@ -251,6 +252,6 @@ ReprSystem& ReprRegistry::get(hrz_proto::VectorReprType type)
 
 uint64_t ReprSystem::next_displayable_frame() const
 {
-    return hrz::Render::CurrentFrame;
+    return hrz::clock::CurrentFrameNumber;
 }
 } // namespace hrz::vt

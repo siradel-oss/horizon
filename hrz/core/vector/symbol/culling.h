@@ -1,19 +1,21 @@
 #pragma once
 
 #include "hrz/common/blob_array.h"
-#include "hrz/common/geo.h"
 #include "hrz/common/maths.h"
-#include "hrz/common/vector_tiles.h"
-#include "hrz/core/render.h"
+#include "hrz/common/vector_tiles/symbol_anchor_data.h"
+#include "hrz/core/render_request.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/fnd/inlined_vector.h"
 
 #include <lin_maths.h>
+#include <mycelium/backend.h>
 
 namespace hrz
 {
 struct SymbolCullingSystem;
 struct Render;
 struct JobScheduler;
+struct RenderViewInfo;
 
 namespace symbol_culling
 {
@@ -43,8 +45,8 @@ bool is_working(SymbolCullingSystem*);
 GroupHandle register_group(
     SymbolCullingSystem*,
     GroupInfo&& group_info,
-    hrz::BlobArray<vt::BakedSymbols::AnchorSpan> anchor_spans,
-    hrz::BlobArray<vt::BakedSymbols::AnchorCulling> anchors,
+    hrz::BlobArray<vt::AnchorSpan> anchor_spans,
+    hrz::BlobArray<vt::AnchorCullingInfo> anchors,
     bool ignore_occlusions,
     const hrz::monitoring::ResourceOwner& resource_owner,
     std::initializer_list<std::pair<hrz::MetadataString, hrz::MetadataString>> metadata);

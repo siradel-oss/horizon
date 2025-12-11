@@ -2,7 +2,8 @@
 
 #include "hrz/core/model/shared_resources.h"
 #include "hrz/core/model/ubo_defs.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
 #include "hrz/fnd/mem.h"
 
 #include <lin_maths.h>

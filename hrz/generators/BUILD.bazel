@@ -42,6 +42,7 @@ filegroup(
         "templates/documentation/fragment_common.tpl.html",
         "templates/documentation/fragment_doc.tpl.html",
         "templates/documentation/fragment_enum.tpl.html",
+        "templates/documentation/fragment_file.tpl.html",
         "templates/documentation/fragment_message.tpl.html",
         "templates/documentation/fragment_service.tpl.html",
         "templates/documentation/reference.tpl.md",
@@ -56,9 +57,7 @@ filegroup(
     name = "cpp_protocol_tpl",
     srcs = [
         "templates/cpp_protocol/path_builder.tpl.h",
-        "templates/cpp_protocol/path_builder_all.tpl.h",
         "templates/cpp_protocol/path_builder_common.tpl.h",
-        "templates/cpp_protocol/protocol_all.tpl.h",
         "templates/cpp_protocol/services.tpl.h",
     ],
     visibility = ["//visibility:public"],
@@ -75,7 +74,6 @@ filegroup(
         "templates/cpp_core/scene_model_accessor.tpl.h",
         "templates/cpp_core/scene_path.tpl.cpp",
         "templates/cpp_core/scene_path.tpl.h",
-        "templates/cpp_core/scene_path_all.tpl.h",
         "templates/cpp_core/scene_path_common.tpl.h",
         "templates/cpp_core/style_enums.tpl.cpp",
     ],
@@ -94,6 +92,7 @@ filegroup(
 filegroup(
     name = "job_declarations_tpl",
     srcs = [
+        "templates/jobs/all_params_responses.tpl.h",
         "templates/jobs/declarations.tpl.cpp",
         "templates/jobs/declarations.tpl.h",
         "templates/jobs/enum_names.tpl.h",

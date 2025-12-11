@@ -1,12 +1,10 @@
 #pragma once
 
-#include "hrz/fnd/hash.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/tile.pb.h"
 
 #include <assert.h>
 #include <lin_maths.h>
 
-#include <functional>
 #include <stdint.h>
 
 namespace hrz
@@ -31,6 +29,12 @@ struct TileCoords
         t.y = y / 2;
         t.lod = lod - 1;
         return t;
+    }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const TileCoords& t)
+    {
+        return H::combine(std::move(h), t.x, t.y, t.lod);
     }
 };
 
@@ -69,7 +73,7 @@ struct TileToTileUvTransform
 
     TileToTileUvTransform(TileCoords from, TileCoords to)
     {
-        int lod_diff = to.lod - from.lod;
+        const int lod_diff = to.lod - from.lod;
         scale = std::pow((T)2, (T)lod_diff);
         offset.x = (T)from.x * scale - (T)to.x;
         offset.y = (T)from.y * scale - (T)to.y;
@@ -79,21 +83,6 @@ struct TileToTileUvTransform
 };
 
 } // namespace hrz
-
-namespace std
-{
-template<>
-struct hash<hrz::TileCoords>
-{
-    size_t operator()(const hrz::TileCoords& v) const noexcept
-    {
-        auto h1(std::hash<uint32_t>{}(v.x));
-        auto h2(std::hash<uint32_t>{}(v.y));
-        auto h3(std::hash<uint8_t>{}(v.lod));
-        return hrz::hash_mix(hrz::hash_mix(h1, h2), h3);
-    }
-};
-} // namespace std
 
 namespace hrz
 {

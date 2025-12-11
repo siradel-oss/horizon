@@ -1,8 +1,10 @@
 #include "hrz/core/vector/symbol/text.h"
 
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
+#include "hrz/common/vector_tiles/data_texture.h"
+#include "hrz/core/render/context.h"
 #include "hrz/core/resources/resources.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/fnd/mem.h"
@@ -500,7 +502,7 @@ ElementSystem::PrototypeStatus TextElementSystem::get_prototype_status(
     }
 }
 
-SymbolBakingData::ElementBakingParams TextElementSystem::get_prototype_baking_params(
+hrz_jobs::SymbolBakingData::ElementBakingParams TextElementSystem::get_prototype_baking_params(
     PrototypeH prototype_handle) const
 {
     if (prototype_handle.type != ElementType)
@@ -523,7 +525,7 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
     PrototypeH prototype_handle,
     uint64_t layer_id,
     TileCoords tile_coords,
-    BakedSymbols::ElementInstances&& baked_instances,
+    hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
     double bsphere_radius,
     lm::dvec3 bsphere_center,
     my::ResourceHandle tile_ubo,
@@ -570,7 +572,8 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
 
     auto tile_coords_str = fmt::to_string(tile_coords);
 
-    auto instance_data = std::get<BakedSymbols::TextInstances>(std::move(baked_instances.data));
+    auto instance_data =
+        std::get<hrz_jobs::BakedSymbols::TextInstances>(std::move(baked_instances.data));
 
     TextRenderable renderable;
     renderable.center = bsphere_center;

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "hrz/core/camera/types.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/visibility_constraints.pb.h"
+
+#include <lin_maths.h>
 
 namespace hrz
 {

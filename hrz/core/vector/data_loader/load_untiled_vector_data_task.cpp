@@ -1,4 +1,5 @@
 #include "hrz/core/vector/data_loader/impl.h"
+#include "hrz/fnd/log.h"
 #include "hrz/fnd/variant.h"
 
 namespace hrz
@@ -9,7 +10,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_untiled_vector_da
 {
     uint64_t hash =
         hrz::hash_value(hrz::index_of_variant<decltype(Task::data), Task::LoadUntiledVectorData>());
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(data_source));
 
     auto it = tasks_by_hash.find(hash);
@@ -153,7 +154,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadUntiledVect
             if (hrz_jobs::get_job_status(js, task_data.build_aabb_tree_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                vector_data::AabbTree aabb_tree;
+                hrz_jobs::AabbTree aabb_tree;
                 hrz_jobs::get_job_response(js, task_data.build_aabb_tree_ticket, aabb_tree);
 
                 task_data.aabb_tree = std::move(aabb_tree);

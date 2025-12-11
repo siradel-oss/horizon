@@ -28,6 +28,19 @@ hrz::model::ModelGeometry* _get_model_geometry(
     return ptr ? ptr->get() : nullptr;
 }
 
+inline my::IndexType _get_index_type(my::VertexFormat format)
+{
+    switch (format)
+    {
+        case my::VertexFormat::UInt8: return my::IndexType::UByte;
+        case my::VertexFormat::UInt16: return my::IndexType::UShort;
+        case my::VertexFormat::UInt32: return my::IndexType::UInt;
+        default:
+            HRZ_LOG_WARNING("Index type {} not supported", (int)format);
+            return my::IndexType::UShort;
+    }
+}
+
 } // namespace
 
 namespace hrz::model

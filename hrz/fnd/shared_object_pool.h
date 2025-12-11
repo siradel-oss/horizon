@@ -1,14 +1,13 @@
 #pragma once
 
 #include "hrz/fnd/class.h"
-#include "hrz/fnd/hash.h"
+#include "hrz/fnd/function_ref.h"
+#include "hrz/fnd/log.h"
 
 #include <cassert>
 #include <cstdint>
-#include <functional>
 #include <iterator>
 #include <limits>
-#include <span>
 #include <utility>
 #include <vector>
 
@@ -37,7 +36,11 @@ public:
 
         bool is_null() const { return handle == std::numeric_limits<PrivateHandle>::max(); }
 
-        size_t hash() const { return std::hash<PrivateHandle>{}(handle); }
+        template<typename H>
+        friend H AbslHashValue(H h, Handle handle)
+        {
+            return H::combine(std::move(h), handle.handle);
+        }
     };
 
     static constexpr Handle NULL_HANDLE = {std::numeric_limits<PrivateHandle>::max()};
@@ -397,7 +400,7 @@ public:
 
     bool empty() const { return size() == 0; }
 
-    void collect_garbage(std::function<void(Handle h, T&)> on_delete_callback)
+    void collect_garbage(hrz::function_ref<void(Handle h, T&)> on_delete_callback)
     {
         // We cannot use an iterator here, as new objects can be added to
         // the released object array while the iteration is going on, and
@@ -553,13 +556,11 @@ private:
 
         size_t ref_count() const { return pool->pool.ref_count(handle); }
 
-        struct Hasher
+        template<typename H>
+        friend H AbslHashValue(H h, const RefBase& ref)
         {
-            size_t operator()(const RefBase& ref) const
-            {
-                return hrz::hash_mix(std::hash<SharedObjectPool*>{}(ref.pool), ref.handle.hash());
-            }
-        };
+            return H::combine(std::move(h), ref.pool, ref.handle);
+        }
 
     protected:
         RefBase() = default;
@@ -700,7 +701,7 @@ public:
 
     bool empty() const { return size() == 0; }
 
-    void collect_garbage(std::function<void(T&)> on_delete_callback)
+    void collect_garbage(hrz::function_ref<void(T&)> on_delete_callback)
     {
         pool.collect_garbage([&](Handle, T& value) { on_delete_callback(value); });
     }

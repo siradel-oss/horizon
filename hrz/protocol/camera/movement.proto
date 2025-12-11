@@ -1,0 +1,82 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/camera/index.proto";
+
+enum CameraFrame {
+    // Aligned with the north-south and earth-west axes.
+    // @label="Cardinal"
+    CAMERA_FRAME_CARDINAL   = 0;
+
+    // Aligned with forward-backward and left-right axes of the camera,
+    // tangential to the terrain.
+    // @label="Tangential"
+    CAMERA_FRAME_TANGENTIAL = 1;
+}
+
+// The translation distance is defined as the geodesic distance between two
+// points some fixed central angle appart.
+// The factor here is applied to modify the central angle between the two
+// points.
+// The default central angle is chosen so that a factor of -1/1 produces a
+// movement that is more or less what is naïvely expected.
+// The distance computed is applied per second when using a continuous movement.
+message CameraTranslate {
+    reserved 1, 2;
+
+    CameraFrame frame          = 3;
+
+    // For cardinal frame, < 0 = west, > 0 = east.
+    // For tangential frame, < 0 = left, > 0 = right.
+    float       angle_factor_x = 4;
+
+    // For cardinal frame, < 0 = south, > 0 = north.
+    // For tangential frame, < 0 = backward, > 0 = forward.
+    float       angle_factor_y = 5;
+}
+
+message CameraRotate {
+    // In radians (in rad/s when using continuous movement). Clockwise.
+    float bearing = 1;
+    float tilt    = 2;
+}
+
+message CameraZoom {
+    // Ratio of 2 means a 2x zoom toward the planet (ratio is applied per
+    // second when using a continuous movement).
+    float ratio = 1;
+}
+
+enum CameraContinuousMovementInterruption {
+    // Continuous movement cannot be interrupted except by a transition or
+    // another continuous movement.
+    // @label="Not interruptible"
+    CONTINUOUS_MOVEMENT_NOT_INTERRUPTIBLE         = 0;
+
+    // Continuous movement can be interrupted by user actions.
+    // @label="Interruptible"
+    CONTINUOUS_MOVEMENT_INTERRUPTIBLE_NO_RESUME   = 1;
+
+    // Continuous movement can be interrupted by user actions, and when said
+    // action is over, the movement resumes.
+    // @label="Interruptible, then resumes"
+    CONTINUOUS_MOVEMENT_INTERRUPTIBLE_THEN_RESUME = 2;
+}
+
+message CameraMovement {
+    reserved 2, 3;
+
+    CameraIndex                          camera_index                     = 1;
+
+    // For continuous movements only. Sets whether the movement can be
+    // interrupted, and whether it can resume after it has been interrupted.
+    CameraContinuousMovementInterruption continuous_movement_interruption = 4;
+
+    oneof                                movement {
+        CameraTranslate translation = 101;
+        CameraRotate    rotation    = 102;
+        CameraZoom      zoom        = 103;
+    }
+}

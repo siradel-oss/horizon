@@ -1,24 +1,25 @@
 #include "hrz/common/blob_array.h"
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
+#include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/proto_maths.h"
-#include "hrz/common/style.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/vector/flat_overlay.h"
 #include "hrz/core/vector/image_loader.h"
 #include "hrz/core/vector/repr.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/thread.h"
 
 #include <array>
 #include <optional>
@@ -466,12 +467,12 @@ struct TileGeometry
 
     // Positions are relative to the centre of the tile.
     std::variant<
-        hrz::BlobArray<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>,
-        hrz::BlobArray<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>>
+        hrz::BlobArray<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>,
+        hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>>
         polygon_data;
     hrz::BlobArray<uint32_t> polygon_indices;
-    hrz::BlobArray<hrz::vt::FlatVectorGeometry::PolylineInstance> polyline_data;
-    hrz::BlobArray<hrz::vt::FlatVectorGeometry::PointInstance> point_data;
+    hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PolylineInstance> polyline_data;
+    hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PointInstance> point_data;
     hrz::BlobArray<hrz::vector_data::FeatureIdHash> feature_ids;
 
     uint32_t max_feature_index;
@@ -481,7 +482,7 @@ struct TileGeometry
     double origin_lat;
     double lat_span;
 
-    hrz::BlobArray<hrz::vt::FlatVectorGeometry::PolygonPatternStyle> polygon_pattern_style_data;
+    hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PolygonPatternStyle> polygon_pattern_style_data;
 };
 
 struct TileId
@@ -522,7 +523,7 @@ struct Tile
     std::optional<lm::dbbox2> wmerc_bounds = std::nullopt;
 
     hrz_jobs::BakeFlatVectorGeometryTicket bake_ticket;
-    std::optional<hrz::vt::FlatVectorData> bake_data;
+    std::optional<hrz_jobs::FlatVectorData> bake_data;
     std::optional<TileGeometry> geometry;
     std::optional<RenderableFeatures> renderable;
 
@@ -1300,7 +1301,7 @@ public:
             HRZ_LOG_WARNING("Unknown config. Using default values.");
         }
 
-        hrz::vt::FlatVectorData bake_data;
+        hrz_jobs::FlatVectorData bake_data;
         bake_data.coords = coords;
 
         bake_data.feature_ids = tile.has_feature_ids
@@ -1735,7 +1736,7 @@ public:
             if (hrz_jobs::get_job_status(ctx.js, tile->bake_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::vt::FlatVectorGeometry response;
+                hrz_jobs::FlatVectorGeometry response;
                 hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
 
                 TileGeometry geometry;
@@ -1827,16 +1828,16 @@ public:
         bool has_polygon_data =
             (!tile->has_polygon_pattern
              && std::holds_alternative<
-                 hrz::BlobArray<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>>(
+                 hrz::BlobArray<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>>(
                  geometry.polygon_data)
-             && !std::get<hrz::BlobArray<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>>(
+             && !std::get<hrz::BlobArray<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>>(
                      geometry.polygon_data)
                      .empty())
             || (tile->has_polygon_pattern
                 && std::holds_alternative<
-                    hrz::BlobArray<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>>(
+                    hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>>(
                     geometry.polygon_data)
-                && !std::get<hrz::BlobArray<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>>(
+                && !std::get<hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>>(
                         geometry.polygon_data)
                         .empty());
         bool has_polyline_data = !geometry.polyline_data.empty();
@@ -1907,7 +1908,7 @@ public:
         if (has_polygon_data && tile->has_polygon_pattern)
         {
             static constexpr size_t pixels_per_style =
-                sizeof(hrz::vt::FlatVectorGeometry::PolygonPatternStyle) / sizeof(lm::uvec4);
+                sizeof(hrz_jobs::FlatVectorGeometry::PolygonPatternStyle) / sizeof(lm::uvec4);
 
             auto polygon_pattern_style_data = geometry.polygon_pattern_style_data.get_data();
             assert(
@@ -1983,10 +1984,10 @@ public:
 
             if (tile->has_polygon_pattern)
             {
-                using Vertex = hrz::vt::FlatVectorGeometry::PatternPolygonVertex;
+                using Vertex = hrz_jobs::FlatVectorGeometry::PatternPolygonVertex;
 
                 auto geometry_data =
-                    std::get<hrz::BlobArray<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>>(
+                    std::get<hrz::BlobArray<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>>(
                         geometry.polygon_data)
                         .get_data();
 
@@ -2019,10 +2020,10 @@ public:
             }
             else
             {
-                using Vertex = hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex;
+                using Vertex = hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex;
 
                 auto geometry_data =
-                    std::get<hrz::BlobArray<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>>(
+                    std::get<hrz::BlobArray<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>>(
                         geometry.polygon_data)
                         .get_data();
 
@@ -2094,7 +2095,7 @@ public:
 
         if (has_polyline_data)
         {
-            using Instance = hrz::vt::FlatVectorGeometry::PolylineInstance;
+            using Instance = hrz_jobs::FlatVectorGeometry::PolylineInstance;
 
             auto& renderable_data = renderable.data.polylines_data;
             auto geometry_data = geometry.polyline_data.get_data();
@@ -2168,7 +2169,7 @@ public:
 
         if (has_point_data)
         {
-            using Instance = hrz::vt::FlatVectorGeometry::PointInstance;
+            using Instance = hrz_jobs::FlatVectorGeometry::PointInstance;
 
             auto& renderable_data = renderable.data.points_data;
             auto geometry_data = geometry.point_data.get_data();

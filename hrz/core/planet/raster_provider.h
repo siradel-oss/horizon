@@ -1,11 +1,11 @@
 #pragma once
 
 #include "hrz/common/blob_image.h"
-#include "hrz/common/planet.h"
+#include "hrz/common/planet/tiled_raster_geometry.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/attribution.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/core/scene_path/raster/provider_paths.h"
 #include "hrz/fnd/inlined_vector.h"
 
 extern "C"

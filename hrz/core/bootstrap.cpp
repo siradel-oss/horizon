@@ -6,12 +6,11 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
 #include "hrz/common/proto_geo.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/core/actor_runner.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/client_message_queue.h"
 #include "hrz/core/client_messages.h"
-#include "hrz/core/core.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/debug_draw.h"
 #include "hrz/core/dev_ui.h"
 #include "hrz/core/events.h"
@@ -22,11 +21,11 @@
 #include "hrz/core/mapbox_translation.h"
 #include "hrz/core/monitoring/monitoring.h"
 #include "hrz/core/monitoring/remote.h"
-#include "hrz/core/picking_system.h"
 #include "hrz/core/platform/detection.h"
 #include "hrz/core/platform/events_proto.h"
 #include "hrz/core/platform/platform.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/resources/resources.h"
 #include "hrz/core/rpc_dispatcher.h"
@@ -42,9 +41,17 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/time.h"
+#include "hrz/protocol/identification/object_reference.pb.h"
+#include "hrz/protocol/identification/picking_result.pb.h"
+#include "hrz/protocol/layer/service.pb.h"
+#include "hrz/protocol/message_queue/message.pb.h"
+#include "hrz/protocol/message_queue/service.pb.h"
+#include "hrz/protocol/scene_model/service.pb.h"
+#include "hrz/protocol/viewer/service.pb.h"
 
 #include <basisu_transcoder.h>
 #include <etcpak/bc7enc.h>
+#include <mycelium/log.h>
 
 #include <deque>
 #include <vector>
@@ -144,7 +151,7 @@ class PresentTechnique
 public:
     void init(my::Instance* my, hrz::GpuResourceContext* rc)
     {
-        _ubo_data_stride = hrz::render::compute_ubo_stride<SceneViewportUniformData>(
+        _ubo_data_stride = hrz::compute_ubo_stride<SceneViewportUniformData>(
             my->get_uniform_buffer_offset_alignment());
 
         {
@@ -320,17 +327,17 @@ public:
         const hrz::RenderRequest& last_frame_render_request,
         float device_pixel_ratio)
     {
-        double now = hrz::now_frame_ms();
+        const double now = hrz::clock::CurrentFrameRealTime.s;
 
         _force_picking_after_delay |=
             (_current_pick_mouse_pos != _mouse_pos
              || (last_frame_render_request.is_render_requested(hrz::RenderRequest::Type::Visual)));
 
-        bool should_do_info = _in_canvas && _info_enabled && now - _last_info >= _info_rate_ms
-            && _force_picking_after_delay;
+        const bool should_do_info = _in_canvas && _info_enabled
+            && now - _last_info_time_ms >= _info_rate_ms && _force_picking_after_delay;
 
-        bool should_do_highlight = _in_canvas && _highlight_enabled
-            && now - _last_highlight >= _highlight_rate_ms && _force_picking_after_delay;
+        const bool should_do_highlight = _in_canvas && _highlight_enabled
+            && now - _last_highlight_time_ms >= _highlight_rate_ms && _force_picking_after_delay;
 
         if (_picking_ticket.ticket != 0)
         {
@@ -353,7 +360,7 @@ public:
                     hrz::client_message_queue::enqueue_mouse_hover_info_message(
                         mq, std::move(message));
 
-                    _last_info = now;
+                    _last_info_time_ms = now;
                 }
 
                 if (should_do_highlight)
@@ -361,7 +368,7 @@ public:
                     auto hovered_feature = hrz::scene::make_feature_reference(scene, hovered_object)
                                                .value_or(hrz::picking::FeatureReference());
                     hrz::scene::quick_highlight(scene, hovered_feature);
-                    _last_highlight = now;
+                    _last_highlight_time_ms = now;
                 }
 
                 _picking_ticket.ticket = 0;
@@ -426,8 +433,8 @@ private:
     lm::ivec2 _current_pick_mouse_pos = {0, 0};
     lm::ivec2 _mouse_pos = {0, 0};
 
-    double _last_info = hrz::now_frame_ms();
-    double _last_highlight = hrz::now_frame_ms();
+    double _last_info_time_ms = hrz::clock::CurrentFrameRealTime.ms;
+    double _last_highlight_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 };
 
 struct KeyInteractionBindings
@@ -468,7 +475,7 @@ struct KeyInteractionBindings
                     animation_options.set_easing_function(hrz_proto::EasingFunctions::EASE_INOUT);
                     animation_options.set_easing_exponent(2);
 
-                    for (size_t i = 0; i < hrz::CAMERA_COUNT; ++i)
+                    for (size_t i = 0; i < hrz_proto::CameraIndex_ARRAYSIZE; ++i)
                     {
                         hrz_proto::ResetNorthParams params;
                         params.set_camera_index((hrz_proto::CameraIndex)(hrz_proto::CAMERA_0 + i));
@@ -1638,11 +1645,11 @@ public:
             // We need to skip the few first frames because they take more than the total fadeout
             // animation time on some platforms.
 
-            _fadeout_start_ms = hrz::now_frame_ms();
+            _fadeout_start_ms = hrz::clock::CurrentFrameRealTime.ms;
             _num_frames_skipped++;
         }
 
-        double elapsed = hrz::now_frame_ms() - _fadeout_start_ms;
+        const double elapsed = hrz::clock::CurrentFrameRealTime.ms - _fadeout_start_ms;
 
         LoadingScreenUniformData uniform_data;
         uniform_data.num_shaders_total = num_shaders_total;
@@ -1853,9 +1860,9 @@ public:
         _graphics_level = options.graphics_level();
 
         // Don't forget to update the graphics level documentation when these rules change.
-        if (_graphics_level == hrz_proto::GraphicsLevelAuto)
+        if (_graphics_level == hrz_proto::GRAPHICS_LEVEL_AUTO)
         {
-            _graphics_level = hrz_proto::GraphicsLevelMedium;
+            _graphics_level = hrz_proto::GRAPHICS_LEVEL_MEDIUM;
 
             if (platform_info.os == hrz::PlatformInfo::IOs
                 && platform_info.runtime != hrz::PlatformInfo::Native)
@@ -1863,7 +1870,7 @@ public:
                 HRZ_LOG_INFO(
                     "Using low graphics because it seems we're running WebGL on iOS (low "
                     "power, suboptimal WebGL 2 implementation)");
-                _graphics_level = hrz_proto::GraphicsLevelLow;
+                _graphics_level = hrz_proto::GRAPHICS_LEVEL_LOW;
             }
             else if (
                 platform_info.gpu_vendor == hrz::PlatformInfo::Intel
@@ -1873,7 +1880,7 @@ public:
                     "Using low graphics because it seems we're running WebGL on an Intel "
                     "integrated "
                     "GPU (low power, suboptimal WebGL 2 implementation)");
-                _graphics_level = hrz_proto::GraphicsLevelLow;
+                _graphics_level = hrz_proto::GRAPHICS_LEVEL_LOW;
             }
             else if (
                 platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Discrete
@@ -1882,13 +1889,13 @@ public:
                 HRZ_LOG_INFO(
                     "Using high graphics because we're running on a discrete Nvidia GPU, "
                     "supposedly high-end");
-                _graphics_level = hrz_proto::GraphicsLevelHigh;
+                _graphics_level = hrz_proto::GRAPHICS_LEVEL_HIGH;
             }
             else if (platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Software)
             {
                 HRZ_LOG_INFO(
                     "Using low graphics because it seems we're emulating WebGL on the CPU.");
-                _graphics_level = hrz_proto::GraphicsLevelLow;
+                _graphics_level = hrz_proto::GRAPHICS_LEVEL_LOW;
             }
         }
 
@@ -1902,11 +1909,11 @@ public:
         hrz::set_flag(hrz::Flag::EnableTerrain, !options.disable_terrain());
 
         // Don't forget to update the graphics level documentation when these rules change.
-        _graphics_settings.set_shadows_enabled(_graphics_level >= hrz_proto::GraphicsLevelHigh);
+        _graphics_settings.set_shadows_enabled(_graphics_level >= hrz_proto::GRAPHICS_LEVEL_HIGH);
         _graphics_settings.set_atmosphere_enabled(
-            _graphics_level >= hrz_proto::GraphicsLevelMedium);
+            _graphics_level >= hrz_proto::GRAPHICS_LEVEL_MEDIUM);
         _graphics_settings.set_ui_elements_depth_peeling_enabled(
-            _graphics_level >= hrz_proto::GraphicsLevelMedium);
+            _graphics_level >= hrz_proto::GRAPHICS_LEVEL_MEDIUM);
 
         // Determine scene parameters from graphics level and available video memory.
         _graphics_settings.set_imagery_merge_group_count(3);
@@ -1922,9 +1929,9 @@ public:
         // Don't forget to update the graphics level documentation when the memory thresholds
         // change.
         if (max_video_memory_size <= 600 * 1024 * 1024
-            || _graphics_level == hrz_proto::GraphicsLevel::GraphicsLevelLow)
+            || _graphics_level == hrz_proto::GraphicsLevel::GRAPHICS_LEVEL_LOW)
         {
-            if (_graphics_level != hrz_proto::GraphicsLevel::GraphicsLevelLow)
+            if (_graphics_level != hrz_proto::GraphicsLevel::GRAPHICS_LEVEL_LOW)
             {
                 HRZ_LOG_INFO(
                     "Max video memory size is 600 MiB or less, applying low graphics video "
@@ -1939,9 +1946,9 @@ public:
         }
         else if (
             max_video_memory_size <= 800 * 1024 * 1024
-            || _graphics_level == hrz_proto::GraphicsLevel::GraphicsLevelMedium)
+            || _graphics_level == hrz_proto::GraphicsLevel::GRAPHICS_LEVEL_MEDIUM)
         {
-            if (_graphics_level != hrz_proto::GraphicsLevel::GraphicsLevelMedium)
+            if (_graphics_level != hrz_proto::GraphicsLevel::GRAPHICS_LEVEL_MEDIUM)
             {
                 HRZ_LOG_INFO(
                     "Max video memory size is 800 MiB or less, applying medium graphics video "
@@ -2090,7 +2097,7 @@ public:
             _blob_allocator, _message_queue, _job_scheduler, hrz::scene::get_model(_scene),
             hrz::scene::get_vector_data_loader(_scene));
 
-        _frame_time_timer_us = hrz::now_frame_us_s64();
+        _frame_time_timer_us = hrz::clock::CurrentFrameRealTime.us_s64;
     }
 
     ~Core()
@@ -2569,8 +2576,6 @@ public:
 
         if (!_my->begin_frame()) return true;
 
-        hrz::Render::CurrentFrame++;
-
         if (!_viewer_ready)
         {
             if (!work_loading()) return false;
@@ -2579,35 +2584,35 @@ public:
         {
             hrz::profiling::begin_frame();
 
-            int64_t loop_dur_us = hrz::now_us_s64() - _frame_time_timer_us;
+            const int64_t loop_dur_us = hrz::now_us_s64() - _frame_time_timer_us;
 
             _monitoring.register_cpu_time(
                 _events_dur_us, _update_dur_us, _update_gpu_dur_us, _draw_dur_us, _swap_dur_us,
                 loop_dur_us);
 
-            int64_t frame_start_us = hrz::now_us_s64();
+            const int64_t frame_start_us = hrz::now_us_s64();
             hrz::profiling::begin_frame();
 
-            int64_t events_start_us = frame_start_us;
+            const int64_t events_start_us = frame_start_us;
             if (!events()) return false;
             _events_dur_us = hrz::now_us_s64() - events_start_us;
 
-            int64_t update_start_us = hrz::now_us_s64();
+            const int64_t update_start_us = hrz::now_us_s64();
             update();
             _update_dur_us = hrz::now_us_s64() - update_start_us;
 
-            int64_t update_gpu_start_us = hrz::now_us_s64();
+            const int64_t update_gpu_start_us = hrz::now_us_s64();
             update_gpu();
             _update_gpu_dur_us = hrz::now_us_s64() - update_gpu_start_us;
 
-            int64_t draw_start_us = hrz::now_us_s64();
+            const int64_t draw_start_us = hrz::now_us_s64();
             draw();
             _draw_dur_us = hrz::now_us_s64() - draw_start_us;
 
             if (!_loading_screen_technique)
             {
                 // @Todo(796) is working goes through all systems, improve this!
-                bool is_idle = !hrz::scene::is_working(_scene);
+                const bool is_idle = !hrz::scene::is_working(_scene);
                 _my->advance_shaders_link(is_idle);
             }
             _my->end_frame();
@@ -2615,7 +2620,7 @@ public:
             const auto& render_request = hrz::scene::get_render_request(_scene);
             hrz::profiling::end_frame(render_request.get_requested_render_types());
 
-            int64_t swap_start_us = hrz::now_us_s64();
+            const int64_t swap_start_us = hrz::now_us_s64();
             hrz::platform::swap_window(_platform);
             _swap_dur_us = hrz::now_us_s64() - swap_start_us;
 
@@ -2668,11 +2673,12 @@ public:
         static constexpr double kAttributionDelayS = 1;
 
         if (!_attribution_messages_enabled
-            || hrz::now_frame_s() - _last_attribution_message_time_s < kAttributionDelayS)
+            || hrz::clock::CurrentFrameRealTime.s - _last_attribution_message_time_s
+                < kAttributionDelayS)
             return;
 
         hrz::scene::enqueue_attribution_message(_scene, _message_queue, &_last_attribution_hash);
-        _last_attribution_message_time_s = hrz::now_frame_s();
+        _last_attribution_message_time_s = hrz::clock::CurrentFrameRealTime.s;
     }
 
     void capture_next_frame() { _capture_next_frame = true; }
@@ -3076,13 +3082,14 @@ public:
         size_t message_count = 0;
         while (message_count < input.max_message_count())
         {
-            auto message = hrz::client_message_queue::dequeue_message(queue);
-            if (!message.has_value())
+            hrz_proto::TypedMessage message;
+            auto has_message = hrz::client_message_queue::dequeue_message(queue, &message);
+            if (!has_message)
             {
                 break;
             }
 
-            output.mutable_messages()->Add(std::move(message.value()));
+            output.mutable_messages()->Add(std::move(message));
             message_count++;
         }
 
@@ -3398,7 +3405,10 @@ unsigned int hrz_core_init(
 uint32_t hrz_core_frame(void)
 {
     HRZ_SCOPED_SAMPLE_ROOT("hrz frame");
-    hrz::set_frame_time();
+
+    hrz::clock::CurrentFrameNumber += 1;
+    hrz::clock::CurrentFrameRealTime = hrz::now_all_variants();
+
     bool should_continue = core->frame();
     hrz::metrics::finish_thread_registry_frame();
     hrz::metrics::synchronize_thread_registry();

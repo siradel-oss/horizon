@@ -7,14 +7,12 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/time.h"
-#include "hrz/fnd/variant.h"
 #include "hrz/monitoring/monitoring.h"
 
 #include <google/protobuf/arena.h>
 
 #include <algorithm>
 #include <mutex>
-#include <optional>
 #include <variant>
 
 using PbArena = google::protobuf::Arena;
@@ -420,7 +418,7 @@ struct ThreadMetricsRegistry
     int64_t _last_synchronization_timestamp_ms = 0;
 
     explicit ThreadMetricsRegistry(bool start_enabled) :
-        _enabled(start_enabled), _last_synchronization_timestamp_ms(hrz::now_frame_ms_s64())
+        _enabled(start_enabled), _last_synchronization_timestamp_ms(hrz::now_ms_s64())
     {
     }
 
@@ -489,7 +487,7 @@ struct ThreadMetricsRegistry
 
     void synchronize(SharedData* data)
     {
-        int64_t now = hrz::now_frame_ms_s64();
+        const int64_t now = hrz::now_ms_s64();
         if (now - _last_synchronization_timestamp_ms > SYNCHRONIZATION_INTERVAL_MS)
         {
             std::unique_lock<std::mutex> lock(data->_mutex);

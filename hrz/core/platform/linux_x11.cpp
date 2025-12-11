@@ -123,7 +123,7 @@ PlatformContext* initialize(
 
     if (ctx->enable_events_capture)
     {
-        ctx->dblclk_info.start_time_ms = hrz::now_frame_ms();
+        ctx->dblclk_info.start_time_ms = hrz::now_ms();
         ctx->dblclk_info.start_mouse_x = std::numeric_limits<int>::lowest();
         ctx->dblclk_info.start_mouse_y = std::numeric_limits<int>::lowest();
         ctx->dblclk_info.button = (Event::MouseButton)-1;
@@ -252,6 +252,8 @@ void advance_events(PlatformContext* ctx)
     assert(ctx);
 
     if (!ctx->enable_events_capture) return;
+
+    const double now = hrz::now_ms();
 
     while (XPending(ctx->display))
     {
@@ -408,8 +410,7 @@ void advance_events(PlatformContext* ctx)
                             default: button = Event::MouseButton::Left; break;
                         }
 
-                        double elapsed_time_ms =
-                            hrz::now_frame_ms() - ctx->dblclk_info.start_time_ms;
+                        double elapsed_time_ms = now - ctx->dblclk_info.start_time_ms;
                         float distance_squared = (ctx->dblclk_info.start_mouse_x - x)
                                 * (ctx->dblclk_info.start_mouse_x - x)
                             + (ctx->dblclk_info.start_mouse_y - y)
@@ -430,7 +431,7 @@ void advance_events(PlatformContext* ctx)
                             ctx->dblclk_info.button = button;
                         }
 
-                        ctx->dblclk_info.start_time_ms = hrz::now_frame_ms();
+                        ctx->dblclk_info.start_time_ms = now;
                         ctx->dblclk_info.start_mouse_x = x;
                         ctx->dblclk_info.start_mouse_y = y;
                     }

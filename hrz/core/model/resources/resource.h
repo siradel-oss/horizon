@@ -1,20 +1,20 @@
 #pragma once
 
 #include "hrz/common/blob_image.h"
-#include "hrz/common/model.h"
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/core/jobs/decompress_draco_mesh.h"
 #include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/model/blob_library.h"
 #include "hrz/core/model/common.h"
 #include "hrz/core/model/descriptor.h"
-#include "hrz/core/render.h"
 
 #include <mycelium/backend.h>
 
 namespace hrz
 {
 struct ImageDecoder;
-}
+struct Render;
+} // namespace hrz
 
 namespace hrz::model
 {
@@ -119,7 +119,7 @@ struct GpuDracoMeshResource
     size_t blob_byte_length;
 
     hrz_jobs::DecompressDracoMeshTicket decompression_ticket;
-    Mesh mesh;
+    hrz_jobs::DecompressedDracoMesh mesh;
     hrz::flat_hash_map<int, int> attrib_id_to_index;
 
     my::ResourceHandle vertex_buffer;

@@ -1,7 +1,5 @@
 #include "hrz/core/global_flags.h"
 
-#include "hrz/fnd/log.h"
-
 static bool g_flag_values[(int)hrz::Flag::_FlagCount] = {};
 
 namespace hrz

@@ -4,15 +4,16 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/camera/camera.h"
-#include "hrz/core/debug_draw.h"
 #include "hrz/core/download_buffer_pool.h"
 #include "hrz/core/global_flags.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/common_ubos.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/shaders/collection.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 
 #include <deque>
 

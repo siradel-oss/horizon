@@ -1,12 +1,10 @@
 #pragma once
 
-#include "hrz/common/planet.h"
+#include "hrz/common/planet/tile_request.h"
 #include "hrz/common/shader_defines.h"
-#include "hrz/common/tile_coords.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/protocol/all.h"
+#include "hrz/core/scene_path/scene/view_settings_paths.h"
 
 #include <mycelium/backend.h>
 #include <mycelium/render_graph.h>

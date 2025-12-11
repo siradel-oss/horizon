@@ -1,6 +1,8 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/three_d_tiles.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
+#include "hrz/core/jobs/three_d_tiles_jobs_params.h"
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
 
@@ -329,8 +331,8 @@ unsigned int parse_tile(
 
 namespace hrz_jobs::decode_three_d_tiles_tileset
 {
-hrz::JobResult run(
-    const hrz::three_d_tiles::EncodedThreeDTilesTileset& params,
+hrz_jobs::JobResult run(
+    const hrz_jobs::EncodedThreeDTilesTileset& params,
     hrz::three_d_tiles::ThreeDTilesTilesetDescriptor& response,
     const JobContext&)
 {
@@ -347,7 +349,7 @@ hrz::JobResult run(
 
         if (!check_json_document(document))
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -356,7 +358,7 @@ hrz::JobResult run(
     if (!document.HasMember("root"))
     {
         HRZ_LOG_ERROR("No root node in tileset");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     const auto& root = document["root"];
@@ -389,11 +391,11 @@ hrz::JobResult run(
             else
             {
                 HRZ_LOG_ERROR("Unsupported 3D Tiles extension {} required", ext_name);
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
         }
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::decode_three_d_tiles_tileset

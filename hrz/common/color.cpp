@@ -1,6 +1,6 @@
 #include "hrz/common/color.h"
 
-#include "hrz/fnd/string_utils.h"
+#include "hrz/fnd/char_utils.h"
 
 namespace hrz
 {

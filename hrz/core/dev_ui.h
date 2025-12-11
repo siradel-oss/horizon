@@ -1,7 +1,5 @@
 #pragma once
 
-#include "hrz/core/platform/events.h"
-
 #include <mycelium/backend.h>
 
 #include <stdint.h>

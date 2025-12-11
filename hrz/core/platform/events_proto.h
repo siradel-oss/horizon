@@ -1,11 +1,11 @@
 #pragma once
 
 #include "hrz/core/platform/events.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/input/event.pb.h"
 
 namespace hrz::platform
 {
-static Event::Key from_proto(const hrz_proto::Key& key)
+static inline Event::Key from_proto(const hrz_proto::Key& key)
 {
     return (Event::Key)key;
 }

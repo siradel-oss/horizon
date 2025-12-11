@@ -1,7 +1,8 @@
 #pragma once
 
+#include "hrz/common/maths.h"
 #include "hrz/core/palette_ubo.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/resources.h"
 
 #include <lin_maths.h>
 

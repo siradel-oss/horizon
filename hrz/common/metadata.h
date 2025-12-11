@@ -1,10 +1,10 @@
 #pragma once
 
 #include "hrz/fnd/static_string.h"
-#include "hrz/fnd/variant.h"
 
 #include <string>
 #include <string_view>
+#include <variant>
 
 namespace hrz
 {

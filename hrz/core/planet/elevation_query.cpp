@@ -1,12 +1,11 @@
 #include "hrz/core/planet/elevation_query.h"
 
-#include "hrz/common/planet.h"
+#include "hrz/core/jobs/points_query_jobs_params.h"
 #include "hrz/core/planet/raster.h"
 #include "hrz/core/planet/raster_collection.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/thread.h"
 
 void hrz::planet::ElevationQuery::queue_cancel(Ticket ticket)
 {
@@ -218,7 +217,7 @@ void hrz::planet::ElevationQuery::_start_culling(
     Batch* batch = _batchs.get_object(ticket);
     assert(batch && batch->status == Batch::Queued);
 
-    CullPointsQueryParams job_data;
+    hrz_jobs::CullPointsQueryParams job_data;
     job_data.points = batch->points;
 
     assert(rasters.size() == raster_geometries.size());
@@ -243,7 +242,7 @@ void hrz::planet::ElevationQuery::_start_waiting_for_tiles(
     Batch* batch = _batchs.get_object(ticket);
     assert(batch && batch->status == Batch::Culling);
 
-    CulledPointsQuery results;
+    hrz_jobs::CulledPointsQuery results;
     hrz_jobs::get_job_response(js, batch->cull_ticket, results);
 
     batch->tiles.clear();
@@ -286,12 +285,12 @@ void hrz::planet::ElevationQuery::_start_sampling(
 {
     assert(rasters.size() == raster_geometries.size());
 
-    SamplePointsQueryParams job_data;
+    hrz_jobs::SamplePointsQueryParams job_data;
     job_data.points = batch->points;
 
     for (unsigned int i = 0; i < rasters.size(); ++i)
     {
-        SamplePointsQueryParams::Raster job_raster;
+        hrz_jobs::SamplePointsQueryParams::Raster job_raster;
         job_raster.image_format = rasters[i]->provider->get_image_format();
         job_raster.geometry = raster_geometries[i];
         job_raster.nodata.CopyFrom(rasters[i]->provider->get_nodata());
@@ -308,7 +307,7 @@ void hrz::planet::ElevationQuery::_start_sampling(
 
         if (coords_and_image.image.valid())
         {
-            SamplePointsQueryParams::TileWithImage pb_tile;
+            hrz_jobs::SamplePointsQueryParams::TileWithImage pb_tile;
             pb_tile.raster_index = tile.raster_index;
             pb_tile.tile_coords = coords_and_image.coords;
 
@@ -659,7 +658,7 @@ void hrz::planet::ElevationQuery::work(
                 if (hrz_jobs::get_job_status(js, batch->sample_ticket)
                     == hrz::job_scheduler::JobStatus::Finished_Success)
                 {
-                    SampledPointsQuery response;
+                    hrz_jobs::SampledPointsQuery response;
                     hrz_jobs::get_job_response(js, batch->sample_ticket, response);
 
                     batch->elevations = std::move(response.values);

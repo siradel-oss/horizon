@@ -4,7 +4,6 @@
 #include "hrz/common/metadata.h"
 #include "hrz/common/monitoring_defs.h"
 
-#include <string_view>
 #include <utility>
 
 namespace hrz

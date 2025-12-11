@@ -1,0 +1,90 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/3d_model/material.proto";
+import "hrz/protocol/color/palette.proto";
+import "hrz/protocol/maths/geometry.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/lighting_settings.proto";
+import "hrz/protocol/visibility_constraints.proto";
+import "hrz/protocol/attributes/transform.proto";
+import "hrz/protocol/scene/index.proto";
+
+enum ThreeDTileAttributeSource {
+    BATCH_TABLE_SOURCE       = 0;
+
+    VECTOR_DATA_LAYER_SOURCE = 1;
+
+    // Load the ID of the class of each batch to an attribute, when the
+    // `3DTILES_batch_table_hierarchy` extension is used.
+    BATCH_CLASS_ID_SOURCE    = 2;
+
+    // Load the name of the class of each batch to an attribute, when the
+    // `3DTILES_batch_table_hierarchy` extension is used.
+    BATCH_CLASS_NAME_SOURCE  = 3;
+}
+
+message ThreeDTileAttribute {
+    reserved 2, 3;
+
+    string                    name                = 1;
+
+    ThreeDTileAttributeSource source              = 6;
+
+    // Transformation to apply to attributes.
+    // This will not apply to attributes coming from a vector data layer.
+    // For those, use the transform defined in the vector data layer model.
+    AttributeTransform        transform           = 7;
+
+    // This is the attribute ID defined in the vector data layer.
+    uint32                    vector_data_attr_id = 4;
+    // Only for attributes that are not from the vector data layer.
+    bool                      is_feature_id       = 5;
+}
+
+// @path_root="three_d_tiles_layer"
+message ThreeDTilesLayer {
+    reserved 6, 21, 24, 25;
+
+    string                        url                       = 1;
+    HttpHeaderList                http_headers              = 13;
+    string                        attribution               = 29;
+
+    // Pass main URL query parameters when requesting tiles.
+    bool                          preserve_query_parameters = 22;
+
+    Transform                     transform                 = 2;
+    GeographicPosition            geographic_position       = 3;
+    bool                          apply_geographic_position = 4;
+    // Maximum screen-space error in pixels in logical pixels before refining a
+    // tile.
+    float                         max_screen_space_error    = 5;
+    // 0: no hysteresis, 0.25: medium hysteresis, 0.5: large hysteresis
+    float                         refinement_hysteresis     = 26;
+    uint32                        vector_data_layer_id      = 11;
+    repeated ThreeDTileAttribute  attributes                = 7;
+    repeated Palette              palettes                  = 8;
+    uint64                        rng_seed                  = 27;
+    string                        styling_script            = 9;
+    bool                          visible                   = 10;
+
+    repeated Material             materials                 = 20;
+    MaterialProperties            material_properties       = 23;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32                         loading_priority          = 12;
+
+    int32                         clip_id                   = 14;
+
+    // Select what views the layer will be visible in.
+    SceneViewBitset               scene_views               = 15;
+
+    LayerVisibilityConstraintList visibility_constraints    = 16;
+
+    LightingSettings              lighting                  = 18;
+
+    bool                          draw_under_flat_overlays  = 28;
+}

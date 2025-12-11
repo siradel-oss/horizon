@@ -7,16 +7,23 @@
 #include "hrz/common/proto_maths.h"
 #include "hrz/core/camera/camera.h"
 #include "hrz/core/camera_height.h"
+#include "hrz/core/clipping_plane_layers.h"
 #include "hrz/core/events.h"
 #include "hrz/core/gizmo_layers.h"
 #include "hrz/core/global_flags.h"
-#include "hrz/core/picking_id_allocator.h"
 #include "hrz/core/picking_system.h"
 #include "hrz/core/planet/geometry.h"
 #include "hrz/core/planet/surface.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/common_ubos.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/depth.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/lighting_settings.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/screen_space.h"
+#include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
 #include "hrz/core/shape_editor.h"
@@ -27,8 +34,7 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 
 #include <mycelium/render_graph.h>
 
@@ -2723,7 +2729,7 @@ RenderRequest work(
     const CameraViewInfo& cam_view_info,
     const lm::uvec2& canvas_size,
     float device_pixel_ratio,
-    ClippingPlaneInfo cpi[HRZ_S_MAX_CLIP_PLANES],
+    std::span<const ClippingPlaneInfo, HRZ_S_MAX_CLIP_PLANES> cpi,
     PlanetSurface* planet_surface,
     const HeatmapReprRegistry* heatmap_repr_registry,
     picking::FeatureReference quick_highlight_feature_id)
@@ -2919,7 +2925,7 @@ RenderRequest work(
 
     frame_uniforms_data.quick_highlight_color = view->quick_highlight_color;
 
-    frame_uniforms_data.time = hrz::now_frame_s();
+    frame_uniforms_data.time = hrz::clock::CurrentFrameRealTime.s;
 
     auto previous_quick_highlight = frame_uniforms_data.quick_highlight_feature_reference;
     frame_uniforms_data.quick_highlight_feature_reference = quick_highlight_feature_id.to_uvec3();

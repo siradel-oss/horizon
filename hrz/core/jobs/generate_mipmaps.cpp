@@ -1,13 +1,13 @@
+#include "hrz/core/jobs/generate_mipmaps.h"
+
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/color.h"
 #include "hrz/common/image_processing.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/raster_sampling.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/log.h"
-
-#include <span>
 
 namespace hrz_jobs::generate_mipmaps
 {
@@ -236,7 +236,7 @@ bool generate_tiles_at_level(
     uint32_t image_height,
     hrz_proto::ImageFormat image_format,
     unsigned int tile_size,
-    hrz::planet::Mipmaps& response,
+    hrz_jobs::Mipmaps& response,
     const JobContext& context)
 {
     auto blob_allocator = context.get_blob_allocator();
@@ -250,7 +250,7 @@ bool generate_tiles_at_level(
     {
         for (unsigned int tile_x = 0; tile_x < tile_count_x; tile_x++)
         {
-            hrz::planet::Mipmaps::Tile tile;
+            hrz_jobs::Mipmaps::Tile tile;
             tile.coords.lod = lod;
             tile.coords.x = tile_x;
             tile.coords.y = tile_y;
@@ -298,9 +298,9 @@ bool generate_tiles_at_level(
     return true;
 }
 
-hrz::JobResult run(
-    const hrz::planet::MipmapGenerationParams& params,
-    hrz::planet::Mipmaps& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::MipmapGenerationParams& params,
+    hrz_jobs::Mipmaps& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("generate mipmaps job");
@@ -309,7 +309,7 @@ hrz::JobResult run(
     if (!format_opt.has_value())
     {
         HRZ_LOG_ERROR("Unsupported image format");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto format = format_opt.value();
 
@@ -352,7 +352,7 @@ hrz::JobResult run(
     if (!pixel_buffer_0_blob.has_value() || !pixel_buffer_1_blob.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate buffers for mipmap generation");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::blobs::register_owner(
@@ -402,7 +402,7 @@ hrz::JobResult run(
         previous_height = height;
     }
 
-    return success ? hrz::JobResult::SUCCESS : hrz::JobResult::FAILURE;
+    return success ? hrz_jobs::JobResult::SUCCESS : hrz_jobs::JobResult::FAILURE;
 }
 
 } // namespace hrz_jobs::generate_mipmaps

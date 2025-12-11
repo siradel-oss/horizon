@@ -390,3 +390,55 @@ fmt("{} has {} inhabitants.", attr("city"), attr("population"));
 <gallery-card demo="heatmapEarthquakes"></gallery-card>
 
 <gallery-card demo="rennesTrees"></gallery-card>
+
+## Grammar
+
+#### Values
+
+```
+ESCAPED_CHAR    :=   '\n' | '\t' | '\\' | '\"' | '\u{' HEXDIGIT+ '}'
+string_lit      :=   '"' (CHAR | ESCAPED_CHAR)* '"'
+uint_lit        :=   ('0x' HEXDIGIT+) | DIGIT+
+sint_lit        :=   '-'? DIGIT+
+real_lit        :=   '-'? ('.' DIGIT+ | DIGIT+ ('.' DIGIT+))
+numeric_lit     :=   uint_lit | sint_lit | real_lit
+hex_color_lit   :=   '#' HEXDIGIT{3,4,6,8}
+color_lit       :=   hex_color_digit
+literal         :=   string_lit | numeric_lit | color_lit
+attr            :=   'attr' '(' string_lit ')'
+```
+
+#### Functions
+
+```
+function_name  :=    CHAR+
+function_call  :=    function_name '(' expr (',' expr)* ')'
+colorize_call  :=    'colorize' '(' string_lit ',' expr ')'   // Special case, ugh...
+fmt_call       :=    'fmt' '(' string_lit ',' expr ')'   // Special case, ugh...
+function       :=    function_call | colorize_call | fmt_call
+```
+
+#### Expressions
+
+```
+expr        := expr_1 ('or' expr_1)*
+expr_1      := expr_2 ('and' expr_3)*
+expr_3      := 'not' expr_3 | expr_4 (('<' | '>' | '<=' | '>=' | '==' | '!=') expr_4)?
+expr_4      := '(' expr ')' | function | literal | attr
+```
+
+#### Instructions
+
+```
+block          :=   instr*
+b_block        :=   '{' block '}'
+instr          :=   discard | emit | fork | branch | set
+discard        :=   'discard' ';'
+emit           :=   'emit' expr ';'
+fork           :=   'fork' b_block
+branch         :=   branch_if (branch_elif)* (branch_else)?
+branch_if      :=   'if' '(' expr ')' b_block
+branch_elif    :=   'elif' '(' expr ')' b_block
+branch_else    :=   'else' b_block
+set            :=   'set' string_lit '=' expr ';'
+```

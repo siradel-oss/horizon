@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/identification/picking_result.pb.h"
 
 #include <cstdint>
 #include <vector>

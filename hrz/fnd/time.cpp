@@ -4,7 +4,6 @@
 
 using Clock = std::chrono::high_resolution_clock;
 static Clock::time_point epoch = Clock::now();
-static Clock::duration frame_time(0);
 
 template<typename T>
 static inline T _cast_duration(Clock::duration duration)
@@ -25,11 +24,6 @@ void hrz::set_epoch()
     epoch = Clock::now();
 }
 
-void hrz::set_frame_time()
-{
-    frame_time = Clock::now() - epoch;
-}
-
 double hrz::now_s()
 {
     return _cast_duration<double>(Clock::now() - epoch);
@@ -38,16 +32,6 @@ double hrz::now_s()
 int64_t hrz::now_s_s64()
 {
     return _cast_duration<int64_t>(Clock::now() - epoch);
-}
-
-double hrz::now_frame_s()
-{
-    return _cast_duration<double>(frame_time);
-}
-
-int64_t hrz::now_frame_s_s64()
-{
-    return _cast_duration<int64_t>(frame_time);
 }
 
 double hrz::now_ms()
@@ -60,16 +44,6 @@ int64_t hrz::now_ms_s64()
     return _cast_duration<int64_t, std::milli>(Clock::now() - epoch);
 }
 
-double hrz::now_frame_ms()
-{
-    return _cast_duration<double, std::milli>(frame_time);
-}
-
-int64_t hrz::now_frame_ms_s64()
-{
-    return _cast_duration<int64_t, std::milli>(frame_time);
-}
-
 double hrz::now_us()
 {
     return _cast_duration<double, std::micro>(Clock::now() - epoch);
@@ -80,12 +54,15 @@ int64_t hrz::now_us_s64()
     return _cast_duration<int64_t, std::micro>(Clock::now() - epoch);
 }
 
-double hrz::now_frame_us()
+hrz::TimeVariants hrz::now_all_variants()
 {
-    return _cast_duration<double, std::micro>(frame_time);
-}
-
-int64_t hrz::now_frame_us_s64()
-{
-    return _cast_duration<int64_t, std::micro>(frame_time);
+    auto duration = Clock::now() - epoch;
+    return TimeVariants{
+        _cast_duration<double>(duration),
+        _cast_duration<int64_t>(duration),
+        _cast_duration<double, std::milli>(duration),
+        _cast_duration<int64_t, std::milli>(duration),
+        _cast_duration<double, std::micro>(duration),
+        _cast_duration<int64_t, std::micro>(duration),
+    };
 }

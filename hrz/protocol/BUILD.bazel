@@ -7,8 +7,6 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-exports_files(glob(["*.proto"]))
-
 hrz_genrule(
     name = "generate_descriptor_set",
     srcs = [

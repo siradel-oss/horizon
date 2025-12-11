@@ -2,7 +2,6 @@
 
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/metrics.h"
-#include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
 #include "hrz/core/actor.h"
 #include "hrz/core/vector/data_loader/data_loader.h"

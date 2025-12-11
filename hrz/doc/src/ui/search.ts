@@ -4,6 +4,7 @@ import { HrzDemos } from "@siradel/horizon-doc-common";
 interface SearchItem {
     page: string;
     title: string;
+    displayTitle: string;
     tags: string[];
 }
 
@@ -12,13 +13,14 @@ let SEARCH_INDEX: SearchItem[] = [];
 for (const demo in HrzDemos.DEFINITIONS) {
     SEARCH_INDEX.push({
         page: `gallery/index.html?demo=${demo}`,
-        title: "Demo > " + HrzDemos.DEFINITIONS[demo].title,
+        title: HrzDemos.DEFINITIONS[demo].title,
+        displayTitle: "Demo > " + HrzDemos.DEFINITIONS[demo].title,
         tags: HrzDemos.DEFINITIONS[demo].tags,
     });
 }
 
-(window as any).addSearchItem = function (page: string, title: string) {
-    SEARCH_INDEX.push({ page, title, tags: [] });
+(window as any).addSearchItem = function (page: string, title: string, displayTitle?: string) {
+    SEARCH_INDEX.push({ page, title, displayTitle: displayTitle || title, tags: [] });
 };
 
 let fuse: Fuse<SearchItem> | null = null;
@@ -57,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     .map((res) => {
                         let a = document.createElement("a");
                         a.href = res.item.page;
-                        a.innerText = res.item.title;
+                        a.innerHTML = res.item.displayTitle;
                         return a;
                     })
                     .map((a) => {

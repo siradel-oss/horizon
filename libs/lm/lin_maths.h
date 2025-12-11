@@ -72,6 +72,12 @@ struct Vector<T, 2>
         : x{(T)other.x}, y{(T)other.y}
     {
     }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const Vector& vec)
+    {
+        return H::combine_contiguous(std::move(h), vec.m, 2);
+    }
 };
 
 template<typename T>
@@ -135,6 +141,12 @@ struct Vector<T, 3>
         requires(!std::same_as<T, U>)
         : x{(T)other.x}, y{(T)other.y}, z{(T)other.z}
     {
+    }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const Vector& vec)
+    {
+        return H::combine_contiguous(std::move(h), vec.m, 3);
     }
 };
 
@@ -240,6 +252,12 @@ struct Vector<T, 4>
         : x{(T)other.x}, y{(T)other.y}, z{(T)other.z}, w{(T)other.w}
     {
     }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const Vector& vec)
+    {
+        return H::combine_contiguous(std::move(h), vec.m, 4);
+    }
 };
 
 using vec2 = Vector<float, 2>;
@@ -328,6 +346,12 @@ struct Matrix<T, 2>
     {
         return Matrix(Vector<T, 2>(1, 0), Vector<T, 2>(0, 1));
     }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const Matrix& mat)
+    {
+        return H::combine_contiguous(std::move(h), mat.e, 4);
+    }
 };
 
 template<typename T>
@@ -384,6 +408,12 @@ struct Matrix<T, 3>
     static constexpr Matrix<T, 3> identity()
     {
         return Matrix(Vector<T, 3>(1, 0, 0), Vector<T, 3>(0, 1, 0), Vector<T, 3>(0, 0, 1));
+    }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const Matrix& mat)
+    {
+        return H::combine_contiguous(std::move(h), mat.e, 9);
     }
 };
 
@@ -461,6 +491,12 @@ struct Matrix<T, 4>
         return Matrix(
             Vector<T, 4>(1, 0, 0, 0), Vector<T, 4>(0, 1, 0, 0), Vector<T, 4>(0, 0, 1, 0),
             Vector<T, 4>(0, 0, 0, 1));
+    }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const Matrix& mat)
+    {
+        return H::combine_contiguous(std::move(h), mat.e, 16);
     }
 };
 

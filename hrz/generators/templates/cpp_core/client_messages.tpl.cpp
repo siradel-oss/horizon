@@ -8,7 +8,7 @@
 
 #include "hrz/core/client_message_queue.h"
 
-#include "hrz/protocol/messages.pb.h"
+#include "hrz/protocol/message_queue/message.pb.h"
 
 namespace hrz::client_message_queue
 {

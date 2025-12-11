@@ -1,12 +1,13 @@
+#include "hrz/core/jobs/parse_wmts_resource.h"
+
 #include "hrz/common/crs_database.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/proj.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/core/jobs/ogc_utils.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/url_utils.h"
-#include "hrz/protocol/all.h"
 
 #include <fmt/format.h>
 #include <lin_maths.h>
@@ -105,7 +106,7 @@ lm::dbbox2 transform_and_intersect_bbox(
 
 struct GetTileMethod
 {
-    hrz::planet::WmtsGetTileMethod method;
+    hrz_jobs::WmtsGetTileMethod method;
     std::string_view url;
 };
 
@@ -121,7 +122,7 @@ std::optional<GetTileMethod> find_get_tile_method(const pugi::xml_node& root_nod
     {
         // This is what QGIS does.
         HRZ_LOG_WARNING("No operations metadata found, defaulting to RESTful GetTile method");
-        return {{hrz::planet::WmtsGetTileMethod::GET_RESTFUL, ""}};
+        return {{hrz_jobs::WmtsGetTileMethod::GET_RESTFUL, ""}};
     }
 
     for (const auto& operation_node : operations_metadata_node.children("ows:Operation"))
@@ -152,11 +153,11 @@ std::optional<GetTileMethod> find_get_tile_method(const pugi::xml_node& root_nod
 
                 if (std::strcmp(value, "RESTful") == 0)
                 {
-                    return {{hrz::planet::WmtsGetTileMethod::GET_RESTFUL, href}};
+                    return {{hrz_jobs::WmtsGetTileMethod::GET_RESTFUL, href}};
                 }
                 else if (std::strcmp(value, "KVP") == 0)
                 {
-                    return {{hrz::planet::WmtsGetTileMethod::GET_KVP, href}};
+                    return {{hrz_jobs::WmtsGetTileMethod::GET_KVP, href}};
                 }
             }
         }
@@ -432,9 +433,9 @@ int8_t compute_level_offset(const lm::uvec2& level_zero_tile_count, uint32_t til
 
 namespace hrz_jobs::parse_wmts_resource
 {
-hrz::JobResult run(
-    const hrz::planet::WmtsResourceParams& params,
-    hrz::planet::WmtsResourceResponse& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::WmtsResourceParams& params,
+    hrz_jobs::WmtsResourceResponse& response,
     const JobContext&)
 {
     auto raw_xml = params.raw_xml.get_data();
@@ -447,7 +448,7 @@ hrz::JobResult run(
     if (parse_result.status != pugi::status_ok)
     {
         HRZ_LOG_ERROR("Couldn't parse WMTS Capabilities XML: {}", parse_result.description());
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     const pugi::xml_node& root_node = doc.child("Capabilities");
@@ -464,7 +465,7 @@ hrz::JobResult run(
     if (!get_tile_method.has_value())
     {
         HRZ_LOG_ERROR("No supported GetTile method found");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     const pugi::xml_node& contents_node = root_node.child("Contents");
@@ -515,7 +516,7 @@ hrz::JobResult run(
                     HRZ_LOG_ERROR(
                         "Style \"{}\" not found for layer \"{}\"", params.style_identifier,
                         layer_identifier);
-                    return hrz::JobResult::FAILURE;
+                    return hrz_jobs::JobResult::FAILURE;
                 }
                 else
                 {
@@ -531,7 +532,7 @@ hrz::JobResult run(
                         {
                             HRZ_LOG_ERROR(
                                 "No default style found for layer \"{}\"", layer_identifier);
-                            return hrz::JobResult::FAILURE;
+                            return hrz_jobs::JobResult::FAILURE;
                         }
                     }
                 }
@@ -557,7 +558,7 @@ hrz::JobResult run(
                     {
                         HRZ_LOG_ERROR("No supported image format found");
                     }
-                    return hrz::JobResult::FAILURE;
+                    return hrz_jobs::JobResult::FAILURE;
                 }
             }
 
@@ -565,7 +566,7 @@ hrz::JobResult run(
 
             std::vector<const char*> url_templates;
 
-            if (get_tile_method->method == hrz::planet::WmtsGetTileMethod::GET_RESTFUL)
+            if (get_tile_method->method == hrz_jobs::WmtsGetTileMethod::GET_RESTFUL)
             {
                 for (const auto& resource_url_node : layer_node.children("ResourceURL"))
                 {
@@ -588,7 +589,7 @@ hrz::JobResult run(
                     else
                     {
                         HRZ_LOG_ERROR("No template URLs for layer {}", layer_identifier);
-                        return hrz::JobResult::FAILURE;
+                        return hrz_jobs::JobResult::FAILURE;
                     }
                 }
             }
@@ -626,13 +627,13 @@ hrz::JobResult run(
                     HRZ_LOG_ERROR(
                         "Could not find supported tile matrix set for layer \"{}\"",
                         layer_identifier);
-                    return hrz::JobResult::FAILURE;
+                    return hrz_jobs::JobResult::FAILURE;
                 }
             }
 
             const auto& matrix_set = matrix_set_opt.value();
 
-            if (get_tile_method->method == hrz::planet::WmtsGetTileMethod::GET_RESTFUL)
+            if (get_tile_method->method == hrz_jobs::WmtsGetTileMethod::GET_RESTFUL)
             {
                 for (const auto& layer_url_template : url_templates)
                 {
@@ -649,7 +650,7 @@ hrz::JobResult run(
                     response.url_patterns.push_back(url_template);
                 }
             }
-            else if (get_tile_method->method == hrz::planet::WmtsGetTileMethod::GET_KVP)
+            else if (get_tile_method->method == hrz_jobs::WmtsGetTileMethod::GET_KVP)
             {
                 auto protocol = hrz::url::protocol_s(get_tile_method->url);
                 auto authority = hrz::url::authority_s(get_tile_method->url);
@@ -690,7 +691,7 @@ hrz::JobResult run(
                 else
                 {
                     assert(false && "Unhandled case");
-                    return hrz::JobResult::FAILURE;
+                    return hrz_jobs::JobResult::FAILURE;
                 }
             }
 
@@ -774,7 +775,7 @@ hrz::JobResult run(
             // server using TileMatrixSetLimits.
             //     -tpetillon, 2021-11-15
 
-            return hrz::JobResult::SUCCESS;
+            return hrz_jobs::JobResult::SUCCESS;
         }
     }
 
@@ -787,6 +788,6 @@ hrz::JobResult run(
         HRZ_LOG_ERROR("Could not find any displayable layer");
     }
 
-    return hrz::JobResult::FAILURE;
+    return hrz_jobs::JobResult::FAILURE;
 }
 } // namespace hrz_jobs::parse_wmts_resource

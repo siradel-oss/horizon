@@ -8,7 +8,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_all_attributes_ta
     const FeatureSelection& feature_selection)
 {
     uint64_t hash = hrz::index_of_variant<decltype(Task::data), Task::LoadAllAttributeValues>();
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, feature_selection.hash());
 
     auto it = tasks_by_hash.find(hash);

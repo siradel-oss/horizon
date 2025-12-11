@@ -3,12 +3,15 @@
 #include "hrz/common/blob_array.h"
 #include "hrz/common/maths.h"
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/resources.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/fnd/class.h"
 #include "hrz/fnd/flat_hash_set.h"
 
 namespace hrz
 {
+
+struct Render;
 
 // This class renders a (mostly) static point clouds.
 // The point cloud can have batches, each with a feature ID and color that comes from styling.

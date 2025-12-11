@@ -1,0 +1,15 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum VectorDataFormat {
+    reserved 2, 3;
+
+    // Read data from GeoJSON files.
+    GEOJSON_VECTOR_DATA = 0;
+    // Read data from Mapbox Vector Tile files.
+    MVT_VECTOR_DATA     = 1;
+    // Read data from Geobuf files.
+    GEOBUF_VECTOR_DATA  = 4;
+}

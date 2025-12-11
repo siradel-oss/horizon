@@ -1,16 +1,16 @@
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
 #include "hrz/core/base_url.h"
 #include "hrz/core/job_scheduler.h"
+#include "hrz/core/jobs/decode_cesium_terrain_tile.h"
 #include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
 #include "hrz/core/tile_url_generator.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/json_utils.h"
-#include "hrz/fnd/url_utils.h"
+#include "hrz/fnd/string_utils.h"
 
 #include <fmt/format.h>
 #include <lin_maths.h>
@@ -71,7 +71,7 @@ public:
         auto handle = tiles.alloc();
         auto tile = tiles.get_object(handle);
         tile->status = Status::Decoding;
-        CesiumTerrainTileData params;
+        hrz_jobs::CesiumTerrainTileData params;
         params.blob = blob;
         params.format = tile_format;
         tile->rasterize_ticket = hrz_jobs::add_job_rasterize_cesium_terrain_tile(

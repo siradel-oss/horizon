@@ -28,6 +28,8 @@ def parse(input_file_name):
     protocol["messages"] = []
     protocol["files"] = []
 
+    path_root_message = root.find("file/message[full_name='HrzProtocol.PathRoot']")
+
     for proto_file in root.iter("file"):
         file_basename = proto_file.find("filename").text[:-6]
         dependencies = []
@@ -100,10 +102,10 @@ def parse(input_file_name):
 
             path_root_node = m.find("path_root")
             if path_root_node != None:
-                root_field = proto_file.find("message[full_name='HrzProtocol.PathRoot']/field[union='kind'][name='%s']" % path_root_node.text)
+                root_field = path_root_message.find("field[union='kind'][name='%s']" % path_root_node.text)
                 msg["path_root"] = path_root_node.text
                 msg["path_root_type"] = root_field.find("type").text
-                root_type_is_enum = proto_file.find("enum[full_name='%s']" % msg["path_root_type"]) != None
+                root_type_is_enum = root.find("file/enum[full_name='%s']" % msg["path_root_type"]) != None
                 msg["path_root_type_is_enum"] = root_type_is_enum
                 msg["is_path_root"] = True
             else:

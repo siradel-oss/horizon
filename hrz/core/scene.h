@@ -2,11 +2,18 @@
 
 #include "hrz/common/geo.h"
 #include "hrz/common/layers.h"
+#include "hrz/common/picking_types.h"
+#include "hrz/common/vector_data/feature_id_hash.h"
+#include "hrz/core/camera/types.h"
 #include "hrz/core/render_request.h"
-#include "hrz/core/scene_view.h"
-#include "hrz/fnd/flat_hash_map.h"
+#include "hrz/fnd/int128.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/identification/mouse_hover.pb.h"
+#include "hrz/protocol/identification/object_reference.pb.h"
+#include "hrz/protocol/identification/picking_result.pb.h"
+#include "hrz/protocol/layer/defs.pb.h"
+#include "hrz/protocol/scene_dump/service.pb.h"
+#include "hrz/protocol/services.h"
 
 #include <lin_maths.h>
 #include <mycelium/backend.h>
@@ -95,7 +102,8 @@ void destroy(
 
 void initialize_rendering(Scene*, my::Instance*, GpuResourceContext*);
 
-StaticVector<std::pair<my::ResourceHandle, lm::ibbox2>, SCENE_VIEW_COUNT> get_color_outputs(Scene*);
+StaticVector<std::pair<my::ResourceHandle, lm::ibbox2>, hrz_proto::SceneViewIndex_ARRAYSIZE>
+get_color_outputs(Scene*);
 
 bool handle_event(Scene*, const Event&, float device_pixel_ratio);
 

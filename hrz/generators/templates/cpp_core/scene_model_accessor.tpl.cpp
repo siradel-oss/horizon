@@ -3,6 +3,10 @@
 
 #include "hrz/fnd/log.h"
 
+{% for f in protocol.files %}
+#include "{{ f.name }}.pb.h"
+{% endfor %}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //        THIS FILE HAS BEEN GENERATED FROM THE SPECS, DO NOT EDIT!!!         //

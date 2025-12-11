@@ -1,0 +1,19 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+message AssetRequestMessage {
+    uint32 ticket      = 1;
+    string url         = 2;
+    // The range of bytes needed.
+    // A range size of 0 represents an unrestricted size.
+    uint64 range_start = 3;
+    uint64 range_size  = 4;
+}
+
+message AssetRequestResponse {
+    uint32 ticket    = 1;
+    bytes  data      = 2;
+    string mime_type = 3;
+}

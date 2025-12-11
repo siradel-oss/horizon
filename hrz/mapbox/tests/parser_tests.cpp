@@ -1,8 +1,7 @@
 #include "hrz/common/color.h"
-#include "hrz/fnd/string_utils.h"
 #include "hrz/mapbox/common.h"
 #include "hrz/mapbox/translate.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/scene_dump/defs.pb.h"
 #include "rules_cc/cc/runfiles/runfiles.h"
 
 #include <gtest/gtest.h>

@@ -1,6 +1,5 @@
 #include "hrz/core/three_d_tiles_layers.h"
 
-#include "hrz/common/attributes.h"
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/color.h"
 #include "hrz/common/horizon_culling.h"
@@ -11,33 +10,39 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_geo.h"
 #include "hrz/common/proto_maths.h"
-#include "hrz/common/style.h"
+#include "hrz/common/style/flat_ast.h"
 #include "hrz/common/three_d_tiles.h"
+#include "hrz/common/vector_data/attribute_type_api.h"
+#include "hrz/common/vector_data/packed_attribute_values.h"
 #include "hrz/common/vertex_utils.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/base_url.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/debug_draw.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/job_scheduler.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/styling.h"
+#include "hrz/core/jobs/three_d_tiles_jobs_params.h"
 #include "hrz/core/loading_priorities.h"
 #include "hrz/core/model/descriptor.h"
 #include "hrz/core/model/materials_manager.h"
 #include "hrz/core/model/model.h"
 #include "hrz/core/picking_id_allocator.h"
 #include "hrz/core/point_cloud.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/lighting_settings.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/core/scene.h"
 #include "hrz/core/scene_model_array_sync.h"
 #include "hrz/core/selection.h"
-#include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
 #include "hrz/core/sky.h"
 #include "hrz/core/style/script.h"
 #include "hrz/core/vector/data_loader/data_loader.h"
 #include "hrz/core/viewsheds.h"
 #include "hrz/core/visibility_constraints.h"
-#include "hrz/fnd/array_view.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
@@ -45,15 +50,11 @@
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/observed.h"
 #include "hrz/fnd/static_string.h"
 #include "hrz/fnd/string_utils.h"
-#include "hrz/fnd/time.h"
-#include "hrz/fnd/url_utils.h"
-#include "hrz/fnd/variant.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/three_d_tiles_layer.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -784,7 +785,7 @@ struct ThreeDTilesSystem
     {
         _system_picking_id = system_picking_id;
         _vector_data_channel = std::move(vector_data_channel);
-        _request_priority_timer_ms = hrz::now_frame_ms();
+        _request_priority_timer_ms = hrz::clock::CurrentFrameRealTime.ms;
     }
 
     void initialize_rendering(hrz::Render* render)
@@ -2877,7 +2878,7 @@ struct ThreeDTilesSystem
         auto& content = std::get<ThreeDTile::B3dmContent>(subtile.content);
 
         {
-            hrz::three_d_tiles::EncodedBatchTable params;
+            hrz_jobs::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
                 hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
@@ -3002,7 +3003,7 @@ struct ThreeDTilesSystem
         }
 
         {
-            hrz::three_d_tiles::EncodedBatchTable params;
+            hrz_jobs::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
                 hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
@@ -3176,7 +3177,7 @@ struct ThreeDTilesSystem
         auto& content = std::get<ThreeDTile::PntsContent>(subtile.content);
 
         {
-            hrz::three_d_tiles::EncodedBatchTable params;
+            hrz_jobs::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = hrz::blobs::make_sub_blob(
                 hrz::unsafe("Component sizes are checked against tile size"), ba, tile_data_blob,
@@ -3288,7 +3289,7 @@ struct ThreeDTilesSystem
         auto& content = std::get<ThreeDTile::B3dmContent>(subtile.content);
 
         {
-            hrz::three_d_tiles::EncodedBatchTable params;
+            hrz_jobs::EncodedBatchTable params;
             params.batch_length = content.batch_length;
             params.json_data = {};
             params.bin_data = {};
@@ -3612,7 +3613,7 @@ struct ThreeDTilesSystem
         const hrz::blobs::BlobHandle& descriptor_blob,
         hrz::JobScheduler* js)
     {
-        hrz::three_d_tiles::EncodedThreeDTilesTileset params;
+        hrz_jobs::EncodedThreeDTilesTileset params;
         params.raw_json = descriptor_blob;
         params.transform = tileset->transform;
         params.root_depth = tileset->root_depth;
@@ -4082,7 +4083,7 @@ struct ThreeDTilesSystem
 
         if (subtile.attribute_values.size() != config.attributes.size()) return false;
 
-        hrz::style::FeaturesStylingData job_data;
+        hrz_jobs::FeaturesStylingData job_data;
 
         job_data.ast = config.style_ast;
         job_data.representations.push_back({TILE_REPR_ID, TILE_REPR_NAME});
@@ -4143,7 +4144,7 @@ struct ThreeDTilesSystem
         ThreeDTile::Subtile& subtile,
         hrz::JobScheduler* js)
     {
-        hrz::style::StylingResult result;
+        hrz_jobs::StylingResult result;
         hrz_jobs::get_job_response(js, subtile.style_job_ticket, result);
 
         // This scratch buffer can be used by to temporarily store per batch colors.
@@ -4686,7 +4687,7 @@ struct ThreeDTilesSystem
             if (hrz_jobs::get_job_status(ctx.js, content.decode_batch_table_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::three_d_tiles::DecodedBatchTable response;
+                hrz_jobs::DecodedBatchTable response;
                 hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket, response);
 
                 subtile.attribute_values = std::move(response.attribute_values);
@@ -4799,7 +4800,7 @@ struct ThreeDTilesSystem
                     content.prototype, *content.geometry, *content.material)};
             }
 
-            hrz::three_d_tiles::DecodedBatchTable response;
+            hrz_jobs::DecodedBatchTable response;
             hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket, response);
 
             subtile.attribute_values = std::move(response.attribute_values);
@@ -4990,7 +4991,7 @@ struct ThreeDTilesSystem
                 return render_request;
             }
 
-            hrz::three_d_tiles::DecodedBatchTable response;
+            hrz_jobs::DecodedBatchTable response;
             hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket, response);
 
             content.decode_batch_table_ticket = {};
@@ -5675,7 +5676,7 @@ struct ThreeDTilesSystem
         // become outdated, so we update them regularly.
         bool should_update_priorities = false;
         {
-            double duration = hrz::now_frame_ms() - _request_priority_timer_ms;
+            double duration = hrz::clock::CurrentFrameRealTime.ms - _request_priority_timer_ms;
             if (duration >= REQUEST_PRIORITY_UPDATE_INTERVAL)
             {
                 should_update_priorities = true;

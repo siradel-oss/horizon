@@ -1,13 +1,12 @@
 #pragma once
 
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/http_headers.pb.h"
 
 #include <lin_maths.h>
-#include <mycelium/mycelium.h>
+#include <mycelium/backend.h>
 
 #include <cstdint>
-#include <string_view>
 
 namespace hrz
 {

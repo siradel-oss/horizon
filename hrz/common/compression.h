@@ -1,6 +1,7 @@
 #pragma once
 
-#include <functional>
+#include "hrz/fnd/function_ref.h"
+
 #include <span>
 
 namespace hrz
@@ -11,7 +12,7 @@ namespace hrz
 
 bool decompress_gzip(
     std::span<const std::byte> compressed,
-    const std::function<void(std::span<const std::byte>)>& callback);
+    hrz::function_ref<void(std::span<const std::byte>)> callback);
 
 bool decompress_zlib_uncompress(
     std::span<const std::byte> compressed,
@@ -19,10 +20,10 @@ bool decompress_zlib_uncompress(
 
 bool decompress_zstd(
     std::span<const std::byte> compressed,
-    const std::function<void(std::span<const std::byte>)>& callback);
+    hrz::function_ref<void(std::span<const std::byte>)> callback);
 
 bool decompress_brotli(
     std::span<const std::byte> compressed,
-    const std::function<void(std::span<const std::byte>)>& callback);
+    hrz::function_ref<void(std::span<const std::byte>)> callback);
 
 } // namespace hrz

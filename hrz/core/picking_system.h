@@ -2,7 +2,6 @@
 
 #include "hrz/common/picking_types.h"
 #include "hrz/core/render_request.h"
-#include "hrz/protocol/all.h"
 
 #include <lin_maths.h>
 #include <mycelium/render_graph.h>

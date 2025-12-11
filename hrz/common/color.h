@@ -1,17 +1,14 @@
 #pragma once
 
-#include "hrz/common/proto_maths.h"
-#include "hrz/fnd/char_utils.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/color/color.pb.h"
 
 #include <lin_maths.h>
 
 #include <bit>
 #include <cmath>
 #include <optional>
-#include <span>
 #include <string_view>
 
 namespace hrz
@@ -146,7 +143,7 @@ lm::ubvec4 mix_srgb_colors_in_linear(const lm::ubvec4& x, const lm::ubvec4& y, f
 
 lm::ubvec4 mix_srgb_colors_in_oklab(const lm::ubvec4& x, const lm::ubvec4& y, float t);
 
-static inline lm::vec4 premultiply_alpha(lm::vec4 c)
+static constexpr lm::vec4 premultiply_alpha(lm::vec4 c)
 {
     c.rgb *= c.a;
     return c;
@@ -169,12 +166,12 @@ static inline lm::ubvec4 convert_rgba_color_to_bytes(const lm::vec4& color)
     return {to_byte(color.r), to_byte(color.g), to_byte(color.b), to_byte(color.a)};
 }
 
-static inline lm::ubvec4 convert_uint_color_to_bytes(uint32_t color)
+static constexpr lm::ubvec4 convert_uint_color_to_bytes(uint32_t color)
 {
     return std::bit_cast<lm::ubvec4, uint32_t>(color);
 }
 
-static inline uint32_t convert_byte_color_to_uint(const lm::ubvec4& color)
+static constexpr uint32_t convert_byte_color_to_uint(const lm::ubvec4& color)
 {
     return std::bit_cast<uint32_t, lm::ubvec4>(color);
 }
@@ -185,12 +182,12 @@ static inline uint32_t convert_rgba_color_to_uint(const lm::vec4& color)
     return convert_byte_color_to_uint(convert_rgba_color_to_bytes(color));
 }
 
-static inline lm::vec4 convert_byte_color_to_rgba(const lm::ubvec4& color)
+static constexpr lm::vec4 convert_byte_color_to_rgba(const lm::ubvec4& color)
 {
     return lm::vec4{(float)color.r, (float)color.g, (float)color.b, (float)color.a} / 255.0f;
 }
 
-static inline lm::vec4 convert_uint_color_to_rgba(uint32_t c)
+static constexpr lm::vec4 convert_uint_color_to_rgba(uint32_t c)
 {
     return lm::vec4{
                (float)(c & 0xff),

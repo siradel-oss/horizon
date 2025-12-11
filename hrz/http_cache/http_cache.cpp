@@ -4,7 +4,6 @@
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/hash.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/lru.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/string_utils.h"

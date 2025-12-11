@@ -1,20 +1,21 @@
 #pragma once
 
 #include "hrz/common/blob_array.h"
-#include "hrz/common/geo.h"
 #include "hrz/common/picking_types.h"
+#include "hrz/common/style/styled_features.h"
 #include "hrz/common/tile_coords.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/feature_ids.h"
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/core/channel.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/lighting_settings.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/style/script.h"
 #include "hrz/core/vector/symbol/culling.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/intern_string.h"
-#include "hrz/fnd/log.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/vector/clamping.pb.h"
+#include "hrz/protocol/vector/representation.pb.h"
 
 #include <lin_maths.h>
 

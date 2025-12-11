@@ -22,5 +22,11 @@ struct uint128
         else
             return a.low <=> b.low;
     }
+
+    template<typename H>
+    friend H AbslHashValue(H h, uint128 v)
+    {
+        return H::combine(std::move(h), v.low, v.high);
+    }
 };
 } // namespace hrz

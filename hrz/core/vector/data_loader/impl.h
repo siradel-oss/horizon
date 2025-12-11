@@ -7,8 +7,8 @@
 #include "hrz/core/attribution.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/core/pmtiles.h"
-#include "hrz/core/scene_path/scene_path.h"
 #include "hrz/core/tile_url_generator.h"
 #include "hrz/core/vector/data_loader/data_loader.h"
 #include "hrz/core/vector/in_memory.h"
@@ -16,8 +16,9 @@
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/http.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/shared_object_pool.h"
+#include "hrz/protocol/layer/vector_data_layer.pb.h"
+#include "hrz/protocol/vector/provider.pb.h"
 
 extern "C"
 {
@@ -269,9 +270,9 @@ private:
             uint32_t data_source;
             hrz_proto::AttributeTransform transform;
 
-            vector_data::AttributeModel to_attribute_model() const
+            hrz_jobs::AttributeModel to_attribute_model() const
             {
-                vector_data::AttributeModel model{};
+                hrz_jobs::AttributeModel model{};
                 model.id = id;
                 model.is_feature_id = is_feature_id;
                 model.name = name_in_source;
@@ -541,16 +542,12 @@ private:
         {
             if (has_feature_ids())
             {
-                return hrz::hash_mix((uint64_t)0, (uint64_t)feature_ids().get_handle().hash());
+                return hrz::hash_mix<uint64_t>(0, hrz::hash_value(feature_ids().get_handle()));
             }
             else if (has_tile_coords())
             {
                 const auto& coords = tile_coords();
-                return hrz::hash_mix(
-                    (uint64_t)1,
-                    hrz::hash_mix(
-                        (uint64_t)coords.x,
-                        hrz::hash_mix((uint64_t)coords.y, (uint64_t)coords.lod)));
+                return hrz::hash_mix<uint64_t>(1, hrz::hash_value(coords));
             }
             else
             {
@@ -755,7 +752,7 @@ private:
     {
         TaskStatus status;
         uint8_t version;
-        hrz::flat_hash_set<WeakTaskRef, TaskRef::Hasher> dependents;
+        hrz::flat_hash_set<WeakTaskRef> dependents;
         uint32_t data_use_count;
 
         bool is_active;
@@ -860,7 +857,7 @@ private:
             metrics::MetricDesc request_count_metric;
             TaskDependency load_url_data_task;
             hrz_jobs::ParseMvtTicket parse_ticket;
-            std::optional<hrz::vector_data::VectorDataPackage> package;
+            std::optional<hrz_jobs::VectorDataPackage> package;
         };
 
         // Loads a vector data package from a PMTiles dataset, and parses it from MVT.
@@ -881,7 +878,7 @@ private:
             std::optional<PmTiles::QueryHandle> tile_query;
             hrz_jobs::ParseMvtTicket parse_ticket;
 
-            std::optional<hrz::vector_data::VectorDataPackage> package;
+            std::optional<hrz_jobs::VectorDataPackage> package;
         };
 
         // Loads geometry, attribute values, and feature IDs from an untiled vector data source
@@ -894,7 +891,7 @@ private:
             uint32_t data_source;
             TaskDependency load_vector_tile_data_task;
             hrz_jobs::BuildAabbTreeTicket build_aabb_tree_ticket;
-            hrz::vector_data::AabbTree aabb_tree;
+            hrz_jobs::AabbTree aabb_tree;
             FeatureIdListRef feature_ids;
             TileGeometryRef geometry;
             AttributionHandle attribution;
@@ -952,7 +949,7 @@ private:
             LayerModelRef layer_model;
             uint32_t data_source;
             FeatureSelection feature_selection;
-            std::vector<hrz::vector_data::AttributeModel> attributes;
+            std::vector<hrz_jobs::AttributeModel> attributes;
 
             TaskDependency load_feature_ids_task;
 
@@ -1223,8 +1220,13 @@ private:
     hrz::flat_hash_map<RequestId, LayerLoader> request_ids_to_layer_loaders;
     std::unordered_multimap<uint32_t, RequestId> layer_ids_to_request_ids;
 
+    struct WeakTaskRefHasher
+    {
+        size_t operator()(const WeakTaskRef& task_ref) const { return hrz::hash_value(task_ref); }
+    };
+
     hrz::flat_hash_map<RequestId, DataRequest> request_ids_to_data_requests;
-    std::unordered_multimap<WeakTaskRef, RequestId, WeakTaskRef::Hasher> tasks_to_data_request_ids;
+    std::unordered_multimap<WeakTaskRef, RequestId, WeakTaskRefHasher> tasks_to_data_request_ids;
 
     // Declared here to avoid re-instantiating the set each frame.
     hrz::flat_hash_set<uint32_t> updated_layers;

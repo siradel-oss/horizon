@@ -1,28 +1,30 @@
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/maths.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_maths.h"
-#include "hrz/common/style.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/impostor_baker.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/core/loading_priorities.h"
 #include "hrz/core/model/model.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/sky.h"
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/viewsheds.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/thread.h"
+#include "hrz/protocol/3d_model/material.pb.h"
 
 namespace
 {
@@ -292,7 +294,7 @@ struct Tile
     ConfigH config_handle;
     bool has_feature_ids;
 
-    hrz::vt::ModelData bake_data;
+    hrz_jobs::ModelData bake_data;
     hrz_jobs::Bake3dModelGeometryTicket bake_ticket;
     TileGeometry geometry;
 
@@ -693,7 +695,7 @@ public:
             tile.config_handle = 0;
         }
 
-        hrz::vt::ModelData bake_data;
+        hrz_jobs::ModelData bake_data;
 
         bake_data.frame = cfg.frame;
         bake_data.rotation_order = cfg.rotation_order;
@@ -1740,7 +1742,7 @@ private:
                 if (hrz_jobs::is_job_valid(ctx.js, tile->bake_ticket)
                     && hrz_jobs::is_job_finished(ctx.js, tile->bake_ticket))
                 {
-                    hrz::vt::ModelGeometry response;
+                    hrz_jobs::ModelGeometry response;
                     hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
 
                     TileGeometry geometry;

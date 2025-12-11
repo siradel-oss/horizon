@@ -1,13 +1,15 @@
 #include "hrz/common/blob_array.h"
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/common/style.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/core/render.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/lighting_settings.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
@@ -15,11 +17,8 @@
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/viewsheds.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/thread.h"
-#include "hrz/fnd/time.h"
 
 #include <optional>
 
@@ -210,7 +209,7 @@ struct TileGeometry
     lm::dvec3 bsphere_center;
     bool has_transparency;
     bool is_animated;
-    hrz::BlobArray<hrz::vt::CylinderVectorGeometry::Instance> instance_data;
+    hrz::BlobArray<hrz_jobs::CylinderVectorGeometry::Instance> instance_data;
 };
 
 struct TileId
@@ -245,7 +244,7 @@ struct Tile
     bool has_feature_ids;
 
     hrz_jobs::BakeCylinderVectorGeometryTicket bake_ticket;
-    std::optional<hrz::vt::CylinderVectorData> bake_data;
+    std::optional<hrz_jobs::CylinderVectorData> bake_data;
     std::optional<TileGeometry> geometry;
     std::optional<RenderableFeatures> renderable;
 
@@ -618,7 +617,7 @@ public:
         tile.coords = coords;
         tile.has_feature_ids = feature_ids.has_any_attribute();
 
-        hrz::vt::CylinderVectorData bake_data;
+        hrz_jobs::CylinderVectorData bake_data;
 
         Config cfg;
         Config* cfg_src = _configs.get_object(config_handle);
@@ -756,7 +755,7 @@ public:
             if (hrz_jobs::get_job_status(ctx.js, tile->bake_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::vt::CylinderVectorGeometry response;
+                hrz_jobs::CylinderVectorGeometry response;
                 hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
 
                 TileGeometry geometry;
@@ -833,7 +832,7 @@ public:
         auto& geometry = tile->geometry.value();
         RenderableFeatures renderable;
 
-        using Instance = hrz::vt::CylinderVectorGeometry::Instance;
+        using Instance = hrz_jobs::CylinderVectorGeometry::Instance;
 
         size_t instance_count = geometry.instance_data.size();
 

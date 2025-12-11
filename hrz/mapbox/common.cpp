@@ -2,7 +2,6 @@
 
 #include "hrz/common/color.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/string_utils.h"
 #include "hrz/mapbox/expression.h"
 
 #include <fmt/format.h>

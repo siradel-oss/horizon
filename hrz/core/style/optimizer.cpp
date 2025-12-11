@@ -1,4 +1,5 @@
 #include "hrz/common/profiling.h"
+#include "hrz/common/style/operator_evaluator.h"
 #include "hrz/core/style/script.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/static_vector.h"
@@ -243,10 +244,10 @@ struct OptimizerImpl : public Optimizer
                 node_ref.data = 0;
             }
 
-            flat_ast.push_expression(node_ref);
+            flat_ast.expressions.push_back(node_ref);
         }
 
-        uint32_t size = flat_ast.expressions.size() - offset;
+        const uint32_t size = flat_ast.expressions.size() - offset;
         FlatAst::FullNode full_node;
         full_node.kind = NodeKind::Expr;
         full_node.expr.offset = offset;
@@ -258,7 +259,7 @@ struct OptimizerImpl : public Optimizer
     // Returns the block node index.
     bool flatten_block(Ast& ast, FlatAst& flat_ast, uint32_t node_index, uint32_t* root)
     {
-        Arena::Vec<FlatAst::NodeRef> instrs;
+        std::vector<FlatAst::NodeRef> instrs;
         while (node_index != Ast::kInvalidNodeIndex)
         {
             const auto& node = ast.nodes[node_index];
@@ -266,7 +267,7 @@ struct OptimizerImpl : public Optimizer
             {
                 case NodeKind::Discard:
                 {
-                    flat_ast.arena.push(instrs, {NodeKind::Discard, {0}});
+                    instrs.push_back({NodeKind::Discard, {0}});
 
                     node_index = node.discard.next_instr;
                     break;
@@ -275,7 +276,7 @@ struct OptimizerImpl : public Optimizer
                 {
                     uint32_t expr;
                     CHECK_ERR(optimize_expr(ast, flat_ast, node.emit.expr, &expr));
-                    flat_ast.arena.push(instrs, {NodeKind::Emit, {expr}});
+                    instrs.push_back({NodeKind::Emit, {expr}});
 
                     node_index = node.emit.next_instr;
                     break;
@@ -287,10 +288,10 @@ struct OptimizerImpl : public Optimizer
                     full_node.set.prp_id = node.set.prp_id;
                     CHECK_ERR(optimize_expr(ast, flat_ast, node.set.expr, &full_node.set.expr));
 
-                    FlatAst::NodeRef node_ref;
+                    FlatAst::NodeRef node_ref{};
                     node_ref.kind = NodeKind::Set;
                     node_ref.full_node = flat_ast.push_full_node(full_node);
-                    flat_ast.arena.push(instrs, node_ref);
+                    instrs.push_back(node_ref);
 
                     node_index = node.set.next_instr;
                     break;
@@ -299,7 +300,7 @@ struct OptimizerImpl : public Optimizer
                 {
                     uint32_t block_index;
                     CHECK_ERR(flatten_block(ast, flat_ast, node.fork.block, &block_index));
-                    flat_ast.arena.push(instrs, {NodeKind::Fork, {block_index}});
+                    instrs.push_back({NodeKind::Fork, {block_index}});
 
                     node_index = node.fork.next_instr;
                     break;
@@ -322,10 +323,10 @@ struct OptimizerImpl : public Optimizer
                         full_node.branch.else_body = 0;
                     }
 
-                    FlatAst::NodeRef node_ref;
+                    FlatAst::NodeRef node_ref{};
                     node_ref.kind = NodeKind::Branch;
                     node_ref.full_node = flat_ast.push_full_node(full_node);
-                    flat_ast.arena.push(instrs, node_ref);
+                    instrs.push_back(node_ref);
 
                     node_index = node.branch.next_instr;
                     break;
@@ -334,11 +335,8 @@ struct OptimizerImpl : public Optimizer
             }
         }
 
-        uint32_t offset = flat_ast.statements.size();
-        for (uint32_t i = 0; i < instrs.size(); ++i)
-        {
-            flat_ast.push_statement(instrs[i]);
-        }
+        const uint32_t offset = flat_ast.statements.size();
+        flat_ast.statements.insert(flat_ast.statements.end(), instrs.begin(), instrs.end());
 
         FlatAst::FullNode full_node;
         full_node.kind = NodeKind::Block;

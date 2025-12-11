@@ -1,0 +1,58 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/color/palette.proto";
+import "hrz/protocol/size_unit.proto";
+
+enum HeatmapAccumulationMode {
+    // The values are simply added together.
+    // This mode is accurate but can easily saturate the palette if it does not
+    // have a wide enough range. The values and not bounded, and neither is the
+    // palette.
+    //
+    // @label="Additive"
+    HEATMAP_ADDITIVE         = 0;
+
+    // The values are alpha-blended together using their value as weight.
+    // This mode is much harder to saturate, and this keeps the heatmap readable
+    // in areas of high density. The values should be in the [0, 1] range, and
+    // so should the palette. Failing to do so is undefined behaviour.
+    //
+    // @label="Weighted blended"
+    HEATMAP_WEIGHTED_BLENDED = 1;
+}
+
+message HeatmapVectorRepr {
+    reserved 1, 2;
+
+    // Controls the radius of the disc-shaped area where the feature contributes
+    // its value.
+    FloatProperty           disc_radius           = 6;
+
+    // Controls the size of the blur applied to each point, relative to the disc
+    // radius.
+    float                   blur_size             = 8;
+
+    // Controls the value that will be contributed to the heatmap by the
+    // feature.
+    FloatProperty           value                 = 7;
+
+    // Indicates the unit of the `disc_radius` and `blur_size` properties.
+    InWorldSizeUnit         disc_radius_size_unit = 3;
+
+    // How point values are accumulated for the final colorization.
+    HeatmapAccumulationMode accumulation          = 9;
+
+    // Used to colorize the heatmap depending on the value of the points
+    // contributed by the different representations. WARNING: The number of
+    // color points is limited to 32.
+    NumericPalette          numeric_palette       = 4;
+
+    // Used to set the rendering order of the heatmap in relation to the other
+    // flat overlay representations. Higher Z-indices are drawn above lower
+    // ones.
+    uint32                  z_index               = 5;
+}

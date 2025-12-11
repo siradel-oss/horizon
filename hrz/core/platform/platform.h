@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hrz/core/platform/events.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/viewer/init_status.pb.h"
 
 #include <lin_maths.h>
 

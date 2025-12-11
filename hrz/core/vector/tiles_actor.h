@@ -1,25 +1,22 @@
 #pragma once
 
-#include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_array.h"
 #include "hrz/common/blob_array_view.h"
 #include "hrz/common/geo.h"
 #include "hrz/common/horizon_culling.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/core/actor.h"
 #include "hrz/core/attribution.h"
 #include "hrz/core/channel.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/core/vector/repr.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/vector/style.pb.h"
 
 #include <lin_maths.h>
+#include <mycelium/renderer.h>
 
 #include <optional>
-#include <utility>
 #include <variant>
 
 namespace hrz

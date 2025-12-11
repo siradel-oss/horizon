@@ -1,6 +1,8 @@
 #include "hrz/scene_dump/migration.h"
 #include "hrz/scene_dump/utils.h"
 
+#include <stdio.h>
+
 int main(int argc, char* argv[])
 {
     if (argc < 3)

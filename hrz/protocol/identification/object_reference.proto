@@ -1,0 +1,35 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/layer/handle.proto";
+import "hrz/protocol/attributes/feature_id.proto";
+import "hrz/protocol/types/primitive.proto";
+
+message VectorTilesObjectReference {
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 2;
+}
+
+message ThreeDTilesObjectReference {
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 3;
+}
+
+message TypedObjectReference {
+    oneof ref {
+        Void                       planet         = 1;
+        LayerHandle                single_model   = 2;
+        VectorTilesObjectReference vector_tiles   = 3;
+        ThreeDTilesObjectReference three_d_tiles  = 4;
+        LayerHandle                editable_shape = 5;
+    }
+}
+
+message FeatureReference {
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 2;
+}
+
+message FeatureReferences { repeated FeatureReference features = 1; }

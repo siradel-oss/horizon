@@ -1,17 +1,16 @@
+#include "hrz/core/jobs/parse_wms_resource.h"
+
 #include "hrz/common/color.h"
 #include "hrz/common/crs_database.h"
 #include "hrz/common/crs_utils.h"
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/proj.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/core/jobs/ogc_utils.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/maths.h"
-#include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/url_utils.h"
-#include "hrz/protocol/all.h"
 
 #include <fmt/format.h>
 #include <lin_maths.h>
@@ -162,7 +161,7 @@ const char* get_layer_style(const pugi::xml_node& layer_node, std::string_view r
 
 void get_layer_attribution(
     const pugi::xml_node& layer_node,
-    std::vector<hrz::planet::WmsResourceResponse::Attribution>& attributions)
+    std::vector<hrz_jobs::WmsResourceResponse::Attribution>& attributions)
 {
     auto parent_node = layer_node.parent();
     if (std::strcmp(parent_node.name(), "Layer") == 0)
@@ -538,13 +537,13 @@ bool is_layer_displayable(const pugi::xml_node& layer_node, unsigned int tile_si
 
 void get_layers(
     const pugi::xml_node& layer_node,
-    const hrz::planet::WmsResourceParams& params,
+    const hrz_jobs::WmsResourceParams& params,
     unsigned int tile_size,
     size_t& found_layer_count,
     std::vector<bool>& found_layers,
     std::vector<const char*>& layer_names,
     std::vector<const char*>& layer_styles,
-    std::vector<hrz::planet::WmsResourceResponse::Attribution>& attributions,
+    std::vector<hrz_jobs::WmsResourceResponse::Attribution>& attributions,
     SrsBounds& srs_bounds,
     ScaleDenominators& scale_denominators)
 {
@@ -597,9 +596,9 @@ void get_layers(
 
 namespace hrz_jobs::parse_wms_resource
 {
-hrz::JobResult run(
-    const hrz::planet::WmsResourceParams& params,
-    hrz::planet::WmsResourceResponse& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::WmsResourceParams& params,
+    hrz_jobs::WmsResourceResponse& response,
     const JobContext&)
 {
     auto raw_xml = params.raw_xml.get_data();
@@ -612,7 +611,7 @@ hrz::JobResult run(
     if (parse_result.status != pugi::status_ok)
     {
         HRZ_LOG_ERROR("Couldn't parse WMS Capabilities XML: {}", parse_result.description());
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     pugi::xml_node root_node = doc.child("WMS_Capabilities");
@@ -635,7 +634,7 @@ hrz::JobResult run(
     if (!capability_node)
     {
         HRZ_LOG_ERROR("Missing Capability node");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     const pugi::xml_node& request_node = capability_node.child("Request");
@@ -643,7 +642,7 @@ hrz::JobResult run(
     if (!request_node)
     {
         HRZ_LOG_ERROR("Missing Request node");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     const auto& get_map_node = request_node.child("GetMap");
@@ -651,7 +650,7 @@ hrz::JobResult run(
     if (!get_map_node)
     {
         HRZ_LOG_ERROR("Missing GetMap node");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     unsigned int layer_limit = get_layer_limit(root_node);
@@ -662,7 +661,7 @@ hrz::JobResult run(
     if (tile_size == 0)
     {
         HRZ_LOG_ERROR("Invalid max image size");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto get_map_url = find_get_map_url(get_map_node);
@@ -670,7 +669,7 @@ hrz::JobResult run(
     if (!get_map_url.has_value())
     {
         HRZ_LOG_ERROR("No GetMap URL found");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto exception = get_exception(capability_node);
@@ -691,7 +690,7 @@ hrz::JobResult run(
         {
             HRZ_LOG_ERROR("No supported image format found");
         }
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     SrsBounds srs_bounds;
@@ -725,7 +724,7 @@ hrz::JobResult run(
         if (!has_displayable_layer)
         {
             HRZ_LOG_ERROR("No requested layers exist or are displayable");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -737,7 +736,7 @@ hrz::JobResult run(
         if (srs_bounds.srs_indices.empty())
         {
             HRZ_LOG_ERROR("No usable projection found.");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         {
@@ -1046,6 +1045,6 @@ hrz::JobResult run(
         }
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::parse_wms_resource

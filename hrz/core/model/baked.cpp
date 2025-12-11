@@ -1,8 +1,8 @@
 #include "hrz/core/model/baked.h"
 
+#include "hrz/core/clock.h"
 #include "hrz/core/model/prototype.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/time.h"
 
 namespace hrz::model
 {
@@ -699,7 +699,7 @@ BakedModelStatus BakedModel::status() const
 
 void BakedModel::update_animation_times()
 {
-    const double frame_time = hrz::now_frame_s();
+    const double frame_time = hrz::clock::CurrentFrameRealTime.s;
     for (auto& anim : _playing_animations)
     {
         anim.player.set_time(

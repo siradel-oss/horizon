@@ -1,22 +1,21 @@
+#include "hrz/core/jobs/styling.h"
+
 #include "hrz/common/blob_array.h"
 #include "hrz/common/blob_vector.h"
-#include "hrz/common/color.h"
-#include "hrz/common/palette.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/random.h"
-#include "hrz/common/style.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/common/style/operator_evaluator.h"
+#include "hrz/common/vector_data/packed_attribute_values_builder.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_index_pool.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/string_utils.h"
 
 #include <fmt/args.h>
-
-#include <bit>
 
 #define CHECK_ERR_M(MSG, ...)   \
     do                          \
@@ -40,17 +39,9 @@
 namespace
 {
 using namespace hrz;
-using namespace vector_data;
-using namespace style;
-
-// This is to circumvent some complications about template specialization that is
-// only enforced by GCC. See https://stackoverflow.com/a/3057522.
-//      -slerouzic, 09-09-2021
-template<typename T>
-struct Identity
-{
-    using Type = T;
-};
+using namespace hrz::vector_data;
+using namespace hrz::style;
+using namespace hrz_jobs;
 
 struct Instance
 {
@@ -202,7 +193,7 @@ struct State
     hrz::flat_hash_map<uint32_t, PackedAttributeValuesReader> attribute_values;
     hrz::BlobVector<StyledFeatures::Instance> resp_instances;
     hrz::BlobVector<uint64_t> resp_prps;
-    AttributeValuesBuilder resp_values;
+    PackedAttributeValuesBuilder resp_values;
 
     std::vector<hrz::RngState> instances_rng_states;
 
@@ -1225,7 +1216,7 @@ struct State
 
 namespace hrz_jobs::style_features
 {
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const FeaturesStylingData& params,
     StylingResult& response,
     const JobContext& context)
@@ -1313,7 +1304,7 @@ hrz::JobResult run(
         if (!instances_opt.has_value() || !prps_opt.has_value() || !values_opt.has_value())
         {
             HRZ_LOG_ERROR("Could not allocate data");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         response.features.instances = std::move(instances_opt.value());
@@ -1339,12 +1330,12 @@ hrz::JobResult run(
         response.features.out_of_line_data.register_blob_owner(
             context.get_blob_allocator(), context.get_resource_owner());
 
-        return hrz::JobResult::SUCCESS;
+        return hrz_jobs::JobResult::SUCCESS;
     }
     else
     {
         HRZ_LOG_ERROR("Error during styling script execution");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 }
 } // namespace hrz_jobs::style_features

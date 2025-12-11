@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/vector/clamping.pb.h"
 
 #include <span>
 

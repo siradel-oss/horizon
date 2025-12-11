@@ -187,7 +187,7 @@ class Inertia
 
     inline double zero_if_under(double value, double threshold) const
     {
-        if (std::abs(value) < threshold) return 0.0f;
+        if (std::abs(value) < threshold) return 0.0;
         return value;
     }
 
@@ -201,7 +201,7 @@ public:
         _frame_dt(frame_dt),
         _lambda(lambda(energy_half_time)),
         _energy_reduction_this_frame(std::exp(-_lambda * _frame_dt)),
-        _energy_quantity_this_frame((1.0f - _energy_reduction_this_frame) / _lambda)
+        _energy_quantity_this_frame((1.0 - _energy_reduction_this_frame) / _lambda)
     {
     }
 

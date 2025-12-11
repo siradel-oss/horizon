@@ -6,17 +6,6 @@
 
 namespace hrz::planet
 {
-constexpr const char* ImageryRasterCollectionTraits::NAME;
-constexpr hrz_proto::LayerType ImageryRasterCollectionTraits::LAYER_TYPE;
-constexpr std::array<hrz_proto::ImageFormat, 1>
-    ImageryRasterCollectionTraits::SOURCE_TILE_IMAGE_FORMATS;
-constexpr hrz_proto::ImageFormat ImageryRasterCollectionTraits::COMPOSED_TILE_IMAGE_FORMAT;
-
-constexpr const char* DtmRasterCollectionTraits::NAME;
-constexpr hrz_proto::LayerType DtmRasterCollectionTraits::LAYER_TYPE;
-constexpr std::array<hrz_proto::ImageFormat, 5>
-    DtmRasterCollectionTraits::SOURCE_TILE_IMAGE_FORMATS;
-constexpr hrz_proto::ImageFormat DtmRasterCollectionTraits::COMPOSED_TILE_IMAGE_FORMAT;
 
 namespace details
 {

@@ -2,6 +2,8 @@
 
 #include "hrz/common/geo.h"
 #include "hrz/common/maths.h"
+#include "hrz/common/vector_tiles/data_texture.h"
+#include "hrz/common/vector_tiles/picking.h"
 #include "hrz/core/jobs/vector_repr_common.h"
 #include "hrz/fnd/log.h"
 
@@ -50,7 +52,7 @@ lm::bbox2 transform_rect_3d(lm::bbox2 rect, const lm::mat4& transform)
     return lm::merge(lm::merge(pts[0].xy, pts[1].xy), lm::merge(pts[2].xy, pts[3].xy));
 }
 
-SymbolBaker::SymbolBaker(const hrz::vt::SymbolBakingData& params, const JobContext& context) :
+SymbolBaker::SymbolBaker(const hrz_jobs::SymbolBakingData& params, const JobContext& context) :
     context(context),
     placeholder_visitor(this),
     anchor_visitor(this),
@@ -124,18 +126,18 @@ ElementGeometry SymbolBaker::visit_element(
     return geometry;
 }
 
-hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
+hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
 {
     hrz::vector_repr::compute_tile_radius_center(
         params.geometry.bounds, &tile_radius, &tile_center);
 
-    if (params.elements.empty()) return hrz::JobResult::SUCCESS;
+    if (params.elements.empty()) return hrz_jobs::JobResult::SUCCESS;
 
     for (auto visitor : element_visitors)
     {
-        if (visitor.second->init() != hrz::JobResult::SUCCESS)
+        if (visitor.second->init() != hrz_jobs::JobResult::SUCCESS)
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -146,9 +148,9 @@ hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
         if (element.z_index.has_value())
         {
             if (get_element_visitor_for_type(element.type)->init_element_instances(element)
-                != hrz::JobResult::SUCCESS)
+                != hrz_jobs::JobResult::SUCCESS)
             {
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
         }
     }
@@ -322,7 +324,7 @@ hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
     auto anchor_gpu_data_size_opt = anchor_gpu_data.size();
     if (!anchor_gpu_data_size_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto anchor_gpu_data_texture_size =
@@ -342,7 +344,7 @@ hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
     if (!anchor_gpu_data_array_opt.has_value() || !anchor_position_data_opt.has_value()
         || !anchor_culling_data_array_opt.has_value() || !anchor_spans_data_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::BSphere<double> bsphere =
@@ -390,7 +392,7 @@ hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
                 HRZ_LOG_ERROR(
                     "Could not get instances at z-index {} of type {}", element.z_index.value(),
                     hrz_proto::SymbolElementType_Name(element.type));
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
 
             baked_symbols.instances.push_back(std::move(instances_opt.value()));
@@ -402,6 +404,6 @@ hrz::JobResult SymbolBaker::bake(hrz::vt::BakedSymbols& baked_symbols)
         visitor.second->deinit();
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::symbol

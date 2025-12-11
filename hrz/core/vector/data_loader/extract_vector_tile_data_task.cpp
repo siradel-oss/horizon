@@ -1,4 +1,5 @@
 #include "hrz/core/vector/data_loader/impl.h"
+#include "hrz/fnd/log.h"
 #include "hrz/fnd/variant.h"
 
 namespace hrz
@@ -10,7 +11,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_extract_vector_tile_da
 {
     uint64_t hash =
         hrz::hash_value(hrz::index_of_variant<decltype(Task::data), Task::ExtractVectorTileData>());
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(data_source));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(tile_coords));
 
@@ -191,7 +192,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::ExtractVectorTi
 
             const auto& load_data = load_untiled_vector_tile_data_task.load_untiled_vector_data();
 
-            vector_data::VectorTileExtractionParams params{};
+            hrz_jobs::VectorTileExtractionParams params{};
             params.source_data.coords = TileCoords{0, 0, 0};
             params.source_data.geometry = load_data.geometry.value();
             params.source_data.feature_ids = load_data.feature_ids.value();

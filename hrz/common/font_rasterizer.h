@@ -2,15 +2,15 @@
 
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/shader_defines.h"
-#include "hrz/common/text.h"
-#include "hrz/fnd/variant.h"
 
 #include <hb.h>
+#include <lin_maths.h>
 #include <stb_truetype.h>
 
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <variant>
 #include <vector>
 
 namespace hrz

@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <new>
-#include <span>
 
 #define HRZ_ARRAY_COUNT(A) (sizeof(A) / sizeof(A[0]))
 

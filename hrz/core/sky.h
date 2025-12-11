@@ -2,7 +2,7 @@
 
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/core/scene_path/scene/view_settings_paths.h"
 
 #include <lin_maths.h>
 

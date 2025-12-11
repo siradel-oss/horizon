@@ -1,7 +1,6 @@
 #include "hrz/core/camera/driver.h"
 #include "hrz/core/camera/manipulator.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/log.h"
 
 extern "C"
 {

@@ -1,15 +1,12 @@
-#include "hrz/common/attributes.h"
 #include "hrz/common/blob_allocator.h"
-#include "hrz/common/style.h"
+#include "hrz/common/vector_data/packed_attribute_values_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/styling.h"
 #include "hrz/core/style/script.h"
-#include "hrz/fnd/defines.h"
 #include "hrz/fnd/flat_hash_set.h"
-#include "hrz/fnd/log.h"
 
 #include <gtest/gtest.h>
 
-#include <bit>
 #include <limits>
 
 namespace
@@ -34,6 +31,7 @@ private:
 
 namespace
 {
+using namespace hrz_jobs;
 using namespace hrz::style;
 using namespace hrz::vector_data;
 
@@ -53,10 +51,10 @@ protected:
         data.representations.push_back({id, name});
     }
 
-    AttributeValuesBuilder new_attribute()
+    PackedAttributeValuesBuilder new_attribute()
     {
         assert(blob_allocator);
-        return AttributeValuesBuilder(16, blob_allocator, job_context.get_resource_owner());
+        return PackedAttributeValuesBuilder(16, blob_allocator, job_context.get_resource_owner());
     }
 };
 
@@ -80,7 +78,7 @@ TEST_F(FeatureStyling, empty)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(0, resp.features.instances.size());
 }
 
@@ -106,7 +104,7 @@ TEST_F(FeatureStyling, one_emit)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -138,7 +136,7 @@ TEST_F(FeatureStyling, stop_at_first_emit)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -169,7 +167,7 @@ TEST_F(FeatureStyling, discard)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(0, resp.features.instances.size());
 }
 
@@ -202,7 +200,7 @@ TEST_F(FeatureStyling, fork_simple)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(12, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -254,7 +252,7 @@ TEST_F(FeatureStyling, fork_exit_early)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -305,7 +303,7 @@ TEST_F(FeatureStyling, set_literal)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(2, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -410,7 +408,7 @@ TEST_F(FeatureStyling, set_attribute)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(2, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -485,7 +483,7 @@ TEST_F(FeatureStyling, set_uniform)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(1, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(1, resp.features.instances.get_data().unsafe_at(0).repr_id);
@@ -526,7 +524,7 @@ TEST_F(FeatureStyling, decimal_number_interpretation)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(1, resp.features.instances.size());
 
     const auto& inst = resp.features.instances.get_data().unsafe_at(0);
@@ -606,7 +604,7 @@ TEST_F(FeatureStyling, set_attribute_numeric_cast)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -663,7 +661,7 @@ TEST_F(FeatureStyling, set_with_fork)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(0).feature_index);
     EXPECT_EQ(0, resp.features.instances.get_data().unsafe_at(1).feature_index);
@@ -767,7 +765,7 @@ TEST_F(FeatureStyling, set_colorize_numeric)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
     uint32_t values[5] = {0xffffffff, 0xffbebebe, 0xff808080, 0xff484848, 0xff161616};
@@ -853,7 +851,7 @@ TEST_F(FeatureStyling, set_colorize_labels)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
 
     uint32_t values[3] = {0xffffffff, 0xffff00ff, 0xff808080};
@@ -901,7 +899,7 @@ TEST_F(FeatureStyling, double_precision)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(1, resp.features.instances.size());
 
     const auto& inst = resp.features.instances.get_data().unsafe_at(0);
@@ -989,7 +987,7 @@ TEST_F(FeatureStyling, fmt)
         StylingResult resp;
         auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-        ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+        ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
         ASSERT_EQ(1, resp.features.instances.size());
     }
 }
@@ -1034,7 +1032,7 @@ TEST_F(FeatureStyling, fmt_value)
         StylingResult resp;
         auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-        ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+        ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
         ASSERT_EQ(1, resp.features.instances.size());
         ASSERT_EQ(1, resp.features.values.size());
         ASSERT_EQ("100", resp.features.get_values_reader().as_string(0));
@@ -1163,7 +1161,7 @@ TEST_F(FeatureStyling, arithmetic_expressions)
         StylingResult resp;
         auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-        ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+        ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
         ASSERT_EQ(1, resp.features.instances.size());
 
         const auto& inst = resp.features.instances.get_data().unsafe_at(0);
@@ -1232,7 +1230,7 @@ TEST_F(FeatureStyling, arithmetic_expressions_floats)
         StylingResult resp;
         auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-        ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+        ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
         ASSERT_EQ(1, resp.features.instances.size());
 
         const auto& inst = resp.features.instances.get_data().unsafe_at(0);
@@ -1288,7 +1286,7 @@ TEST_F(FeatureStyling, branch_exhaustive)
     int64_t values[5] = {4, 1, 2, 4, 4};
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
     for (size_t i = 0; i < 5; ++i)
@@ -1352,7 +1350,7 @@ TEST_F(FeatureStyling, branch_empty_alternatives)
     int64_t values[5] = {1, 1, 1, 1, 1};
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
     for (size_t i = 0; i < 5; ++i)
@@ -1415,7 +1413,7 @@ TEST_F(FeatureStyling, branch_no_branch_taken)
     int64_t values[5] = {0, 0, 0, 0, 0};
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
     for (size_t i = 0; i < 5; ++i)
@@ -1479,7 +1477,7 @@ TEST_F(FeatureStyling, branch_nested)
     int64_t values[5] = {1, 2, 0, 3, 3};
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
     for (size_t i = 0; i < 5; ++i)
@@ -1559,7 +1557,7 @@ TEST_F(FeatureStyling, branch_complex_condition)
     int64_t values[5] = {1, 2, 3, 2, 1};
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(5, resp.features.instances.size());
 
     for (size_t i = 0; i < 5; ++i)
@@ -1627,7 +1625,7 @@ TEST_F(FeatureStyling, branch_with_termination)
     uint32_t repr_id[5] = {repr_c, repr_a, 0, repr_b, repr_c};
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(4, resp.features.instances.size());
 
     for (size_t i = 0; i < 4; ++i)
@@ -1684,7 +1682,7 @@ TEST_F(FeatureStyling, branch_with_termination_double)
 
     bool seen[5] = {false, false, false, false, false};
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(2, resp.features.instances.size());
 
     for (size_t i = 0; i < 2; ++i)
@@ -1746,7 +1744,7 @@ TEST_F(FeatureStyling, lots_of_features)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(expected_pass, resp.features.instances.size());
 
     hrz::flat_hash_set<uint32_t> indices;
@@ -1805,7 +1803,7 @@ TEST_F(FeatureStyling, fork_after_discard)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
 
     bool seen[10] = {false, false, false, false, false, false, false, false, false, false};
@@ -1880,7 +1878,7 @@ TEST_F(FeatureStyling, fork_in_if)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(7, resp.features.instances.size());
 
     bool seen[10] = {false, false, false, false, false, false, false, false, false, false};
@@ -1964,7 +1962,7 @@ TEST_F(FeatureStyling, emit_in_nested_if)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(2, resp.features.instances.size());
 
     bool seen[4] = {false, false, false, false};
@@ -2047,7 +2045,7 @@ TEST_F(FeatureStyling, operators_type_cast)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(2, resp.features.instances.size());
     ASSERT_EQ(6, resp.features.values.size());
 
@@ -2100,7 +2098,7 @@ TEST_F(FeatureStyling, mapbox_typeof)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(7, resp.features.instances.size());
     ASSERT_EQ(7, resp.features.values.size());
 
@@ -2153,7 +2151,7 @@ TEST_F(FeatureStyling, to_color)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
     ASSERT_EQ(6, resp.features.values.size());
 
@@ -2205,7 +2203,7 @@ TEST_F(FeatureStyling, to_int)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
     ASSERT_EQ(6, resp.features.values.size());
 
@@ -2257,7 +2255,7 @@ TEST_F(FeatureStyling, to_uint)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
     ASSERT_EQ(6, resp.features.values.size());
 
@@ -2309,7 +2307,7 @@ TEST_F(FeatureStyling, to_number)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
     ASSERT_EQ(6, resp.features.values.size());
 
@@ -2361,7 +2359,7 @@ TEST_F(FeatureStyling, to_string)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(6, resp.features.instances.size());
     ASSERT_EQ(6, resp.features.values.size());
 
@@ -2415,7 +2413,7 @@ TEST_F(FeatureStyling, to_boolean)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(data.feature_count, resp.features.instances.size());
     ASSERT_EQ(data.feature_count, resp.features.values.size());
 
@@ -2474,7 +2472,7 @@ TEST_F(FeatureStyling, is_null)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(data.feature_count, resp.features.instances.size());
     ASSERT_EQ(data.feature_count, resp.features.values.size());
 
@@ -2531,7 +2529,7 @@ TEST_F(FeatureStyling, is_nan)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(data.feature_count, resp.features.instances.size());
     ASSERT_EQ(data.feature_count, resp.features.values.size());
 
@@ -2587,7 +2585,7 @@ TEST_F(FeatureStyling, value_or)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(data.feature_count, resp.features.instances.size());
     ASSERT_EQ(data.feature_count * 2, resp.features.values.size());
 
@@ -2659,7 +2657,7 @@ TEST_F(FeatureStyling, large_batch)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(count, resp.features.instances.size());
     ASSERT_EQ(count * 3, resp.features.values.size());
 
@@ -2738,7 +2736,7 @@ TEST_F(FeatureStyling, dynamic_emit_string)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
 
     int seen0 = 0;
@@ -2807,7 +2805,7 @@ TEST_F(FeatureStyling, dynamic_emit_string_unknown_repr)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(1, resp.features.instances.size());
 
     int seen0 = 0;
@@ -2877,7 +2875,7 @@ TEST_F(FeatureStyling, dynamic_emit_id)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(3, resp.features.instances.size());
 
     int seen0 = 0;
@@ -2945,7 +2943,7 @@ TEST_F(FeatureStyling, rand_no_ids)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(4, resp.features.instances.size());
     ASSERT_EQ(12, resp.features.values.size());
 
@@ -3003,7 +3001,7 @@ TEST_F(FeatureStyling, rand_with_ids)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(4, resp.features.instances.size());
     ASSERT_EQ(12, resp.features.values.size());
 
@@ -3071,7 +3069,7 @@ TEST_F(FeatureStyling, rand_in_condition)
     StylingResult resp;
     auto res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(8, resp.features.instances.size());
     ASSERT_EQ(8, resp.features.values.size());
 
@@ -3089,7 +3087,7 @@ TEST_F(FeatureStyling, rand_in_condition)
 
     res = hrz_jobs::style_features::run(data, resp, job_context);
 
-    ASSERT_EQ(hrz::JobResult::SUCCESS, res);
+    ASSERT_EQ(hrz_jobs::JobResult::SUCCESS, res);
     ASSERT_EQ(8, resp.features.instances.size());
     ASSERT_EQ(8, resp.features.values.size());
 

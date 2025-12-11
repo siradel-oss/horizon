@@ -7,7 +7,7 @@ import re
 import json
 
 from hrz.generators import protocol_parser
-from hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data, remove_prefix
+from hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data, remove_prefix, path_to_snake_case
 
 generators = {}
 
@@ -23,14 +23,10 @@ def generator(name, parser = protocol_parser.parse):
 def cpp_protocol_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("cpp_protocol/services.tpl.h")
     output_template(protocol, tpl, output_dir, "gen/hrz/protocol/services.h")
-    tpl = tpl_env.get_template("cpp_protocol/protocol_all.tpl.h")
-    output_template(protocol, tpl, output_dir, "gen/hrz/protocol/all.h")
 
     tpl_data = prepare_api_tpl_data(protocol)
     tpl = tpl_env.get_template("cpp_protocol/path_builder_common.tpl.h")
     output_template(tpl_data, tpl, output_dir, "gen/hrz/protocol/path_builder_common.h")
-    tpl = tpl_env.get_template("cpp_protocol/path_builder_all.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "gen/hrz/protocol/path_builder.h")
 
     tpl = tpl_env.get_template("cpp_protocol/path_builder.tpl.h")
     for f in tpl_data["protocol"]["files"]:
@@ -59,8 +55,6 @@ def cpp_core_generator(protocol, tpl_env, output_dir, extra):
 
     tpl = tpl_env.get_template("cpp_core/scene_path.tpl.cpp")
     output_template(tpl_data, tpl, output_dir, "scene_path/scene_path.cpp")
-    tpl = tpl_env.get_template("cpp_core/scene_path_all.tpl.h")
-    output_template(tpl_data, tpl, output_dir, "scene_path/scene_path.h")
     tpl = tpl_env.get_template("cpp_core/scene_path_common.tpl.h")
     output_template(tpl_data, tpl, output_dir, "scene_path/common.h")
     tpl = tpl_env.get_template("cpp_core/scene_path.tpl.h")
@@ -91,12 +85,20 @@ def parse_jobs_manifest(file_path):
     for (k, v) in jobs_json.items():
         job_dict = {"name": k}
         job_dict.update(v)
+        if not "documentation" in job_dict:
+            job_dict["documentation"] = ""
         jobs.append(job_dict)
-    return jobs
+    includes = set()
+    for job in jobs:
+        if "includes" in job:
+            for include in job["includes"]:
+                includes.add(include)
+    includes = list(includes)
+    return {"jobs": jobs, "all_params_responses_includes": includes}
 
 @generator("job_declarations", parser=parse_jobs_manifest)
 def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
-    tpl_data = { "jobs": protocol }
+    tpl_data = protocol
     tpl = tpl_env.get_template("jobs/declarations.tpl.cpp")
     output_template(tpl_data, tpl, output_dir, "jobs_declarations.cpp")
     tpl = tpl_env.get_template("jobs/declarations.tpl.h")
@@ -109,6 +111,8 @@ def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
     output_template(tpl_data, tpl, output_dir, "jobs_enum_names.h")
     tpl = tpl_env.get_template("jobs/type.tpl.h")
     output_template(tpl_data, tpl, output_dir, "jobs_type.h")
+    tpl = tpl_env.get_template("jobs/all_params_responses.tpl.h")
+    output_template(tpl_data, tpl, output_dir, "all_params_responses.h")
 
 @generator("web_ui_info")
 def web_ui_info_generator(protocol, tpl_env, output_dir, extra):
@@ -340,13 +344,27 @@ def output_doc_html(values, tpl, contents, name, title, toc, menu_category, outp
     output_template(doc_values, tpl, output_dir, filename)
     return out_file
 
-def output_templates_html(values, key_to_iterate, tpl, output_path):
+def output_templates_protocol_def_html(values, key_to_iterate, tpl, output_path):
     output_path = Path(output_path)
     outputs = []
     for k in values[key_to_iterate]:
         v = values.copy()
         v["this"] = k
         filename = k["full_name"] + ".html"
+        output_template(v, tpl, output_path, filename)
+        outputs.append(output_path / filename)
+    return outputs
+
+def output_templates_protocol_file_html(values, key_to_iterate, tpl, output_path):
+    output_path = Path(output_path)
+    outputs = []
+    for k in values[key_to_iterate]:
+        v = values.copy()
+        v["this"] = k
+        v["file_services"] = [s for s in values["services"] if s["file"] == k["name"]]
+        v["file_enums"] = [e for e in values["enums"] if e["file"] == k["name"]]
+        v["file_messages"] = [m for m in values["messages"] if m["file"] == k["name"]]
+        filename = path_to_snake_case(k["name"]) + "_proto.html"
         output_template(v, tpl, output_path, filename)
         outputs.append(output_path / filename)
     return outputs
@@ -412,14 +430,16 @@ def doc_ref_pages_generator(protocol, tpl_env, output_dir, extra):
     convert_doc_fields_markdown(values)
 
     tpl_enums = tpl_env.get_template("documentation/fragment_enum.tpl.html")
-    output_templates_html(values, "enums", tpl_enums, output_dir)
+    output_templates_protocol_def_html(values, "enums", tpl_enums, output_dir)
 
     tpl_messages = tpl_env.get_template("documentation/fragment_message.tpl.html")
-    output_templates_html(values, "messages", tpl_messages, output_dir)
+    output_templates_protocol_def_html(values, "messages", tpl_messages, output_dir)
 
     tpl_services = tpl_env.get_template("documentation/fragment_service.tpl.html")
-    output_templates_html(values, "services", tpl_services, output_dir)
+    output_templates_protocol_def_html(values, "services", tpl_services, output_dir)
 
+    tpl_files = tpl_env.get_template("documentation/fragment_file.tpl.html")
+    output_templates_protocol_file_html(values, "files", tpl_files, output_dir)
 
 @generator("doc_crs_database_md")
 def doc_crs_database_md_generator(protocol, tpl_env, output_dir, extra):

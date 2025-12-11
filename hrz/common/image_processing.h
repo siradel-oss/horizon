@@ -1,9 +1,8 @@
 #pragma once
 
-#include "hrz/fnd/defines.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/protocol/types.pb.h"
+#include "hrz/protocol/image.pb.h"
 
 #include <lin_maths.h>
 #include <mycelium/backend.h>

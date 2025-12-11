@@ -1,20 +1,23 @@
 #pragma once
 
 #include "hrz/common/picking_types.h"
+#include "hrz/common/shader_defines.h"
 #include "hrz/core/camera/types.h"
-#include "hrz/core/clipping_plane_layers.h"
 #include "hrz/core/events.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/protocol/all.h"
+#include "hrz/core/scene_path/scene/view_settings_paths.h"
 
 #include <mycelium/backend.h>
-#include <mycelium/render_graph.h>
 #include <mycelium/renderer.h>
 
 #include <optional>
 #include <vector>
+
+namespace HrzProtocol
+{
+class ViewScaleAltitude;
+} // namespace HrzProtocol
 
 namespace hrz
 {
@@ -32,6 +35,7 @@ struct PlanetSurface;
 struct VectorFlatOverlaySystem;
 struct Event;
 struct HeatmapReprRegistry;
+struct ClippingPlaneInfo;
 
 namespace camera
 {
@@ -77,7 +81,7 @@ RenderRequest work(
     const CameraViewInfo&,
     const lm::uvec2& canvas_size,
     float device_pixel_ratio,
-    ClippingPlaneInfo[HRZ_S_MAX_CLIP_PLANES],
+    std::span<const ClippingPlaneInfo, HRZ_S_MAX_CLIP_PLANES>,
     PlanetSurface*,
     const HeatmapReprRegistry*,
     picking::FeatureReference quick_highlight_feature_id);
@@ -132,7 +136,7 @@ PlanetGeometry* get_planet_geometry(SceneView*);
 VectorFlatOverlaySystem* get_vector_flat_overlay(SceneView*);
 PickingSystem* get_picking_system(SceneView*);
 double get_camera_height(SceneView*);
-const hrz_proto::ViewScaleAltitude& get_view_scale_altitude(SceneView*);
+const HrzProtocol::ViewScaleAltitude& get_view_scale_altitude(SceneView*);
 
 } // namespace scene
 } // namespace hrz

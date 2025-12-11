@@ -1,9 +1,11 @@
 #include "hrz/core/planet/tile_fetcher.h"
 
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
+#include "hrz/core/clock.h"
+#include "hrz/core/image_decoder.h"
+#include "hrz/core/job_scheduler.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/time.h"
 
 namespace hrz::planet
 {
@@ -140,7 +142,7 @@ RasterProvider::TileImage TileFetcher::get_tile_image(LockTicket lock_ticket)
         Tile* tile = _tiles_pool.get_object(it->second);
         assert(tile);
 
-        tile->last_touch_time_ms = now_frame_ms();
+        tile->last_touch_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
         switch (tile->status)
         {
@@ -197,7 +199,7 @@ TileFetcher::LockTicket TileFetcher::request_and_lock_tile(
             _tile_requester->request_tile(
                 tile_coords, al, queue, priority, {monitoring::systems::PlanetSurface, _raster_id}),
             queue, priority};
-        tile.last_touch_time_ms = now_frame_ms();
+        tile.last_touch_time_ms = hrz::clock::CurrentFrameRealTime.ms;
         tile.lock_count = 1;
 
         TileHandle handle = _tiles_pool.alloc();
@@ -215,7 +217,7 @@ TileFetcher::LockTicket TileFetcher::request_and_lock_tile(
     else
     {
         Tile* tile = _tiles_pool.get_object(it->second);
-        tile->last_touch_time_ms = now_frame_ms();
+        tile->last_touch_time_ms = hrz::clock::CurrentFrameRealTime.ms;
         tile->lock_count += 1;
         _active_locks[lock_ticket] = it->second;
     }
@@ -233,7 +235,7 @@ TileFetcher::LockTicket TileFetcher::lock_tile_if_ready(TileCoords tile_coords)
         if (tile->status == Tile::Status::Loaded)
         {
             tile->lock_count += 1;
-            tile->last_touch_time_ms = now_frame_ms();
+            tile->last_touch_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
             auto lock_ticket = generate_lock_ticket();
             _active_locks[lock_ticket] = it->second;

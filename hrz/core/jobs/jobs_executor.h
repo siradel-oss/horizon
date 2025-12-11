@@ -1,10 +1,9 @@
 #pragma once
 
-#include "hrz/common/job_result.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/core/jobs/context.h"
-#include "hrz/core/jobs/jobs_declarations.h"
-#include "hrz/fnd/defines.h"
+#include "hrz/core/jobs/job_result.h"
+#include "hrz/core/jobs/jobs_type.h"
 
 #include <any>
 
@@ -38,7 +37,7 @@ struct ExecutorContext : public JobContext
 
 namespace executor
 {
-hrz::JobResult run_job(
+hrz_jobs::JobResult run_job(
     uint32_t job_id,
     hrz_jobs::JobType job_type,
     const std::any& params,

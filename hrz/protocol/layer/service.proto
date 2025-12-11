@@ -1,0 +1,39 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/layer/handle.proto";
+import "hrz/protocol/layer/defs.proto";
+
+message LayerCreateInfo {
+    LayerType type = 1;
+    // The internal name of the layer. It is not used by Horizon and is there as
+    // a convenience to easily identify layers for monitoring. If empty, a
+    // default name will be used based on the type of the layer.
+    string    name = 2;
+}
+
+message LayerRenameInfo {
+    LayerHandle handle = 1;
+    string      name   = 2;
+}
+
+// @service_id=0x41c4255b
+service LayerService {
+    // @method_id=0x30ffe3a4
+    rpc CreateLayer(LayerCreateInfo) returns (LayerHandle);
+
+    // @method_id=0xf8cadac0
+    rpc DestroyLayer(LayerHandle) returns (Void);
+
+    // @method_id=0x044fb58c
+    rpc RenameLayer(LayerRenameInfo) returns (Void);
+
+    // @method_id=0xa48c16c5
+    rpc GetLayer(LayerHandle) returns (Layer);
+
+    // @method_id=0x9103b6f7
+    rpc GetAllLayers(Void) returns (LayerArray);
+}

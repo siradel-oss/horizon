@@ -1,14 +1,16 @@
-#include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_array.h"
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/common/style.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/core/render.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/lighting_settings.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
@@ -16,11 +18,9 @@
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/viewsheds.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/thread.h"
 
 namespace
 {
@@ -184,7 +184,7 @@ struct TileGeometry
     lm::dvec3 bsphere_center;
     bool has_transparency;
     // Positions are relative to the tile centre
-    hrz::BlobArray<hrz::vt::ExtrudedVectorGeometry::Vertex> vertex_data;
+    hrz::BlobArray<hrz_jobs::ExtrudedVectorGeometry::Vertex> vertex_data;
     hrz::BlobArray<uint32_t> indices;
     hrz::BlobArray<hrz::vector_data::FeatureIdHash> feature_ids;
     uint32_t max_feature_index;
@@ -222,7 +222,7 @@ struct Tile
     bool has_feature_ids;
 
     hrz_jobs::BakeExtrudedVectorGeometryTicket bake_ticket;
-    std::optional<hrz::vt::ExtrudedVectorData> bake_data;
+    std::optional<hrz_jobs::ExtrudedVectorData> bake_data;
     std::optional<TileGeometry> geometry;
     std::optional<RenderableFeatures> renderable;
 
@@ -541,7 +541,7 @@ public:
         tile.coords = coords;
         tile.has_feature_ids = feature_ids.has_any_attribute();
 
-        hrz::vt::ExtrudedVectorData bake_data;
+        hrz_jobs::ExtrudedVectorData bake_data;
 
         Config cfg;
         Config* cfg_src = _configs.get_object(config_handle);
@@ -673,7 +673,7 @@ public:
             if (hrz_jobs::get_job_status(ctx.js, tile->bake_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::vt::ExtrudedVectorGeometry response;
+                hrz_jobs::ExtrudedVectorGeometry response;
                 hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
 
                 TileGeometry geometry;
@@ -778,7 +778,7 @@ public:
         CHECK_RESOURCE_UPLOAD(index_buffer, "index buffer");
         renderable.index_buffer = index_buffer;
 
-        using Vertex = hrz::vt::ExtrudedVectorGeometry::Vertex;
+        using Vertex = hrz_jobs::ExtrudedVectorGeometry::Vertex;
 
         my::VertexInputStream streams[] = {
             {InputStreamPosition, vertex_buffer, my::VertexFormat::Float32_3,

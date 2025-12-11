@@ -2,8 +2,8 @@
 #include "hrz/common/horizon_culling.h"
 #include "hrz/common/maths.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/vector_tiles.h"
 #include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/fnd/kdtree.h"
 #include "hrz/fnd/log.h"
 
@@ -22,9 +22,9 @@ struct TransformedAnchor
 } // namespace
 
 TransformedAnchor transform_anchor(
-    const hrz::vt::SymbolCullingParams::ViewInfo& view,
-    const hrz::vt::SymbolCullingParams::Group& group,
-    const hrz::vt::BakedSymbols::AnchorCulling& anchor)
+    const hrz_jobs::SymbolCullingParams::ViewInfo& view,
+    const hrz_jobs::SymbolCullingParams::Group& group,
+    const hrz::vt::AnchorCullingInfo& anchor)
 {
     lm::mat4 view_cc(view.view_cc);
     const auto& anchor_proto = group.anchor_protos[anchor.anchor_prototype_index];
@@ -164,9 +164,9 @@ TransformedAnchor transform_anchor(
 }
 
 bool cull_one_view(
-    std::span<const hrz::vt::SymbolCullingParams::Group> groups,
-    const hrz::vt::SymbolCullingParams::ViewInfo& view_info,
-    hrz::vt::SymbolCullingResponse& response,
+    std::span<const hrz_jobs::SymbolCullingParams::Group> groups,
+    const hrz_jobs::SymbolCullingParams::ViewInfo& view_info,
+    hrz_jobs::SymbolCullingResponse& response,
     const JobContext& context)
 {
     static const lm::bbox2 screen_bbox{{-1, -1}, {1, 1}};
@@ -238,7 +238,7 @@ bool cull_one_view(
     {
         if ((group.visible_in_views & view_bit) == 0)
         {
-            hrz::vt::SymbolCullingResponse::GroupId out_group;
+            hrz_jobs::SymbolCullingResponse::GroupId out_group;
             out_group.handle = group.handle;
             out_group.scene_view = view_info.view_index;
             response.groups_to_reset.push_back(std::move(out_group));
@@ -252,7 +252,7 @@ bool cull_one_view(
             uint32_t group_first_bitset_bucket = total_bitset_bucket_count;
             total_bitset_bucket_count += group_bitset_bucket_count;
 
-            hrz::vt::SymbolCullingResponse::Group out_group;
+            hrz_jobs::SymbolCullingResponse::Group out_group;
             out_group.handle = group.handle;
             out_group.scene_view = view_info.view_index;
             out_group.first_bitset_bucket = group_first_bitset_bucket;
@@ -333,7 +333,7 @@ bool cull_one_view(
         all_bitsets[out_group.first_bitset_bucket + pixel] |= 1u << bit;
 
         static constexpr uint32_t BITSET_TEXTURE_WIDTH =
-            hrz::vt::SymbolCullingResponse::BITSET_TEXTURE_WIDTH;
+            hrz_jobs::SymbolCullingResponse::BITSET_TEXTURE_WIDTH;
 
         lm::uvec2 position{pixel % BITSET_TEXTURE_WIDTH, pixel / BITSET_TEXTURE_WIDTH};
         out_group.ones_bbox = lm::expand(out_group.ones_bbox, position);
@@ -461,9 +461,9 @@ bool cull_one_view(
     return true;
 }
 
-hrz::JobResult run(
-    const hrz::vt::SymbolCullingParams& params,
-    hrz::vt::SymbolCullingResponse& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::SymbolCullingParams& params,
+    hrz_jobs::SymbolCullingResponse& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("cull symbols");
@@ -472,12 +472,12 @@ hrz::JobResult run(
     {
         if (!cull_one_view(params.groups, view, response, context))
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
     response.frame = params.frame;
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::cull_symbols

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hrz/common/geo.h"
+#include "hrz/protocol/geo/coords.pb.h"
 
 namespace hrz
 {

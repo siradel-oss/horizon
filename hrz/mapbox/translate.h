@@ -1,10 +1,15 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/raster/group.pb.h"
 
 #include <lin_maths.h>
 
 #include <string_view>
+
+namespace HrzProtocol
+{
+class SceneDump;
+} // namespace HrzProtocol
 
 namespace hrz_mapbox
 {
@@ -33,5 +38,5 @@ TranslationResult translate_scene(
     std::string_view json,
     std::string_view sprite_index_json,
     const TranslationSettings&,
-    hrz_proto::SceneDump* scene_dump);
+    HrzProtocol::SceneDump* scene_dump);
 } // namespace hrz_mapbox

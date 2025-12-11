@@ -1,13 +1,16 @@
 #include "hrz/core/vector/tiles_actor.h"
 
-#include "hrz/common/attributes.h"
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
+#include "hrz/common/vector_tiles/picking.h"
+#include "hrz/core/actor.h"
 #include "hrz/core/actor_runner.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/job_scheduler.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/styling.h"
 #include "hrz/core/planet/elevation_query.h"
 #include "hrz/core/planet/surface.h"
 #include "hrz/core/vector/data_loader/data_loader.h"
@@ -16,6 +19,7 @@
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_index_pool.h"
 #include "hrz/fnd/gen_object_pool.h"
+#include "hrz/fnd/hash.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/time.h"
@@ -2150,7 +2154,7 @@ struct VectorTilesActor : public Actor
             {
                 if (!_script_is_valid) return false;
 
-                style::FeaturesStylingData data;
+                hrz_jobs::FeaturesStylingData data;
 
                 data.ast = _ast;
 
@@ -2180,11 +2184,11 @@ struct VectorTilesActor : public Actor
                     }
                 }
 
-                bool has_feature_ids = content.feature_ids.feature_ids.has_any_attribute();
+                const bool has_feature_ids = content.feature_ids.feature_ids.has_any_attribute();
                 if (!has_feature_ids)
                 {
-                    uint64_t tile_coords_hash = std::hash<TileCoords>{}(content.coords);
-                    data.rng_seed = hrz::hash_mix(tile_coords_hash, _rng_seed);
+                    const size_t tile_coords_hash = hrz::hash_value(content.coords);
+                    data.rng_seed = hrz::hash_mix<uint64_t>(tile_coords_hash, _rng_seed);
                 }
                 else
                 {
@@ -2253,7 +2257,7 @@ struct VectorTilesActor : public Actor
             if (hrz_jobs::get_job_status(js, content.style_job.ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                style::StylingResult result;
+                hrz_jobs::StylingResult result;
                 hrz_jobs::get_job_response(js, content.style_job.ticket, result);
 
                 content.style_job.result_repr = std::move(result.features);
@@ -2584,7 +2588,7 @@ struct VectorTilesActor : public Actor
             node.last_time_elevation_queried_ms = 0;
         }
 
-        double now = hrz::now_frame_ms();
+        double now = hrz::clock::CurrentFrameRealTime.ms;
         if (node.elevation.source != ElevationSource::GroundTruth)
         {
             if ((now - node.last_time_elevation_queried_ms) > TILE_ELEVATION_QUERY_DELAY_MS)
@@ -2932,7 +2936,7 @@ struct VectorTilesActor : public Actor
             }
         }
 
-        double now = hrz::now_frame_ms();
+        double now = hrz::clock::CurrentFrameRealTime.ms;
 
         // Stop refining the tiles that have reached their screen space error
         // threshold, or when we have reached the end of the dataset.

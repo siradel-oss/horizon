@@ -3,16 +3,17 @@
 #include "hrz/common/blob_allocator.h"
 #include "hrz/core/channel.h"
 #include "hrz/fnd/defines.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/http.h"
-#include "hrz/protocol/all.h"
 
 #include <cstdint>
-#include <memory>
-#include <optional>
-#include <span>
 #include <string_view>
 #include <variant>
+
+namespace HrzProtocol
+{
+class HttpHeaderList;
+class AssetRequestResponse;
+}; // namespace HrzProtocol
 
 namespace hrz
 {
@@ -21,7 +22,7 @@ struct ClientMessageQueue;
 
 namespace assets_loader
 {
-HttpHeaders from_proto(const hrz_proto::HttpHeaderList&);
+HttpHeaders from_proto(const HrzProtocol::HttpHeaderList&);
 
 enum class RequestStatus
 {
@@ -150,7 +151,7 @@ blobs::BlobHandle get_blob(AssetsLoader*, BlobAllocator*, Ticket);
 
 /**
  * Updates the internal states of the assets loader. This allows it to actually
- * do work. It should be called regularily.
+ * do work. It should be called regularly.
  */
 void work(AssetsLoader*, BlobAllocator*, ClientMessageQueue*);
 
@@ -159,7 +160,7 @@ void clear_http_cache(AssetsLoader*);
 void provide_client_asset_data(
     AssetsLoader*,
     BlobAllocator*,
-    const hrz_proto::AssetRequestResponse&);
+    const HrzProtocol::AssetRequestResponse&);
 
 namespace messages
 {

@@ -4,13 +4,14 @@
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_geo.h"
-#include "hrz/core/camera/camera.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/common_ubos.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadow_map.h"
-#include "hrz/fnd/defines.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 
 namespace
 {

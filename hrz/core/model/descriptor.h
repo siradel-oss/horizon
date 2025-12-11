@@ -6,6 +6,7 @@
 #include "hrz/core/model/blob_library.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/meta.h"
+#include "hrz/protocol/image.pb.h"
 
 #include <mycelium/backend.h>
 

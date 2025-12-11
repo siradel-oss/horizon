@@ -10,14 +10,18 @@
 #include "hrz/core/model/model.h"
 #include "hrz/core/picking_id_allocator.h"
 #include "hrz/core/planet/surface.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/scene.h"
 #include "hrz/core/scene_model_array_sync.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/core/selection.h"
 #include "hrz/core/visibility_constraints.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/gen_object_pool.h"
+#include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/protocol/path_builder/scene_model.h"
+#include "hrz/protocol/path_builder/layer/single_model_layer.h"
 
 namespace
 {

@@ -1,14 +1,13 @@
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/image_processing.h"
 #include "hrz/common/palette.h"
-#include "hrz/common/planet.h"
+#include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/palettize_image.h"
 #include "hrz/core/planet/raster_provider.h"
-#include "hrz/core/planet/tile_fetcher.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/node_hash_map.h"
 
 #include <cassert>
 #include <vector>
@@ -347,7 +346,7 @@ public:
                     auto child_image = child_raster_provider->get_tile_image(tile->lock_ticket);
                     if (child_image.image.valid())
                     {
-                        PalettizeImageParams palettize_image_params;
+                        hrz_jobs::PalettizeImageParams palettize_image_params;
                         palettize_image_params.image = child_image.image;
                         palettize_image_params.nodata = child_raster_provider->get_nodata();
                         palettize_image_params.palette = palette;

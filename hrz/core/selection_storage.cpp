@@ -1,6 +1,7 @@
 #include "hrz/core/selection_storage.h"
 
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 
 #include <algorithm>
 

@@ -1,0 +1,26 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/tile.proto";
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/attributes/feature_id.proto";
+
+message VectorDataInvalidation {
+    uint32 vector_data_layer_id     = 1;
+
+    // The index of the data source in the vector data layer whose data
+    // should be invalidated.
+    uint32 vector_data_source_index = 2;
+
+    oneof  selection {
+        // Invalidates the vector data associated to the corresponding
+        // tile.
+        TileCoords tile_coords = 101;
+        // Invalidates the vector data associated to these feature ids.
+        FeatureIds feature_ids = 102;
+        // Invalidates all the vector data defined in the data source.
+        Void       everything  = 103;
+    }
+}

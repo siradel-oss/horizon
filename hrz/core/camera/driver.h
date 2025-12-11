@@ -1,7 +1,6 @@
 #pragma once
 
 #include "hrz/common/geo.h"
-#include "hrz/common/maths.h"
 #include "hrz/core/camera/animation.h"
 
 #include <lin_maths.h>

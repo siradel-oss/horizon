@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hrz/common/vector_data.h"
-#include "hrz/protocol/layers.pb.h"
+#include "hrz/common/vector_data/feature_id_hash.h"
+#include "hrz/protocol/layer/handle.pb.h"
 
 #include <lin_maths.h>
 

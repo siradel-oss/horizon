@@ -1,4 +1,5 @@
 #include "hrz/core/vector/data_loader/impl.h"
+#include "hrz/fnd/log.h"
 #include "hrz/fnd/variant.h"
 
 namespace hrz
@@ -8,7 +9,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_geometry_task(
     const FeatureSelection& feature_selection)
 {
     uint64_t hash = hrz::index_of_variant<decltype(Task::data), Task::LoadGeometry>();
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, feature_selection.hash());
 
     auto it = tasks_by_hash.find(hash);

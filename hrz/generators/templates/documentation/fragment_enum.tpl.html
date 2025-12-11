@@ -4,28 +4,26 @@
 {% block title %}{{ this.full_name|without_first(".") }}{% endblock %}
 {% block content %}
     <h2>Enumeration <code>{{ type_link(this.full_name) }}</code></h2>
+    <p><em>Defined in <code><a href="{{ this.file|path_to_snake_case }}_proto.html">{{ this.file }}.proto</a></code>.</em></p>
     {% if this.documentation %}
         <p>{{ this.documentation }}</p>
     {% endif %}
     {% if this.expose_to_style %}
         <p>Available in style scripts.</p>
     {% endif %}
-    <table>
-        <colgroup>
-            <col span="1" style="width: 8%;" />
-        </colgroup>
-        <tr><th>#</th><th>Description</th></tr>
-        {% for value in this["values"] %}
-            <tr>
-                <td style="text-align: center;">{{ value.id }}</td>
-                <td>
-                    <p><strong><code>{{ value.name }}</code></strong>{% if value.deprecated %} <em>(DEPRECATED)</em>{% endif %}</p>
-                    {% if value.documentation %}
-                        <p>{{ value.documentation }}</p>
-                    {% endif %}
-                </td>
-            </tr>
-            </tr>
-        {% endfor %}
-    </table>
+    {% for value in this["values"] %}
+        <hr />
+        <h5 id="value-{{ value.name }}"><code>{{ value.name }}</code> ({{ value.id }}){%if value.deprecated %} <em>(DEPRECATED)</em>{% endif %}</h5>
+        {% if value.documentation %}
+            <p>{{ value.documentation }}</p>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
+
+{% block toc %}
+<ul>
+    {% for value in this["values"]|sort(attribute = "name") %}
+        <li><a href="#value-{{ value.name }}">{{ value.name }}</a></li>
+    {% endfor %}
+</ul>
 {% endblock %}

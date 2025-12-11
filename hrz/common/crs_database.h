@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/geo/srs.pb.h"
 
 #include <proj_lite.h>
 

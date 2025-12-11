@@ -1,7 +1,8 @@
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/proj.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
+#include "hrz/fnd/hash.h"
 #include "hrz/fnd/string_utils.h"
 
 #include <pugixml/pugixml.hpp>

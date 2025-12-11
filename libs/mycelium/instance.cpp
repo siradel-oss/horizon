@@ -2,6 +2,7 @@
 
 #include "internal/conv.h"
 #include "internal/log.h"
+#include "mycelium/properties.h"
 
 #include <string.h>
 

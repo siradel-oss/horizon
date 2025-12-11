@@ -1,10 +1,12 @@
+#include "hrz/common/geo.h"
+#include "hrz/common/proto_maths.h"
 #include "hrz/common/vertex_utils.h"
 #include "hrz/core/jobs/symbol/baker.h"
 
 namespace hrz_jobs::symbol
 {
 ElementGeometry SymbolBaker::AnchorVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SymbolElementType::ANCHOR_SYMBOL_ELEMENT);

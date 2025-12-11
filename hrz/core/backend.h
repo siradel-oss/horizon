@@ -2,7 +2,8 @@
 
 #include "hrz/api/api.h"
 #include "hrz/fnd/defines.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/viewer/init_status.pb.h"
+#include "hrz/protocol/viewer/options.pb.h"
 
 #include <memory>
 

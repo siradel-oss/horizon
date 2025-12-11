@@ -1,0 +1,53 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/maths/geometry.proto";
+import "hrz/protocol/lighting_settings.proto";
+import "hrz/protocol/3d_model/impostor_params.proto";
+
+message ModelVectorRepr {
+    reserved 1 to 4;
+
+    // Controls the colour of the model. Set white for the original colour of
+    // the image.
+    ColorProperty      color                        = 16;
+    // Controls the size of the model. Set `(1, 1, 1)` for the default size.
+    Vec3fProperty      scale                        = 17;
+    // Controls the offset of the sprite in local North-East-Up (ENU) space. Set
+    // `(0, 0, 0)` for no offset (Note that `z=0` is the ground level).
+    Vec3fProperty      world_offset                 = 18;
+    // Controls the rotation of the model. Set `(0, 0, 0)` for no rotation.
+    Vec3fProperty      rotation                     = 19;
+
+    // URL of the model, in the glTF format.
+    string             url                          = 5;
+    HttpHeaderList     http_headers                 = 7;
+    // Pass main URL query parameters when requesting external resources,
+    // such as textures.
+    bool               preserve_query_parameters    = 12;
+    // Because there are competing conventions for which axis is up, and how the
+    // axes are oriented one to another, the `frame` property is needed in order
+    // to have the model be properly oriented.
+    CoordinatesFrame   frame                        = 6;
+    ImpostorParams     impostor_params              = 8;
+    int32              clip_id                      = 9;
+    LightingSettings   lighting                     = 11;
+
+    // Determine how the texture colour and the colour property are combined.
+    BlendMode          feature_color_blend_mode     = 13;
+    // The proportion of the colour property to combine with the texture colour.
+    float              feature_color_blend_strength = 14;
+
+    // The order in which to apply the three components of the model's rotation
+    // property.
+    EulerRotationOrder rotation_order               = 15;
+
+    // Discard symbols outside the borders of the tiles. Useful for hiding
+    // margins often added by vector data tilers.
+    bool               clip_to_tile                 = 20;
+}

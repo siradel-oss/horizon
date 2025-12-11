@@ -2,6 +2,7 @@
 #include "hrz/core/loading_priorities.h"
 #include "hrz/core/tilejson.h"
 #include "hrz/core/vector/data_loader/impl.h"
+#include "hrz/fnd/log.h"
 #include "hrz/fnd/variant.h"
 
 namespace hrz

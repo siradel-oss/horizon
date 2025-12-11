@@ -1,11 +1,11 @@
 #pragma once
 
-#include "hrz/core/render.h"
-
 namespace hrz
 {
 struct CameraViewInfo;
 struct CameraHeightSystem;
+struct Render;
+struct RenderView;
 
 namespace planet
 {
@@ -29,7 +29,7 @@ CameraHeightSystem* create_system();
 
 void destroy_system(CameraHeightSystem*, Render*);
 
-void init_render(CameraHeightSystem*, hrz::RenderView*);
+void init_render(CameraHeightSystem*, RenderView*);
 
 void register_view(CameraHeightSystem*, Render*);
 

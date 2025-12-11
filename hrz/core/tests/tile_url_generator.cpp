@@ -43,27 +43,25 @@ TEST(Url, make_tile_url)
     url.has_quadkey = true;
     url.level_zero_tile_count_y = 1;
 
-// std::hash<>() implementation is platform dependent.
-// If determinism was needed, a correct fix would be to
-// use a custom hash function. But as it only matters
-// here, we can deal with it this way.
-#if HRZ_WINDOWS
-    EXPECT_EQ("n.1.2.2.1.21", url.make_url(1, 2, 2));
-    EXPECT_EQ("n.1.2.2.1.21", url.make_url(1, 2, 2));
-    EXPECT_EQ("n.1.2.2.1.21", url.make_url(1, 2, 2));
+    // Abseil's hash function is somehow seeded per run.
+    // So we can't statically test these.
 
-    EXPECT_EQ("u.5.9.5.22.02103", url.make_url(5, 9, 5));
+    auto a = url.make_url(1, 2, 2);
+    auto b = url.make_url(1, 2, 2);
+    auto c = url.make_url(1, 2, 2);
+    auto d = url.make_url(5, 9, 5);
+    auto e = url.make_url(3, 5, 3);
 
-    EXPECT_EQ("o.3.5.3.2.213", url.make_url(3, 5, 3));
-#else
-    EXPECT_EQ("g.1.2.2.1.21", url.make_url(1, 2, 2));
-    EXPECT_EQ("g.1.2.2.1.21", url.make_url(1, 2, 2));
-    EXPECT_EQ("g.1.2.2.1.21", url.make_url(1, 2, 2));
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(a, c);
 
-    EXPECT_EQ("g.5.9.5.22.02103", url.make_url(5, 9, 5));
+    EXPECT_TRUE(a[0] >= 'a' && a[0] <= 'z');
+    EXPECT_TRUE(d[0] >= 'a' && d[0] <= 'z');
+    EXPECT_TRUE(e[0] >= 'a' && e[0] <= 'z');
 
-    EXPECT_EQ("r.3.5.3.2.213", url.make_url(3, 5, 3));
-#endif
+    EXPECT_EQ(a.substr(2), "1.2.2.1.21");
+    EXPECT_EQ(d.substr(2), "5.9.5.22.02103");
+    EXPECT_EQ(e.substr(2), "3.5.3.2.213");
 }
 
 TEST(Url, level_zero_tile_count_y)

@@ -1,11 +1,12 @@
+#include "hrz/common/geo.h"
 #include "hrz/core/jobs/symbol/baker.h"
 
 namespace hrz_jobs::symbol
 {
 static constexpr size_t InitialComponentCapacity = 256;
 
-hrz::JobResult SymbolBaker::LeaderLineVisitor::init_element_instances(
-    const hrz::vt::SymbolBakingData::Element& element)
+hrz_jobs::JobResult SymbolBaker::LeaderLineVisitor::init_element_instances(
+    const hrz_jobs::SymbolBakingData::Element& element)
 {
     assert(element.z_index.has_value());
 
@@ -17,11 +18,11 @@ hrz::JobResult SymbolBaker::LeaderLineVisitor::init_element_instances(
                  get_context().get_blob_allocator(), InitialComponentCapacity)});
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 ElementGeometry SymbolBaker::LeaderLineVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SymbolElementType::LEADER_LINE_SYMBOL_ELEMENT);
@@ -71,7 +72,7 @@ void SymbolBaker::LeaderLineVisitor::finalize_element_instance(
     }
 }
 
-std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBaker::
+std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBaker::
     LeaderLineVisitor::get_element_instances_at_z_index(uint32_t z_index)
 {
     auto instance_array_opt = instances_by_z_index.at(z_index).to_blob_array();
@@ -82,7 +83,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
 
     if (instance_array_opt->empty())
     {
-        return {std::optional<hrz::vt::BakedSymbols::ElementInstances>{}};
+        return {std::optional<hrz_jobs::BakedSymbols::ElementInstances>{}};
     }
 
     instance_array_opt->register_blob_metadata(
@@ -90,7 +91,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
     instance_array_opt->register_blob_owner(
         get_context().get_blob_allocator(), get_context().get_resource_owner());
 
-    return {{hrz::vt::BakedSymbols::ElementInstances{
+    return {{hrz_jobs::BakedSymbols::ElementInstances{
         hrz_proto::SymbolElementType::LEADER_LINE_SYMBOL_ELEMENT,
         std::move(instance_array_opt.value())}}};
 }

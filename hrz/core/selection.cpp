@@ -1,9 +1,7 @@
 #include "hrz/core/selection.h"
 
-#include "hrz/core/picking_id_allocator.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
-#include "hrz/fnd/hash.h"
 
 namespace
 {
@@ -13,22 +11,14 @@ struct FullObjectId
     uint64_t object_id;
 
     constexpr bool operator==(const FullObjectId& id) const = default;
-};
-} // namespace
 
-namespace std
-{
-template<>
-struct hash<FullObjectId>
-{
-    size_t operator()(const FullObjectId& id) const noexcept
+    template<typename H>
+    friend H AbslHashValue(H h, const FullObjectId& id)
     {
-        auto h1(std::hash<uint64_t>{}(id.layer_id));
-        auto h2(std::hash<uint64_t>{}(id.object_id));
-        return hrz::hash_mix(h1, h2);
+        return H::combine(std::move(h), id.layer_id, id.object_id);
     }
 };
-} // namespace std
+} // namespace
 
 namespace hrz
 {

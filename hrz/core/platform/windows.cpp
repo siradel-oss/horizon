@@ -2,7 +2,6 @@
 #include "hrz/core/platform/windows_context.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/log.h"
 
 #include <assert.h>
 #include <windows.h>

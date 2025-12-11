@@ -1,0 +1,16 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// Raster groups are used to separate rasters into categories of similar update
+// frequencies. Their draw order is given by their name.
+// When a raster in a group is modified, the entire group must be rebuilt, but
+// other groups are untouched. This means that it is a good idea to group
+// "background" raster like OSM or Bing in a lower group than raster tht are
+// often modified like computation results.
+enum RasterGroup {
+    BOTTOM_RASTER_GROUP = 0;
+    MIDDLE_RASTER_GROUP = 1;
+    TOP_RASTER_GROUP    = 2;
+}

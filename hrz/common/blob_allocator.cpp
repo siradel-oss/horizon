@@ -15,7 +15,6 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/object_pool.h"
 #include "hrz/fnd/time.h"
-#include "hrz/fnd/variant.h"
 #include "hrz/monitoring/monitoring.h"
 
 #include <tlsf/tlsf.h>
@@ -1052,6 +1051,8 @@ struct BlobAllocator
     };
 
     Ui ui;
+
+    TimeVariants current_time;
 };
 
 namespace
@@ -1195,7 +1196,7 @@ bool try_allocate_root_blob(BlobAllocator* allocator, BlobId blob_id, Blob* blob
 
     auto do_alloc_success = [&]()
     {
-        blob->allocation_date = hrz::now_frame_s();
+        blob->allocation_date = allocator->current_time.s;
         blob->state = BlobState::Allocated;
 
         // Wake the thread that may be waiting on this blob's allocation.
@@ -1425,7 +1426,7 @@ AllocationTicket allocate_blob(BlobAllocator* allocator, size_t size, bool block
     auto blob = allocator->blob_pool.get_object(id);
     blob->state = BlobState::NotAllocated;
     blob->size = size;
-    blob->request_date = hrz::now_frame_s();
+    blob->request_date = allocator->current_time.s;
     blob->allocation_date = 0;
     blob->use_count = 1;
 
@@ -2048,7 +2049,7 @@ void dump_blobs(
     auto* msgs = google::protobuf::Arena::Create<hrz_monitoring::MonitoringMessages>(&arena);
     auto* msg = msgs->add_messages();
     auto* snapshot = msg->mutable_blobs();
-    snapshot->set_timestamp(hrz::now_frame_us_s64());
+    snapshot->set_timestamp(allocator->current_time.us_s64);
     snapshot->set_malloc_passthrough(allocator->is_malloc_passthrough);
     snapshot->set_capacity(allocator->capacity);
 
@@ -2156,6 +2157,8 @@ void work(BlobAllocator* allocator)
 
     assert(allocator);
 
+    allocator->current_time = hrz::now_all_variants();
+
     {
         HRZ_SCOPED_LOCK(allocator->potentially_unused_blobs_mutex);
         allocator->potentially_unused_blobs.swap();
@@ -2192,7 +2195,7 @@ void work(BlobAllocator* allocator)
 
         if (blob != nullptr)
         {
-            if (hrz::now_frame_s() - blob->request_date > MAX_WAIT_DURATION)
+            if (allocator->current_time.s - blob->request_date > MAX_WAIT_DURATION)
             {
                 HRZ_LOG_WARNING(
                     "Could not allocate blob {} of size {} after {} s", blob_id, blob->size,
@@ -2505,7 +2508,7 @@ void dev_ui(
                 buffer.push_back('\n');
                 fmt::format_to(
                     std::back_inserter(buffer), "{:.0f} seconds old",
-                    hrz::now_frame_s() - blob->allocation_date);
+                    allocator->current_time.s - blob->allocation_date);
 
                 hrz::ui::add_tooltip(
                     ctx, &allocator->ui.tooltip_ctx, {buffer.data(), buffer.size()});

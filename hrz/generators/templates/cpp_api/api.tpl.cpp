@@ -1,12 +1,14 @@
 #include "hrz/api/api.h"
 
-#include "hrz/protocol/all.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //        THIS FILE HAS BEEN GENERATED FROM THE SPECS, DO NOT EDIT!!!         //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+{% for f in protocol.files %}
+#include "{{ f.name }}.pb.h"
+{% endfor %}
 
 {% for s in protocol.services %}
 {% for m in s.methods %}

@@ -1,16 +1,18 @@
 #include "hrz/core/vector/tiles.h"
 
-#include "hrz/common/attributes.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_geo.h"
-#include "hrz/common/style.h"
 #include "hrz/common/tile_coords.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/vector_data/attribute_type_api.h"
+#include "hrz/common/vector_tiles/picking.h"
 #include "hrz/core/camera/camera.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/debug_draw.h"
 #include "hrz/core/global_flags.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/lighting_settings.h"
+#include "hrz/core/render/screen_space.h"
 #include "hrz/core/selection.h"
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/vector/tiles_actor.h"
@@ -22,7 +24,6 @@
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/protocol/all.h"
 
 #include <lin_maths.h>
 #include <mycelium/renderer.h>
@@ -573,7 +574,7 @@ struct VectorTiles
                  RenderRequest::VisualCause::VectorTileVisibilitySet))
             && !hrz::get_flag(hrz::Flag::DebugFreezeVectorTilesCulling))
         {
-            auto displayable_frame = hrz::Render::CurrentFrame;
+            auto displayable_frame = hrz::clock::CurrentFrameNumber;
             for (auto type : _repr_types)
             {
                 displayable_frame =
@@ -628,12 +629,12 @@ struct VectorTiles
                 if (visibility_set_must_wait)
                 {
                     _visibility_set_frame_queue.emplace_back(
-                        std::move(_new_visibility_set.value()), hrz::Render::CurrentFrame);
+                        std::move(_new_visibility_set.value()), hrz::clock::CurrentFrameNumber);
                 }
                 else
                 {
                     set_current_visibility_set(
-                        std::move(_new_visibility_set.value()), hrz::Render::CurrentFrame);
+                        std::move(_new_visibility_set.value()), hrz::clock::CurrentFrameNumber);
                 }
 
                 _new_visibility_set = std::nullopt;

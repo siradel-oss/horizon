@@ -2,10 +2,14 @@
 
 #include "hrz/common/geo.h"
 #include "hrz/common/picking_types.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/core/render.h"
+#include "hrz/common/vector_data/feature_id.h"
+#include "hrz/core/render/lighting_settings.h"
 #include "hrz/core/render_request.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/core/visibility_constraints.h"
+#include "hrz/protocol/identification/picking_result.pb.h"
+#include "hrz/protocol/vector/clamping.pb.h"
+#include "hrz/protocol/vector/style.pb.h"
 
 #include <cstdint>
 #include <optional>
@@ -24,6 +28,7 @@ struct SelectionSystem;
 struct VectorDataLoader;
 struct SymbolCullingSystem;
 struct AttributionRegistry;
+struct Render;
 
 namespace vt
 {

@@ -9,7 +9,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_vector_data_task(
     const FeatureSelection& feature_selection)
 {
     uint64_t hash = hrz::index_of_variant<decltype(Task::data), Task::LoadVectorData>();
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(data_source));
     hash = hrz::hash_mix<uint64_t>(hash, feature_selection.hash());
 
@@ -254,7 +254,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorData>
         }
         else if (task_data.reference_feature_ids.has_value())
         {
-            vector_data::UnjoinedVectorData params;
+            hrz_jobs::UnjoinedVectorData params;
             params.join_by_feature_ids =
                 data_source.join_type == LayerModel::JoinType::SortByFeatureIds;
             params.reference_feature_ids = task_data.reference_feature_ids.value();
@@ -304,7 +304,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorData>
             if (hrz_jobs::get_job_status(js, task_data.join_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                vector_data::JoinedVectorData data;
+                hrz_jobs::JoinedVectorData data;
                 hrz_jobs::get_job_response(js, task_data.join_ticket, data);
                 size_t feature_count = task_data.reference_feature_ids->size();
 

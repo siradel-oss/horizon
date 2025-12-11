@@ -1,108 +1,157 @@
 {
   "test_job_1": {
-    "params_type": "struct hrz::test::TestJob1Params",
-    "response_type": "struct hrz::test::TestJob1Response",
-    "documentation": "Test job 1"
+    "params_type": "struct hrz_jobs::TestJob1Params",
+    "response_type": "struct hrz_jobs::TestJob1Response",
+    "documentation": "Test job 1",
+    "includes": [
+      "hrz/core/jobs/test_jobs.h"
+    ]
   },
   "test_job_2": {
-    "params_type": "struct hrz::test::TestJob2Params",
-    "response_type": "struct hrz::test::TestJob2Response",
-    "documentation": "Test job 2"
+    "params_type": "struct hrz_jobs::TestJob2Params",
+    "response_type": "struct hrz_jobs::TestJob2Response",
+    "documentation": "Test job 2",
+    "includes": [
+      "hrz/core/jobs/test_jobs.h"
+    ]
   },
   "process_feedback_texture": {
-    "params_type": "struct hrz::planet::FeedbackData",
-    "response_type": "struct hrz::planet::TileList",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::FeedbackData",
+    "response_type": "struct hrz_jobs::TileList",
+    "includes": [
+      "hrz/core/jobs/process_feedback.h"
+    ]
   },
   "reproject_raster_tile": {
-    "params_type": "struct hrz::planet::RasterTileReprojParams",
-    "response_type": "struct hrz::planet::ReprojectedTiles",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::RasterTileReprojParams",
+    "response_type": "struct hrz_jobs::ReprojectedTiles",
+    "includes": [
+      "hrz/core/jobs/reproject_raster_tile.h"
+    ]
   },
   "generate_mipmaps": {
-    "params_type": "struct hrz::planet::MipmapGenerationParams",
-    "response_type": "struct hrz::planet::Mipmaps",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::MipmapGenerationParams",
+    "response_type": "struct hrz_jobs::Mipmaps",
+    "includes": [
+      "hrz/core/jobs/generate_mipmaps.h"
+    ]
   },
   "compose_raster_tile": {
-    "params_type": "struct hrz::planet::RasterTileCompositionParams",
-    "response_type": "struct hrz::planet::RasterTileCompositionResponse",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::RasterTileCompositionParams",
+    "response_type": "struct hrz_jobs::RasterTileCompositionResponse",
+    "includes": [
+      "hrz/core/jobs/compose_raster_tile.h"
+    ]
   },
   "decode_vector_tile": {
-    "params_type": "struct hrz::vector_data::EncodedVectorTile",
+    "params_type": "struct hrz_jobs::EncodedVectorTile",
     "response_type": "struct hrz::vector_data::DecodedVectorTile",
-    "documentation": ""
+    "includes": [
+      "hrz/common/vector_data/tile.h",
+      "hrz/core/jobs/vector_data_jobs_params.h"
+    ]
   },
   "bake_extruded_vector_geometry": {
-    "params_type": "struct hrz::vt::ExtrudedVectorData",
-    "response_type": "struct hrz::vt::ExtrudedVectorGeometry",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::ExtrudedVectorData",
+    "response_type": "struct hrz_jobs::ExtrudedVectorGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "bake_3d_model_geometry": {
-    "params_type": "struct hrz::vt::ModelData",
-    "response_type": "struct hrz::vt::ModelGeometry",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::ModelData",
+    "response_type": "struct hrz_jobs::ModelGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "bake_flat_vector_geometry": {
-    "params_type": "struct hrz::vt::FlatVectorData",
-    "response_type": "struct hrz::vt::FlatVectorGeometry",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::FlatVectorData",
+    "response_type": "struct hrz_jobs::FlatVectorGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "cull_points_query": {
-    "params_type": "struct hrz::planet::CullPointsQueryParams",
-    "response_type": "struct hrz::planet::CulledPointsQuery",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::CullPointsQueryParams",
+    "response_type": "struct hrz_jobs::CulledPointsQuery",
+    "includes": [
+      "hrz/core/jobs/points_query_jobs_params.h"
+    ]
   },
   "sample_points_query": {
-    "params_type": "struct hrz::planet::SamplePointsQueryParams",
-    "response_type": "struct hrz::planet::SampledPointsQuery",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::SamplePointsQueryParams",
+    "response_type": "struct hrz_jobs::SampledPointsQuery",
+    "includes": [
+      "hrz/core/jobs/points_query_jobs_params.h"
+    ]
   },
   "parse_tilemap_resource": {
-    "params_type": "struct hrz::planet::TilemapResourceParams",
-    "response_type": "struct hrz::planet::TilemapResourceResponse",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::TilemapResourceParams",
+    "response_type": "struct hrz_jobs::TilemapResourceResponse",
+    "includes": [
+      "hrz/core/jobs/parse_tilemap_resource.h"
+    ]
   },
   "style_features": {
-    "params_type": "struct hrz::style::FeaturesStylingData",
-    "response_type": "struct hrz::style::StylingResult",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::FeaturesStylingData",
+    "response_type": "struct hrz_jobs::StylingResult",
+    "includes": [
+      "hrz/core/jobs/styling.h"
+    ]
   },
   "palettize_image": {
-    "params_type": "struct hrz::planet::PalettizeImageParams",
+    "params_type": "struct hrz_jobs::PalettizeImageParams",
     "response_type": "class hrz::BlobImage",
-    "documentation": ""
+    "includes": [
+      "hrz/core/jobs/palettize_image.h",
+      "hrz/common/blob_image.h"
+    ]
   },
   "bake_cylinder_vector_geometry": {
-    "params_type": "struct hrz::vt::CylinderVectorData",
-    "response_type": "struct hrz::vt::CylinderVectorGeometry",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::CylinderVectorData",
+    "response_type": "struct hrz_jobs::CylinderVectorGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "decode_three_d_tiles_tileset": {
-    "params_type": "struct hrz::three_d_tiles::EncodedThreeDTilesTileset",
+    "params_type": "struct hrz_jobs::EncodedThreeDTilesTileset",
     "response_type": "struct hrz::three_d_tiles::ThreeDTilesTilesetDescriptor",
-    "documentation": ""
+    "includes": [
+      "hrz/common/three_d_tiles.h",
+      "hrz/core/jobs/three_d_tiles_jobs_params.h"
+    ]
   },
   "decompress_draco_mesh": {
     "params_type": "struct hrz::blobs::BlobHandle",
-    "response_type": "struct hrz::model::Mesh",
-    "documentation": ""
+    "response_type": "struct hrz_jobs::DecompressedDracoMesh",
+    "includes": [
+      "hrz/common/blob_allocator.h",
+      "hrz/core/jobs/decompress_draco_mesh.h"
+    ]
   },
   "parse_wmts_resource": {
-    "params_type": "struct hrz::planet::WmtsResourceParams",
-    "response_type": "struct hrz::planet::WmtsResourceResponse",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::WmtsResourceParams",
+    "response_type": "struct hrz_jobs::WmtsResourceResponse",
+    "includes": [
+      "hrz/core/jobs/parse_wmts_resource.h"
+    ]
   },
   "parse_wms_resource": {
-    "params_type": "struct hrz::planet::WmsResourceParams",
-    "response_type": "struct hrz::planet::WmsResourceResponse",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::WmsResourceParams",
+    "response_type": "struct hrz_jobs::WmsResourceResponse",
+    "includes": [
+      "hrz/core/jobs/parse_wms_resource.h"
+    ]
   },
   "rasterize_cesium_terrain_tile": {
-    "params_type": "struct hrz::planet::CesiumTerrainTileData",
+    "params_type": "struct hrz_jobs::CesiumTerrainTileData",
     "response_type": "class hrz::BlobImage",
-    "documentation": ""
+    "includes": [
+      "hrz/core/jobs/decode_cesium_terrain_tile.h",
+      "hrz/common/blob_image.h"
+    ]
   },
   "decode_blob_image": {
     "params_type": "struct hrz::BlobImageDecodingParams",
@@ -110,58 +159,81 @@
     "documentation": "Decodes an image. The input data is the encoded image, as a blob. The image type is guessed from the data. For supported input formats, see https://github.com/nothings/stb/blob/master/stb_image.h. 1, 2, 3 and 4 channels are supported. The output data is the decoded blob image, with one byte per channel per pixel."
   },
   "join_vector_data": {
-    "params_type": "struct hrz::vector_data::UnjoinedVectorData",
-    "response_type": "struct hrz::vector_data::JoinedVectorData",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::UnjoinedVectorData",
+    "response_type": "struct hrz_jobs::JoinedVectorData",
+    "includes": [
+      "hrz/core/jobs/vector_data_jobs_params.h"
+    ]
   },
   "decode_three_d_tiles_batch_table": {
-    "params_type": "struct hrz::three_d_tiles::EncodedBatchTable",
-    "response_type": "struct hrz::three_d_tiles::DecodedBatchTable",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::EncodedBatchTable",
+    "response_type": "struct hrz_jobs::DecodedBatchTable",
+    "includes": [
+      "hrz/core/jobs/three_d_tiles_jobs_params.h"
+    ]
   },
   "move_client_vector_data_to_blobs": {
-    "params_type": "struct hrz::vector_data::RawClientVectorData",
+    "params_type": "struct hrz_jobs::RawClientVectorData",
     "response_type": "struct hrz::vector_data::DecodedVectorTile",
-    "documentation": ""
+    "includes": [
+      "hrz/common/vector_data/tile.h",
+      "hrz/core/jobs/vector_data_jobs_params.h"
+    ]
   },
   "compress_blob_image": {
     "params_type": "struct hrz::BlobImageCompressionParams",
-    "response_type": "class hrz::BlobImage",
-    "documentation": ""
+    "response_type": "class hrz::BlobImage"
   },
   "bake_heatmap_geometry": {
-    "params_type": "struct hrz::vt::HeatmapData",
-    "response_type": "struct hrz::vt::HeatmapGeometry",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::HeatmapData",
+    "response_type": "struct hrz_jobs::HeatmapGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "bake_symbols": {
-    "params_type": "struct hrz::vt::SymbolBakingData",
-    "response_type": "struct hrz::vt::BakedSymbols",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::SymbolBakingData",
+    "response_type": "struct hrz_jobs::BakedSymbols",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "parse_mvt": {
     "params_type": "struct hrz::blobs::BlobHandle",
-    "response_type": "struct hrz::vector_data::ParsedMvt",
-    "documentation": ""
+    "response_type": "struct hrz_jobs::ParsedMvt",
+    "includes": [
+      "hrz/core/jobs/vector_data_jobs_params.h"
+    ]
   },
   "cull_symbols": {
-    "params_type": "struct hrz::vt::SymbolCullingParams",
-    "response_type": "struct hrz::vt::SymbolCullingResponse",
-    "documentation": ""
+    "params_type": "struct hrz_jobs::SymbolCullingParams",
+    "response_type": "struct hrz_jobs::SymbolCullingResponse",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
   },
   "build_aabb_tree": {
     "params_type": "struct hrz::vector_data::VectorTileGeometry",
-    "response_type": "struct hrz::vector_data::AabbTree",
-    "documentation": ""
+    "response_type": "struct hrz_jobs::AabbTree",
+    "includes": [
+      "hrz/core/jobs/vector_data_jobs_params.h",
+      "hrz/common/vector_data/tile_geometry.h"
+    ]
   },
   "extract_vector_tile": {
-    "params_type": "struct hrz::vector_data::VectorTileExtractionParams",
+    "params_type": "struct hrz_jobs::VectorTileExtractionParams",
     "response_type": "struct hrz::vector_data::DecodedVectorTile",
-    "documentation": ""
+    "includes": [
+      "hrz/core/jobs/vector_data_jobs_params.h",
+      "hrz/common/vector_data/tile.h"
+    ]
   },
   "decompress_blob": {
-    "params_type": "struct hrz::DecompressBlobParams",
+    "params_type": "struct hrz_jobs::DecompressBlobParams",
     "response_type": "struct hrz::blobs::BlobHandle",
-    "documentation": ""
+    "includes": [
+      "hrz/common/blob_allocator.h",
+      "hrz/core/jobs/decompress_blob.h"
+    ]
   }
 }

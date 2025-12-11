@@ -3,9 +3,9 @@
 #include "hrz/core/camera/driver.h"
 #include "hrz/core/camera/manipulator.h"
 #include "hrz/core/camera/viewpoint.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/events.h"
 #include "hrz/core/picking_system.h"
-#include "hrz/core/render.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/time.h"
@@ -2173,14 +2173,15 @@ public:
 
         if (!controller()->is_idle())
         {
-            _last_non_idle_time = hrz::now_frame_s();
+            _last_non_idle_time = hrz::clock::CurrentFrameRealTime.s;
         }
 
         if (state.config.correction.duration() > 0)
         {
             // The delay before we start the correction animation is half the duration of the
             // correction animation.
-            if (hrz::now_frame_s() - _last_non_idle_time > state.config.correction.duration() * 0.5)
+            if (hrz::clock::CurrentFrameRealTime.s - _last_non_idle_time
+                > state.config.correction.duration() * 0.5)
             {
                 Pose pose = pose_from_dual_quat(state.pose);
                 if (correct_position(&pose.position))
@@ -2191,7 +2192,7 @@ public:
                         state.config.terrain_collision_inertia));
                 }
                 // So that we don't check too often
-                _last_non_idle_time = hrz::now_frame_s();
+                _last_non_idle_time = hrz::clock::CurrentFrameRealTime.s;
             }
         }
 

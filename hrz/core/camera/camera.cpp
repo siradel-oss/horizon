@@ -1,20 +1,18 @@
 #include "hrz/core/camera/camera.h"
 
 #include "hrz/common/geo.h"
-#include "hrz/common/geometry.h"
 #include "hrz/common/proto_geo.h"
 #include "hrz/core/camera/animation.h"
 #include "hrz/core/camera/manipulator.h"
 #include "hrz/core/camera/viewpoint.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/events.h"
 #include "hrz/core/picking_system.h"
 #include "hrz/core/planet/surface.h"
-#include "hrz/core/render.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/camera/settings.h"
 
 extern "C"
 {
@@ -291,7 +289,7 @@ public:
             std::max(kMinInertia, user_controls_inertia), std::max(kMinInertia, movements_inertia)},
         _min_height_above_terrain(min_height_above_terrain),
         _terrain_collision_inertia(terrain_collision_inertia),
-        _last_work_time(hrz::now_frame_s()),
+        _last_work_time(hrz::clock::CurrentFrameRealTime.s),
         _index(index)
     {
         _baked_info.fovy = lm::radians(fov);
@@ -422,7 +420,7 @@ public:
 
         assert(_manipulator);
 
-        double now = hrz::now_frame_s();
+        double now = hrz::clock::CurrentFrameRealTime.s;
         double dt = now - std::exchange(_last_work_time, now);
         lm::ddual_quat new_pose = _manipulator->work(
             dt, _baked_info.fovy, viewport, height_above_terrain, picking, notifications_cb);

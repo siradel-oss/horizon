@@ -2,19 +2,21 @@
 
 #include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/common/tickets.h"
 #include "hrz/core/planet/raster.h"
 #include "hrz/core/planet/raster_data_fetch_types.h"
 #include "hrz/core/planet/raster_merge_group.h"
-#include "hrz/core/render.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/core/scene_path/layer/dtm_raster_layer_paths.h"
+#include "hrz/core/scene_path/layer/imagery_raster_layer_paths.h"
+#include "hrz/core/scene_path/scene/settings_paths.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/core/visibility_constraints.h"
 #include "hrz/core/vtex/clipmap_params.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/dtm_raster_layer.h"
+#include "hrz/protocol/path_builder/layer/imagery_raster_layer.h"
+#include "hrz/protocol/path_builder/scene/settings.h"
 
 #include <array>
 

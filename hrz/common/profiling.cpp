@@ -1,8 +1,6 @@
 #include "hrz/common/profiling.h"
 
 #include "hrz/fnd/arena.h"
-#include "hrz/fnd/defines.h"
-#include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/time.h"
@@ -104,7 +102,7 @@ struct ThreadProfiler
     explicit ThreadProfiler(bool enabled) :
         _enabled(enabled),
         _monitoring_buffer(hrz_monitoring::create_buffer()),
-        _last_synchronization_timestamp_ms(hrz::now_frame_ms_s64())
+        _last_synchronization_timestamp_ms(hrz::now_ms_s64())
     {
     }
 
@@ -223,10 +221,10 @@ struct ThreadProfiler
 
     void synchronize(SharedData* data)
     {
-        int64_t now = hrz::now_frame_ms_s64();
+        const int64_t now = hrz::now_ms_s64();
         if (now - _last_synchronization_timestamp_ms > SYNCHRONIZATION_INTERVAL_MS)
         {
-            bool was_enabled = _enabled;
+            const bool was_enabled = _enabled;
 
             {
                 std::unique_lock<std::mutex> lock(data->mutex);

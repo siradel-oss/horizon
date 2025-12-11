@@ -1,27 +1,23 @@
 #include "hrz/core/planet/surface.h"
 
-#include "hrz/common/crs_database.h"
 #include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
 #include "hrz/core/channel_group.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/picking_id_allocator.h"
 #include "hrz/core/planet/elevation_query.h"
 #include "hrz/core/planet/geometry.h"
 #include "hrz/core/planet/raster_collection.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/fnd/hash.h"
-#include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/thread.h"
-#include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
 
 #include <array>
 #include <limits>
-#include <mutex>
-#include <queue>
 
 namespace
 {
@@ -211,7 +207,7 @@ struct PlanetSurface
 
         const my::Renderer::Culler& culler = render->rd->as_culler();
 
-        double now = now_frame_ms();
+        double now = hrz::clock::CurrentFrameRealTime.ms;
 
         if (now - last_set_center >= SetCenterDelayMs)
         {

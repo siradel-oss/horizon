@@ -3,13 +3,13 @@
 #include "hrz/common/crs_database.h"
 #include "hrz/common/image_processing.h"
 #include "hrz/common/image_view.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/common/raster_sampling.h"
 #include "hrz/common/reprojection.h"
 #include "hrz/common/tile_coords.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
+#include "hrz/core/jobs/points_query_jobs_params.h"
 #include "hrz/fnd/array_view.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
@@ -49,12 +49,12 @@ void get_tile(
     out_domain_coords_pixel = domain_coords_pixel;
 }
 
-hrz::JobResult cull(
+hrz_jobs::JobResult cull(
     uint32_t raster_index,
     const hrz::planet::TiledRasterGeometry& raster_geometry,
     const lm::dbbox2& raster_display_bounds,
     hrz::ArrayView<const lm::dvec2> points_2d,
-    hrz::planet::CulledPointsQuery& culled,
+    hrz_jobs::CulledPointsQuery& culled,
     BlobAllocator* blob_allocator)
 {
     pl_Crs from = hrz_proj::wmerc;
@@ -70,7 +70,7 @@ hrz::JobResult cull(
     assert(ok == pl_Result_Ok);
 
     size_t point_count = points_2d.size();
-    if (point_count == 0) return hrz::JobResult::SUCCESS;
+    if (point_count == 0) return hrz_jobs::JobResult::SUCCESS;
 
     hrz::BlobVector<lm::dvec3> points(blob_allocator, point_count);
     points.reserve(point_count);
@@ -82,7 +82,7 @@ hrz::JobResult cull(
     if (!points_data_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate data.");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto points_data = points_data_opt.value();
 
@@ -123,32 +123,32 @@ hrz::JobResult cull(
         culled.tiles.push_back({raster_index, coords});
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
-hrz::JobResult cull(
-    const hrz::planet::CullPointsQueryParams& params,
+hrz_jobs::JobResult cull(
+    const hrz_jobs::CullPointsQueryParams& params,
     hrz::ArrayView<const lm::dvec2> points,
-    hrz::planet::CulledPointsQuery& resp,
+    hrz_jobs::CulledPointsQuery& resp,
     BlobAllocator* blob_allocator)
 {
     if (points.size() == 0)
     {
         HRZ_LOG_WARNING("Cull job with an empty list of points.");
-        return hrz::JobResult::SUCCESS;
+        return hrz_jobs::JobResult::SUCCESS;
     }
 
     uint32_t index = 0;
     for (const auto& raster : params.rasters)
     {
         if (cull(index++, raster.geometry, raster.display_bounds, points, resp, blob_allocator)
-            != hrz::JobResult::SUCCESS)
+            != hrz_jobs::JobResult::SUCCESS)
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // anonymous namespace
 
@@ -156,9 +156,9 @@ namespace hrz_jobs
 {
 namespace cull_points_query
 {
-hrz::JobResult run(
-    const hrz::planet::CullPointsQueryParams& params,
-    hrz::planet::CulledPointsQuery& resp,
+hrz_jobs::JobResult run(
+    const hrz_jobs::CullPointsQueryParams& params,
+    hrz_jobs::CulledPointsQuery& resp,
     const JobContext& context)
 {
     if (std::holds_alternative<hrz::BlobArrayView<lm::dvec2>>(params.points))
@@ -177,17 +177,17 @@ hrz::JobResult run(
 
 namespace
 {
-hrz::JobResult sample(
-    const hrz::planet::SamplePointsQueryParams& params,
+hrz_jobs::JobResult sample(
+    const hrz_jobs::SamplePointsQueryParams& params,
     hrz::ArrayView<const lm::dvec2> points,
-    hrz::planet::SampledPointsQuery& resp,
+    hrz_jobs::SampledPointsQuery& resp,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
 {
     if (points.size() == 0)
     {
         HRZ_LOG_WARNING("Sample job with an empty list of points.");
-        return hrz::JobResult::SUCCESS;
+        return hrz_jobs::JobResult::SUCCESS;
     }
 
     auto check_image_format = [](hrz_proto::ImageFormat format)
@@ -206,7 +206,7 @@ hrz::JobResult sample(
     {
         if (!check_image_format(raster.image_format))
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -215,12 +215,12 @@ hrz::JobResult sample(
         auto format = tile.image.proto_format();
         if (!format.has_value() || !check_image_format(format.value()))
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
     const size_t point_count = points.size();
-    if (point_count == 0) return hrz::JobResult::FAILURE;
+    if (point_count == 0) return hrz_jobs::JobResult::FAILURE;
 
     // This marks points that we need to continue sampling and the ones we don't.
     std::vector<bool> to_sample(point_count, true);
@@ -234,7 +234,7 @@ hrz::JobResult sample(
     if (!point_coords_data_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate data.");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto point_coords_data = point_coords_data_opt.value();
 
@@ -249,7 +249,7 @@ hrz::JobResult sample(
     if (!elevations_data_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate data.");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto elevations_data = elevations_data_opt.value();
 
@@ -425,20 +425,20 @@ hrz::JobResult sample(
     auto elevations_array_opt = elevations.to_blob_array();
     if (!elevations_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     resp.values = std::move(elevations_array_opt.value());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace
 
 namespace sample_points_query
 {
-hrz::JobResult run(
-    const hrz::planet::SamplePointsQueryParams& params,
-    hrz::planet::SampledPointsQuery& resp,
+hrz_jobs::JobResult run(
+    const hrz_jobs::SamplePointsQueryParams& params,
+    hrz_jobs::SampledPointsQuery& resp,
     const JobContext& context)
 {
     if (std::holds_alternative<hrz::BlobArrayView<lm::dvec2>>(params.points))

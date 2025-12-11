@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hrz/core/render.h"
 #include "hrz/core/vector/flat_overlay.h"
 
 #include <mycelium/backend.h>

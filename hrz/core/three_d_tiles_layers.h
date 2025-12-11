@@ -3,8 +3,9 @@
 #include "hrz/common/picking_types.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/protocol/all.h"
+#include "hrz/core/scene_path/layer/three_d_tiles_layer_paths.h"
+#include "hrz/protocol/identification/object_reference.pb.h"
+#include "hrz/protocol/identification/picking_result.pb.h"
 
 #include <lin_maths.h>
 

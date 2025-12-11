@@ -2,7 +2,6 @@
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_image.h"
 #include "hrz/common/blob_malloc_adapter.h"
-#include "hrz/common/color.h"
 #include "hrz/common/profiling.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/fnd/defer.h"
@@ -320,7 +319,7 @@ my::TextureFormat convert_basisu_texture_format(
 
 // Based partly on
 // https://github.com/BinomialLLC/basis_universal/blob/9c5da86dbebf5f6eaf5fe42168d93f46566d8d5a/contrib/single_file_transcoder/examples/emscripten.cpp#L352
-hrz::JobResult decode_ktx2(
+hrz_jobs::JobResult decode_ktx2(
     std::span<const std::byte> encoded_image_data,
     hrz_proto::ImageFormat encoded_image_format,
     bool allow_decoding_to_compressed_image,
@@ -333,26 +332,26 @@ hrz::JobResult decode_ktx2(
     {
         assert(false);
         HRZ_LOG_ERROR("Unsupported format for compressed images");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     basist::ktx2_transcoder transcoder;
     if (!transcoder.init(encoded_image_data.data(), encoded_image_data.size_bytes()))
     {
         HRZ_LOG_ERROR("Could not initialize KTX2 transcoder for image data");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (transcoder.get_level_index().empty())
     {
         HRZ_LOG_ERROR("No levels in KTX2 file");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (!transcoder.start_transcoding())
     {
         HRZ_LOG_ERROR("Could not start transcoding KTX2 file");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     bool is_srgb = transcoder.get_dfd_transfer_func() == basist::KTX2_KHR_DF_TRANSFER_SRGB;
@@ -381,7 +380,7 @@ hrz::JobResult decode_ktx2(
         if (!transcoder.get_image_level_info(level_info, level, 0, 0))
         {
             HRZ_LOG_ERROR("Could not get level {} info from KTX2 file", level);
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         auto level_width = level_info.m_width;
@@ -402,7 +401,7 @@ hrz::JobResult decode_ktx2(
                     level, level_width, level_height, texture_layout.get_level_data_width(level),
                     texture_layout.get_level_data_height(level), transcoder.get_width(),
                     transcoder.get_height());
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
         }
 
@@ -421,7 +420,7 @@ hrz::JobResult decode_ktx2(
     if (!decoded_image_blob.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate blob of size {}", decoded_image_byte_size);
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     {
@@ -439,7 +438,7 @@ hrz::JobResult decode_ktx2(
         texture_format, texture_layout.width, texture_layout.height, texture_layout.levels,
         std::move(decoded_image_blob.value()), context.get_blob_allocator());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 std::optional<hrz::blobs::BlobHandle> decode_webp(
@@ -760,7 +759,7 @@ std::optional<hrz::blobs::BlobHandle> decode_raw(
 
 namespace hrz_jobs::decode_blob_image
 {
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const hrz::BlobImageDecodingParams& params,
     hrz::BlobImage& decoded_image,
     const JobContext& context)
@@ -828,11 +827,11 @@ hrz::JobResult run(
         if (decoded_image_opt.has_value())
         {
             decoded_image = std::move(decoded_image_opt.value());
-            return hrz::JobResult::SUCCESS;
+            return hrz_jobs::JobResult::SUCCESS;
         }
     }
 
-    return hrz::JobResult::FAILURE;
+    return hrz_jobs::JobResult::FAILURE;
 }
 
 } // namespace hrz_jobs::decode_blob_image

@@ -1,7 +1,11 @@
 #pragma once
 
 #include "hrz/core/visibility_constraints.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/layer/handle.pb.h"
+#include "hrz/protocol/raster/blending.pb.h"
+#include "hrz/protocol/raster/group.pb.h"
+#include "hrz/protocol/raster/sampling.pb.h"
+#include "hrz/protocol/visibility_constraints.pb.h"
 
 #include <lin_maths.h>
 

@@ -35,6 +35,9 @@ build:linux --copt=-fvisibility=hidden
 build:linux --linkopt=-fvisibility=hidden
 build:linux --copt=-fPIC
 
+build:linux_clang --config=linux
+build:linux_clang --repo_env=CC=clang
+
 build:wasm_common --per_file_copt=.*\.(cc|cpp)$@-std=c++20
 build:wasm_common --features=-wasm_warnings_as_errors
 build:wasm_common --per_file_copt=external/.*$@-Wno-everything

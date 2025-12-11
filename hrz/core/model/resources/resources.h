@@ -5,7 +5,6 @@
 #include "hrz/core/model/descriptor.h"
 #include "hrz/core/model/resources/collection.h"
 #include "hrz/core/model/resources/resource.h"
-#include "hrz/core/render.h"
 
 #include <mycelium/backend.h>
 

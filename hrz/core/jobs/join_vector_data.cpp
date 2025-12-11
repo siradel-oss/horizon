@@ -1,9 +1,8 @@
-#include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_array.h"
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/vector_data.h"
 #include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/log.h"
 
@@ -50,9 +49,9 @@ hrz::vector_data::VectorTileGeometry::Feature make_empty_feature()
     return feature;
 }
 
-hrz::JobResult join_by_feature_ids(
-    const hrz::vector_data::UnjoinedVectorData& params,
-    hrz::vector_data::JoinedVectorData& response,
+hrz_jobs::JobResult join_by_feature_ids(
+    const hrz_jobs::UnjoinedVectorData& params,
+    hrz_jobs::JoinedVectorData& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("join by feature id");
@@ -62,7 +61,7 @@ hrz::JobResult join_by_feature_ids(
     if (!params.feature_ids.has_same_attributes(params.reference_feature_ids))
     {
         HRZ_LOG_WARNING("Feature IDs do not contain the same attributes");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto hashes_data = params.feature_ids.hashes().get_data();
@@ -104,7 +103,7 @@ hrz::JobResult join_by_feature_ids(
         response.geometry = params.geometry;
         response.attributes = params.attributes;
 
-        return hrz::JobResult::SUCCESS;
+        return hrz_jobs::JobResult::SUCCESS;
     }
 
     hrz::flat_hash_map<hrz::vector_data::FeatureIdHash, size_t> feature_ids_to_indices;
@@ -141,7 +140,7 @@ hrz::JobResult join_by_feature_ids(
         }
 
         auto features_opt = sorted_features.to_blob_array();
-        if (!features_opt.has_value()) return hrz::JobResult::FAILURE;
+        if (!features_opt.has_value()) return hrz_jobs::JobResult::FAILURE;
 
         hrz::vector_data::VectorTileGeometry geometry;
         geometry.bounds = params.geometry.value().bounds;
@@ -175,7 +174,7 @@ hrz::JobResult join_by_feature_ids(
         }
 
         auto values_opt = sorted_values.to_blob_array();
-        if (!values_opt.has_value()) return hrz::JobResult::FAILURE;
+        if (!values_opt.has_value()) return hrz_jobs::JobResult::FAILURE;
 
         hrz::vector_data::AttributeValues sorted_attribute;
         sorted_attribute.attribute_id = attribute.attribute_id;
@@ -184,12 +183,12 @@ hrz::JobResult join_by_feature_ids(
         response.attributes.push_back(std::move(sorted_attribute));
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
-hrz::JobResult match_feature_counts(
-    const hrz::vector_data::UnjoinedVectorData& params,
-    hrz::vector_data::JoinedVectorData& response,
+hrz_jobs::JobResult match_feature_counts(
+    const hrz_jobs::UnjoinedVectorData& params,
+    hrz_jobs::JoinedVectorData& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("match feature count");
@@ -228,7 +227,7 @@ hrz::JobResult match_feature_counts(
             }
 
             auto features_opt = response_features.to_blob_array();
-            if (!features_opt.has_value()) return hrz::JobResult::FAILURE;
+            if (!features_opt.has_value()) return hrz_jobs::JobResult::FAILURE;
 
             hrz::vector_data::VectorTileGeometry geometry;
             geometry.bounds = params.geometry.value().bounds;
@@ -269,19 +268,19 @@ hrz::JobResult match_feature_counts(
             }
 
             auto values_opt = joined_values.to_blob_array();
-            if (!values_opt.has_value()) return hrz::JobResult::FAILURE;
+            if (!values_opt.has_value()) return hrz_jobs::JobResult::FAILURE;
 
             attribute.values = std::move(values_opt.value());
         }
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace
 
-hrz::JobResult run(
-    const hrz::vector_data::UnjoinedVectorData& params,
-    hrz::vector_data::JoinedVectorData& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::UnjoinedVectorData& params,
+    hrz_jobs::JoinedVectorData& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("join vector data job");

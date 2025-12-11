@@ -4,15 +4,14 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/proto_settings.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/time.h"
+#include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/variant.h"
 #include "hrz/mapbox/common.h"
 #include "hrz/mapbox/expression.h"
+#include "hrz/protocol/scene_dump/defs.pb.h"
 #include "hrz/protocol/scene_model_version.h"
 
 #include <lin_maths.h>
@@ -22,7 +21,6 @@
 #include <rapidjson/writer.h>
 #include <string.h>
 
-#include <bit>
 #include <string>
 
 #define CHECK_ERR_M(MSG, ...)   \
@@ -2787,13 +2785,16 @@ TranslationResult translate_scene(
 
     ctx.scene_dump->Clear();
 
+    hrz_proto::SceneViewSettings default_scene_view_settings_proto;
+    default_scene_view_settings(&default_scene_view_settings_proto);
+
     for (int i = 0; i < hrz_proto::SceneViewIndex_ARRAYSIZE; ++i)
     {
         auto* view_settings = ctx.scene_dump->add_scene_view_settings();
         auto index = (hrz_proto::SceneViewIndex)((int)hrz_proto::SceneViewIndex_MIN + i);
 
         view_settings->set_index(index);
-        view_settings->mutable_settings()->CopyFrom(default_scene_view_settings());
+        view_settings->mutable_settings()->CopyFrom(default_scene_view_settings_proto);
 
         view_settings->mutable_settings()->mutable_ambient()->mutable_sky()->set_attenuation(0.8);
         view_settings->mutable_settings()->mutable_ambient()->mutable_sky()->set_mode(

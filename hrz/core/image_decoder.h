@@ -3,10 +3,6 @@
 #include "hrz/common/blob_image.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/protocol/all.h"
-
-#include <optional>
-#include <span>
 
 namespace hrz
 {

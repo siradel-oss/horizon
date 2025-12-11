@@ -1,0 +1,24 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/visibility_constraints.proto";
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/raster/group.proto";
+import "hrz/protocol/raster/defs.proto";
+
+// Imagery rasters overlaid on the terrain.
+// @path_root="imagery_raster_layer"
+message ImageryRasterLayer {
+    Raster                        raster                 = 1;
+    RasterGroup                   group                  = 2;
+
+    // This gives the order or raster layers in a group. A raster with a higher
+    // slot will take priority over rasters with a lower slot. Order is
+    // undefined between rasters of equal slot.
+    uint32                        slot                   = 3;
+    bool                          visible                = 4;
+    LayerVisibilityConstraintList visibility_constraints = 5;
+    SceneViewBitset               scene_views            = 6;
+}

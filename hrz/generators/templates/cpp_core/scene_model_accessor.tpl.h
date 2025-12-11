@@ -6,9 +6,18 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hrz/protocol/all.h"
 #include <span>
 #include <string_view>
+#include <string>
+
+namespace HrzProtocol
+{
+{% for type in path_types %}
+{% if not type.is_primitive and not type.is_enum %}
+class {{ type.name }};
+{% endif %}
+{% endfor %}
+} // namespace HrzProtocol
 
 namespace hrz::scene_model
 {

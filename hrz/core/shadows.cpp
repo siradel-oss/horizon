@@ -2,12 +2,10 @@
 
 #include "hrz/common/maths.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/camera/camera.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
 #include "hrz/core/shadow_map.h"
-#include "hrz/fnd/log.h"
-#include "hrz/fnd/mem.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 
 namespace
 {

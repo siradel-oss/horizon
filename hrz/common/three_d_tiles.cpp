@@ -3,8 +3,6 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/horizon_culling.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/proto_geo.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/log.h"
 

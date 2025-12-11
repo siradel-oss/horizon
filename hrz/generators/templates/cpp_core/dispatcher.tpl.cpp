@@ -1,9 +1,11 @@
 #include "hrz/core/rpc_dispatcher.h"
-#include "hrz/core/core.h"
 
 #include <google/protobuf/arena.h>
-#include "hrz/protocol/all.h"
 #include "hrz/common/profiling.h"
+
+{% for f in files %}
+#include "{{ f.name }}.pb.h"
+{% endfor %}
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

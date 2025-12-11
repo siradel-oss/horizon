@@ -1,0 +1,19 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum VectorClampMode {
+    // Disables clamping (fastest).
+    NO_CLAMPING = 0;
+    // Computes a clamp value for the anchor of the feature which is then
+    // applied to every point of the feature.
+    ANCHOR      = 1;
+    // Computes a clamp value at every point of the feature (slowest).
+    PER_VERTEX  = 2;
+}
+
+message VectorClamping {
+    VectorClampMode method = 1;
+    bool            use_z  = 2;
+}

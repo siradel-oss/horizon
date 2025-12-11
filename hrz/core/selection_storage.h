@@ -1,21 +1,22 @@
 #pragma once
 
+#include "hrz/common/metadata.h"
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/core/render.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
+#include "hrz/fnd/variant.h"
 
 #include <lin_maths.h>
 #include <mycelium/backend.h>
 
 #include <stdint.h>
-#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace hrz
 {
 struct GpuResourceContext;
+struct Render;
 
 namespace selection
 {

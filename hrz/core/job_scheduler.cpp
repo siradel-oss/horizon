@@ -1,14 +1,12 @@
 #include "hrz/core/job_scheduler.h"
 
-#include "hrz/common/job_result.h"
 #include "hrz/common/metrics.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/defines.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/thread.h"
-#include "hrz/fnd/time.h"
-#include "hrz/monitoring/monitoring.h"
 
 #include <condition_variable>
 #include <deque>
@@ -58,7 +56,7 @@ struct Job
     hrz_jobs::JobType type;
     std::any parameters;
     hrz::monitoring::ResourceOwner resource_owner;
-    hrz::JobResult result;
+    hrz_jobs::JobResult result;
     std::any response;
 };
 
@@ -177,8 +175,8 @@ void worker_func(Worker* worker, BlobAllocator* blob_allocator, FontRasterizer* 
         // Update the job's status to finished, if it's still in-progress.
         auto status_set_result = try_set_job_status(
             job, JobStatus::InProgress,
-            job_result == hrz::JobResult::SUCCESS ? JobStatus::Finished_Success
-                                                  : JobStatus::Finished_Failure);
+            job_result == hrz_jobs::JobResult::SUCCESS ? JobStatus::Finished_Success
+                                                       : JobStatus::Finished_Failure);
 
         if (!status_set_result.status_changed)
         {

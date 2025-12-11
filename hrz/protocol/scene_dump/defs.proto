@@ -1,0 +1,77 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/scene/settings.proto";
+import "hrz/protocol/scene/view_settings.proto";
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/camera/viewpoints.proto";
+import "hrz/protocol/camera/settings.proto";
+import "hrz/protocol/layer/single_model_layer.proto";
+import "hrz/protocol/layer/dtm_raster_layer.proto";
+import "hrz/protocol/layer/imagery_raster_layer.proto";
+import "hrz/protocol/layer/vector_data_layer.proto";
+import "hrz/protocol/layer/vector_tiles_layer.proto";
+import "hrz/protocol/layer/three_d_tiles_layer.proto";
+import "hrz/protocol/layer/clipping_plane_layer.proto";
+import "hrz/protocol/layer/in_memory_vector_source_layer.proto";
+import "hrz/protocol/layer/gizmo_layer.proto";
+import "hrz/protocol/layer/editable_shape_layer.proto";
+
+message SceneViewSettingsDump {
+    SceneViewIndex    index    = 1;
+    SceneViewSettings settings = 2;
+}
+
+message CameraSettingsDump {
+    CameraIndex    index    = 1;
+    CameraSettings settings = 2;
+}
+
+message CameraDump {
+    CameraIndex      index     = 1;
+    AngularViewpoint viewpoint = 2;
+}
+
+message ViewpointDump {
+    string           name      = 1;
+    AngularViewpoint viewpoint = 2;
+}
+
+message LayerDump {
+    string name = 1;
+    oneof  kind {
+        SingleModelLayer          single_model            = 101;
+        DtmRasterLayer            dtm_raster              = 102;
+        ImageryRasterLayer        imagery_raster          = 103;
+        VectorDataLayer           vector_data             = 104;
+        VectorTilesLayer          vector_tiles            = 105;
+        ThreeDTilesLayer          three_d_tiles           = 106;
+        ClippingPlaneLayer        clipping_plane          = 107;
+        InMemoryVectorSourceLayer in_memory_vector_source = 108;
+        GizmoLayer                gizmo                   = 109;
+        EditableShapeLayer        editable_shape          = 110;
+    }
+}
+
+message SceneDump {
+    string                         name                = 1;
+
+    // Never change the id of the version field! Must always be 2.
+    uint32                         version             = 2;
+
+    SceneSettings                  scene_settings      = 3;
+    repeated SceneViewSettingsDump scene_view_settings = 4;
+    repeated CameraSettingsDump    camera_settings     = 5;
+    repeated LayerDump             layers              = 6;
+
+    // Initial position of the cameras.
+    repeated CameraDump            cameras             = 7;
+
+    // Named viewpoints. Not dumped or loaded by the engine, but can be
+    // populated and read by integrating application to store interesting
+    // viewpoints.
+    repeated ViewpointDump         viewpoints          = 8;
+}

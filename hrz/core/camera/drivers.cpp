@@ -2,7 +2,6 @@
 #include "hrz/core/camera/driver.h"
 #include "hrz/core/camera/terrain.h"
 #include "hrz/core/camera/viewpoint.h"
-#include "hrz/fnd/log.h"
 
 #include <optional>
 

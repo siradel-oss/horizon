@@ -2,11 +2,11 @@
 
 #include "hrz/common/color.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/format.h"
 #include "hrz/fnd/inlined_vector.h"
-#include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/string_utils.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/layer/vector_data_layer.pb.h"
+#include "hrz/protocol/layer/vector_tiles_layer.pb.h"
+
+#include <fmt/format.h>
 
 #include <optional>
 #include <span>

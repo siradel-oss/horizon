@@ -1,0 +1,21 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/vector/geometry_type.proto";
+import "hrz/protocol/attributes/attribute.proto";
+
+message ClientFeatureGeometry {
+    VectorGeometryType type             = 1;
+
+    // In Web Mercator.
+    repeated double    coords           = 2;
+
+    repeated uint32    linestring_sizes = 3;
+}
+
+message ClientFeature {
+    ClientFeatureGeometry   geometry         = 1;
+    repeated AttributeValue attribute_values = 2;
+}

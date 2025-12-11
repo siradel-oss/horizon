@@ -1,16 +1,14 @@
 #include "geobuf.pb.h"
-#include "hrz/common/attributes.h"
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_array.h"
 #include "hrz/common/blob_vector.h"
-#include "hrz/common/color.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/proto_geo.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/geometry_utils.h"
+#include "hrz/common/vector_data/packed_attribute_values_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
@@ -18,7 +16,6 @@
 
 #include <rapidjson/document.h>
 
-#include <bit>
 #include <limits>
 #include <optional>
 
@@ -53,7 +50,7 @@ struct MutableVectorTile
 {
     hrz::TileCoords coords;
     MutableVectorGeometry geometry;
-    std::vector<hrz::vector_data::AttributeValuesBuilder> attributes;
+    std::vector<hrz::vector_data::PackedAttributeValuesBuilder> attributes;
 };
 
 static constexpr size_t InitialFeatureCapacity = 1024;
@@ -106,7 +103,7 @@ double polygon_area(std::span<const lm::dvec3> linestring)
 
 template<typename T>
 void append_attribute_value(
-    hrz::vector_data::AttributeValuesBuilder& attribute,
+    hrz::vector_data::PackedAttributeValuesBuilder& attribute,
     hrz_proto::AttributeTransform transform,
     T&& value,
     size_t count)
@@ -133,7 +130,7 @@ void append_attribute_value(
 
 // Returns whether the value type was handled. In any case a value is inserted.
 bool append_json_attribute_value(
-    hrz::vector_data::AttributeValuesBuilder& attribute,
+    hrz::vector_data::PackedAttributeValuesBuilder& attribute,
     hrz_proto::AttributeTransform transform,
     const rapidjson::Value& value,
     size_t count)
@@ -147,7 +144,7 @@ bool append_json_attribute_value(
 }
 
 void append_default_attribute_value(
-    hrz::vector_data::AttributeValuesBuilder& attribute,
+    hrz::vector_data::PackedAttributeValuesBuilder& attribute,
     size_t count)
 {
     for (size_t i = 0; i < count; ++i)
@@ -461,20 +458,20 @@ void mvt_parse_polygons(
     static_assert(true, "")
 
 bool decode_mvt(
-    const hrz::vector_data::EncodedVectorTile& encoded_tile,
+    const hrz_jobs::EncodedVectorTile& encoded_tile,
     MutableVectorTile& decoded_tile,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
 {
     HRZ_SCOPED_SAMPLE("vector tiles job decode mvt");
 
-    if (!std::holds_alternative<hrz::vector_data::ParsedMvt>(encoded_tile.data.data))
+    if (!std::holds_alternative<hrz_jobs::ParsedMvt>(encoded_tile.data.data))
     {
         HRZ_LOG_ERROR("Expected parsed MVT as input");
         return false;
     }
 
-    auto vt = std::get<hrz::vector_data::ParsedMvt>(encoded_tile.data.data).tile;
+    auto vt = std::get<hrz_jobs::ParsedMvt>(encoded_tile.data.data).tile;
 
     decoded_tile.coords = encoded_tile.coords;
 
@@ -723,7 +720,7 @@ bool decode_mvt(
 }
 
 void reserve_attribute_space(
-    std::vector<hrz::vector_data::AttributeValuesBuilder>& decoded_attributes,
+    std::vector<hrz::vector_data::PackedAttributeValuesBuilder>& decoded_attributes,
     size_t feature_count)
 {
     for (auto& decoded_attribute : decoded_attributes)
@@ -1004,7 +1001,7 @@ void finalize_latlon_tile(MutableVectorTile& tile)
 }
 
 bool decode_geojson(
-    const hrz::vector_data::EncodedVectorTile& encoded_tile,
+    const hrz_jobs::EncodedVectorTile& encoded_tile,
     MutableVectorTile& decoded_tile,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
@@ -1357,7 +1354,7 @@ void decode_geobuf_geometry(
 }
 
 bool decode_geobuf_attribute_value(
-    hrz::vector_data::AttributeValuesBuilder& decoded_attribute,
+    hrz::vector_data::PackedAttributeValuesBuilder& decoded_attribute,
     hrz_proto::AttributeTransform transform,
     const geobuf::Data::Value& value,
     size_t feature_count)
@@ -1393,9 +1390,9 @@ bool decode_geobuf_attribute_value(
 }
 
 void decode_geobuf_attributes(
-    const std::vector<hrz::vector_data::AttributeModel>& encoded_attributes,
+    const std::vector<hrz_jobs::AttributeModel>& encoded_attributes,
     const std::vector<std::optional<uint32_t>>& key_to_attribute,
-    std::vector<hrz::vector_data::AttributeValuesBuilder>& decoded_attributes,
+    std::vector<hrz::vector_data::PackedAttributeValuesBuilder>& decoded_attributes,
     const geobuf::Data::Feature& feature_data,
     size_t feature_count,
     std::vector<bool>& attributes_with_values,
@@ -1427,7 +1424,7 @@ void decode_geobuf_attributes(
 }
 
 bool decode_geobuf(
-    const hrz::vector_data::EncodedVectorTile& encoded_tile,
+    const hrz_jobs::EncodedVectorTile& encoded_tile,
     MutableVectorTile& decoded_tile,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
@@ -1596,8 +1593,8 @@ bool decode_geobuf(
 }
 } // anonymous namespace
 
-hrz::JobResult run(
-    const hrz::vector_data::EncodedVectorTile& encoded_tile,
+hrz_jobs::JobResult run(
+    const hrz_jobs::EncodedVectorTile& encoded_tile,
     hrz::vector_data::DecodedVectorTile& decoded_tile,
     const JobContext& context)
 {
@@ -1644,7 +1641,7 @@ hrz::JobResult run(
 
     if (!success)
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto features_opt = mutable_tile.geometry.features.to_blob_array();
@@ -1652,7 +1649,7 @@ hrz::JobResult run(
     auto linestring_sizes_opt = mutable_tile.geometry.linestring_sizes.to_blob_array();
     if (!features_opt.has_value() || !points_opt.has_value() || !linestring_sizes_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     decoded_tile.coords = mutable_tile.coords;
@@ -1667,7 +1664,7 @@ hrz::JobResult run(
         auto attribute_opt = mutable_tile.attributes[i].finalize(encoded_tile.attributes[i].id);
         if (!attribute_opt.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         decoded_tile.attributes.push_back(std::move(attribute_opt.value()));
@@ -1693,7 +1690,7 @@ hrz::JobResult run(
         auto hashes_opt = hashes.to_blob_array();
         if (!hashes_opt.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         auto feature_ids = hrz::vector_data::FeatureIds::make(
@@ -1704,7 +1701,7 @@ hrz::JobResult run(
         }
         else
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -1721,7 +1718,7 @@ hrz::JobResult run(
     }
 #endif
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::decode_vector_tile

@@ -13,7 +13,7 @@
 
 namespace hrz_jobs::compress_blob_image
 {
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const hrz::BlobImageCompressionParams& params,
     hrz::BlobImage& compressed_image,
     const JobContext& context)
@@ -23,25 +23,25 @@ hrz::JobResult run(
     if (!my::is_format_compressed(params.output_format))
     {
         HRZ_LOG_ERROR("Target format is not compressed");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (params.output_format == params.image.format())
     {
         compressed_image = std::move(params.image);
-        return hrz::JobResult::SUCCESS;
+        return hrz_jobs::JobResult::SUCCESS;
     }
 
     if (params.image.format() != my::TextureFormat::SRGBA8)
     {
         HRZ_LOG_ERROR("Unsupported input image format");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (params.image.width() % 4 != 0 || params.image.height() % 4 != 0)
     {
         HRZ_LOG_ERROR("Image dimensions must be multiples of 4");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (params.output_format != my::TextureFormat::SRGBA_BC7
@@ -49,7 +49,7 @@ hrz::JobResult run(
         && params.output_format != my::TextureFormat::SRGBA_ETC2_EAC)
     {
         HRZ_LOG_ERROR("Unsupported compressed texture format");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     my::TextureLayout layout;
@@ -67,14 +67,14 @@ hrz::JobResult run(
     if (!compressed_image_blob.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate blob of size {}", compressed_image_byte_size);
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     {
         if (params.image.blob().data_alignment() < alignof(uint32_t)
             || compressed_image_blob->data_alignment() < alignof(uint64_t))
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         auto uncompressed_image_data = params.image.blob().get_mutable_data();
@@ -127,7 +127,7 @@ hrz::JobResult run(
                     block_count_width * 4, true);
                 break;
             }
-            default: assert(false && "Unhandled case"); return hrz::JobResult::FAILURE;
+            default: assert(false && "Unhandled case"); return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -135,6 +135,6 @@ hrz::JobResult run(
         params.output_format, layout.width, layout.height, layout.levels,
         std::move(compressed_image_blob.value()), context.get_blob_allocator());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::compress_blob_image

@@ -1,16 +1,10 @@
 #pragma once
 
-#include "hrz/common/color.h"
-#include "hrz/common/geo.h"
 #include "hrz/common/maths.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/tile_coords.h"
 #include "hrz/fnd/array_view.h"
-#include "hrz/fnd/flat_hash_map.h"
-#include "hrz/protocol/all.h"
 
 #include <lin_maths.h>
-
-#include <span>
 
 namespace hrz::vector_repr
 {

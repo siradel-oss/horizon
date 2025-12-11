@@ -1,0 +1,55 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/color/color.proto";
+
+enum NodataValueType {
+    // Little endian bit pattern.
+    BIT_PATTERN_NODATA = 0;
+
+    // Color value, for color rasters.
+    COLOR_NODATA       = 1;
+
+    // Unsigned integer value, for integer rasters.
+    UINT_VALUE_NODATA  = 2;
+
+    // Signed integer value, for integer rasters.
+    INT_VALUE_NODATA   = 3;
+
+    // Exact float value.
+    FLOAT_VALUE_NODATA = 4;
+
+    // All NaN values, for float rasters.
+    NAN_NODATA         = 5;
+}
+
+message NodataValue {
+    reserved 1, 2;
+
+    NodataValueType type        = 3;
+
+    uint32          bit_pattern = 4;
+    Color           color       = 5;
+    uint32          uint_value  = 6;
+    int32           int_value   = 7;
+    float           float_value = 8;
+}
+
+enum NodataHandling {
+    // All pixels are valid.
+    IGNORE_NODATA         = 0;
+
+    // Pixels that are nodata are not processed.
+    DISCARD_NODATA_PIXELS = 1;
+
+    // All channels of nodata pixels are set to 0.
+    SET_NODATA_TO_ZERO    = 2;
+}
+
+message RasterNodata {
+    bool        has_nodata = 1;
+    // Value of the channels of a pixel that contains no meaningful value.
+    NodataValue value      = 2;
+}

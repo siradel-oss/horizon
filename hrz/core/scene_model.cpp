@@ -1,18 +1,29 @@
 #include "hrz/core/scene_model.h"
 
 #include "hrz/common/profiling.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/scene_model_accessor.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/thread.h"
-#include "hrz/fnd/time.h"
+#include "hrz/protocol/camera/settings.pb.h"
+#include "hrz/protocol/layer/clipping_plane_layer.pb.h"
+#include "hrz/protocol/layer/dtm_raster_layer.pb.h"
+#include "hrz/protocol/layer/editable_shape_layer.pb.h"
+#include "hrz/protocol/layer/gizmo_layer.pb.h"
+#include "hrz/protocol/layer/imagery_raster_layer.pb.h"
+#include "hrz/protocol/layer/in_memory_vector_source_layer.pb.h"
+#include "hrz/protocol/layer/single_model_layer.pb.h"
+#include "hrz/protocol/layer/three_d_tiles_layer.pb.h"
+#include "hrz/protocol/layer/vector_data_layer.pb.h"
+#include "hrz/protocol/layer/vector_tiles_layer.pb.h"
+#include "hrz/protocol/scene/settings.pb.h"
+#include "hrz/protocol/scene/view_settings.pb.h"
 
 extern "C"
 {
 #include <microui/microui.h>
 }
-
-#include <mutex>
 
 static constexpr double DEFRAG_DELAY_MS = 5000;
 
@@ -341,7 +352,7 @@ namespace scene_model
 SceneModel* create()
 {
     SceneModel* model = new SceneModel();
-    model->last_defrag_ms = hrz::now_frame_ms();
+    model->last_defrag_ms = hrz::clock::CurrentFrameRealTime.ms;
 
     model->models.insert(std::make_pair(
         hrz_proto::PathRoot::kSingleModelLayer,
@@ -423,7 +434,7 @@ void defrag(SceneModel* model)
     HRZ_SCOPED_SAMPLE("scene model defrag");
 
     assert(model);
-    double now = hrz::now_frame_ms();
+    double now = hrz::clock::CurrentFrameRealTime.ms;
 
     if (now - model->last_defrag_ms >= DEFRAG_DELAY_MS)
     {

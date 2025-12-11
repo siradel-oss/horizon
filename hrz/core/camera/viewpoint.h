@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hrz/common/geo.h"
+#include "hrz/protocol/camera/viewpoints.pb.h"
 
 #include <lin_maths.h>
 

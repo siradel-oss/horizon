@@ -8,7 +8,7 @@
 #include "hrz/core/planet/raster_data_fetch_types.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/protocol/identification/object_reference.pb.h"
 
 #include <mycelium/render_graph.h>
 
@@ -28,6 +28,13 @@ struct PickingIdAllocator;
 struct Render;
 struct RenderViewInfo;
 struct AttributionRegistry;
+
+namespace scene_model
+{
+class DtmRasterLayerPath;
+class ImageryRasterLayerPath;
+class SceneSettingsPath;
+} // namespace scene_model
 
 namespace planet
 {

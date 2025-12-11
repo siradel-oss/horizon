@@ -3,14 +3,12 @@
 #include "hrz/common/color.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
 #include "hrz/core/jobs/feature_clamping.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_repr_common.h"
-#include "hrz/fnd/log.h"
-#include "hrz/fnd/string_utils.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 
 using namespace hrz::vector_data;
 
@@ -23,9 +21,9 @@ static constexpr size_t InitialInstanceCapacity = 1024;
 static constexpr size_t InitialBSpherePointCapacity = 2048;
 } // namespace
 
-hrz::JobResult run(
-    const hrz::vt::CylinderVectorData& input,
-    hrz::vt::CylinderVectorGeometry& geometry,
+hrz_jobs::JobResult run(
+    const hrz_jobs::CylinderVectorData& input,
+    hrz_jobs::CylinderVectorGeometry& geometry,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("bake cylinder geometry");
@@ -39,7 +37,7 @@ hrz::JobResult run(
     auto style_prps = input.style.prps.get_data();
     auto style_values = input.style.get_values_reader();
 
-    hrz::BlobVector<hrz::vt::CylinderVectorGeometry::Instance> instances(
+    hrz::BlobVector<hrz_jobs::CylinderVectorGeometry::Instance> instances(
         context.get_blob_allocator(), InitialInstanceCapacity);
 
     // Declared here to recycle memory.
@@ -178,7 +176,7 @@ hrz::JobResult run(
         auto points_data_opt = points.data();
         if (!points_data_opt.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
         auto points_data = points_data_opt.value();
 
@@ -305,7 +303,7 @@ hrz::JobResult run(
     auto bsphere_point_buffer_data_opt = bsphere_point_buffer.data();
     if (!instances_array_opt.has_value() || !bsphere_point_buffer_data_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::BSphere<float> bsphere = hrz::compute_bounding_sphere(
@@ -326,7 +324,7 @@ hrz::JobResult run(
     geometry.instance_data.register_blob_owner(
         context.get_blob_allocator(), context.get_resource_owner());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::bake_cylinder_vector_geometry

@@ -1,5 +1,7 @@
 #include "hrz/common/proto_maths.h"
 
+#include "hrz/common/maths.h"
+
 namespace hrz
 {
 

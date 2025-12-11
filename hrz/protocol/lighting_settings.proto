@@ -1,0 +1,17 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+message LightingSettings {
+    reserved 2;
+
+    // Set to true to enable diffuse lighting and receiving shadows.
+    bool enable_lighting = 1;
+
+    // Set to true to cast shadows on other objects and itself.
+    bool cast_shadows    = 3;
+
+    // Set to true to receive shadows from other objects and itself.
+    bool receive_shadows = 4;
+}

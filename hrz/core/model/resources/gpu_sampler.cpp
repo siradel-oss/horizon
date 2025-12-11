@@ -1,4 +1,5 @@
-#include "hrz/core/model/resources/resources.h"
+#include "hrz/core/model/resources/resource.h"
+#include "hrz/core/render/context.h"
 
 namespace hrz::model
 {

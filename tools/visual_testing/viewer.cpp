@@ -1,13 +1,14 @@
 #include "hrz/core/backend.h"
-#include "hrz/fnd/string_utils.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/image.pb.h"
+#include "hrz/protocol/mapbox/service.pb.h"
+#include "hrz/protocol/message_queue/service.pb.h"
+#include "hrz/protocol/scene_dump/service.pb.h"
 #include "hrz/protocol/scene_model_version.h"
 #include "hrz/scene_dump/migration.h"
 
 #include <argparser.h>
 #include <wsi.h>
 
-#include <span>
 #include <thread>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -207,7 +208,7 @@ public:
 
         hrz_proto::ViewerOptions options;
         options.set_log_filter_level(log_filter_level);
-        options.set_graphics_level(hrz_proto::GraphicsLevelHigh);
+        options.set_graphics_level(hrz_proto::GRAPHICS_LEVEL_HIGH);
 
         backend = hrz_core::Backend::create(wsi->instance, wsi->window, options);
         if (backend->init_status() != hrz_proto::ViewerInitStatus::INIT_SUCCESS)

@@ -1,9 +1,25 @@
-#include "hrz/common/attributes.h"
+#include "hrz/common/vector_data/attribute_types_all.h"
+#include "hrz/common/vector_data/attributes_ops.h"
 
 #include <gtest/gtest.h>
 
 using namespace hrz;
 using namespace vector_data;
+
+static_assert(AttributeValueTraits<RefAttributeValueTraits>);
+static_assert(AttributeValueTraits<RefAttributeValueArenaTraits>);
+static_assert(AttributeValueTraits<OwnedAttributeValueTraits>);
+static_assert(AttributeValueTraits<ApiAttributeValueTraits>);
+static_assert(AttributeValueTraits<InMemoryAttributeValueTraits>);
+static_assert(AttributeValueTraits<PackedAttributeValueTraits<std::vector<char>>>);
+static_assert(AttributeValueTraits<PackedAttributeValueTraits<hrz::BlobVector<char>>>);
+
+static_assert(
+    sizeof(PackedAttributeValue) == sizeof(uint64_t),
+    "PackedAttributeValue must be 64 bits");
+static_assert(
+    std::is_trivially_default_constructible_v<PackedAttributeValue>,
+    "PackedAttributeValue must be trivial");
 
 TEST(AttributeValueConstruction, null_value)
 {
@@ -108,6 +124,7 @@ TEST(AttributeValueConstruction, from_int64)
 
 using TestPacked = PackedAttributeValue;
 using TestPackedTraits = PackedAttributeValueTraits<std::vector<char>>;
+static_assert(AttributeValueTraits<TestPackedTraits>);
 
 TEST(PackedAttributeValueConstruction, from_number)
 {

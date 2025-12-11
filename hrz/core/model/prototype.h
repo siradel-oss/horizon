@@ -5,6 +5,9 @@
 #include "hrz/core/model/instance_group.h"
 #include "hrz/core/model/material.h"
 #include "hrz/core/model/model.h"
+#include "hrz/core/model/resources/resources.h"
+#include "hrz/fnd/gen_index_pool.h"
+#include "hrz/fnd/gen_object_pool.h"
 
 namespace hrz::model
 {

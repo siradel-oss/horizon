@@ -1,16 +1,12 @@
 #include "hrz/core/pmtiles.h"
 
-#include "hrz/core/render.h" // A bit weird to include this, I know.
-                             // But we need the frame number to avoid calling work too
-                             // often from the vector data loader.
-
 #include "hrz/common/compression.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/geo.h"
-#include "hrz/common/job_params_compression.h"
 #include "hrz/common/proj.h"
+#include "hrz/core/clock.h"
+#include "hrz/core/jobs/decompress_blob.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/fnd/defer.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_index_pool.h"
@@ -19,8 +15,6 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/lru.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/object_pool.h"
-#include "hrz/fnd/time.h"
 #include "hrz/fnd/varint.h"
 
 #include <rapidjson/document.h>
@@ -49,13 +43,14 @@ enum class Compression : uint8_t
     kCompressionInvalid,
 };
 
-std::optional<hrz::DecompressBlobParams::CompressionType> convert_compression_type(Compression c)
+std::optional<hrz_jobs::DecompressBlobParams::CompressionType> convert_compression_type(
+    Compression c)
 {
     switch (c)
     {
-        case Compression::kGzip: return hrz::DecompressBlobParams::CompressionType::kGzip;
-        case Compression::kBrotli: return hrz::DecompressBlobParams::CompressionType::kBrotli;
-        case Compression::kZstd: return hrz::DecompressBlobParams::CompressionType::kZstd;
+        case Compression::kGzip: return hrz_jobs::DecompressBlobParams::CompressionType::kGzip;
+        case Compression::kBrotli: return hrz_jobs::DecompressBlobParams::CompressionType::kBrotli;
+        case Compression::kZstd: return hrz_jobs::DecompressBlobParams::CompressionType::kZstd;
         default: return std::nullopt;
     }
 }
@@ -733,7 +728,7 @@ public:
 
         if (auto compression = convert_compression_type(_tile_compression); compression.has_value())
         {
-            hrz::DecompressBlobParams params;
+            hrz_jobs::DecompressBlobParams params;
             params.compressed = data;
             params.type = compression.value();
 
@@ -862,8 +857,8 @@ public:
 
     void work(JobScheduler* js, BlobAllocator* ba) override
     {
-        if (_last_frame_work >= hrz::Render::CurrentFrame) return;
-        _last_frame_work = hrz::Render::CurrentFrame;
+        if (_last_frame_work >= hrz::clock::CurrentFrameNumber) return;
+        _last_frame_work = hrz::clock::CurrentFrameNumber;
 
         if (_status == kError)
         {

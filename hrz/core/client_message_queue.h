@@ -1,8 +1,9 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
-
-#include <optional>
+namespace HrzProtocol
+{
+class TypedMessage;
+} // namespace HrzProtocol
 
 namespace hrz
 {
@@ -23,12 +24,14 @@ void destroy(ClientMessageQueue*);
 /**
  * Push a new message at the end of the queue.
  */
-void enqueue_message(ClientMessageQueue*, hrz_proto::TypedMessage&&);
+void enqueue_message(ClientMessageQueue*, HrzProtocol::TypedMessage&&);
 
 /**
- * Remove the the first (i.e. oldest) message from the queue, and return it.
+ * Remove the the first (i.e. oldest) message from the queue.
+ * If a message was available, it is written to the given output parameter and
+ * the function returns true. If no message was available, the function returns false.
  */
-std::optional<hrz_proto::TypedMessage> dequeue_message(ClientMessageQueue*);
+bool dequeue_message(ClientMessageQueue*, HrzProtocol::TypedMessage*);
 
 /**
  * Return the number of messages in the queue.

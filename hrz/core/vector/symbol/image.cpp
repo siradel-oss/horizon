@@ -1,14 +1,14 @@
 #include "hrz/core/vector/symbol/image.h"
 
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_maths.h"
+#include "hrz/core/render/context.h"
 #include "hrz/core/shaders/collection.h"
+#include "hrz/fnd/hash.h"
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/mem.h"
-
-#include <numeric>
 
 namespace hrz::vt::symbol
 {
@@ -421,9 +421,8 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
                 sprite_geometry_identity.push_back(s.size());
             }
 
-            hrz::uint128 identity_hash = murmur3_x64_128(std::span<const std::byte>(
-                (const std::byte*)sprite_geometry_identity.data(),
-                sprite_geometry_identity.size() * 4));
+            hrz::uint128 identity_hash =
+                murmur3_x64_128(std::as_bytes(std::span<const int>(sprite_geometry_identity)));
 
             cuts_x.make_cuts_from_stretches(
                 sprite.size().x(), {sprite.stretch_x().data(), (size_t)sprite.stretch_x_size()});
@@ -518,7 +517,7 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
 
                 size_t index_count = prototype.index_buffer_data.size() - first_index;
 
-                SymbolBakingData::Image::SpriteGeometry sprite_geometry;
+                hrz_jobs::SymbolBakingData::Image::SpriteGeometry sprite_geometry;
                 sprite_geometry.first_index = (uint32_t)first_index;
                 sprite_geometry.index_count = (uint32_t)index_count;
 
@@ -528,7 +527,7 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
                     std::make_pair(identity_hash, geometry_index));
             }
 
-            SymbolBakingData::Image::Sprite sprite_prototype;
+            hrz_jobs::SymbolBakingData::Image::Sprite sprite_prototype;
             sprite_prototype.geometry_index = geometry_index;
             sprite_prototype.atlas_size = to_lm(sprite.size());
             sprite_prototype.atlas_offset = to_lm(sprite.offset());
@@ -591,11 +590,11 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
         prototype.index_buffer_data.push_back(1);
         prototype.index_buffer_data.push_back(3);
 
-        SymbolBakingData::Image::SpriteGeometry sprite_geometry;
+        hrz_jobs::SymbolBakingData::Image::SpriteGeometry sprite_geometry;
         sprite_geometry.first_index = 0;
         sprite_geometry.index_count = 4;
 
-        SymbolBakingData::Image::Sprite sprite_prototype;
+        hrz_jobs::SymbolBakingData::Image::Sprite sprite_prototype;
         sprite_prototype.geometry_index = -1; // We use this as a marker that this needs to be
                                               // generated once we know the size of the image.
 
@@ -662,7 +661,7 @@ ElementSystem::PrototypeStatus ImageElementSystem::get_prototype_status(
     }
 }
 
-SymbolBakingData::ElementBakingParams ImageElementSystem::get_prototype_baking_params(
+hrz_jobs::SymbolBakingData::ElementBakingParams ImageElementSystem::get_prototype_baking_params(
     PrototypeH prototype_handle) const
 {
     if (prototype_handle.type != ElementType)
@@ -685,7 +684,7 @@ std::optional<ElementSystem::RenderableH> ImageElementSystem::make_renderable(
     PrototypeH prototype_handle,
     uint64_t layer_id,
     TileCoords tile_coords,
-    BakedSymbols::ElementInstances&& baked_instances_generic,
+    hrz_jobs::BakedSymbols::ElementInstances&& baked_instances_generic,
     double bsphere_radius,
     lm::dvec3 bsphere_center,
     my::ResourceHandle tile_ubo,
@@ -723,7 +722,7 @@ std::optional<ElementSystem::RenderableH> ImageElementSystem::make_renderable(
     auto tile_coords_str = fmt::to_string(tile_coords);
 
     auto baked_data =
-        std::move(std::get<BakedSymbols::ImageInstances>(baked_instances_generic.data));
+        std::move(std::get<hrz_jobs::BakedSymbols::ImageInstances>(baked_instances_generic.data));
     auto instance_data = baked_data.instances.get_data();
 
     my::BufferResource vib_res(my::BufferResource::BufferType::Vertex);
@@ -736,7 +735,7 @@ std::optional<ElementSystem::RenderableH> ImageElementSystem::make_renderable(
         &vib_res, hrz::monitoring::systems::Symbols, layer_id,
         {{"contents"_ss, "image instance data"_ss}, {"tile coords"_ss, tile_coords_str}});
 
-    using ImageInstance = BakedSymbols::ImageInstance;
+    using ImageInstance = hrz_jobs::BakedSymbols::ImageInstance;
 
     hrz::InlinedVector<ImageRenderable::Batch, 16> batches;
 

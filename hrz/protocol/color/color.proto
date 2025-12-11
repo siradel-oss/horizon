@@ -1,0 +1,37 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// Colour in sRGB space, with alpha.
+// All components are in [0, 1] range.
+// Red, green, and blue are gamma corrected, they are non-linear.
+// Alpha is linear.
+//
+// @path_leaf="true"
+message Color {
+    float r = 1;
+    float g = 2;
+    float b = 3;
+    float a = 4;
+}
+
+message ColorProperty {
+    string name          = 1;
+    Color  default_value = 2;
+}
+
+// See https://en.wikipedia.org/wiki/Blend_modes
+enum BlendMode {
+    // No color blending.
+    BLEND_NORMAL   = 0;
+
+    // Applies the source to the hightones of the destination.
+    BLEND_MULTIPLY = 1;
+
+    // Applies the source to the lowtones of the destination.
+    BLEND_SCREEN   = 2;
+
+    // Applied the source to the midtones of the destination.
+    BLEND_OVERLAY  = 3;
+}

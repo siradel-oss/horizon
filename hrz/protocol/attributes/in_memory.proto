@@ -1,0 +1,20 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// This message is an almost duplicate of AttributeValue, with the
+// `oneof` removed, and must remain so.
+// Colors can be encoded as 0xaabbggrr in integer or number fields, or
+// as "#xxxxxx" or color names in the string field.
+// When no field is set, the value is considered null.
+// @Todo See if it could be interesting to allow `oneof`s in paths.
+message InMemoryAttributeValue {
+    reserved 1, 12, 13, 16;
+
+    optional bool     boolean_value = 11;
+    optional sfixed64 int64_value   = 17;
+    optional fixed64  uint64_value  = 18;
+    optional double   number_value  = 14;
+    optional string   string_value  = 15;
+}

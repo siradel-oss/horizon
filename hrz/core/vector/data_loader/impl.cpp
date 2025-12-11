@@ -1,18 +1,18 @@
 #include "hrz/core/vector/data_loader/impl.h"
 
-#include "hrz/common/blob_array.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_geo.h"
 #include "hrz/common/ui_utils.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/loading_priorities.h"
 #include "hrz/core/scene_model.h"
+#include "hrz/core/scene_path/layer/vector_data_layer_paths.h"
 #include "hrz/fnd/format.h"
+#include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/fnd/meta.h"
 #include "hrz/fnd/thread.h"
-#include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/vector_data_layer.h"
 
 #include <lin_maths.h>
 
@@ -1987,7 +1987,7 @@ void VectorDataLoader::work_client_request_timeouts()
     while (!client_tickets_timeouts.empty())
     {
         auto& request = client_tickets_timeouts.top();
-        if (hrz::now_frame_ms() >= request.timeout_date)
+        if (hrz::clock::CurrentFrameRealTime.ms >= request.timeout_date)
         {
             auto it = client_tickets_to_tasks.find(request.ticket);
             if (it != client_tickets_to_tasks.end())

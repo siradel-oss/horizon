@@ -1,0 +1,37 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/input/defs.proto";
+
+enum KeyAction {
+    // Resets bearing and tilt. See `CameraService::ResetNorth`.
+    RESET_NORTH                  = 0;
+    // See `ViewerService::ToggleDevUi`
+    TOGGLE_DEV_UI                = 1;
+    // See `ViewerService::MoveDevUiToCursor`
+    MOVE_DEV_UI                  = 2;
+    // See `ViewerService::DeselectAll`
+    DESELECT_ALL                 = 3;
+    // See `ShapeEditorService::SelectMode`.
+    EDITOR_APPEND                = 4;
+    // See `ShapeEditorService::SelectMode`.
+    EDITOR_SELECT                = 5;
+    // See `ShapeEditorService::DeleteSelectedControlPoint`.
+    EDITOR_DELETE_SELECTED_POINT = 6;
+    // If not connected, tries to connect to the monitoring app.
+    // Otherwise, disconnects from it.
+    // Also enables / disables profiling and metrics collection.
+    TOGGLE_MONITORING            = 7;
+    // Defines the modifier key used to activate alternative modes to some user
+    // interactions. For instance it is used to activate the fixed position
+    // rotation mode, when rotating the camera with the middle mouse button. It
+    // can also change left-click + drag from panning to rotating.
+    MOD_KEY                      = 8;
+}
+
+message KeyBinding {
+    Key       key    = 1;
+    KeyAction action = 2;
+}

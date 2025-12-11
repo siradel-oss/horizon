@@ -1,4 +1,4 @@
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/scene_dump/defs.pb.h"
 #include "hrz/scene_dump/migration.h"
 #include "hrz/scene_dump/utils.h"
 

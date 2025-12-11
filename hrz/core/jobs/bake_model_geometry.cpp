@@ -1,17 +1,18 @@
+#include "hrz/common/geo.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proto_maths.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
 #include "hrz/core/jobs/feature_clamping.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_repr_common.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 
 namespace hrz_jobs::bake_3d_model_geometry
 {
-hrz::JobResult run(
-    const hrz::vt::ModelData& input,
-    hrz::vt::ModelGeometry& geometry,
+hrz_jobs::JobResult run(
+    const hrz_jobs::ModelData& input,
+    hrz_jobs::ModelGeometry& geometry,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("bake model geometry");
@@ -210,7 +211,7 @@ hrz::JobResult run(
     geometry.origin = tile_center;
     geometry.bsphere = {lm::center(geometry_bounds), lm::radius(geometry_bounds)};
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::bake_3d_model_geometry

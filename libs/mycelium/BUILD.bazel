@@ -16,7 +16,6 @@ SRCS = [
 ]
 
 HDRS = [
-    "mycelium.h",
     "types.h",
     "log.h",
     "backend.h",

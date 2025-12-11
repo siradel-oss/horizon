@@ -1,7 +1,6 @@
 #include "hrz/scene_dump/dynamic_message.h"
 
 #include <array>
-#include <cmath>
 #include <unordered_map>
 
 namespace hrz::migration

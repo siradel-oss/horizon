@@ -3,7 +3,7 @@
 #include "hrz/core/jobs/context.h"
 #include "hrz/core/jobs/jobs_type.h"
 
-#include "hrz/common/job_result.h"
+#include "hrz/core/jobs/job_result.h"
 #include <any>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,7 +20,7 @@
 namespace hrz_jobs
 {
 
-using JobFunctionPtr = hrz::JobResult (*)(const std::any&, std::any&, const JobContext&);
+using JobFunctionPtr = hrz_jobs::JobResult (*)(const std::any&, std::any&, const JobContext&);
 JobFunctionPtr get_job_function(JobType);
 
 {% for job in jobs %}
@@ -29,7 +29,7 @@ namespace {{ job.name }}
 {
 
 {{ job.documentation|to_documentation_block }}
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const {{ job.params_type }}& params,
     {{ job.response_type }}& response,
     const JobContext& context);
@@ -37,7 +37,7 @@ hrz::JobResult run(
 /**
  * Internal run function for the job {{ job.name }}.
  */
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const std::any& params,
     std::any response,
     const JobContext& context);

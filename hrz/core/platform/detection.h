@@ -2,7 +2,6 @@
 
 #include "hrz/common/platform_detection.h"
 
-#include <string>
 #include <string_view>
 
 namespace hrz

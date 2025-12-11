@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/core/render.h"
+#include "hrz/core/render/resources.h"
 
 namespace hrz
 {

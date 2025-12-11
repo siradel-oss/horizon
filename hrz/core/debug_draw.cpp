@@ -9,16 +9,16 @@ extern "C"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
 #include "hrz/core/global_flags.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/resources/resources.h"
 #include "hrz/core/shaders/collection.h"
-#include "hrz/fnd/array_view.h"
-#include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/flat_hash_set.h"
-#include "hrz/fnd/hash.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
 
+#include <mycelium/render_graph.h>
+#include <mycelium/renderer.h>
 #include <stb_truetype.h>
 
 #include <bitset>

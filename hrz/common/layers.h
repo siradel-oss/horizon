@@ -1,8 +1,7 @@
 #pragma once
 
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/flat_hash_set.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/layer/handle.pb.h"
 
 #include <string>
 

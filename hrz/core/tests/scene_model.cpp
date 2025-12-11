@@ -1,9 +1,7 @@
 #include "hrz/core/scene_model.h"
 
 #include "hrz/core/scene_model_accessor.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/fnd/defines.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/single_model_layer.h"
 
 #include <gtest/gtest.h>
 

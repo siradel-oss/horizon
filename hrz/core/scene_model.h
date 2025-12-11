@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/scene_model/path.pb.h"
 
 #include <string>
 #include <string_view>
@@ -16,8 +16,9 @@ namespace hrz
  * No interaction is thread-safe.
  */
 struct SceneModel;
+} // namespace hrz
 
-namespace scene_model
+namespace hrz::scene_model
 {
 enum class UpdateType
 {
@@ -116,7 +117,10 @@ uint32_t add(SceneModel* model, const hrz_proto::Path& path, const T& input)
 
 void dev_ui(const SceneModel* model, mu_Context* ctx);
 
-} // namespace scene_model
+} // namespace hrz::scene_model
+
+namespace hrz
+{
 
 /**
  * To use with hrz_proto path builders.

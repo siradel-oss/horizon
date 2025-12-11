@@ -1,9 +1,10 @@
 #pragma once
 
 #include "hrz/common/geo.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render_request.h"
 
 #include <lin_maths.h>
+#include <mycelium/backend.h>
 
 #include <initializer_list>
 #include <span>
@@ -11,6 +12,7 @@
 namespace hrz
 {
 struct DebugDrawSystem;
+struct Render;
 
 namespace debug_draw
 {

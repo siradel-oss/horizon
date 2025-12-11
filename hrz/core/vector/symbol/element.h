@@ -1,9 +1,8 @@
 #pragma once
 
-#include "hrz/common/vector_tiles.h"
-#include "hrz/core/render.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/vector/repr.h"
-#include "hrz/protocol/all.h"
 
 #include <cstdint>
 #include <functional>
@@ -123,7 +122,8 @@ struct ElementSystem
 
     virtual PrototypeStatus get_prototype_status(PrototypeH) const = 0;
 
-    virtual SymbolBakingData::ElementBakingParams get_prototype_baking_params(PrototypeH) const = 0;
+    virtual hrz_jobs::SymbolBakingData::ElementBakingParams get_prototype_baking_params(
+        PrototypeH) const = 0;
 
     virtual std::optional<vt::AnchorPrototype> get_anchor_prototype(PrototypeH) const
     {
@@ -137,7 +137,7 @@ struct ElementSystem
         PrototypeH,
         uint64_t layer_id,
         TileCoords tile_coords,
-        BakedSymbols::ElementInstances&& baked_instances,
+        hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
         double bsphere_radius,
         lm::dvec3 bsphere_center,
         my::ResourceHandle tile_ubo,

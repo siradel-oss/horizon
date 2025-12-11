@@ -1,11 +1,14 @@
 #pragma once
 
+#include "hrz/common/geo.h"
 #include "hrz/common/tile_coords.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/feature_ids.h"
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/core/attribution.h"
 #include "hrz/core/channel.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/protocol/client_data/vector_data_invalidation.pb.h"
+#include "hrz/protocol/client_data/vector_data_request_response.pb.h"
 
 #include <cstdint>
 #include <variant>
@@ -19,6 +22,11 @@ struct JobScheduler;
 struct ClientMessageQueue;
 struct SceneModel;
 struct VectorDataLoader;
+
+namespace scene_model
+{
+class VectorDataLayerPath;
+} // namespace scene_model
 
 namespace vector_data
 {

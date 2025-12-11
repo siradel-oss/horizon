@@ -1,8 +1,9 @@
-#include "hrz/common/attributes.h"
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/geometry_utils.h"
+#include "hrz/common/vector_data/packed_attribute_values_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/inlined_vector.h"
 
 #include <optional>
@@ -271,8 +272,8 @@ void clip_feature(
 }
 } // namespace
 
-hrz::JobResult run(
-    const hrz::vector_data::VectorTileExtractionParams& params,
+hrz_jobs::JobResult run(
+    const hrz_jobs::VectorTileExtractionParams& params,
     hrz::vector_data::DecodedVectorTile& extracted_tile,
     const JobContext& context)
 {
@@ -485,7 +486,7 @@ hrz::JobResult run(
             else
             {
                 assert(false && "Unhandled");
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
 
             if (feature.point_count > 0)
@@ -508,7 +509,7 @@ hrz::JobResult run(
     if (!points_array_opt.has_value() || !linestring_sizes_array_opt.has_value()
         || !features_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto points_array = points_array_opt.value();
@@ -522,7 +523,7 @@ hrz::JobResult run(
     extracted_tile.geometry.has_full_detail = tile_has_full_detail;
 
     {
-        std::vector<hrz::vector_data::AttributeValuesBuilder> attributes;
+        std::vector<hrz::vector_data::PackedAttributeValuesBuilder> attributes;
         attributes.reserve(params.source_data.attributes.size());
 
         for (size_t i = 0; i < params.source_data.attributes.size(); ++i)
@@ -545,7 +546,7 @@ hrz::JobResult run(
                 attributes[i].finalize(params.source_data.attributes[i].attribute_id);
             if (!finalized_attribute.has_value())
             {
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
 
             extracted_tile.attributes.push_back(std::move(finalized_attribute.value()));
@@ -573,14 +574,14 @@ hrz::JobResult run(
         auto hashes_opt = hashes.to_blob_array();
         if (!hashes_opt.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         auto feature_ids = hrz::vector_data::FeatureIds::make(
             feature_id_attribute_values, std::move(hashes_opt.value()));
         if (!feature_ids.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         extracted_tile.feature_ids = std::move(feature_ids.value());
@@ -590,6 +591,6 @@ hrz::JobResult run(
         extracted_tile.feature_ids = {};
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::extract_vector_tile

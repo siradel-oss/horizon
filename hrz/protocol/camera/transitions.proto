@@ -1,0 +1,74 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/camera/viewpoints.proto";
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/camera/animation.proto";
+
+message FixedTargetCameraTransition {
+    oneof view {
+        AngularViewpoint    angular_viewpoint    = 101;
+        PositionalViewpoint positional_viewpoint = 102;
+    }
+
+    CameraIndex            camera_index    = 7;
+    double                 min_distance    = 1;
+    double                 max_distance    = 2;
+    // In radians, 0 is straight down.
+    float                  min_tilt        = 3;
+    // In radians, 0 is straight down.
+    float                  max_tilt        = 4;
+    CameraAnimationOptions go_to_animation = 5;
+    AltitudeMode           altitude_mode   = 6;
+}
+
+message FixedPositionCameraTransition {
+    oneof view {
+        Void                current              = 101;
+        AngularViewpoint    angular_viewpoint    = 102;
+        PositionalViewpoint positional_viewpoint = 103;
+        Pose                pose                 = 104;
+    }
+
+    CameraIndex            camera_index    = 5;
+
+    // In radians, 0 is straight down.
+    float                  min_tilt        = 1;
+    // In radians, 0 is straight down.
+    float                  max_tilt        = 2;
+    CameraAnimationOptions go_to_animation = 3;
+    AltitudeMode           altitude_mode   = 4;
+}
+
+message OrbitCameraTransition {
+    oneof view {
+        Void                current              = 101;
+        AngularViewpoint    angular_viewpoint    = 102;
+        PositionalViewpoint positional_viewpoint = 103;
+        Pose                pose                 = 104;
+        BoundsView          bounds               = 105;
+    }
+
+    CameraIndex            camera_index         = 9;
+
+    GeographicBounds       limit_bounds         = 1;
+    double                 max_altitude         = 2;
+    // In radians, 0 is straight down.
+    float                  min_tilt             = 3;
+    // In radians, 0 is straight down.
+    float                  max_tilt             = 4;
+    CameraAnimationOptions go_to_animation      = 5;
+    bool                   is_interruptible     = 6;
+    AltitudeMode           altitude_mode        = 7;
+
+    // This is the animation that happens when we correct the position of the
+    // camera to put is back in the limits defined above.
+    // When the duration is 0, the camera is simply limited to the bounds.
+    // When the duration is > 0, the camera can move out of the bounds, but is
+    // corrected after a few idle seconds using this animation.
+    CameraAnimationOptions correction_animation = 8;
+}

@@ -1,15 +1,14 @@
+#include "hrz/core/jobs/decode_cesium_terrain_tile.h"
+
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_image.h"
-#include "hrz/common/image_processing.h"
 #include "hrz/common/image_view.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/core/jobs/rasterizer.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
-#include "hrz/fnd/string_utils.h"
-#include "hrz/protocol/all.h"
 
 #include <lin_maths.h>
 
@@ -30,7 +29,7 @@ static_assert(sizeof(double) == 8, "sizeof(double) != 8");
 static_assert(sizeof(float) == 4, "sizeof(float) != 4");
 
 // https://github.com/CesiumGS/cesium/wiki/heightmap-1.0
-hrz::JobResult decode_heightmap_tile(
+hrz_jobs::JobResult decode_heightmap_tile(
     std::span<const std::byte> raw_data,
     hrz::BlobImage& output,
     const JobContext& context)
@@ -42,7 +41,7 @@ hrz::JobResult decode_heightmap_tile(
     if (raw_data.size() < 8450)
     {
         HRZ_LOG_ERROR("Incorrect tile data size: {}", raw_data.size());
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     float elevation_data[65 * 65];
@@ -62,7 +61,7 @@ hrz::JobResult decode_heightmap_tile(
     if (!output_blob_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate output image");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::blobs::register_owner(
@@ -90,7 +89,7 @@ hrz::JobResult decode_heightmap_tile(
         hrz_proto::ImageFormat::R_F32, 64, 64, std::move(output_blob_opt.value()),
         context.get_blob_allocator());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 static constexpr size_t QuantizedMeshHeaderSize = sizeof(double) * 10 + sizeof(float) * 2;
@@ -120,7 +119,7 @@ struct SampleAndComposeFunction : public rasterizer::SampleAndComposeFunction<fl
 };
 
 // https://github.com/CesiumGS/quantized-mesh
-hrz::JobResult decode_quantized_mesh_tile(
+hrz_jobs::JobResult decode_quantized_mesh_tile(
     std::span<const std::byte> raw_data,
     hrz::BlobImage& output,
     const JobContext& context)
@@ -132,7 +131,7 @@ hrz::JobResult decode_quantized_mesh_tile(
     if (raw_data.size() < QuantizedMeshHeaderSize + sizeof(uint32_t))
     {
         HRZ_LOG_ERROR("Tile data too small");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     float minimum_height = 0.0f;
@@ -151,7 +150,7 @@ hrz::JobResult decode_quantized_mesh_tile(
         if (raw_data.data() + raw_data.size() < vertex_data + vertex_data_size + sizeof(uint32_t))
         {
             HRZ_LOG_ERROR("Tile data too small");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -195,7 +194,7 @@ hrz::JobResult decode_quantized_mesh_tile(
         if (raw_data.data() + raw_data.size() < index_data + index_data_size)
         {
             HRZ_LOG_ERROR("Tile data too small");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
@@ -232,7 +231,7 @@ hrz::JobResult decode_quantized_mesh_tile(
     if (!output_blob_opt.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate output image");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hrz::blobs::register_owner(
@@ -260,18 +259,18 @@ hrz::JobResult decode_quantized_mesh_tile(
         hrz_proto::ImageFormat::R_F32, 256, 256, std::move(output_blob_opt.value()),
         context.get_blob_allocator());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace
 
-hrz::JobResult run(
-    const hrz::planet::CesiumTerrainTileData& params,
+hrz_jobs::JobResult run(
+    const hrz_jobs::CesiumTerrainTileData& params,
     hrz::BlobImage& response,
     const JobContext& context)
 {
     auto input_data = params.blob.get_data();
 
-    auto result = hrz::JobResult::FAILURE;
+    auto result = hrz_jobs::JobResult::FAILURE;
     if (params.format == "heightmap-1.0")
     {
         result = decode_heightmap_tile(input_data, response, context);

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "hrz/common/model.h"
+#include "hrz/core/jobs/decompress_draco_mesh.h"
 #include "hrz/core/model/ubo_defs.h"
-#include "hrz/fnd/log.h"
 
 #include <mycelium/backend.h>
 
@@ -11,12 +10,12 @@ namespace hrz::model
 
 [[maybe_unused]]
 static my::VertexFormat _convert_vertex_format(
-    Mesh::Attribute::DataType data_type,
+    hrz_jobs::DecompressedDracoMesh::Attribute::DataType data_type,
     unsigned int component_count)
 {
     switch (data_type)
     {
-        case Mesh::Attribute::DataType::INT8:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::INT8:
         {
             switch (component_count)
             {
@@ -28,7 +27,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::UINT8:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::UINT8:
         {
             switch (component_count)
             {
@@ -40,7 +39,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::INT16:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::INT16:
         {
             switch (component_count)
             {
@@ -52,7 +51,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::UINT16:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::UINT16:
         {
             switch (component_count)
             {
@@ -64,7 +63,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::INT32:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::INT32:
         {
             switch (component_count)
             {
@@ -76,7 +75,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::UINT32:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::UINT32:
         {
             switch (component_count)
             {
@@ -88,7 +87,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::FLOAT16:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::FLOAT16:
         {
             switch (component_count)
             {
@@ -100,7 +99,7 @@ static my::VertexFormat _convert_vertex_format(
             }
             break;
         }
-        case Mesh::Attribute::DataType::FLOAT32:
+        case hrz_jobs::DecompressedDracoMesh::Attribute::DataType::FLOAT32:
         {
             switch (component_count)
             {
@@ -119,30 +118,34 @@ static my::VertexFormat _convert_vertex_format(
     return my::VertexFormat::UInt8;
 }
 
-inline my::IndexType _convert_index_type(Mesh::IndexType index_type)
+inline my::IndexType _convert_index_type(hrz_jobs::DecompressedDracoMesh::IndexType index_type)
 {
     switch (index_type)
     {
-        case Mesh::IndexType::UBYTE: return my::IndexType::UByte;
-        case Mesh::IndexType::USHORT: return my::IndexType::UShort;
-        case Mesh::IndexType::UINT: return my::IndexType::UInt;
+        using enum hrz_jobs::DecompressedDracoMesh::IndexType;
+        case UBYTE: return my::IndexType::UByte;
+        case USHORT: return my::IndexType::UShort;
+        case UINT: return my::IndexType::UInt;
         default: assert(false && "Unhandled case"); return my::IndexType::UShort;
     }
 }
 
-inline DracoCompressionType _convert_compression_type(Mesh::Attribute::Compression compression)
+inline DracoCompressionType _convert_compression_type(
+    hrz_jobs::DecompressedDracoMesh::Attribute::Compression compression)
 {
     switch (compression)
     {
-        case Mesh::Attribute::Compression::NONE: return DracoCompressionType::None;
-        case Mesh::Attribute::Compression::QUANTIZED: return DracoCompressionType::Quantized;
-        case Mesh::Attribute::Compression::OCT_ENCODED: return DracoCompressionType::OctEncoded;
+        using enum hrz_jobs::DecompressedDracoMesh::Attribute::Compression;
+        case NONE: return DracoCompressionType::None;
+        case QUANTIZED: return DracoCompressionType::Quantized;
+        case OCT_ENCODED: return DracoCompressionType::OctEncoded;
         default: assert(false && "Unhanded case"); return DracoCompressionType::None;
     }
 }
 
 [[maybe_unused]]
-static VertexCompressionParamsUniformData _to_compression_uniform_data(const Mesh::Attribute& attr)
+static VertexCompressionParamsUniformData _to_compression_uniform_data(
+    const hrz_jobs::DecompressedDracoMesh::Attribute& attr)
 {
     using Type = DracoCompressionType;
 
@@ -182,19 +185,6 @@ static VertexCompressionParamsUniformData _to_compression_uniform_data(const Mes
         assert(false && "Unhandled case");
     }
     return uniform_data;
-}
-
-inline my::IndexType _get_index_type(my::VertexFormat format)
-{
-    switch (format)
-    {
-        case my::VertexFormat::UInt8: return my::IndexType::UByte;
-        case my::VertexFormat::UInt16: return my::IndexType::UShort;
-        case my::VertexFormat::UInt32: return my::IndexType::UInt;
-        default:
-            HRZ_LOG_WARNING("Index type {} not supported", (int)format);
-            return my::IndexType::UShort;
-    }
 }
 
 } // namespace hrz::model

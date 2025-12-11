@@ -2,7 +2,6 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/tickets.h"
 #include "hrz/core/base_url.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"

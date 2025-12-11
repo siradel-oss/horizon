@@ -1,14 +1,14 @@
+#include "hrz/core/jobs/compose_raster_tile.h"
+
 #include "hrz/common/blob_allocator.h"
-#include "hrz/common/fmt.h"
 #include "hrz/common/geo.h"
 #include "hrz/common/image_view.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/common/raster_sampling.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/core/jobs/clipping.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/core/jobs/rasterizer.h"
 #include "hrz/fnd/log.h"
 
@@ -647,9 +647,9 @@ std::unique_ptr<BlendingFunction> _make_blending_function(
 }
 } // namespace
 
-hrz::JobResult run(
-    const hrz::planet::RasterTileCompositionParams& params,
-    hrz::planet::RasterTileCompositionResponse& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::RasterTileCompositionParams& params,
+    hrz_jobs::RasterTileCompositionResponse& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("compose tile job");
@@ -661,7 +661,7 @@ hrz::JobResult run(
     if (!output_image_blob.has_value())
     {
         HRZ_LOG_ERROR("Could not allocate output image");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     blobs::register_owner(
@@ -684,20 +684,18 @@ hrz::JobResult run(
     {
         const auto& img_canvas = params.images.at(i);
 
-        if (!std::holds_alternative<hrz::planet::RasterTileCompositionParams::Blit>(
-                img_canvas.canvas))
+        if (!std::holds_alternative<hrz_jobs::RasterTileCompositionParams::Blit>(img_canvas.canvas))
         {
             continue;
         }
 
-        const auto& blit =
-            std::get<hrz::planet::RasterTileCompositionParams::Blit>(img_canvas.canvas);
+        const auto& blit = std::get<hrz_jobs::RasterTileCompositionParams::Blit>(img_canvas.canvas);
         int lod_diff = (int)blit.input_coords.lod - (int)params.output_coords.lod;
 
         if (lod_diff >= 0)
         {
             auto in_coords =
-                std::get<hrz::planet::RasterTileCompositionParams::Blit>(img_canvas.canvas)
+                std::get<hrz_jobs::RasterTileCompositionParams::Blit>(img_canvas.canvas)
                     .input_coords;
             int x = (int)(in_coords.x >> lod_diff) - (int)params.output_coords.x;
             int y = (int)(in_coords.y >> lod_diff) - (int)params.output_coords.y;
@@ -715,7 +713,7 @@ hrz::JobResult run(
         else
         {
             const auto& in_coords =
-                std::get<hrz::planet::RasterTileCompositionParams::Blit>(img_canvas.canvas)
+                std::get<hrz_jobs::RasterTileCompositionParams::Blit>(img_canvas.canvas)
                     .input_coords;
 
             int out_x = params.output_coords.x;
@@ -769,7 +767,7 @@ hrz::JobResult run(
         auto blending_function =
             _make_blending_function(std::round(blending.opacity() * 255), params.output_format);
 
-        if (std::holds_alternative<hrz::planet::RasterTileCompositionParams::ReprojectionMesh>(
+        if (std::holds_alternative<hrz_jobs::RasterTileCompositionParams::ReprojectionMesh>(
                 img_canvas.canvas))
         {
             auto sampling_function = hrz::sampling::make_sampling_function(
@@ -777,7 +775,7 @@ hrz::JobResult run(
                 sampling.filtering(), image_format);
 
             auto& reprojection_mesh =
-                std::get<hrz::planet::RasterTileCompositionParams::ReprojectionMesh>(
+                std::get<hrz_jobs::RasterTileCompositionParams::ReprojectionMesh>(
                     img_canvas.canvas);
             _rasterize_tile(
                 input_image, output_image, reprojection_mesh.grid, reprojection_mesh.quad_count.x,
@@ -787,8 +785,7 @@ hrz::JobResult run(
         }
         else
         {
-            auto& blit =
-                std::get<hrz::planet::RasterTileCompositionParams::Blit>(img_canvas.canvas);
+            auto& blit = std::get<hrz_jobs::RasterTileCompositionParams::Blit>(img_canvas.canvas);
 
             // we don't need bilinear filtering when dealing same lod blitting.
             auto lod_diff = blit.input_coords.lod - params.output_coords.lod;
@@ -836,7 +833,7 @@ hrz::JobResult run(
         }
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::compose_raster_tile

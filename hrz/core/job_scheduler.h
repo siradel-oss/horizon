@@ -6,8 +6,6 @@
 #include <any>
 #include <cassert>
 #include <cstdint>
-#include <functional>
-#include <span>
 
 namespace hrz_monitoring
 {

@@ -1,4 +1,6 @@
-#include "mycelium/mycelium.h"
+#include "mycelium/render_graph.h"
+
+#include "mycelium/backend.h"
 
 #include <gtest/gtest.h>
 

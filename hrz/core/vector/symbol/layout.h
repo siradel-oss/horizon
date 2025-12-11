@@ -34,7 +34,7 @@ protected:
         return PrototypeStatus::Error;
     }
 
-    SymbolBakingData::ElementBakingParams get_prototype_baking_params(
+    hrz_jobs::SymbolBakingData::ElementBakingParams get_prototype_baking_params(
         PrototypeH prototype_handle) const override
     {
         if (prototype_handle.type != ElementType)
@@ -64,7 +64,7 @@ public:
         PrototypeH,
         uint64_t layer_id,
         TileCoords tile_coords,
-        BakedSymbols::ElementInstances&& baked_instances,
+        hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
         double bsphere_radius,
         lm::dvec3 bsphere_center,
         my::ResourceHandle tile_ubo,
@@ -101,7 +101,7 @@ public:
 // element is controlled by the alignment. (0,0) centers all the
 // elements. -1 or 1 in one axis aligns the elements on the border.
 struct StackElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Stack, hrz_proto::STACK_SYMBOL_ELEMENT>
+    public LayoutElementSystem<hrz_jobs::SymbolBakingData::Stack, hrz_proto::STACK_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -121,7 +121,7 @@ private:
 
 struct StackExpandElementSystem :
     public LayoutElementSystem<
-        SymbolBakingData::StackExpand,
+        hrz_jobs::SymbolBakingData::StackExpand,
         hrz_proto::STACK_EXPAND_SYMBOL_ELEMENT>
 {
 private:
@@ -141,7 +141,9 @@ private:
 };
 
 struct PaddingElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Padding, hrz_proto::PADDING_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::Padding,
+        hrz_proto::PADDING_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -160,7 +162,9 @@ private:
 };
 
 struct SizedBoxElementSystem :
-    public LayoutElementSystem<SymbolBakingData::SizedBox, hrz_proto::SIZED_BOX_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::SizedBox,
+        hrz_proto::SIZED_BOX_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -179,7 +183,7 @@ private:
 };
 
 struct FlexElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Flex, hrz_proto::FLEX_SYMBOL_ELEMENT>
+    public LayoutElementSystem<hrz_jobs::SymbolBakingData::Flex, hrz_proto::FLEX_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -198,7 +202,9 @@ private:
 };
 
 struct FlexibleElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Flexible, hrz_proto::FLEXIBLE_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::Flexible,
+        hrz_proto::FLEXIBLE_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -217,7 +223,9 @@ private:
 };
 
 struct AlignElementSystem :
-    public LayoutElementSystem<SymbolBakingData::FittedBox, hrz_proto::ALIGN_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::FittedBox,
+        hrz_proto::ALIGN_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -237,7 +245,7 @@ private:
 
 struct ConstrainedBoxElementSystem :
     public LayoutElementSystem<
-        SymbolBakingData::ConstrainedBox,
+        hrz_jobs::SymbolBakingData::ConstrainedBox,
         hrz_proto::CONSTRAINED_BOX_SYMBOL_ELEMENT>
 {
 private:
@@ -257,7 +265,9 @@ private:
 };
 
 struct RotatedBoxElementSystem :
-    public LayoutElementSystem<SymbolBakingData::RotatedBox, hrz_proto::ROTATED_BOX_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::RotatedBox,
+        hrz_proto::ROTATED_BOX_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -277,7 +287,7 @@ private:
 
 struct AspectRatioElementSystem :
     public LayoutElementSystem<
-        SymbolBakingData::AspectRatio,
+        hrz_jobs::SymbolBakingData::AspectRatio,
         hrz_proto::ASPECT_RATIO_SYMBOL_ELEMENT>
 {
 private:
@@ -297,7 +307,9 @@ private:
 };
 
 struct FittedBoxElementSystem :
-    public LayoutElementSystem<SymbolBakingData::FittedBox, hrz_proto::FITTED_BOX_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::FittedBox,
+        hrz_proto::FITTED_BOX_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -316,7 +328,9 @@ private:
 };
 
 struct TransformElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Transform, hrz_proto::TRANSFORM_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::Transform,
+        hrz_proto::TRANSFORM_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -335,7 +349,9 @@ private:
 };
 
 struct OptionalElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Optional, hrz_proto::OPTIONAL_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::Optional,
+        hrz_proto::OPTIONAL_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(
@@ -354,7 +370,9 @@ private:
 };
 
 struct VariantElementSystem :
-    public LayoutElementSystem<SymbolBakingData::Variant, hrz_proto::VARIANT_SYMBOL_ELEMENT>
+    public LayoutElementSystem<
+        hrz_jobs::SymbolBakingData::Variant,
+        hrz_proto::VARIANT_SYMBOL_ELEMENT>
 {
 private:
     PrototypeH make_prototype(

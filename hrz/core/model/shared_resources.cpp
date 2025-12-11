@@ -2,7 +2,8 @@
 
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/core/model/ubo_defs.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
 #include "hrz/core/sky.h"
@@ -645,11 +646,10 @@ static SharedResources* create_shared_resources_common(Render* render)
 
     sr->ubo_alignment = (uint32_t)render->my->get_uniform_buffer_offset_alignment();
 
-    sr->mesh_ubo_stride = render::compute_ubo_stride<MeshUniformData>(sr->ubo_alignment);
-    sr->primitive_draw_ubo_stride =
-        render::compute_ubo_stride<PrimitiveDrawUniformData>(sr->ubo_alignment);
+    sr->mesh_ubo_stride = compute_ubo_stride<MeshUniformData>(sr->ubo_alignment);
+    sr->primitive_draw_ubo_stride = compute_ubo_stride<PrimitiveDrawUniformData>(sr->ubo_alignment);
     sr->primitive_transform_ubo_stride =
-        render::compute_ubo_stride<PrimitiveTransformUniformData>(sr->ubo_alignment);
+        compute_ubo_stride<PrimitiveTransformUniformData>(sr->ubo_alignment);
 
     sr->fallback_position_vertex_buffer =
         _build_constant_vertex_array<lm::vec3>({0, 0, 0}, my::VertexFormat::Float32_3, render);

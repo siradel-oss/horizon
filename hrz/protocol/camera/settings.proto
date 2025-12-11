@@ -1,0 +1,33 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// @path_root="camera_settings"
+message CameraSettings {
+    // Vertical field of view in degrees.
+    float  fovy                      = 1;
+
+    // Half-time of the energy contained in the camera system, in seconds.
+    // For example if the camera moves at 1m/s then is requested to stop, it
+    // will take this duration for its velocity to be halved.
+    // This setting only affects user controls like mouse movements and touch
+    // controls.
+    // Default: 0.06
+    float  user_controls_inertia     = 2;
+
+    // Same as above but for the "movement" API.
+    // Default: 0.06
+    float  movements_inertia         = 3;
+
+    // Minimum distance between the camera and the terrain, in metres.
+    // Set to a positive value to prevent the camera from going underground.
+    // Takes DTM layers into account.
+    // Default: 2.0
+    double min_height_above_terrain  = 4;
+
+    // Time in seconds it takes for the camera to be back at its target minimum
+    // height above the terrain after it goes below it.
+    // Default: 0.06
+    float  terrain_collision_inertia = 5;
+}

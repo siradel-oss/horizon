@@ -1,0 +1,55 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/color/palette.proto";
+
+message TemplatedUrl {
+    string name = 1;
+    string url  = 2;
+}
+
+message Material {
+    // Name of the material. It must be unique.
+    // This is the identifier used to make the material active.
+    string                name                 = 4;
+
+    // Name of the material variant to use, as defined by
+    // the KHR_materials_variants extension.
+    string                variant_name         = 1;
+
+    // List of templated URLs to use for dynamic materials.
+    // See the SIRADEL_templated_image_url extension for more
+    // information.
+    repeated TemplatedUrl urls                 = 2;
+
+    // Palette used to colorize data textures (if any is used).
+    // WARNING: The number of color points is limited to 32.
+    NumericPalette        data_texture_palette = 3;
+}
+
+// Two materials can be displayed at once: the base and the overlay materials.
+// The overlay material can be disabled, and its opacity changed. It is
+// displayed on top of the base material. The feature color (for example the
+// instanced or batch color) can be applied either between the base and overlay
+// materials, or above everything if the `apply_feature_color_to_overlay` is set
+// to true.
+message MaterialProperties {
+    // Name of the activate material defined in the `materials` field of
+    // the layer.
+    // If this name doesn't map to a valid material, the model will be
+    // displayed with the default material defined in the source.
+    string    base_material                  = 1;
+
+    // Same as the base material, but for the overlay material.
+    string    overlay_material               = 2;
+
+    bool      enable_overlay                 = 3;
+    float     overlay_opacity                = 4;
+    bool      apply_feature_color_to_overlay = 5;
+
+    BlendMode feature_color_blend_mode       = 6;
+    float     feature_color_blend_strength   = 7;
+}

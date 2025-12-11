@@ -1,3 +1,4 @@
+#include "hrz/common/proto_maths.h"
 #include "hrz/core/jobs/symbol/baker.h"
 #include "hrz/fnd/inlined_vector.h"
 
@@ -82,7 +83,7 @@ Size constrain_box_fit(
 }
 
 ElementGeometry SymbolBaker::StackVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SymbolElementType::STACK_SYMBOL_ELEMENT);
@@ -146,7 +147,7 @@ ElementGeometry SymbolBaker::StackVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::StackExpandVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::STACK_EXPAND_SYMBOL_ELEMENT);
@@ -159,7 +160,7 @@ ElementGeometry SymbolBaker::StackExpandVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::ConstrainedBoxVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SymbolElementType::CONSTRAINED_BOX_SYMBOL_ELEMENT);
@@ -183,7 +184,7 @@ ElementGeometry SymbolBaker::ConstrainedBoxVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::RotatedBoxVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::ROTATED_BOX_SYMBOL_ELEMENT);
@@ -243,7 +244,7 @@ ElementGeometry SymbolBaker::RotatedBoxVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::PaddingVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::PADDING_SYMBOL_ELEMENT);
@@ -281,7 +282,7 @@ ElementGeometry SymbolBaker::PaddingVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::SizedBoxVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SIZED_BOX_SYMBOL_ELEMENT);
@@ -299,7 +300,7 @@ ElementGeometry SymbolBaker::SizedBoxVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::FlexVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::FLEX_SYMBOL_ELEMENT);
@@ -455,7 +456,7 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::FlexibleVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::FLEXIBLE_SYMBOL_ELEMENT);
@@ -468,7 +469,7 @@ ElementGeometry SymbolBaker::FlexibleVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::AspectRatioVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::ASPECT_RATIO_SYMBOL_ELEMENT);
@@ -500,7 +501,7 @@ ElementGeometry SymbolBaker::AspectRatioVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::FittedBoxVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(
@@ -529,10 +530,10 @@ ElementGeometry SymbolBaker::FittedBoxVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::TransformVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
-    using Transform = typename hrz::vt::SymbolBakingData::Transform;
+    using Transform = typename hrz_jobs::SymbolBakingData::Transform;
 
     assert(element.type == hrz_proto::TRANSFORM_SYMBOL_ELEMENT);
     const auto& params = element.transform();
@@ -585,7 +586,7 @@ ElementGeometry SymbolBaker::TransformVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::OptionalVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::OPTIONAL_SYMBOL_ELEMENT);
@@ -607,7 +608,7 @@ ElementGeometry SymbolBaker::OptionalVisitor::visit_element(
 }
 
 ElementGeometry SymbolBaker::VariantVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::VARIANT_SYMBOL_ELEMENT);

@@ -1,10 +1,12 @@
 #include "hrz/common/blob_array.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/core/render.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/vector/symbol/anchor.h"
@@ -20,8 +22,6 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/meta.h"
-#include "hrz/fnd/thread.h"
-#include "hrz/protocol/all.h"
 
 #include <lin_maths.h>
 
@@ -99,7 +99,7 @@ struct Config
         // Index among visual elements
         std::optional<uint32_t> z_index;
 
-        SymbolBakingData::ElementBakingParams baking_params;
+        hrz_jobs::SymbolBakingData::ElementBakingParams baking_params;
     };
 
     // The elements are kept in the order they are in the scene
@@ -152,8 +152,8 @@ struct Tile
     picking::FeatureReference feature_ref;
     bool has_feature_ids;
 
-    std::optional<hrz::vt::SymbolBakingData> baking_data;
-    std::optional<hrz::vt::BakedSymbols> baked_data;
+    std::optional<hrz_jobs::SymbolBakingData> baking_data;
+    std::optional<hrz_jobs::BakedSymbols> baked_data;
 
     hrz_jobs::BakeSymbolsTicket baking_ticket;
 
@@ -478,7 +478,7 @@ public:
         tile.has_feature_ids = feature_ids.has_any_attribute();
         tile.scene_views = config.scene_views;
 
-        tile.baking_data = {hrz::vt::SymbolBakingData{}};
+        tile.baking_data = {hrz_jobs::SymbolBakingData{}};
         auto& baking_data = tile.baking_data.value();
 
         baking_data.tile_coords = tile.coords;
@@ -858,7 +858,7 @@ public:
                     if (hrz_jobs::get_job_status(ctx.js, tile->baking_ticket)
                         == hrz::job_scheduler::JobStatus::Finished_Success)
                     {
-                        tile->baked_data = {BakedSymbols{}};
+                        tile->baked_data = {hrz_jobs::BakedSymbols{}};
                         hrz_jobs::get_job_response(
                             ctx.js, tile->baking_ticket, tile->baked_data.value());
 
@@ -1147,7 +1147,7 @@ public:
                     if (anchor_count > 0)
                     {
                         constexpr unsigned int pixels_per_anchor =
-                            sizeof(BakedSymbols::AnchorGpu) / sizeof(lm::uvec4);
+                            sizeof(hrz_jobs::BakedSymbols::AnchorGpu) / sizeof(lm::uvec4);
                         tile->anchor_data_texture = alloc_data_texture(
                             std::as_bytes(anchor_data.as_span()), my::TextureFormat::RGBA32UI,
                             pixels_per_anchor, "anchors"_ss);

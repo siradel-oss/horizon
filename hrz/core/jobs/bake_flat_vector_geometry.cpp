@@ -4,19 +4,18 @@
 #include "hrz/common/color.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/triangulation.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
+#include "hrz/common/triangulation.h" // IWYU pragma: keep
+#include "hrz/common/vector_tiles/data_texture.h"
+#include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
 #include "hrz/core/jobs/clipping.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_repr_common.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/string_utils.h"
 
 #include <CDT.h>
 #include <delabella.h>
@@ -28,37 +27,6 @@ namespace
 {
 static constexpr size_t InitialVertexCapacity = 4096;
 } // namespace
-
-namespace std
-{
-using PolygonPatternStyle = hrz::vt::FlatVectorGeometry::PolygonPatternStyle;
-
-template<>
-struct hash<PolygonPatternStyle>
-{
-    size_t operator()(const PolygonPatternStyle& style) const
-    {
-        return hrz::hash_values(
-            style.sprite_size, style.sprite_offset, style.polygon_pattern_transform,
-            style.background_color_srgb, style.pattern_color_srgb,
-            style.pattern_color_blend_strength);
-    }
-};
-} // namespace std
-
-namespace hrz::vt
-{
-using PolygonPatternStyle = hrz::vt::FlatVectorGeometry::PolygonPatternStyle;
-
-bool operator==(const PolygonPatternStyle& lhs, const PolygonPatternStyle& rhs)
-{
-    return lhs.sprite_size == rhs.sprite_size && lhs.sprite_offset == rhs.sprite_offset
-        && lhs.polygon_pattern_transform == rhs.polygon_pattern_transform
-        && lhs.background_color_srgb == rhs.background_color_srgb
-        && lhs.pattern_color_srgb == rhs.pattern_color_srgb
-        && lhs.pattern_color_blend_strength == rhs.pattern_color_blend_strength;
-}
-} // namespace hrz::vt
 
 namespace hrz_jobs::bake_flat_vector_geometry
 {
@@ -236,9 +204,9 @@ void append_polygon_vertex(
     uint32_t feature_index);
 
 template<>
-void append_polygon_vertex<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>(
+void append_polygon_vertex<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>(
     const lm::dvec3& position,
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>& polygon_data,
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>& polygon_data,
     lm::ubvec4 rgba,
     uint32_t pattern_style_index,
     uint32_t feature_index)
@@ -248,9 +216,9 @@ void append_polygon_vertex<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>
 }
 
 template<>
-void append_polygon_vertex<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>(
+void append_polygon_vertex<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>(
     const lm::dvec3& position,
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>& polygon_data,
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>& polygon_data,
     lm::ubvec4 rgba,
     uint32_t pattern_style_index,
     uint32_t feature_index)
@@ -666,7 +634,7 @@ struct SegmentSubdivisionContext
 {
     uint32_t feature_index;
     hrz::BlobVector<lm::dvec3>& positions;
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PolylineInstance>& polyline_data;
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PolylineInstance>& polyline_data;
     lm::ubvec4 rgba;
     float line_width;
     float dash_length;
@@ -787,7 +755,7 @@ void generate_polylines_geometry(
     std::span<const uint32_t> linestring_sizes,
     hrz::BlobVector<lm::dvec3>& positions,
     hrz::BlobVector<uint32_t>& polylines_segment_counts,
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PolylineInstance>& polyline_data,
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PolylineInstance>& polyline_data,
     lm::ubvec4 rgba,
     float line_width,
     float dash_length,
@@ -918,7 +886,7 @@ void generate_points_geometry(
     uint32_t feature_index,
     std::span<const lm::dvec3> feature_span,
     hrz::BlobVector<lm::dvec3>& positions,
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PointInstance>& point_data,
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PointInstance>& point_data,
     const lm::ubvec4& rgba,
     float disc_radius)
 {
@@ -940,9 +908,9 @@ void generate_points_geometry(
 
 } // anonymous namespace
 
-hrz::JobResult run(
-    const hrz::vt::FlatVectorData& input,
-    hrz::vt::FlatVectorGeometry& geometry,
+hrz_jobs::JobResult run(
+    const hrz_jobs::FlatVectorData& input,
+    hrz_jobs::FlatVectorGeometry& geometry,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("bake flat geometry");
@@ -959,7 +927,7 @@ hrz::JobResult run(
         context.get_blob_allocator(), input_points.size() * sizeof(hrz::GeoPosition3));
     if (!points_geo_blob_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     // Input points as lat/lon positions for computing exact geodesic distances
@@ -985,19 +953,19 @@ hrz::JobResult run(
     lm::dbbox2 tile_bounds = hrz::mercator_tile_bbox_meters(input.coords);
     lm::dvec2 tile_size = tile_bounds.max - tile_bounds.min;
 
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>
         solid_color_polygon_vertices(
             context.get_blob_allocator(), input.has_polygon_pattern ? 0 : InitialVertexCapacity);
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PatternPolygonVertex> pattern_polygon_vertices(
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex> pattern_polygon_vertices(
         context.get_blob_allocator(), input.has_polygon_pattern ? InitialVertexCapacity : 0);
     hrz::BlobVector<uint32_t> pattern_polygon_indices(
         context.get_blob_allocator(), InitialVertexCapacity);
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PolylineInstance> polyline_vertices(
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PolylineInstance> polyline_vertices(
         context.get_blob_allocator(), InitialVertexCapacity);
-    hrz::BlobVector<hrz::vt::FlatVectorGeometry::PointInstance> point_vertices(
+    hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PointInstance> point_vertices(
         context.get_blob_allocator(), InitialVertexCapacity);
 
-    hrz::flat_hash_map<hrz::vt::FlatVectorGeometry::PolygonPatternStyle, uint32_t>
+    hrz::flat_hash_map<hrz_jobs::FlatVectorGeometry::PolygonPatternStyle, uint32_t>
         polygon_pattern_styles;
 
     uint32_t max_feature_index = 0;
@@ -1175,7 +1143,7 @@ hrz::JobResult run(
                         * lm::scaling(lm::dvec3(pattern_size, 1.0))
                         * lm::scaling(lm::dvec3(1.0 / tile_size.x, 1.0 / tile_size.y, 1.0)));
 
-                    hrz::vt::FlatVectorGeometry::PolygonPatternStyle style;
+                    hrz_jobs::FlatVectorGeometry::PolygonPatternStyle style;
                     style.sprite_size =
                         lm::vec2(pattern_sprite.atlas_size) / input.pattern_texture_size;
                     style.sprite_offset =
@@ -1199,7 +1167,7 @@ hrz::JobResult run(
                         polygon_pattern_styles.insert({style, pattern_style_index});
                     }
 
-                    generate_polygon_geometry<hrz::vt::FlatVectorGeometry::PatternPolygonVertex>(
+                    generate_polygon_geometry<hrz_jobs::FlatVectorGeometry::PatternPolygonVertex>(
                         feature_index, feature_points, feature_linestring_sizes, polygon_positions,
                         pattern_polygon_vertices, pattern_polygon_indices, fill_color_srgb,
                         pattern_style_index, input.coords, tile_bounds, input.clip_to_tile,
@@ -1207,7 +1175,8 @@ hrz::JobResult run(
                 }
                 else
                 {
-                    generate_polygon_geometry<hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex>(
+                    generate_polygon_geometry<
+                        hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex>(
                         feature_index, feature_points, feature_linestring_sizes, polygon_positions,
                         solid_color_polygon_vertices, pattern_polygon_indices, fill_color_srgb, 0,
                         input.coords, tile_bounds, input.clip_to_tile,
@@ -1261,7 +1230,7 @@ hrz::JobResult run(
         || !point_positions_data_opt.has_value() || !polyline_segment_counts_data_opt.has_value()
         || !feature_ids_data_opt.has_value() || !pattern_polygon_vertices_data_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto polygon_positions_data = polygon_positions_data_opt.value();
     auto polyline_positions_data = polyline_positions_data_opt.value();
@@ -1360,7 +1329,7 @@ hrz::JobResult run(
     if (!solid_color_polygon_vertices_data_opt.has_value()
         || !polyline_vertices_data_opt.has_value() || !point_vertices_data_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto solid_color_polygon_vertices_data = solid_color_polygon_vertices_data_opt.value();
     auto polyline_vertices_data = polyline_vertices_data_opt.value();
@@ -1449,7 +1418,7 @@ hrz::JobResult run(
             {polygon_positions_data}, bsphere.center,
             {(lm::vec3*)&pattern_polygon_vertices_data.data()->position,
              polygon_positions_data.size(),
-             sizeof(hrz::vt::FlatVectorGeometry::PatternPolygonVertex)});
+             sizeof(hrz_jobs::FlatVectorGeometry::PatternPolygonVertex)});
     }
     else
     {
@@ -1457,7 +1426,7 @@ hrz::JobResult run(
             {polygon_positions_data}, bsphere.center,
             {(lm::vec3*)&solid_color_polygon_vertices_data.data()->position,
              polygon_positions_data.size(),
-             sizeof(hrz::vt::FlatVectorGeometry::SolidColorPolygonVertex)});
+             sizeof(hrz_jobs::FlatVectorGeometry::SolidColorPolygonVertex)});
     }
 
     hrz::vector_repr::compute_rel_coords(
@@ -1465,18 +1434,18 @@ hrz::JobResult run(
          2 * sizeof(lm::dvec3)},
         bsphere.center,
         {(lm::vec3*)&polyline_vertices_data.data()->position0, polyline_positions_data.size() / 2,
-         sizeof(hrz::vt::FlatVectorGeometry::PolylineInstance)});
+         sizeof(hrz_jobs::FlatVectorGeometry::PolylineInstance)});
     hrz::vector_repr::compute_rel_coords(
         {polyline_positions_data.data() + 1, polyline_positions_data.size() / 2,
          2 * sizeof(lm::dvec3)},
         bsphere.center,
         {(lm::vec3*)&polyline_vertices_data.data()->position1, polyline_positions_data.size() / 2,
-         sizeof(hrz::vt::FlatVectorGeometry::PolylineInstance)});
+         sizeof(hrz_jobs::FlatVectorGeometry::PolylineInstance)});
 
     hrz::vector_repr::compute_rel_coords(
         {point_positions_data}, bsphere.center,
         {(lm::vec3*)&point_vertices_data.data()->position, point_positions_data.size(),
-         sizeof(hrz::vt::FlatVectorGeometry::PointInstance)});
+         sizeof(hrz_jobs::FlatVectorGeometry::PointInstance)});
 
     auto solid_color_polygon_vertices_array_opt = solid_color_polygon_vertices.to_blob_array();
     auto pattern_polygon_vertices_array_opt = pattern_polygon_vertices.to_blob_array();
@@ -1488,7 +1457,7 @@ hrz::JobResult run(
         || !pattern_polygon_indices_array_opt.has_value()
         || !polyline_vertices_array_opt.has_value() || !point_vertices_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     // Finalize
@@ -1500,14 +1469,14 @@ hrz::JobResult run(
             context.get_blob_allocator(), context.get_resource_owner());
         geometry.polygon_data = {std::move(pattern_polygon_vertices_array_opt.value())};
 
-        hrz::BlobVector<hrz::vt::FlatVectorGeometry::PolygonPatternStyle>
+        hrz::BlobVector<hrz_jobs::FlatVectorGeometry::PolygonPatternStyle>
             polygon_pattern_styles_vector(
                 context.get_blob_allocator(), polygon_pattern_styles.size());
         polygon_pattern_styles_vector.resize(polygon_pattern_styles.size());
         auto polygon_pattern_styles_span = polygon_pattern_styles_vector.data();
         if (!polygon_pattern_styles_span.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         for (const auto& style : polygon_pattern_styles)
@@ -1526,7 +1495,7 @@ hrz::JobResult run(
         auto polygon_pattern_styles_array_opt = polygon_pattern_styles_vector.to_blob_array();
         if (!polygon_pattern_styles_array_opt.has_value())
         {
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         polygon_pattern_styles_array_opt.value().register_blob_metadata(
@@ -1573,7 +1542,7 @@ hrz::JobResult run(
     geometry.feature_ids.register_blob_owner(
         context.get_blob_allocator(), context.get_resource_owner());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::bake_flat_vector_geometry

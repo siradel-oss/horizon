@@ -3,20 +3,19 @@
 #include "hrz/common/ui_utils.h"
 #include "hrz/core/assets_loader/http_platform.h"
 #include "hrz/core/channel_group.h"
-#include "hrz/core/client_message_queue.h"
 #include "hrz/core/client_messages.h"
 #include "hrz/core/platform/platform.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/string_utils.h"
+#include "hrz/fnd/variant.h"
+#include "hrz/protocol/client_data/asset_request.pb.h"
+#include "hrz/protocol/http_headers.pb.h"
 
 #include <array>
 #include <deque>
-#include <mutex>
-#include <queue>
 
 extern "C"
 {
@@ -27,7 +26,6 @@ extern "C"
 #include "hrz/common/profiling.h"
 #include "hrz/fnd/gen_object_pool.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/thread.h"
 
 namespace
 {

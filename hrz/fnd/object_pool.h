@@ -4,8 +4,6 @@
 #include "hrz/fnd/class.h"
 #include "hrz/fnd/defines.h"
 
-#include <span>
-
 namespace hrz
 {
 // This is an arena-backed object pool.

@@ -2,20 +2,21 @@
 
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/crs_database.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/geo.h"
 #include "hrz/common/image_processing.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/common/raster_sampling.h"
 #include "hrz/common/reprojection.h"
 #include "hrz/core/job_scheduler.h"
+#include "hrz/core/jobs/compose_raster_tile.h"
+#include "hrz/core/jobs/reproject_raster_tile.h"
 #include "hrz/core/loading_priorities.h"
 #include "hrz/core/planet/raster.h"
 #include "hrz/core/planet/raster_collection.h"
 #include "hrz/fnd/format.h"
+#include "hrz/fnd/hash.h"
 
 #include <array>
 #include <limits>
@@ -307,7 +308,7 @@ hrz_jobs::ReprojectRasterTileTicket RasterMergeGroup::create_reprojection_job(
     // the most texels accurately projected.
     unsigned int quad_size = std::min(4 << tile_coords.lod, REPROJ_GRID_SIZE);
 
-    RasterTileReprojParams tile_reproj_params;
+    hrz_jobs::RasterTileReprojParams tile_reproj_params;
     tile_reproj_params.tile_coords = tile_coords;
     tile_reproj_params.quad_size = quad_size;
     tile_reproj_params.raster_geometry = raster->provider->get_geometry();
@@ -943,7 +944,7 @@ void RasterMergeGroup::work(
                     {
                         tile_raster.reprojected_tiles.clear();
 
-                        ReprojectedTiles reprojected_tiles;
+                        hrz_jobs::ReprojectedTiles reprojected_tiles;
                         hrz_jobs::get_job_response(
                             js, tile_raster.reproject_tile_ticket, reprojected_tiles);
 
@@ -1106,7 +1107,7 @@ void RasterMergeGroup::work(
         {
             HRZ_SCOPED_SAMPLE("planet raster work prepare compose");
 
-            RasterTileCompositionParams job_params;
+            hrz_jobs::RasterTileCompositionParams job_params;
             job_params.output_coords = tile.coords;
             job_params.output_format = _composed_image_format;
 
@@ -1140,13 +1141,13 @@ void RasterMergeGroup::work(
                         raster->provider->get_tile_image(rt.lock_ticket);
                     if (tile_image.image.valid())
                     {
-                        RasterTileCompositionParams::ImageWithCanvas img_canvas;
+                        hrz_jobs::RasterTileCompositionParams::ImageWithCanvas img_canvas;
                         img_canvas.image = std::move(tile_image.image);
 
                         if (rt.mesh.has_value())
                         {
                             auto& mesh = rt.mesh.value();
-                            RasterTileCompositionParams::ReprojectionMesh param_mesh;
+                            hrz_jobs::RasterTileCompositionParams::ReprojectionMesh param_mesh;
 
                             param_mesh.quad_count.x = mesh.grid_size.x - 1;
                             param_mesh.quad_count.y = mesh.grid_size.y - 1;
@@ -1167,7 +1168,7 @@ void RasterMergeGroup::work(
                         }
                         else
                         {
-                            RasterTileCompositionParams::Blit proto;
+                            hrz_jobs::RasterTileCompositionParams::Blit proto;
 
                             proto.input_coords = tile_image.coords;
 
@@ -1246,7 +1247,7 @@ void RasterMergeGroup::work(
                 if (hrz_jobs::get_job_status(js, tile.compose_tile_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    RasterTileCompositionResponse response;
+                    hrz_jobs::RasterTileCompositionResponse response;
                     hrz_jobs::get_job_response(js, tile.compose_tile_ticket, response);
 
                     assert(

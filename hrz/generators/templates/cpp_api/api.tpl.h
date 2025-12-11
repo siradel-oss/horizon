@@ -1,6 +1,7 @@
 #pragma once
 
-#include "hrz/protocol/scene_model.pb.h"
+#include "hrz/protocol/scene_model/path.pb.h"
+#include "hrz/protocol/scene_model/service.pb.h"
 #include "hrz/protocol/services.h"
 
 ////////////////////////////////////////////////////////////////////////////////

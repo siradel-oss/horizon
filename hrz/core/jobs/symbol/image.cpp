@@ -4,8 +4,8 @@ namespace hrz_jobs::symbol
 {
 static constexpr size_t InitialComponentCapacity = 256;
 
-hrz::JobResult SymbolBaker::ImageVisitor::init_element_instances(
-    const hrz::vt::SymbolBakingData::Element& element)
+hrz_jobs::JobResult SymbolBaker::ImageVisitor::init_element_instances(
+    const hrz_jobs::SymbolBakingData::Element& element)
 {
     if (element.anchor_index.has_value())
     {
@@ -18,11 +18,11 @@ hrz::JobResult SymbolBaker::ImageVisitor::init_element_instances(
         instances_by_z_index.insert({element.z_index.value(), std::move(baking_data)});
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 ElementGeometry SymbolBaker::ImageVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SymbolElementType::IMAGE_SYMBOL_ELEMENT);
@@ -125,7 +125,7 @@ void SymbolBaker::ImageVisitor::finalize_element_instance(
     }
 }
 
-std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBaker::ImageVisitor::
+std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBaker::ImageVisitor::
     get_element_instances_at_z_index(uint32_t z_index)
 {
     auto& image_data = instances_by_z_index.at(z_index);
@@ -139,7 +139,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
 
     if (instance_count == 0)
     {
-        return {std::optional<hrz::vt::BakedSymbols::ElementInstances>{}};
+        return {std::optional<hrz_jobs::BakedSymbols::ElementInstances>{}};
     }
 
     // Sort such that all instances that share the same geometry index are consecutive.
@@ -162,7 +162,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
     auto unsorted = instance_array_opt->get_data();
     auto sorted = sorted_instance_array_opt->get_mutable_data();
 
-    std::vector<hrz::vt::BakedSymbols::ImageInstances::Batch> batches;
+    std::vector<hrz_jobs::BakedSymbols::ImageInstances::Batch> batches;
     uint32_t current_batch_instance_count = 0;
     uint32_t current_batch_first_instance = 0;
     int current_batch_geometry_index = -1;
@@ -201,11 +201,11 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
     sorted_instance_array_opt->register_blob_owner(
         blob_allocator, get_context().get_resource_owner());
 
-    hrz::vt::BakedSymbols::ImageInstances baked_instances;
+    hrz_jobs::BakedSymbols::ImageInstances baked_instances;
     baked_instances.instances = std::move(sorted_instance_array_opt.value());
     baked_instances.batches = std::move(batches);
 
-    return {{hrz::vt::BakedSymbols::ElementInstances{
+    return {{hrz_jobs::BakedSymbols::ElementInstances{
         hrz_proto::IMAGE_SYMBOL_ELEMENT,
         {std::move(baked_instances)}}}};
 }

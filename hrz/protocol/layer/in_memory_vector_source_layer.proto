@@ -1,0 +1,55 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/vector/geometry_type.proto";
+import "hrz/protocol/attributes/transform.proto";
+import "hrz/protocol/attributes/in_memory.proto";
+import "hrz/protocol/geo/srs.proto";
+
+message InMemoryVectorFeatureGeometry {
+    VectorGeometryType type             = 1;
+
+    // @Note we don't do "repeated Vec3d" to avoid allocating a lot of small
+    // objects when encoding or decoding, but it's essentially the
+    // same thing, just with everything inline.
+    repeated double    coords           = 2;
+
+    // Number of points for each linestring. Linestrings must not be closed.
+    // For polygons, exterior linestring must be counter-clockwise, and interior
+    // ones must be clockwise. This is used only for polygons and polylines.
+    repeated uint32    linestring_sizes = 3;
+}
+
+message InMemoryAttribute {
+    reserved 2, 3;
+
+    uint32             id            = 1;
+    bool               is_feature_id = 4;
+    AttributeTransform transform     = 5;
+}
+
+message InMemoryVectorFeature {
+    reserved 1, 2, 3;
+
+    InMemoryVectorFeatureGeometry   geometry         = 4;
+
+    // Must have one value for each attribute of the layer,
+    // in the correct order and with the correct types.
+    // Invalid or missing values are replaced by the default
+    // value of the type.
+    repeated InMemoryAttributeValue attribute_values = 5;
+}
+
+// @path_root="in_memory_vector_source_layer"
+message InMemoryVectorSourceLayer {
+    reserved 3;
+
+    uint32                         id          = 1;
+    SpatialReferenceSystem         projection  = 2;
+    string                         attribution = 6;
+
+    repeated InMemoryVectorFeature features    = 5;
+    repeated InMemoryAttribute     attributes  = 4;
+}

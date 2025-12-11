@@ -4,15 +4,13 @@
 #include "hrz/common/proto_geo.h"
 #include "hrz/common/proto_maths.h"
 #include "hrz/core/grid.h"
-#include "hrz/core/render.h"
-#include "hrz/core/shaders/collection.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/scene_path/layer/clipping_plane_layer_paths.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/mem.h"
-#include "hrz/protocol/path_builder.h"
-
-#include <optional>
+#include "hrz/protocol/path_builder/layer/clipping_plane_layer.h"
 
 namespace hrz
 {

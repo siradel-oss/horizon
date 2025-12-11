@@ -1,12 +1,10 @@
 #pragma once
 
 #include "hrz/core/model/model.h"
-#include "hrz/core/render.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/3d_model/impostor_params.pb.h"
 
 #include <cstdint>
 #include <optional>
-#include <span>
 
 namespace hrz
 {

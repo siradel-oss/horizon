@@ -1,0 +1,25 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// @path_leaf="true"
+message TileCoords {
+    uint32 x   = 1;
+    uint32 y   = 2;
+    uint32 lod = 3;
+}
+
+// This enum defines the behaviour of a tiles providers when
+// a tile can't be retrieved.
+enum MissingTilePolicy {
+    // This will go up the hierarchy to look for a lower-resolution
+    // tile to replace the missing one with.
+    // If none is found, it has the same behaviour as USE_EMPTY_TILE.
+    USE_LOWER_RESOLUTION = 0;
+
+    // This will produce an empty tile depending on the format.
+    // Empty tiles are essentially transparent: whatever available raster tile
+    // is below them is their group will be used instead.
+    USE_EMPTY_TILE       = 1;
+}

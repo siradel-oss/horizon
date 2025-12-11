@@ -1,0 +1,19 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/layer/handle.proto";
+
+message ShapeSelection { LayerHandle layer = 1; }
+
+message ControlPointIndex { uint32 value = 1; }
+
+message ControlPointSelection { ControlPointIndex control_point_index = 1; }
+
+enum ShapeEditorMode {
+    SELECTION_MODE = 0;
+    APPEND_MODE    = 1;
+}
+
+message ModeSelection { ShapeEditorMode mode = 1; }

@@ -4,9 +4,9 @@
 
 namespace hrz_jobs::bake_symbols
 {
-hrz::JobResult run(
-    const hrz::vt::SymbolBakingData& params,
-    hrz::vt::BakedSymbols& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::SymbolBakingData& params,
+    hrz_jobs::BakedSymbols& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("bake symbols");

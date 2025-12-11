@@ -1,13 +1,11 @@
-#include "hrz/common/attributes.h"
-#include "hrz/common/blob_allocator.h"
 #include "hrz/common/blob_array.h"
 #include "hrz/common/blob_vector.h"
-#include "hrz/common/color.h"
-#include "hrz/common/crs_database.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/proj.h"
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/attribute_type_api.h" // IWYU pragma: keep
+#include "hrz/common/vector_data/geometry_utils.h"
+#include "hrz/common/vector_data/packed_attribute_values_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/log.h"
 
@@ -21,8 +19,8 @@
 
 namespace hrz_jobs::move_client_vector_data_to_blobs
 {
-hrz::JobResult run(
-    const hrz::vector_data::RawClientVectorData& params,
+hrz_jobs::JobResult run(
+    const hrz_jobs::RawClientVectorData& params,
     hrz::vector_data::DecodedVectorTile& response,
     const JobContext& context)
 {
@@ -144,7 +142,7 @@ hrz::JobResult run(
 
     if (!points.is_valid() || !linestring_sizes.is_valid() || !features.is_valid())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto feature_array_opt = features.to_blob_array();
@@ -154,7 +152,7 @@ hrz::JobResult run(
     if (!feature_array_opt.has_value() || !point_array_opt.has_value()
         || !linestring_size_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     // Get the attributes and feature ids
@@ -164,7 +162,7 @@ hrz::JobResult run(
     // Because their order matter, as we will want to extract the first few of them
     // in a span later.
     hrz::flat_hash_map<uint32_t, uint32_t> attribute_id_to_index;
-    std::vector<hrz::vector_data::AttributeValuesBuilder> attribute_index_to_values;
+    std::vector<hrz::vector_data::PackedAttributeValuesBuilder> attribute_index_to_values;
     std::vector<uint32_t> attribute_id;
 
     auto emplace_back_attribute_values = [&](uint32_t id)
@@ -259,7 +257,7 @@ hrz::JobResult run(
     auto hashes_array_opt = hashes_vector.to_blob_array();
     if (!hashes_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto feature_ids_opt = hrz::vector_data::FeatureIds::make(
@@ -267,7 +265,7 @@ hrz::JobResult run(
 
     if (!feature_ids_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     response.feature_ids = feature_ids_opt.value();
@@ -285,6 +283,6 @@ hrz::JobResult run(
     response.geometry.points = point_array_opt.value();
     response.geometry.linestring_sizes = linestring_size_array_opt.value();
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::move_client_vector_data_to_blobs

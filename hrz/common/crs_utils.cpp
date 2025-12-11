@@ -41,12 +41,12 @@ std::optional<hrz::crs::Srid> parse_single_comma_srid(
 
     for (unsigned int i = 0; i < str.size(); ++i)
     {
-        char c = str[i];
+        const char c = str[i];
         if (c == 0) break;
         if (!is_digit(c)) return std::nullopt;
     }
 
-    int code = std::atoi(str.data());
+    const int code = std::atoi(str.data());
     if (code < 0 || code > std::numeric_limits<uint16_t>::max())
     {
         return std::nullopt;

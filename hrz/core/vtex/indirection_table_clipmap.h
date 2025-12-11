@@ -4,15 +4,11 @@
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/core/buffer.h"
-#include "hrz/core/render.h"
 #include "hrz/core/vtex/clipmap_params.h"
 #include "hrz/core/vtex/page_table.h"
 
 #include <lin_maths.h>
 #include <mycelium/backend.h>
-
-#include <span>
-#include <string_view>
 
 namespace hrz::vtex
 {

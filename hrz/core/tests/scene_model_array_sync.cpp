@@ -1,10 +1,8 @@
 #include "hrz/core/scene_model_array_sync.h"
 
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/fnd/defines.h"
-#include "hrz/protocol/all.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/core/scene_path/layer/three_d_tiles_layer_paths.h"
+#include "hrz/protocol/path_builder/layer/three_d_tiles_layer.h"
 
 #include <gtest/gtest.h>
 

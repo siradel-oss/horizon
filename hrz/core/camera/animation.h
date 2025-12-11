@@ -1,9 +1,11 @@
 #pragma once
 
 #include "hrz/core/camera/viewpoint.h"
-#include "hrz/fnd/variant.h"
+#include "hrz/protocol/camera/animation.pb.h"
 
 #include <lin_maths.h>
+
+#include <variant>
 
 namespace hrz::camera
 {

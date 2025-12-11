@@ -1,0 +1,14 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/layer/handle.proto";
+
+message Layer {
+    LayerHandle handle = 1;
+    LayerType   type   = 2;
+    string      name   = 3;
+}
+
+message LayerArray { repeated Layer layers = 1; }

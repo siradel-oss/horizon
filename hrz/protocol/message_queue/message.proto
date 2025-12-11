@@ -1,0 +1,125 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/attribution/message.proto";
+import "hrz/protocol/image.proto";
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/camera/notification.proto";
+import "hrz/protocol/identification/object_reference.proto";
+import "hrz/protocol/identification/picking_ticket.proto";
+import "hrz/protocol/identification/picking_result.proto";
+import "hrz/protocol/identification/raster_data_fetch_ticket.proto";
+import "hrz/protocol/mapbox/result.proto";
+import "hrz/protocol/client_data/asset_request.proto";
+import "hrz/protocol/monitoring/message.proto";
+import "hrz/protocol/identification/mouse_hover.proto";
+import "hrz/protocol/gizmo/message.proto";
+import "hrz/protocol/shape_editor/message.proto";
+import "hrz/protocol/client_data/vector_data_request_message.proto";
+
+message PickResultMessage {
+    PickTicket  ticket  = 1;
+    PickResults results = 2;
+}
+
+message PickAreaResultMessage {
+    PickAreaTicket                ticket = 1;
+    repeated TypedObjectReference refs   = 2;
+}
+
+message RasterDataFetchMessage {
+    RasterDataFetchTicket    ticket  = 1;
+    repeated PickLayerResult results = 2;
+}
+
+message ViewerLoadingProgressMessage {
+    uint32 completed_step_count = 1;
+    uint32 total_step_count     = 2;
+}
+
+// End enums values with `_MESSAGE`, for namespacing and clarity reasons.
+enum MessageType {
+    // @label="Pick message"
+    // @params_field_name="pick"
+    PICK_MESSAGE                    = 0;
+
+    // @label="Vector data request"
+    // @params_field_name="vector_data_request"
+    VECTOR_DATA_REQUEST_MESSAGE     = 2;
+
+    // @label="Mouse hover info"
+    // @params_field_name="mouse_hover_info"
+    MOUSE_HOVER_INFO_MESSAGE        = 3;
+
+    // @label="Pick area message"
+    // @params_field_name="pick_area"
+    PICK_AREA_MESSAGE               = 4;
+
+    // @label="Gizmo update message"
+    // @params_field_name="gizmo_update"
+    GIZMO_UPDATE_MESSAGE            = 5;
+
+    // @label="Shape editor update message"
+    // @params_field_name="shape_editor_update"
+    SHAPE_EDITOR_MESSAGE            = 6;
+
+    // @label="Raster data fetch result message"
+    // @params_field_name="raster_data_fetch"
+    RASTER_DATA_FETCH_MESSAGE       = 7;
+
+    // @label="Frame capture message"
+    // @params_field_name="frame_capture"
+    FRAME_CAPTURE_MESSAGE           = 8;
+
+    // @label="Viewer ready"
+    // @params_field_name="viewer_ready"
+    VIEWER_READY_MESSAGE            = 9;
+
+    // @label="Viewer loading progress"
+    // @params_field_name="viewer_loading_progress"
+    VIEWER_LOADING_PROGRESS_MESSAGE = 10;
+
+    // @label="Monitoring data message"
+    // @params_field_name="monitoring_data"
+    MONITORING_DATA_MESSAGE         = 11;
+
+    // @label="Asset request message"
+    // @params_field_name="asset_request"
+    ASSET_REQUEST_MESSAGE           = 12;
+
+    // @label="Mapbox translation message"
+    // @params_field_name="mapbox_translation"
+    MAPBOX_TRANSLATION_MESSAGE      = 13;
+
+    // @label="Attributions"
+    // @params_field_name="attributions"
+    ATTRIBUTIONS_MESSAGE            = 14;
+
+    // @label="Camera notification"
+    // @params_field_name="camera_notification"
+    CAMERA_NOTIFICATION_MESSAGE     = 15;
+}
+
+message TypedMessage {
+    MessageType type = 1;
+
+    oneof       payload {
+        PickResultMessage            pick                    = 102;
+        VectorDataRequestMessage     vector_data_request     = 103;
+        MouseHoverInfoMessage        mouse_hover_info        = 104;
+        PickAreaResultMessage        pick_area               = 105;
+        GizmoUpdateMessage           gizmo_update            = 106;
+        ShapeEditorMessage           shape_editor_update     = 107;
+        RasterDataFetchMessage       raster_data_fetch       = 108;
+        Image                        frame_capture           = 109;
+        Void                         viewer_ready            = 110;
+        ViewerLoadingProgressMessage viewer_loading_progress = 111;
+        MonitoringDataMessage        monitoring_data         = 112;
+        AssetRequestMessage          asset_request           = 113;
+        MapboxTranslationMessage     mapbox_translation      = 114;
+        AttributionsMessage          attributions            = 115;
+        CameraNotification           camera_notification     = 116;
+    }
+}

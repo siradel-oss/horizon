@@ -1,6 +1,5 @@
 #include "hrz/core/base_url.h"
 
-#include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/url_utils.h"
 
 namespace hrz

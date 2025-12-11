@@ -1,8 +1,6 @@
 #pragma once
 
-#include "hrz/scene_dump/dynamic_message.h"
-
-#include <span>
+#include <cstddef>
 #include <vector>
 
 namespace hrz::migration

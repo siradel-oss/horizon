@@ -1,14 +1,13 @@
+#include "hrz/core/jobs/reproject_raster_tile.h"
+
 #include "hrz/common/crs_database.h"
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/proto_maths.h"
 #include "hrz/common/reprojection.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/log.h"
 
 #include <optional>
@@ -24,7 +23,7 @@ static const int MERCATOR_BORDER_SIZE = ATLAS_TILE_BORDER_SIZE == 0
 static constexpr size_t MaxLevelDifferenceForDownsampling = 2;
 static constexpr size_t MaxRasterTilesPerPlanetTile = 16;
 
-// This is pretty much a copy of SignedTileCoords, except with
+// This is pretty much a copy of TileCoords, except with
 // signed x and y values.
 struct SignedTileCoords
 {
@@ -38,6 +37,12 @@ struct SignedTileCoords
         if (lod == 0) return {0, 0, 0};
 
         return {x / 2, y / 2, (uint8_t)(lod - 1)};
+    }
+
+    template<typename H>
+    friend H AbslHashValue(H h, const SignedTileCoords& tc)
+    {
+        return H::combine(std::move(h), tc.x, tc.y, tc.lod);
     }
 };
 
@@ -53,26 +58,11 @@ struct TileInfos
 };
 } // namespace
 
-namespace std
-{
-template<>
-struct hash<SignedTileCoords>
-{
-    size_t operator()(const SignedTileCoords& v) const noexcept
-    {
-        auto h1(std::hash<int32_t>{}(v.x));
-        auto h2(std::hash<int32_t>{}(v.y));
-        auto h3(std::hash<uint8_t>{}(v.lod));
-        return hrz::hash_mix(hrz::hash_mix(h1, h2), h3);
-    }
-};
-} // namespace std
-
 namespace hrz_jobs::reproject_raster_tile
 {
 void compute_tiled_mercator_reprojection(
-    const hrz::planet::RasterTileReprojParams& params,
-    hrz::planet::ReprojectedTiles& response)
+    const hrz_jobs::RasterTileReprojParams& params,
+    hrz_jobs::ReprojectedTiles& response)
 {
     HRZ_SCOPED_SAMPLE("compute tiled mercator reprojection");
 
@@ -279,7 +269,7 @@ lm::ilbbox2 compute_tile_pixel_bounds(SignedTileCoords coords, const ImageTiling
 }
 
 void select_tiled_image_tiles(
-    const hrz::planet::RasterTileReprojParams& params,
+    const hrz_jobs::RasterTileReprojParams& params,
     const pl_Crs* image_projection_crs,
     const ImageTilingInfo& info,
     hrz::flat_hash_set<SignedTileCoords>& selected_tiles)
@@ -835,11 +825,11 @@ void remove_overlaps(
 }
 
 void project_tiled_image_tiles(
-    const hrz::planet::RasterTileReprojParams& params,
+    const hrz_jobs::RasterTileReprojParams& params,
     const pl_Crs* image_projection_crs,
     const ImageTilingInfo& info,
     const hrz::flat_hash_map<SignedTileCoords, TileSelectionStatus>& status_by_tile,
-    hrz::planet::ReprojectedTiles& response)
+    hrz_jobs::ReprojectedTiles& response)
 {
     HRZ_SCOPED_SAMPLE("project tiled image tiles");
 
@@ -1132,9 +1122,9 @@ void project_tiled_image_tiles(
 }
 
 void compute_tiled_image_reprojection(
-    const hrz::planet::RasterTileReprojParams& params,
+    const hrz_jobs::RasterTileReprojParams& params,
     const pl_Crs* image_projection_crs,
-    hrz::planet::ReprojectedTiles& response)
+    hrz_jobs::ReprojectedTiles& response)
 {
     HRZ_SCOPED_SAMPLE("compute tiled image reprojection");
 
@@ -1186,9 +1176,9 @@ void compute_tiled_image_reprojection(
         params, image_projection_crs, image_tiling_info, status_by_tile, response);
 }
 
-hrz::JobResult run(
-    const hrz::planet::RasterTileReprojParams& params,
-    hrz::planet::ReprojectedTiles& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::RasterTileReprojParams& params,
+    hrz_jobs::ReprojectedTiles& response,
     const JobContext&)
 {
     HRZ_SCOPED_SAMPLE("reproject tile job");
@@ -1201,7 +1191,7 @@ hrz::JobResult run(
 
     pl_Crs param_crs;
     bool convert_success = hrz::convert_crs(raster_geometry.projection, &param_crs);
-    if (!convert_success) return hrz::JobResult::FAILURE;
+    if (!convert_success) return hrz_jobs::JobResult::FAILURE;
 
     const auto tiling_scheme_type = raster_geometry.tiling_scheme.type();
     if (tiling_scheme_type == hrz_proto::TilingSchemeType::GLOBAL
@@ -1226,7 +1216,7 @@ hrz::JobResult run(
         compute_tiled_image_reprojection(params, &param_crs, response);
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::reproject_raster_tile

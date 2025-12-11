@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hrz/core/render.h"
 #include "hrz/core/vtex/indirection_table_clipmap.h"
 #include "hrz/core/vtex/page_table.h"
 
@@ -12,6 +11,7 @@ namespace hrz
 {
 struct BlobAllocator;
 class BlobImage;
+struct Render;
 
 namespace vtex
 {

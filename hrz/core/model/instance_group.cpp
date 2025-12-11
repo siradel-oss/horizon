@@ -1,5 +1,6 @@
 #include "hrz/core/model/instance_group.h"
 
+#include "hrz/common/geo.h"
 #include "hrz/core/model/prototype.h"
 
 namespace hrz::model

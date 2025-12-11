@@ -1,7 +1,11 @@
 #pragma once
 
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/vector/symbol/element.h"
 #include "hrz/fnd/gen_object_pool.h"
+
+#include <mycelium/renderer.h>
 
 namespace hrz::vt::symbol
 {
@@ -75,7 +79,7 @@ private:
 
         my::ResourceHandle ubo = my::ResourceHandle::null();
 
-        SymbolBakingData::LeaderLine baking_params;
+        hrz_jobs::SymbolBakingData::LeaderLine baking_params;
     };
 
     static constexpr hrz_proto::SymbolElementType ElementType =
@@ -125,7 +129,7 @@ private:
 
     PrototypeStatus get_prototype_status(PrototypeH prototype_handle) const override;
 
-    SymbolBakingData::ElementBakingParams get_prototype_baking_params(
+    hrz_jobs::SymbolBakingData::ElementBakingParams get_prototype_baking_params(
         PrototypeH prototype_handle) const override
     {
         if (prototype_handle.type != ElementType)
@@ -148,7 +152,7 @@ private:
         PrototypeH,
         uint64_t layer_id,
         TileCoords tile_coords,
-        BakedSymbols::ElementInstances&& baked_instances,
+        hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
         double bsphere_radius,
         lm::dvec3 bsphere_center,
         my::ResourceHandle tile_ubo,

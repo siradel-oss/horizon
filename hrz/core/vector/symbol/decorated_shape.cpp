@@ -1,8 +1,10 @@
 #include "hrz/core/vector/symbol/decorated_shape.h"
 
 #include "hrz/common/color.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/profiling.h"
+#include "hrz/common/proto_maths.h"
+#include "hrz/core/render/context.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/fnd/mem.h"
 
@@ -326,8 +328,8 @@ ElementSystem::PrototypeStatus DecoratedShapeElementSystem::get_prototype_status
     }
 }
 
-SymbolBakingData::ElementBakingParams DecoratedShapeElementSystem::get_prototype_baking_params(
-    PrototypeH prototype_handle) const
+hrz_jobs::SymbolBakingData::ElementBakingParams DecoratedShapeElementSystem::
+    get_prototype_baking_params(PrototypeH prototype_handle) const
 {
     if (prototype_handle.type != ElementType)
     {
@@ -349,7 +351,7 @@ std::optional<ElementSystem::RenderableH> DecoratedShapeElementSystem::make_rend
     PrototypeH prototype_handle,
     uint64_t layer_id,
     TileCoords tile_coords,
-    BakedSymbols::ElementInstances&& baked_instances,
+    hrz_jobs::BakedSymbols::ElementInstances&& baked_instances,
     double bsphere_radius,
     lm::dvec3 bsphere_center,
     my::ResourceHandle tile_ubo,
@@ -380,8 +382,9 @@ std::optional<ElementSystem::RenderableH> DecoratedShapeElementSystem::make_rend
 
     auto tile_coords_str = fmt::to_string(tile_coords);
 
-    auto instance_blob = std::move(
-        std::get<hrz::BlobArray<BakedSymbols::DecoratedShapeInstance>>(baked_instances.data));
+    auto instance_blob =
+        std::move(std::get<hrz::BlobArray<hrz_jobs::BakedSymbols::DecoratedShapeInstance>>(
+            baked_instances.data));
     auto instance_data = instance_blob.get_data();
 
     my::BufferResource vb_res(my::BufferResource::BufferType::Vertex);
@@ -394,7 +397,7 @@ std::optional<ElementSystem::RenderableH> DecoratedShapeElementSystem::make_rend
         &vb_res, hrz::monitoring::systems::Symbols, layer_id,
         {{"contents"_ss, "placeholder instance data"_ss}, {"tile coords"_ss, tile_coords_str}});
 
-    using DecoratedShapeInstance = BakedSymbols::DecoratedShapeInstance;
+    using DecoratedShapeInstance = hrz_jobs::BakedSymbols::DecoratedShapeInstance;
 
     my::VertexInputStream streams[] = {
         {InMeshPosInputStream, _vertex_data_buffer, my::VertexFormat::Float32_2, 0,

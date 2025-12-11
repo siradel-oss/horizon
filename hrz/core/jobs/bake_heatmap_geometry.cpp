@@ -2,14 +2,10 @@
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/triangulation.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/common/vector_tiles.h"
-#include "hrz/common/vertex_utils.h"
+#include "hrz/common/triangulation.h" // IWYU pragma: keep
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_repr_common.h"
-#include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/string_utils.h"
+#include "hrz/core/jobs/vector_tiles_jobs_params.h"
 
 #include <earcut.hpp>
 
@@ -25,7 +21,7 @@ namespace
 void generate_points_geometry(
     std::span<const lm::dvec3> feature_span,
     hrz::BlobVector<lm::dvec3>& positions,
-    hrz::BlobVector<hrz::vt::HeatmapGeometry::PointInstance>& point_data,
+    hrz::BlobVector<hrz_jobs::HeatmapGeometry::PointInstance>& point_data,
     float value,
     float disc_radius)
 {
@@ -40,9 +36,9 @@ void generate_points_geometry(
 
 } // anonymous namespace
 
-hrz::JobResult run(
-    const hrz::vt::HeatmapData& input,
-    hrz::vt::HeatmapGeometry& geometry,
+hrz_jobs::JobResult run(
+    const hrz_jobs::HeatmapData& input,
+    hrz_jobs::HeatmapGeometry& geometry,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("bake heatmap geometry");
@@ -58,7 +54,7 @@ hrz::JobResult run(
 
     const auto& style = input.style;
 
-    hrz::BlobVector<hrz::vt::HeatmapGeometry::PointInstance> point_vertices(
+    hrz::BlobVector<hrz_jobs::HeatmapGeometry::PointInstance> point_vertices(
         context.get_blob_allocator(), InitialVertexCapacity);
 
     for (const auto& instance : style.instances.get_data())
@@ -100,7 +96,7 @@ hrz::JobResult run(
     auto point_positions_data_opt = point_positions.data();
     if (!point_positions_data_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto point_positions_data = point_positions_data_opt.value();
 
@@ -114,7 +110,7 @@ hrz::JobResult run(
     auto point_vertices_data_opt = point_vertices.data();
     if (!point_vertices_data_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
     auto point_vertices_data = point_vertices_data_opt.value();
 
@@ -122,12 +118,12 @@ hrz::JobResult run(
     hrz::vector_repr::compute_rel_coords(
         {point_positions_data}, bsphere.center,
         {(lm::vec3*)point_vertices_data.data(), point_positions_data.size(),
-         sizeof(hrz::vt::HeatmapGeometry::PointInstance)});
+         sizeof(hrz_jobs::HeatmapGeometry::PointInstance)});
 
     auto point_vertices_array_opt = point_vertices.to_blob_array();
     if (!point_vertices_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     // Finalize
@@ -139,7 +135,7 @@ hrz::JobResult run(
     geometry.point_data.register_blob_owner(
         context.get_blob_allocator(), context.get_resource_owner());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::bake_heatmap_geometry

@@ -9,7 +9,10 @@
 #include <concepts>
 
 #include "hrz/protocol/path_builder_common.h"
-#include "hrz/protocol/path_builder/wrappers.h"
+#include "hrz/protocol/scene_model/path.pb.h"
+{% if filename != "types/wrappers" %}
+#include "hrz/protocol/path_builder/types/wrappers.h"
+{% endif %}
 #include "{{ filename }}.pb.h"
 
 {% for f in dependencies %}

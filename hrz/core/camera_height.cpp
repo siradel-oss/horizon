@@ -6,9 +6,12 @@
 #include "hrz/core/download_buffer_pool.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/planet/geometry.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/common_ubos.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resources.h"
+#include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/shaders/collection.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
 
 #include <lin_maths.h>

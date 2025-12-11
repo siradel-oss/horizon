@@ -1,6 +1,6 @@
 #include "hrz/core/blob_image.h"
 
-#include "hrz/core/render.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/log.h"
 

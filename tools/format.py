@@ -118,7 +118,8 @@ elif mode == "jj":
         if op in ("R", "C"):
             # Change hrz\doc\{doc_internal => doc}\img\impostors.png
             # to hrz\doc\doc\img\impostors.png
-            filename = re.sub(r"\{[^{}]*=>\s*([^{}]+)\}", r"\1", filename)
+            filename = re.sub(r"\{[^{}]*=>\s*([^{}]*)\}", r"\1", filename)
+            filename = str(Path(filename))
 
         ext = os.path.splitext(filename)[1][1:]
         basename = os.path.basename(filename)

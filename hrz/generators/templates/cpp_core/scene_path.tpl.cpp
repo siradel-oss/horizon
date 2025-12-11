@@ -1,4 +1,6 @@
-#include "hrz/core/scene_path/scene_path.h"
+{% for f in protocol.files %}
+#include "hrz/core/scene_path/{{ f.name[13:] }}_paths.h"
+{% endfor %}
 
 #include <utility>
 #include <fmt/format.h>

@@ -287,50 +287,50 @@ hrz_genrule(
 # IDE support
 #
 
-compilation_database(
-    name = "compilation_database_windows",
-    output_base = OUTPUT_BASE,
-    targets = [
-        "//apps/native_client",
-        "//tools/monitoring_client",
+_TESTS = [
+    "//hrz/common:tests",
+    "//hrz/core:tests",
+    "//hrz/core/jobs:tests",
+    "//hrz/core/platform:tests",
+    "//hrz/fnd:tests",
+    "//hrz/http_cache:tests",
+    "//hrz/mapbox:tests",
+    "//hrz/monitoring:tests",
+    "//libs/mycelium:tests",
+    "//libs/proj_lite:tests",
+]
+
+_ALL_BINS = [
+    "//apps/native_client",
+    "//tools/monitoring_client",
+    "//libs/ws:ws_echo_server",
+    "//tools/compress_file_lz4",
+    "//tools/scene_dump:get_dump_version",
+    "//tools/scene_dump:set_dump_version",
+    "//tools/scene_dump:migrate_dump",
+    "//tools/scene_dump:edit_dump",
+    "//apps/web_client:generate_scenes_list",
+    "//tools/visual_testing:viewer",
+    "//tools/visual_testing:comparator",
+] + _TESTS + select({
+    "//:os_windows": [
         "//hrz/core:hrz_core.dll",
-        "//libs/ws:ws_echo_server",
-        "//tools/compress_file_lz4",
-        "//tools/scene_dump:get_dump_version",
-        "//tools/scene_dump:set_dump_version",
-        "//tools/scene_dump:migrate_dump",
-        "//tools/scene_dump:edit_dump",
-        "//apps/web_client:generate_scenes_list",
-        "//tools/visual_testing:viewer",
-        "//tools/visual_testing:comparator",
-        "//:all_tests",
     ],
+    "//:os_linux": [
+        "//hrz/core:hrz_core.so",
+    ],
+    "//conditions:default": [],
+})
+
+compilation_database(
+    name = "compilation_database",
+    output_base = OUTPUT_BASE,
+    targets = _ALL_BINS,
 )
 
 cmakelists(
     name = "cmakelists",
-    targets = [
-        "//apps/native_client",
-        "//tools/monitoring_client",
-        "//libs/ws:ws_echo_server",
-        "//tools/compress_file_lz4",
-        "//tools/scene_dump:get_dump_version",
-        "//tools/scene_dump:set_dump_version",
-        "//tools/scene_dump:migrate_dump",
-        "//tools/scene_dump:edit_dump",
-        "//apps/web_client:generate_scenes_list",
-        "//tools/visual_testing:viewer",
-        "//tools/visual_testing:comparator",
-        "//:all_tests",
-    ] + select({
-        "//:os_windows": [
-            "//hrz/core:hrz_core.dll",
-        ],
-        "//:os_linux": [
-            "//hrz/core:hrz_core.so",
-        ],
-        "//conditions:default": [],
-    }),
+    targets = _ALL_BINS,
 )
 
 prettier_bin.prettier_binary(
@@ -355,16 +355,5 @@ prettier_bin.prettier_binary(
 test_suite(
     name = "all_tests",
     testonly = False,
-    tests = [
-        "//hrz/common:tests",
-        "//hrz/core:tests",
-        "//hrz/core/jobs:tests",
-        "//hrz/core/platform:tests",
-        "//hrz/fnd:tests",
-        "//hrz/http_cache:tests",
-        "//hrz/mapbox:tests",
-        "//hrz/monitoring:tests",
-        "//libs/mycelium:tests",
-        "//libs/proj_lite:tests",
-    ],
+    tests = _TESTS,
 )

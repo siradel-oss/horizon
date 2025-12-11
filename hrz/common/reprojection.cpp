@@ -1,6 +1,6 @@
 #include "hrz/common/reprojection.h"
 
-#include "hrz/common/planet.h"
+#include "hrz/common/planet/tiled_raster_geometry.h"
 #include "hrz/common/proj.h"
 
 namespace hrz

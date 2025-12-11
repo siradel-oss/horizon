@@ -1,0 +1,110 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/layer/handle.proto";
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/types/primitive.proto";
+
+message PathRoot {
+    reserved 200;
+
+    oneof kind {
+        // Points to a [[SingleModelLayer]] message.
+        LayerHandle    single_model_layer            = 1;
+
+        // Points to a [[DtmRasterLayer]] message.
+        LayerHandle    dtm_raster_layer              = 2;
+
+        // Points to an [[ImageryRasterLayer]] message.
+        LayerHandle    imagery_raster_layer          = 3;
+
+        // Points to a [[VectorDataLayer]] message.
+        LayerHandle    vector_data_layer             = 4;
+
+        // Points to a [[VectorTilesLayer]] message.
+        LayerHandle    vector_tiles_layer            = 5;
+
+        // Points to a [[ThreeDTilesLayer]] message.
+        LayerHandle    three_d_tiles_layer           = 6;
+
+        // Points to a [[ClippingPlaneLayer]] message.
+        LayerHandle    clipping_plane_layer          = 7;
+
+        // Points to an [[InMemoryVectorSourceLayer]] message.
+        LayerHandle    in_memory_vector_source_layer = 8;
+
+        // Points to a [[GizmoLayer]] message.
+        LayerHandle    gizmo_layer                   = 9;
+
+        // Points to an [[EditableShapeLayer]] message.
+        LayerHandle    editable_shape_layer          = 10;
+
+        // Points to a single [[SceneSettings]] message.
+        Void           scene_settings                = 100;
+
+        // Points to a [[SceneViewSettings]] message.
+        SceneViewIndex scene_view_settings           = 103;
+
+        // Points to a [[CameraSettings]] message.
+        CameraIndex    camera_settings               = 101;
+    }
+}
+
+// A path is composed of a root and a list of numbers that point to a specific
+// part of the scene model.
+//
+// The root points to a specific tree in the scene model. See [[PathRoot]].
+//
+// To explain the parts array, we will consider the following
+// scene model tree:
+//
+// ```
+// my_layer
+// ├── name (#1)
+// └── palette (#2)
+//     ├── color_space (#1)
+//     └── color_points[] (#2)
+//         ├── [0]
+//         │   ├── r (#1)
+//         │   ├── g (#2)
+//         │   └── b (#3)
+//         └── [1]
+//             ├── r (#1)
+//             ├── g (#2)
+//             └── b (#3)
+// ```
+//
+// In this example, there is a root message with two fields (`name` and
+// `palette`). The palette itself has one field, `color_points`, which is an
+// array of colors. Each color has three fields: `r`, `g`, and `b`.
+//
+// The numbers denoted by a `#` character are the IDs of the fields, described
+// by the Protobuf schema (omitted here).
+//
+// A path is the concatenation of field numbers, starting from the root, that
+// points to a specific field. Examples:
+//
+// - The path to `name` would be `[1]`.
+// - The path to `palette` would be `[2]`.
+// - The path to `palette.color_space` would be `[2, 1]`.
+//
+// Pointing to an entire array (called the root of the array) is done by using
+// the field number of the array. This is used for methods that count or add
+// elements.
+//
+// - The path to `palette.color_points` would be `[2, 2]`.
+//
+// Pointing to a specific element of an array is done by using the field number
+// of the array, and the index of the element in the array. The index is
+// zero-based. The path then continues as normal.
+//
+// - The path to `palette.color_points[0]` would be `[2, 2, 0]`.
+// - The path to `palette.color_points[0].r` would be `[2, 2, 0, 1]`.
+// - The path to `palette.color_points[1].b` would be `[2, 2, 1, 3]`.
+message Path {
+    PathRoot        root  = 1;
+    repeated uint32 parts = 2;
+}

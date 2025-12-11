@@ -3,8 +3,8 @@
 #include "hrz/common/picking_types.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/identification/object_reference.pb.h"
+#include "hrz/protocol/identification/picking_result.pb.h"
 
 #include <lin_maths.h>
 
@@ -31,6 +31,11 @@ struct HeatmapReprRegistry;
 struct SymbolCullingSystem;
 struct AttributionRegistry;
 struct ActorRunner;
+
+namespace scene_model
+{
+class VectorTilesLayerPath;
+}
 
 namespace camera
 {

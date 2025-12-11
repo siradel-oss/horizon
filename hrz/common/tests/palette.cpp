@@ -2,7 +2,6 @@
 
 #include "hrz/common/color.h"
 #include "hrz/fnd/log.h"
-#include "hrz/protocol/all.h"
 
 #include <gtest/gtest.h>
 #include <lin_maths.h>

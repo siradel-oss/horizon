@@ -1,16 +1,14 @@
 #include "hrz/common/blob_allocator.h"
-#include "hrz/common/font_rasterizer.h"
-#include "hrz/common/job_params.h"
-#include "hrz/core/core.h"
 #include "hrz/core/job_scheduler.h"
 #include "hrz/core/jobs/jobs_tickets.h"
+#include "hrz/core/jobs/test_jobs.h"
 
 #include <gtest/gtest.h>
 
 namespace
 {
 using namespace hrz;
-using namespace hrz::test;
+using namespace hrz_jobs;
 
 TEST(JobScheduler, add)
 {

@@ -6,7 +6,7 @@
 #    include <glad/glad.h>
 #endif
 
-#include "mycelium/mycelium.h"
+#include "mycelium/backend.h"
 
 // Not all texture compression formats are available on every GL API
 // (OpenGL, OpenGL ES, WebGL). Because of this, all constants are not

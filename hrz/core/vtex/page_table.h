@@ -4,19 +4,17 @@
 #include "hrz/common/metadata.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/tile_coords.h"
-#include "hrz/core/render.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/hash.h"
 
 #include <mycelium/backend.h>
-
-#include <string_view>
 
 namespace hrz
 {
 struct BlobAllocator;
+struct Render;
+} // namespace hrz
 
-namespace vtex
+namespace hrz::vtex
 {
 class PageTable
 {
@@ -34,6 +32,12 @@ public:
         uint16_t ty;
 
         constexpr bool operator==(const Address& a) const = default;
+
+        template<typename H>
+        friend H AbslHashValue(H h, const Address& a)
+        {
+            return H::combine(std::move(h), a.tx, a.ty);
+        }
     };
 
     static constexpr Address NoAddress = PageTable::Address{0xffff, 0xffff};
@@ -105,19 +109,4 @@ private:
     std::vector<ImageToUpload> _to_upload;
 };
 
-} // namespace vtex
-} // namespace hrz
-
-namespace std
-{
-template<>
-struct hash<hrz::vtex::PageTable::Address>
-{
-    size_t operator()(const hrz::vtex::PageTable::Address& a) const noexcept
-    {
-        size_t h1(std::hash<uint16_t>{}(a.tx));
-        size_t h2(std::hash<uint16_t>{}(a.ty));
-        return hrz::hash_mix(h1, h2);
-    }
-};
-} // namespace std
+} // namespace hrz::vtex

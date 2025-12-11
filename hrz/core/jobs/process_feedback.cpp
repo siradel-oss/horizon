@@ -1,9 +1,9 @@
-#include "hrz/common/blob_allocator.h"
+#include "hrz/core/jobs/process_feedback.h"
+
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/proto_maths.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/flat_hash_map.h"
 
 using namespace hrz;
@@ -55,9 +55,9 @@ TileCoords tile_parent(TileCoords tile, const std::vector<lm::uvec2>& offsets)
     return tile;
 }
 
-hrz::JobResult run(
-    const hrz::planet::FeedbackData& feedback,
-    hrz::planet::TileList& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::FeedbackData& feedback,
+    hrz_jobs::TileList& response,
     const JobContext&)
 {
     hrz::flat_hash_map<TileCoords, uint32_t> usages;
@@ -147,7 +147,7 @@ hrz::JobResult run(
             { return tile_usage_comp(t1.coords, t1.uses, 0, t2.coords, t2.uses, 0); });
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::process_feedback_texture

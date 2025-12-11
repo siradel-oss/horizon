@@ -1,7 +1,9 @@
-#include "hrz/common/attributes.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/three_d_tiles.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/common/vector_data/packed_attribute_values_builder.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
+#include "hrz/core/jobs/three_d_tiles_jobs_params.h"
 #include "hrz/fnd/array_view.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/inlined_vector.h"
@@ -11,7 +13,6 @@
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
-#include <bit>
 #include <cstdint>
 #include <string_view>
 #include <type_traits>
@@ -98,7 +99,7 @@ std::optional<AttributeValues> _convert_attribute_binary_values(
         "Binary-packed attributes should be of arithmetic type");
 
     hrz::ArrayView<const DataType> view((const DataType*)data, count, byte_stride);
-    hrz::vector_data::AttributeValuesBuilder builder(count, blob_allocator, resource_owner);
+    hrz::vector_data::PackedAttributeValuesBuilder builder(count, blob_allocator, resource_owner);
 
     if (transform == hrz_proto::ATTRIBUTE_TRANSFORM_NONE)
     {
@@ -213,7 +214,7 @@ std::optional<hrz::vector_data::AttributeValues> _decode_attribute_values_array(
         return std::nullopt;
     }
 
-    hrz::vector_data::AttributeValuesBuilder builder(
+    hrz::vector_data::PackedAttributeValuesBuilder builder(
         expected_length, blob_allocator, resource_owner);
     bool has_unhandled_types = false;
 
@@ -583,14 +584,14 @@ bool _decode_batch_table_hierarchy(
     // In such cases it is up to the implementation to decide which value
     // to return."
 
-    std::vector<hrz::vector_data::AttributeValuesBuilder> mutable_attributes;
+    std::vector<hrz::vector_data::PackedAttributeValuesBuilder> mutable_attributes;
     mutable_attributes.reserve(attributes.size());
 
     for (size_t i = 0; i < attributes.size(); ++i)
     {
         size_t size = attributes_to_load.contains(i) ? batch_length : 0;
         auto values =
-            hrz::vector_data::AttributeValuesBuilder(size, blob_allocator, resource_owner);
+            hrz::vector_data::PackedAttributeValuesBuilder(size, blob_allocator, resource_owner);
         values.resize(size);
         mutable_attributes.push_back(std::move(values));
     }
@@ -665,9 +666,9 @@ bool _decode_batch_table_hierarchy(
 }
 } // namespace
 
-hrz::JobResult finalize_attributes(
-    const hrz::three_d_tiles::EncodedBatchTable& params,
-    hrz::three_d_tiles::DecodedBatchTable& response,
+hrz_jobs::JobResult finalize_attributes(
+    const hrz_jobs::EncodedBatchTable& params,
+    hrz_jobs::DecodedBatchTable& response,
     const JobContext& context)
 {
     {
@@ -702,7 +703,7 @@ hrz::JobResult finalize_attributes(
             if (!hashes_opt.has_value())
             {
                 HRZ_LOG_ERROR("Could not allocate feature ID hashes");
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
 
             auto feature_ids = hrz::vector_data::FeatureIds::make(
@@ -713,7 +714,7 @@ hrz::JobResult finalize_attributes(
             }
             else
             {
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
         }
     }
@@ -750,7 +751,7 @@ hrz::JobResult finalize_attributes(
                 HRZ_LOG_ERROR(
                     "Could not allocate null attribute values for attribute \"{}\"",
                     attribute.name);
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
 
             // Fill the attribute with null data to still allow styling.
@@ -761,12 +762,12 @@ hrz::JobResult finalize_attributes(
         }
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
-hrz::JobResult run(
-    const hrz::three_d_tiles::EncodedBatchTable& params,
-    hrz::three_d_tiles::DecodedBatchTable& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::EncodedBatchTable& params,
+    hrz_jobs::DecodedBatchTable& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("decode batch table job");
@@ -795,7 +796,7 @@ hrz::JobResult run(
             if (!dummy_value_opt.has_value())
             {
                 HRZ_LOG_ERROR("Could not allocate dummy value");
-                return hrz::JobResult::FAILURE;
+                return hrz_jobs::JobResult::FAILURE;
             }
 
             for (size_t i = 0; i < params.attributes.size(); ++i)
@@ -805,7 +806,7 @@ hrz::JobResult run(
             }
         }
 
-        return hrz::JobResult::SUCCESS;
+        return hrz_jobs::JobResult::SUCCESS;
     }
 
     auto batch_table_json_data = params.json_data.get_data();
@@ -824,13 +825,13 @@ hrz::JobResult run(
         HRZ_LOG_ERROR(
             "Could not parse batch table JSON: {}",
             rapidjson::GetParseError_En(document.GetParseError()));
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     if (!document.IsObject())
     {
         HRZ_LOG_ERROR("Invalid batch table JSON");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     for (const auto& attribute_entry : document.GetObject())

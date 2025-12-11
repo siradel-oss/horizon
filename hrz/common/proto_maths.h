@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hrz/common/maths.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/maths/geometry.pb.h"
+#include "hrz/protocol/maths/maths.pb.h"
 
 #include <lin_maths.h>
 

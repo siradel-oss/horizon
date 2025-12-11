@@ -7,6 +7,7 @@
 #include "internal/conv.h"
 #include "internal/instance.h"
 #include "internal/log.h"
+#include "mycelium/properties.h"
 
 #include <string.h>
 
@@ -14,7 +15,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
-#include <memory>
 #include <span>
 
 namespace my

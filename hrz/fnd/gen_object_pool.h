@@ -4,7 +4,6 @@
 #include "hrz/fnd/defines.h"
 #include "hrz/fnd/gen_index_pool.h"
 
-#include <span>
 #include <stdlib.h>
 
 // This checks that all allocated objects have been released when the stored

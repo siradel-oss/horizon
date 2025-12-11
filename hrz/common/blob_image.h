@@ -5,9 +5,8 @@
 #include "hrz/common/metadata.h"
 #include "hrz/common/platform_detection.h"
 #include "hrz/fnd/log.h"
-#include "hrz/protocol/all.h"
 
-#include <mycelium/mycelium.h>
+#include <mycelium/backend.h>
 #include <mycelium/properties.h>
 
 #include <cassert>

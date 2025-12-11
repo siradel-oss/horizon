@@ -3,7 +3,9 @@
 #include "hrz/core/camera/types.h"
 #include "hrz/core/events.h"
 #include "hrz/core/picking_system.h"
-#include "hrz/core/render.h"
+#include "hrz/core/scene_view_bitset.h"
+#include "hrz/protocol/camera/movement.pb.h"
+#include "hrz/protocol/camera/notification.pb.h"
 
 namespace hrz::camera
 {

@@ -4,7 +4,6 @@
 #include "hrz/fnd/class.h"
 
 #include <cstdint>
-#include <span>
 
 namespace hrz
 {

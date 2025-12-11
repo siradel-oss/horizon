@@ -2,7 +2,8 @@
 
 #include "hrz/core/camera/types.h"
 #include "hrz/fnd/class.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/layer/grid.pb.h"
+#include "hrz/protocol/size_unit.pb.h"
 
 #include <lin_maths.h>
 

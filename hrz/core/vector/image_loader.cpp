@@ -6,12 +6,12 @@
 #include "hrz/core/blob_image.h"
 #include "hrz/core/image_decoder.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_index_pool.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/http.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/static_string.h"
@@ -21,7 +21,9 @@
 #include <utility>
 #include <vector>
 
-namespace hrz::vt::image_loader
+namespace hrz::vt
+{
+namespace image_loader
 {
 struct ImageReference
 {
@@ -32,27 +34,14 @@ struct ImageReference
     {
         return url == other.url && headers.hash_content() == other.headers.hash_content();
     }
-};
-} // namespace hrz::vt::image_loader
 
-namespace std
-{
-template<>
-struct hash<hrz::vt::image_loader::ImageReference>
-{
-    size_t operator()(const hrz::vt::image_loader::ImageReference& ref) const
+    template<typename H>
+    friend H AbslHashValue(H h, const ImageReference& ref)
     {
-        auto str_hash = hash<std::string>{};
-        auto headers_hash = hash<hrz::HttpHeaders>{};
-        return hrz::hash_mix(str_hash(ref.url), headers_hash(ref.headers));
+        return H::combine(std::move(h), ref.url, ref.headers);
     }
 };
-} // namespace std
 
-namespace hrz::vt
-{
-namespace image_loader
-{
 struct Image
 {
     enum class Status
@@ -384,5 +373,6 @@ void work_gpu(ImageLoader* loader, Render* render)
         }
     }
 }
+
 } // namespace image_loader
 } // namespace hrz::vt

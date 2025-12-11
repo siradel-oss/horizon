@@ -4,13 +4,19 @@
 #include "hrz/common/blob_image.h"
 #include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
 #include "hrz/core/buffer.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/debug_draw.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/jobs/jobs_tickets.h"
-#include "hrz/core/render.h"
+#include "hrz/core/jobs/process_feedback.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/profiling.h"
+#include "hrz/core/render/resource_context.h"
+#include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
 #include "hrz/core/sky.h"
@@ -21,8 +27,7 @@
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/static_vector.h"
-#include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 
 #include <float.h>
 
@@ -992,10 +997,10 @@ struct PatchTree
 
         my::ResourceHandle get_for_gpu() const
         {
-            if (_last_flip_frame != hrz::Render::CurrentFrame)
+            if (_last_flip_frame != hrz::clock::CurrentFrameNumber)
             {
                 _current_writable = 1 - _current_writable;
-                _last_flip_frame = hrz::Render::CurrentFrame;
+                _last_flip_frame = hrz::clock::CurrentFrameNumber;
             }
             const auto& texture = _textures[1 - _current_writable];
             assert(!texture.has_dirty_rows());
@@ -2792,7 +2797,7 @@ struct PlanetGeometry
     FeedbackStatus feedback_status = FeedbackStatus::Idle;
     hrz_jobs::ProcessFeedbackTextureTicket feedback_job_ticket;
     bool feedback_requested = false;
-    double last_feedback_start_ms = hrz::now_frame_ms();
+    double last_feedback_start_ms = hrz::clock::CurrentFrameRealTime.ms;
     uint64_t feedback_texture_download_id = 0;
     std::unique_ptr<char[]> last_feedback_data;
     lm::uvec2 last_feedback_size;
@@ -2857,7 +2862,7 @@ struct PlanetGeometry
 
         RenderRequest render_request;
 
-        double now = hrz::now_frame_ms();
+        double now = hrz::clock::CurrentFrameRealTime.ms;
         if (feedback_status == FeedbackStatus::Idle && feedback_requested
             && now - last_feedback_start_ms >= FeedbackDelayMs)
         {
@@ -2979,7 +2984,7 @@ struct PlanetGeometry
 
             assert(feedback_job_ticket.ticket == 0);
 
-            planet::FeedbackData feedback_data;
+            hrz_jobs::FeedbackData feedback_data;
             feedback_data.image = std::move(last_feedback_image);
 
             for (lm::uvec2 offset : clipmap_params->get_offsets())
@@ -3000,7 +3005,7 @@ struct PlanetGeometry
             assert(feedback_status == FeedbackStatus::JobScheduled);
             HRZ_SCOPED_SAMPLE("receive feedback job result");
 
-            planet::TileList response;
+            hrz_jobs::TileList response;
             hrz_jobs::get_job_response(js, feedback_job_ticket, response);
             feedback_job_ticket.ticket = 0;
 
@@ -3034,8 +3039,7 @@ struct PlanetGeometry
                         camera_tile_coords.value(), std::numeric_limits<uint32_t>::max(),
                         planet::TileRequestOrigin::CameraVerticalProjectionOrigin});
                     requested_tiles_hash = hrz::hash_mix(
-                        requested_tiles_hash,
-                        std::hash<hrz::TileCoords>{}(camera_tile_coords.value()));
+                        requested_tiles_hash, hrz::hash_value(camera_tile_coords.value()));
                 }
             }
 
@@ -3048,8 +3052,7 @@ struct PlanetGeometry
 
                 requested_tiles.push_back(
                     planet::RequestedTileCoords{coords, tile.uses, tile.origin});
-                requested_tiles_hash =
-                    hrz::hash_mix(requested_tiles_hash, std::hash<hrz::TileCoords>{}(coords));
+                requested_tiles_hash = hrz::hash_mix(requested_tiles_hash, hrz::hash_value(coords));
             }
 
             requested_tiles_updated = true;

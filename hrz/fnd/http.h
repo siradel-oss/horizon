@@ -3,7 +3,7 @@
 #include "hrz/fnd/arena.h"
 #include "hrz/fnd/class.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/hash.h"
+#include "hrz/fnd/function_ref.h"
 #include "hrz/fnd/int128.h"
 
 #include <optional>
@@ -75,6 +75,12 @@ public:
     uint64_t hash_content() const;
 
     void clear();
+
+    template<typename H>
+    friend H AbslHashValue(H h, const HttpHeaders& headers)
+    {
+        return H::combine(std::move(h), headers.hash_full());
+    }
 };
 
 // The callback is called for each value. Is has as argument the field value
@@ -90,7 +96,7 @@ public:
 void parse_http_header_value(
     std::string_view value,
     char separator,
-    const std::function<bool(std::string_view, std::string_view)>& callback);
+    hrz::function_ref<bool(std::string_view, std::string_view)> callback);
 
 class HttpTime
 {
@@ -148,6 +154,12 @@ struct HttpTicket
     uint64_t o;
 
     constexpr bool operator==(HttpTicket other) const { return o == other.o; }
+
+    template<typename H>
+    friend H AbslHashValue(H h, HttpTicket t)
+    {
+        return H::combine(std::move(h), t.o);
+    }
 };
 
 enum class HttpRequestStatus
@@ -208,21 +220,3 @@ public:
 };
 
 } // namespace hrz
-
-namespace std
-{
-template<>
-struct hash<hrz::HttpHeaders>
-{
-    inline size_t operator()(const hrz::HttpHeaders& k) const
-    {
-        return std::hash<uint64_t>{}(k.hash_full());
-    }
-};
-
-template<>
-struct hash<hrz::HttpTicket>
-{
-    inline size_t operator()(const hrz::HttpTicket& k) const { return std::hash<uint64_t>{}(k.o); }
-};
-} // namespace std

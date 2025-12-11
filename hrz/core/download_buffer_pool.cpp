@@ -1,6 +1,6 @@
 #include "hrz/core/download_buffer_pool.h"
 
-#include "hrz/core/render.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/fnd/maths.h"
 
 namespace hrz

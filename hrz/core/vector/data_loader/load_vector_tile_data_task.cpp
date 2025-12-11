@@ -1,4 +1,4 @@
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/core/vector/data_loader/impl.h"
 #include "hrz/fnd/variant.h"
 
@@ -10,7 +10,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_vector_tile_data_
     const FeatureSelection& feature_selection)
 {
     uint64_t hash = hrz::index_of_variant<decltype(Task::data), Task::LoadVectorTileData>();
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(data_source));
     hash = hrz::hash_mix<uint64_t>(hash, feature_selection.hash());
 
@@ -218,9 +218,9 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorTileD
 
     auto decode_data = [&](TileCoords tile_coords, std::string_view layer_name,
                            AttributionHandle attribution,
-                           const vector_data::VectorDataPackage& package)
+                           const hrz_jobs::VectorDataPackage& package)
     {
-        vector_data::EncodedVectorTile job_params;
+        hrz_jobs::EncodedVectorTile job_params;
         job_params.coords = tile_coords;
         job_params.data = package;
         job_params.layer_name = layer_name;
@@ -234,7 +234,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorTileD
 
             if (attribute.data_source != task_data.data_source) continue;
 
-            vector_data::AttributeModel param_attribute;
+            hrz_jobs::AttributeModel param_attribute;
             param_attribute.id = attribute_id;
             param_attribute.name = attribute.name_in_source;
             param_attribute.is_feature_id = attribute.is_feature_id;

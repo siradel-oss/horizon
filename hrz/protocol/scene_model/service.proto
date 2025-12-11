@@ -1,0 +1,68 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/scene_model/path.proto";
+import "hrz/protocol/types/wrappers.proto";
+import "hrz/protocol/types/primitive.proto";
+
+message SceneModelSet {
+    Path  path    = 1;
+    bytes payload = 2;
+}
+
+// This service provides read and write access to the scene model.
+// It should not be used directly, but instead through the path builders API.
+// This is because there is no type-checking, and payloads are serialized,
+// which means that it is easy to make a mistake and send or receive the wrong
+// message type.
+//
+// Each method is a different access type to the scene model, and uses a path
+// to point to the location in the scene model that should be accessed.
+//
+// The `Get` and `Set` methods cannot operate on an entire array. Use the `Add`
+// and `Remove` methods instead, or mutate a parent message, or a single element
+// of the array.
+//
+// @service_id = 0x463fd4f6
+service SceneModelService {
+    // Retrieves a part of the scene model at the given path.
+    // The returned value is the Protobuf-serialized value, that should
+    // be deserialized using the appropriate message type.
+    //
+    // @method_id=0x1e48af60
+    rpc Get(Path) returns (BytesValue);
+
+    // Sets a part of the scene model at the given path.
+    // The payload is the Protobuf-serialized value, serialized with
+    // the appropriate message type.
+    //
+    // @method_id=0x81c38365
+    rpc Set(SceneModelSet) returns (Void);
+
+    // Adds a new element to an array in the scene model.
+    // The path must point to the root of an array (see the [[Path]]
+    // documentation), and the payload must be the Protobuf-serialized value of
+    // the element, serialized with the appropriate message type. The number of
+    // elements in the array after adding this new element is returned.
+    //
+    // @method_id=0x605469da
+    rpc Add(SceneModelSet) returns (UInt32Value);
+
+    // Removes an element from an array in the scene model.
+    // The path must point to the element in the array to be removed
+    // (see the [[Path]] documentation).
+    // The number of elements in the array after removing this element
+    // is returned.
+    //
+    // @method_id=0x7f555d53
+    rpc Remove(Path) returns (UInt32Value);
+
+    // Counts the number of elements in an array in the scene model.
+    // The path must point to the root of an array (see the [[Path]]
+    // documentation).
+    //
+    // @method_id=0x44987164
+    rpc Count(Path) returns (UInt32Value);
+}

@@ -1,6 +1,6 @@
 #include "hrz/core/jobs/jobs_tickets.h"
 
-#include "hrz/common/job_params.h"
+#include "hrz/core/jobs/all_params_responses.h"
 #include "hrz/common/monitoring_defs.h"
 #include <any>
 

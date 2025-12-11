@@ -5,7 +5,6 @@
 
 #include <lin_maths.h>
 
-#include <functional>
 #include <span>
 
 namespace hrz

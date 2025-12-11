@@ -3,12 +3,11 @@
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/picking_types.h"
-#include "hrz/common/vector_data.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/attribution.h"
 #include "hrz/core/base_url.h"
 #include "hrz/core/model/ubo_defs.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/lighting_settings.h"
 #include "hrz/core/render_request.h"
 #include "hrz/fnd/flat_hash_set.h"
 
@@ -40,6 +39,12 @@
  *  - Impostor baking: like single, but specific to building impostors.
  *  - Batched: used for 3D Tiles where feature IDs are associated per vertex.
  */
+
+namespace HrzProtocol
+{
+class NumericPalette;
+class Material;
+} // namespace HrzProtocol
 
 namespace hrz
 {
@@ -172,9 +177,12 @@ struct ModelMaterialH
     uint64_t o;
 };
 
-ModelMaterialH create_model_material(ModelPrototype*, const hrz_proto::Material&);
+ModelMaterialH create_model_material(ModelPrototype*, const HrzProtocol::Material&);
 void destroy(ModelPrototype*, ModelMaterialH);
-void update_data_texture_palette(ModelPrototype*, ModelMaterialH, const hrz_proto::NumericPalette&);
+void update_data_texture_palette(
+    ModelPrototype*,
+    ModelMaterialH,
+    const HrzProtocol::NumericPalette&);
 
 struct InstanceGroupData
 {

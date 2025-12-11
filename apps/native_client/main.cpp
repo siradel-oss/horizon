@@ -1,6 +1,7 @@
 #include "hrz/core/backend.h"
-#include "hrz/protocol/all.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/layer/defs.pb.h"
+#include "hrz/protocol/mapbox/service.pb.h"
+#include "hrz/protocol/scene_dump/service.pb.h"
 #include "hrz/protocol/scene_model_version.h"
 #include "hrz/scene_dump/migration.h"
 
@@ -112,7 +113,7 @@ int main(int argc, char* argv[])
     arg.type = argparser::ArgType::Int;
     arg.required = false;
     arg.has_default = true;
-    arg.default_int = (int)hrz_proto::GraphicsLevelAuto;
+    arg.default_int = (int)hrz_proto::GRAPHICS_LEVEL_AUTO;
     argparser::add_argument(arg_parser, arg);
 
     arg.name = "force-render";

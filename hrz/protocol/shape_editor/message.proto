@@ -1,0 +1,23 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/shape_editor/defs.proto";
+
+enum ShapeEditorUpdateType {
+    MODE_SWITCH             = 0;
+    SHAPE_SELECTION         = 1;
+    CONTROL_POINT_SELECTION = 2;
+    SHAPE_GEOMETRY_UPDATE   = 3;
+}
+
+message ShapeEditorMessage {
+    ShapeEditorUpdateType type = 1;
+
+    oneof                 payload {
+        ShapeEditorMode       mode          = 101;
+        ShapeSelection        shape         = 102;
+        ControlPointSelection control_point = 103;
+    }
+}

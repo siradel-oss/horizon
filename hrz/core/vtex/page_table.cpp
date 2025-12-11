@@ -2,7 +2,8 @@
 
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/profiling.h"
-#include "hrz/fnd/time.h"
+#include "hrz/core/clock.h"
+#include "hrz/core/render/context.h"
 
 namespace hrz::vtex
 {
@@ -145,7 +146,7 @@ PageTable::UploadResult PageTable::upload_page(BlobImage&& img, TileCoords tile)
         {
             uint32_t pid = page_id(page_address);
             Page& page = _pages[pid];
-            page.last_touch_time = now_frame_ms();
+            page.last_touch_time = hrz::clock::CurrentFrameRealTime.ms;
 
             _to_upload.push_back(ImageToUpload{
                 std::move(img), (int)(page_address.tx * _page_size),
@@ -172,7 +173,7 @@ PageTable::UploadResult PageTable::upload_page(BlobImage&& img, TileCoords tile)
     Page& page = _pages[pid];
     page.occupied = true;
     page.tile = tile;
-    page.last_touch_time = now_frame_ms();
+    page.last_touch_time = hrz::clock::CurrentFrameRealTime.ms;
 
     _page_order.push_back(page_address);
 
@@ -209,7 +210,7 @@ void PageTable::touch(Address address)
     uint32_t pid = page_id(address);
     if (pid < _pages.size())
     {
-        _pages[pid].last_touch_time = now_frame_ms();
+        _pages[pid].last_touch_time = hrz::clock::CurrentFrameRealTime.ms;
     }
 }
 

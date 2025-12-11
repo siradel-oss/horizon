@@ -1,0 +1,22 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+// @path_leaf="true"
+message HttpHeader {
+    string name  = 1;
+    string value = 2;
+}
+
+message HttpHeaderList {
+    // A URL with different headers doesn't necessarily return the same data.
+    // However, Horizon adopts the strategy of not reloading data already
+    // downloaded when HTTP headers change. Only subsequent requests will use
+    // the new HTTP headers. This is true for every layer and system. When a
+    // reloading of all the data with new HTTP headers is required, one can
+    // simply perform an update of the scene model on a part that forces a data
+    // re-download. This can be, for instance, updating the URL that indicates
+    // where data must be fetched without actually changing it.
+    repeated HttpHeader headers = 1;
+}

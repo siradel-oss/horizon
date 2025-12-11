@@ -1,6 +1,8 @@
 #include "hrz/core/vtex/indirection_table_clipmap.h"
 
 #include "hrz/common/profiling.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/resource_context.h"
 
 namespace hrz::vtex
 {

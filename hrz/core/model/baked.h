@@ -4,6 +4,7 @@
 #include "hrz/core/model/geometry.h"
 #include "hrz/core/model/instance_group.h"
 #include "hrz/core/model/material.h"
+#include "hrz/fnd/observed.h"
 
 namespace hrz::model
 {

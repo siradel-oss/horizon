@@ -1,11 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
-
-#include <memory>
-#include <optional>
-#include <string>
-#include <string_view>
+#include "hrz/protocol/mapbox/service.pb.h"
 
 namespace hrz
 {

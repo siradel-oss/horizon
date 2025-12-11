@@ -1,8 +1,7 @@
 #pragma once
 
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/protocol/all.h"
+#include "hrz/fnd/function_ref.h"
 
 namespace hrz::scene_model
 {
@@ -300,7 +299,7 @@ public:
 
     // The callback must return the element count in the mirror array after the
     // command has been executed. This is used to ensure consistency.
-    void synchronize(std::function<size_t(const Command&)> callback)
+    void synchronize(hrz::function_ref<size_t(const Command&)> callback)
     {
         if (_rebuild_all)
         {

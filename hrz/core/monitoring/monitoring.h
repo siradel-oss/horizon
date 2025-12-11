@@ -6,18 +6,14 @@
 #include "hrz/common/monitoring_resource_sorter.h"
 #include "hrz/common/ui_utils.h"
 #include "hrz/core/monitoring/gpu.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/profiling.h"
 #include "hrz/core/render_request.h"
-#include "hrz/core/scene.h"
-#include "hrz/fnd/defines.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
-#include "hrz/fnd/hash.h"
 #include "hrz/fnd/inlined_vector.h"
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/viewer/options.pb.h"
 
 #include <fmt/format.h>
-#include <mycelium/mycelium.h>
 
 #include <optional>
 #include <utility>
@@ -36,6 +32,7 @@ struct MessageBuffer;
 namespace hrz
 {
 struct RemoteMonitoring;
+struct JobScheduler;
 
 class Monitoring : public monitoring::GpuResourceMonitoring
 {

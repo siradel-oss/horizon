@@ -5,8 +5,6 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/metrics.h"
 #include "hrz/core/assets_loader/assets_loader.h"
-#include "hrz/core/image_decoder.h"
-#include "hrz/core/job_scheduler.h"
 #include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/tile_url_generator.h"
@@ -14,11 +12,8 @@
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/string_utils.h"
-#include "hrz/fnd/variant.h"
 
 #include <bit>
-#include <span>
 
 namespace hrz::planet
 {

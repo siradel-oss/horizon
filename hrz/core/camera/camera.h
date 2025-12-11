@@ -2,9 +2,14 @@
 
 #include "hrz/common/geo.h"
 #include "hrz/core/camera/types.h"
-#include "hrz/core/render.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/core/scene_path/camera/settings_paths.h"
+#include "hrz/core/scene_view_bitset.h"
+#include "hrz/protocol/camera/movement.pb.h"
+#include "hrz/protocol/camera/notification.pb.h"
+#include "hrz/protocol/camera/service.pb.h"
+#include "hrz/protocol/camera/transitions.pb.h"
+#include "hrz/protocol/camera/viewpoints.pb.h"
 
 struct mu_Context;
 
@@ -13,8 +18,9 @@ namespace hrz
 struct PlanetSurface;
 struct PickingSystem;
 struct ViewportEvent;
+} // namespace hrz
 
-namespace camera
+namespace hrz::camera
 {
 class Camera
 {
@@ -98,5 +104,4 @@ Camera* create(
 
 void destroy(Camera*);
 
-} // namespace camera
-} // namespace hrz
+} // namespace hrz::camera

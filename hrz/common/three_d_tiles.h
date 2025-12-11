@@ -1,19 +1,19 @@
 #pragma once
 
-#include "hrz/common/blob_allocator.h"
 #include "hrz/common/geo.h"
 #include "hrz/common/maths.h"
-#include "hrz/common/vector_data.h"
-#include "hrz/fnd/variant.h"
+#include "hrz/protocol/attributes/transform.pb.h"
 
 #include <lin_maths.h>
 
 #include <optional>
 #include <span>
 #include <string>
+#include <variant>
 
 namespace hrz::three_d_tiles
 {
+
 enum class RefinementType
 {
     ADD,
@@ -89,13 +89,6 @@ size_t compute_hash(const BoundingVolume& volume);
 // This cannot always be computed, in which case the volume cannot be occluded by the horizon.
 std::optional<lm::dvec3> compute_horizon_occlusion_point(const BoundingVolume& volume);
 
-struct EncodedThreeDTilesTileset
-{
-    hrz::blobs::BlobHandle raw_json;
-    lm::dmat4 transform;
-    uint32_t root_depth;
-};
-
 struct ThreeDTilesTilesetDescriptor
 {
     // SIRADEL_range_request extension
@@ -104,6 +97,12 @@ struct ThreeDTilesTilesetDescriptor
         uint64_t offset;
         uint64_t length;
         std::optional<std::string> mime_type;
+
+        template<typename H>
+        friend H AbslHashValue(H h, const Range& range)
+        {
+            return H::combine(std::move(h), range.offset, range.length, range.mime_type);
+        }
     };
 
     struct Tile
@@ -214,31 +213,6 @@ struct AttributeConfig
     }
 };
 
-struct EncodedBatchTable
-{
-    uint32_t batch_length;
-    hrz::blobs::BlobHandle json_data;
-    hrz::blobs::BlobHandle bin_data;
-    std::vector<AttributeConfig> attributes;
-};
-
-struct DecodedBatchTable
-{
-    hrz::vector_data::FeatureIds batches_to_feature_ids;
-    std::vector<std::optional<hrz::vector_data::AttributeValues>> attribute_values;
-};
-
 std::optional<AttributeComponentType> component_type_from_string(std::string_view str);
-} // namespace hrz::three_d_tiles
 
-namespace std
-{
-template<>
-struct hash<hrz::three_d_tiles::ThreeDTilesTilesetDescriptor::Range>
-{
-    size_t operator()(const hrz::three_d_tiles::ThreeDTilesTilesetDescriptor::Range& range) const
-    {
-        return hrz::hash_values(range.length, range.offset, range.mime_type);
-    }
-};
-} // namespace std
+} // namespace hrz::three_d_tiles

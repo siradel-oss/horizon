@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hrz/protocol/all.h"
+#include "hrz/protocol/raster/tiling_scheme.pb.h"
 
 #include <lin_maths.h>
 

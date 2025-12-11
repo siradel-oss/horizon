@@ -1,0 +1,39 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/vector/data_source.proto";
+
+// @path_root="vector_data_layer"
+message VectorDataLayer {
+    reserved 3, 4, 5;
+
+    uint32                    id               = 1;
+
+    // Sources of vector data, that are combined to make up the layer's data.
+    // The first source is the primary source, and the others are secondary.
+    // The primary source defines the number and order of features. Data from
+    // secondary sources is joined to data from the primary source, and adapted
+    // if needed to match the primary source.
+    // Data can be joined in two ways:
+    //
+    // * The simplest way is to take geometries and attribute values in the
+    //   order they come from. Features from secondary sources can be deleted
+    //   if there are more in the secondary source than in the primary source.
+    //   Default (empty) features can be added if the secondary source has fewer
+    //   features than the primary source.
+    // * If both the primary and secondary sources have features IDs, data from
+    //   the secondary source can be reordered to match the primary source.
+    //   Features from the secondary source can be discarded if they have no
+    //   matching feature in the primary source, and default (empty) features
+    //   can be added if some features from the primary source have no matching
+    //   feature in the secondary source.
+    //   Feature IDs must be defined with the same attributes in both primary
+    //   and secondary sources, for joins by feature ID to be possible. When
+    //   this condition is met, joins by feature ID are automatically used.
+    repeated VectorDataSource sources          = 2;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32                     loading_priority = 6;
+}

@@ -1,7 +1,5 @@
 #include "hrz/common/crs_database.h"
 
-#include "hrz/protocol/all.h"
-
 #include <gtest/gtest.h>
 #include <proj_lite.h>
 

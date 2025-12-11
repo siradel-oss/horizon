@@ -1,4 +1,5 @@
-#include "hrz/common/vector_data.h"
+#include "hrz/common/vector_data/attribute_type_owned.h"
+#include "hrz/common/vector_data/feature_id.h"
 
 #include <gtest/gtest.h>
 

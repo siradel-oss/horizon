@@ -2,9 +2,6 @@
 
 #include "hrz/common/maths.h"
 #include "hrz/common/proto_geo.h"
-#include "hrz/core/debug_draw.h"
-#include "hrz/fnd/log.h"
-#include "hrz/fnd/static_vector.h"
 
 namespace hrz::camera
 {

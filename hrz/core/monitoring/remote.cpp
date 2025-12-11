@@ -3,14 +3,12 @@
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/metrics.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/client_message_queue.h"
 #include "hrz/core/client_messages.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/monitoring/monitoring.h"
 #include "hrz/core/version.h"
-#include "hrz/fnd/defines.h"
-#include "hrz/fnd/log.h"
-#include "hrz/fnd/time.h"
 #include "hrz/monitoring/monitoring.h"
+#include "hrz/protocol/monitoring/message.pb.h"
 
 #include <fmt/chrono.h>
 #include <string.h>
@@ -64,7 +62,7 @@ struct RemoteMonitoring : public ws::ClientHandler
     char _address_buffer[128] = "ws://127.0.0.1:8500";
 
     static constexpr double SEND_MESSAGES_INTERVAL_MS = 1000.0;
-    double _last_send_messages_ms = hrz::now_frame_ms();
+    double _last_send_messages_ms = hrz::clock::CurrentFrameRealTime.ms;
 
     bool _gpu_resources_snapshot_requested = false;
     bool _blob_snapshot_requested = false;
@@ -220,7 +218,7 @@ struct RemoteMonitoring : public ws::ClientHandler
     {
         assert(_status == Status::Connected);
 
-        double now = hrz::now_frame_ms();
+        double now = hrz::clock::CurrentFrameRealTime.ms;
         bool force_send_now = false;
 
         if (!_thread_names_dumped)

@@ -1,26 +1,22 @@
 #include "hrz/core/vector/in_memory.h"
 
-#include "hrz/common/attributes.h"
 #include "hrz/common/blob_allocator.h"
-#include "hrz/common/color.h"
 #include "hrz/common/crs_database.h"
 #include "hrz/common/geo.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/proto_maths.h"
-#include "hrz/common/tickets.h"
+#include "hrz/common/vector_data/attribute_type_in_memory.h" // IWYU pragma: keep
+#include "hrz/common/vector_data/attributes_ops.h"
+#include "hrz/common/vector_data/geometry_utils.h"
 #include "hrz/core/channel_group.h"
+#include "hrz/core/scene_path/layer/in_memory_vector_source_layer_paths.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/hash.h"
-#include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/meta.h"
 #include "hrz/fnd/node_hash_map.h"
 #include "hrz/fnd/thread.h"
-#include "hrz/fnd/variant.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/in_memory_vector_source_layer.h"
 
 #include <lin_maths.h>
 
@@ -29,6 +25,7 @@
 #include <functional>
 #include <limits>
 #include <mutex>
+#include <variant>
 #include <vector>
 
 namespace hrz

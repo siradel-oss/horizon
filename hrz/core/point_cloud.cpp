@@ -1,13 +1,15 @@
 #include "hrz/core/point_cloud.h"
 
 #include "hrz/common/geo.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/data_texture.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/vertex_input_builder.h"
 #include "hrz/core/selection_storage.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/core/shadows.h"
 #include "hrz/core/sky.h"
 #include "hrz/core/viewsheds.h"
-#include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/static_vector.h"
 
@@ -300,10 +302,10 @@ public:
 
     void draw(hrz::Render* render, hrz::SceneViewBitset scene_views) override
     {
-        if (_last_frame_common_resources_queued < hrz::Render::CurrentFrame)
+        if (_last_frame_common_resources_queued < hrz::clock::CurrentFrameNumber)
         {
             _queued_common_resources = render->rd->as_queue().write(_common_resources.value());
-            _last_frame_common_resources_queued = hrz::Render::CurrentFrame;
+            _last_frame_common_resources_queued = hrz::clock::CurrentFrameNumber;
         }
 
         _renderable.render_data.common = _queued_common_resources;

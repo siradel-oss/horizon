@@ -1,10 +1,6 @@
 #include "hrz/common/metrics.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/assets_loader/http_platform.h"
-#include "hrz/core/resources/resources.h"
-#include "hrz/core/version.h"
-#include "hrz/fnd/char_utils.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/log.h"
@@ -12,7 +8,6 @@
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/url_utils.h"
-#include "hrz/fnd/variant.h"
 #include "hrz/http_cache/http_cache.h"
 
 #include <optional>

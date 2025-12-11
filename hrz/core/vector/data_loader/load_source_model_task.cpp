@@ -9,7 +9,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_source_model_task
     uint32_t data_source)
 {
     uint64_t hash = hrz::index_of_variant<decltype(Task::data), Task::LoadSourceModel>();
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(data_source));
 
     auto it = tasks_by_hash.find(hash);

@@ -12,7 +12,7 @@
 
 bool hrz::decompress_gzip(
     std::span<const std::byte> compressed,
-    const std::function<void(std::span<const std::byte>)>& callback)
+    hrz::function_ref<void(std::span<const std::byte>)> callback)
 {
     z_stream stream{};
     stream.next_in = (Bytef*)compressed.data();
@@ -76,7 +76,7 @@ bool hrz::decompress_zlib_uncompress(
 
 bool hrz::decompress_brotli(
     std::span<const std::byte> compressed,
-    const std::function<void(std::span<const std::byte>)>& callback)
+    hrz::function_ref<void(std::span<const std::byte>)> callback)
 {
     std::unique_ptr<BrotliDecoderState, decltype(BrotliDecoderDestroyInstance)*> decoder_state(
         BrotliDecoderCreateInstance(nullptr, nullptr, nullptr), &BrotliDecoderDestroyInstance);
@@ -119,7 +119,7 @@ bool hrz::decompress_brotli(
 
 bool hrz::decompress_zstd(
     std::span<const std::byte> compressed,
-    const std::function<void(std::span<const std::byte>)>& callback)
+    hrz::function_ref<void(std::span<const std::byte>)> callback)
 {
     // Decompress zstd stream using streaming.
     std::unique_ptr<ZSTD_DStream, decltype(ZSTD_freeDStream)*> stream(

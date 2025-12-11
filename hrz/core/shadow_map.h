@@ -1,6 +1,9 @@
 #pragma once
 
-#include "hrz/core/render.h"
+#include "hrz/core/render/common_ubos.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/timed_render_pass.h"
 
 namespace hrz::shadow_map
 {

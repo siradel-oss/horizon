@@ -1,8 +1,8 @@
 #include "hrz/core/gestures.h"
 
-#include "hrz/fnd/defines.h"
+#include "hrz/core/clock.h"
+#include "hrz/fnd/defines.h" // IWYU pragma: keep
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/time.h"
 
 #include <cassert>
 #include <deque>
@@ -108,7 +108,7 @@ void on_touch_start(GestureSystem* system, const platform::Event& event)
             // End the single finger
             auto& single_finger_gesture = std::get<SingleFingerGesture>(gesture->gesture);
             single_finger_gesture.status = GestureStatus::Ended;
-            gesture->end_time_ms = hrz::now_frame_ms();
+            gesture->end_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
             system->events.push_back({Event::Kind::End, single_finger_gesture});
 
@@ -132,7 +132,7 @@ void on_touch_start(GestureSystem* system, const platform::Event& event)
             two_finger_gesture.status = GestureStatus::Ongoing;
             new_gesture->gesture = two_finger_gesture;
 
-            new_gesture->start_time_ms = hrz::now_frame_ms();
+            new_gesture->start_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
             system->gestures.insert(new_gesture_id);
 
@@ -159,7 +159,7 @@ void on_touch_start(GestureSystem* system, const platform::Event& event)
     single_finger_gesture.status = GestureStatus::Ongoing;
     gesture->gesture = single_finger_gesture;
 
-    gesture->start_time_ms = hrz::now_frame_ms();
+    gesture->start_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
     system->gestures.insert(gesture_id);
 
@@ -181,7 +181,7 @@ void on_touch_end(GestureSystem* system, const platform::Event& event)
                 // End gesture
                 auto& single_finger_gesture = std::get<SingleFingerGesture>(gesture->gesture);
                 single_finger_gesture.status = GestureStatus::Ended;
-                gesture->end_time_ms = hrz::now_frame_ms();
+                gesture->end_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
                 // Browsers emit click events alongside pointer events. This is not programatically
                 // preventable. We rely almost uniquely on pointer events to avoid having duplicates
@@ -253,7 +253,7 @@ void on_touch_end(GestureSystem* system, const platform::Event& event)
                 // End gesture, but create a new one-finger gesture for the remaining finger
                 auto& two_finger_gesture = std::get<TwoFingerGesture>(gesture->gesture);
                 two_finger_gesture.status = GestureStatus::Ended;
-                gesture->end_time_ms = hrz::now_frame_ms();
+                gesture->end_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
                 system->events.push_back({Event::Kind::End, two_finger_gesture});
 
@@ -278,7 +278,7 @@ void on_touch_end(GestureSystem* system, const platform::Event& event)
                 single_finger_gesture.status = GestureStatus::Ongoing;
                 new_gesture->gesture = single_finger_gesture;
 
-                new_gesture->start_time_ms = hrz::now_frame_ms();
+                new_gesture->start_time_ms = hrz::clock::CurrentFrameRealTime.ms;
 
                 system->gestures.insert(new_gesture_id);
 
@@ -433,7 +433,7 @@ void remove_ended_gestures(GestureSystem* system)
 {
     assert(system);
 
-    auto now = hrz::now_frame_ms();
+    auto now = hrz::clock::CurrentFrameRealTime.ms;
 
     std::erase_if(
         system->gestures,

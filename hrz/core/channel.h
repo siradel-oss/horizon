@@ -4,11 +4,9 @@
 #include "hrz/fnd/defines.h"
 #include "hrz/fnd/thread.h"
 
-#include <atomic>
 #include <cassert>
 #include <deque>
 #include <mutex>
-#include <optional>
 #include <utility>
 
 namespace hrz

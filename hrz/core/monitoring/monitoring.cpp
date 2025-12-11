@@ -4,18 +4,15 @@
 #include "hrz/common/monitoring_resource_sorter.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/ui_utils.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/job_scheduler.h"
 #include "hrz/core/monitoring/remote.h"
-#include "hrz/core/render.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/mem.h"
-#include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/time.h"
 #include "hrz/monitoring/monitoring.h"
-
-#include <mycelium/mycelium.h>
 
 #if HRZ_LINUX || HRZ_EMSCRIPTEN
 #    include <malloc.h>
@@ -1013,7 +1010,7 @@ void Monitoring::dump_gpu_resources(
     auto* msgs = PbArena::Create<hrz_monitoring::MonitoringMessages>(&arena);
     auto* msg = msgs->add_messages();
     auto* snapshot = msg->mutable_gpu_resources();
-    snapshot->set_timestamp(hrz::now_frame_us_s64());
+    snapshot->set_timestamp(hrz::clock::CurrentFrameRealTime.us_s64);
 
     hrz::flat_hash_map<GpuResourceBucketKey, hrz_monitoring::GpuResourcesBucket*> buckets_index;
 

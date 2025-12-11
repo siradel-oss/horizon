@@ -11,6 +11,7 @@
 #include "hrz/core/camera/camera.h"
 #include "hrz/core/client_messages.h"
 #include "hrz/core/clipping_plane_layers.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/debug_draw.h"
 #include "hrz/core/events.h"
 #include "hrz/core/gizmo_layers.h"
@@ -19,11 +20,27 @@
 #include "hrz/core/planet/geometry.h"
 #include "hrz/core/planet/surface.h"
 #include "hrz/core/platform/platform.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/profiling.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/core/scene_path/camera/settings_paths.h"
+#include "hrz/core/scene_path/layer/clipping_plane_layer_paths.h"
+#include "hrz/core/scene_path/layer/dtm_raster_layer_paths.h"
+#include "hrz/core/scene_path/layer/editable_shape_layer_paths.h"
+#include "hrz/core/scene_path/layer/gizmo_layer_paths.h"
+#include "hrz/core/scene_path/layer/imagery_raster_layer_paths.h"
+#include "hrz/core/scene_path/layer/in_memory_vector_source_layer_paths.h"
+#include "hrz/core/scene_path/layer/single_model_layer_paths.h"
+#include "hrz/core/scene_path/layer/three_d_tiles_layer_paths.h"
+#include "hrz/core/scene_path/layer/vector_data_layer_paths.h"
+#include "hrz/core/scene_path/layer/vector_tiles_layer_paths.h"
+#include "hrz/core/scene_path/scene/settings_paths.h"
+#include "hrz/core/scene_path/scene/view_settings_paths.h"
 #include "hrz/core/scene_view.h"
+#include "hrz/core/scene_view_bitset.h"
 #include "hrz/core/selection.h"
 #include "hrz/core/shape_editor.h"
 #include "hrz/core/single_model_layers.h"
@@ -35,12 +52,24 @@
 #include "hrz/core/vector/symbol/culling.h"
 #include "hrz/core/vector/tiles_layers.h"
 #include "hrz/fnd/flat_hash_map.h"
-#include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/gen_object_pool.h"
+#include "hrz/fnd/hash.h"
 #include "hrz/fnd/string_utils.h"
-#include "hrz/fnd/time.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/attribution/message.pb.h"
+#include "hrz/protocol/path_builder/camera/settings.h"
+#include "hrz/protocol/path_builder/layer/clipping_plane_layer.h"
+#include "hrz/protocol/path_builder/layer/dtm_raster_layer.h"
+#include "hrz/protocol/path_builder/layer/editable_shape_layer.h"
+#include "hrz/protocol/path_builder/layer/gizmo_layer.h"
+#include "hrz/protocol/path_builder/layer/imagery_raster_layer.h"
+#include "hrz/protocol/path_builder/layer/in_memory_vector_source_layer.h"
+#include "hrz/protocol/path_builder/layer/single_model_layer.h"
+#include "hrz/protocol/path_builder/layer/three_d_tiles_layer.h"
+#include "hrz/protocol/path_builder/layer/vector_data_layer.h"
+#include "hrz/protocol/path_builder/layer/vector_tiles_layer.h"
+#include "hrz/protocol/path_builder/scene/settings.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 #include "hrz/protocol/scene_model_version.h"
 
 #include <limits>
@@ -61,6 +90,7 @@ enum
     DEV_UI_LOG_SIZE = 64,
     SCENE_MODEL_MAX_LOG_LINE_LENGTH = 256,
     CAMERA_NOTIFICATION_MAX_LOG_LINE_LENGTH = 128,
+    CAMERA_COUNT = hrz_proto::CameraIndex_ARRAYSIZE,
 };
 
 #define LOG_INVALID_SCENE_VIEW_INDEX(index)                                               \
@@ -700,7 +730,7 @@ void add_scene_model_log_line_raw(Scene* scene, std::string_view line)
 {
     auto& logs = scene->scene_model_logs;
 
-    const double since_epoch = hrz::now_frame_ms() / 1000.0;
+    const double since_epoch = hrz::clock::CurrentFrameRealTime.ms / 1000.0;
     const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
     const int minutes = (int)std::floor(since_epoch / 60.0);
     const int seconds = (int)std::floor(since_epoch) - 60 * minutes;
@@ -834,9 +864,13 @@ Scene* create(
     const my::Instance::Info& my_instance_info,
     AssetsLoader* al)
 {
-    hrz_proto::SceneSettings scene_settings = default_scene_settings();
-    hrz_proto::SceneViewSettings scene_view_settings = default_scene_view_settings();
-    hrz_proto::CameraSettings camera_settings = default_camera_settings();
+    hrz_proto::SceneSettings scene_settings;
+    hrz_proto::SceneViewSettings scene_view_settings;
+    hrz_proto::CameraSettings camera_settings;
+
+    default_scene_settings(&scene_settings);
+    default_scene_view_settings(&scene_view_settings);
+    default_camera_settings(&camera_settings);
 
     auto scene = new Scene();
     scene->picking_id_allocator = hrz::picking::create_id_allocator();
@@ -1229,7 +1263,7 @@ void add_camera_notification_log_line(
 {
     auto& logs = scene->camera_notification_logs;
 
-    const double since_epoch = hrz::now_frame_s();
+    const double since_epoch = hrz::clock::CurrentFrameRealTime.s;
     const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
     const int minutes = (int)(since_epoch / 60.0);
     const int seconds = (int)since_epoch - 60 * minutes;
@@ -1284,7 +1318,7 @@ void work(
                                 .camera()
                                 .get();
 
-        if (camera_index >= 0 && (size_t)camera_index < hrz::CAMERA_COUNT)
+        if (camera_index >= 0 && (size_t)camera_index < CAMERA_COUNT)
         {
             view_to_camera_index[view.first] = camera_index;
         }

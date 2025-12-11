@@ -1,4 +1,5 @@
 #include "hrz/core/vector/data_loader/impl.h"
+#include "hrz/fnd/log.h"
 #include "hrz/fnd/variant.h"
 
 namespace hrz
@@ -150,7 +151,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataU
             if (hrz_jobs::get_job_status(js, task_data.parse_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::vector_data::ParsedMvt parsed_mvt;
+                hrz_jobs::ParsedMvt parsed_mvt;
                 hrz_jobs::get_job_response(js, task_data.parse_ticket, parsed_mvt);
 
                 task_data.package = {

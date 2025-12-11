@@ -1,0 +1,14 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/attributes/attribute.proto";
+
+message FeatureId {
+    reserved 1;
+
+    repeated FeatureAttributeValue attributes = 2;
+}
+
+message FeatureIds { repeated FeatureId feature_ids = 1; }

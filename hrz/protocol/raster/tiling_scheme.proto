@@ -1,0 +1,66 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+enum TilingSchemeType {
+    // No tiling (e.g. single images).
+    UNTILED = 0;
+
+    // Tiling is relative to the given bounds.
+    LOCAL   = 1;
+
+    // Tiling uses the full extent of the projection domain.
+    GLOBAL  = 2;
+}
+
+enum BorderTileAspect {
+    // All the tiles are `tile_size`x`tile_size`, even if it
+    // makes them go outside the bounds of the raster.
+    FULL_SIZED = 0;
+
+    // The border tiles are clipped in order to stay fully
+    // inside  the bounds of the raster. Because of that they
+    // may not all have the same dimensions.
+    CLIPPED    = 1;
+}
+
+enum TilingOrigin {
+    // The raster is tiled from the top, down.
+    TOP_ORIGIN    = 0;
+
+    // The raster is tiled from the bottom, up.
+    BOTTOM_ORIGIN = 1;
+}
+
+message GlobalTilingSchemeParams {
+    int32            tile_size               = 1;
+    int32            level_zero_tile_count_x = 2;
+    int32            level_zero_tile_count_y = 3;
+    int32            min_level               = 4;
+    int32            max_level               = 5;
+    BorderTileAspect border_tile_aspect      = 6;
+}
+
+message LocalTilingSchemeParams {
+    int64            full_image_width      = 1;
+    int64            full_image_height     = 2;
+    int32            tile_size             = 3;
+    bool             has_min_level         = 4;
+    int32            min_level             = 5;
+    bool             has_max_level         = 6;
+    int32            max_level             = 7;
+    bool             override_level_offset = 10;
+    int32            level_offset          = 11;
+    BorderTileAspect border_tile_aspect    = 8;
+    TilingOrigin     tiling_origin         = 9;
+}
+
+// The tiling scheme describes the meaning of a tile's coordinates
+message TilingSchemeParams {
+    TilingSchemeType         type          = 1;
+
+    // oneof
+    GlobalTilingSchemeParams global_tiling = 101;
+    LocalTilingSchemeParams  local_tiling  = 102;
+}

@@ -10,7 +10,8 @@
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
 #include "hrz/mapbox/translate.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/mapbox/result.pb.h"
+#include "hrz/protocol/path_builder/scene/view_settings.h"
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>

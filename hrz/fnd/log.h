@@ -1,7 +1,5 @@
 #pragma once
 
-#include "hrz/fnd/defines.h"
-
 #include <fmt/core.h>
 #include <fmt/format.h>
 

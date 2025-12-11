@@ -1,12 +1,12 @@
 #include "hrz/common/color.h"
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/tickets.h"
+#include "hrz/core/jobs/parse_wms_resource.h"
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/maths.h"
+#include "hrz/fnd/string_utils.h"
 #include "hrz/fnd/unique_vector.h"
 #include "hrz/fnd/url_utils.h"
 
@@ -310,7 +310,7 @@ public:
                 {
                     auto raw_data = assets_loader::get_blob(al, ba, download_ticket);
 
-                    WmsResourceParams params;
+                    hrz_jobs::WmsResourceParams params;
                     params.raw_xml = std::move(raw_data);
                     params.wms_url = url;
                     for (size_t i = 0; i < layer_names.size(); ++i)
@@ -350,7 +350,7 @@ public:
                 if (hrz_jobs::get_job_status(js, parsing_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    WmsResourceResponse response;
+                    hrz_jobs::WmsResourceResponse response;
                     hrz_jobs::get_job_response(js, parsing_ticket, response);
 
                     fmt::memory_buffer buffer;

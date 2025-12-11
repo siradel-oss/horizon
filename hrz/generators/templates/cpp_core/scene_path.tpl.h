@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "hrz/core/scene_path/common.h"
-#include "hrz/core/scene_path/wrappers_paths.h"
+#include "hrz/core/scene_path/types/wrappers_paths.h"
 
 #include "{{ filename }}.pb.h"
 {% for f in dependencies %}

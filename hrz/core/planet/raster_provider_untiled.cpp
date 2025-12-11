@@ -1,12 +1,12 @@
 #include "hrz/common/crs_database.h"
-#include "hrz/common/fmt.h"
+#include "hrz/common/fmt.h" // IWYU pragma: keep
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
+#include "hrz/core/image_decoder.h"
+#include "hrz/core/jobs/generate_mipmaps.h"
+#include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/planet/raster_provider.h"
-#include "hrz/core/planet/tile_fetcher.h"
 #include "hrz/fnd/format.h"
-#include "hrz/fnd/node_hash_map.h"
 
 namespace hrz::planet
 {
@@ -221,7 +221,7 @@ public:
 
                     max_level = std::ceil(std::log2(std::max(image_width, image_height)));
 
-                    MipmapGenerationParams mipmap_generation_params;
+                    hrz_jobs::MipmapGenerationParams mipmap_generation_params;
                     mipmap_generation_params.image = response;
                     mipmap_generation_params.nodata = nodata;
                     mipmap_generation_params.tile_size = hrz::MERCATOR_TILE_SIZE;
@@ -253,7 +253,7 @@ public:
 
             if (mipmaps_ticket_status == job_scheduler::JobStatus::Finished_Success)
             {
-                Mipmaps response;
+                hrz_jobs::Mipmaps response;
                 hrz_jobs::get_job_response(js, generate_mipmaps_ticket, response);
 
                 for (unsigned int i = 0; i < response.tiles.size(); i++)

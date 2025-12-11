@@ -1,9 +1,12 @@
 #pragma once
 
-#include "hrz/core/render.h"
+#include "hrz/core/render/resources.h"
 #include "hrz/core/render_request.h"
 
 #include <lin_maths.h>
+#include <mycelium/renderer.h>
+
+#include <vector>
 
 /*
  * Flat Overlay system allows rendering of a list of vector data layers from a set of concentric
@@ -21,6 +24,8 @@ struct CameraViewInfo;
 struct VectorFlatOverlaySystem;
 struct CameraHeightSystem;
 struct HeatmapSystem;
+struct Render;
+struct RenderView;
 
 struct OverlayCamerasInfo
 {

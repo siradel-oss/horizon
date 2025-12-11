@@ -1,5 +1,6 @@
 #include "hrz/common/font_rasterizer.h"
 #include "hrz/common/profiling.h"
+#include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/core/jobs/symbol/baker.h"
 #include "hrz/fnd/unicode.h"
 
@@ -7,8 +8,8 @@
 
 namespace hrz_jobs::symbol
 {
-using TextInstances = hrz::vt::BakedSymbols::TextInstances;
-using GlyphPositionUv = hrz::vt::BakedSymbols::TextInstances::GlyphPositionUv;
+using TextInstances = hrz_jobs::BakedSymbols::TextInstances;
+using GlyphPositionUv = hrz_jobs::BakedSymbols::TextInstances::GlyphPositionUv;
 
 namespace
 {
@@ -567,19 +568,19 @@ void pad_vector_for_data_texture(hrz::BlobVector<T>& vector)
 }
 } // namespace
 
-hrz::JobResult SymbolBaker::TextVisitor::init()
+hrz_jobs::JobResult SymbolBaker::TextVisitor::init()
 {
     hb_buffer = hb_buffer_create();
 
     if (hb_buffer == nullptr)
     {
         HRZ_LOG_ERROR("Could not allocate text buffer");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     hb_buffer_set_flags(hb_buffer, (hb_buffer_flags_t)(HB_BUFFER_FLAG_BOT | HB_BUFFER_FLAG_EOT));
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 void SymbolBaker::TextVisitor::deinit()
@@ -587,8 +588,8 @@ void SymbolBaker::TextVisitor::deinit()
     hb_buffer_destroy(hb_buffer);
 }
 
-hrz::JobResult SymbolBaker::TextVisitor::init_element_instances(
-    const hrz::vt::SymbolBakingData::Element& element)
+hrz_jobs::JobResult SymbolBaker::TextVisitor::init_element_instances(
+    const hrz_jobs::SymbolBakingData::Element& element)
 {
     assert(element.z_index.has_value());
 
@@ -621,11 +622,11 @@ hrz::JobResult SymbolBaker::TextVisitor::init_element_instances(
              }});
     }
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 ElementGeometry SymbolBaker::TextVisitor::visit_element(
-    const hrz::vt::SymbolBakingData::Element& element,
+    const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
 {
     assert(element.type == hrz_proto::SymbolElementType::TEXT_SYMBOL_ELEMENT);
@@ -734,7 +735,7 @@ void SymbolBaker::TextVisitor::finalize_element_instance(
     }
 }
 
-std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBaker::TextVisitor::
+std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBaker::TextVisitor::
     get_element_instances_at_z_index(uint32_t z_index)
 {
     auto blob_allocator = get_context().get_blob_allocator();
@@ -766,7 +767,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
     if (transforms_array_opt->empty())
     {
         // No texts have been generated.
-        return {std::optional<hrz::vt::BakedSymbols::ElementInstances>{}};
+        return {std::optional<hrz_jobs::BakedSymbols::ElementInstances>{}};
     }
 
     transforms_array_opt->register_blob_metadata(
@@ -791,7 +792,7 @@ std::optional<std::optional<hrz::vt::BakedSymbols::ElementInstances>> SymbolBake
         blob_allocator, "contents"_ss, "text glyph text indices"_ss);
     text_indices_array_opt->register_blob_owner(blob_allocator, resource_owner);
 
-    return {{hrz::vt::BakedSymbols::ElementInstances{
+    return {{hrz_jobs::BakedSymbols::ElementInstances{
         hrz_proto::SymbolElementType::TEXT_SYMBOL_ELEMENT,
         TextInstances{
             transforms_array_opt.value(), anchor_indices_array_opt.value(),

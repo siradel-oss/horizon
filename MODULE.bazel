@@ -125,3 +125,6 @@ tsconfig_util(
     name = "tsconfig_util",
     tsconfig = "//:tsconfig.json",
 )
+
+proto_files_list = use_extension("//hrz/protocol:list_proto_files_extension.bzl", "proto_files_list")
+use_repo(proto_files_list, "proto_files_list")

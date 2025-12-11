@@ -1,7 +1,9 @@
 #include "hrz/core/client_messages.h"
+#include "hrz/core/clock.h"
 #include "hrz/core/vector/data_loader/impl.h"
 #include "hrz/fnd/time.h"
 #include "hrz/fnd/variant.h"
+#include "hrz/protocol/client_data/vector_data_request_message.pb.h"
 
 #include <queue>
 
@@ -13,7 +15,7 @@ VectorDataLoader::TaskRef VectorDataLoader::get_or_create_request_client_data_ta
     const FeatureSelection& feature_selection)
 {
     uint64_t hash = hrz::index_of_variant<decltype(Task::data), Task::RequestClientData>();
-    hash = hrz::hash_mix<uint64_t>(hash, layer_model.get_handle().hash());
+    hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(layer_model.get_handle()));
     hash = hrz::hash_mix<uint64_t>(hash, hrz::hash_value(data_source));
     hash = hrz::hash_mix<uint64_t>(hash, feature_selection.hash());
 
@@ -230,7 +232,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::RequestClientDa
     }
     else if (task_data.client_response.has_value())
     {
-        vector_data::RawClientVectorData params;
+        hrz_jobs::RawClientVectorData params;
         params.attributes = std::move(task_data.attributes);
         params.expects_geometry = layer_model.data_sources.at(task_data.data_source).has_geometry;
         params.client_data = std::move(task_data.client_response.value());
@@ -282,7 +284,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::RequestClientDa
             {
                 client_tickets_timeouts.push(
                     {task_data.client_ticket,
-                     hrz::now_frame_ms() + data_source.timeout_duration.value()});
+                     hrz::clock::CurrentFrameRealTime.ms + data_source.timeout_duration.value()});
             }
 
             set_task_status(task_ref, task, TaskStatus::Blocked);

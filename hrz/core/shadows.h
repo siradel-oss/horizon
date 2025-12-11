@@ -1,12 +1,11 @@
 #pragma once
 
-#include "hrz/core/render.h"
+#include "hrz/common/shader_defines.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
+#include "hrz/core/scene_path/scene/view_settings_paths.h"
 
 #include <lin_maths.h>
-
-#include <span>
+#include <mycelium/renderer.h>
 
 namespace hrz
 {

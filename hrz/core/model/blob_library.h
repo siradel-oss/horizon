@@ -34,9 +34,9 @@ public:
         constexpr bool operator==(const Handle& other) const = default;
 
         template<typename H>
-        friend H AbslHashValue(H h, const Handle& k)
+        friend H AbslHashValue(H h, const Handle& handle)
         {
-            return H::combine(std::move(h), k.o);
+            return H::combine(std::move(h), handle.o);
         }
     };
 

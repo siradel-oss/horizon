@@ -1,6 +1,6 @@
 #include "hrz/core/vector/data_loader/impl.h"
 #include "hrz/fnd/variant.h"
-#include "hrz/protocol/path_builder.h"
+#include "hrz/protocol/path_builder/layer/vector_data_layer.h"
 
 namespace hrz
 {

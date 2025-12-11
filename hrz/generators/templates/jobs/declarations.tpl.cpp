@@ -1,6 +1,6 @@
 #include "hrz/core/jobs/jobs_declarations.h"
 
-#include "hrz/common/job_params.h"
+#include "hrz/core/jobs/all_params_responses.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -16,7 +16,7 @@ namespace hrz_jobs
 namespace {{ job.name }}
 {
 
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const std::any& params,
     std::any& response,
     const JobContext& context)
@@ -27,12 +27,12 @@ hrz::JobResult run(
     {
         response = std::make_any<{{ job.response_type }}>();
         {{ job.response_type }}& typed_response = std::any_cast<{{ job.response_type }}&>(response);
-        hrz::JobResult result = run(*typed_params, typed_response, context);
+        hrz_jobs::JobResult result = run(*typed_params, typed_response, context);
         return result;
     }
     else
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 }
 

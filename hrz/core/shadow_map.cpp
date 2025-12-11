@@ -2,7 +2,11 @@
 
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/render.h"
+#include "hrz/core/render/common_ubos.h"
+#include "hrz/core/render/context.h"
+#include "hrz/core/render/defs.h"
+#include "hrz/core/render/double_buffered_uniform_buffer.h"
+#include "hrz/core/render/resource_context.h"
 #include "hrz/fnd/mem.h"
 
 #include <cstring>
@@ -73,7 +77,7 @@ void ShadowMapPass::retrieve_resources(
     const my::RenderGraph::ResourceContext& ctx)
 {
     size_t alignment = my->get_uniform_buffer_offset_alignment();
-    _ubo_aligned_size = render::compute_ubo_stride<AuxViewUniformData>(alignment);
+    _ubo_aligned_size = compute_ubo_stride<AuxViewUniformData>(alignment);
 
     for (size_t i = 0; i < _cascade_count; ++i)
     {

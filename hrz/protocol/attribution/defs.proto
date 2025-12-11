@@ -1,0 +1,11 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+message Attribution {
+    // The text might contain HTML tags, such as links.
+    string text     = 1;
+
+    string logo_url = 2;
+}

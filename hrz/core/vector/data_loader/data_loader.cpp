@@ -11,7 +11,6 @@ extern "C"
 
 namespace hrz
 {
-namespace in_memory = vector_data::in_memory;
 
 namespace vector_data
 {

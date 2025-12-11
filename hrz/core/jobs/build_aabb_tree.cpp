@@ -1,8 +1,7 @@
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
-#include "hrz/common/vector_data.h"
 #include "hrz/core/jobs/jobs_declarations.h"
-#include "hrz/fnd/inlined_vector.h"
+#include "hrz/core/jobs/vector_data_jobs_params.h"
 
 #include <lin_maths.h>
 
@@ -10,7 +9,7 @@
 
 namespace hrz_jobs::build_aabb_tree
 {
-using Node = hrz::vector_data::AabbTree::Node;
+using Node = hrz_jobs::AabbTree::Node;
 
 namespace
 {
@@ -71,9 +70,9 @@ void insert_node(const Node& node_to_insert, std::vector<Node>& nodes)
 }
 } // namespace
 
-hrz::JobResult run(
+hrz_jobs::JobResult run(
     const hrz::vector_data::VectorTileGeometry& geometry,
-    hrz::vector_data::AabbTree& response,
+    hrz_jobs::AabbTree& response,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("build aabb job");
@@ -129,11 +128,11 @@ hrz::JobResult run(
 
     if (!aabb_tree_array_opt.has_value())
     {
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     response.aabb_tree = std::move(aabb_tree_array_opt.value());
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 } // namespace hrz_jobs::build_aabb_tree

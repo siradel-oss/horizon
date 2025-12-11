@@ -11,6 +11,9 @@ def last(value, sep):
     elements = value.split(sep)
     return elements[len(elements) - 1]
 
+def path_to_snake_case(value: str):
+    return value.replace("/", "_").replace("\\", "_").replace(".", "_")
+
 def snake_case(value):
     return "_".join(re.findall('[A-Z]+[^A-Z]*', value)).lower()
 
@@ -25,6 +28,12 @@ def camel_case(value):
 
 def rejoin(value, old, new):
     return new.join(value.split(old))
+
+def wbr_on_slash(value: str) -> str:
+    return value.replace("/", "/<wbr />").replace("\\", "\\<wbr />")
+
+def wbr_on_period(value: str) -> str:
+    return value.replace(".", ".<wbr />")
 
 def type_path(full_name):
     elements = full_name.split('.')
@@ -127,6 +136,7 @@ def prepare_env():
 
     loader = jinja2.FileSystemLoader(current_path)
     tpl_env = jinja2.Environment(loader = loader)
+    tpl_env.filters["path_to_snake_case"] = path_to_snake_case
     tpl_env.filters["snake_case"] = snake_case
     tpl_env.filters["snake_to_pascal"] = snake_to_pascal
     tpl_env.filters["camel_case"] = camel_case
@@ -146,6 +156,8 @@ def prepare_env():
     tpl_env.filters["indent_prefix"] = indent_prefix
     tpl_env.filters["to_documentation_block"] = to_documentation_block
     tpl_env.filters["to_wrapper"] = to_wrapper
+    tpl_env.filters["wbr_on_slash"] = wbr_on_slash
+    tpl_env.filters["wbr_on_period"] = wbr_on_period
     tpl_env.trim_blocks = True
     tpl_env.lstrip_blocks = True
     return tpl_env
@@ -276,7 +288,7 @@ def gather_path_types(protocol, enum_names, message_type, gathered_path_types, t
             "is_enum": False,
             "type": message_type,
             "full_name": message_type,
-            "file": "hrz/protocol/wrappers",
+            "file": "hrz/protocol/types/wrappers",
         }
         gathered_path_types.append(primitive_type)
     elif enum_type != None:

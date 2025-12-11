@@ -1,10 +1,11 @@
+#include "hrz/core/jobs/parse_tilemap_resource.h"
+
 #include "hrz/common/crs_database.h"
 #include "hrz/common/geo.h"
-#include "hrz/common/planet.h"
 #include "hrz/common/profiling.h"
-#include "hrz/core/jobs/jobs_declarations.h"
+#include "hrz/core/jobs/context.h"
+#include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/string_utils.h"
 
 #include <pugixml/pugixml.hpp>
 
@@ -24,9 +25,9 @@ enum class Profile
 
 namespace hrz_jobs::parse_tilemap_resource
 {
-hrz::JobResult run(
-    const hrz::planet::TilemapResourceParams& params,
-    hrz::planet::TilemapResourceResponse& response,
+hrz_jobs::JobResult run(
+    const hrz_jobs::TilemapResourceParams& params,
+    hrz_jobs::TilemapResourceResponse& response,
     const JobContext&)
 {
     HRZ_SCOPED_SAMPLE("parse tilemapresource xml data");
@@ -41,7 +42,7 @@ hrz::JobResult run(
     if (parse_result.status != pugi::status_ok)
     {
         HRZ_LOG_ERROR("Couldn't parse tilemapresource.xml: {}", parse_result.description());
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     const pugi::xml_node root = doc.child("TileMap");
@@ -59,7 +60,7 @@ hrz::JobResult run(
     if (tile_width != tile_height)
     {
         HRZ_LOG_ERROR("Tiles must be square");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     lm::dbbox2 bounds{
@@ -99,7 +100,7 @@ hrz::JobResult run(
         if (srs != "OSGEO:41001" && srs != "EPSG:3857")
         {
             HRZ_LOG_ERROR("SRS must be \"OSGEO:41001\" or \"EPSG:3857\" for mercator profile");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         // Coordinates seem to (always?) be given in lat/lon for the mercator profile.
@@ -116,7 +117,7 @@ hrz::JobResult run(
         if (srs != "EPSG:4326")
         {
             HRZ_LOG_ERROR("SRS must be \"EPSG:4326\" for geodetic profile");
-            return hrz::JobResult::FAILURE;
+            return hrz_jobs::JobResult::FAILURE;
         }
 
         profile = Profile::Geodetic;
@@ -132,10 +133,10 @@ hrz::JobResult run(
     else
     {
         HRZ_LOG_ERROR("Unknown TileMapService '{}' profile", profile_str);
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
-    if (!check_srs()) return hrz::JobResult::FAILURE;
+    if (!check_srs()) return hrz_jobs::JobResult::FAILURE;
 
     uint8_t min_level = std::numeric_limits<uint8_t>::max();
     uint8_t max_level = std::numeric_limits<uint8_t>::min();
@@ -234,7 +235,7 @@ hrz::JobResult run(
     else
     {
         HRZ_LOG_ERROR("Unknown TileMapService profile");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     response.geometry.bounds = bounds;
@@ -281,14 +282,14 @@ hrz::JobResult run(
     if (response.url_patterns.empty())
     {
         HRZ_LOG_ERROR("No tileset URLs found");
-        return hrz::JobResult::FAILURE;
+        return hrz_jobs::JobResult::FAILURE;
     }
 
     auto attribution_node = root.child("Attribution");
     response.attribution_title = attribution_node.child("Title").text().as_string();
     response.attribution_logo = attribution_node.child("Logo").attribute("href").as_string();
 
-    return hrz::JobResult::SUCCESS;
+    return hrz_jobs::JobResult::SUCCESS;
 }
 
 } // namespace hrz_jobs::parse_tilemap_resource

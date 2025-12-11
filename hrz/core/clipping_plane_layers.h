@@ -1,18 +1,25 @@
 #pragma once
 
-#include "hrz/core/render.h"
+#include "hrz/common/shader_defines.h"
 #include "hrz/core/render_request.h"
 #include "hrz/core/scene_model.h"
-#include "hrz/core/scene_path/scene_path.h"
-#include "hrz/protocol/all.h"
+
+#include <lin_maths.h>
 
 namespace hrz
 {
+
+namespace scene_model
+{
+class ClippingPlaneLayerPath;
+} // namespace scene_model
+
 /**
  * This system is responsible for handling clipping plane layers.
  */
 struct ClippingPlaneLayerSystem;
 struct Render;
+struct RenderViewInfo;
 
 struct ClippingPlaneInfo
 {
