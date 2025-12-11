@@ -9,11 +9,11 @@ The results of the graphics selection process can be retrieved using the `GetCon
 
 ## Level–feature matrix
 
-| Feature | Low | Medium | High |
-|---------|:---:|:------:|:----:|
-| Shadows | ❌ | ❌ | ✅ |
-| Simulated atmosphere | ❌ | ✅ | ✅ |
-| High-quality UI[^1] | ❌ | ✅ | ✅ |
+| Feature              |  Low  | Medium | High  |
+| -------------------- | :---: | :----: | :---: |
+| Shadows              |   ❌   |   ❌    |   ✅   |
+| Simulated atmosphere |   ❌   |   ✅    |   ✅   |
+| High-quality UI[^1]  |   ❌   |   ✅    |   ✅   |
 
 [^1]: This enables high-quality transparency for UI elements such as gizmos and grids.
 
@@ -23,18 +23,17 @@ Additionally, the quality of raster and flat overlays layers are affected by the
 
 These are the rules applied when auto-selecting a graphics level, from highest to lowest priority. An empty cell means "any value".
 
-| OS | Runtime | GPU | Selected level |
-|:--:|:-------:|:---:|:--------------:|
-| Android | - | - | **Low** |
-| iOS | - | - | **Low** |
-| - | Web[^any_browser] | Intel | **Low** |
-| - | - | Nvidia | **High** |
-| - | - | - | **Medium** |
+|   OS    |      Runtime      |             GPU             | Selected level |
+| :-----: | :---------------: | :-------------------------: | :------------: |
+| Android |         -         |              -              |    **Low**     |
+|   iOS   |         -         |              -              |    **Low**     |
+|    -    | Web[^any_browser] |     Intel [HD] Graphics     |    **Low**     |
+|    -    |         -         |          Intel Arc          |    **High**    |
+|    -    |         -         |           Nvidia            |    **High**    |
+|    -    |         -         | AMD Radeon HD/RX (discrete) |    **High**    |
+|    -    |         -         |              -              |   **Medium**   |
 
 [^any_browser]: Any browser
-
-!!! info "Tested platforms"
-    If your configuration doesn't match with one of the rows of the table above, it probably means that it has not been tested, probably due to a lack of testing hardware.
 
 ## Low video memory situations
 

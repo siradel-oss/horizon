@@ -1874,6 +1874,7 @@ public:
             }
             else if (
                 platform_info.gpu_vendor == hrz::PlatformInfo::Intel
+                && platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Integrated
                 && platform_info.runtime != hrz::PlatformInfo::Native)
             {
                 HRZ_LOG_INFO(
@@ -1881,6 +1882,24 @@ public:
                     "integrated "
                     "GPU (low power, suboptimal WebGL 2 implementation)");
                 _graphics_level = hrz_proto::GRAPHICS_LEVEL_LOW;
+            }
+            else if (
+                platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Discrete
+                && platform_info.gpu_vendor == hrz::PlatformInfo::Intel)
+            {
+                HRZ_LOG_INFO(
+                    "Using high graphics because we're running on a discrete Intel GPU, "
+                    "supposedly high-end");
+                _graphics_level = hrz_proto::GRAPHICS_LEVEL_HIGH;
+            }
+            else if (
+                platform_info.gpu_vendor == hrz::PlatformInfo::Amd
+                && platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Discrete)
+            {
+                HRZ_LOG_INFO(
+                    "Using high graphics because we're running on a discrete AMD GPU, "
+                    "supposedly high-end");
+                _graphics_level = hrz_proto::GRAPHICS_LEVEL_HIGH;
             }
             else if (
                 platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Discrete
@@ -1894,7 +1913,7 @@ public:
             else if (platform_info.gpu_form_factor == hrz::PlatformInfo::GpuFormFactor::Software)
             {
                 HRZ_LOG_INFO(
-                    "Using low graphics because it seems we're emulating WebGL on the CPU.");
+                    "Using low graphics because it seems we're emulating OpenGL/WebGL on the CPU.");
                 _graphics_level = hrz_proto::GRAPHICS_LEVEL_LOW;
             }
         }

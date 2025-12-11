@@ -46,12 +46,13 @@ struct PlatformInfo
         AppleSilicon,
         SwiftShader,
         Llvmpipe,
+        Amd,
 
         _GpuVendorCount,
     };
 
     static constexpr const char* GpuVendorName[_GpuVendorCount] = {
-        "<unknown>", "Nvidia", "Intel", "Apple Silicon", "SwiftShader", "LLVMpipe",
+        "<unknown>", "Nvidia", "Intel", "Apple Silicon", "SwiftShader", "LLVMpipe", "AMD",
     };
 
     enum GpuFormFactor

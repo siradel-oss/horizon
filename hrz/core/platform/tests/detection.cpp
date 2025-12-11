@@ -329,7 +329,7 @@ TEST(PlatformDetection, WindowsEdge)
     ASSERT_EQ(info.os, PlatformInfo::Windows);
     ASSERT_EQ(info.runtime, PlatformInfo::Edge);
     ASSERT_EQ(info.gpu_vendor, PlatformInfo::UnknownGpuVendor);
-    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Discrete);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::UnknownFormFactor);
 }
 
 TEST(PlatformDetection, MacOSEdge)
@@ -343,7 +343,7 @@ TEST(PlatformDetection, MacOSEdge)
     ASSERT_EQ(info.os, PlatformInfo::MacOS);
     ASSERT_EQ(info.runtime, PlatformInfo::Edge);
     ASSERT_EQ(info.gpu_vendor, PlatformInfo::UnknownGpuVendor);
-    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Discrete);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::UnknownFormFactor);
 }
 
 TEST(PlatformDetection, IOsEdge)
@@ -385,6 +385,49 @@ TEST(PlatformDetection, ChromeOSChrome)
     ASSERT_EQ(info.os, PlatformInfo::ChromeOS);
     ASSERT_EQ(info.runtime, PlatformInfo::Chrome);
     ASSERT_EQ(info.gpu_vendor, PlatformInfo::UnknownGpuVendor);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Integrated);
+}
+
+TEST(PlatformDetection, IntelArc)
+{
+    PlatformInfo info = detect_platform("Linux", "", "Intel", "Intel(R) Arc(TM) B580 Graphics");
+
+    ASSERT_EQ(info.os, PlatformInfo::Linux);
+    ASSERT_EQ(info.runtime, PlatformInfo::Native);
+    ASSERT_EQ(info.gpu_vendor, PlatformInfo::Intel);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Discrete);
+}
+
+TEST(PlatformDetection, AmdRyzen)
+{
+    PlatformInfo info = detect_platform(
+        "Linux", "", "AMD",
+        "AMD Ryzen 7 7800X3D 8-Core Processor (radeonsi, raphael_mendocIno, ACO, DRM 3.64, "
+        "6.17.8-arch1-1)");
+
+    ASSERT_EQ(info.os, PlatformInfo::Linux);
+    ASSERT_EQ(info.runtime, PlatformInfo::Native);
+    ASSERT_EQ(info.gpu_vendor, PlatformInfo::Amd);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Integrated);
+}
+
+TEST(PlatformDetection, AmdDiscrete)
+{
+    PlatformInfo info = detect_platform("Linux", "", "AMD", "AMD Radeon (TM) R9 200 Series");
+
+    ASSERT_EQ(info.os, PlatformInfo::Linux);
+    ASSERT_EQ(info.runtime, PlatformInfo::Native);
+    ASSERT_EQ(info.gpu_vendor, PlatformInfo::Amd);
+    ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Discrete);
+}
+
+TEST(PlatformDetection, AmdIntegrated)
+{
+    PlatformInfo info = detect_platform("Linux", "", "AMD", "AMD Radeon(TM) 890M Graphics");
+
+    ASSERT_EQ(info.os, PlatformInfo::Linux);
+    ASSERT_EQ(info.runtime, PlatformInfo::Native);
+    ASSERT_EQ(info.gpu_vendor, PlatformInfo::Amd);
     ASSERT_EQ(info.gpu_form_factor, PlatformInfo::GpuFormFactor::Integrated);
 }
 

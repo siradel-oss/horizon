@@ -113,10 +113,11 @@ PlatformInfo detect_platform(
     }
     else
     {
-        info.gpu_form_factor = PlatformInfo::GpuFormFactor::Discrete;
+        info.gpu_form_factor = PlatformInfo::GpuFormFactor::UnknownFormFactor;
     }
 
-    if (gl_vendor.find("NVIDIA") != npos || gl_renderer.find("NVIDIA") != npos)
+    if (gl_vendor.find("NVIDIA") != npos || gl_renderer.find("NVIDIA") != npos
+        || gl_renderer.find("Quadro") != npos)
     {
         info.gpu_vendor = PlatformInfo::Nvidia;
         info.gpu_form_factor = PlatformInfo::GpuFormFactor::Discrete;
@@ -128,7 +129,7 @@ PlatformInfo detect_platform(
         {
             info.gpu_form_factor = PlatformInfo::GpuFormFactor::Integrated;
         }
-        else
+        else if (gl_renderer.find("Arc") != npos)
         {
             info.gpu_form_factor = PlatformInfo::GpuFormFactor::Discrete;
         }
@@ -147,6 +148,19 @@ PlatformInfo detect_platform(
     {
         info.gpu_vendor = PlatformInfo::Llvmpipe;
         info.gpu_form_factor = PlatformInfo::GpuFormFactor::Software;
+    }
+    else if (gl_vendor.find("AMD") != npos || gl_renderer.find("AMD") != npos)
+    {
+        info.gpu_vendor = PlatformInfo::Amd;
+        if (gl_renderer.find("Ryzen") != npos || gl_renderer.find("Graphics") != npos)
+        {
+            // Not super precise
+            info.gpu_form_factor = PlatformInfo::GpuFormFactor::Integrated;
+        }
+        else
+        {
+            info.gpu_form_factor = PlatformInfo::GpuFormFactor::Discrete;
+        }
     }
 
     return info;
