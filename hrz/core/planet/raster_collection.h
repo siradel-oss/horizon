@@ -167,7 +167,7 @@ struct DtmRasterCollectionTraits
     static constexpr const char* NAME = "Elevation";
     static constexpr hrz_proto::LayerType LAYER_TYPE = hrz_proto::LayerType::DTM_RASTER;
     static constexpr std::array<hrz_proto::ImageFormat, 5> SOURCE_TILE_IMAGE_FORMATS = {
-        hrz_proto::ImageFormat::R_F32, hrz_proto::ImageFormat::R_F32_SILICIUM,
+        hrz_proto::ImageFormat::R_F32, hrz_proto::ImageFormat::SIRADEL_LEGACY_F32,
         hrz_proto::ImageFormat::SIGNED_FIXED_24_8, hrz_proto::ImageFormat::TERRARIUM,
         hrz_proto::ImageFormat::TERRAIN_RGB};
     static constexpr hrz_proto::ImageFormat COMPOSED_TILE_IMAGE_FORMAT =

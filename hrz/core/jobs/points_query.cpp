@@ -300,8 +300,8 @@ hrz_jobs::JobResult sample(
             case hrz_proto::ImageFormat::R_F32:
                 pixel_fetch_function = hrz::sampling::fetch_r_f32_pixel;
                 break;
-            case hrz_proto::ImageFormat::R_F32_SILICIUM:
-                pixel_fetch_function = hrz::sampling::fetch_r_f32_silicium_pixel;
+            case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32:
+                pixel_fetch_function = hrz::sampling::fetch_siradel_legacy_f32_pixel;
                 break;
             case hrz_proto::ImageFormat::SIGNED_FIXED_24_8:
                 pixel_fetch_function = hrz::sampling::fetch_signed_fixed_24_8_pixel;

@@ -22,7 +22,7 @@ static inline uint8_t image_format_channel_count(hrz_proto::ImageFormat format)
         case hrz_proto::ImageFormat::TERRARIUM:
         case hrz_proto::ImageFormat::TERRAIN_RGB:
         case hrz_proto::ImageFormat::R_F32:
-        case hrz_proto::ImageFormat::R_F32_SILICIUM:
+        case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32:
         case hrz_proto::ImageFormat::R_8: return 1;
         default:
         {
@@ -41,7 +41,7 @@ static inline uint8_t image_format_bit_count(hrz_proto::ImageFormat format)
         case hrz_proto::ImageFormat::TERRARIUM:
         case hrz_proto::ImageFormat::TERRAIN_RGB:
         case hrz_proto::ImageFormat::R_F32:
-        case hrz_proto::ImageFormat::R_F32_SILICIUM: return 32;
+        case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32: return 32;
         case hrz_proto::ImageFormat::R_8: return 8;
         default:
         {
@@ -63,7 +63,7 @@ static inline my::TextureFormat image_format_to_gpu_format(hrz_proto::ImageForma
         case hrz_proto::ImageFormat::SRGBA_8: return my::TextureFormat::SRGBA8;
         case hrz_proto::ImageFormat::SIGNED_FIXED_24_8: return my::TextureFormat::R32I;
         case hrz_proto::ImageFormat::R_F32: return my::TextureFormat::R32F;
-        case hrz_proto::ImageFormat::R_F32_SILICIUM: return my::TextureFormat::R32I;
+        case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32: return my::TextureFormat::R32I;
         case hrz_proto::ImageFormat::TERRARIUM:
         case hrz_proto::ImageFormat::TERRAIN_RGB: return my::TextureFormat::R32UI;
         case hrz_proto::ImageFormat::R_8: return my::TextureFormat::R8;
@@ -90,7 +90,7 @@ static inline std::optional<hrz_proto::ImageFormat> gpu_format_to_image_format(
 static inline bool is_scalar_image_format(hrz_proto::ImageFormat format)
 {
     return format == hrz_proto::ImageFormat::R_F32
-        || format == hrz_proto::ImageFormat::R_F32_SILICIUM
+        || format == hrz_proto::ImageFormat::SIRADEL_LEGACY_F32
         || format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8
         || format == hrz_proto::ImageFormat::TERRARIUM
         || format == hrz_proto::ImageFormat::TERRAIN_RGB;
@@ -102,22 +102,22 @@ static inline bool is_scalar_image_format(hrz_proto::ImageFormat format)
 // be used to reconstruct the float value. (e.g. in WebGL 1)
 //
 // Bit layouts:
-//     IEEE 754: seeeeeeeefffffffffffffffffffffff
-//     Silicium: eeeeeeeesfffffffffffffffffffffff
-//     color:    aaaaaaaabbbbbbbbggggggggrrrrrrrr
+//     IEEE 754:           seeeeeeeefffffffffffffffffffffff
+//     Siradel legacy f32: eeeeeeeesfffffffffffffffffffffff
+//     color:              aaaaaaaabbbbbbbbggggggggrrrrrrrr
 //     s: sign, e: exponent, f: fraction
 //
 // cf. https://msdn.microsoft.com/en-us/library/yhwsaf3w%28v=vs.110%29.aspx
 // cf. https://en.wikipedia.org/wiki/Single-precision_floating-point_format
 // cf. http://stackoverflow.com/a/31002725
-static inline float decode_r_f32_silicium_value_to_float(uint32_t rgba)
+static inline float decode_siradel_legacy_f32_value_to_float(uint32_t rgba)
 {
     const uint32_t res =
         (rgba & 0x007fffff) | ((rgba >> 1) & 0x7f800000) | ((rgba << 8) & 0x80000000);
     return std::bit_cast<float>(res);
 }
 
-static inline uint32_t encode_float_to_r_f32_silicium(float value)
+static inline uint32_t encode_float_to_siradel_legacy_f32(float value)
 {
     const auto bits = std::bit_cast<uint32_t>(value);
     return (bits & 0x007fffff) | ((bits & 0x80000000) >> 8) | ((bits & 0x7f800000) << 1);

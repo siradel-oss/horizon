@@ -213,7 +213,7 @@ PixelValue<float, 1> fetch_r_f32_pixel(
     int x,
     int y,
     const NodataFunction& nodata);
-PixelValue<float, 1> fetch_r_f32_silicium_pixel(
+PixelValue<float, 1> fetch_siradel_legacy_f32_pixel(
     const ImageView& input,
     int x,
     int y,

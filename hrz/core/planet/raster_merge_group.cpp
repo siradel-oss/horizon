@@ -729,7 +729,7 @@ void RasterMergeGroup::work(
         if (auto image_format = raster->provider->get_image_format();
             image_format == HrzProtocol::ImageFormat::SIGNED_FIXED_24_8
             || image_format == HrzProtocol::ImageFormat::R_F32
-            || image_format == HrzProtocol::ImageFormat::R_F32_SILICIUM
+            || image_format == HrzProtocol::ImageFormat::SIRADEL_LEGACY_F32
             || image_format == HrzProtocol::ImageFormat::TERRARIUM
             || image_format == HrzProtocol::ImageFormat::TERRAIN_RGB
             || raster->provider->get_raster_provider_type()

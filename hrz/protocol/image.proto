@@ -8,33 +8,43 @@ enum ImageFormat {
     //
     // The usual format for images.
     // @label="sRGB RGBA8"
-    SRGBA_8           = 0;
+    SRGBA_8            = 0;
 
     // IEEE 754 single precision floating point, little-endian, one 32-bit
     // channel.
     // @label="R F32"
-    R_F32             = 1;
+    R_F32              = 1;
 
-    // Silicium encoding, one 32-bit channel.
-    // @label="R F32 Silicium"
-    R_F32_SILICIUM    = 2;
+    // Legacy float32 encoding used at Siradel, one 32-bit channel.
+    // Same as R_F32, but with the exponent and sign bits swapped.
+    //
+    // `eeeeeeee smmmmmmm mmmmmmmm mmmmmmmm` with `e` = exponent bits, `s` =
+    // sign bit, and `m` = mantissa bits.
+    //
+    // Originally created for WebGL 1, where `uintBitsToFloat()` is not
+    // available in shaders. This bit order allowed for a faster decoding.
+    //
+    // For new data, use `R_F32` instead.
+    //
+    // @label="Siradel legacy F32"
+    SIRADEL_LEGACY_F32 = 2;
 
     // Signed fixed-point value with 1 sign bit, 23 integer bits, and 8
     // fractional bits.
     // @label="Signed fixed 24.8"
-    SIGNED_FIXED_24_8 = 3;
+    SIGNED_FIXED_24_8  = 3;
 
     // Greyscale, linear encoding, 8-bit.
     // @label="R8"
-    R_8               = 4;
+    R_8                = 4;
 
     // 24-bit values in [-32768, 32768] range, with 8 fractional bits.
     // @label="Terrarium"
-    TERRARIUM         = 5;
+    TERRARIUM          = 5;
 
     // 24-bit values in [-10000, 1667721.5] range, with a 0.1 metre resolution.
     // @label="Terrain-RGB"
-    TERRAIN_RGB       = 6;
+    TERRAIN_RGB        = 6;
 }
 
 message Image {

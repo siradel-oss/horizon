@@ -104,16 +104,16 @@ Multiple image formats are supported. They are all stored in file formats that h
 
 * `SIGNED_FIXED_24_8`: Each RGBA pixel is interpreted as a single 32-bit signed integer, whose value is the elevation above (or below if negative) sea level in 256ths of a metre.
 * `R_F32`: Each RGBA pixel is interpreted as a [32-bit IEEE 754 single-precision floating-point number](https://en.wikipedia.org/wiki/Single-precision_floating-point_format).
-* `R_F32_SILICIUM`: Each RGBA pixel contains a 32-bit single-precision floating-point number, but with a bit layout that differs from IEEE 754. The exponent bits are shifted once to the left, so that they constitute the eight most significant bits. The sign bit is shifted eight times to the right.
+* `SIRADEL_LEGACY_F32`: Each RGBA pixel contains a 32-bit single-precision floating-point number, but with a bit layout that differs from IEEE 754. The exponent bits are shifted once to the left, so that they constitute the eight most significant bits. The sign bit is shifted eight times to the right.
 * `TERRARIUM`: Each RGB pixel contains a 24-bit signed fixed point value. 16 bits are used for the integral part (ranging from -32,768 to 32,768) and 8 bits for the fractional part (increments of 256ths). The formula to decode a value is `(red * 256 + green + blue / 256) - 32768`. See [Mapzen’s documentation](https://www.mapzen.com/blog/terrain-tile-service/).
 * `TERRAIN_RGB`: Each RGB pixel contains a 24-bit unsigned integer, which is scaled and shifted down to obtain a value in metres, with a 0.1 m precision. The lowest value is -10,000 m. The formula to decode a value is `(red * 256 * 256 + green * 256 + blue) * 0.1 - 10000`. See [Mapbox’s documentation](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data/#decode-data).
 
 !!! note "Bit layouts for floating-points formats"
-    | Format | Bit layout |
-    | --- | --- |
-    | IEEE 754 | `seeeeeee efffffff ffffffff ffffffff` |
-    | `R_F32_SILICIUM` | `eeeeeeee sfffffff ffffffff ffffffff` |
-    | Colour channels | `aaaaaaaa bbbbbbbb gggggggg rrrrrrrr` |
+    | Format           | Bit layout                            |
+    | ---------------- | ------------------------------------- |
+    | IEEE 754         | `seeeeeee efffffff ffffffff ffffffff` |
+    | `SIRADEL_LEGACY_F32` | `eeeeeeee sfffffff ffffffff ffffffff` |
+    | Colour channels  | `aaaaaaaa bbbbbbbb gggggggg rrrrrrrr` |
 
     * `s`: sign bit
     * `e`: exponent

@@ -165,7 +165,7 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                 }
                 break;
             }
-            case hrz_proto::ImageFormat::R_F32_SILICIUM:
+            case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32:
             {
                 switch (nodata_value.type())
                 {
@@ -181,20 +181,20 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                     }
                     case hrz_proto::NodataValueType::UINT_VALUE_NODATA:
                     {
-                        nodata_pattern =
-                            hrz::encode_float_to_r_f32_silicium((float)nodata_value.uint_value());
+                        nodata_pattern = hrz::encode_float_to_siradel_legacy_f32(
+                            (float)nodata_value.uint_value());
                         break;
                     }
                     case hrz_proto::NodataValueType::INT_VALUE_NODATA:
                     {
-                        nodata_pattern =
-                            hrz::encode_float_to_r_f32_silicium((float)nodata_value.int_value());
+                        nodata_pattern = hrz::encode_float_to_siradel_legacy_f32(
+                            (float)nodata_value.int_value());
                         break;
                     }
                     case hrz_proto::NodataValueType::FLOAT_VALUE_NODATA:
                     {
                         nodata_pattern =
-                            hrz::encode_float_to_r_f32_silicium(nodata_value.float_value());
+                            hrz::encode_float_to_siradel_legacy_f32(nodata_value.float_value());
                         break;
                     }
                     case hrz_proto::NodataValueType::NAN_NODATA:
@@ -340,7 +340,7 @@ PixelValue<float, 1> fetch_r_f32_pixel(
     return {res, nodata.is_nodata<float, 1>(res)};
 }
 
-PixelValue<float, 1> fetch_r_f32_silicium_pixel(
+PixelValue<float, 1> fetch_siradel_legacy_f32_pixel(
     const ImageView& input,
     int x,
     int y,
@@ -349,7 +349,7 @@ PixelValue<float, 1> fetch_r_f32_silicium_pixel(
     uint32_t value = 0;
     std::memcpy(&value, input.pixel_data<uint32_t, 1>(x, y), sizeof(uint32_t));
     return {
-        {hrz::decode_r_f32_silicium_value_to_float(value)},
+        {hrz::decode_siradel_legacy_f32_value_to_float(value)},
         nodata.is_nodata<uint32_t, 1>(&value)};
 }
 
@@ -405,10 +405,10 @@ std::unique_ptr<SamplingFunction> make_sampling_function(
         return std::make_unique<DtmSamplingFunction>(
             fetch_r_f32_pixel, alpha_channel_usage, nodata_function, filtering);
     }
-    else if (image_format == hrz_proto::ImageFormat::R_F32_SILICIUM)
+    else if (image_format == hrz_proto::ImageFormat::SIRADEL_LEGACY_F32)
     {
         return std::make_unique<DtmSamplingFunction>(
-            fetch_r_f32_silicium_pixel, alpha_channel_usage, nodata_function, filtering);
+            fetch_siradel_legacy_f32_pixel, alpha_channel_usage, nodata_function, filtering);
     }
     else if (image_format == hrz_proto::ImageFormat::SIGNED_FIXED_24_8)
     {

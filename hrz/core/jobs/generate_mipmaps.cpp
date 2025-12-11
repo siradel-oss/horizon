@@ -51,15 +51,15 @@ void interpolate<uint8_t, 4, hrz_proto::ImageFormat::SRGBA_8>(
 }
 
 template<>
-void interpolate<uint32_t, 1, hrz_proto::ImageFormat::R_F32_SILICIUM>(
+void interpolate<uint32_t, 1, hrz_proto::ImageFormat::SIRADEL_LEGACY_F32>(
     const uint32_t* a,
     const uint32_t* b,
     uint32_t* res)
 {
-    float a_f = hrz::decode_r_f32_silicium_value_to_float(*a);
-    float b_f = hrz::decode_r_f32_silicium_value_to_float(*b);
+    float a_f = hrz::decode_siradel_legacy_f32_value_to_float(*a);
+    float b_f = hrz::decode_siradel_legacy_f32_value_to_float(*b);
     float res_f = (a_f + b_f) / 2.0f;
-    *res = hrz::encode_float_to_r_f32_silicium(res_f);
+    *res = hrz::encode_float_to_siradel_legacy_f32(res_f);
 }
 
 template<>
@@ -216,8 +216,8 @@ decltype(&generate_pixel<uint8_t, 4, hrz_proto::ImageFormat::SRGBA_8>) get_gener
             return &generate_pixel<int32_t, 1, hrz_proto::ImageFormat::SIGNED_FIXED_24_8>;
         case hrz_proto::ImageFormat::R_F32:
             return &generate_pixel<float, 1, hrz_proto::ImageFormat::R_F32>;
-        case hrz_proto::ImageFormat::R_F32_SILICIUM:
-            return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::R_F32_SILICIUM>;
+        case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32:
+            return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::SIRADEL_LEGACY_F32>;
         case hrz_proto::ImageFormat::TERRARIUM:
             return &generate_pixel<uint32_t, 1, hrz_proto::ImageFormat::TERRARIUM>;
         case hrz_proto::ImageFormat::TERRAIN_RGB:

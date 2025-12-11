@@ -640,7 +640,7 @@ void _parse_gltf_texture(const rapidjson::Value& texture_json, ModelDescriptor* 
             else if (std::strcmp(data_interpretation.value(), "silicium") == 0)
             {
                 // This is undocumented.
-                texture.data_intepretation = hrz_proto::ImageFormat::R_F32_SILICIUM;
+                texture.data_intepretation = hrz_proto::ImageFormat::SIRADEL_LEGACY_F32;
             }
             else
             {

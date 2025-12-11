@@ -109,7 +109,7 @@ void _rasterize_tile(
                     input, sampling_function, blending_function, bounds);
             break;
         case hrz_proto::ImageFormat::R_F32:
-        case hrz_proto::ImageFormat::R_F32_SILICIUM:
+        case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32:
         case hrz_proto::ImageFormat::TERRARIUM:
         case hrz_proto::ImageFormat::TERRAIN_RGB:
             sample_and_compose_function =

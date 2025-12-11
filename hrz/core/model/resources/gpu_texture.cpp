@@ -49,7 +49,7 @@ std::optional<GpuTextureResource> GpuTextureResource::acquire(
             if (id.is_data)
             {
                 if (texture->data_intepretation == hrz_proto::ImageFormat::R_F32
-                    || texture->data_intepretation == hrz_proto::ImageFormat::R_F32_SILICIUM)
+                    || texture->data_intepretation == hrz_proto::ImageFormat::SIRADEL_LEGACY_F32)
                 {
                     data_interpretation = texture->data_intepretation;
                 }
@@ -68,13 +68,13 @@ std::optional<GpuTextureResource> GpuTextureResource::acquire(
 
         if (id.is_data && !data_interpretation.has_value())
         {
-            // Undocumented fallback to R_F32_SILICIUM, for models that have been generated
+            // Undocumented fallback to SIRADEL_LEGACY_F32, for models that have been generated
             // according to the old specification, where data interpretation was not
-            // specified but Horizon expected R_F32_SILICIUM.
+            // specified but Horizon expected SIRADEL_LEGACY_F32.
             HRZ_LOG_WARNING(
-                "glTF data texture has no data interpretation, assuming R_F32_SILICIUM");
+                "glTF data texture has no data interpretation, assuming SIRADEL_LEGACY_F32");
 
-            data_interpretation = hrz_proto::ImageFormat::R_F32_SILICIUM;
+            data_interpretation = hrz_proto::ImageFormat::SIRADEL_LEGACY_F32;
         }
 
         int source_id = texture->source.value();
@@ -182,7 +182,7 @@ void GpuTextureResource::work(
                     }
 
                     const hrz_proto::ImageFormat format = is_data_texture
-                        ? data_interpretation.value_or(hrz_proto::ImageFormat::R_F32_SILICIUM)
+                        ? data_interpretation.value_or(hrz_proto::ImageFormat::SIRADEL_LEGACY_F32)
                         : hrz_proto::ImageFormat::SRGBA_8;
                     auto scalar_conversion = is_data_texture
                         ? image_decoder::ConvertScalarsToFloat::Convert

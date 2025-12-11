@@ -23,9 +23,9 @@ int32_t to_fixed_24_8(int32_t v)
     return v * 256;
 }
 
-uint32_t to_silicium(float v)
+uint32_t to_siradel_legacy_f32(float v)
 {
-    return hrz::encode_float_to_r_f32_silicium(v);
+    return hrz::encode_float_to_siradel_legacy_f32(v);
 }
 
 uint32_t to_terrarium(float v)
@@ -682,18 +682,18 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_dtm)
     }
 }
 
-TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
     nodata_value.set_float_value(-9999.9f);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::R_F32_SILICIUM);
+        hrz_proto::ImageFormat::SIRADEL_LEGACY_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_silicium(-9999.9f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.9f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -708,7 +708,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_silicium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_silicium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -718,22 +718,22 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_silicium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_silicium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
     }
 }
 
-TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::INT_VALUE_NODATA);
     nodata_value.set_int_value(-9999);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::R_F32_SILICIUM);
+        hrz_proto::ImageFormat::SIRADEL_LEGACY_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_silicium(-9999.0f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.0f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -748,7 +748,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_silicium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_silicium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -758,22 +758,22 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_silicium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_silicium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
     }
 }
 
-TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_silicium(-9999.9f)));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_siradel_legacy_f32(-9999.9f)));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::R_F32_SILICIUM);
+        hrz_proto::ImageFormat::SIRADEL_LEGACY_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_silicium(-9999.9f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.9f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -788,7 +788,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_silicium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -798,21 +798,22 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_silicium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_silicium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
     }
 }
 
-TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_silicium_dtm)
+TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::NAN_NODATA);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
-        hrz_proto::ImageFormat::R_F32_SILICIUM);
+        hrz_proto::ImageFormat::SIRADEL_LEGACY_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_silicium(std::numeric_limits<float>::quiet_NaN())};
+        std::array<uint32_t, 1> v = {
+            to_siradel_legacy_f32(std::numeric_limits<float>::quiet_NaN())};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -827,7 +828,7 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_silicium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_silicium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -837,7 +838,7 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_silicium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_silicium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
     }
 }
 

@@ -167,8 +167,8 @@ std::optional<hrz::BlobImage> finalize_image(
         switch (encoded_image_format)
         {
             case hrz_proto::ImageFormat::R_F32: break;
-            case hrz_proto::ImageFormat::R_F32_SILICIUM:
-                convert(hrz::decode_r_f32_silicium_value_to_float);
+            case hrz_proto::ImageFormat::SIRADEL_LEGACY_F32:
+                convert(hrz::decode_siradel_legacy_f32_value_to_float);
                 break;
             case hrz_proto::ImageFormat::SIGNED_FIXED_24_8:
                 convert(hrz::decode_signed_fixed_24_8_to_float);
