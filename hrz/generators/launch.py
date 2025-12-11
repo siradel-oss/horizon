@@ -7,17 +7,27 @@ import re
 import json
 
 from hrz.generators import protocol_parser
-from hrz.generators.common import prepare_env, output_template, prepare_api_tpl_data, remove_prefix, path_to_snake_case
+from hrz.generators.common import (
+    prepare_env,
+    output_template,
+    prepare_api_tpl_data,
+    remove_prefix,
+    path_to_snake_case,
+)
 
 generators = {}
 
-def generator(name, parser = protocol_parser.parse):
+
+def generator(name, parser=protocol_parser.parse):
     def generator_inner(func):
         def wrapper(manifest_file, *args, **kwargs):
             return func(parser(manifest_file), *args, **kwargs)
+
         generators[name] = wrapper
         return wrapper
+
     return generator_inner
+
 
 @generator("cpp_protocol")
 def cpp_protocol_generator(protocol, tpl_env, output_dir, extra):
@@ -33,7 +43,10 @@ def cpp_protocol_generator(protocol, tpl_env, output_dir, extra):
         tpl_data["filename"] = f["name"]
         tpl_data["dependencies"] = f["dependencies"]
         f = remove_prefix(f["name"], "hrz/protocol/")
-        output_template(tpl_data, tpl, output_dir, f"gen/hrz/protocol/path_builder/{f}.h")
+        output_template(
+            tpl_data, tpl, output_dir, f"gen/hrz/protocol/path_builder/{f}.h"
+        )
+
 
 @generator("cpp_core")
 def cpp_core_generator(protocol, tpl_env, output_dir, extra):
@@ -64,6 +77,7 @@ def cpp_core_generator(protocol, tpl_env, output_dir, extra):
         f = remove_prefix(f["name"], "hrz/protocol/")
         output_template(tpl_data, tpl, output_dir, f"scene_path/{f}_paths.h")
 
+
 @generator("cpp_api")
 def cpp_api_generator(protocol, tpl_env, output_dir, extra):
     tpl_data = prepare_api_tpl_data(protocol)
@@ -72,6 +86,7 @@ def cpp_api_generator(protocol, tpl_env, output_dir, extra):
     tpl_h = tpl_env.get_template("cpp_api/api.tpl.h")
     output_template(tpl_data, tpl_h, output_dir, "api.h")
 
+
 @generator("ts_api")
 def ts_api_generator(protocol, tpl_env, output_dir, extra):
     tpl_data = prepare_api_tpl_data(protocol)
@@ -79,10 +94,11 @@ def ts_api_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("ts_api/api.tpl.ts")
     output_template(tpl_data, tpl, output_dir, "hrz_api.ts")
 
+
 def parse_jobs_manifest(file_path):
     jobs_json = json.loads(open(file_path, "r", encoding="utf-8").read())
     jobs = []
-    for (k, v) in jobs_json.items():
+    for k, v in jobs_json.items():
         job_dict = {"name": k}
         job_dict.update(v)
         if not "documentation" in job_dict:
@@ -95,6 +111,7 @@ def parse_jobs_manifest(file_path):
                 includes.add(include)
     includes = list(includes)
     return {"jobs": jobs, "all_params_responses_includes": includes}
+
 
 @generator("job_declarations", parser=parse_jobs_manifest)
 def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
@@ -114,6 +131,7 @@ def jobs_declarations_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("jobs/all_params_responses.tpl.h")
     output_template(tpl_data, tpl, output_dir, "all_params_responses.h")
 
+
 @generator("web_ui_info")
 def web_ui_info_generator(protocol, tpl_env, output_dir, extra):
     tpl_data = prepare_api_tpl_data(protocol)
@@ -121,11 +139,12 @@ def web_ui_info_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("web_ui_info/ui_info.tpl.ts")
     output_template(tpl_data, tpl, output_dir, "ui_info.ts")
 
+
 def trim_indentation(lines):
     min_leading_spaces = 100000
 
     for line in lines:
-        if len(line) != 0: # Ignore empty lines
+        if len(line) != 0:  # Ignore empty lines
             leading_spaces = len(line) - len(line.lstrip(" "))
             min_leading_spaces = min(min_leading_spaces, leading_spaces)
 
@@ -134,9 +153,9 @@ def trim_indentation(lines):
 
     return lines
 
-comment_by_file_ext = {
-    ".ts": "//"
-}
+
+comment_by_file_ext = {".ts": "//"}
+
 
 def find_block(lines, block_name, prefix):
     block_start = prefix + "embed-block-start " + block_name
@@ -157,6 +176,7 @@ def find_block(lines, block_name, prefix):
         block_start_line = None
 
     return block_start_line, block_end_line
+
 
 # Code can be embedded in documentation with four patterns:
 # A whole file:
@@ -197,13 +217,15 @@ def resolve_code_embeddings(md_content):
             if start_line is not None and end_line is None:
                 end_line = start_line
 
-            embeddings.append({
-                "dest_line": index,
-                "file_name": file_name,
-                "start_line": start_line,
-                "end_line": end_line,
-                "block_name": block_name
-            })
+            embeddings.append(
+                {
+                    "dest_line": index,
+                    "file_name": file_name,
+                    "start_line": start_line,
+                    "end_line": end_line,
+                    "block_name": block_name,
+                }
+            )
 
     for embedding in embeddings:
         file_name = embedding["file_name"]
@@ -222,7 +244,10 @@ def resolve_code_embeddings(md_content):
             file_extension = path.splitext(file_name)[1]
             comment_prefix = comment_by_file_ext.get(file_extension, None)
             if comment_prefix is None:
-                print("Error: Unknown file extension for code embedding: " + file_extension)
+                print(
+                    "Error: Unknown file extension for code embedding: "
+                    + file_extension
+                )
                 sys.exit(2)
             start_line, end_line = find_block(file_lines, block_name, comment_prefix)
 
@@ -235,11 +260,14 @@ def resolve_code_embeddings(md_content):
                 lines[dest_line] = file_content
         else:
             # Embed a line range
-            lines[dest_line] = "\n".join(trim_indentation(file_lines[start_line:(end_line + 1)]))
+            lines[dest_line] = "\n".join(
+                trim_indentation(file_lines[start_line : (end_line + 1)])
+            )
 
     md_content = "\n".join(lines)
 
     return md_content
+
 
 def read_crs_database(crs_database_path):
     crs_list = {}
@@ -248,15 +276,12 @@ def read_crs_database(crs_database_path):
             parts = line.split("\t")
             auth = parts[0]
             l = crs_list.get(auth, [])
-            l.append({
-                "srid": int(parts[1]),
-                "name": parts[2],
-                "proj_str": parts[3]
-            })
+            l.append({"srid": int(parts[1]), "name": parts[2], "proj_str": parts[3]})
             crs_list[auth] = l
     for _, l in crs_list.items():
         l.sort(key=lambda crs: crs["srid"])
     return crs_list
+
 
 def convert_doc_fields_markdown(values):
     if isinstance(values, list):
@@ -266,15 +291,16 @@ def convert_doc_fields_markdown(values):
         for key, value in values.items():
             if key == "documentation" and isinstance(value, str):
                 md = markdown.Markdown(
-                    extensions = ["extra", "sane_lists", "codehilite", "wikilinks"],
-                    extension_configs = {
+                    extensions=["extra", "sane_lists", "codehilite", "wikilinks"],
+                    extension_configs={
                         "codehilite": [("guess_lang", False)],
                         "wikilinks": [
                             ("base_url", "HrzProtocol."),
                             ("end_url", ".html"),
                             ("html_class", "protocol-type-link"),
                         ],
-                    })
+                    },
+                )
                 html_contents = md.convert(value)
                 values[key] = html_contents
             else:
@@ -288,12 +314,12 @@ def read_doc_markdown(in_file):
     md_contents = fp.read()
     fp.close()
 
-    md = markdown.Markdown(extensions = ["meta"])
+    md = markdown.Markdown(extensions=["meta"])
     # Parse only metadata first
     if md_contents.startswith("---\n"):
         index = md_contents[4:].find("---\n")
         if index >= 0:
-            md.convert(md_contents[:index + 8])
+            md.convert(md_contents[: index + 8])
 
     toc_depth = "1-3"
     if "tocdepth" in md.Meta:
@@ -301,16 +327,25 @@ def read_doc_markdown(in_file):
 
     md_contents = resolve_code_embeddings(md_contents)
     md = markdown.Markdown(
-        extensions = ["meta", "extra", "sane_lists", "toc", "codehilite", "admonition", "wikilinks"],
-        extension_configs = {
+        extensions=[
+            "meta",
+            "extra",
+            "sane_lists",
+            "toc",
+            "codehilite",
+            "admonition",
+            "wikilinks",
+        ],
+        extension_configs={
             "codehilite": [("guess_lang", False)],
             "toc": [("toc_depth", toc_depth)],
             "wikilinks": [
                 ("base_url", "HrzProtocol."),
                 ("end_url", ".html"),
                 ("html_class", "protocol-type-link"),
-            ]
-        })
+            ],
+        },
+    )
 
     separator = "<p>@@@@@@@@@@@TOCSEPARATOR@@@@@@@@@@@@@@</p>"
 
@@ -320,18 +355,28 @@ def read_doc_markdown(in_file):
     #  - TOC
     #  - separator
     #  - footnotes
-    html_contents_toc = md.convert(md_contents + "\n\n" + separator + "\n\n[TOC]\n\n" + separator)
+    html_contents_toc = md.convert(
+        md_contents + "\n\n" + separator + "\n\n[TOC]\n\n" + separator
+    )
     html_contents_toc = html_contents_toc.split(separator)
 
     title = md.Meta["title"][0]
     category = md.Meta["category"][0] if "category" in md.Meta else None
     menu_category = md.Meta["menucategory"][0] if "menucategory" in md.Meta else "doc"
 
-    return html_contents_toc[0] + html_contents_toc[2], name, title, category, menu_category, html_contents_toc[1]
+    return (
+        html_contents_toc[0] + html_contents_toc[2],
+        name,
+        title,
+        category,
+        menu_category,
+        html_contents_toc[1],
+    )
+
 
 def output_doc_html(values, tpl, contents, name, title, toc, menu_category, output_dir):
     filename = name + ".html"
-    out_file = Path(output_dir)  / filename
+    out_file = Path(output_dir) / filename
 
     doc_values = values.copy()
     doc_values["this"] = {
@@ -344,6 +389,7 @@ def output_doc_html(values, tpl, contents, name, title, toc, menu_category, outp
     output_template(doc_values, tpl, output_dir, filename)
     return out_file
 
+
 def output_templates_protocol_def_html(values, key_to_iterate, tpl, output_path):
     output_path = Path(output_path)
     outputs = []
@@ -354,6 +400,7 @@ def output_templates_protocol_def_html(values, key_to_iterate, tpl, output_path)
         output_template(v, tpl, output_path, filename)
         outputs.append(output_path / filename)
     return outputs
+
 
 def output_templates_protocol_file_html(values, key_to_iterate, tpl, output_path):
     output_path = Path(output_path)
@@ -369,6 +416,7 @@ def output_templates_protocol_file_html(values, key_to_iterate, tpl, output_path
         outputs.append(output_path / filename)
     return outputs
 
+
 def make_documentation_pages_values(protocol, pages_list_file):
     doc_pages = []
     doc_contents = []
@@ -381,7 +429,15 @@ def make_documentation_pages_values(protocol, pages_list_file):
         if not page_in_file.endswith(".md"):
             continue
         md, name, title, category, menu_category, toc = read_doc_markdown(page_in_file)
-        doc_contents.append({"contents": md, "name": name, "title": title, "toc": toc, "menu_category": menu_category})
+        doc_contents.append(
+            {
+                "contents": md,
+                "name": name,
+                "title": title,
+                "toc": toc,
+                "menu_category": menu_category,
+            }
+        )
 
         page_ref = {"name": name, "title": title}
         doc_pages.append(page_ref)
@@ -397,9 +453,14 @@ def make_documentation_pages_values(protocol, pages_list_file):
     values["doc_categories"] = doc_categories
     values["doc_contents"] = doc_contents
     values["version"] = extra[0]
-    values["scene_model_roots"] = [{"type": msg["full_name"], "root_field": msg["path_root"]} for msg in protocol["messages"] if msg["is_path_root"]]
+    values["scene_model_roots"] = [
+        {"type": msg["full_name"], "root_field": msg["path_root"]}
+        for msg in protocol["messages"]
+        if msg["is_path_root"]
+    ]
 
     return values
+
 
 @generator("doc_pages")
 def documentation_generator(protocol, tpl_env, output_dir, extra):
@@ -410,7 +471,17 @@ def documentation_generator(protocol, tpl_env, output_dir, extra):
 
     tpl_doc = tpl_env.get_template("documentation/fragment_doc.tpl.html")
     for doc in values["doc_contents"]:
-        out_file = output_doc_html(values, tpl_doc, doc["contents"], doc["name"], doc["title"], doc["toc"], doc["menu_category"], output_dir)
+        out_file = output_doc_html(
+            values,
+            tpl_doc,
+            doc["contents"],
+            doc["name"],
+            doc["title"],
+            doc["toc"],
+            doc["menu_category"],
+            output_dir,
+        )
+
 
 @generator("doc_search_index_script")
 def doc_search_index_script_generator(protocol, tpl_env, output_dir, extra):
@@ -421,6 +492,7 @@ def doc_search_index_script_generator(protocol, tpl_env, output_dir, extra):
 
     tpl_script = tpl_env.get_template("documentation/searchIndex.tpl.js")
     output_template(values, tpl_script, output_dir, extra[2])
+
 
 @generator("doc_ref_pages")
 def doc_ref_pages_generator(protocol, tpl_env, output_dir, extra):
@@ -441,12 +513,14 @@ def doc_ref_pages_generator(protocol, tpl_env, output_dir, extra):
     tpl_files = tpl_env.get_template("documentation/fragment_file.tpl.html")
     output_templates_protocol_file_html(values, "files", tpl_files, output_dir)
 
+
 @generator("doc_crs_database_md")
 def doc_crs_database_md_generator(protocol, tpl_env, output_dir, extra):
     values = {}
     values["crs_db"] = read_crs_database(extra[0])
     tpl = tpl_env.get_template("documentation/crs_database.tpl.md")
     output_template(values, tpl, output_dir, "crs_database.md")
+
 
 @generator("doc_artifacts_md")
 def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
@@ -469,10 +543,14 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
         raw_base = ""
         if is_snapshot:
             npm_base = "http://redacted.localhost/repository/npm-snapshots/"
-            raw_base = "http://redacted.localhost/repository/raw-snapshots/horizon/"
+            raw_base = (
+                "http://redacted.localhost/repository/raw-snapshots/horizon/"
+            )
         else:
             npm_base = "http://redacted.localhost/repository/npm-releases/"
-            raw_base = "http://redacted.localhost/repository/raw-releases/horizon/"
+            raw_base = (
+                "http://redacted.localhost/repository/raw-releases/horizon/"
+            )
 
         values["core_windows"] = f"{raw_base}core-windows-{version}.tar.gz"
         values["api_windows"] = f"{raw_base}cpp-api-windows-{version}.tar.gz"
@@ -482,19 +560,37 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
         values["api_linux"] = f"{raw_base}cpp-api-linux-{version}.tar.gz"
         values["protocol_linux"] = f"{raw_base}cpp-protocol-linux-{version}.tar.gz"
 
-        values["core_npm"] = f"{npm_base}@siradel/horizon-core/-/horizon-core-{npm_version}.tgz"
-        values["api_npm"] = f"{npm_base}@siradel/horizon-api/-/horizon-api-{npm_version}.tgz"
-        values["protocol_npm"] = f"{npm_base}@siradel/horizon-protocol/-/horizon-protocol-{npm_version}.tgz"
+        values["core_npm"] = (
+            f"{npm_base}@siradel/horizon-core/-/horizon-core-{npm_version}.tgz"
+        )
+        values["api_npm"] = (
+            f"{npm_base}@siradel/horizon-api/-/horizon-api-{npm_version}.tgz"
+        )
+        values["protocol_npm"] = (
+            f"{npm_base}@siradel/horizon-protocol/-/horizon-protocol-{npm_version}.tgz"
+        )
 
-        values["scene_dump_npm"] = f"{npm_base}@siradel/horizon-scene-dump/-/horizon-scene-dump-{npm_version}.tgz"
-        values["monitoring_protocol_npm"] = f"{npm_base}@siradel/horizon-monitoring-protocol/-/horizon-monitoring-protocol-{npm_version}.tgz"
+        values["scene_dump_npm"] = (
+            f"{npm_base}@siradel/horizon-scene-dump/-/horizon-scene-dump-{npm_version}.tgz"
+        )
+        values["monitoring_protocol_npm"] = (
+            f"{npm_base}@siradel/horizon-monitoring-protocol/-/horizon-monitoring-protocol-{npm_version}.tgz"
+        )
 
-        values["monitoring_app_windows"] = f"{raw_base}monitoring-client-windows-{version}.exe"
+        values["monitoring_app_windows"] = (
+            f"{raw_base}monitoring-client-windows-{version}.exe"
+        )
         values["monitoring_app_linux"] = f"{raw_base}monitoring-client-linux-{version}"
 
-        values["testing_kit_linux_x11"] = f"{raw_base}testing-kit-linux-x11-{version}.tar.gz"
-        values["testing_kit_linux_headless"] = f"{raw_base}testing-kit-linux-headless-{version}.tar.gz"
-        values["testing_kit_windows"] = f"{raw_base}testing-kit-windows-{version}.tar.gz"
+        values["testing_kit_linux_x11"] = (
+            f"{raw_base}testing-kit-linux-x11-{version}.tar.gz"
+        )
+        values["testing_kit_linux_headless"] = (
+            f"{raw_base}testing-kit-linux-headless-{version}.tar.gz"
+        )
+        values["testing_kit_windows"] = (
+            f"{raw_base}testing-kit-windows-{version}.tar.gz"
+        )
 
         values["documentation"] = f"{raw_base}api-doc-{version}.tar.gz"
     else:
@@ -502,7 +598,9 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
 
         values["core_windows"] = f"{base}horizon-core-{version}-cpp-windows.tar.gz"
         values["api_windows"] = f"{base}horizon-api-{version}-cpp-windows.tar.gz"
-        values["protocol_windows"] = f"{base}horizon-protocol-{version}-cpp-windows.tar.gz"
+        values["protocol_windows"] = (
+            f"{base}horizon-protocol-{version}-cpp-windows.tar.gz"
+        )
 
         values["core_linux"] = f"{base}horizon-core-{version}-cpp-linux.tar.gz"
         values["api_linux"] = f"{base}horizon-api-{version}-cpp-linux.tar.gz"
@@ -513,32 +611,51 @@ def doc_artifacts_md_generator(protocol, tpl_env, output_dir, extra):
         values["protocol_npm"] = f"{base}horizon-protocol-{version}-ts-npm.tgz"
 
         values["scene_dump_npm"] = f"{base}horizon-scene-dump-{version}-ts-npm.tgz"
-        values["monitoring_protocol_npm"] = f"{base}horizon-monitoring-protocol-{version}-ts-npm.tgz"
+        values["monitoring_protocol_npm"] = (
+            f"{base}horizon-monitoring-protocol-{version}-ts-npm.tgz"
+        )
 
-        values["monitoring_app_windows"] = f"{base}horizon-monitoring-client-{version}-windows.exe"
-        values["monitoring_app_linux"] = f"{base}horizon-monitoring-client-{version}-linux"
+        values["monitoring_app_windows"] = (
+            f"{base}horizon-monitoring-client-{version}-windows.exe"
+        )
+        values["monitoring_app_linux"] = (
+            f"{base}horizon-monitoring-client-{version}-linux"
+        )
 
-        values["testing_kit_linux_x11"] = f"{base}horizon-testing-kit-{version}-linux-x11.tar.gz"
-        values["testing_kit_linux_headless"] = f"{base}horizon-testing-kit-{version}-linux-headless.tar.gz"
-        values["testing_kit_windows"] = f"{base}horizon-testing-kit-{version}-windows.tar.gz"
+        values["testing_kit_linux_x11"] = (
+            f"{base}horizon-testing-kit-{version}-linux-x11.tar.gz"
+        )
+        values["testing_kit_linux_headless"] = (
+            f"{base}horizon-testing-kit-{version}-linux-headless.tar.gz"
+        )
+        values["testing_kit_windows"] = (
+            f"{base}horizon-testing-kit-{version}-windows.tar.gz"
+        )
 
         values["documentation"] = f"{base}horizon-documentation-{version}.tar.gz"
 
     tpl = tpl_env.get_template("documentation/artifacts.tpl.md")
     output_template(values, tpl, output_dir, "artifacts.md")
 
+
 @generator("doc_reference_md")
 def doc_reference_md_generator(protocol, tpl_env, output_dir, extra):
     values = protocol.copy()
-    values["scene_model_roots"] = [{"type": msg["full_name"], "root_field": msg["path_root"]} for msg in protocol["messages"] if msg["is_path_root"]]
+    values["scene_model_roots"] = [
+        {"type": msg["full_name"], "root_field": msg["path_root"]}
+        for msg in protocol["messages"]
+        if msg["is_path_root"]
+    ]
 
     tpl = tpl_env.get_template("documentation/reference.tpl.md")
     output_template(values, tpl, output_dir, "reference.md")
+
 
 @generator("style_enums_md")
 def style_enums_md_generator(protocol, tpl_env, output_dir, extra):
     tpl = tpl_env.get_template("documentation/style_enums.tpl.md")
     output_template(protocol, tpl, output_dir, "style_enums.md")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:

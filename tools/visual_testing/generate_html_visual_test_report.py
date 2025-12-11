@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import argparse
 import base64
@@ -9,13 +9,16 @@ import os
 import sys
 from pathlib import Path
 
+
 def get_root_path():
     return str(Path(__file__).parent.parent.parent)
+
 
 def get_favicon_base64(size):
     icon_path = os.path.join(get_root_path(), f"hrz/branding/favicon-{size}x{size}.png")
     with open(icon_path, "rb") as icon_file:
         return base64.b64encode(icon_file.read()).decode("ascii")
+
 
 def has_failed_tests(results):
     for test in results:
@@ -23,16 +26,23 @@ def has_failed_tests(results):
             return True
     return False
 
+
 def has_tests_with_errors(results):
     for test in results:
-        if test["success"] and test["errorRatio"] is not None and test["errorRatio"] > 0:
+        if (
+            test["success"]
+            and test["errorRatio"] is not None
+            and test["errorRatio"] > 0
+        ):
             return True
     return False
+
 
 def format_error_ratio(error_ratio):
     if error_ratio is None:
         return "--"
     return "%.2f" % (error_ratio * 100)
+
 
 def error_type_to_name(error_type):
     error_names = [
@@ -47,12 +57,14 @@ def error_type_to_name(error_type):
     ]
     return error_names[error_type]
 
+
 def test_to_css_class(test):
     if test["errorType"] != 0:
         return "failure"
     if test["errorRatio"] and test["errorRatio"] > 0:
         return "error"
     return "success"
+
 
 def make_template_env():
     template_path = os.path.join(get_root_path(), "tools/visual_testing/report")
@@ -66,9 +78,11 @@ def make_template_env():
     template_env.filters["format_error_ratio"] = format_error_ratio
     return template_env
 
+
 def render_template(template_env, template_name, params, output_file):
     template = template_env.get_template(template_name)
     output_file.write(template.render(params))
+
 
 def generate_html_report(json_path, output_file_name):
     if not os.path.exists(json_path):
@@ -92,6 +106,7 @@ def generate_html_report(json_path, output_file_name):
 
     return 0
 
+
 def generate_html_index(output_file_path):
     template_env = make_template_env()
 
@@ -100,11 +115,27 @@ def generate_html_index(output_file_path):
 
     return 0
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("report_path", nargs='?', default=None, type=str, help="Visual test report path")
-    parser.add_argument("-o", nargs=1, default=["hrz-visual-test-report.html"], type=str, help="Output HTML file name")
-    parser.add_argument("-t", nargs=1, choices=["report", "index"], default=["report"], type=str, help="Page type: report or index")
+    parser.add_argument(
+        "report_path", nargs="?", default=None, type=str, help="Visual test report path"
+    )
+    parser.add_argument(
+        "-o",
+        nargs=1,
+        default=["hrz-visual-test-report.html"],
+        type=str,
+        help="Output HTML file name",
+    )
+    parser.add_argument(
+        "-t",
+        nargs=1,
+        choices=["report", "index"],
+        default=["report"],
+        type=str,
+        help="Page type: report or index",
+    )
 
     args = parser.parse_args(sys.argv[1:])
 

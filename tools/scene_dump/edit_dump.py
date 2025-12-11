@@ -23,7 +23,15 @@ if __name__ == "__main__":
     MANIFEST = read_manifest(MANIFEST_PATH)
 
     ret = subprocess.run(
-        ["bazel", "run", "//tools/scene_dump:edit_dump", BZL_CONFIG, "--", args.dump_file.absolute()])
+        [
+            "bazel",
+            "run",
+            "//tools/scene_dump:edit_dump",
+            BZL_CONFIG,
+            "--",
+            args.dump_file.absolute(),
+        ]
+    )
 
     if ret.returncode == 0:
         print("OK")

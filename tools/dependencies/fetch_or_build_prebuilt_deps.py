@@ -6,17 +6,28 @@ import common.manifest as deps_manifest
 import common.lockfile as deps_lockfile
 from common.packaging import download_file_with_digest
 
+
 def full_label_to_path(label: str) -> Path:
     if label.startswith("//"):
         label = label[2:]
     return Path("/".join(label.split(":")))
 
+
 if __name__ == "__main__":
     default_platform = deps_platforms.get_current_platform()
 
-    parser = argparse.ArgumentParser(description="Fetch or build prebuilt dependencies.")
+    parser = argparse.ArgumentParser(
+        description="Fetch or build prebuilt dependencies."
+    )
     parser.add_argument("targets", help="Leave empty for all", type=str, nargs="*")
-    parser.add_argument("-t", "--platform", type=str, choices=deps_platforms.PLATFORM_TRIPLE.values(), default=default_platform, required=default_platform is None)
+    parser.add_argument(
+        "-t",
+        "--platform",
+        type=str,
+        choices=deps_platforms.PLATFORM_TRIPLE.values(),
+        default=default_platform,
+        required=default_platform is None,
+    )
 
     args = parser.parse_args()
     print("Fetching or building dependencies for platform", args.platform)
@@ -26,7 +37,11 @@ if __name__ == "__main__":
 
     platform = deps_platforms.TRIPLE_PLATFORM[args.platform]
 
-    external_deps = [dep for dep in manifest.entries if isinstance(dep, deps_manifest.ExternalManifestEntry)]
+    external_deps = [
+        dep
+        for dep in manifest.entries
+        if isinstance(dep, deps_manifest.ExternalManifestEntry)
+    ]
     external_deps = [dep for dep in external_deps if dep.supports_platform(platform)]
 
     if len(args.targets) > 0:
@@ -44,7 +59,9 @@ if __name__ == "__main__":
             lock_name = f"{dep.name}_{platform_name}"
 
         lock_entry = lockfile.entries.get(lock_name)
-        if not lock_entry or not isinstance(lock_entry, deps_lockfile.LocalArchiveLockEntry):
+        if not lock_entry or not isinstance(
+            lock_entry, deps_lockfile.LocalArchiveLockEntry
+        ):
             raise RuntimeError(f"Missing lock entry or wrong type for {lock_name}")
 
         print(f"Fetching or building {lock_name}")

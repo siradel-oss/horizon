@@ -14,7 +14,19 @@ check_version = sys.argv[4]
 validator_path = Path(sys.argv[5])
 compressor_path = Path(sys.argv[6])
 
-output = subprocess.run([validator_path, "--target-env", "opengl", "-S", stage, "--auto-map-bindings", "--auto-map-locations", input_path], stdout=subprocess.PIPE)
+output = subprocess.run(
+    [
+        validator_path,
+        "--target-env",
+        "opengl",
+        "-S",
+        stage,
+        "--auto-map-bindings",
+        "--auto-map-locations",
+        input_path,
+    ],
+    stdout=subprocess.PIPE,
+)
 if output.returncode != 0:
     filenames = {}
     with open(input_path, "rb") as fp:
@@ -29,7 +41,10 @@ if output.returncode != 0:
     for line in output:
         m = error_re.search(line)
         if m != None:
-            print("ERROR: %s:%s: %s" % (filenames[int(m.group(1))], m.group(2), m.group(3).rstrip()))
+            print(
+                "ERROR: %s:%s: %s"
+                % (filenames[int(m.group(1))], m.group(2), m.group(3).rstrip())
+            )
         else:
             print(line.rstrip())
         pass

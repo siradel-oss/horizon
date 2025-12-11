@@ -11,7 +11,7 @@ if __name__ == "__main__":
     unused_descriptors = gather_unused_descriptors(MANIFEST)
     if unused_descriptors:
         for f in unused_descriptors:
-            print(f"Unused descriptor \"{str(f)}\"")
+            print(f'Unused descriptor "{str(f)}"')
         sys.exit(1)
 
     print("OK")

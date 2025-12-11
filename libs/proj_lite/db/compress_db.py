@@ -3,6 +3,7 @@ import heapq
 import sqlite3
 import argparse
 
+
 def split(string, separators):
     part = ""
     for character in string:
@@ -12,6 +13,7 @@ def split(string, separators):
             part = ""
     if part != "":
         yield part
+
 
 def dict_compress(projections, separators):
     frequencies = dict()
@@ -41,7 +43,9 @@ def dict_compress(projections, separators):
             keys[string] = "1" + keys.get(string, "")
 
         # Join both as one node and push to tree
-        heapq.heappush(htree, (left_node[0] + right_node[0], left_node[1] + right_node[1]))
+        heapq.heappush(
+            htree, (left_node[0] + right_node[0], left_node[1] + right_node[1])
+        )
 
         key_tree_size += 1
 
@@ -51,7 +55,7 @@ def dict_compress(projections, separators):
         if len(key) >= longest_key_length:
             padding_key = key
             longest_key_length = len(key)
-    assert(len(padding_key) >= 8)
+    assert len(padding_key) >= 8
 
     projection_lengths = []
     encoded_lines = ""
@@ -69,7 +73,7 @@ def dict_compress(projections, separators):
         encoded_line += padding_key[:missing_bytes]
         encoded_lines += encoded_line
 
-        assert(len(encoded_line) % 8 == 0)
+        assert len(encoded_line) % 8 == 0
 
         projection_lengths.append((srid, int(len(encoded_line) / 8)))
 
@@ -83,14 +87,16 @@ def dict_compress(projections, separators):
 
     return projection_lengths, encoded_bytes, keys, key_tree_size
 
+
 # Because 'to_bytes()' does not exist on Python 2.
 # From https://stackoverflow.com/a/20793663
-def to_bytes(n, length, endianess = "big"):
+def to_bytes(n, length, endianess="big"):
     if sys.version_info[0] >= 3:
         return n.to_bytes(length, endianess)
     else:
         s = "{:0{}x}".format(n, length * 2).decode("hex")
         return s if endianess == "big" else s[::-1]
+
 
 def compress_db(db_file_path, output_file_path, verbose):
     projections = []
@@ -104,17 +110,22 @@ def compress_db(db_file_path, output_file_path, verbose):
         if auth == "EPSG":
             projections.append((code, proj_str))
         else:
-            print("Warning: Non-EPSG projections are not currently supported, skipping %s:%s" % (auth, code))
+            print(
+                "Warning: Non-EPSG projections are not currently supported, skipping %s:%s"
+                % (auth, code)
+            )
 
-    projection_lengths, proj_bytes, keys, key_tree_size = dict_compress(projections, [" ", "="])
+    projection_lengths, proj_bytes, keys, key_tree_size = dict_compress(
+        projections, [" ", "="]
+    )
 
-    assert(len(keys) <= 256 * 256)
+    assert len(keys) <= 256 * 256
 
     key_list = []
     for string, key in keys.items():
         key_list.append((key, string))
 
-    key_list.sort(key = lambda entry: entry[0])
+    key_list.sort(key=lambda entry: entry[0])
 
     if verbose:
         print("%s keys (tree entries: %s)" % (len(key_list), key_tree_size))
@@ -127,7 +138,7 @@ def compress_db(db_file_path, output_file_path, verbose):
         dict_bytes += to_bytes(len(key), 1, "little")
         dict_bytes += to_bytes(int_key, 2, "little")
         dict_bytes += bytes(string.encode("utf-8"))
-        dict_bytes += [0] # make a 0-terminated string
+        dict_bytes += [0]  # make a 0-terminated string
 
     lengths_bytes = []
     for srid, length in projection_lengths:
@@ -158,11 +169,21 @@ def compress_db(db_file_path, output_file_path, verbose):
     with open(output_file_path, "wb") as out_file:
         out_file.write(bytearray(output_bytes))
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate a compressed projection database.")
+    parser = argparse.ArgumentParser(
+        description="Generate a compressed projection database."
+    )
     parser.add_argument("db_file_path", help="Path to the input database file")
-    parser.add_argument("output_file_path", help="Path to the output compressed database file")
-    parser.add_argument("-v", "--verbose", action='store_true', help="Enable verbose mode (default: false)")
+    parser.add_argument(
+        "output_file_path", help="Path to the output compressed database file"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose mode (default: false)",
+    )
     args = parser.parse_args()
 
     compress_db(args.db_file_path, args.output_file_path, args.verbose)

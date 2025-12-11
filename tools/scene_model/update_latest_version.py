@@ -4,7 +4,12 @@ from pathlib import Path
 sys.path.append("")
 from hrz.protocol.history.manifest import read_manifest, compute_hash
 
-from common import MANIFEST_PATH, INITIAL_HASH, save_current_descriptor_set, compute_file_hash
+from common import (
+    MANIFEST_PATH,
+    INITIAL_HASH,
+    save_current_descriptor_set,
+    compute_file_hash,
+)
 
 if __name__ == "__main__":
     MANIFEST = read_manifest(MANIFEST_PATH)
@@ -12,11 +17,15 @@ if __name__ == "__main__":
     id = MANIFEST.last_entry().id
     print(f"Updating version {id}...")
 
-    print("WARNING: You are about to overwrite the latest registered scene model descriptor set with the current one.")
-    print("While this is mandatory, it should only be done if you are sure those versions are compatible (aka no migration is needed).")
+    print(
+        "WARNING: You are about to overwrite the latest registered scene model descriptor set with the current one."
+    )
+    print(
+        "While this is mandatory, it should only be done if you are sure those versions are compatible (aka no migration is needed)."
+    )
     print("Otherwise please use new_version.py to create a new version & migration")
     print("")
-    resp = input("Are you sure you want to do this? Type \"Yes\" if so: ")
+    resp = input('Are you sure you want to do this? Type "Yes" if so: ')
 
     if resp.lower() == "yes":
         print("Updating the descriptor set")

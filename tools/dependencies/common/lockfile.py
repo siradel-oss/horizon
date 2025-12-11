@@ -1,14 +1,25 @@
 import json
 from dataclasses import dataclass
 
+
 class LockEntry:
     def serialize(self) -> dict:
-        return dict({k: v for k, v in vars(self).items() if v is not None}, type = self.tag)
+        return dict(
+            {k: v for k, v in vars(self).items() if v is not None}, type=self.tag
+        )
+
 
 class HttpArchiveLockEntry(LockEntry):
     tag: str = "http_archive"
 
-    def __init__(self, urls: list[str], digest: str, prefix: str = None, patches: list[str] = None, build_file: str = None):
+    def __init__(
+        self,
+        urls: list[str],
+        digest: str,
+        prefix: str = None,
+        patches: list[str] = None,
+        build_file: str = None,
+    ):
         self.urls = urls
         self.digest = digest
         self.prefix = prefix
@@ -17,11 +28,11 @@ class HttpArchiveLockEntry(LockEntry):
 
     def from_dict(data: dict) -> "HttpArchiveLockEntry":
         return HttpArchiveLockEntry(
-            urls = data["urls"],
-            digest = data["digest"],
-            prefix = data.get("prefix", None),
-            patches = data.get("patches", None),
-            build_file = data.get("build_file", None),
+            urls=data["urls"],
+            digest=data["digest"],
+            prefix=data.get("prefix", None),
+            patches=data.get("patches", None),
+            build_file=data.get("build_file", None),
         )
 
     def as_bazel_rule(self, name: str) -> str:
@@ -40,11 +51,14 @@ class HttpArchiveLockEntry(LockEntry):
 
         if self.patches:
             text += "    patches = [\n"
-            text += "".join([f'        "//third_party:patches/{p}",\n' for p in self.patches])
+            text += "".join(
+                [f'        "//third_party:patches/{p}",\n' for p in self.patches]
+            )
             text += "    ],\n"
 
         text += ")\n"
         return text
+
 
 class HttpFileLockEntry(LockEntry):
     tag: str = "http_file"
@@ -56,9 +70,9 @@ class HttpFileLockEntry(LockEntry):
 
     def from_dict(data: dict) -> "HttpFileLockEntry":
         return HttpFileLockEntry(
-            urls = data["urls"],
-            digest = data["digest"],
-            executable = data.get("executable", False),
+            urls=data["urls"],
+            digest=data["digest"],
+            executable=data.get("executable", False),
         )
 
     def as_bazel_rule(self, name: str) -> str:
@@ -70,15 +84,22 @@ class HttpFileLockEntry(LockEntry):
         text += f'    sha256 = "{self.digest}",\n'
 
         if self.executable:
-            text += '    executable = True,\n'
+            text += "    executable = True,\n"
 
         text += ")\n"
         return text
 
+
 class LocalArchiveLockEntry(LockEntry):
     tag: str = "local_archive"
 
-    def __init__(self, label: str, mirror_url: str = None, mirror_digest: str = None, build_file: str = None):
+    def __init__(
+        self,
+        label: str,
+        mirror_url: str = None,
+        mirror_digest: str = None,
+        build_file: str = None,
+    ):
         self.label = label
         self.build_file = build_file
         self.mirror_url = mirror_url
@@ -86,10 +107,10 @@ class LocalArchiveLockEntry(LockEntry):
 
     def from_dict(data: dict) -> "LocalArchiveLockEntry":
         return LocalArchiveLockEntry(
-            label = data["label"],
-            mirror_url = data.get("mirror_url", None),
-            mirror_digest = data.get("mirror_digest", None),
-            build_file = data.get("build_file", None),
+            label=data["label"],
+            mirror_url=data.get("mirror_url", None),
+            mirror_digest=data.get("mirror_digest", None),
+            build_file=data.get("build_file", None),
         )
 
     def as_bazel_rule(self, name: str) -> str:
@@ -107,6 +128,7 @@ class LocalArchiveLockEntry(LockEntry):
         text += ")\n"
         return text
 
+
 class Lockfile:
     def __init__(self):
         self.entries: dict[str, LockEntry] = {}
@@ -122,7 +144,13 @@ class Lockfile:
 
     def write(self, path: str):
         with open(path, "wb+") as f:
-            f.write(bytes(json.dumps(self.serialize(), sort_keys=True, indent=2) + "\n", encoding="utf8"))
+            f.write(
+                bytes(
+                    json.dumps(self.serialize(), sort_keys=True, indent=2) + "\n",
+                    encoding="utf8",
+                )
+            )
+
 
 def parse(data: any) -> Lockfile:
     classes = [HttpArchiveLockEntry, HttpFileLockEntry, LocalArchiveLockEntry]
@@ -135,6 +163,7 @@ def parse(data: any) -> Lockfile:
         else:
             raise ValueError(f"Unknown dependency type: {prps['type']}")
     return lock
+
 
 def read(path: str) -> Lockfile:
     with open(path, "rb") as f:

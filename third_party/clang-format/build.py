@@ -6,7 +6,13 @@ import platform
 dependencies_dir_parent = (Path(__file__).parent / "../..").resolve()
 sys.path.insert(0, str(dependencies_dir_parent))
 
-from tools.dependencies.common.utils import create_temp_dir, create_temp_file, download_file, untar, run_command
+from tools.dependencies.common.utils import (
+    create_temp_dir,
+    create_temp_file,
+    download_file,
+    untar,
+    run_command,
+)
 
 if len(sys.argv) < 4:
     print("Usage: %s <version> <platform> <install_dir>" % sys.argv[0])
@@ -32,11 +38,31 @@ untar(llvm_archive.path, llvm_dir.path)
 
 print("Configure CMake build")
 build_dir = create_temp_dir()
-if not run_command(["cmake", "-S", llvm_dir.path / ROOT_FOLDER / "llvm", "-B", build_dir.path, "-DLLVM_ENABLE_PROJECTS=clang", "-DCMAKE_BUILD_TYPE=Release"]):
+if not run_command(
+    [
+        "cmake",
+        "-S",
+        llvm_dir.path / ROOT_FOLDER / "llvm",
+        "-B",
+        build_dir.path,
+        "-DLLVM_ENABLE_PROJECTS=clang",
+        "-DCMAKE_BUILD_TYPE=Release",
+    ]
+):
     raise RuntimeError("Couldn't configure CMake build")
 
 print("Build clang-format")
-if not run_command(["cmake", "--build", build_dir.path, "--config", "Release", "--target", "clang-format"]):
+if not run_command(
+    [
+        "cmake",
+        "--build",
+        build_dir.path,
+        "--config",
+        "Release",
+        "--target",
+        "clang-format",
+    ]
+):
     raise RuntimeError("Failed to build clang-format")
 
 bin_path = None
@@ -53,4 +79,3 @@ if not shutil.copy(bin_path, install_dir):
     raise RuntimeError("Couldn't copy clang-format executable")
 
 print("Cleanup")
-

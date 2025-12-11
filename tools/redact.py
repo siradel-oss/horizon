@@ -14,4 +14,3 @@ data = Path(input).read_bytes()
 regex = f"^.*{BEGIN_TAG}[\\w\\W]*?{END_TAG}.*$\\n"
 data = re.sub(regex, "", data.decode(), flags=re.MULTILINE)
 Path(output).write_bytes(data.encode())
-

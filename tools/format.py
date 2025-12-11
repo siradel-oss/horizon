@@ -9,11 +9,13 @@ import json
 import multiprocessing
 import re
 
+
 def retrieve_bazel_info(all, wanted):
     for line in all:
         if line.startswith(wanted + ":"):
-            return line[(len(wanted) + 2):]
+            return line[(len(wanted) + 2) :]
     return ""
+
 
 def run_command(cmd, name):
     ret = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -24,22 +26,56 @@ def run_command(cmd, name):
         print("stderr:\n", ret.stderr.decode("utf-8"))
         sys.exit(1)
 
-parser = argparse.ArgumentParser(description="Format code files. If no operation is selected, all are performed.")
-parser.add_argument("-s", "--staged", action='store_true', help="only operate on staged files")
-parser.add_argument("--jj", action='store_true', help="only operate on JJ working copy files")
-parser.add_argument("-c", "--clang-format", action='store_true', help="run Clang-Format (format C/C++ files)")
-parser.add_argument("-p", "--prettier", action='store_true', help="run Prettier (format TypeScript/JavaScript/CSS files)")
-parser.add_argument("-l", "--line-endings", action='store_true', help="fix line endings")
-parser.add_argument("-b", "--buildifier", action='store_true', help="run Buildifier (format Bazel files)")
+
+parser = argparse.ArgumentParser(
+    description="Format code files. If no operation is selected, all are performed."
+)
+parser.add_argument(
+    "-s", "--staged", action="store_true", help="only operate on staged files"
+)
+parser.add_argument(
+    "--jj", action="store_true", help="only operate on JJ working copy files"
+)
+parser.add_argument(
+    "-c",
+    "--clang-format",
+    action="store_true",
+    help="run Clang-Format (format C/C++ files)",
+)
+parser.add_argument(
+    "-p",
+    "--prettier",
+    action="store_true",
+    help="run Prettier (format TypeScript/JavaScript/CSS files)",
+)
+parser.add_argument(
+    "-l", "--line-endings", action="store_true", help="fix line endings"
+)
+parser.add_argument(
+    "-b",
+    "--buildifier",
+    action="store_true",
+    help="run Buildifier (format Bazel files)",
+)
+parser.add_argument(
+    "-k", "--black", action="store_true", help="run Black (format Python files)"
+)
 args = parser.parse_args()
 
 mode = "staged" if args.staged else "all"
 mode = "jj" if args.jj else mode
 
-run_all = not args.clang_format and not args.prettier and not args.line_endings and not args.buildifier
+run_all = (
+    not args.clang_format
+    and not args.prettier
+    and not args.line_endings
+    and not args.buildifier
+    and not args.black
+)
 run_clang_format = run_all or args.clang_format
 run_prettier = run_all or args.prettier
 run_buildifier = run_all or args.buildifier
+run_black = run_all or args.black
 fix_line_endings = run_all or args.line_endings
 
 fd = "fd"
@@ -48,11 +84,15 @@ if mode == "all":
         if shutil.which("fdfind"):
             fd = "fdfind"
         else:
-            print("\033[93mERROR: fd required (install package 'fd-find' (cargo, apt, etc) or https://github.com/sharkdp/fd/releases)\033[0m")
+            print(
+                "\033[93mERROR: fd required (install package 'fd-find' (cargo, apt, etc) or https://github.com/sharkdp/fd/releases)\033[0m"
+            )
             sys.exit(1)
 
 bazel_info = subprocess.check_output(["bazel", "info"]).decode("utf-8").splitlines()
-repo_mapping = json.loads(subprocess.check_output(["bazel", "mod", "dump_repo_mapping", ""]))
+repo_mapping = json.loads(
+    subprocess.check_output(["bazel", "mod", "dump_repo_mapping", ""])
+)
 output_base = Path(retrieve_bazel_info(bazel_info, "output_base"))
 
 clang_format_config = {
@@ -66,8 +106,15 @@ clang_format_config = {
     },
 }[platform.system()]
 
-clang_format_target = "@@" + clang_format_config["workspace"] + "//:" + clang_format_config["file"]
-clang_format_exe = output_base / "external" / clang_format_config["workspace"] / clang_format_config["file"]
+clang_format_target = (
+    "@@" + clang_format_config["workspace"] + "//:" + clang_format_config["file"]
+)
+clang_format_exe = (
+    output_base
+    / "external"
+    / clang_format_config["workspace"]
+    / clang_format_config["file"]
+)
 
 subprocess.run(["bazel", "build", clang_format_target])
 subprocess.run([clang_format_exe, "--version"])
@@ -77,11 +124,48 @@ if not shutil.which("git"):
     sys.exit(1)
 
 # Check that git settings are OK
-output = subprocess.check_output(["git", "config", "--get", "core.autocrlf"]).decode("utf-8").strip()
+output = (
+    subprocess.check_output(["git", "config", "--get", "core.autocrlf"])
+    .decode("utf-8")
+    .strip()
+)
 if output != "false":
     print("\033[93mWARNING: git config core.autocrlf should be false\033[0m")
 
-all_extensions = ["txt", "bazel", "cpp", "h", "c", "cc", "hpp", "inl", "proto", "bzl", "py", "js", "json", "md", "Config", "tpl", "css", "ts", "html", "cs", "bat", "sh", "tpl", "frag", "vert", "glsl", "patch", "csv", "php", "yaml", "yml", "vue"]
+all_extensions = [
+    "txt",
+    "bazel",
+    "cpp",
+    "h",
+    "c",
+    "cc",
+    "hpp",
+    "inl",
+    "proto",
+    "bzl",
+    "py",
+    "js",
+    "json",
+    "md",
+    "Config",
+    "tpl",
+    "css",
+    "ts",
+    "html",
+    "cs",
+    "bat",
+    "sh",
+    "tpl",
+    "frag",
+    "vert",
+    "glsl",
+    "patch",
+    "csv",
+    "php",
+    "yaml",
+    "yml",
+    "vue",
+]
 all_files_names = [".gitlab-ci.yml", "Dockerfile"]
 cpp_extensions = ["cpp", "h", "c", "cc", "hpp", "inl", "proto"]
 
@@ -92,10 +176,31 @@ print("Discovering files....")
 
 if mode == "all":
     extensions_args = " ".join(["-e %s" % e for e in all_extensions])
-    all_files = subprocess.check_output((fd + " " + extensions_args).split(" ")).decode("utf-8").splitlines()
-    all_files += subprocess.check_output([fd, "\"" + "|".join(all_files_names) + "\""]).decode("utf-8").splitlines()
+    all_files = (
+        subprocess.check_output((fd + " " + extensions_args).split(" "))
+        .decode("utf-8")
+        .splitlines()
+    )
+    all_files += (
+        subprocess.check_output([fd, '"' + "|".join(all_files_names) + '"'])
+        .decode("utf-8")
+        .splitlines()
+    )
 elif mode == "staged":
-    files = subprocess.check_output(["git", "diff-index", "--cached", "--diff-filter=ACMRTUXB", "--name-only", "HEAD"]).decode("utf-8").splitlines()
+    files = (
+        subprocess.check_output(
+            [
+                "git",
+                "diff-index",
+                "--cached",
+                "--diff-filter=ACMRTUXB",
+                "--name-only",
+                "HEAD",
+            ]
+        )
+        .decode("utf-8")
+        .splitlines()
+    )
     for f in files:
         ext = os.path.splitext(f)[1][1:]
         basename = os.path.basename(f)
@@ -104,7 +209,24 @@ elif mode == "staged":
         elif basename in all_files_names:
             all_files.append(f)
 elif mode == "jj":
-    files = subprocess.check_output(["jj", "show", "-r", "@", "-s", "-T", "''", "--no-pager", "--color", "never"]).decode("utf-8").splitlines()
+    files = (
+        subprocess.check_output(
+            [
+                "jj",
+                "show",
+                "-r",
+                "@",
+                "-s",
+                "-T",
+                "''",
+                "--no-pager",
+                "--color",
+                "never",
+            ]
+        )
+        .decode("utf-8")
+        .splitlines()
+    )
     use_ops = ["A", "M", "R", "C"]
     skip_ops = ["D"]
     for f in files:
@@ -112,7 +234,9 @@ elif mode == "jj":
         if op in skip_ops:
             continue
         if op not in use_ops:
-            raise RuntimeError(f"Unexpected operation '{op}' in JJ output, expected one of {use_ops}")
+            raise RuntimeError(
+                f"Unexpected operation '{op}' in JJ output, expected one of {use_ops}"
+            )
 
         filename = f[2:]
         if op in ("R", "C"):
@@ -175,15 +299,41 @@ if run_prettier:
 if run_buildifier:
     # Run Buildifier for Bazel files
     print("Running Buildifier...")
-    buildifier_cmd = ["bazel", "run", "//third_party:buildifier", "--", "-lint", "fix", "-r", os.getcwd()]
+    buildifier_cmd = [
+        "bazel",
+        "run",
+        "//third_party:buildifier",
+        "--",
+        "-lint",
+        "fix",
+        "-r",
+        os.getcwd(),
+    ]
     run_command(buildifier_cmd, "Buildifier")
+
+if run_black:
+    # Run Black for Python files
+    print("Running Black...")
+    black_cmd = ["bazel", "run", "//third_party:black", "--"]
+    should_run = True
+    if mode != "all":
+        py_files = [f for f in all_files if f.endswith(".py")]
+        if len(py_files) == 0:
+            should_run = False
+        else:
+            black_cmd += [Path(f).resolve() for f in all_files if f.endswith(".py")]
+    else:
+        black_cmd += [os.getcwd()]
+
+    if should_run:
+        run_command(black_cmd, "Black")
 
 if fix_line_endings:
     # Fix line endings for all text files
     print("Fixing line endings...")
 
-    for (i, f) in enumerate(all_files):
-        print("\r    Fixing file %d/%d" % (i + 1, len(all_files)), end = "")
+    for i, f in enumerate(all_files):
+        print("\r    Fixing file %d/%d" % (i + 1, len(all_files)), end="")
         lines = open(f, "rb").readlines()
         fixed_output = ""
         has_differences = False
@@ -203,4 +353,3 @@ if mode == "staged":
     print("Re-staging files...")
     for f in all_files:
         run_command(["git", "add", f], "Git Add")
-

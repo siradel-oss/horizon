@@ -8,7 +8,13 @@ import requests
 dependencies_dir_parent = (Path(__file__).parent / "../..").resolve()
 sys.path.insert(0, str(dependencies_dir_parent))
 
-from tools.dependencies.common.utils import create_temp_dir, create_temp_file, download_file, untar, run_command
+from tools.dependencies.common.utils import (
+    create_temp_dir,
+    create_temp_file,
+    download_file,
+    untar,
+    run_command,
+)
 
 if len(sys.argv) < 4:
     print("Usage: %s <version> <platform> <install_dir>" % sys.argv[0])
@@ -52,13 +58,15 @@ for patch in source.get("patches", []):
     patch_file = create_temp_file()
     if not download_file(patch_url, patch_file.path):
         raise RuntimeError(f"Couldn't download patch {patch}")
-    if not run_command(["git", "apply", f"-p{patch_strip}", patch_file.path], directory=source_dir):
+    if not run_command(
+        ["git", "apply", f"-p{patch_strip}", patch_file.path], directory=source_dir
+    ):
         raise RuntimeError(f"Failed to apply patch {patch}")
 
 # Add zlib to the MODULE and BUILD files
 # This might need to change when updating, so we assert on the version here
-assert(version == "8.8.0.bcr.1")
-patch = '''
+assert version == "8.8.0.bcr.1"
+patch = """
 diff --git a/BUILD.bazel b/BUILD.bazel
 index a57440ceb..1c9e3e9f4 100644
 --- a/BUILD.bazel
@@ -99,7 +107,7 @@ index e1fcda8dc..e6a9816d6 100644
  bazel_dep(name = "platforms", version = "0.0.10")
  bazel_dep(name = "boringssl", version = "0.0.0-20230215-5c22014")
 +bazel_dep(name = "zlib", version = "1.3.1.bcr.3")
-'''
+"""
 patch_file = create_temp_file()
 patch_file.path.write_bytes(patch.encode())
 
@@ -122,19 +130,33 @@ for cfg in ["opt", "dbg"]:
     lib_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Building boringssl, {cfg}")
-    if not run_command(["bazel", "--batch", "build", "@boringssl//:crypto", "-c", cfg] + build_args, directory=source_dir):
+    if not run_command(
+        ["bazel", "--batch", "build", "@boringssl//:crypto", "-c", cfg] + build_args,
+        directory=source_dir,
+    ):
         raise RuntimeError("Failed to build curl")
 
-    if not run_command(["bazel", "--batch", "build", "@boringssl//:ssl", "-c", cfg] + build_args, directory=source_dir):
+    if not run_command(
+        ["bazel", "--batch", "build", "@boringssl//:ssl", "-c", cfg] + build_args,
+        directory=source_dir,
+    ):
         raise RuntimeError("Failed to build curl")
 
     print(f"Building curl, {cfg}")
-    if not run_command(["bazel", "--batch", "build", "//:curl", "-c", cfg] + build_args, directory=source_dir):
+    if not run_command(
+        ["bazel", "--batch", "build", "//:curl", "-c", cfg] + build_args,
+        directory=source_dir,
+    ):
         raise RuntimeError("Failed to build curl")
 
     shutil.copy(source_dir / f"bazel-bin/{lib_prefix}curl{lib_ext}", lib_dir)
-    shutil.copy(source_dir / f"bazel-bin/external/boringssl+/{lib_prefix}ssl{lib_ext}", lib_dir)
-    shutil.copy(source_dir / f"bazel-bin/external/boringssl+/{lib_prefix}crypto{lib_ext}", lib_dir)
+    shutil.copy(
+        source_dir / f"bazel-bin/external/boringssl+/{lib_prefix}ssl{lib_ext}", lib_dir
+    )
+    shutil.copy(
+        source_dir / f"bazel-bin/external/boringssl+/{lib_prefix}crypto{lib_ext}",
+        lib_dir,
+    )
 
 print("Copying headers")
 dst_include_dir = install_dir / "include/curl"

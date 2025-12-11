@@ -7,36 +7,46 @@ import platform
 
 from pathlib import Path
 
+
 def last(value, sep):
     elements = value.split(sep)
     return elements[len(elements) - 1]
 
+
 def path_to_snake_case(value: str):
     return value.replace("/", "_").replace("\\", "_").replace(".", "_")
 
+
 def snake_case(value):
-    return "_".join(re.findall('[A-Z]+[^A-Z]*', value)).lower()
+    return "_".join(re.findall("[A-Z]+[^A-Z]*", value)).lower()
+
 
 def snake_to_pascal(value):
     return "".join([v[0].upper() + v[1:] for v in value.split("_")])
 
+
 def snake_to_camel(value):
     return camel_case("".join([v[0].upper() + v[1:] for v in value.split("_")]))
+
 
 def camel_case(value):
     return value[0].lower() + value[1:]
 
+
 def rejoin(value, old, new):
     return new.join(value.split(old))
+
 
 def wbr_on_slash(value: str) -> str:
     return value.replace("/", "/<wbr />").replace("\\", "\\<wbr />")
 
+
 def wbr_on_period(value: str) -> str:
     return value.replace(".", ".<wbr />")
 
+
 def type_path(full_name):
-    elements = full_name.split('.')
+    elements = full_name.split(".")
     path = []
     previous_path = ""
     first = True
@@ -52,8 +62,10 @@ def type_path(full_name):
 
     return path
 
+
 def without_first(value, sep):
     return sep.join(value.split(sep)[1:])
+
 
 def to_short_type_name(value):
     if value in PB_PRIMITIVE_TYPES:
@@ -63,21 +75,25 @@ def to_short_type_name(value):
             value = without_first(value, ".")
     return rejoin(value, ".", "_")
 
+
 def to_cpp_enum_value_name(value, enum_full_name):
     enum_name = to_short_type_name(enum_full_name)
     if "_" in enum_name:
         return enum_name + "_" + value
     return value
 
+
 def to_cpp_field_name(value):
     if value == "descriptor":
         return "descriptor_"
     return value
 
+
 def to_cpp_qualified_name(value):
     if value in PB_PRIMITIVE_TYPES:
         return CPP_PRIMITIVE_TYPES[value]
     return "::" + rejoin(value, ".", "::")
+
 
 def to_cpp_forward_declaration(value):
     type = "struct"
@@ -90,10 +106,12 @@ def to_cpp_forward_declaration(value):
     elements = value.split("::")
     return f'namespace {"::".join(elements[0:-1])} {{ {type} {elements[-1]}; }}'
 
+
 def to_ts_type(value):
     if value in PB_PRIMITIVE_TYPES:
         return TS_PRIMITIVE_TYPES[value]
     return value
+
 
 def to_ts_interface(value, enum_names):
     if value in PB_PRIMITIVE_TYPES:
@@ -104,19 +122,22 @@ def to_ts_interface(value, enum_names):
     elements[len(elements) - 1] = "I" + elements[len(elements) - 1]
     return ".".join(elements)
 
+
 def to_cs_type(value):
     if value in PB_PRIMITIVE_TYPES:
         return CS_PRIMITIVE_TYPES[value]
     return value
 
-def indent_prefix(text, indent = 0, prefix = ""):
+
+def indent_prefix(text, indent=0, prefix=""):
     if text == "":
         return ""
     line_prefix = "\n" + " " * indent + prefix
     lines = text.split("\n")
     return line_prefix.join(lines)
 
-def to_documentation_block(text, indent = 0, open_block = True, close_block = True):
+
+def to_documentation_block(text, indent=0, open_block=True, close_block=True):
     if text == "":
         return ""
     prefix = " " * indent + " *"
@@ -124,10 +145,12 @@ def to_documentation_block(text, indent = 0, open_block = True, close_block = Tr
     end = "\n" + prefix + "/" if close_block else ""
     return start + indent_prefix(text, indent, " * ") + end
 
+
 def to_wrapper(value):
     if value in PB_PRIMITIVE_TYPES:
         return PB_PRIMITIVE_WRAPPERS[value]
-    return PB_PRIMITIVE_WRAPPERS["uint32"] # for enums
+    return PB_PRIMITIVE_WRAPPERS["uint32"]  # for enums
+
 
 def prepare_env():
     current_path = Path(os.getcwd()) / "hrz/generators/templates"
@@ -135,7 +158,7 @@ def prepare_env():
         current_path = Path(os.path.dirname(__file__)) / "templates"
 
     loader = jinja2.FileSystemLoader(current_path)
-    tpl_env = jinja2.Environment(loader = loader)
+    tpl_env = jinja2.Environment(loader=loader)
     tpl_env.filters["path_to_snake_case"] = path_to_snake_case
     tpl_env.filters["snake_case"] = snake_case
     tpl_env.filters["snake_to_pascal"] = snake_to_pascal
@@ -162,10 +185,12 @@ def prepare_env():
     tpl_env.lstrip_blocks = True
     return tpl_env
 
+
 def remove_prefix(value: str, prefix: str) -> str:
     if value.startswith(prefix):
-        return value[len(prefix):]
+        return value[len(prefix) :]
     return value
+
 
 def output_template(value, tpl, output_path, name):
     output_path = Path(output_path)
@@ -176,6 +201,7 @@ def output_template(value, tpl, output_path, name):
     fp = io.open(output_file_path, mode="w+", encoding="utf8")
     fp.write(content)
     fp.close()
+
 
 PB_PRIMITIVE_TYPES = [
     "double",
@@ -267,7 +293,16 @@ CS_PRIMITIVE_TYPES = {
     "bytes": "ByteString",
 }
 
-def gather_path_types(protocol, enum_names, message_type, gathered_path_types, to_forward_declare, visited_types = [], visit_stack = []):
+
+def gather_path_types(
+    protocol,
+    enum_names,
+    message_type,
+    gathered_path_types,
+    to_forward_declare,
+    visited_types=[],
+    visit_stack=[],
+):
     if message_type in visit_stack:
         # Circular dependency
         if not message_type in to_forward_declare:
@@ -279,8 +314,12 @@ def gather_path_types(protocol, enum_names, message_type, gathered_path_types, t
         return
     visited_types.append(message_type)
 
-    enum_type = next((e for e in protocol["enums"] if e["full_name"] == message_type), None)
-    msg_type = next((m for m in protocol["messages"] if m["full_name"] == message_type), None)
+    enum_type = next(
+        (e for e in protocol["enums"] if e["full_name"] == message_type), None
+    )
+    msg_type = next(
+        (m for m in protocol["messages"] if m["full_name"] == message_type), None
+    )
 
     if message_type in PB_PRIMITIVE_TYPES:
         primitive_type = {
@@ -307,38 +346,61 @@ def gather_path_types(protocol, enum_names, message_type, gathered_path_types, t
             for f in msg_type["fields"]:
                 f["is_primitive"] = f["type"] in PB_PRIMITIVE_TYPES
                 f["is_enum"] = f["type"] in enum_names
-                gather_path_types(protocol, enum_names, f["type"], gathered_path_types, to_forward_declare, visited_types, visit_stack + [message_type])
+                gather_path_types(
+                    protocol,
+                    enum_names,
+                    f["type"],
+                    gathered_path_types,
+                    to_forward_declare,
+                    visited_types,
+                    visit_stack + [message_type],
+                )
         gathered_path_types.append(msg_type)
+
 
 def find_by_full_name(full_name, collection):
     return next((item for item in collection if item["full_name"] == full_name))
 
+
 def gather_client_messages(protocol):
-    client_typed_message = find_by_full_name("HrzProtocol.TypedMessage", protocol["messages"])
-    client_message_type_enum = find_by_full_name("HrzProtocol.MessageType", protocol["enums"])
+    client_typed_message = find_by_full_name(
+        "HrzProtocol.TypedMessage", protocol["messages"]
+    )
+    client_message_type_enum = find_by_full_name(
+        "HrzProtocol.MessageType", protocol["enums"]
+    )
 
     client_messages = []
     for enum_value in client_message_type_enum["values"]:
         for field in client_typed_message["fields"]:
             if field["name"] == enum_value["params_field_name"]:
                 message = find_by_full_name(field["type"], protocol["messages"])
-                client_messages.append({
-                    "enum_value": enum_value,
-                    "message": message,
-                })
+                client_messages.append(
+                    {
+                        "enum_value": enum_value,
+                        "message": message,
+                    }
+                )
                 break
 
     return client_messages
 
+
 def prepare_api_tpl_data(protocol):
-    root_types = {msg["full_name"]: msg["path_root"] for msg in protocol["messages"] if msg["is_path_root"]}
+    root_types = {
+        msg["full_name"]: msg["path_root"]
+        for msg in protocol["messages"]
+        if msg["is_path_root"]
+    }
     path_types = []
     to_forward_declare = []
 
     enum_names = [e["full_name"] for e in protocol["enums"]]
 
     for root_type in root_types:
-        gather_path_types(protocol, enum_names, root_type, path_types, to_forward_declare)
+        gather_path_types(
+            protocol, enum_names, root_type, path_types, to_forward_declare
+        )
 
     return {
         "protocol": protocol,

@@ -6,5 +6,5 @@ tar = tarfile.open(sys.argv[1])
 output = Path(sys.argv[2])
 if not output.exists():
     output.mkdir(parents=True)
-tar.extractall(path = output)
+tar.extractall(path=output)
 tar.close()

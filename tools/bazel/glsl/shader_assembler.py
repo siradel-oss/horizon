@@ -18,9 +18,11 @@ for arg in sys.argv:
 find_include_re = re.compile(r"^\s*#\s*include\s*[\"<]([a-zA-Z0-9_\.\/]+)[\">]")
 find_pragma_once_re = re.compile(r"^\s*#\s*pragma\s*once")
 
+
 def error(s):
     print(s)
     sys.exit(1)
+
 
 def get_file_id(f):
     global file_ids
@@ -30,11 +32,13 @@ def get_file_id(f):
     else:
         return file_ids[f]
 
+
 def process_include(l):
     m = find_include_re.search(l)
     if m == None:
         error("Couldn't parse include for line " + l)
     return process_file(Path(m.group(1)))
+
 
 def process_pragma(l, file):
     if find_pragma_once_re.match(l):
@@ -43,9 +47,11 @@ def process_pragma(l, file):
     else:
         return l
 
+
 def is_pound(l, keyword):
     l = l.strip()
     return l.startswith("#") and l[1:].strip().startswith(keyword)
+
 
 def process_file(file):
     if file in do_not_visit_again:
@@ -70,6 +76,7 @@ def process_file(file):
                 line += 1
             return "\n".join([l.rstrip() for l in output_lines])
     error("Couldn't find file " + str(file))
+
 
 content = process_file(input_path)
 output = "#version " + version + " " + profile + "\n"

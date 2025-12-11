@@ -31,7 +31,16 @@ the `Generator` class.
 These are the section lines, in the same order as they will be written in the final changelog.
 Feel free to customize this as necessary.
 """
-SECTION_NAMES = ["Added", "Changed", "Deprecated", "Removed", "Fixed", "Upgrade notes", "Integration notes"]
+SECTION_NAMES = [
+    "Added",
+    "Changed",
+    "Deprecated",
+    "Removed",
+    "Fixed",
+    "Upgrade notes",
+    "Integration notes",
+]
+
 
 class Node:
     """
@@ -77,7 +86,7 @@ class Node:
             repr += child.display(indent + 4)
         return repr
 
-    def find_child(self, content: str) -> 'Node':
+    def find_child(self, content: str) -> "Node":
         """
         Finds the child with the given content. Or None.
         """
@@ -86,7 +95,7 @@ class Node:
                 return child
         return None
 
-    def find_or_create_child(self, content) -> 'Node':
+    def find_or_create_child(self, content) -> "Node":
         """
         Finds the child with the given content, or create it if it does not exist.
         """
@@ -94,7 +103,7 @@ class Node:
         if not child:
             child = Node(content)
             self.children.append(child)
-        assert(child != None)
+        assert child != None
         return child
 
     def merge(self, other):
@@ -102,7 +111,7 @@ class Node:
         Merges the contents of another node in this one.
         Children and sub-children are merged based on their content.
         """
-        assert(other.content == self.content)
+        assert other.content == self.content
         for other_child in other.children:
             this_child = self.find_or_create_child(other_child.content)
             this_child.merge(other_child)
@@ -118,6 +127,7 @@ class Node:
             if child:
                 sorted_children.append(child)
         self.children = sorted_children
+
 
 def parse_changelog_partial(lines: List[str]) -> Node:
     """
@@ -148,9 +158,9 @@ def parse_changelog_partial(lines: List[str]) -> Node:
             stack = [NodeStackEntry(root.find_or_create_child(section_name), -1)]
 
         elif line[indentation:].startswith(("- ", "* ")):
-            content = line[indentation + 2:].strip()
+            content = line[indentation + 2 :].strip()
 
-            assert(len(stack) > 0)
+            assert len(stack) > 0
 
             while stack[len(stack) - 1].indent >= indentation:
                 stack = stack[:-1]
@@ -159,6 +169,7 @@ def parse_changelog_partial(lines: List[str]) -> Node:
             stack.append(NodeStackEntry(new_node, indentation))
 
     return root
+
 
 class Changelog:
     """
@@ -188,6 +199,7 @@ class Changelog:
             for section_child in section.children:
                 fp.write(section_child.display(0))
 
+
 def parse_changelog(lines: List[str]) -> Changelog:
     """
     Parses a changelog file (with metadata) into a changelog object.
@@ -216,11 +228,13 @@ def parse_changelog(lines: List[str]) -> Changelog:
     root = parse_changelog_partial(lines[cursor:])
     return Changelog(version, date, root)
 
+
 def list_input_files(patterns):
     files = []
     for pattern in patterns:
         files += Path(".").glob(pattern)
     return list(set(files))
+
 
 def merge_into_cmd(args):
     """
@@ -235,7 +249,7 @@ def merge_into_cmd(args):
     merged = Node("ROOT")
 
     for file_path in paths:
-        with open(file_path, "r", encoding = "utf-8") as fp:
+        with open(file_path, "r", encoding="utf-8") as fp:
             print("Parsing changelog %s" % file_path)
             partial = parse_changelog_partial(fp.readlines())
             merged.merge(partial)
@@ -247,6 +261,7 @@ def merge_into_cmd(args):
 
     changelog = Changelog(version, date, merged)
     changelog.write_to(args.output_file)
+
 
 class Generator:
     """
@@ -267,7 +282,10 @@ class Generator:
         print("Category: General", file=self.fp)
         print("---", file=self.fp)
         print("", file=self.fp)
-        print("The upgrade and integration notes sections aim to help API users port their application to the new version of Horizon by listing the changes needed to, respectively, maintain compatibility with the previous version, and integrate new or upgraded features optimally and efficiently. Please refer to [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) for the meaning of the terms *must*, *should*, and *may*.", file=self.fp)
+        print(
+            "The upgrade and integration notes sections aim to help API users port their application to the new version of Horizon by listing the changes needed to, respectively, maintain compatibility with the previous version, and integrate new or upgraded features optimally and efficiently. Please refer to [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) for the meaning of the terms *must*, *should*, and *may*.",
+            file=self.fp,
+        )
 
     def write_footer(self):
         """
@@ -292,6 +310,7 @@ class Generator:
         for child in content:
             self.fp.write(child.display(0))
 
+
 def generate_cmd(args):
     """
     This command generates a file containing all changelogs given as arguments, that are
@@ -301,45 +320,51 @@ def generate_cmd(args):
     """
     changelogs = []
     for file in list_input_files(args.input_file):
-        with open(file, "r", encoding = "utf-8") as fp:
+        with open(file, "r", encoding="utf-8") as fp:
             changelogs.append(parse_changelog(fp.readlines()))
 
     def parse_version_order(changelog):
         def accumulate_func(a, b):
             return a * 1000 + b
+
         version_parts = [int(p) for p in changelog.version.split(".")]
-        order_iter = itertools.accumulate(version_parts, func = accumulate_func)
+        order_iter = itertools.accumulate(version_parts, func=accumulate_func)
         *_, order = order_iter
         return order
 
-    changelogs.sort(key = parse_version_order, reverse = True)
+    changelogs.sort(key=parse_version_order, reverse=True)
 
     generator = Generator(args.output_file)
     generator.write_header()
 
     for changelog in changelogs:
-            generator.write_version(changelog.version, changelog.date)
+        generator.write_version(changelog.version, changelog.date)
 
-            for section_name in SECTION_NAMES:
-                node = changelog.root.find_child(section_name)
-                if node and len(node.children) > 0:
-                    generator.write_section(section_name, node.children)
+        for section_name in SECTION_NAMES:
+            node = changelog.root.find_child(section_name)
+            if node and len(node.children) > 0:
+                generator.write_section(section_name, node.children)
 
     generator.write_footer()
+
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers()
 
 parser_merge_into = subparsers.add_parser("merge_into")
-parser_merge_into.add_argument("output_file", type = argparse.FileType("w+", encoding = "utf-8"))
+parser_merge_into.add_argument(
+    "output_file", type=argparse.FileType("w+", encoding="utf-8")
+)
 parser_merge_into.add_argument("version")
-parser_merge_into.add_argument("input_file", nargs = "+")
-parser_merge_into.set_defaults(func = merge_into_cmd)
+parser_merge_into.add_argument("input_file", nargs="+")
+parser_merge_into.set_defaults(func=merge_into_cmd)
 
 parser_generate = subparsers.add_parser("generate")
-parser_generate.add_argument("output_file", type = argparse.FileType("w+", encoding = "utf-8"))
-parser_generate.add_argument("input_file", nargs = "+")
-parser_generate.set_defaults(func = generate_cmd)
+parser_generate.add_argument(
+    "output_file", type=argparse.FileType("w+", encoding="utf-8")
+)
+parser_generate.add_argument("input_file", nargs="+")
+parser_generate.set_defaults(func=generate_cmd)
 
 args = parser.parse_args(sys.argv[1:])
 args.func(args)

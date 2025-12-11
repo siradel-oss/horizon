@@ -1,7 +1,7 @@
 import sys
 
 OUTPUT_PATH = sys.argv[1]
-licenses = dict([arg.split('=', maxsplit=1) for arg in sys.argv[2:]])
+licenses = dict([arg.split("=", maxsplit=1) for arg in sys.argv[2:]])
 
 full_str = """---
 Title: Third-party licenses
@@ -17,5 +17,5 @@ for license_name, license_path in licenses.items():
         full_str += line
     full_str += "```\n"
 
-fp = open(OUTPUT_PATH, mode = "w+", encoding="utf-8")
+fp = open(OUTPUT_PATH, mode="w+", encoding="utf-8")
 fp.write(full_str)

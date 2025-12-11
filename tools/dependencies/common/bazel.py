@@ -13,6 +13,7 @@ local_archive = use_repo_rule("//tools/bazel:local_archive.bzl", "local_archive"
 
 """
 
+
 def write_bazel_deps(lock: lockfile.Lockfile, path: str):
     rules = ""
     for name, entry in lock.entries.items():

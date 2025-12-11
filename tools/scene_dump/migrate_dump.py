@@ -23,9 +23,18 @@ if __name__ == "__main__":
     MANIFEST = read_manifest(MANIFEST_PATH)
 
     ret = subprocess.run(
-        ["bazel", "run", "//tools/scene_dump:migrate_dump", BZL_CONFIG, "--", args.dump_file.absolute(), args.dump_file.absolute()],
+        [
+            "bazel",
+            "run",
+            "//tools/scene_dump:migrate_dump",
+            BZL_CONFIG,
+            "--",
+            args.dump_file.absolute(),
+            args.dump_file.absolute(),
+        ],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.PIPE,
+    )
 
     if ret.returncode == 0:
         print("OK")

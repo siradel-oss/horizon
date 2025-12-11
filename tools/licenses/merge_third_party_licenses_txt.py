@@ -1,9 +1,11 @@
 import sys
 
 OUTPUT_PATH = sys.argv[1]
-licenses = dict([arg.split('=', maxsplit=1) for arg in sys.argv[2:]])
+licenses = dict([arg.split("=", maxsplit=1) for arg in sys.argv[2:]])
 
-license_split_str = "#############################################################################\n\n"
+license_split_str = (
+    "#############################################################################\n\n"
+)
 
 full_str = ""
 i = 0
@@ -18,5 +20,5 @@ for license_name, license_path in licenses.items():
     full_str += "\n\n"
     i += 1
 
-fp = open(OUTPUT_PATH, mode = "w+", encoding="utf-8")
+fp = open(OUTPUT_PATH, mode="w+", encoding="utf-8")
 fp.write(full_str)

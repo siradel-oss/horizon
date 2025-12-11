@@ -10,5 +10,5 @@ if __name__ == "__main__":
 
     unused_descriptors = gather_unused_descriptors(MANIFEST)
     for f in unused_descriptors:
-        print(f"Removing unused descriptor \"{str(f)}\"")
+        print(f'Removing unused descriptor "{str(f)}"')
         f.unlink()

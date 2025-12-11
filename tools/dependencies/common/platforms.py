@@ -1,6 +1,7 @@
 import enum
 import platform as py_platform
 
+
 class Platform(enum.Enum):
     WINDOWS = 0
     LINUX = 1
@@ -8,6 +9,7 @@ class Platform(enum.Enum):
 
     def all() -> list["Platform"]:
         return [Platform.WINDOWS, Platform.LINUX, Platform.WASM]
+
 
 PLATFORM_TRIPLE = {
     Platform.WINDOWS: "x86_64-pc-windows-msvc",
@@ -28,11 +30,13 @@ PY_PLATFORM_TO_ID = {
     "Linux": Platform.LINUX,
 }
 
+
 def get_current_platform() -> Platform:
     if py_platform.system() in PY_PLATFORM_TO_ID:
         return PLATFORM_TRIPLE[PY_PLATFORM_TO_ID[py_platform.system()]]
     else:
         return None
+
 
 def parse_platforms(data: any) -> list[Platform]:
     platforms = [TRIPLE_PLATFORM[p] for p in data.get("platforms", [])]

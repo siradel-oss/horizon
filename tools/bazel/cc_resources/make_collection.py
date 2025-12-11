@@ -15,10 +15,12 @@ values["keys"] = KEYS
 values["header"] = Path(H_PATH).name
 
 r = Runfiles.Create()
-template_dir = Path(r.Rlocation("horizon/tools/bazel/cc_resources/collection.tpl.cpp")).parent
+template_dir = Path(
+    r.Rlocation("horizon/tools/bazel/cc_resources/collection.tpl.cpp")
+).parent
 
 loader = jinja2.FileSystemLoader(template_dir)
-tpl_env = jinja2.Environment(loader = loader)
+tpl_env = jinja2.Environment(loader=loader)
 tpl_env.trim_blocks = True
 tpl_env.lstrip_blocks = True
 

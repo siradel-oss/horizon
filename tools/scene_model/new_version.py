@@ -8,10 +8,12 @@ sys.path.append("")
 from hrz.protocol.history.manifest import ManifestEntry, read_manifest, compute_hash
 from common import MANIFEST_PATH, save_current_descriptor_set, compute_file_hash
 
+
 def make_id():
     id = random.getrandbits(32)
     id = f"{id:08x}"
     return id
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -33,8 +35,12 @@ if __name__ == "__main__":
 
     print("Registering version...")
     print("")
-    print("Please implement the following function in the hrz::migration namespace in the //hrz/scene_dump:migration library:")
-    print(f"bool migration_{MANIFEST.last_entry().id}_to_{id}(const DynamicMessage& src, DynamicMessage* dst);")
+    print(
+        "Please implement the following function in the hrz::migration namespace in the //hrz/scene_dump:migration library:"
+    )
+    print(
+        f"bool migration_{MANIFEST.last_entry().id}_to_{id}(const DynamicMessage& src, DynamicMessage* dst);"
+    )
     print("")
 
     previous_hash = MANIFEST.last_entry().chain_hash

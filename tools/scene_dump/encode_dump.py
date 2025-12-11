@@ -16,7 +16,12 @@ MANIFEST: Manifest = None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--manifest", help="Manifest path", default=MANIFEST_PATH)
-    parser.add_argument("-v", "--version", help="Model version as 8 hex digits (latest if not specified)", default="latest")
+    parser.add_argument(
+        "-v",
+        "--version",
+        help="Model version as 8 hex digits (latest if not specified)",
+        default="latest",
+    )
     parser.add_argument("dump_text_file", type=argparse.FileType("r"))
     parser.add_argument("output_bin_file", type=argparse.FileType("wb+"))
 
@@ -35,10 +40,19 @@ if __name__ == "__main__":
     descriptor_path = Path(f"hrz/protocol/history/{version}.pbf").absolute()
 
     ret = subprocess.run(
-        ["bazel", "run", "//third_party:protoc", BZL_CONFIG, "--", "--descriptor_set_in=" + str(descriptor_path), "--encode=HrzProtocol.SceneDump"],
+        [
+            "bazel",
+            "run",
+            "//third_party:protoc",
+            BZL_CONFIG,
+            "--",
+            "--descriptor_set_in=" + str(descriptor_path),
+            "--encode=HrzProtocol.SceneDump",
+        ],
         stdin=args.dump_text_file,
         stdout=args.output_bin_file,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.PIPE,
+    )
 
     if ret.returncode == 0:
         print("OK")

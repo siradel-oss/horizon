@@ -6,7 +6,13 @@ import platform
 dependencies_dir_parent = (Path(__file__).parent / "../..").resolve()
 sys.path.insert(0, str(dependencies_dir_parent))
 
-from tools.dependencies.common.utils import create_temp_dir, create_temp_file, download_file, untar, run_command
+from tools.dependencies.common.utils import (
+    create_temp_dir,
+    create_temp_file,
+    download_file,
+    untar,
+    run_command,
+)
 
 if len(sys.argv) < 4:
     print("Usage: %s <version> <platform> <install_dir>" % sys.argv[0])
@@ -15,7 +21,9 @@ if len(sys.argv) < 4:
 install_dir = Path(sys.argv[3])
 version = sys.argv[1]
 
-ARTIFACT_URL = f"https://github.com/KhronosGroup/glslang/archive/refs/tags/{version}.tar.gz"
+ARTIFACT_URL = (
+    f"https://github.com/KhronosGroup/glslang/archive/refs/tags/{version}.tar.gz"
+)
 ROOT_DIR_NAME = f"glslang-{version}"
 
 if platform.system().lower() != sys.argv[2]:
@@ -32,16 +40,38 @@ untar(archive.path, source_dir.path)
 
 print("Updating glslang sources")
 source_root_dir = source_dir.path / ROOT_DIR_NAME
-if not run_command([sys.executable, "update_glslang_sources.py"], directory=source_root_dir):
+if not run_command(
+    [sys.executable, "update_glslang_sources.py"], directory=source_root_dir
+):
     raise RuntimeError("Failed to update glslang sources")
 
 print("Configure CMake build")
 build_dir = create_temp_dir()
-if not run_command(["cmake", "-DCMAKE_BUILD_TYPE=Release", "-S", source_root_dir, "-B", build_dir.path, "-DENABLE_HLSL=OFF"]):
+if not run_command(
+    [
+        "cmake",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-S",
+        source_root_dir,
+        "-B",
+        build_dir.path,
+        "-DENABLE_HLSL=OFF",
+    ]
+):
     raise RuntimeError("Couldn't configure CMake build")
 
 print("Building")
-if not run_command(["cmake", "--build", build_dir.path, "--config", "Release", "--target", "glslang-standalone"]):
+if not run_command(
+    [
+        "cmake",
+        "--build",
+        build_dir.path,
+        "--config",
+        "Release",
+        "--target",
+        "glslang-standalone",
+    ]
+):
     raise RuntimeError("Failed to build glslang")
 
 bin_path = None

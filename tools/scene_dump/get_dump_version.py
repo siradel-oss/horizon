@@ -27,7 +27,8 @@ if __name__ == "__main__":
     ret = subprocess.run(
         ["bazel", "run", "//tools/scene_dump:get_dump_version", BZL_CONFIG, "--", path],
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL)
+        stderr=subprocess.DEVNULL,
+    )
 
     if ret.returncode == 0:
         last_line = ret.stdout.splitlines()[-1]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import argparse
 import datetime
@@ -47,14 +47,15 @@ STDOUT = subprocess.DEVNULL
 STDERR = subprocess.DEVNULL
 
 WHITE = (1.0, 1.0, 1.0, 1.0)
-RED = (0.9, 0.3, 0.3, 1.)
-GREEN = (0.4, 0.8, 0.4, 1.)
-YELLOW = (0.9, 0.7, 0.2, 1.)
-GRAY = (0.5, 0.5, 0.5, 1.)
-HIGHLIGHT_COLOR = (0, 0.65, 0.75, 1.)
+RED = (0.9, 0.3, 0.3, 1.0)
+GREEN = (0.4, 0.8, 0.4, 1.0)
+YELLOW = (0.9, 0.7, 0.2, 1.0)
+GRAY = (0.5, 0.5, 0.5, 1.0)
+HIGHLIGHT_COLOR = (0, 0.65, 0.75, 1.0)
 
 EDIT_POPUP_NAME = "Edit test"
 REMOVE_POPUP_NAME = "Remove test"
+
 
 # From https://stackoverflow.com/a/72965775
 def ask_open_filename(*args, **kwargs):
@@ -69,6 +70,7 @@ def ask_open_filename(*args, **kwargs):
 
     return Filedialog.askopenfilename(*args, **kwargs)
 
+
 def ask_directory(*args, **kwargs):
     class Filedialog(tkinter.Tk):
         @classmethod
@@ -81,20 +83,29 @@ def ask_directory(*args, **kwargs):
 
     return Filedialog.askdirectory(*args, **kwargs)
 
+
 def get_input_path(test_name, test_type):
-    return path.join(Test.Type.directory(test_type), f"{test_name}{Test.Type.file_extension(test_type)}")
+    return path.join(
+        Test.Type.directory(test_type),
+        f"{test_name}{Test.Type.file_extension(test_type)}",
+    )
+
 
 def get_ref_image_path(test_name, test_type):
     return path.join(Test.Type.directory(test_type), f"{test_name}.hrz_ref.png")
 
+
 def get_capture_path(output_dir, test_name):
     return path.join(output_dir, f"{test_name}_capture.png")
+
 
 def get_expected_path(output_dir, test_name):
     return path.join(output_dir, f"{test_name}_expected.png")
 
+
 def get_diff_path(output_dir, test_name):
     return path.join(output_dir, f"{test_name}_diff.png")
+
 
 class OutputDirectory:
     """
@@ -102,6 +113,7 @@ class OutputDirectory:
     - A temporary directory automatically deleted when the output directory input widget is empty.
     - A persistent directory.
     """
+
     def __init__(self, path):
         self.path = str(Path(path).absolute())
         self.preserve = self.path != ""
@@ -123,36 +135,27 @@ class OutputDirectory:
         if not self.preserve:
             shutil.rmtree(self.path, ignore_errors=True)
 
+
 class Test:
     class Type(IntEnum):
-        HrzScene = 0,
-        MapboxStyle = 1,
+        HrzScene = (0,)
+        MapboxStyle = (1,)
 
         def file_extension(type):
-            return [
-                ".hrz_scene.pbf",
-                ".json"
-            ][type]
+            return [".hrz_scene.pbf", ".json"][type]
 
         def directory(type):
-            return [
-                TEST_DATA_DIR / "hrz_scenes",
-                TEST_DATA_DIR / "mapbox_styles"
-            ][type]
+            return [TEST_DATA_DIR / "hrz_scenes", TEST_DATA_DIR / "mapbox_styles"][type]
 
         def name(type):
-            return [
-                "Horizon scene",
-                "Mapbox style"
-            ][type]
+            return ["Horizon scene", "Mapbox style"][type]
 
     class ErrorStrategy(IntEnum):
-        Abort = 0,
-        Message = 1,
+        Abort = (0,)
+        Message = (1,)
 
         def name(strategy):
             return ["Abort", "Message"][strategy]
-
 
     ERROR_STRATEGY_NAMES = ["Abort", "Message"]
 
@@ -185,7 +188,9 @@ class Test:
 
         json_error = json.get("errorHandling", None)
         if json_error is not None:
-            self.error_strategy = json_error.get("errorStrategy", default.error_strategy)
+            self.error_strategy = json_error.get(
+                "errorStrategy", default.error_strategy
+            )
             self.error_message = json_error.get("errorMessage", default.error_threshold)
         else:
             self.error_strategy = default.error_strategy
@@ -200,7 +205,7 @@ class Test:
             "errorHandling": {
                 "errorStrategy": self.error_strategy,
                 "errorMessage": self.error_message,
-            }
+            },
         }
 
     def check_input(self):
@@ -211,9 +216,11 @@ class Test:
             self.input_error = None
 
     def input_must_be_copied(self):
-        return (self.input_error is None
-            and (Path(self.input_path).parent != Test.Type.directory(self.type)
-            or path.basename(self.input_path) != self.name + Test.Type.file_extension(self.type)))
+        return self.input_error is None and (
+            Path(self.input_path).parent != Test.Type.directory(self.type)
+            or path.basename(self.input_path)
+            != self.name + Test.Type.file_extension(self.type)
+        )
 
     def copy_input(self):
         self.check_input()
@@ -250,17 +257,18 @@ class Test:
 
         return True
 
+
 class Result:
     class ErrorType(IntEnum):
-        None_ = 0,
-        Viewer = 1,
-        Timeout = 2,
-        Threshold = 3,
-        MissingRef = 4,
-        MissingInput = 5,
-        MigrationError = 6,
-        Aborted = 7,
-        Comparator = 8,
+        None_ = (0,)
+        Viewer = (1,)
+        Timeout = (2,)
+        Threshold = (3,)
+        MissingRef = (4,)
+        MissingInput = (5,)
+        MigrationError = (6,)
+        Aborted = (7,)
+        Comparator = (8,)
 
     def __init__(self, json=None):
         if json is not None:
@@ -317,10 +325,14 @@ class Result:
             skipped.set("message", "Aborted because a previous test failed")
         else:
             failure = ET.SubElement(root, "failure")
-            failure.set("message", f"Type: {self.error_type.name}, ratio: {self.error_ratio}, message: {self.error_message}")
+            failure.set(
+                "message",
+                f"Type: {self.error_type.name}, ratio: {self.error_ratio}, message: {self.error_message}",
+            )
             if self.log:
                 failure.text = self.log
         return root
+
 
 class Report:
     def __init__(self, json=None):
@@ -397,6 +409,7 @@ class Report:
 
         return root
 
+
 # Unknown exit codes can happen when the viewer crashes.
 class ViewerExitCode:
     Ok = 0
@@ -418,7 +431,7 @@ class ViewerExitCode:
         5: "InvalidInput",
         6: "FailedMigration",
         7: "Timeout",
-        -1: "Unknown"
+        -1: "Unknown",
     }
 
     def __init__(self, value):
@@ -434,15 +447,18 @@ class ViewerExitCode:
     def __repr__(self):
         return f"ViewerExitCode.{self.name}"
 
+
 def get_git_info():
     global BRANCH
     global COMMIT
 
     if BRANCH == "":
-        ret = subprocess.run(["git", "branch", "--points-at", "HEAD"],
+        ret = subprocess.run(
+            ["git", "branch", "--points-at", "HEAD"],
             cwd=ROOT,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL)
+            stderr=subprocess.DEVNULL,
+        )
         BRANCH = ret.stdout.decode().splitlines()[0]
         match = re.match("\\* \\(HEAD detached at (.*)\\)", BRANCH)
         if bool(match):
@@ -450,11 +466,14 @@ def get_git_info():
         elif BRANCH.startswith("* "):
             BRANCH = BRANCH[2:]
 
-    ret = subprocess.run(["git", "rev-parse", "HEAD"],
+    ret = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
         cwd=ROOT,
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL)
+        stderr=subprocess.DEVNULL,
+    )
     COMMIT = ret.stdout.decode()[:-1]
+
 
 def read_manifest(path):
     manifest_json = []
@@ -465,17 +484,20 @@ def read_manifest(path):
     manifest = [Test(test_json) for test_json in manifest_json]
     return sorted(manifest, key=lambda test: test.name)
 
+
 def write_manifest():
     with open(MANIFEST_PATH, "w", encoding="utf8", newline="\n") as f:
         tests = sorted([test.serialize() for test in MANIFEST], key=lambda t: t["name"])
         content = json.dumps(tests, indent=4)
         f.write(content + "\n")
 
+
 def write_json_report(report, path):
     print("Writing report at", path)
     with open(path, "w", encoding="utf8", newline="\n") as f:
         content = json.dumps(report, default=lambda o: o.serialize(), indent=4)
         f.write(content)
+
 
 def read_report(path):
     print("Reading report at", path)
@@ -484,42 +506,62 @@ def read_report(path):
         report.deserialize(json.load(f))
     return report
 
+
 def has_input(test):
     return path.exists(get_input_path(test.name, test.type))
 
+
 def has_ref(test):
     return path.exists(get_ref_image_path(test.name, test.type))
+
 
 def generate_ref_image(test, output_dir):
     if has_input(test):
         ret = subprocess.run(
             [
                 VIEWER_EXE,
-                "--input", get_input_path(test.name, test.type),
-                "--output", get_capture_path(output_dir, test.name),
-                "--width", str(IMAGE_SIZE),
-                "--height", str(IMAGE_SIZE),
-                "--timeout", str(test.timeout),
+                "--input",
+                get_input_path(test.name, test.type),
+                "--output",
+                get_capture_path(output_dir, test.name),
+                "--width",
+                str(IMAGE_SIZE),
+                "--height",
+                str(IMAGE_SIZE),
+                "--timeout",
+                str(test.timeout),
                 "--no-show-window",
-                "--log-filter-level", "0" if VERBOSE else "3"
+                "--log-filter-level",
+                "0" if VERBOSE else "3",
             ],
             cwd=ROOT,
             stdout=STDOUT,
-            stderr=STDERR)
+            stderr=STDERR,
+        )
         return_code = ViewerExitCode(ret.returncode)
         if return_code == ViewerExitCode.Ok:
-            shutil.copyfile(get_capture_path(output_dir, test.name), get_ref_image_path(test.name, test.type))
+            shutil.copyfile(
+                get_capture_path(output_dir, test.name),
+                get_ref_image_path(test.name, test.type),
+            )
         else:
-            print(f"ERROR: Couldn't generate reference image for '{test.name}', return code: {return_code.name} ({return_code.raw_value})")
+            print(
+                f"ERROR: Couldn't generate reference image for '{test.name}', return code: {return_code.name} ({return_code.raw_value})"
+            )
     else:
-        print(f"ERROR: Couldn't generate reference image for '{test.name}', no input found.")
+        print(
+            f"ERROR: Couldn't generate reference image for '{test.name}', no input found."
+        )
+
 
 def generate_ref_images(tests, output_dir):
     for test_id in tests:
         generate_ref_image(MANIFEST[test_id], output_dir)
 
+
 def can_append_to_report(report_to_append_to):
     return report_to_append_to is not None and report_to_append_to.commit == COMMIT
+
 
 class TestExecutionContext:
     def __init__(self):
@@ -531,7 +573,10 @@ class TestExecutionContext:
         self.process = None
         self.terminate = False
 
-def run_tests(tests, report_to_append_to, output_dir, junit_output_file, show_viewer_window):
+
+def run_tests(
+    tests, report_to_append_to, output_dir, junit_output_file, show_viewer_window
+):
     ctx = TestExecutionContext()
     ctx.tests = tests
     ctx.report_to_append_to = report_to_append_to
@@ -540,6 +585,7 @@ def run_tests(tests, report_to_append_to, output_dir, junit_output_file, show_vi
     ctx.show_viewer_window = show_viewer_window
 
     return run_tests_in_context(ctx)
+
 
 def run_tests_in_context(ctx):
     abort_tests = False
@@ -554,7 +600,7 @@ def run_tests_in_context(ctx):
     error_type = Result.ErrorType.None_
 
     if VERBOSE:
-        print(f"(Output dir: \"{ctx.output_dir.path}\")")
+        print(f'(Output dir: "{ctx.output_dir.path}")')
 
     results = []
     for test_index, test_id in enumerate(ctx.tests):
@@ -573,7 +619,7 @@ def run_tests_in_context(ctx):
 
         print("Running test", end="")
         if len(ctx.tests) > 1:
-            print(f" \"{test.name}\" ({test_index + 1} of {len(ctx.tests)})", end="")
+            print(f' "{test.name}" ({test_index + 1} of {len(ctx.tests)})', end="")
         print("...", end="", flush=True)
 
         input_path = get_input_path(test.name, test.type)
@@ -581,19 +627,25 @@ def run_tests_in_context(ctx):
 
         if VERBOSE:
             print(f"\n  (Timeout: {str(test.timeout)}s)")
-            print(f"  (Input: \"{input_path}\")")
-            print(f"  (Output: \"{capture_path}\")")
+            print(f'  (Input: "{input_path}")')
+            print(f'  (Output: "{capture_path}")')
 
         start_time = time.time_ns() / 1_000_000_000
         if error_type == Result.ErrorType.None_ and not abort_tests:
             arguments = [
                 VIEWER_EXE,
-                "--input", input_path,
-                "--output", capture_path,
-                "--width", str(IMAGE_SIZE),
-                "--height", str(IMAGE_SIZE),
-                "--timeout", str(test.timeout),
-                "--log-filter-level", "0" if VERBOSE else "3"
+                "--input",
+                input_path,
+                "--output",
+                capture_path,
+                "--width",
+                str(IMAGE_SIZE),
+                "--height",
+                str(IMAGE_SIZE),
+                "--timeout",
+                str(test.timeout),
+                "--log-filter-level",
+                "0" if VERBOSE else "3",
             ]
             if not ctx.show_viewer_window:
                 arguments.append("--no-show-window")
@@ -603,12 +655,13 @@ def run_tests_in_context(ctx):
                 stdout=subprocess.PIPE,
                 stderr=STDERR,
                 text=True,
-                bufsize=1)
+                bufsize=1,
+            )
 
             output_lines = []
             for line in ctx.process.stdout:
                 if VERBOSE:
-                    print(line, end='')
+                    print(line, end="")
                 output_lines.append(line)
 
             return_code = ctx.process.wait()
@@ -626,7 +679,9 @@ def run_tests_in_context(ctx):
                 error_type = Result.ErrorType.Viewer
 
                 if VERBOSE:
-                    print(f"Viewer error, return code: {return_code.name} ({return_code.raw_value})")
+                    print(
+                        f"Viewer error, return code: {return_code.name} ({return_code.raw_value})"
+                    )
 
         duration = time.time_ns() / 1_000_000_000 - start_time
         total_duration += duration
@@ -636,24 +691,33 @@ def run_tests_in_context(ctx):
 
         if error_type == Result.ErrorType.None_ and not abort_tests:
             if VERBOSE:
-                print(f"Running comparator: {COMPARATOR_EXE} {ref_image_path} {capture_path} {diff_path}")
+                print(
+                    f"Running comparator: {COMPARATOR_EXE} {ref_image_path} {capture_path} {diff_path}"
+                )
 
-            ret = subprocess.run([COMPARATOR_EXE, ref_image_path, capture_path, diff_path],
+            ret = subprocess.run(
+                [COMPARATOR_EXE, ref_image_path, capture_path, diff_path],
                 cwd=ROOT,
                 stdout=subprocess.PIPE,
-                stderr=STDERR)
+                stderr=STDERR,
+            )
             if ret.returncode != 0:
                 error_type = Result.ErrorType.Comparator
             else:
                 different_pixels = int(ret.stdout.decode("utf-8").strip())
 
         if different_pixels is not None:
-            diff_ratio = (different_pixels / (IMAGE_SIZE * IMAGE_SIZE))
+            diff_ratio = different_pixels / (IMAGE_SIZE * IMAGE_SIZE)
 
-            if diff_ratio > test.error_threshold or different_pixels > IMAGE_SIZE*IMAGE_SIZE:
+            if (
+                diff_ratio > test.error_threshold
+                or different_pixels > IMAGE_SIZE * IMAGE_SIZE
+            ):
                 error_type = Result.ErrorType.Threshold
 
-            shutil.copyfile(ref_image_path, get_expected_path(ctx.output_dir.path, test.name))
+            shutil.copyfile(
+                ref_image_path, get_expected_path(ctx.output_dir.path, test.name)
+            )
         else:
             diff_ratio = None
 
@@ -681,7 +745,10 @@ def run_tests_in_context(ctx):
 
         test_names.add(test.name)
 
-        if error_type != Result.ErrorType.None_ and test.error_strategy == Test.ErrorStrategy.Abort:
+        if (
+            error_type != Result.ErrorType.None_
+            and test.error_strategy == Test.ErrorStrategy.Abort
+        ):
             abort_tests = True
 
     report = Report()
@@ -713,12 +780,15 @@ def run_tests_in_context(ctx):
     if ctx.junit_output_file:
         print(f"Writing JUnit report file to {ctx.junit_output_file}")
         junit = report.serialize_junit()
-        junit = minidom.parseString(ET.tostring(junit)).toprettyxml(indent="   ", encoding="utf8")
+        junit = minidom.parseString(ET.tostring(junit)).toprettyxml(
+            indent="   ", encoding="utf8"
+        )
         with open(ctx.junit_output_file, "wb+") as fp:
             fp.write(junit)
 
     print(f"Passed: {passed_tests}, failed: {failed_tests}, aborted: {aborted_tests}")
     return failed_tests
+
 
 def create_test(args):
     test = Test()
@@ -759,6 +829,7 @@ def create_test(args):
 
     return 0
 
+
 def remove_test(args):
     for i, test in enumerate(MANIFEST):
         if test.name == args.test_name:
@@ -766,18 +837,32 @@ def remove_test(args):
             break
     write_manifest()
 
+
 def run_all(args):
     tests = list(range(len(MANIFEST)))
     return run_tests(tests, None, OutputDirectory(args.o), args.junit_report, args.show)
 
+
 def run_exclude(args):
     tests = list(range(len(MANIFEST)))
-    return run_tests([i for i, test in enumerate(MANIFEST) if test.name not in args.tests],
-        None, OutputDirectory(args.o), args.junit_report, args.show)
+    return run_tests(
+        [i for i, test in enumerate(MANIFEST) if test.name not in args.tests],
+        None,
+        OutputDirectory(args.o),
+        args.junit_report,
+        args.show,
+    )
+
 
 def run_subset(args):
-    return run_tests([i for i, test in enumerate(MANIFEST) if test.name in args.tests],
-        None, OutputDirectory(args.o), args.junit_report, args.show)
+    return run_tests(
+        [i for i, test in enumerate(MANIFEST) if test.name in args.tests],
+        None,
+        OutputDirectory(args.o),
+        args.junit_report,
+        args.show,
+    )
+
 
 def sync_manifest():
     """
@@ -794,7 +879,11 @@ def sync_manifest():
 
     for type in list(Test.Type):
         ext = Test.Type.file_extension(type)
-        dumps_filename = [f[:-len(ext)] for f in os.listdir(Test.Type.directory(type)) if f.endswith(ext)]
+        dumps_filename = [
+            f[: -len(ext)]
+            for f in os.listdir(Test.Type.directory(type))
+            if f.endswith(ext)
+        ]
         for filename in dumps_filename:
             if not (filename in tests_name):
                 test = Test()
@@ -803,6 +892,7 @@ def sync_manifest():
                 MANIFEST.append(test)
 
     write_manifest()
+
 
 class Texture:
     def __init__(self):
@@ -832,30 +922,46 @@ class Texture:
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_REPEAT)
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, w, h, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, data)
+            gl.glTexImage2D(
+                gl.GL_TEXTURE_2D,
+                0,
+                gl.GL_RGBA,
+                w,
+                h,
+                0,
+                gl.GL_RGBA,
+                gl.GL_UNSIGNED_BYTE,
+                data,
+            )
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
             self.has_data = True
             self.size = (w, h)
         else:
             assert w == self.size[0] and h == self.size[1]
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.id)
-            gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, 0, w, h, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, data)
+            gl.glTexSubImage2D(
+                gl.GL_TEXTURE_2D, 0, 0, 0, w, h, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, data
+            )
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
         SDL_FreeSurface(img)
 
+
 class TestState(IntEnum):
-    Skip = 0,
-    Fail = 1,
-    Success = 2,
-    UnderThreshold = 3,
-    Updated = 4,
-    Aborted = 5,
+    Skip = (0,)
+    Fail = (1,)
+    Success = (2,)
+    UnderThreshold = (3,)
+    Updated = (4,)
+    Aborted = (5,)
+
 
 class Gui:
     class Context:
         def __init__(self, output_dir):
-            self.name_to_id = {test.name: test_id for test_id, test in enumerate(MANIFEST)}
+            self.name_to_id = {
+                test.name: test_id for test_id, test in enumerate(MANIFEST)
+            }
             self.id_to_result_id = {}
             self.selection = [True] * len(MANIFEST)
             self.states = [TestState.Skip] * len(MANIFEST)
@@ -929,16 +1035,21 @@ class Gui:
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1)
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1)
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4)
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
+        SDL_GL_SetAttribute(
+            SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG
+        )
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
 
         window = SDL_CreateWindow(
             "Horizon – Visual test tool".encode("utf-8"),
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            width, height,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE)
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
+            width,
+            height,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE,
+        )
 
         if window is None:
             print("Coudln't create window:", SDL_GetError().decode("utf-8"))
@@ -969,7 +1080,7 @@ class Gui:
         SDL_DestroyWindow(window)
         SDL_Quit()
 
-    def load_report(self, ctx, go_to_first_in_view_queue = False):
+    def load_report(self, ctx, go_to_first_in_view_queue=False):
         ctx.has_report = ctx.output_dir.has_report()
         if not ctx.has_report:
             ctx.report = None
@@ -983,7 +1094,9 @@ class Gui:
         for result_id, result in enumerate(ctx.report.results):
             test_id = ctx.name_to_id.get(result.name, -1)
             if test_id == -1:
-                print(f"WARNING: result of '{result.name}' was ignored because it wasn't found in the manifest.")
+                print(
+                    f"WARNING: result of '{result.name}' was ignored because it wasn't found in the manifest."
+                )
                 continue
 
             if result.error_type == Result.ErrorType.Aborted:
@@ -996,7 +1109,10 @@ class Gui:
                 ctx.states[test_id] = TestState.Success
 
             ctx.id_to_result_id[test_id] = result_id
-            if ctx.states[test_id] == TestState.Fail or ctx.states[test_id] == TestState.UnderThreshold:
+            if (
+                ctx.states[test_id] == TestState.Fail
+                or ctx.states[test_id] == TestState.UnderThreshold
+            ):
                 ctx.view_queue.add(test_id)
 
         if go_to_first_in_view_queue and len(ctx.view_queue) > 0:
@@ -1004,20 +1120,34 @@ class Gui:
 
     def run_test_plan(self, ctx, show_viewer_window):
         ctx.show_viewer_window = show_viewer_window
-        ctx.test_run_plan = [i for i, test in enumerate(MANIFEST) if ctx.selection[i] and test.matches_filters(ctx.name_filter, ctx.type_filter)]
+        ctx.test_run_plan = [
+            i
+            for i, test in enumerate(MANIFEST)
+            if ctx.selection[i]
+            and test.matches_filters(ctx.name_filter, ctx.type_filter)
+        ]
         ctx.remaining_tests_in_plan = {i for i in ctx.test_run_plan}
         ctx.cancel_test_plan = False
-        ctx.test_plan_thread = Thread(target=self.test_plan_worker_thread_func, args=[ctx])
+        ctx.test_plan_thread = Thread(
+            target=self.test_plan_worker_thread_func, args=[ctx]
+        )
         ctx.test_plan_thread.start()
 
     def test_plan_worker_thread_func(self, ctx):
         ctx.currently_running_test_in_plan = 0
 
-        while ctx.currently_running_test_in_plan < len(ctx.test_run_plan) and not ctx.cancel_test_plan:
+        while (
+            ctx.currently_running_test_in_plan < len(ctx.test_run_plan)
+            and not ctx.cancel_test_plan
+        ):
             if len(ctx.test_run_plan) > 1:
-                print(f"Running test {ctx.currently_running_test_in_plan + 1} of {len(ctx.test_run_plan)}...")
+                print(
+                    f"Running test {ctx.currently_running_test_in_plan + 1} of {len(ctx.test_run_plan)}..."
+                )
 
-            ctx.test_plan_execution_ctx.tests = [ctx.test_run_plan[ctx.currently_running_test_in_plan]]
+            ctx.test_plan_execution_ctx.tests = [
+                ctx.test_run_plan[ctx.currently_running_test_in_plan]
+            ]
             ctx.test_plan_execution_ctx.report_to_append_to = ctx.report
             ctx.test_plan_execution_ctx.output_dir = ctx.output_dir
             ctx.test_plan_execution_ctx.junit_output_file = None
@@ -1027,7 +1157,9 @@ class Gui:
 
             self.load_report(ctx, False)
 
-            ctx.remaining_tests_in_plan.remove(ctx.test_run_plan[ctx.currently_running_test_in_plan])
+            ctx.remaining_tests_in_plan.remove(
+                ctx.test_run_plan[ctx.currently_running_test_in_plan]
+            )
             ctx.currently_running_test_in_plan += 1
 
         ctx.test_plan_thread = None
@@ -1063,13 +1195,22 @@ class Gui:
         if to_move_id in ctx.id_to_result_id:
             ctx.id_to_result_id[to_remove_id] = ctx.id_to_result_id[to_move_id]
 
-        MANIFEST[to_remove_id],MANIFEST[to_move_id] = MANIFEST[to_move_id],MANIFEST[to_remove_id]
+        MANIFEST[to_remove_id], MANIFEST[to_move_id] = (
+            MANIFEST[to_move_id],
+            MANIFEST[to_remove_id],
+        )
         MANIFEST.pop()
 
-        ctx.selection[to_remove_id],ctx.selection[to_move_id] = ctx.selection[to_move_id],ctx.selection[to_remove_id]
+        ctx.selection[to_remove_id], ctx.selection[to_move_id] = (
+            ctx.selection[to_move_id],
+            ctx.selection[to_remove_id],
+        )
         ctx.selection.pop()
 
-        ctx.states[to_remove_id],ctx.states[to_move_id] = ctx.states[to_move_id],ctx.states[to_remove_id]
+        ctx.states[to_remove_id], ctx.states[to_move_id] = (
+            ctx.states[to_move_id],
+            ctx.states[to_remove_id],
+        )
         ctx.states.pop()
 
         if ctx.viewed_test_id == to_remove_id:
@@ -1082,16 +1223,20 @@ class Gui:
         write_manifest()
 
     def work_gui_remove(self, ctx):
-        if ctx.test is None: return
+        if ctx.test is None:
+            return
 
         style = imgui.get_style()
         text = f"Are you sure you want to remove '{ctx.test.name}'?"
-        width = imgui.calc_text_size(text)[0] + 2*style.item_spacing[0]
+        width = imgui.calc_text_size(text)[0] + 2 * style.item_spacing[0]
         imgui.push_style_var(imgui.STYLE_WINDOW_MIN_SIZE, (width, 1))
-        popup_open = imgui.begin_popup_modal(REMOVE_POPUP_NAME, flags=imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_RESIZE)[0]
+        popup_open = imgui.begin_popup_modal(
+            REMOVE_POPUP_NAME, flags=imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_RESIZE
+        )[0]
         imgui.pop_style_var()
 
-        if not popup_open: return
+        if not popup_open:
+            return
 
         imgui.text(text)
 
@@ -1113,7 +1258,9 @@ class Gui:
 
     def work_gui_edit(self, ctx):
         imgui.set_next_window_size(640, 274)
-        if not imgui.begin_popup_modal(EDIT_POPUP_NAME, flags=imgui.WINDOW_NO_RESIZE)[0]:
+        if not imgui.begin_popup_modal(EDIT_POPUP_NAME, flags=imgui.WINDOW_NO_RESIZE)[
+            0
+        ]:
             return
 
         style = imgui.get_style()
@@ -1124,14 +1271,16 @@ class Gui:
         input_path = ctx.test.input_path
 
         _, ctx.test.name = imgui.input_text("Test name", ctx.test.name, 512)
-        _, ctx.test.type = imgui.combo("Test type", ctx.test.type, [Test.Type.name(x) for x in list(Test.Type)])
+        _, ctx.test.type = imgui.combo(
+            "Test type", ctx.test.type, [Test.Type.name(x) for x in list(Test.Type)]
+        )
 
-        filetype = ('Horizon scene', '*.hrz_scene.pbf')
+        filetype = ("Horizon scene", "*.hrz_scene.pbf")
         if ctx.test.type == Test.Type.MapboxStyle:
-            filetype = ('Mapbox style', '*.json')
+            filetype = ("Mapbox style", "*.json")
 
         if imgui.button(f"Load {filetype[0]}..."):
-            filepath = ask_open_filename(filetypes = [filetype])
+            filepath = ask_open_filename(filetypes=[filetype])
             if filepath is not None and filepath != ():
                 input_path = filepath
         if ctx.test.input_error is not None:
@@ -1141,13 +1290,24 @@ class Gui:
             imgui.same_line()
             imgui.text(ctx.test.input_info)
         _, input_path = imgui.input_text(f"{filetype[0]} path", input_path, 512)
-        _, ctx.test.error_threshold = imgui.input_float("Error threshold (%)", ctx.test.error_threshold * 100, format="%.6f")
+        _, ctx.test.error_threshold = imgui.input_float(
+            "Error threshold (%)", ctx.test.error_threshold * 100, format="%.6f"
+        )
         ctx.test.error_threshold = max(0, min(1, ctx.test.error_threshold / 100))
         _, ctx.test.timeout = imgui.input_int("Timeout (sec)", ctx.test.timeout)
-        _, ctx.test.error_strategy = imgui.combo("Error strategy", ctx.test.error_strategy, [Test.ErrorStrategy.name(x) for x in list(Test.ErrorStrategy)])
+        _, ctx.test.error_strategy = imgui.combo(
+            "Error strategy",
+            ctx.test.error_strategy,
+            [Test.ErrorStrategy.name(x) for x in list(Test.ErrorStrategy)],
+        )
         if ctx.test.error_strategy == Test.ErrorStrategy.Message:
-            _, ctx.test.error_message = imgui.input_text("Error message", ctx.test.error_message, 512)
-        _, ctx.generate_ref = imgui.checkbox(("G" if ctx.test.new else "Reg") + "enerate reference image", ctx.generate_ref)
+            _, ctx.test.error_message = imgui.input_text(
+                "Error message", ctx.test.error_message, 512
+            )
+        _, ctx.generate_ref = imgui.checkbox(
+            ("G" if ctx.test.new else "Reg") + "enerate reference image",
+            ctx.generate_ref,
+        )
 
         ctx.test.timeout = max(ctx.test.timeout, 0)
 
@@ -1159,15 +1319,19 @@ class Gui:
             else:
                 ctx.test.input_error = None
                 if ctx.test.name == "":
-                    ctx.test.name = path.basename(input_path)[0:-len(Test.Type.file_extension(ctx.test.type))]
+                    ctx.test.name = path.basename(input_path)[
+                        0 : -len(Test.Type.file_extension(ctx.test.type))
+                    ]
                 if ctx.test.input_must_be_copied():
-                    ctx.test.input_info = f"File will be copied to \"{Test.Type.directory(ctx.test.type).relative_to(ROOT)}\""
+                    ctx.test.input_info = f'File will be copied to "{Test.Type.directory(ctx.test.type).relative_to(ROOT)}"'
                 else:
                     ctx.test.input_info = None
 
         available_width = imgui.get_window_width() - 3 * style.item_spacing[0]
         if imgui.get_content_region_available()[1] > 30:
-            imgui.set_cursor_pos((imgui.get_cursor_pos()[0], imgui.get_window_height() - 30))
+            imgui.set_cursor_pos(
+                (imgui.get_cursor_pos()[0], imgui.get_window_height() - 30)
+            )
 
         if imgui.button("Cancel", available_width * 0.5):
             ctx.test_id = -1
@@ -1175,7 +1339,9 @@ class Gui:
             ctx.generate_ref = False
             imgui.close_current_popup()
         imgui.same_line()
-        if imgui.button("Create" if ctx.test and ctx.test.new else "Update", available_width * 0.5):
+        if imgui.button(
+            "Create" if ctx.test and ctx.test.new else "Update", available_width * 0.5
+        ):
             if ctx.test.input_must_be_copied():
                 ctx.test.copy_input()
                 ctx.test.input_info = None
@@ -1209,7 +1375,14 @@ class Gui:
     def work_gui_selection(self, ctx):
         style = imgui.get_style()
 
-        imgui.begin("window-selection", False, imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_SAVED_SETTINGS)
+        imgui.begin(
+            "window-selection",
+            False,
+            imgui.WINDOW_NO_RESIZE
+            | imgui.WINDOW_NO_MOVE
+            | imgui.WINDOW_NO_TITLE_BAR
+            | imgui.WINDOW_NO_SAVED_SETTINGS,
+        )
 
         text = "Working directory"
         Gui.center_next_widget_h(imgui.calc_text_size(text)[0])
@@ -1223,7 +1396,9 @@ class Gui:
                 ctx.output_dir = OutputDirectory(ctx.output_dir_input)
                 self.load_report(ctx)
 
-        changed, value = imgui.input_text("Path", str(ctx.output_dir_input), 512, imgui.INPUT_TEXT_ENTER_RETURNS_TRUE)
+        changed, value = imgui.input_text(
+            "Path", str(ctx.output_dir_input), 512, imgui.INPUT_TEXT_ENTER_RETURNS_TRUE
+        )
         if changed:
             if value:
                 ctx.output_dir_input = Path(value.replace("\\", "\\\\")).absolute()
@@ -1235,7 +1410,9 @@ class Gui:
         imgui.text("(?)")
         if imgui.is_item_hovered():
             imgui.begin_tooltip()
-            imgui.text("Results are generated in a temporary directory when the path is empty.")
+            imgui.text(
+                "Results are generated in a temporary directory when the path is empty."
+            )
             imgui.end_tooltip()
 
         imgui.separator()
@@ -1264,7 +1441,9 @@ class Gui:
         imgui.text("Test types:")
         imgui.same_line()
         for type in list(Test.Type):
-            clicked, enabled = imgui.checkbox(Test.Type.name(type) + "s", type in ctx.type_filter)
+            clicked, enabled = imgui.checkbox(
+                Test.Type.name(type) + "s", type in ctx.type_filter
+            )
             if clicked:
                 if enabled:
                     ctx.type_filter.add(type)
@@ -1304,14 +1483,14 @@ class Gui:
         col_width_remove = imgui.calc_text_size("Remove")[0] + 2 * style.item_spacing[0]
         col_width_edit = imgui.calc_text_size("Edit")[0] + 2 * style.item_spacing[0]
         col_width_go = imgui.calc_text_size("View")[0] + 2 * style.item_spacing[0]
-        available -= (col_width_remove + col_width_edit + col_width_go)
+        available -= col_width_remove + col_width_edit + col_width_go
 
         imgui.columns(5, "selectioncolumns", False)
         imgui.set_column_width(4, col_width_remove)
         imgui.set_column_width(3, col_width_edit)
         imgui.set_column_width(2, col_width_go)
-        imgui.set_column_width(1, available*0.2)
-        imgui.set_column_width(0, available*0.8)
+        imgui.set_column_width(1, available * 0.2)
+        imgui.set_column_width(0, available * 0.8)
 
         test_state_label_data = {}
         test_state_label_data[TestState.Skip] = ("skipped", GRAY)
@@ -1333,18 +1512,25 @@ class Gui:
                 height = imgui.get_frame_height()
                 draw_list = imgui.get_window_draw_list()
                 draw_list.add_rect_filled(
-                    cur_begin[0], cur_begin[1],
-                    cur_begin[0] + width, cur_begin[1] + height,
-                    imgui.get_color_u32_rgba(*HIGHLIGHT_COLOR))
+                    cur_begin[0],
+                    cur_begin[1],
+                    cur_begin[0] + width,
+                    cur_begin[1] + height,
+                    imgui.get_color_u32_rgba(*HIGHLIGHT_COLOR),
+                )
 
-            _, ctx.selection[test_id] = imgui.checkbox(test.name, ctx.selection[test_id])
+            _, ctx.selection[test_id] = imgui.checkbox(
+                test.name, ctx.selection[test_id]
+            )
             if imgui.is_item_hovered():
                 imgui.set_tooltip(test.name)
             imgui.next_column()
             if test_id in ctx.remaining_tests_in_plan:
                 imgui.text_colored("queued", *WHITE)
             else:
-                imgui.text_colored(test_state_label_data[state][0], *test_state_label_data[state][1])
+                imgui.text_colored(
+                    test_state_label_data[state][0], *test_state_label_data[state][1]
+                )
             imgui.next_column()
             imgui.button("View")
             if imgui.is_item_clicked():
@@ -1403,7 +1589,12 @@ class Gui:
                 self.cancel_test_plan(ctx)
 
         if imgui.button("(Re)generate reference images", -1, 20):
-            tests = [i for i, test in enumerate(MANIFEST) if ctx.selection[i] and test.matches_filters(ctx.name_filter, ctx.type_filter)]
+            tests = [
+                i
+                for i, test in enumerate(MANIFEST)
+                if ctx.selection[i]
+                and test.matches_filters(ctx.name_filter, ctx.type_filter)
+            ]
             generate_ref_images(tests, ctx.output_dir.path)
             if ctx.report is not None:
                 for result_id, result in enumerate(ctx.report.results):
@@ -1445,7 +1636,11 @@ class Gui:
         imgui.text(Test.Type.name(test.type))
         if result is not None:
             if result.success:
-                color = GREEN if result.error_ratio is None or result.error_ratio == 0 else YELLOW
+                color = (
+                    GREEN
+                    if result.error_ratio is None or result.error_ratio == 0
+                    else YELLOW
+                )
                 imgui.text_colored("Passed", *color)
             else:
                 imgui.text_colored("Failure", *RED)
@@ -1463,51 +1658,88 @@ class Gui:
         imgui.columns(1)
         imgui.spacing()
 
-        imgui.begin_child("region-images", -1, -style.item_spacing[1] - 30, border=False)
+        imgui.begin_child(
+            "region-images", -1, -style.item_spacing[1] - 30, border=False
+        )
 
         if result is not None:
             if result.error_type == Result.ErrorType.MissingInput:
-                imgui.text_colored(f"Couldn't load input at {get_input_path(result.name, result.type)}", *RED)
+                imgui.text_colored(
+                    f"Couldn't load input at {get_input_path(result.name, result.type)}",
+                    *RED,
+                )
             elif result.error_type == Result.ErrorType.MissingRef:
-                imgui.text_colored(f"Couldn't load reference image at {get_ref_image_path(result.name, result.type)}", *RED)
+                imgui.text_colored(
+                    f"Couldn't load reference image at {get_ref_image_path(result.name, result.type)}",
+                    *RED,
+                )
             if result.error_type == Result.ErrorType.MigrationError:
-                imgui.text_colored(f"Couldn't migrate scene dump at {get_input_path(result.name, result.type)}", *RED)
+                imgui.text_colored(
+                    f"Couldn't migrate scene dump at {get_input_path(result.name, result.type)}",
+                    *RED,
+                )
             elif result.error_type == Result.ErrorType.Timeout:
-                imgui.text_colored(f"The test has timed out after {test.timeout} seconds.", *RED)
+                imgui.text_colored(
+                    f"The test has timed out after {test.timeout} seconds.", *RED
+                )
             elif result.error_type == Result.ErrorType.Viewer:
-                imgui.text_colored("The scene couldn't be captured due to a viewer error", *RED)
+                imgui.text_colored(
+                    "The scene couldn't be captured due to a viewer error", *RED
+                )
             elif result.error_type == Result.ErrorType.Aborted:
                 imgui.text_colored("Test was aborted due to a previous error.", *RED)
             elif result.error_type == Result.ErrorType.Comparator:
                 imgui.text_colored("There was an error during capture comparison", *RED)
 
-            has_capture_and_diff = result.error_type == Result.ErrorType.None_ or result.error_type == Result.ErrorType.Threshold
+            has_capture_and_diff = (
+                result.error_type == Result.ErrorType.None_
+                or result.error_type == Result.ErrorType.Threshold
+            )
 
-            if ctx.uploaded_textures_test_id != ctx.viewed_test_id or ctx.uploaded_textures_report_date != ctx.report.date:
-                ctx.textures[0].upload_image_on_gpu(get_ref_image_path(result.name, result.type))
+            if (
+                ctx.uploaded_textures_test_id != ctx.viewed_test_id
+                or ctx.uploaded_textures_report_date != ctx.report.date
+            ):
+                ctx.textures[0].upload_image_on_gpu(
+                    get_ref_image_path(result.name, result.type)
+                )
                 if has_capture_and_diff:
-                    ctx.textures[1].upload_image_on_gpu(get_capture_path(ctx.output_dir.path, result.name))
-                    ctx.textures[2].upload_image_on_gpu(get_diff_path(ctx.output_dir.path, result.name))
+                    ctx.textures[1].upload_image_on_gpu(
+                        get_capture_path(ctx.output_dir.path, result.name)
+                    )
+                    ctx.textures[2].upload_image_on_gpu(
+                        get_diff_path(ctx.output_dir.path, result.name)
+                    )
                 ctx.uploaded_textures_test_id = ctx.viewed_test_id
                 ctx.uploaded_textures_report_date = ctx.report.date
 
             if has_capture_and_diff:
-                expanded, _ = imgui.collapsing_header("Images", flags=imgui.TREE_NODE_DEFAULT_OPEN)
+                expanded, _ = imgui.collapsing_header(
+                    "Images", flags=imgui.TREE_NODE_DEFAULT_OPEN
+                )
                 if expanded:
-                    Gui.center_next_widget_h(IMAGE_SIZE*1.5 + style.item_spacing[0])
+                    Gui.center_next_widget_h(IMAGE_SIZE * 1.5 + style.item_spacing[0])
                     Gui.display_texture(ctx.textures[2], IMAGE_SIZE, IMAGE_SIZE)
                     imgui.same_line()
                     imgui.begin_group()
-                    Gui.display_texture(ctx.textures[0], IMAGE_SIZE*0.5, IMAGE_SIZE*0.5)
-                    Gui.display_texture(ctx.textures[1], IMAGE_SIZE*0.5, IMAGE_SIZE*0.5)
+                    Gui.display_texture(
+                        ctx.textures[0], IMAGE_SIZE * 0.5, IMAGE_SIZE * 0.5
+                    )
+                    Gui.display_texture(
+                        ctx.textures[1], IMAGE_SIZE * 0.5, IMAGE_SIZE * 0.5
+                    )
                     imgui.end_group()
 
                     now = int(time.time_ns() / 1_000_000)
                     if imgui.is_item_hovered():
                         imgui.begin_tooltip()
-                        Gui.display_texture(ctx.textures[ctx.compare_texture_id], IMAGE_SIZE, IMAGE_SIZE)
+                        Gui.display_texture(
+                            ctx.textures[ctx.compare_texture_id], IMAGE_SIZE, IMAGE_SIZE
+                        )
                         text = ["Reference", "Capture"]
-                        Gui.center_next_widget_h(imgui.calc_text_size(text[ctx.compare_texture_id])[0])
+                        Gui.center_next_widget_h(
+                            imgui.calc_text_size(text[ctx.compare_texture_id])[0]
+                        )
                         imgui.text(text[ctx.compare_texture_id])
                         imgui.end_tooltip()
 
@@ -1515,7 +1747,9 @@ class Gui:
                             ctx.compare_texture_id = (ctx.compare_texture_id + 1) & 1
                             ctx.compare_last_time = now
             else:
-                expanded, _ = imgui.collapsing_header("Reference image", flags=imgui.TREE_NODE_DEFAULT_OPEN)
+                expanded, _ = imgui.collapsing_header(
+                    "Reference image", flags=imgui.TREE_NODE_DEFAULT_OPEN
+                )
                 if expanded:
                     Gui.center_next_widget_h(IMAGE_SIZE + style.item_spacing[0])
                     Gui.display_texture(ctx.textures[0], IMAGE_SIZE, IMAGE_SIZE)
@@ -1523,28 +1757,44 @@ class Gui:
             if result.log:
                 expanded, _ = imgui.collapsing_header("Logs")
                 if expanded:
-                    imgui.begin_child("logs_content", height=250, border=True, flags=imgui.WINDOW_HORIZONTAL_SCROLLING_BAR)
+                    imgui.begin_child(
+                        "logs_content",
+                        height=250,
+                        border=True,
+                        flags=imgui.WINDOW_HORIZONTAL_SCROLLING_BAR,
+                    )
                     imgui.push_font(self.mono_font)
                     imgui.text_unformatted(result.log)
                     imgui.pop_font()
                     imgui.end_child()
         else:
             if ctx.uploaded_textures_test_id != ctx.viewed_test_id:
-                ctx.textures[0].upload_image_on_gpu(get_ref_image_path(test.name, test.type))
+                ctx.textures[0].upload_image_on_gpu(
+                    get_ref_image_path(test.name, test.type)
+                )
                 ctx.uploaded_textures_test_id = ctx.viewed_test_id
 
-            expanded, _ = imgui.collapsing_header("Reference image", flags=imgui.TREE_NODE_DEFAULT_OPEN)
+            expanded, _ = imgui.collapsing_header(
+                "Reference image", flags=imgui.TREE_NODE_DEFAULT_OPEN
+            )
             if expanded:
-                    Gui.center_next_widget_h(IMAGE_SIZE + style.item_spacing[0])
-                    Gui.display_texture(ctx.textures[0], IMAGE_SIZE, IMAGE_SIZE)
+                Gui.center_next_widget_h(IMAGE_SIZE + style.item_spacing[0])
+                Gui.display_texture(ctx.textures[0], IMAGE_SIZE, IMAGE_SIZE)
 
         imgui.end_child()
 
-        available = imgui.get_content_region_available()[0] - 2*style.item_spacing[0]
+        available = imgui.get_content_region_available()[0] - 2 * style.item_spacing[0]
         go_to_next_in_queue = False
         if imgui.button("Regenerate reference image", available * 0.5, 30):
-            if result is not None and ctx.output_dir.has_capture(test) and has_input(test):
-                shutil.copyfile(get_capture_path(ctx.output_dir.path, result.name), get_ref_image_path(result.name, result.type))
+            if (
+                result is not None
+                and ctx.output_dir.has_capture(test)
+                and has_input(test)
+            ):
+                shutil.copyfile(
+                    get_capture_path(ctx.output_dir.path, result.name),
+                    get_ref_image_path(result.name, result.type),
+                )
             else:
                 generate_ref_image(MANIFEST[ctx.viewed_test_id], ctx.output_dir.path)
             ctx.states[ctx.name_to_id[test.name]] = TestState.Updated
@@ -1561,7 +1811,9 @@ class Gui:
             remaining = len(ctx.view_queue)
             if ctx.viewed_test_id in ctx.view_queue:
                 remaining -= 1
-            imgui.set_tooltip(f"Go to next unreviewed failed test\n{remaining} remaining")
+            imgui.set_tooltip(
+                f"Go to next unreviewed failed test\n{remaining} remaining"
+            )
 
         if go_to_next_in_queue:
             ctx.view_queue.discard(ctx.viewed_test_id)
@@ -1570,7 +1822,14 @@ class Gui:
                 ctx.viewed_test_id = next_in_queue
 
     def work_gui_report(self, ctx):
-        imgui.begin("window-report", False, imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_SAVED_SETTINGS)
+        imgui.begin(
+            "window-report",
+            False,
+            imgui.WINDOW_NO_RESIZE
+            | imgui.WINDOW_NO_MOVE
+            | imgui.WINDOW_NO_TITLE_BAR
+            | imgui.WINDOW_NO_SAVED_SETTINGS,
+        )
 
         if ctx.has_report:
             text = "Report"
@@ -1588,7 +1847,9 @@ class Gui:
             imgui.text(path.join(ctx.output_dir.path, REPORT_FILE_NAME))
             show_tooltip = imgui.is_item_hovered()
             use_report_dir = imgui.is_item_clicked()
-            imgui.text(str(datetime.datetime.fromisoformat(ctx.report.date).astimezone()))
+            imgui.text(
+                str(datetime.datetime.fromisoformat(ctx.report.date).astimezone())
+            )
             imgui.text(ctx.report.branch)
             imgui.text(ctx.report.commit)
             imgui.columns(1)
@@ -1603,7 +1864,9 @@ class Gui:
 
             def center_text_colored(text, color):
                 cursor = imgui.get_cursor_pos()
-                offset_x = (imgui.get_column_width() - imgui.calc_text_size(text)[0]) * 0.5
+                offset_x = (
+                    imgui.get_column_width() - imgui.calc_text_size(text)[0]
+                ) * 0.5
                 imgui.set_cursor_pos((cursor[0] + offset_x, cursor[1]))
                 imgui.text_colored(text, *color)
 
@@ -1613,7 +1876,9 @@ class Gui:
             if ctx.report.total_tests > 0:
                 passed_ratio = (ctx.report.passed_tests / ctx.report.total_tests) * 100
                 failed_ratio = (ctx.report.failed_tests / ctx.report.total_tests) * 100
-                aborted_ratio = (ctx.report.aborted_tests / ctx.report.total_tests) * 100
+                aborted_ratio = (
+                    ctx.report.aborted_tests / ctx.report.total_tests
+                ) * 100
 
                 passed_ratio_str = f"{passed_ratio:.2f}"
                 failed_ratio_str = f"{failed_ratio:.2f}"
@@ -1624,13 +1889,19 @@ class Gui:
             center_text_colored(f"{str(ctx.report.total_tests)}", WHITE)
             imgui.next_column()
             center_text_colored("Passed", GREEN)
-            center_text_colored(f"{str(ctx.report.passed_tests)} ({passed_ratio_str}%)", GREEN)
+            center_text_colored(
+                f"{str(ctx.report.passed_tests)} ({passed_ratio_str}%)", GREEN
+            )
             imgui.next_column()
             center_text_colored("Failed", RED)
-            center_text_colored(f"{str(ctx.report.failed_tests)} ({failed_ratio_str}%)", RED)
+            center_text_colored(
+                f"{str(ctx.report.failed_tests)} ({failed_ratio_str}%)", RED
+            )
             imgui.next_column()
             center_text_colored("Aborted", GRAY)
-            center_text_colored(f"{str(ctx.report.aborted_tests)} ({aborted_ratio_str}%)", GRAY)
+            center_text_colored(
+                f"{str(ctx.report.aborted_tests)} ({aborted_ratio_str}%)", GRAY
+            )
             imgui.columns(1)
             imgui.separator()
             imgui.spacing()
@@ -1668,8 +1939,10 @@ class Gui:
                     running = False
                     break
                 if event.type == SDL_WINDOWEVENT:
-                    if event.window.event == SDL_WINDOWEVENT_RESIZED or\
-                        event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED:
+                    if (
+                        event.window.event == SDL_WINDOWEVENT_RESIZED
+                        or event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
+                    ):
                         window_size = (event.window.data1, event.window.data2)
                 renderer.process_event(event)
             renderer.process_inputs()
@@ -1685,7 +1958,7 @@ class Gui:
             self.work_gui_report(ctx)
 
             imgui.render()
-            gl.glClearColor(1., 1., 1., 1.)
+            gl.glClearColor(1.0, 1.0, 1.0, 1.0)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
             renderer.render(imgui.get_draw_data())
@@ -1699,25 +1972,68 @@ class Gui:
         renderer.shutdown()
         self.pysdl_shutdown(window, gl_context)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--manifest", help="Manifest path", default=MANIFEST_PATH)
     parser.add_argument("-o", help="Output directory", nargs="?", type=str, default="")
     parser.add_argument("-v", help="Verbose", action="store_true", default=False)
     parser.add_argument("-b", help="Branch name", nargs="?", type=str, default="")
-    parser.add_argument("-c", "--compilation_mode", help="Compilation mode", nargs="?", type=str, default="")
-    parser.add_argument("--bazelrc", help="Path to bazelrc file", nargs="?", type=str, default="")
-    parser.add_argument("--output_base", help="Path Bazel output base directory", nargs="?", type=str, default="")
-    parser.add_argument("--batch", help="Execute Bazel in batch mode", action="store_true", default=False)
-    parser.add_argument("--gui", help="Run the visual tests GUI tool", action="store_true", default=False)
-    parser.add_argument("--show", help="Show Horizon window", action="store_true", default=False)
-    parser.add_argument("--sync", help="Sync the manifest entries with the available input files", action="store_true", default=False)
-    parser.add_argument("--junit_report", help="JUnit report output file", type=str, default=None)
+    parser.add_argument(
+        "-c",
+        "--compilation_mode",
+        help="Compilation mode",
+        nargs="?",
+        type=str,
+        default="",
+    )
+    parser.add_argument(
+        "--bazelrc", help="Path to bazelrc file", nargs="?", type=str, default=""
+    )
+    parser.add_argument(
+        "--output_base",
+        help="Path Bazel output base directory",
+        nargs="?",
+        type=str,
+        default="",
+    )
+    parser.add_argument(
+        "--batch",
+        help="Execute Bazel in batch mode",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--gui",
+        help="Run the visual tests GUI tool",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--show", help="Show Horizon window", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--sync",
+        help="Sync the manifest entries with the available input files",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--junit_report", help="JUnit report output file", type=str, default=None
+    )
     parser.add_argument("--viewer", help="Viewer executable", type=str, default=None)
-    parser.add_argument("--comparator", help="Comparator executable", type=str, default=None)
+    parser.add_argument(
+        "--comparator", help="Comparator executable", type=str, default=None
+    )
 
     if platform.system() == "Linux":
-        parser.add_argument("--wsi", help="Choose the windowing system integration", type=str, default="x11", choices=["x11", "headless_egl"])
+        parser.add_argument(
+            "--wsi",
+            help="Choose the windowing system integration",
+            type=str,
+            default="x11",
+            choices=["x11", "headless_egl"],
+        )
 
     subparsers = parser.add_subparsers()
 
@@ -1725,13 +2041,17 @@ if __name__ == "__main__":
     subparser.add_argument("tests", nargs="+", help="List of tests to run")
     subparser.set_defaults(func=run_subset)
 
-    subparser = subparsers.add_parser("exclude", help="Runs all the tests except those specified")
+    subparser = subparsers.add_parser(
+        "exclude", help="Runs all the tests except those specified"
+    )
     subparser.add_argument("tests", nargs="+", help="List of tests to skip")
     subparser.set_defaults(func=run_exclude)
 
     subparser = subparsers.add_parser("create", help="Create a new test")
     subparser.add_argument("test_name", help="Test name")
-    subparser.add_argument("-t", "--threshold", type=float, help="Error threshold", default=0.015)
+    subparser.add_argument(
+        "-t", "--threshold", type=float, help="Error threshold", default=0.015
+    )
     group = subparser.add_mutually_exclusive_group(required=True)
     group.add_argument("--scene_dump_path", help="Scene dump file")
     group.add_argument("--mapbox_style_path", help="Mapbox style file")
@@ -1779,7 +2099,6 @@ if __name__ == "__main__":
     else:
         print("Relying on the bazelrc file for platform-specific configuration.")
 
-
     if args.sync:
         print("Synchronising manifest file.")
         sync_manifest()
@@ -1790,13 +2109,20 @@ if __name__ == "__main__":
         print("Building viewer executable...", end="", flush=True)
         if VERBOSE:
             print("")
-        viewer_build_command = ["bazel"] + bazel_startup_options + ["build", "//tools/visual_testing:viewer"] + bazel_build_options
+        viewer_build_command = (
+            ["bazel"]
+            + bazel_startup_options
+            + ["build", "//tools/visual_testing:viewer"]
+            + bazel_build_options
+        )
         if platform.system() == "Linux" and args.wsi == "headless_egl":
             viewer_build_command.append("--//:linux_wsi=headless_egl")
-        build_error = subprocess.run(viewer_build_command,
-            cwd=ROOT,
-            stdout=STDOUT,
-            stderr=STDERR).returncode != 0
+        build_error = (
+            subprocess.run(
+                viewer_build_command, cwd=ROOT, stdout=STDOUT, stderr=STDERR
+            ).returncode
+            != 0
+        )
         VIEWER_EXE = f"{ROOT}/bazel-bin/tools/visual_testing/viewer{EXE_EXT}"
         if build_error:
             print(" [FAILED]")
@@ -1810,10 +2136,18 @@ if __name__ == "__main__":
         print("Building comparator executable...", end="", flush=True)
         if VERBOSE:
             print("")
-        build_error = subprocess.run(["bazel"] + bazel_startup_options + ["build", "//tools/visual_testing:comparator"] + bazel_build_options,
-            cwd=ROOT,
-            stdout=STDOUT,
-            stderr=STDERR).returncode != 0
+        build_error = (
+            subprocess.run(
+                ["bazel"]
+                + bazel_startup_options
+                + ["build", "//tools/visual_testing:comparator"]
+                + bazel_build_options,
+                cwd=ROOT,
+                stdout=STDOUT,
+                stderr=STDERR,
+            ).returncode
+            != 0
+        )
         COMPARATOR_EXE = f"{ROOT}/bazel-bin/tools/visual_testing/comparator{EXE_EXT}"
         if build_error:
             print(" [FAILED]")

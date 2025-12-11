@@ -4,6 +4,7 @@ import sys
 # Generates a prefix tree encoding all HTML colors.
 # Then encode it as a series of C++ functions that lookup this tree.
 
+
 def generate_prefix_tree(node, word, value):
     if len(word) == 0:
         node[""] = value
@@ -12,17 +13,21 @@ def generate_prefix_tree(node, word, value):
         node[word[0]] = {}
     generate_prefix_tree(node[word[0]], word[1:], value)
 
+
 def compress_prefix_tree(node):
     for child in node.values():
         if isinstance(child, dict):
             compress_prefix_tree(child)
 
-    to_merge = [word for word in node if len(node[word]) == 1 and isinstance(node[word], dict)]
+    to_merge = [
+        word for word in node if len(node[word]) == 1 and isinstance(node[word], dict)
+    ]
 
     for word in to_merge:
         child = list(node[word].items())[0]
         del node[word]
         node[word + child[0]] = child[1]
+
 
 def generate_lookup_tree(colors):
     tree = {}
@@ -31,7 +36,8 @@ def generate_lookup_tree(colors):
     compress_prefix_tree(tree)
     return tree
 
-def generate_lookup_function(node, parent_prefix = ""):
+
+def generate_lookup_function(node, parent_prefix=""):
     code_before = ""
     func_suffix = "_" + parent_prefix if len(parent_prefix) > 0 else ""
     code = f"std::optional<uint32_t> html_color_lookup{func_suffix}(std::string_view str)\n"
@@ -43,19 +49,21 @@ def generate_lookup_function(node, parent_prefix = ""):
     code += "    switch (str[0])\n"
     code += "    {\n"
     for prefix, child in node.items():
-        if prefix == "": continue
+        if prefix == "":
+            continue
         code += f"        case '{prefix[0]}':\n"
         if isinstance(child, dict):
             full_prefix = parent_prefix + prefix
-            code += f"            if (str.starts_with(\"{prefix}\")) {{ return html_color_lookup_{full_prefix}(str.substr({len(prefix)})); }}\n"
+            code += f'            if (str.starts_with("{prefix}")) {{ return html_color_lookup_{full_prefix}(str.substr({len(prefix)})); }}\n'
             code_before += generate_lookup_function(child, full_prefix)
         else:
-            code += f"            if (str == \"{prefix}\") {{ return {child}; }}\n"
+            code += f'            if (str == "{prefix}") {{ return {child}; }}\n'
         code += "            break;\n"
     code += "    }\n"
     code += "    return std::nullopt;\n"
     code += "}\n\n"
     return code_before + code
+
 
 def generate_lookup_code(tree):
     max_length = max(len(c[0]) for c in COLORS)
@@ -63,8 +71,10 @@ def generate_lookup_code(tree):
     code += generate_lookup_function(tree)
     return code
 
+
 # Colours from https://www.w3.org/TR/css-color-3/#svg-color
-COLORS = [["aliceblue", "#f0f8ff"],
+COLORS = [
+    ["aliceblue", "#f0f8ff"],
     ["antiquewhite", "#faebd7"],
     ["aqua", "#00ffff"],
     ["aquamarine", "#7fffd4"],
@@ -210,18 +220,23 @@ COLORS = [["aliceblue", "#f0f8ff"],
     ["white", "#ffffff"],
     ["whitesmoke", "#f5f5f5"],
     ["yellow", "#ffff00"],
-    ["yellowgreen", "#9acd32"]]
+    ["yellowgreen", "#9acd32"],
+]
 
 for c in COLORS:
     c[1] = "0xff{}{}{}U".format(c[1][5:], c[1][3:5], c[1][1:3])
+
 
 def lookup_cmd():
     tree = generate_lookup_tree(COLORS)
     print(generate_lookup_code(tree))
 
+
 def randomize_case(s):
     import random
+
     return "".join(c.upper() if random.random() > 0.5 else c.lower() for c in s)
+
 
 def tests_cmd():
     color_names = ", ".join([f'"{randomize_case(c[0])}"' for c in COLORS])
@@ -233,25 +248,29 @@ def tests_cmd():
     print(f"    static const uint32_t expected_values[] = {{{expected_values}}};")
     print(f"")
     print(f"    size_t names_size = sizeof(color_names) / sizeof(color_names[0]);")
-    print(f"    size_t values_size = sizeof(expected_values) / sizeof(expected_values[0]);")
+    print(
+        f"    size_t values_size = sizeof(expected_values) / sizeof(expected_values[0]);"
+    )
     print(f"")
     print(f"    ASSERT_EQ(names_size, values_size);")
     print(f"")
     print(f"    for (size_t i = 0; i < names_size; ++i)")
     print(f"    {{")
-    print(f"        ASSERT_EQ(hrz_mapbox::get_html_color_value(color_names[i], strlen(color_names[i])), expected_values[i]);")
+    print(
+        f"        ASSERT_EQ(hrz_mapbox::get_html_color_value(color_names[i], strlen(color_names[i])), expected_values[i]);"
+    )
     print(f"    }}")
     print(f"}}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
     parser_lookup = subparsers.add_parser("lookup")
-    parser_lookup.set_defaults(func = lookup_cmd)
+    parser_lookup.set_defaults(func=lookup_cmd)
 
     parser_lookup = subparsers.add_parser("tests")
-    parser_lookup.set_defaults(func = tests_cmd)
+    parser_lookup.set_defaults(func=tests_cmd)
 
     parser.parse_args(sys.argv[1:]).func()
-

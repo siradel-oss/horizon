@@ -12,7 +12,7 @@ file_index = 0
 file_name = os.path.join(OUTPUT_DIR, str(file_index).zfill(2) + ".cpp")
 
 FP_OUTPUT = open(file_name, "w")
-FP_OUTPUT.write("#include \"../crs_common.h\"\n")
+FP_OUTPUT.write('#include "../crs_common.h"\n')
 
 for i, r in enumerate(resp):
     auth = r[0]
@@ -25,7 +25,8 @@ for i, r in enumerate(resp):
 
     str_length = len(proj_str)
 
-    FP_OUTPUT.write("""TEST_F(CrsDatabaseTest, pl_get_crs_string_%s_%s)
+    FP_OUTPUT.write(
+        """TEST_F(CrsDatabaseTest, pl_get_crs_string_%s_%s)
 {
     // %s
 
@@ -42,13 +43,15 @@ for i, r in enumerate(resp):
     ASSERT_EQ(string_length, %s);
     ASSERT_EQ(crs_string, "%s");
 }
-""" % (auth, srid, name, auth, srid, str_length, auth, srid, str_length, proj_str))
+"""
+        % (auth, srid, name, auth, srid, str_length, auth, srid, str_length, proj_str)
+    )
 
     if i % 100 == 0:
         FP_OUTPUT.close()
         file_index += 1
         file_name = os.path.join(OUTPUT_DIR, str(file_index).zfill(2) + ".cpp")
         FP_OUTPUT = open(file_name, "w")
-        FP_OUTPUT.write("#include \"../crs_common.h\"\n")
+        FP_OUTPUT.write('#include "../crs_common.h"\n')
 
 FP_OUTPUT.close()

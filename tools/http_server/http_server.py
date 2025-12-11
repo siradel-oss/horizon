@@ -8,35 +8,36 @@ import sys
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
+
 class HrzRequestHandler(SimpleHTTPRequestHandler):
-    extensions_map={
-        '': 'application/octet-stream',
-        '.css': 'text/css',
-        '.html': 'text/html',
-        '.jpeg': 'image/jpg',
-        '.jpg': 'image/jpg',
-        '.js': 'text/javascript',
-        '.json': 'application/json',
-        '.manifest': 'text/cache-manifest',
-        '.mvt': 'application/vnd.mapbox-vector-tile',
-        '.png': 'image/png',
-        '.svg': 'image/svg+xml',
-        '.ttf': 'font/ttf',
-        '.txt': 'text/plain',
-        '.webp': 'image/webp',
-        '.woff': 'font/woff',
-        '.woff2': 'font/woff2',
-        '.wasm': 'application/wasm',
-        '.xml': 'application/xml',
+    extensions_map = {
+        "": "application/octet-stream",
+        ".css": "text/css",
+        ".html": "text/html",
+        ".jpeg": "image/jpg",
+        ".jpg": "image/jpg",
+        ".js": "text/javascript",
+        ".json": "application/json",
+        ".manifest": "text/cache-manifest",
+        ".mvt": "application/vnd.mapbox-vector-tile",
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".ttf": "font/ttf",
+        ".txt": "text/plain",
+        ".webp": "image/webp",
+        ".woff": "font/woff",
+        ".woff2": "font/woff2",
+        ".wasm": "application/wasm",
+        ".xml": "application/xml",
     }
 
     def end_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
-        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        self.send_header('Pragma', 'no-cache')
-        self.send_header('Expires', '0')
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
+        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
 
         super().end_headers()
 
@@ -44,28 +45,30 @@ class HrzRequestHandler(SimpleHTTPRequestHandler):
         self.range_start = 0
         self.range_end = None
 
-        if 'Range' in self.headers:
+        if "Range" in self.headers:
             try:
                 path = self.translate_path(self.path)
-                file = open(path, 'rb')
+                file = open(path, "rb")
                 file_size = os.path.getsize(path)
 
                 # Parse the Range header
-                range_header = self.headers['Range']
-                range_match = re.match(r'bytes=(\d+)-(\d*)', range_header)
+                range_header = self.headers["Range"]
+                range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
                 if range_match:
                     start = int(range_match.group(1))
                     end = range_match.group(2)
                     end = int(end) if end else file_size - 1
 
                     if start >= file_size or end >= file_size or start > end:
-                        self.send_error(416, 'Requested Range Not Satisfiable')
+                        self.send_error(416, "Requested Range Not Satisfiable")
                         return None
 
                     self.send_response(206)
-                    self.send_header('Content-Type', self.guess_type(path))
-                    self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
-                    self.send_header('Content-Length', str(end - start + 1))
+                    self.send_header("Content-Type", self.guess_type(path))
+                    self.send_header(
+                        "Content-Range", f"bytes {start}-{end}/{file_size}"
+                    )
+                    self.send_header("Content-Length", str(end - start + 1))
                     self.end_headers()
 
                     self.range_start = start
@@ -74,13 +77,13 @@ class HrzRequestHandler(SimpleHTTPRequestHandler):
                     file.seek(start)
                     return file
                 else:
-                    self.send_error(400, 'Invalid Range Header')
+                    self.send_error(400, "Invalid Range Header")
                     return None
             except FileNotFoundError:
-                self.send_error(404, 'File Not Found')
+                self.send_error(404, "File Not Found")
                 return None
             except Exception as e:
-                self.send_error(500, f'Internal Server Error: {e}')
+                self.send_error(500, f"Internal Server Error: {e}")
                 return None
         else:
             return super().send_head()
@@ -91,14 +94,29 @@ class HrzRequestHandler(SimpleHTTPRequestHandler):
         else:
             shutil.copyfileobj(source, outputfile)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--port", help="Port", type=int, default=8080)
-    parser.add_argument("-n", "--hostname", help="Hostname", type=str, default="0.0.0.0")
-    parser.add_argument("-d", "--directory", help="Path of the directory to serve", type=str, default="")
+    parser.add_argument(
+        "-n", "--hostname", help="Hostname", type=str, default="0.0.0.0"
+    )
+    parser.add_argument(
+        "-d", "--directory", help="Path of the directory to serve", type=str, default=""
+    )
     parser.add_argument("-t", "--tls", help="Use TLS", action="store_true")
-    parser.add_argument("--certificate", help="Certificate path", type=str, default=Path(__file__).parent / "cert.pem")
-    parser.add_argument("--keyfile", help="Certificate private keyfile path", type=str, default=Path(__file__).parent / "key.pem")
+    parser.add_argument(
+        "--certificate",
+        help="Certificate path",
+        type=str,
+        default=Path(__file__).parent / "cert.pem",
+    )
+    parser.add_argument(
+        "--keyfile",
+        help="Certificate private keyfile path",
+        type=str,
+        default=Path(__file__).parent / "key.pem",
+    )
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -133,5 +151,5 @@ if __name__ == '__main__':
             server_side=True,
         )
 
-    print(f'Serving on {protocol}://{hostname}:{port}/')
+    print(f"Serving on {protocol}://{hostname}:{port}/")
     httpd.serve_forever()

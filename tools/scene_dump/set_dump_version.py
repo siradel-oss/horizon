@@ -16,7 +16,12 @@ MANIFEST: Manifest = None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--manifest", help="Manifest path", default=MANIFEST_PATH)
-    parser.add_argument("-v", "--version", help="Model version as 8 hex digits (latest if not specified)", default="latest")
+    parser.add_argument(
+        "-v",
+        "--version",
+        help="Model version as 8 hex digits (latest if not specified)",
+        default="latest",
+    )
     parser.add_argument("dump_file", type=Path)
 
     args = parser.parse_args(sys.argv[1:])
@@ -34,9 +39,18 @@ if __name__ == "__main__":
     path = args.dump_file.absolute()
 
     ret = subprocess.run(
-        ["bazel", "run", "//tools/scene_dump:set_dump_version", BZL_CONFIG, "--", path, version],
+        [
+            "bazel",
+            "run",
+            "//tools/scene_dump:set_dump_version",
+            BZL_CONFIG,
+            "--",
+            path,
+            version,
+        ],
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL)
+        stderr=subprocess.DEVNULL,
+    )
 
     if ret.returncode == 0:
         print("OK")
