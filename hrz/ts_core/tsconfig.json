@@ -2,8 +2,7 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "lib": [
-            "ES6",
-            "ES2017.SharedMemory",
+            "ES2021",
             "DOM"
         ],
         "declaration": true

@@ -9,7 +9,7 @@ export default defineConfig({
     base: "",
     plugins: [nodeResolve(), tailwindcss(), vue()],
     build: {
-        target: "ES6",
+        target: "ES2021",
         rollupOptions: {
             output: {
                 entryFileNames: "[name].js",
