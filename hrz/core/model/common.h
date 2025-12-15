@@ -58,7 +58,7 @@ struct UsedResources
         }
     }
 
-    inline void iterate_all(hrz::function_ref<void(const T&)> fn)
+    inline void iterate_all(hrz::function_ref<void(const T&)> fn) const
     {
         for (const T& key : waiting_on)
         {

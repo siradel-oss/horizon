@@ -95,7 +95,7 @@ bool Animation::is_valid() const
     return true;
 }
 
-void AnimationPlayer::SamplerState::set_time(const Animation::Sampler& sampler, float t)
+void AnimationPlayer::SamplerState::set_time(const Animation::Sampler& sampler, float new_t)
 {
     if (sampler.timestamps.empty())
     {
@@ -103,14 +103,14 @@ void AnimationPlayer::SamplerState::set_time(const Animation::Sampler& sampler, 
         return;
     }
 
-    if (t >= t0 && t < t1)
+    if (new_t >= t0 && new_t < t1)
     {
         last_update_status = Status::kSameInterval;
         return;
     }
 
-    const auto it_t1 = std::ranges::upper_bound(sampler.timestamps, t);
-    if (it_t1 == sampler.timestamps.begin())
+    if (const auto it_t1 = std::ranges::upper_bound(sampler.timestamps, new_t);
+        it_t1 == sampler.timestamps.begin())
     {
         // Before first keyframe.
         // We make the value constant from 0 to the first keyframe.

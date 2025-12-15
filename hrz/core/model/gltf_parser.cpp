@@ -741,9 +741,9 @@ bool _parse_gltf_animation(const rapidjson::Value& animation_json, ModelDescript
                 return false;
             }
 
-            const std::string_view interp_mode =
-                json::get_str_or(sampler_json, "interpolation", "LINEAR");
-            if (interp_mode == "LINEAR")
+            if (const std::string_view interp_mode =
+                    json::get_str_or(sampler_json, "interpolation", "LINEAR");
+                interp_mode == "LINEAR")
             {
                 sampler.interpolation = AnimationInterpolation::Linear;
             }
@@ -788,8 +788,8 @@ bool _parse_gltf_animation(const rapidjson::Value& animation_json, ModelDescript
                 return false;
             }
 
-            const std::string_view path = json::get_str_or(target_json, "path", "");
-            if (path == "translation")
+            if (const std::string_view path = json::get_str_or(target_json, "path", "");
+                path == "translation")
             {
                 channel.target_property = AnimationTargetProperty::Translation;
             }

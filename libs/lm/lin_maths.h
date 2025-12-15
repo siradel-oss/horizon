@@ -1393,7 +1393,12 @@ struct Quaternion
             T x, y, z, w;
         };
 
-        Vector<T, 3> xyz;
+        struct
+        {
+            Vector<T, 3> xyz;
+            T w_;
+        };
+
         T m[4];
     };
 

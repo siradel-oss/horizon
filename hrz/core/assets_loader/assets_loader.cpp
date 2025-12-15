@@ -31,19 +31,32 @@ namespace
 {
 using namespace hrz;
 
-union InnerTicket
+struct InnerTicket
 {
-    assets_loader::Ticket ticket;
-    HttpTicket http_ticket;
+    uint32_t handle : 32;
+    uint32_t queue : 8;
+    uint32_t priority : 24;
 
-    struct
+    InnerTicket() = default;
+
+    constexpr explicit InnerTicket(assets_loader::Ticket t) : InnerTicket{}
     {
-        uint32_t handle : 32;
-        uint32_t queue : 8;
-        uint32_t priority : 24;
-    };
+        *this = std::bit_cast<InnerTicket>(t);
+    }
 
-    bool operator==(const InnerTicket& other) const { return ticket == other.ticket; }
+    constexpr explicit InnerTicket(HttpTicket t) : InnerTicket{}
+    {
+        *this = std::bit_cast<InnerTicket>(t);
+    }
+
+    constexpr assets_loader::Ticket as_ticket() const
+    {
+        return std::bit_cast<assets_loader::Ticket>(*this);
+    }
+
+    constexpr HttpTicket as_http_ticket() const { return std::bit_cast<HttpTicket>(*this); }
+
+    bool operator==(const InnerTicket& other) const { return as_ticket() == other.as_ticket(); }
 };
 
 static_assert(
@@ -290,7 +303,7 @@ struct AssetsLoader
             uint64_t range_size,
             assets_loader::RequestStatus status)
         {
-            size_t index = head;
+            const size_t index = head;
 
             auto& entry = entries[head];
             entry.ticket = ticket;
@@ -400,7 +413,7 @@ Ticket begin(
         priority = MAX_PRIORITY;
     }
 
-    AssetsLoader::PoolTicket handle = l->requests_pool.alloc();
+    const AssetsLoader::PoolTicket handle = l->requests_pool.alloc();
 
     Request* r = l->requests_pool.get_object(handle);
     r->status = RequestStatus::Queued;
@@ -419,7 +432,7 @@ Ticket begin(
         r->protocol_data.emplace<Request::HttpData>().headers = headers;
     }
 
-    InnerTicket pticket;
+    InnerTicket pticket{};
     pticket.handle = handle;
     pticket.queue = queue;
     pticket.priority = priority;
@@ -432,7 +445,7 @@ Ticket begin(
 
     r->history_index = l->history.append(handle, r->url, r->range_start, r->range_size, r->status);
 
-    return pticket.ticket;
+    return pticket.as_ticket();
 }
 
 Ticket begin(
@@ -470,7 +483,7 @@ Ticket reset_priority(AssetsLoader* l, Ticket t, uint32_t priority)
         priority = MAX_PRIORITY;
     }
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
 
     if (!l->requests_pool.is_valid(pt.handle)) return t;
 
@@ -481,7 +494,7 @@ Ticket reset_priority(AssetsLoader* l, Ticket t, uint32_t priority)
         // The request is still in the queue.
         // Create a new platform ticket with the new priority.
 
-        InnerTicket new_pt;
+        InnerTicket new_pt{};
         new_pt.handle = pt.handle;
         new_pt.queue = pt.queue;
         new_pt.priority = priority;
@@ -490,7 +503,7 @@ Ticket reset_priority(AssetsLoader* l, Ticket t, uint32_t priority)
 
         l->should_sort_queues = true;
 
-        return new_pt.ticket;
+        return new_pt.as_ticket();
     }
     else
     {
@@ -504,7 +517,7 @@ void end(AssetsLoader* l, Ticket t)
 {
     assert(l);
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
 
     if (!l->requests_pool.is_valid(pt.handle)) return;
 
@@ -515,7 +528,7 @@ bool is_valid(const AssetsLoader* l, Ticket t)
 {
     assert(l);
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
     return l->requests_pool.is_valid(pt.handle);
 }
 
@@ -523,7 +536,7 @@ bool is_finished(const AssetsLoader* l, Ticket t)
 {
     assert(l);
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
     const Request* r = l->requests_pool.get_object(pt.handle);
     if (!r) return false;
 
@@ -534,7 +547,7 @@ std::string_view get_url(const AssetsLoader* l, Ticket t)
 {
     assert(l);
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
     const Request* r = l->requests_pool.get_object(pt.handle);
     if (!r) return "";
 
@@ -545,7 +558,7 @@ RequestStatus get_status(const AssetsLoader* l, Ticket t)
 {
     assert(l);
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
     const Request* r = l->requests_pool.get_object(pt.handle);
     if (!r) return RequestStatus::Error;
 
@@ -558,7 +571,7 @@ std::string_view get_content_type(const AssetsLoader* l, Ticket t)
 
     if (!is_finished(l, t)) return {};
 
-    InnerTicket pt = {t};
+    const InnerTicket pt{t};
     const Request* r = l->requests_pool.get_object(pt.handle);
     if (!r) return {};
 
@@ -659,7 +672,7 @@ void work_ended_requests(AssetsLoader* al, BlobAllocator* ba)
         if (req->status == RequestStatus::Loading)
         {
             set_request_status(al, pt.handle, req, RequestStatus::Canceled);
-            al->platform_http_loader->cancel_request(pt.http_ticket);
+            al->platform_http_loader->cancel_request(pt.as_http_ticket());
         }
         else if (req->status == RequestStatus::Queued)
         {
@@ -676,7 +689,7 @@ void work_ended_requests(AssetsLoader* al, BlobAllocator* ba)
                 // If it's not in the queue then it is probably in the slot table.
                 for (unsigned int i = FirstRegularQueue; i <= LastRegularQueue; ++i)
                 {
-                    if (al->slots_table[i] == pt.ticket)
+                    if (al->slots_table[i] == pt.as_ticket())
                     {
                         al->slots_table[i] = 0;
                         break;
@@ -686,7 +699,7 @@ void work_ended_requests(AssetsLoader* al, BlobAllocator* ba)
         }
         else
         {
-            al->platform_http_loader->free_data(pt.http_ticket);
+            al->platform_http_loader->free_data(pt.as_http_ticket());
         }
 
         blobs::cancel(ba, req->blob_ticket);
@@ -702,9 +715,9 @@ void work_ended_requests(AssetsLoader* al, BlobAllocator* ba)
             }
         }
 
-        al->running_requests.erase(pt.ticket);
-        al->loading_requests.erase(pt.ticket);
-        al->requests_to_blob.erase(pt.ticket);
+        al->running_requests.erase(pt.as_ticket());
+        al->loading_requests.erase(pt.as_ticket());
+        al->requests_to_blob.erase(pt.as_ticket());
         al->requests_pool.release(pt.handle);
     }
     al->ended_requests.clear();
@@ -742,7 +755,7 @@ void work_emit_requests(AssetsLoader* al, ClientMessageQueue* mq)
         if (req->is_http_request())
         {
             const bool success = al->platform_http_loader->start_request(
-                ticket.http_ticket, req->url, req->range_start, req->range_size,
+                ticket.as_http_ticket(), req->url, req->range_start, req->range_size,
                 req->http_request().headers);
 
             if (!success)
@@ -767,7 +780,7 @@ void work_emit_requests(AssetsLoader* al, ClientMessageQueue* mq)
             set_request_status(al, ticket.handle, req, RequestStatus::Loading);
         }
 
-        al->running_requests.insert(ticket.ticket);
+        al->running_requests.insert(ticket.as_ticket());
         started_request_count++;
 
         return true;
@@ -778,7 +791,7 @@ void work_emit_requests(AssetsLoader* al, ClientMessageQueue* mq)
         auto& user_queue = al->queues[(uint32_t)queue_name];
         while (!max_running_requests_reached && !user_queue.empty())
         {
-            InnerTicket ticket = {user_queue.back().ticket};
+            const InnerTicket ticket = user_queue.back();
             if (ticket == InnerTicket{0}) continue;
 
             if (start_request(ticket))
@@ -812,7 +825,7 @@ void work_emit_requests(AssetsLoader* al, ClientMessageQueue* mq)
 
             if (!q.empty())
             {
-                al->slots_table[i] = q.back().ticket;
+                al->slots_table[i] = q.back().as_ticket();
                 q.pop_back();
                 al->queued_request_count--;
 
@@ -825,7 +838,7 @@ void work_emit_requests(AssetsLoader* al, ClientMessageQueue* mq)
         // Launch pending requests from the slots table.
         for (unsigned int i = FirstRegularQueue; i <= LastRegularQueue; ++i)
         {
-            InnerTicket ticket = {al->slots_table[al->current_slot]};
+            InnerTicket ticket{al->slots_table[al->current_slot]};
             if (!start_request(ticket) && max_running_requests_reached)
             {
                 break;
@@ -858,7 +871,7 @@ void work_retrieve_finished(AssetsLoader* al, BlobAllocator* ba)
         if (!metadata_opt) break;
 
         auto metadata = std::move(metadata_opt).value();
-        ticket.http_ticket = metadata.ticket;
+        ticket = InnerTicket{metadata.ticket};
 
         Request* r = al->requests_pool.get_object(ticket.handle);
         if (r)
@@ -876,7 +889,7 @@ void work_retrieve_finished(AssetsLoader* al, BlobAllocator* ba)
                 blobs::register_metadata(ba, r->blob_ticket, "URL"_ss, r->url);
                 blobs::register_owner(ba, r->blob_ticket, r->resource_owner);
 
-                al->requests_to_blob.insert(ticket.ticket);
+                al->requests_to_blob.insert(ticket.as_ticket());
             }
             else
             {
@@ -908,7 +921,7 @@ void work_blobs(AssetsLoader* al, BlobAllocator* ba)
     for (auto it = al->requests_to_blob.begin(); it != al->requests_to_blob.end();)
     {
         auto ticket = *it;
-        InnerTicket pt = {ticket};
+        const InnerTicket pt{ticket};
         auto request = al->requests_pool.get_object(ticket);
         auto allocation_state = blobs::get_state(ba, request->blob_ticket);
 
@@ -924,7 +937,7 @@ void work_blobs(AssetsLoader* al, BlobAllocator* ba)
                 request->blob_data = {std::move(request->blob.get_mutable_data())};
 
                 if (al->platform_http_loader->copy_data(
-                        pt.http_ticket, request->blob_data->as_writable_bytes()))
+                        pt.as_http_ticket(), request->blob_data->as_writable_bytes()))
                 {
                     al->loading_requests.insert(ticket);
                     new_status = RequestStatus::Loading;
@@ -989,7 +1002,7 @@ void work_blobs(AssetsLoader* al, BlobAllocator* ba)
         else if (allocation_state == blobs::BlobState::Error)
         {
             blobs::cancel(ba, request->blob_ticket);
-            al->platform_http_loader->free_data(pt.http_ticket);
+            al->platform_http_loader->free_data(pt.as_http_ticket());
             new_status = RequestStatus::Error;
 
             if (request->channel_request_id.has_value())
@@ -1018,13 +1031,13 @@ void work_load_into_memory(AssetsLoader* al)
     for (auto it = al->loading_requests.begin(); it != al->loading_requests.end();)
     {
         auto ticket = *it;
-        InnerTicket pt = {ticket};
+        const InnerTicket pt{ticket};
 
-        if (al->platform_http_loader->is_data_copied(pt.http_ticket))
+        if (al->platform_http_loader->is_data_copied(pt.as_http_ticket()))
         {
-            auto request = al->requests_pool.get_object(ticket);
+            auto request = al->requests_pool.get_object(pt.handle);
             request->blob_data = std::nullopt;
-            set_request_status(al, ticket, request, RequestStatus::Loaded);
+            set_request_status(al, pt.handle, request, RequestStatus::Loaded);
             al->loading_requests.erase(it++);
 
             if (request->channel_request_id.has_value())
@@ -1082,7 +1095,7 @@ void provide_client_asset_data(
     const size_t data_size = response.data().size();
 
     req->blob_ticket = blobs::allocate_blob(ba, data_size);
-    al->requests_to_blob.insert(ticket.ticket);
+    al->requests_to_blob.insert(ticket.as_ticket());
 
     set_request_data_size(al, ticket.handle, req, data_size);
 

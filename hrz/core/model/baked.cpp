@@ -14,26 +14,25 @@ ModelMaterial::Status _combine_model_material_statuses(
 {
     switch (material_status)
     {
-        case ModelMaterial::Status::Loading: return ModelMaterial::Status::Loading;
-        case ModelMaterial::Status::Displayable:
+        using enum ModelMaterial::Status;
+        case Loading: return Loading;
+        case Displayable:
             switch (global_status)
             {
-                case ModelMaterial::Status::Loading: return ModelMaterial::Status::Loading;
-                case ModelMaterial::Status::Displayable:
-                case ModelMaterial::Status::Ready:
-                case ModelMaterial::Status::ReadyWithErrors:
-                    return ModelMaterial::Status::Displayable;
+                case Loading: return Loading;
+                case Displayable:
+                case Ready:
+                case ReadyWithErrors: return Displayable;
                 default: return global_status;
             }
-        case ModelMaterial::Status::Ready: return global_status;
-        case ModelMaterial::Status::ReadyWithErrors:
+        case Ready: return global_status;
+        case ReadyWithErrors:
             switch (global_status)
             {
-                case ModelMaterial::Status::Loading:
-                case ModelMaterial::Status::Displayable: return global_status;
-                case ModelMaterial::Status::Ready:
-                case ModelMaterial::Status::ReadyWithErrors:
-                    return ModelMaterial::Status::ReadyWithErrors;
+                case Loading:
+                case Displayable: return global_status;
+                case Ready:
+                case ReadyWithErrors: return ReadyWithErrors;
                 default: return global_status;
             }
         default: assert(false && "Unhandled case"); break;
@@ -130,8 +129,7 @@ void BakedModel::build(ModelPrototype* proto, SharedResources* sr, Render* rende
 
     for (size_t i = 0; i < proto->descriptor.animations.size(); ++i)
     {
-        const auto& anim = proto->descriptor.animations[i];
-        if (!anim.name.empty())
+        if (const auto& anim = proto->descriptor.animations[i]; !anim.name.empty())
         {
             if (_animation_name_to_id.insert_or_assign(anim.name, static_cast<int>(i)).second
                 == false)
@@ -456,7 +454,7 @@ BSphere<double> compute_model_bsphere(
     BakedModelH handle,
     const lm::dmat4& transform)
 {
-    auto* model = _get_baked_model(proto, handle);
+    const auto* model = _get_baked_model(proto, handle);
     if (!model)
     {
         return {};
@@ -616,7 +614,7 @@ void BakedModel::update(ModelPrototype* proto, SharedResources* sr, Render* rend
 
         for (size_t i = 0; i < _primitives.size(); ++i)
         {
-            auto& prim = _primitives[i];
+            const auto& prim = _primitives[i];
             if (!prim.vertex_input) return;
 
             PrimitiveTransformUniformData transform_ubo_data;
@@ -855,7 +853,7 @@ RenderRequest BakedModel::work_gpu(ModelPrototype* proto, SharedResources* sr, R
     {
         update_animation_times();
 
-        for (auto& playing_animation : _playing_animations)
+        for (const auto& playing_animation : _playing_animations)
         {
             playing_animation.player.fetch_channel_values(
                 *playing_animation.animation,

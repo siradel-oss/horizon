@@ -37,7 +37,7 @@ struct FeatureIds
 
     bool empty() const { return _size == 0; }
 
-    bool has_any_attribute() const { return _values.size() > 0; }
+    bool has_any_attribute() const { return !_values.empty(); }
 
     bool has_attribute(uint32_t attribute_id) const;
     bool has_same_attributes(const FeatureIds&) const;

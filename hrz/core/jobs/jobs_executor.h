@@ -19,7 +19,7 @@ struct ExecutorContext : public JobContext
 {
     ExecutorContext() : worker_id(-1) {}
 
-    virtual ~ExecutorContext() = default;
+    ~ExecutorContext() override = default;
 
     int get_worker_id() const override { return worker_id; }
 

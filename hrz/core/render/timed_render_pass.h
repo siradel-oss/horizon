@@ -12,7 +12,7 @@ class TimedRenderPass : public my::RenderPass
 public:
     explicit TimedRenderPass(const char* name) : _name(name) {}
 
-    void execute(const my::RenderGraph::ExecutionContext& ctx) override final;
+    void execute(const my::RenderGraph::ExecutionContext& ctx) final;
     virtual void execute_timed(const my::RenderGraph::ExecutionContext&) = 0;
 };
 

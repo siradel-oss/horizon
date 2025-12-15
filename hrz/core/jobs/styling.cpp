@@ -1204,7 +1204,7 @@ struct State
 
     bool execute(InstanceSpan* inst_span)
     {
-        if (data->ast->full_nodes.size() == 0) return true;
+        if (data->ast->full_nodes.empty()) return true;
 
         const auto* root = &data->ast->full_nodes[data->ast->root];
         CHECK_ERR(execute_block(root, inst_span));

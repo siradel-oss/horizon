@@ -22,8 +22,14 @@ class ObjectPool
     {
         union Payload
         {
-            alignas(alignof(T)) std::byte value[sizeof(T)]; // Storage for the value
-            Node* next;                                     // Linked list of free nodes
+            // This cannot be just T because otherwise the union would not be trivially
+            // destructible, which is a requirement of ObjectPool.
+            // @Todo(C++26) This will be possible with trivial unions.
+            alignas(T) std::byte value[sizeof(T)];
+
+            // The linked list of free nodes
+            Node* next;
+
         } payload;
 
 #if HRZ_DEBUG
@@ -68,7 +74,7 @@ public:
     template<typename... Args>
     T* acquire(Args&&... args)
     {
-        Node* node;
+        Node* node{};
 
         if (_free_head)
         {
@@ -84,12 +90,19 @@ public:
         _in_use_count += 1;
 #endif
 
-        return new (node->payload.value) T(std::forward<Args>(args)...);
+        // This effectively "restarts" the lifetime of the union, and allows us
+        // to change its active member without triggering static analysis tools.
+        // This is because placement new is treated as a read of the field, so we would
+        // read "value" while "next" was active if the node was recycled.
+        auto* payload = new (&node->payload) Node::Payload;
+        return new (payload->value) T(std::forward<Args>(args)...);
     }
 
     void release(T* obj)
     {
-        Node* node = (Node*)obj;
+        std::destroy_at(obj);
+
+        Node* node = std::launder(reinterpret_cast<Node*>(obj));
 
 #if HRZ_DEBUG
         assert(_in_use_count > 0 && node->pool_id == _pool_id);
@@ -97,7 +110,6 @@ public:
         node->pool_id = 0;
 #endif
 
-        std::destroy_at((T*)node->payload.value);
         node->payload.next = std::exchange(_free_head, node);
     }
 };

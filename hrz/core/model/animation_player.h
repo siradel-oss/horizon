@@ -35,7 +35,7 @@ struct StepInterpolation
 {
     T value;
 
-    constexpr StepInterpolation(const T& value) : value(value) {}
+    explicit constexpr StepInterpolation(const T& value_) : value(value_) {}
 
     constexpr T operator()(float /*t*/) const { return value; }
 };

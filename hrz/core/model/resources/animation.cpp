@@ -7,7 +7,7 @@ namespace
 
 using namespace hrz::model;
 
-static constexpr BlobLibrary::ConfigH NullCfg = {0};
+constexpr BlobLibrary::ConfigH NullCfg = {0};
 
 const ModelDescriptor::Accessor* _get_accessor(ModelDescriptor* descriptor, int accessor_id)
 {
@@ -209,8 +209,8 @@ std::optional<AnimationResource> AnimationResource::acquire(
         }
 
         const size_t offset = buffer_view->byte_offset + accessor->byte_offset;
-        const size_t required_size = offset + stride * (accessor->count - 1) + format_size;
-        if (required_size > buffer->byte_length)
+        if (const size_t required_size = offset + stride * (accessor->count - 1) + format_size;
+            required_size > buffer->byte_length)
         {
             return false;
         }
@@ -341,10 +341,9 @@ bool AnimationResource::fetch_data(BlobLibrary* bl)
             return false;
         }
 
-        const size_t expected_size = accessor.byte_offset
-            + accessor.byte_stride * (accessor.count - 1) + my::vertex_size(accessor.type);
-
-        if (expected_size > blob.data_size())
+        if (const size_t expected_size = accessor.byte_offset
+                + accessor.byte_stride * (accessor.count - 1) + my::vertex_size(accessor.type);
+            expected_size > blob.data_size())
         {
             HRZ_LOG_ERROR("Animation accessor data size is smaller than expected");
             return false;
