@@ -514,3 +514,11 @@ TEST(CommonGeoMaths, geo_to_mercator_tile)
         EXPECT_FALSE(coords.has_value());
     }
 }
+
+TEST(CommonGeoMaths, earth_radius_at_latitude)
+{
+    EXPECT_NEAR(hrz::earth_radius_at_latitude(lm::radians(0.0)), hrz::EARTH_RADIUS, 0.1);
+    EXPECT_NEAR(
+        hrz::earth_radius_at_latitude(lm::radians(90.0)),
+        hrz::EARTH_RADIUS * hrz::WGS84_AXES_LENGTH_RATIO, 0.1);
+}

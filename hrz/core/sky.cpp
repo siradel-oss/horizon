@@ -1766,14 +1766,16 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
         double altitude_for_static_sky = geo.alt;
 
-        // Altitudes close to 0 present artefacts in the sky view texture (black horizontal
+        // Altitudes close to 0 present artifacts in the sky view texture (black horizontal
         // lines are present at the top of the texture), which in turn results in black circles
         // in the sky when looking up.
         if (geo.alt > 1.0)
         {
+            const double radius_at_lat = hrz::earth_radius_at_latitude(geo.lat);
+
             ubo_data.altitude = (float)geo.alt;
             ubo_data.horizon_horizon_angle =
-                (float)-acos(HRZ_S_EARTH_RADIUS / (geo.alt + HRZ_S_EARTH_RADIUS));
+                (float)-acos(radius_at_lat / (geo.alt + radius_at_lat));
         }
         else
         {

@@ -2,6 +2,26 @@
 
 #include <float.h>
 
+double hrz::earth_radius_at_latitude(double lat)
+{
+    // https://en.wikipedia.org/wiki/Earth_radius#Geocentric_radius
+
+    constexpr double a2 = EARTH_RADIUS * EARTH_RADIUS;
+    constexpr double b2 =
+        (EARTH_RADIUS * WGS84_AXES_LENGTH_RATIO) * (EARTH_RADIUS * WGS84_AXES_LENGTH_RATIO);
+
+    const double cos_lat = std::cos(lat);
+    const double sin_lat = std::sin(lat);
+
+    const double cos2_lat = cos_lat * cos_lat;
+    const double sin2_lat = sin_lat * sin_lat;
+
+    const double numerator = a2 * a2 * cos2_lat + b2 * b2 * sin2_lat;
+    const double denominator = a2 * cos2_lat + b2 * sin2_lat;
+
+    return std::sqrt(numerator / denominator);
+}
+
 // See
 // http://www.nalresearch.com/files/Standard%20Modems/A3LA-XG/A3LA-XG%20SW%20Version%201.0.0/GPS%20Technical%20Documents/GPS.G1-X-00006%20(Datum%20Transformations).pdf
 hrz::GeoPosition2 hrz::ecef_to_geo2(const lm::dvec3& ecef)

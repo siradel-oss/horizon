@@ -15,7 +15,7 @@ namespace hrz
 static constexpr double EARTH_RADIUS = HRZ_S_EARTH_RADIUS;
 static constexpr double EARTH_CIRCUMFERENCE = EARTH_RADIUS * 2 * lm::PI;
 static constexpr double STRAT_RADIUS = HRZ_S_STRAT_RADIUS;
-static constexpr double WGS84_AXES_LENGTH_RATIO = 0.996647189335;
+static constexpr double WGS84_AXES_LENGTH_RATIO = HRZ_S_WGS84_AXES_LENGTH_RATIO;
 static constexpr double WGS84_AXES_LENGTH_RATIO_2 =
     WGS84_AXES_LENGTH_RATIO * WGS84_AXES_LENGTH_RATIO;
 static constexpr double WGS84_ECCENTRICITY = 8.1819190842622e-2;
@@ -194,6 +194,8 @@ struct GeoVolumeBounds
 
     GeoBounds to_flat() const { return GeoBounds(west, east, south, north); }
 };
+
+double earth_radius_at_latitude(double lat);
 
 GeoPosition2 ecef_to_geo2(const lm::dvec3& ecef);
 GeoPosition3 ecef_to_geo3(const lm::dvec3& ecef);
