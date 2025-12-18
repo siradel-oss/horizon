@@ -303,6 +303,7 @@ cc_library(
         "style/enums.h",
         "style/script.h",
         "stylus.h",
+        "three_d_tiles/feature_table_parser.h",
         "three_d_tiles_layers.h",
         "tile_url_generator.h",
         "tilejson.h",

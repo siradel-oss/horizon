@@ -165,14 +165,34 @@ size_t copy_array_values(
     std::span<int> values,
     const rapidjson::Value& array,
     int default_value = 0);
+
 size_t copy_array_values(
     std::span<float> values,
     const rapidjson::Value& array,
     float default_value = 0.0F);
+
 size_t copy_array_values(
     std::span<double> values,
     const rapidjson::Value& array,
     double default_value = 0.0);
+
+template<typename T, size_t N>
+inline bool copy_array_values_fixed(
+    std::span<T, N> values,
+    const rapidjson::Value& array,
+    T default_value = T{})
+{
+    return copy_array_values(values, array, default_value) == N;
+}
+
+template<typename T, size_t N>
+inline bool copy_array_values_fixed(
+    T (&values)[N],
+    const rapidjson::Value& array,
+    T default_value = T{})
+{
+    return copy_array_values_fixed(std::span<T, N>(values), array, default_value);
+}
 
 inline std::optional<int> get_int(const rapidjson::Value& node, const char* name)
 {
