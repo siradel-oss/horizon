@@ -208,8 +208,7 @@ void BakedModel::build_primitive(
 
         my::VertexInputResource res;
         res.indices = geometry_primitive.index_buffer;
-        res.attrib_count = (uint32_t)streams.size();
-        res.attribs = streams.data();
+        res.attribs = streams;
         prim.vertex_input = render->rc->alloc(
             &res, proto->resource_owner, {{"model URI"_ss, proto->descriptor_uri}});
 
@@ -1050,7 +1049,7 @@ void ImpostorBakingBakedModel::inner_draw(
 
     my::UboBinding ubo_binding = {
         UboImpostorBaking, _impostor_ubo, 0, sizeof(ImpostorBakingUniformData)};
-    render->rb->bind(1, &ubo_binding);
+    render->rb->bind({&ubo_binding, 1});
 
     for (const auto& prim : _primitives)
     {

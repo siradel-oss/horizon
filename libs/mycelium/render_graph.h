@@ -70,7 +70,7 @@ public:
         size_t invocation;
     };
 
-    static constexpr RenderGraphSubsetId SubsetError = ~0u;
+    static constexpr RenderGraphSubsetId SubsetError = ~0U;
 
     static RenderGraph* create();
 
@@ -81,13 +81,11 @@ public:
     virtual bool build(
         my::Instance*,
         my::ResourceContext*,
-        uint32_t final_pass_count,
-        const RenderPassId* final_passes) = 0;
+        std::span<const RenderPassId> final_passes) = 0;
 
     virtual RenderGraphSubsetId make_subset(
         my::Instance*,
-        uint32_t final_pass_count,
-        const RenderPassId* final_passes) = 0;
+        std::span<const RenderPassId> final_passes) = 0;
 
     virtual void execute(const ExecutionContext&) = 0;
 

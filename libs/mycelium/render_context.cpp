@@ -268,7 +268,7 @@ void GLInstance::update_texture(
     }
 }
 
-void GLInstance::clear(uint32_t clear_count, const ClearTarget* values)
+void GLInstance::clear(std::span<const ClearTarget> values)
 {
     bool use_default_fbo = (_last_draw_framebuffer_handle == 0);
 
@@ -280,10 +280,8 @@ void GLInstance::clear(uint32_t clear_count, const ClearTarget* values)
         draw_buffers[i] = GL_NONE;
     }
 
-    for (uint32_t i = 0; i < clear_count; ++i)
+    for (const ClearTarget& value : values)
     {
-        const ClearTarget& value = values[i];
-
         GLenum buffer;
         GLint draw_buffer = 0;
 
@@ -443,10 +441,8 @@ void GLInstance::draw(
     const DrawBatchInfo& info,
     ResourceHandle shader_handle,
     ResourceHandle vertex_input_handle,
-    uint32_t ubo_count,
-    const UboBinding* ubos,
-    uint32_t texture_count,
-    const TextureBinding* textures)
+    std::span<const UboBinding> ubos,
+    std::span<const TextureBinding> textures)
 {
     if (info.is_instanced && info.instances == 0)
     {
@@ -465,18 +461,18 @@ void GLInstance::draw(
         return;
     }
 
-    for (uint32_t i = 0; i < ubo_count; ++i)
+    for (const auto& ubo : ubos)
     {
-        if (get_resource_type(ubos[i].buffer) != Resource::UniformBuffer)
+        if (get_resource_type(ubo.buffer) != Resource::UniformBuffer)
         {
             MY_LOG_ERROR("draw: Uniform block buffer is not a uniform buffer");
             return;
         }
     }
 
-    for (uint32_t i = 0; i < texture_count; ++i)
+    for (const auto& texture : textures)
     {
-        if (get_resource_type(textures[i].texture) != Resource::Texture)
+        if (get_resource_type(texture.texture) != Resource::Texture)
         {
             MY_LOG_ERROR("draw: Texture is not a texture");
             return;
@@ -499,63 +495,86 @@ void GLInstance::draw(
     if (input)
     {
         bind_vao(input->vao);
+
+        if ((shader->attrib_fingerprint & input->attrib_fingerprint) != shader->attrib_fingerprint)
+        {
+            MY_LOG_WARNING(
+                "draw: Vertex input missing attributes for shader {}: {:b}", shader->name,
+                (shader->attrib_fingerprint & ~input->attrib_fingerprint).to_ulong());
+        }
     }
     else
     {
         bind_vao(0);
+
+        if (shader->attrib_fingerprint.any())
+        {
+            MY_LOG_WARNING(
+                "draw: Vertex input missing for shader {}, which requires attributes",
+                shader->name);
+        }
     }
 
     update_draw_buffers(
         {shader->draw_buffers, (size_t)shader->draw_buffer_count},
         shader->draw_buffers_fingerprint);
 
-    for (uint32_t i = 0; i < ubo_count; ++i)
+    for (const auto& ubo : ubos)
     {
-        if (ubos[i].index >= MaxUniformBlocks)
+        if (ubo.index >= MaxUniformBlocks)
         {
             MY_LOG_ERROR(
-                "draw: Uniform block index too large ({} >= {})", ubos[i].index,
+                "draw: Uniform block index too large ({} >= {})", ubo.index,
                 fmt::underlying(MaxUniformBlocks));
             continue;
         }
 
-        if (!shader->active_ubos.test(ubos[i].index)) continue;
+        if (!shader->active_ubos.test(ubo.index)) continue;
 
-        const GLBuffer* buffer = _buffers[get_resource_handle(ubos[i].buffer)];
+        const auto expected_size = shader->uniform_block_size_by_binding[ubo.index];
+        if (ubo.size != expected_size)
+        {
+            MY_LOG_ERROR(
+                "draw: Uniform block size mismatch for block {} in shader {}: expected {}, got {}",
+                ubo.index, shader->name, expected_size, ubo.size);
+            continue;
+        }
+
+        const GLBuffer* buffer = _buffers[get_resource_handle(ubo.buffer)];
         if (buffer)
         {
-            bind_ubo(ubos[i].index, *buffer, ubos[i].offset, ubos[i].size);
+            bind_ubo(ubo.index, *buffer, ubo.offset, ubo.size);
         }
 
         // @Todo(perf) Maybe try to unbind UBOS that are not active, like textures?
     }
 
-    for (uint32_t i = 0; i < texture_count; ++i)
+    for (const auto& texture : textures)
     {
-        if (textures[i].index >= MaxTextureUnits)
+        if (texture.index >= MaxTextureUnits)
         {
             MY_LOG_ERROR(
-                "draw: Texture index too large ({} >= {})", textures[i].index,
+                "draw: Texture index too large ({} >= {})", texture.index,
                 fmt::underlying(MaxTextureUnits));
             continue;
         }
 
-        if (!shader->active_textures.test(textures[i].index)) continue;
+        if (!shader->active_textures.test(texture.index)) continue;
 
-        const GLTexture* texture = _textures[get_resource_handle(textures[i].texture)];
-        const GLuint* sampler = _samplers[get_resource_handle(textures[i].sampler)];
+        const GLTexture* gl_texture = _textures[get_resource_handle(texture.texture)];
+        const GLuint* gl_sampler = _samplers[get_resource_handle(texture.sampler)];
 
-        if (texture)
+        if (gl_texture)
         {
-            bind_texture(textures[i].index, to_gl(texture->layout.type), texture->texture);
+            bind_texture(texture.index, to_gl(gl_texture->layout.type), gl_texture->texture);
 
-            if (sampler)
+            if (gl_sampler)
             {
-                bind_sampler(textures[i].index, *sampler);
+                bind_sampler(texture.index, *gl_sampler);
             }
             else
             {
-                unbind_sampler(textures[i].index);
+                unbind_sampler(texture.index);
             }
         }
     }
@@ -621,8 +640,7 @@ void GLInstance::blit_framebuffers(
     Rect dst_rect,
     AspectFlags aspects,
     Attachment src_attachment,
-    uint32_t dst_attachment_count,
-    const Attachment* dst_attachments,
+    std::span<const Attachment> dst_attachments,
     SamplerParams::Filter filter)
 {
     if (get_resource_type(src_handle) != Resource::Framebuffer && !src_handle.is_null())
@@ -636,15 +654,16 @@ void GLInstance::blit_framebuffers(
         return;
     }
 
-    uint64_t read_fbo_handle = get_resource_handle(src_handle);
+    const uint64_t read_fbo_handle = get_resource_handle(src_handle);
     bind_read_framebuffer(read_fbo_handle);
 
-    GLenum gl_filter = to_gl(filter);
-    GLbitfield gl_aspects = to_gl(aspects);
+    const GLenum gl_filter = to_gl(filter);
+    const GLbitfield gl_aspects = to_gl(aspects);
 
     if (aspects & Aspect_Color)
     {
-        bool use_default_fbo = (_last_draw_framebuffer_handle == 0);
+        const bool use_default_fbo = (_last_draw_framebuffer_handle == 0);
+
         GLenum draw_buffers[MaxFramebufferAttachments];
         GLsizei draw_buffer_count = 0;
         uint64_t draw_buffers_fingerprint = 0;
@@ -661,14 +680,12 @@ void GLInstance::blit_framebuffers(
         }
         else
         {
-            for (uint32_t i = 0; i < dst_attachment_count; ++i)
+            for (const auto attachment : dst_attachments)
             {
-                auto attachment = dst_attachments[i];
-
                 if (attachment != Attachment::Depth && attachment != Attachment::Stencil
                     && attachment != Attachment::DepthStencil)
                 {
-                    int draw_buffer = (int)dst_attachments[i] - (int)Attachment::Color0;
+                    int draw_buffer = (int)attachment - (int)Attachment::Color0;
                     assert(draw_buffer < MaxFramebufferAttachments);
 
                     draw_buffers[draw_buffer] = GL_COLOR_ATTACHMENT0 + draw_buffer;

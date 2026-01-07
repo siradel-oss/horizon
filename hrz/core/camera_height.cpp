@@ -136,7 +136,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _depth_fbo = render.rc->alloc(&res, hrz::monitoring::systems::CameraHeight);
@@ -150,7 +149,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _height_fbo = render.rc->alloc(&res, hrz::monitoring::systems::CameraHeight);
@@ -190,7 +188,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _depth_to_height_vi = render.rc->alloc(&res, hrz::monitoring::systems::CameraHeight);
@@ -224,13 +221,9 @@ public:
         res.vertex_source = hrz_shaders::CameraDepthToHeight_vert;
         res.fragment_source_len = hrz_shaders::CameraDepthToHeight_frag_len;
         res.fragment_source = hrz_shaders::CameraDepthToHeight_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
         res.initial_state.color_blend.enable = false;
         res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
@@ -294,19 +287,18 @@ public:
         static const my::ClearTarget clear_targets[] = {
             {my::Attachment::Depth, my::ClearValue::make_depth(1.0)},
         };
-        ctx.render->clear(HRZ_ARRAY_COUNT(clear_targets), clear_targets);
+        ctx.render->clear(clear_targets);
 
         my::UboBinding ubo_binding{
             hrz::UboView, _view_ubo.get_for_gpu(), 0, sizeof(hrz::AuxViewUniformData)};
-        ctx.binder->bind(1, &ubo_binding);
+        ctx.binder->bind({&ubo_binding, 1});
 
         static const my::Renderer::BinMask pass_masks[] = {
             hrz::RenderPlanetBin,
         };
 
         ctx.renderer->draw(
-            hrz::RenderDepth, _view, HRZ_ARRAY_COUNT(pass_masks), pass_masks, ctx.render,
-            ctx.binder, ctx.user_data);
+            hrz::RenderDepth, _view, pass_masks, ctx.render, ctx.binder, ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -322,7 +314,7 @@ public:
              _planet_resources.planet_params.offset, _planet_resources.planet_params.size},
             {CameraPositionUbo, _camera_ubo.get_for_gpu(), 0, sizeof(CameraPositionUniformData)},
         };
-        ctx.binder->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        ctx.binder->bind(ubo_bindings);
 
         my::TextureBinding texture_bindings[] = {
             {DepthSampler, _depth_texture, _depth_sampler},
@@ -331,15 +323,14 @@ public:
             {DtmAtlasSampler, _planet_resources.dtm_atlas.texture,
              _planet_resources.dtm_atlas.sampler},
         };
-        ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        ctx.binder->bind(texture_bindings);
 
         auto state = ctx.binder->get_current_state();
 
         static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
         ctx.render->draw(
-            info, _depth_to_height_shader, _depth_to_height_vi, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+            info, _depth_to_height_shader, _depth_to_height_vi, state.ubos, state.textures);
 
         ctx.binder->pop_state();
     }

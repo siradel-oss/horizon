@@ -216,37 +216,59 @@ static uint64_t create_shader(GLInstance* my, const ShaderResource& res)
     GLShader* ptr = my->_shaders[shader_handle];
     assert(ptr);
 
-    ptr->attrib_count = std::min(res.attrib_count, (uint32_t)MaxVertexAttributes);
+    ptr->attrib_count = (uint32_t)std::min<size_t>(res.attribs.size(), MaxVertexAttributes);
+    ptr->attrib_fingerprint.reset();
     for (uint32_t i = 0; i < ptr->attrib_count; ++i)
     {
-        ptr->attrib_defs[i] = my::IndexName{
-            res.attribs[i].index, (const char*)my->_intern.intern(res.attribs[i].name)};
+        if (res.attribs[i].index >= MaxVertexAttributes)
+        {
+            MY_LOG_ERROR(
+                "Shader {}: attribute {} has invalid index {}", res.name, res.attribs[i].name,
+                res.attribs[i].index);
+            continue;
+        }
+
+        ptr->attrib_fingerprint.set((size_t)res.attribs[i].index);
+        ptr->attrib_defs[i] =
+            my::IndexName{res.attribs[i].index, my->_intern.intern_as_str(res.attribs[i].name)};
     }
 
     ptr->active_ubos.reset();
-    ptr->uniform_block_count = std::min(res.uniform_block_count, (uint32_t)MaxUniformBlocks);
+    ptr->uniform_block_count =
+        (uint32_t)std::min<size_t>(res.uniform_blocks.size(), MaxUniformBlocks);
+
     for (uint32_t i = 0; i < ptr->uniform_block_count; ++i)
     {
-        ptr->uniform_block_defs[i] = my::IndexName{
-            res.uniform_blocks[i].index,
-            (const char*)my->_intern.intern(res.uniform_blocks[i].name)};
+        if (res.uniform_blocks[i].index >= MaxUniformBlocks)
+        {
+            MY_LOG_ERROR(
+                "Shader {}: uniform block {} has invalid binding index {}", res.name,
+                res.uniform_blocks[i].name, res.uniform_blocks[i].index);
+            continue;
+        }
+
+        ptr->uniform_block_defs[i] = IndexName{
+            .index = res.uniform_blocks[i].index,
+            .name = my->_intern.intern_as_str(res.uniform_blocks[i].name),
+        };
+
         ptr->active_ubos.set(res.uniform_blocks[i].index);
     }
 
     ptr->active_textures.reset();
-    ptr->sampler_count = std::min(res.sampler_count, (uint32_t)MaxTextureUnits);
+    ptr->sampler_count = (uint32_t)std::min<size_t>(res.samplers.size(), MaxTextureUnits);
     for (uint32_t i = 0; i < ptr->sampler_count; ++i)
     {
         assert(res.samplers[i].index < MaxTextureUnits);
-        ptr->sampler_defs[i] = my::IndexName{
-            res.samplers[i].index, (const char*)my->_intern.intern(res.samplers[i].name)};
+        ptr->sampler_defs[i] =
+            my::IndexName{res.samplers[i].index, my->_intern.intern_as_str(res.samplers[i].name)};
         ptr->active_textures.set(res.samplers[i].index);
     }
 
-    ptr->output_count = std::min(res.output_count, (uint32_t)MaxFramebufferAttachments);
+    ptr->output_count = (uint32_t)std::min<size_t>(res.outputs.size(), MaxFramebufferAttachments);
     for (uint32_t i = 0; i < ptr->output_count; ++i)
     {
-        ptr->output_defs[i] = (const char*)my->_intern.intern(res.outputs[i]);
+        ptr->output_defs[i] = my->_intern.intern_as_str(res.outputs[i]);
     }
 
     ptr->vertex_shader = create_shader_inner(
@@ -258,7 +280,7 @@ static uint64_t create_shader(GLInstance* my, const ShaderResource& res)
 
     ptr->program = glCreateProgram();
 
-    ptr->name = res.name ? (const char*)my->_intern.intern(res.name) : nullptr;
+    ptr->name = res.name ? my->_intern.intern_as_str(res.name) : nullptr;
     ptr->link_hint = res.link_hint;
     ptr->link_state = GLShader::NotLinked;
     ptr->in_initial_pool = false;
@@ -426,10 +448,9 @@ static my::ResourceHandle create_vertex_input(GLInstance* my, const VertexInputR
         }
     }
 
-    for (uint32_t i = 0; i < res.attrib_count; ++i)
+    ptr->attrib_fingerprint.reset();
+    for (const auto& stream : res.attribs)
     {
-        const VertexInputStream& stream = res.attribs[i];
-
         if (stream.index >= MaxVertexAttributes)
         {
             MY_LOG_ERROR(
@@ -437,6 +458,8 @@ static my::ResourceHandle create_vertex_input(GLInstance* my, const VertexInputR
                 fmt::underlying(MaxVertexAttributes));
             break;
         }
+
+        ptr->attrib_fingerprint.set((size_t)stream.index);
 
         if (!stream.buffer.is_null())
         {
@@ -502,7 +525,7 @@ static my::ResourceHandle create_vertex_input(GLInstance* my, const VertexInputR
 
 static my::ResourceHandle create_framebuffer(GLInstance* my, const FramebufferResource& res)
 {
-    uint64_t fb_handle = my->_framebuffers.acquire({});
+    const uint64_t fb_handle = my->_framebuffers.acquire({});
     GLFramebuffer* ptr = my->_framebuffers[fb_handle];
     assert(ptr);
 
@@ -512,10 +535,8 @@ static my::ResourceHandle create_framebuffer(GLInstance* my, const FramebufferRe
     glGenFramebuffers(1, &ptr->fbo);
     my->bind_draw_framebuffer(fb_handle);
 
-    for (uint32_t i = 0; i < res.attachment_count; ++i)
+    for (const auto& att : res.attachments)
     {
-        const FramebufferAttachment& att = res.attachments[i];
-
         if (get_resource_type(att.texture_or_renderbuffer) == Resource::Texture)
         {
             const GLTexture* texture =

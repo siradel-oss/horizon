@@ -64,10 +64,8 @@ class ResourceBinder
 public:
     struct State
     {
-        uint32_t ubo_count;
-        uint32_t texture_count;
-        UboBinding* ubos;
-        TextureBinding* textures;
+        std::span<const UboBinding> ubos;
+        std::span<const TextureBinding> textures;
     };
 
     static ResourceBinder* create();
@@ -77,8 +75,8 @@ public:
     virtual void push_state() = 0;
     virtual void pop_state() = 0;
 
-    virtual void bind(uint32_t count, const UboBinding*) = 0;
-    virtual void bind(uint32_t count, const TextureBinding*) = 0;
+    virtual void bind(std::span<const UboBinding>) = 0;
+    virtual void bind(std::span<const TextureBinding>) = 0;
 
     virtual State get_current_state() = 0;
 };
@@ -103,40 +101,55 @@ public:
         virtual ~Queue() = default;
 
         template<typename T>
+            requires std::is_trivially_copyable_v<T> && (!std::is_pointer_v<std::remove_cvref_t<T>>)
         inline T* enqueue(
             BinMask mask,
             RenderFunction fn,
-            const T* data,
+            const T& data,
             const lm::dvec3& center,
             double radius,
             uint32_t user_sort = 0)
         {
-            static_assert(
-                std::is_trivially_copyable_v<T> && std::is_trivially_destructible_v<T>,
-                "Renderable data must be trivially copyable and destructible");
-
-            return (T*)enqueue_raw(mask, fn, data, sizeof(T), center, radius, user_sort);
+            return (T*)enqueue_raw(
+                mask, fn, std::as_bytes(std::span<const T>(&data, 1)), center, radius, user_sort);
         }
 
         template<typename T>
+            requires std::is_trivially_copyable_v<T>
         inline T* write(const T& data)
         {
-            return (T*)write_raw(&data, sizeof(T));
+            return (T*)write_raw(std::as_bytes(std::span<const T>(&data, 1)));
         }
 
         template<typename T>
-        inline T* write_n(const T* data, size_t count)
+            requires std::is_trivially_copyable_v<T>
+        inline std::span<T> write_n(std::span<const T> data)
         {
-            return (T*)write_raw(data, sizeof(T) * count);
+            return std::span<T>((T*)write_raw(std::as_bytes(data)), data.size());
         }
 
-        virtual void* write_raw(const void* data, size_t size) = 0;
+        template<typename T, size_t N>
+            requires std::is_trivially_copyable_v<T>
+        inline std::span<T> write_n(const T (&data)[N])
+        {
+            return std::span<T>((T*)write_raw(std::as_bytes(std::span<const T, N>(data))), N);
+        }
+
+        virtual void* write_raw(std::span<const std::byte>) = 0;
+
+        virtual void* alloc_raw(size_t size) = 0;
+
+        template<typename T>
+            requires std::is_trivially_copyable_v<T> && std::is_trivially_default_constructible_v<T>
+        inline std::span<T> alloc_n_uninit(size_t count)
+        {
+            return std::span<T>((T*)alloc_raw(sizeof(T) * count), count);
+        }
 
         virtual void* enqueue_raw(
             BinMask,
             RenderFunction,
-            const void* data,
-            size_t data_size,
+            std::span<const std::byte> data,
             const lm::dvec3& center,
             double radius,
             uint32_t user_sort) = 0;
@@ -157,8 +170,7 @@ public:
         virtual bool is_visible_in_some_views(
             const lm::dvec3& center,
             double radius,
-            int view_count,
-            const ViewId* views) const = 0;
+            std::span<const ViewId> views) const = 0;
 
         virtual bool is_visible_in_some_views(
             const lm::dvec3& center,
@@ -173,8 +185,7 @@ public:
 
         virtual bool is_visible_in_some_views(
             const OrientedBoundingBox& bbox,
-            int view_count,
-            const ViewId* views) const = 0;
+            std::span<const ViewId> views) const = 0;
 
         virtual bool is_visible_in_some_views(const OrientedBoundingBox& bbox, ViewMask view_mask)
             const = 0;
@@ -214,13 +225,12 @@ public:
     virtual void collect_renderable(const UserDataRenderable&, void* user_data) = 0;
 
     virtual ViewMask make_view_mask(BinMask bin_mask) const = 0;
-    virtual ViewMask make_view_mask(int view_count, const ViewId* views) const = 0;
+    virtual ViewMask make_view_mask(std::span<const ViewId> views) const = 0;
 
     virtual void draw(
         uint32_t render_type,
         ViewId,
-        uint32_t pass_count,
-        const BinMask* pass_masks,
+        std::span<const BinMask> pass_masks,
         RenderContext*,
         ResourceBinder*,
         const void* user_data) = 0;

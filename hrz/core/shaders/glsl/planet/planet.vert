@@ -4,7 +4,7 @@
 #ifdef PLANET_AUX_VIEW
 #include "common/ubo_view.glsl"
 #endif
-#ifndef PLANET_AUX_VIEW
+#if !defined(PLANET_AUX_VIEW) && !defined(PLANET_FEEDBACK)
 #include "common/flat_overlay_cameras.glsl"
 #endif
 
@@ -16,9 +16,6 @@
 #include "common/sun_shadows.vert.glsl"
 #include "common/viewshed.vert.glsl"
 #include "common/clip.vert.glsl"
-
-// @Workaround(001-Firefox-DrawElementsWithNoAttributes)
-in float i_dummy;
 
 uniform highp sampler2D hrz_planet_tessellation;
 uniform highp sampler2D hrz_height_lut;
@@ -62,8 +59,7 @@ void main()
     vec4 data0 = texelFetch(hrz_planet_tessellation, ivec2(gl_VertexID * 2 + 0, instance_data.geometry_slot), 0);
     vec4 data1 = texelFetch(hrz_planet_tessellation, ivec2(gl_VertexID * 2 + 1, instance_data.geometry_slot), 0);
 
-    // @Workaround(001-Firefox-DrawElementsWithNoAttributes)
-    vec3 pos = data0.xyz + vec3(i_dummy);
+    vec3 pos = data0.xyz;
     vec3 ground_normal = vec3(data0.w, data1.x, data1.y);
 
     vec2 partial_wmerc = data1.zw;

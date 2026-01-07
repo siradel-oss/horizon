@@ -796,6 +796,256 @@ static void print_shader_compilation_log(GLuint shader)
     }
 }
 
+static void setup_and_validate_uniform_blocks(my::GLInstance* my, my::GLShader* s)
+{
+    if (s->uniform_block_count > my::MaxUniformBlocks)
+    {
+        MY_LOG_ERROR(
+            "Shader {}: too many defined uniform blocks: {}", s->name, s->uniform_block_count);
+    }
+
+    GLint actual_uniform_block_count = 0;
+    glGetProgramiv(s->program, GL_ACTIVE_UNIFORM_BLOCKS, &actual_uniform_block_count);
+
+    if (actual_uniform_block_count > my::MaxUniformBlocks)
+    {
+        MY_LOG_ERROR(
+            "Shader {}: too many active uniform blocks: {}", s->name, actual_uniform_block_count);
+    }
+
+    std::array<bool, my::MaxUniformBlocks> found_declared_blocks = {};
+    int referenced_in_vertex_count = 0;
+    int referenced_in_fragment_count = 0;
+
+    const std::span<my::IndexName> uniform_block_defs_span{
+        s->uniform_block_defs, s->uniform_block_count};
+
+    for (GLint i = 0; i < actual_uniform_block_count; ++i)
+    {
+        GLint param{};
+
+        glGetActiveUniformBlockiv(
+            s->program, (GLuint)i, GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, &param);
+        if (param != 0) referenced_in_vertex_count += 1;
+
+        glGetActiveUniformBlockiv(
+            s->program, (GLuint)i, GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, &param);
+        if (param != 0) referenced_in_fragment_count += 1;
+
+        GLchar name[256];
+        GLsizei name_length{};
+        glGetActiveUniformBlockName(s->program, (GLuint)i, sizeof(name), &name_length, name);
+        assert((size_t)(name_length + 1) <= sizeof(name));
+
+        const auto* name_interned = my->_intern.intern_as_str(name);
+
+        auto it = std::ranges::find_if(
+            uniform_block_defs_span,
+            [name_interned](const auto& def) { return def.name == name_interned; });
+
+        if (it != std::end(uniform_block_defs_span))
+        {
+            const auto decl_index = std::distance(std::begin(uniform_block_defs_span), it);
+            found_declared_blocks[decl_index] = true;
+
+            glGetActiveUniformBlockiv(s->program, (GLuint)i, GL_UNIFORM_BLOCK_DATA_SIZE, &param);
+            if (param <= 0)
+            {
+                MY_LOG_WARNING(
+                    "Shader {}: uniform block {} has invalid size {}", s->name, name, param);
+            }
+
+            if (param > my::MaxUniformBlockSize)
+            {
+                MY_LOG_WARNING(
+                    "Shader {}: uniform block {} size {} exceeds maximum", s->name, name, param);
+            }
+
+            // Align size to 16 bytes. It's supposed to already be, but it's not always.
+            // This is because on CPU we align all structs to 16 bytes, but some WebGL
+            // implementations don't take trailing padding into account when reporting
+            // the size of the block. So here we are yay.
+            s->uniform_block_size_by_binding[it->index] = (uint32_t)((param + 15) & ~15);
+
+            const GLuint inner_index = glGetUniformBlockIndex(s->program, name);
+            if (inner_index == GL_INVALID_INDEX)
+            {
+                MY_LOG_ERROR("Shader {}: could not get uniform block index for {}", s->name, name);
+            }
+            else
+            {
+                glUniformBlockBinding(s->program, inner_index, it->index);
+            }
+        }
+        else
+        {
+            MY_LOG_WARNING(
+                "Shader {}: active uniform block {} not declared in shader definition", s->name,
+                name);
+        }
+    }
+
+    for (size_t i = 0; i < s->uniform_block_count; ++i)
+    {
+        if (!found_declared_blocks[i])
+        {
+            MY_LOG_ERROR(
+                "Shader {}: declared uniform block {} not active in shader", s->name,
+                s->uniform_block_defs[i].name);
+        }
+    }
+
+    if (referenced_in_vertex_count > my::MaxVertexUniformBlocks)
+    {
+        MY_LOG_WARNING(
+            "Shader {}: too many uniform blocks referenced in vertex shader: {}", s->name,
+            referenced_in_vertex_count);
+    }
+
+    if (referenced_in_fragment_count > my::MaxFragmentUniformBlocks)
+    {
+        MY_LOG_WARNING(
+            "Shader {}: too many uniform blocks referenced in fragment shader: {}", s->name,
+            referenced_in_fragment_count);
+    }
+}
+
+static void setup_and_validate_samplers(my::GLInstance* my, my::GLShader* s)
+{
+    if (s->sampler_count > my::MaxTextureUnits)
+    {
+        MY_LOG_ERROR("Shader {}: too many defined samplers: {}", s->name, s->sampler_count);
+    }
+
+    GLint declared_uniforms_count = 0;
+    glGetProgramiv(s->program, GL_ACTIVE_UNIFORMS, &declared_uniforms_count);
+
+    std::array<bool, my::MaxTextureUnits> found_declared_samplers{};
+
+    auto find_declared_sampler_index_by_name = [s](std::string_view name_sv) -> std::optional<int>
+    {
+        for (int i = 0; i < s->sampler_count; ++i)
+        {
+            if (s->sampler_defs[i].name == name_sv)
+            {
+                return i;
+            }
+        }
+        return std::nullopt;
+    };
+
+    auto handle_sampler_uniform = [my, s, &find_declared_sampler_index_by_name,
+                                   &found_declared_samplers](std::string_view name_sv)
+    {
+        const char* name = my->_intern.intern_as_str(name_sv);
+        auto sampler_index_opt = find_declared_sampler_index_by_name(name_sv);
+        if (sampler_index_opt.has_value())
+        {
+            const int declared_index = sampler_index_opt.value();
+            const GLint location = glGetUniformLocation(s->program, name);
+            glUniform1i(location, s->sampler_defs[declared_index].index);
+            found_declared_samplers[declared_index] = true;
+            GL_ERROR();
+        }
+        else
+        {
+            MY_LOG_WARNING(
+                "Shader {}: sampler uniform {} not declared in shader definition", s->name, name);
+        }
+    };
+
+    auto handle_sampler_uniform_array =
+        [&handle_sampler_uniform](std::string_view name_sv, GLint array_count)
+    {
+        for (int i = 0; i < array_count; ++i)
+        {
+            auto name = fmt::format("{}[{}]", name_sv, i);
+            handle_sampler_uniform(name);
+        }
+    };
+
+    for (int i = 0; i < declared_uniforms_count; ++i)
+    {
+        GLchar name[256];
+        GLsizei name_length{};
+        GLint array_count{};
+        GLenum type{};
+
+        glGetActiveUniform(
+            s->program, (GLuint)i, sizeof(name), &name_length, &array_count, &type, name);
+
+        std::string_view name_sv(name, (size_t)name_length);
+        bool is_array = false;
+
+        // Skip uniform blocks
+        if (name_sv.find('.') != std::string_view::npos) continue;
+
+        // Skip built-ins
+        if (name_sv.starts_with("gl_") || name_sv.starts_with("my_")) continue;
+
+        if (auto pos = name_sv.find('['); pos != std::string_view::npos)
+        {
+            name_sv = name_sv.substr(0, pos);
+            is_array = true;
+        }
+
+        if (is_array)
+        {
+            handle_sampler_uniform_array(name_sv, array_count);
+        }
+        else
+        {
+            handle_sampler_uniform(name_sv);
+        }
+    }
+
+    for (size_t i = 0; i < s->sampler_count; ++i)
+    {
+        if (!found_declared_samplers[i])
+        {
+            MY_LOG_ERROR(
+                "Shader {}: declared sampler {} not active in shader", s->name,
+                s->sampler_defs[i].name);
+        }
+    }
+}
+
+static void validate_vertex_inputs(my::GLInstance* my, my::GLShader* s)
+{
+    GLint active_attrib_count = 0;
+    glGetProgramiv(s->program, GL_ACTIVE_ATTRIBUTES, &active_attrib_count);
+
+    const std::span<my::IndexName> vertex_attrib_defs_span{s->attrib_defs, s->attrib_count};
+
+    for (GLint i = 0; i < active_attrib_count; ++i)
+    {
+        GLchar name[256];
+        GLsizei name_length{};
+        GLint attrib_size{};
+        GLenum attrib_type{};
+        glGetActiveAttrib(
+            s->program, (GLuint)i, sizeof(name), &name_length, &attrib_size, &attrib_type, name);
+        assert((size_t)(name_length + 1) <= sizeof(name));
+
+        const std::string_view name_interned = my->_intern.intern_as_str(name);
+        if (name_interned.starts_with("gl_"))
+        {
+            continue;
+        }
+
+        auto it = std::ranges::find_if(
+            vertex_attrib_defs_span,
+            [name_interned](const auto& def) { return def.name == name_interned.data(); });
+
+        if (it == std::end(vertex_attrib_defs_span))
+        {
+            MY_LOG_ERROR(
+                "Shader {}: active vertex attribute {} not declared in shader definition", s->name,
+                name);
+        }
+    }
+}
+
 void do_post_link_steps(my::GLInstance* inst, my::GLShader* ptr)
 {
     assert(ptr->link_state == my::GLShader::Linking);
@@ -820,7 +1070,7 @@ void do_post_link_steps(my::GLInstance* inst, my::GLShader* ptr)
         glGetProgramInfoLog(ptr->program, length, &length, log.get());
         log[length] = 0;
 
-        MY_LOG_ERROR("Program linking log:\n{}", log.get());
+        MY_LOG_ERROR("Program linking log for shader {}:\n{}", ptr->name, log.get());
 
         MY_LOG_ERROR("Vertex shader log:");
         print_shader_compilation_log(ptr->vertex_shader);
@@ -831,42 +1081,11 @@ void do_post_link_steps(my::GLInstance* inst, my::GLShader* ptr)
         return;
     }
 
-    for (uint32_t i = 0; i < ptr->uniform_block_count; ++i)
-    {
-        GLuint binding_index = ptr->uniform_block_defs[i].index;
-        const char* name = ptr->uniform_block_defs[i].name;
-
-        GLuint index = glGetUniformBlockIndex(ptr->program, name);
-        if (index != GL_INVALID_INDEX)
-        {
-            glUniformBlockBinding(ptr->program, index, binding_index);
-            GL_ERROR();
-        }
-        else
-        {
-            MY_LOG_WARNING("Invalid uniform block {}", name);
-        }
-    }
+    setup_and_validate_uniform_blocks(inst, ptr);
+    validate_vertex_inputs(inst, ptr);
 
     inst->use_program(ptr->program);
-
-    for (uint32_t i = 0; i < ptr->sampler_count; ++i)
-    {
-        GLint location = glGetUniformLocation(ptr->program, ptr->sampler_defs[i].name);
-        if (location >= 0)
-        {
-            glUniform1i(location, ptr->sampler_defs[i].index);
-            GL_ERROR();
-        }
-#ifndef MYCELIUM_DISABLE_UNKNOWN_SAMPLER_WARNINGS
-        else
-        {
-            MY_LOG_WARNING(
-                "Unknown sampler uniform {} at index {} for shader {}", ptr->sampler_defs[i].name,
-                ptr->sampler_defs[i].index, ptr->name);
-        }
-#endif
-    }
+    setup_and_validate_samplers(inst, ptr);
 
     ptr->base_instance_uniform_location = glGetUniformLocation(ptr->program, "my_BaseInstance");
 

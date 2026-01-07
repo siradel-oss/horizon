@@ -54,6 +54,7 @@ struct GLVertexInput
 {
     GLuint vao;
     bool is_indexed;
+    std::bitset<MaxVertexAttributes> attrib_fingerprint;
 };
 
 struct GLBuffer
@@ -104,11 +105,14 @@ struct GLShader
     GLenum draw_buffers[MaxFramebufferAttachments];
     uint64_t draw_buffers_fingerprint;
 
+    // One bit set per defined attribute index.
+    std::bitset<MaxVertexAttributes> attrib_fingerprint;
     uint32_t attrib_count;
     IndexName attrib_defs[MaxVertexAttributes];
 
     uint32_t uniform_block_count;
     IndexName uniform_block_defs[MaxUniformBlocks];
+    size_t uniform_block_size_by_binding[MaxUniformBlocks];
 
     uint32_t sampler_count;
     IndexName sampler_defs[MaxTextureUnits];
@@ -260,7 +264,7 @@ struct GLInstance : public Instance
 
     // Render context stuff
 
-    void clear(uint32_t clear_count, const ClearTarget* values) override;
+    void clear(std::span<const ClearTarget> values) override;
 
     void set_viewport(const ViewportState&) override;
     void set_framebuffer(ResourceHandle fbo, const ViewportState&) override;
@@ -285,10 +289,8 @@ struct GLInstance : public Instance
         const DrawBatchInfo& info,
         ResourceHandle shader,
         ResourceHandle vertex_input,
-        uint32_t ubo_count,
-        const UboBinding* ubos,
-        uint32_t texture_count,
-        const TextureBinding* textures) override;
+        std::span<const UboBinding> ubos,
+        std::span<const TextureBinding> textures) override;
 
     void blit_framebuffers(
         ResourceHandle src,
@@ -296,8 +298,7 @@ struct GLInstance : public Instance
         Rect dst_rect,
         AspectFlags,
         Attachment src_attachment,
-        uint32_t dst_attachment_count,
-        const Attachment* dst_attachments,
+        std::span<const Attachment> dst_attachments,
         SamplerParams::Filter) override;
 
     TextureDownloadData color_texture_download_sync(
@@ -384,9 +385,9 @@ struct GLInstance : public Instance
     };
 
     size_t _uniform_buffer_offset_alignment = 1;
-    uint64_t _last_pipeline = ~0ull;
-    GLuint _last_program = ~0u;
-    GLuint _last_vao = ~0u;
+    uint64_t _last_pipeline = ~0ULL;
+    GLuint _last_program = ~0U;
+    GLuint _last_vao = ~0U;
     uint64_t _last_draw_framebuffer_handle = 0;
     uint64_t _last_read_framebuffer_handle = 0;
     int _last_active_texture = ~0;
@@ -432,7 +433,7 @@ struct GLInstance : public Instance
 
     inline bool bind_shader(uint64_t id, CullModifier cull_modifier)
     {
-        GLPipeline* pipeline = _pipelines[id];
+        const GLPipeline* pipeline = _pipelines[id];
         if (!pipeline) return false;
 
         GLShader* shader = _shaders[pipeline->shader];
@@ -467,7 +468,7 @@ struct GLInstance : public Instance
         // You really want to call this function before
         // deleting the shader.
 
-        GLPipeline* pipeline = _pipelines[id];
+        const GLPipeline* pipeline = _pipelines[id];
         if (!pipeline) return false;
 
         const GLShader* shader = _shaders[pipeline->shader];
@@ -808,19 +809,19 @@ struct GLInstance : public Instance
 };
 
 static const uint64_t HANDLE_BITS = 56;
-static const uint64_t HANDLE_MASK = (1ull << HANDLE_BITS) - 1;
+static const uint64_t HANDLE_MASK = (1ULL << HANDLE_BITS) - 1;
 
-inline static Resource::Type get_resource_type(ResourceHandle handle)
+inline Resource::Type get_resource_type(ResourceHandle handle)
 {
     return (Resource::Type)(handle.handle >> HANDLE_BITS);
 }
 
-inline static uint64_t get_resource_handle(ResourceHandle handle)
+inline uint64_t get_resource_handle(ResourceHandle handle)
 {
     return handle.handle & HANDLE_MASK;
 }
 
-inline static ResourceHandle make_resource_handle(Resource::Type type, uint64_t handle)
+inline ResourceHandle make_resource_handle(Resource::Type type, uint64_t handle)
 {
     return ResourceHandle{((uint64_t)type << HANDLE_BITS) | handle};
 }

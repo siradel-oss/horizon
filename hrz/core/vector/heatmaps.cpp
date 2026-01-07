@@ -159,16 +159,14 @@ struct HeatmapOverlayRenderable : public my::Renderer::Renderable
         my::UboBinding ubo_bindings[] = {
             {UboHeatmapQuadOverlay, data->ubo_buffer, 0, sizeof(HeatmapOverlayUniform)},
         };
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         my::TextureBinding texture_bindings[] = {
             {SamplerHeatmap, data->heatmap_texture, data->heatmap_sampler}};
-        rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        rb->bind(texture_bindings);
 
         auto state = rb->get_current_state();
-        r->draw(
-            points_batch, data->shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(points_batch, data->shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -177,7 +175,7 @@ struct HeatmapOverlayRenderable : public my::Renderer::Renderable
         const override
     {
         queue.enqueue(
-            hrz::RenderFlatOverlayBin, render_callback, &data, {0, 0, 0}, HRZ_S_EARTH_RADIUS,
+            hrz::RenderFlatOverlayBin, render_callback, data, {0, 0, 0}, HRZ_S_EARTH_RADIUS,
             z_index);
     }
 };
@@ -324,8 +322,7 @@ public:
 
         my::FramebufferAttachment attachment{my::Attachment::Color0, repr_data->pass_output_target};
         my::FramebufferResource fb_res;
-        fb_res.attachment_count = 1;
-        fb_res.attachments = &attachment;
+        fb_res.attachments = {&attachment, 1};
 
         repr_data->pass_fbo = render->rc->alloc(
             &fb_res, hrz::monitoring::systems::Heatmaps, repr_data->vector_tiles_layer_id);
@@ -346,12 +343,12 @@ public:
 
         my::UboBinding binding = {
             heatmaps::UboHeatmapPoints, _points_ubo.get_for_gpu(), 0, sizeof(HeatmapPointsUniform)};
-        ctx.binder->bind(1, &binding);
+        ctx.binder->bind({&binding, 1});
 
         const my::TextureBinding texture_bindings[] = {
             {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler},
         };
-        ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        ctx.binder->bind(texture_bindings);
 
         const my::ViewportState viewport_state = {
             {0, 0, _texture_size, _texture_size},
@@ -372,13 +369,13 @@ public:
             const auto& repr_data = pair.second;
 
             ctx.render->set_framebuffer(repr_data.pass_fbo, viewport_state);
-            ctx.render->clear(1, clear_values);
+            ctx.render->clear(clear_values);
 
             user_data.repr_id = repr_id;
 
             ctx.renderer->draw(
-                hrz::RenderType::RenderVisual, _data.view_id, 1, &to_render, ctx.render, ctx.binder,
-                (void*)&user_data);
+                hrz::RenderType::RenderVisual, _data.view_id, {&to_render, 1}, ctx.render,
+                ctx.binder, (void*)&user_data);
         }
 
         ctx.binder->pop_state();
@@ -523,7 +520,6 @@ void initialize_rendering(
              my::VertexRate::PerVertex}};
 
         my::VertexInputResource vi_res;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
 
         system->quad_vertex_input = render->rc->alloc(
@@ -814,13 +810,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::FlatHeatmapQuad_vert;
         res.fragment_source_len = hrz_shaders::FlatHeatmapQuad_frag_len;
         res.fragment_source = hrz_shaders::FlatHeatmapQuad_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = HRZ_ARRAY_COUNT(color_outputs);
         res.outputs = color_outputs;
 
         res.initial_state.depth.test = true;

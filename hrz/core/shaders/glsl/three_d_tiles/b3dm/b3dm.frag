@@ -1,9 +1,12 @@
 #include "common/colors.glsl"
-#include "common/flat_overlay_cameras.glsl"
 #include "common/maths.glsl"
 #include "common/ubo_frame.glsl"
 
 #include "gltf/defs.glsl"
+
+#ifdef B3DM_WITH_OVERLAY
+#include "common/flat_overlay_cameras.glsl"
+#endif
 
 #define varying in
 #include "three_d_tiles/b3dm/interface.glsl"

@@ -34,7 +34,6 @@ void main()
 
     vec3 target_pos_cc = translate_relative_to_camera(i_target_in_tile_position, hrz_tile.origin_low.xyz, hrz_tile.origin_high.xyz);
     vec4 p0_view = hrz_frame.view_cc_matrix * vec4(target_pos_cc, 1);
-
     vec4 p1_view = compute_anchored_pos_view(anchor, vec4(i_in_symbol_position, 1));
 
     float distance_to_anchor = max(0.0, -p0_view.z);

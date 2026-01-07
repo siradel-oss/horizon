@@ -30,8 +30,7 @@ enum
     Uv1InputStream = 1,
     Uv2InputStream = 2,
     Uv3InputStream = 3,
-    VertexIdInputStream = 4,
-    TextIndexInputStream = 5,
+    TextIndexInputStream = 4,
 };
 
 struct TextUniformData
@@ -81,7 +80,7 @@ void TextRenderable::render_callback(
         {AnchorParamsUbo, data->anchor_ubo, 0, sizeof(AnchorUniformData)},
         {TextParamsUbo, data->text_ubo, 0, sizeof(TextUniformData)},
     };
-    rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+    rb->bind(ubo_bindings);
 
     my::TextureBinding texture_bindings[] = {
         {AnchorDataTextureSamplerIndex, data->anchor_data_texture,
@@ -99,20 +98,16 @@ void TextRenderable::render_callback(
          data->text_data_texture_sampler},
         {FontTextureSamplerIndex, data->font_texture, data->font_texture_sampler},
     };
-    rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+    rb->bind(texture_bindings);
 
     auto state = rb->get_current_state();
 
     if (outline_shader.has_value() && data->has_non_zero_outline_width)
     {
-        r->draw(
-            batch, outline_shader.value(), data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, outline_shader.value(), data->vertex_input, state.ubos, state.textures);
     }
 
-    r->draw(
-        batch, fill_shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-        state.textures);
+    r->draw(batch, fill_shader, data->vertex_input, state.ubos, state.textures);
 
     rb->pop_state();
 }
@@ -171,7 +166,6 @@ void TextElementSystem::collect_shaders(GpuResourceContext* rc)
             {Uv1InputStream, "i_in_text_position_uv_1"},
             {Uv2InputStream, "i_in_text_position_uv_2"},
             {Uv3InputStream, "i_in_text_position_uv_3"},
-            {VertexIdInputStream, "i_vertex_id"},
             {TextIndexInputStream, "i_text_index"},
         };
 
@@ -200,13 +194,9 @@ void TextElementSystem::collect_shaders(GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::Symbol_text_vert;
         res.fragment_source_len = hrz_shaders::Symbol_text_frag_len;
         res.fragment_source = hrz_shaders::Symbol_text_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
         res.attribs = attribs;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
-        res.sampler_count = HRZ_ARRAY_COUNT(fill_samplers);
         res.samplers = fill_samplers;
 
         res.initial_state.depth.test = true;
@@ -237,7 +227,6 @@ void TextElementSystem::collect_shaders(GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::Symbol_text_outline_vert;
         res.fragment_source_len = hrz_shaders::Symbol_text_outline_frag_len;
         res.fragment_source = hrz_shaders::Symbol_text_outline_frag;
-        res.sampler_count = HRZ_ARRAY_COUNT(outline_samplers);
         res.samplers = outline_samplers;
 
         rc->alloc(&res, hrz::monitoring::systems::Symbols);
@@ -263,9 +252,7 @@ void TextElementSystem::collect_shaders(GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::Symbol_text_picking_vert;
         res.fragment_source_len = hrz_shaders::Symbol_text_picking_frag_len;
         res.fragment_source = hrz_shaders::Symbol_text_picking_frag;
-        res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
         res.outputs = picking_color_outputs;
-        res.sampler_count = HRZ_ARRAY_COUNT(picking_samplers);
         res.samplers = picking_samplers;
         res.initial_state.color_blend.enable = false;
 
@@ -293,9 +280,7 @@ void TextElementSystem::collect_shaders(GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::Symbol_text_selection_vert;
         res.fragment_source_len = hrz_shaders::Symbol_text_selection_frag_len;
         res.fragment_source = hrz_shaders::Symbol_text_selection_frag;
-        res.output_count = HRZ_ARRAY_COUNT(selection_color_outputs);
         res.outputs = selection_color_outputs;
-        res.sampler_count = HRZ_ARRAY_COUNT(selection_samplers);
         res.samplers = selection_samplers;
         res.initial_state.color_blend.enable = false;
 
@@ -330,22 +315,6 @@ void TextElementSystem::init_render(Render* render)
     _selection_shader = render->rc->retrieve_shader(hrz_shaders::Symbol_text_selection_name);
 
     {
-        // This vertex attribute should be useless, as it replicates
-        // the gl_VertexID built-in variable.
-        // However some platforms require that at least one vertex
-        // attribute with a per-vertex advance rate be present.
-
-        uint8_t data[4] = {0, 1, 2, 3};
-
-        my::BufferResource vb_res(my::BufferResource::BufferType::Vertex);
-        vb_res.size = sizeof(uint8_t) * HRZ_ARRAY_COUNT(data);
-        vb_res.usage = my::UsageHint::Static;
-        vb_res.data = data;
-
-        _vertex_id_buffer = render->rc->alloc(&vb_res, hrz::monitoring::systems::Symbols);
-    }
-
-    {
         my::SamplerResource res;
         res.sampler.min_filter = my::SamplerParams::Filter::Nearest;
         res.sampler.mag_filter = my::SamplerParams::Filter::Nearest;
@@ -378,7 +347,6 @@ void TextElementSystem::deinit_render(Render* render)
     }
     _unused_resources.clear();
 
-    render->rc->dealloc(_vertex_id_buffer);
     render->rc->dealloc(_data_texture_sampler);
     render->rc->dealloc(_font_texture_sampler);
 }
@@ -606,14 +574,6 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
         return pos_uv_stream;
     };
 
-    my::VertexInputStream vertex_id_stream;
-    vertex_id_stream.index = VertexIdInputStream;
-    vertex_id_stream.buffer = _vertex_id_buffer;
-    vertex_id_stream.format = my::VertexFormat::UInt8;
-    vertex_id_stream.offset = 0;
-    vertex_id_stream.stride = my::vertex_size(my::VertexFormat::UInt8);
-    vertex_id_stream.rate = my::VertexRate::PerVertex;
-
     auto text_indices = instance_data.text_indices.get_data();
     my::BufferResource text_index_res(my::BufferResource::BufferType::Vertex);
     text_index_res.size = text_indices.size_bytes();
@@ -636,15 +596,11 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
 
     {
         my::VertexInputStream streams[] = {
-            make_pos_uv_stream(Uv0InputStream),
-            make_pos_uv_stream(Uv1InputStream),
-            make_pos_uv_stream(Uv2InputStream),
-            make_pos_uv_stream(Uv3InputStream),
-            vertex_id_stream,
+            make_pos_uv_stream(Uv0InputStream), make_pos_uv_stream(Uv1InputStream),
+            make_pos_uv_stream(Uv2InputStream), make_pos_uv_stream(Uv3InputStream),
             text_index_stream};
 
         my::VertexInputResource vi_res;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
         renderable.data.vertex_input = render->rc->alloc(
             &vi_res, hrz::monitoring::systems::Symbols, layer_id,

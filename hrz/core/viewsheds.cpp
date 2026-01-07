@@ -73,7 +73,7 @@ struct Cube : public my::Renderer::Renderable
 
         auto state = rb->get_current_state();
 
-        r->draw(batch, shader, data->vertex_input, state.ubo_count, state.ubos, 0, nullptr);
+        r->draw(batch, shader, data->vertex_input, state.ubos, {});
 
         rb->pop_state();
     }
@@ -81,7 +81,7 @@ struct Cube : public my::Renderer::Renderable
     void collect_render_info(my::Renderer::Queue& queue, const my::Renderer::Culler& culler)
         const override
     {
-        queue.enqueue(hrz::RenderWorldOpaqueBinBit, draw_cube, &data, center, 10000);
+        queue.enqueue(hrz::RenderWorldOpaqueBinBit, draw_cube, data, center, 10000);
     }
 
     static void collect_shaders(hrz::GpuResourceContext* rc)
@@ -96,16 +96,13 @@ struct Cube : public my::Renderer::Renderable
 
         my::ShaderResource res{};
         res.name = hrz_shaders::ViewshedWireframe_name;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
         res.vertex_source_len = hrz_shaders::ViewshedWireframe_vert_len;
         res.vertex_source = hrz_shaders::ViewshedWireframe_vert;
         res.fragment_source_len = hrz_shaders::ViewshedWireframe_frag_len;
         res.fragment_source = hrz_shaders::ViewshedWireframe_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(uniform_blocks);
         res.uniform_blocks = uniform_blocks;
-        res.sampler_count = 0;
-        res.output_count = 1;
+        res.samplers = {};
         res.outputs = outputs;
         res.initial_state.depth.test = true;
         res.initial_state.color_blend.enable = true;
@@ -151,7 +148,6 @@ struct Cube : public my::Renderer::Renderable
 
             my::VertexInputResource vi_res;
             vi_res.indices = index_buffer;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
 
             data.vertex_input = render->rc->alloc(&vi_res, hrz::monitoring::systems::Viewsheds);

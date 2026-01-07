@@ -4,7 +4,8 @@
 #include "common/highlight.glsl"
 #include "common/maths.glsl"
 #include "common/polylines.frag.glsl"
-#include "flat_vectors/defs.glsl"
+#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/overlay_passes_defs.glsl"
 
 #define varying in
 #include "flat_vectors/interface.glsl"

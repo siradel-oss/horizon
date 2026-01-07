@@ -81,11 +81,11 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
             {UboPrimitiveTransformParams, data->mesh->ubo, data->prim_transform_ubo_offset,
              sizeof(PrimitiveTransformUniformData)},
         };
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         if (!data->mesh->ubo_bindings.empty())
         {
-            rb->bind((uint32_t)data->mesh->ubo_bindings.size(), data->mesh->ubo_bindings.data());
+            rb->bind(data->mesh->ubo_bindings);
         }
 
         my::TextureBinding texture_bindings[MaterialCount];
@@ -94,19 +94,16 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
             texture_bindings[i] =
                 my::TextureBinding{Material0Sampler + i, data->textures[i], data->samplers[i]};
         }
-        rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        rb->bind(texture_bindings);
 
         if (!data->mesh->texture_bindings.empty())
         {
-            rb->bind(
-                (uint32_t)data->mesh->texture_bindings.size(), data->mesh->texture_bindings.data());
+            rb->bind(data->mesh->texture_bindings);
         }
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            data->batch, shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(data->batch, shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -168,7 +165,7 @@ struct RenderablePrimitive : public my::Renderer::UserDataRenderable
             PrimitiveRenderData new_render_data = primitive_data;
             new_render_data.mesh = mesh_data;
             queue.enqueue(
-                bin_mask, render_callback, &new_render_data, bsphere.center, bsphere.radius);
+                bin_mask, render_callback, new_render_data, bsphere.center, bsphere.radius);
         }
     }
 };

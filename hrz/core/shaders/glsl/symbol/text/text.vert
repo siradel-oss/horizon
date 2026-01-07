@@ -2,21 +2,7 @@ layout(location = 0) in vec4 i_in_text_position_uv_0; // Bottom-left corner of t
 layout(location = 1) in vec4 i_in_text_position_uv_1; // Bottom-right
 layout(location = 2) in vec4 i_in_text_position_uv_2; // Top-right
 layout(location = 3) in vec4 i_in_text_position_uv_3; // Top-left
-layout(location = 4) in uint i_vertex_id;
-layout(location = 5) in uint i_text_index;
-
-// "Why do you use a vertex attribute to store the vertex id,
-// when GLSL has a built-in for that, namely gl_VertexID?" you
-// may ask.
-// See, there is a limitation in Direct3D 9 which disallows instanced
-// rendering without at least a vertex attribute with a per-vertex
-// rate. This limitation has been carried over to ANGLE, and then to
-// some browsers (even when they are not using ANGLE).
-// So we have to include a per-vertex attribute. It has to be used,
-// otherwise it can be removed in a optimisation pass. Putting the
-// vertex IDs in this attribute is the simplest thing we can do.
-// See https://github.com/KhronosGroup/WebGL/issues/2419
-//     -tpetillon, 2020-09-03
+layout(location = 4) in uint i_text_index;
 
 #define varying out
 #include "symbol/text/interface.glsl"
@@ -72,17 +58,17 @@ void main()
 
     vec2 in_text_position;
     vec2 uv;
-    if (i_vertex_id == 0u)
+    if (gl_VertexID == 0)
     {
         in_text_position = i_in_text_position_uv_0.xy;
         uv = i_in_text_position_uv_0.zw;
     }
-    else if (i_vertex_id == 1u)
+    else if (gl_VertexID == 1)
     {
         in_text_position = i_in_text_position_uv_1.xy;
         uv = i_in_text_position_uv_1.zw;
     }
-    else if (i_vertex_id == 2u)
+    else if (gl_VertexID == 2)
     {
         in_text_position = i_in_text_position_uv_2.xy;
         uv = i_in_text_position_uv_2.zw;

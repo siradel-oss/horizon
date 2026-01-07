@@ -1,4 +1,5 @@
-#include "flat_vectors/defs.glsl"
+#include "flat_vectors/overlay_passes_defs.glsl"
+#include "flat_vectors/heatmap_quad_overlay_defs.glsl"
 #include "common/ubo_frame.glsl"
 
 #define PALETTE_FN_NAME apply_palette_heatmap

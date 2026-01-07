@@ -2,7 +2,9 @@
 #include "common/ubo_frame.glsl"
 #include "common/flat_overlay_cameras.glsl"
 #include "common/round_to_power_of_two.glsl"
-#include "flat_vectors/defs.glsl"
+#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/overlay_passes_defs.glsl"
+#include "flat_vectors/pattern_defs.glsl"
 
 #ifdef FLAT_POLYGONS_PATTERN
 #include "common/camera_height.glsl"
@@ -11,8 +13,7 @@
 layout(location = 0) in vec3 i_in_tile_pos;
 #ifndef FLAT_POLYGONS_PATTERN
 layout(location = 1) in vec4 i_color;
-#endif
-#ifdef FLAT_POLYGONS_PATTERN
+#else // ifdef FLAT_POLYGONS_PATTERN
 layout(location = 2) in vec2 i_uv;
 layout(location = 3) in float i_in_tile_lat;
 layout(location = 4) in uint i_pattern_style_index;

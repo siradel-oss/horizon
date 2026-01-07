@@ -472,13 +472,9 @@ void initialize_rendering(DevUi* ui, GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::DevUi_vert;
         res.fragment_source_len = hrz_shaders::DevUi_frag_len;
         res.fragment_source = hrz_shaders::DevUi_frag;
-        res.attrib_count = 4;
         res.attribs = attribs;
-        res.uniform_block_count = 1;
         res.uniform_blocks = uniform_blocks;
-        res.sampler_count = 1;
         res.samplers = samplers;
-        res.output_count = 1;
         res.outputs = outputs;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.depth.test = false;
@@ -550,7 +546,6 @@ void initialize_rendering(DevUi* ui, GpuResourceContext* rc)
              my::VertexRate::PerInstance}};
 
         my::VertexInputResource res;
-        res.attrib_count = 4;
         res.attribs = streams;
 
         ui->rect.input = rc->alloc(&res, hrz::monitoring::systems::DevUi);
@@ -1188,7 +1183,7 @@ void draw(DevUi* ui, my::RenderContext* rc, float device_pixel_ratio)
     const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 6)
                           .instanced((uint32_t)ui->instances.size());
 
-    rc->draw(info, ui->shader, ui->rect.input, 1, &ubo_binding, 1, &texture_binding);
+    rc->draw(info, ui->shader, ui->rect.input, {&ubo_binding, 1}, {&texture_binding, 1});
 }
 
 bool toggle(DevUi* ui)

@@ -413,8 +413,7 @@ struct VertexInputResource : public Resource
 {
     VertexInputResource() : Resource(VertexInput) {}
 
-    uint32_t attrib_count{};
-    const VertexInputStream* attribs{};
+    std::span<const VertexInputStream> attribs{};
     my::ResourceHandle indices;
 };
 
@@ -538,8 +537,7 @@ struct FramebufferResource : public Resource
 {
     FramebufferResource() : Resource(Framebuffer) {}
 
-    uint32_t attachment_count{};
-    const FramebufferAttachment* attachments{};
+    std::span<const FramebufferAttachment> attachments{};
 };
 
 // Hints Mycelium on how to behave with regard to shader program linking stage.
@@ -580,17 +578,10 @@ struct ShaderResource : public Resource
     size_t fragment_source_len{};
     const char* fragment_source{};
 
-    uint32_t attrib_count{};
-    const IndexName* attribs{};
-
-    uint32_t uniform_block_count{};
-    const IndexName* uniform_blocks{};
-
-    uint32_t sampler_count{};
-    const IndexName* samplers{};
-
-    uint32_t output_count{};
-    const char* const* outputs{};
+    std::span<const IndexName> attribs{};
+    std::span<const IndexName> uniform_blocks{};
+    std::span<const IndexName> samplers{};
+    std::span<const char* const> outputs{};
 
     PipelineState initial_state;
 };
@@ -849,7 +840,7 @@ class RenderContext
 public:
     virtual ~RenderContext() = default;
 
-    virtual void clear(uint32_t clear_count, const ClearTarget* values) = 0;
+    virtual void clear(std::span<const ClearTarget> values) = 0;
 
     virtual void set_viewport(const ViewportState&) = 0;
     virtual void set_framebuffer(ResourceHandle fbo, const ViewportState&) = 0;
@@ -883,10 +874,8 @@ public:
         const DrawBatchInfo& info,
         ResourceHandle shader,
         ResourceHandle vertex_input,
-        uint32_t ubo_count,
-        const UboBinding* ubos,
-        uint32_t texture_count,
-        const TextureBinding* textures) = 0;
+        std::span<const UboBinding> ubos,
+        std::span<const TextureBinding> textures) = 0;
 
     virtual void blit_framebuffers(
         ResourceHandle src,
@@ -894,8 +883,7 @@ public:
         Rect dst_rect,
         AspectFlags,
         Attachment src_attachment,
-        uint32_t dst_attachment_count,
-        const Attachment* dst_attachments,
+        std::span<const Attachment> dst_attachments,
         SamplerParams::Filter) = 0;
 
     void blit_framebuffers_depth(
@@ -904,8 +892,7 @@ public:
         Rect dst_rect,
         SamplerParams::Filter filter)
     {
-        blit_framebuffers(
-            src, src_rect, dst_rect, Aspect_Depth, Attachment::Depth, 0, nullptr, filter);
+        blit_framebuffers(src, src_rect, dst_rect, Aspect_Depth, Attachment::Depth, {}, filter);
     }
 
     void blit_framebuffers_stencil(
@@ -914,8 +901,7 @@ public:
         Rect dst_rect,
         SamplerParams::Filter filter)
     {
-        blit_framebuffers(
-            src, src_rect, dst_rect, Aspect_Stencil, Attachment::Stencil, 0, nullptr, filter);
+        blit_framebuffers(src, src_rect, dst_rect, Aspect_Stencil, Attachment::Stencil, {}, filter);
     }
 
     void blit_framebuffers_depth_stencil(
@@ -925,8 +911,7 @@ public:
         SamplerParams::Filter filter)
     {
         blit_framebuffers(
-            src, src_rect, dst_rect, Aspect_DepthStencil, Attachment::DepthStencil, 0, nullptr,
-            filter);
+            src, src_rect, dst_rect, Aspect_DepthStencil, Attachment::DepthStencil, {}, filter);
     }
 
     void blit_framebuffers_colors(
@@ -934,13 +919,11 @@ public:
         Rect src_rect,
         Rect dst_rect,
         Attachment src_attachment,
-        uint32_t dst_attachment_count,
-        const Attachment* dst_attachments,
+        std::span<const Attachment> dst_attachments,
         SamplerParams::Filter filter)
     {
         blit_framebuffers(
-            src, src_rect, dst_rect, Aspect_Color, src_attachment, dst_attachment_count,
-            dst_attachments, filter);
+            src, src_rect, dst_rect, Aspect_Color, src_attachment, dst_attachments, filter);
     }
 
     virtual TextureDownloadData color_texture_download_sync(

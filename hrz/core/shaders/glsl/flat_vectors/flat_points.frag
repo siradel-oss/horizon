@@ -1,4 +1,5 @@
-#include "flat_vectors/defs.glsl"
+#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/overlay_passes_defs.glsl"
 #include "common/colors.glsl"
 #include "common/frag_processing.glsl"
 #include "common/highlight.glsl"

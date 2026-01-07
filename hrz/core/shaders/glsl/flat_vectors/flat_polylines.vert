@@ -3,7 +3,8 @@
 #include "common/octahedral.glsl"
 #include "common/polylines.vert.glsl"
 #include "common/ubo_frame.glsl"
-#include "flat_vectors/defs.glsl"
+#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/overlay_passes_defs.glsl"
 
 layout(location = 0) in vec3 i_in_mesh_pos;
 layout(location = 1) in vec4 i_color;

@@ -8,7 +8,7 @@
 #include "planet/defs.glsl"
 #include "planet/clipmap.glsl"
 
-#ifndef PLANET_AUX_VIEW
+#if !defined(PLANET_AUX_VIEW) && !defined(PLANET_FEEDBACK)
 #include "common/flat_overlay_cameras.glsl"
 
 #ifdef PLANET_VISUAL

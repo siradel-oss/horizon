@@ -1413,13 +1413,13 @@ struct RenderableShape : public my::Renderer::Renderable
             my::ClearValue::make_stencil(128),
         }};
 
-        r->clear(HRZ_ARRAY_COUNT(clear_targets), clear_targets);
+        r->clear(clear_targets);
 
         rb->push_state();
 
         my::UboBinding ubo_bindings[] = {
             {ShapeParamsUbo, data->uniform_buffer, 0, sizeof(ShapeUniformData)}};
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
 
@@ -1437,9 +1437,7 @@ struct RenderableShape : public my::Renderer::Renderable
         // call at all, or they are behind (or in front of) an equal number of front- and
         // back- facing triangles. Their stencil value stays the same as before the draw
         // call.
-        r->draw(
-            batch, data->stencil_shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, data->stencil_shader, data->vertex_input, state.ubos, state.textures);
 
         batch = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
@@ -1447,9 +1445,7 @@ struct RenderableShape : public my::Renderer::Renderable
         // Only draw pixels for which the stencil value is not the original value (at
         // clear time).
         // This makes the intersection of the depth buffer and the mesh be visible.
-        r->draw(
-            batch, shader, data->fullscreen_vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, shader, data->fullscreen_vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -1459,7 +1455,7 @@ struct RenderableShape : public my::Renderer::Renderable
     {
         if (culler.is_visible_in_any_view(center, radius))
         {
-            queue.enqueue(bin_mask, render_callback, &data, center, radius, z_index);
+            queue.enqueue(bin_mask, render_callback, data, center, radius, z_index);
         }
     }
 };
@@ -1525,7 +1521,7 @@ struct RenderableControl : public my::Renderer::Renderable
             {PlanetParamsUbo, data->planet_resources.planet_params.buffer,
              data->planet_resources.planet_params.offset,
              data->planet_resources.planet_params.size}};
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         my::TextureBinding texture_bindings[] = {
             {DtmIndirectionSampler, data->planet_resources.dtm_indirection.texture,
@@ -1533,13 +1529,11 @@ struct RenderableControl : public my::Renderer::Renderable
             {DtmAtlasSampler, data->planet_resources.dtm_atlas.texture,
              data->planet_resources.dtm_atlas.sampler},
         };
-        rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        rb->bind(texture_bindings);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -1549,7 +1543,7 @@ struct RenderableControl : public my::Renderer::Renderable
     {
         if (culler.is_visible_in_any_view(center, radius))
         {
-            queue.enqueue(bin_mask, render_callback, &data, center, radius);
+            queue.enqueue(bin_mask, render_callback, data, center, radius);
         }
     }
 };
@@ -2113,7 +2107,6 @@ void init_render(ShapeEditor* editor, hrz::Render* render)
              my::VertexRate::PerVertex}};
 
         my::VertexInputResource vi_res;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
 
         editor->fullscreen_vertex_input =
@@ -4447,7 +4440,6 @@ void generate_polyline_renderable(
 
     my::VertexInputResource vi_res;
     vi_res.indices = index_buffer;
-    vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
     my::ResourceHandle vertex_input =
         render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape_layer_id);
@@ -4575,7 +4567,6 @@ void generate_polygon_renderable(
 
     my::VertexInputResource vi_res;
     vi_res.indices = index_buffer;
-    vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
     my::ResourceHandle vertex_input =
         render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape.global_layer_id);
@@ -4838,7 +4829,6 @@ void generate_control_points_renderable(Shape& shape, ShapeEditor* editor, Rende
 
     my::VertexInputResource vi_res;
     vi_res.indices = editor->control_index_buffer;
-    vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
     my::ResourceHandle vertex_input =
         render->rc->alloc(&vi_res, monitoring::systems::ShapeEditor, shape.global_layer_id);
@@ -5075,14 +5065,10 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::ShapeEditorPolyline_stencil_vert;
         res.fragment_source_len = hrz_shaders::ShapeEditorPolyline_stencil_frag_len;
         res.fragment_source = hrz_shaders::ShapeEditorPolyline_stencil_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(polyline_attribs);
         res.attribs = polyline_attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = 0;
-        res.outputs = nullptr;
+        res.outputs = {};
         res.initial_state.color_blend.enable = false;
         res.initial_state.depth.test = true;
         res.initial_state.depth.compare = my::DepthState::LessEqual;
@@ -5115,14 +5101,16 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::ShapeEditorPolygon_stencil_vert;
         res.fragment_source_len = hrz_shaders::ShapeEditorPolygon_stencil_frag_len;
         res.fragment_source = hrz_shaders::ShapeEditorPolygon_stencil_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(polygon_attribs);
         res.attribs = polygon_attribs;
-        res.sampler_count = 0;
-        res.samplers = nullptr;
+        res.samplers = {};
         rc->alloc(&res, hrz::monitoring::systems::ShapeEditor);
     }
 
     {
+        static const my::IndexName attribs[] = {
+            {0, "i_pos"},
+        };
+
         static const my::IndexName ubos[] = {
             {ShapeParamsUbo, "Shape"},
         };
@@ -5135,13 +5123,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::ShapeEditorShape_visual_vert;
         res.fragment_source_len = hrz_shaders::ShapeEditorShape_visual_frag_len;
         res.fragment_source = hrz_shaders::ShapeEditorShape_visual_frag;
-        res.attrib_count = 0;
-        res.attribs = nullptr;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
+        res.attribs = attribs;
         res.uniform_blocks = ubos;
-        res.sampler_count = 0;
-        res.samplers = nullptr;
-        res.output_count = HRZ_ARRAY_COUNT(visual_outputs);
+        res.samplers = {};
         res.outputs = visual_outputs;
         res.initial_state.color_blend.enable = true;
         res.initial_state.color_blend.color.src = my::ColorBlendState::One;
@@ -5175,7 +5159,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::ShapeEditorShape_picking_vert;
         res.fragment_source_len = hrz_shaders::ShapeEditorShape_picking_frag_len;
         res.fragment_source = hrz_shaders::ShapeEditorShape_picking_frag;
-        res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
         res.outputs = picking_color_outputs;
         res.initial_state.color_blend.enable = false;
         rc->alloc(&res, hrz::monitoring::systems::ShapeEditor);
@@ -5185,6 +5168,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         static const my::IndexName attribs[] = {
             {PositionLowInputStream, "i_position_low"},
             {PositionHighInputStream, "i_position_high"},
+            {WmercPositionLowInputStream, "i_wmerc_low"},
+            {WmercPositionHighInputStream, "i_wmerc_high"},
+            {GroundNormalInputStream, "i_ground_normal"},
             {LocalPositionInputStream, "i_local_position"},
         };
 
@@ -5207,13 +5193,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::ShapeEditorControl_visual_vert;
         res.fragment_source_len = hrz_shaders::ShapeEditorControl_visual_frag_len;
         res.fragment_source = hrz_shaders::ShapeEditorControl_visual_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = HRZ_ARRAY_COUNT(color_outputs);
         res.outputs = color_outputs;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::Back;
         res.initial_state.color_blend.enable = false;
@@ -5230,7 +5212,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::ShapeEditorControl_picking_vert;
         res.fragment_source_len = hrz_shaders::ShapeEditorControl_picking_frag_len;
         res.fragment_source = hrz_shaders::ShapeEditorControl_picking_frag;
-        res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
         res.outputs = picking_color_outputs;
         rc->alloc(&res, hrz::monitoring::systems::ShapeEditor);
     }

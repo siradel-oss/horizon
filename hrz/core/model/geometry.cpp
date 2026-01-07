@@ -628,16 +628,14 @@ void BatchedModelGeometry::patch_render_data(
     SharedResources* sr,
     RenderablePrimitive::MeshRenderData* render_data)
 {
-    my::TextureBinding texture_bindings[] = {
+    const my::TextureBinding texture_bindings[] = {
         {B3dm_FeatureSelectionSampler, _selection_storage.get_texture(render),
          sr->fallback_data_sampler},
         {B3dm_FeatureColorSampler, _colors_texture.get_resource(), sr->fallback_data_sampler},
         {B3dm_FeatureIdsSampler, _feature_ids_texture.get_resource(), sr->fallback_data_sampler},
     };
 
-    render_data->texture_bindings = {
-        render->rd->as_queue().write_n(texture_bindings, HRZ_ARRAY_COUNT(texture_bindings)),
-        HRZ_ARRAY_COUNT(texture_bindings)};
+    render_data->texture_bindings = render->rd->as_queue().write_n(texture_bindings);
 
     render_data->is_transparent |= _has_transparent_feature_colors;
     render_data->render_selection |= _selection_storage.has_any_selected();

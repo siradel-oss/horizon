@@ -2,7 +2,10 @@
 
 #include "common/colors.glsl"
 #include "common/ubo_frame.glsl"
+
+#ifdef B3DM_WITH_OVERLAY
 #include "common/flat_overlay_cameras.glsl"
+#endif
 
 #ifdef GLTF_DEPTH
 #include "common/ubo_view.glsl"
@@ -85,7 +88,7 @@ void main()
 
     output_position(pos_cc, view_pos);
 
-#if defined(GLTF_VISUAL) || defined(GLTF_PICKING) || defined(B3DM_SELECTION)
+#ifdef B3DM_WITH_OVERLAY
     for (int i = 0; i < HRZ_S_MAX_OVERLAY_CASCADES; i++)
     {
 #if defined(GLTF_PICKING)

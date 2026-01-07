@@ -3,6 +3,7 @@
 #include "hrz/common/geo.h"
 #include "hrz/core/clock.h"
 #include "hrz/core/data_texture.h"
+#include "hrz/core/global_flags.h"
 #include "hrz/core/render/defs.h"
 #include "hrz/core/render/vertex_input_builder.h"
 #include "hrz/core/selection_storage.h"
@@ -10,7 +11,6 @@
 #include "hrz/core/shadows.h"
 #include "hrz/core/sky.h"
 #include "hrz/core/viewsheds.h"
-#include "hrz/fnd/mem.h"
 #include "hrz/fnd/static_vector.h"
 
 namespace
@@ -115,7 +115,7 @@ class PointCloudImpl : public PointCloud
             auto bin_mask = render_data.has_transparency ? hrz::RenderWorldTransparentBin
                                                          : hrz::RenderWorldOpaqueBin;
             queue.enqueue(
-                bin_mask, render_callback, &render_data, lm::dvec3(0), hrz::EARTH_RADIUS + 10'000);
+                bin_mask, render_callback, render_data, lm::dvec3(0), hrz::EARTH_RADIUS + 10'000);
         }
 
         static void render_callback(
@@ -155,20 +155,18 @@ class PointCloudImpl : public PointCloud
             rb->push_state();
 
             my::UboBinding ubo_bindings[] = {{UboPointCloud, data->ubo, 0, sizeof(UniformData)}};
-            rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+            rb->bind(ubo_bindings);
 
             my::TextureBinding texture_bindings[] = {
                 {SamplerFeatureIds, data->feature_ids_texture, data->common->data_sampler},
                 {SamplerFeatureColors, data->feature_colors_texture, data->common->data_sampler},
                 {SamplerSelection, data->selection_texture, data->common->data_sampler},
             };
-            rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+            rb->bind(texture_bindings);
 
             auto state = rb->get_current_state();
 
-            r->draw(
-                batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
 
             rb->pop_state();
         }
@@ -394,12 +392,19 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     hrz::StaticVector<my::IndexName, 16> visual_samplers;
     visual_samplers.push_back({SamplerFeatureIds, "u_feature_ids"});
     visual_samplers.push_back({SamplerFeatureColors, "u_feature_colors"});
-    visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
 
-    for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+    if (get_flag(Flag::EnableAtmosphere))
     {
-        visual_samplers.push_back(
-            {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+    }
+
+    if (get_flag(Flag::EnableShadows))
+    {
+        for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+        {
+            visual_samplers.push_back(
+                {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        }
     }
 
     for (int i = 0; i < HRZ_S_VIEWSHED_CNT; ++i)
@@ -416,13 +421,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::PointCloud_visual_vert;
         res.fragment_source_len = hrz_shaders::PointCloud_visual_frag_len;
         res.fragment_source = hrz_shaders::PointCloud_visual_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = (uint32_t)visual_samplers.size();
-        res.samplers = visual_samplers.data();
-        res.output_count = HRZ_ARRAY_COUNT(color_outputs);
+        res.samplers = visual_samplers;
         res.outputs = color_outputs;
         res.initial_state.depth.test = true;
         res.initial_state.color_blend.enable = false;
@@ -445,13 +446,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::PointCloud_picking_vert;
         res.fragment_source_len = hrz_shaders::PointCloud_picking_frag_len;
         res.fragment_source = hrz_shaders::PointCloud_picking_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = (uint32_t)picking_samplers.size();
-        res.samplers = picking_samplers.data();
-        res.output_count = HRZ_ARRAY_COUNT(picking_outputs);
+        res.samplers = picking_samplers;
         res.outputs = picking_outputs;
         res.initial_state.depth.test = true;
         res.initial_state.color_blend.enable = false;
@@ -465,13 +462,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::PointCloud_selection_vert;
         res.fragment_source_len = hrz_shaders::PointCloud_selection_frag_len;
         res.fragment_source = hrz_shaders::PointCloud_selection_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = (uint32_t)selection_samplers.size();
-        res.samplers = selection_samplers.data();
-        res.output_count = HRZ_ARRAY_COUNT(selection_outputs);
+        res.samplers = selection_samplers;
         res.outputs = selection_outputs;
         res.initial_state.depth.test = true;
         res.initial_state.color_blend.enable = false;

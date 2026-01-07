@@ -212,8 +212,7 @@ public:
                 my::FramebufferAttachment attachment{my::Attachment::Color0, cascade.output_target};
 
                 my::FramebufferResource res;
-                res.attachment_count = 1;
-                res.attachments = &attachment;
+                res.attachments = {&attachment, 1};
 
                 cascade.fbo = render.rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
             }
@@ -263,11 +262,11 @@ public:
         my::UboBinding binding = {
             hrz::vector_flat_overlay::UboVectorOverlayPass, _pass_ubos.get_for_gpu(),
             (uint32_t)_pass_ubos.offset(pass_index), sizeof(OverlayPassUniform)};
-        ctx.binder->bind(1, &binding);
+        ctx.binder->bind({&binding, 1});
 
         my::TextureBinding texture_bindings[] = {
             {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler}};
-        ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        ctx.binder->bind(texture_bindings);
 
         const my::ViewportState viewport_state = {
             {0, 0, _texture_size, _texture_size},
@@ -275,12 +274,12 @@ public:
         };
 
         ctx.render->set_framebuffer(cascade.fbo, viewport_state);
-        ctx.render->clear(1, _clear_values);
+        ctx.render->clear(_clear_values);
 
         my::Renderer::BinMask to_render = RenderFlatOverlayBin;
 
         ctx.renderer->draw(
-            _render_type, cascade.view_id, 1, &to_render, ctx.render, ctx.binder, ctx.user_data);
+            _render_type, cascade.view_id, {&to_render, 1}, ctx.render, ctx.binder, ctx.user_data);
 
         ctx.binder->pop_state();
 
@@ -724,7 +723,7 @@ void draw(VectorFlatOverlaySystem* system, Render* render)
         hrz::vector_flat_overlay::UboVectorOverlayCameras,
         system->_overlay_cameras_ubo.get_for_gpu(), 0, sizeof(OverlayCamerasUniform)};
 
-    render->rb->bind(1, &binding);
+    render->rb->bind({&binding, 1});
 }
 
 VectorFlatOverlaySystem* create_system(uint32_t cascade_count)

@@ -65,7 +65,7 @@ void collect_render_info(
 {
     if (culler.is_visible_in_any_view(center, radius, bin_mask))
     {
-        queue.enqueue(bin_mask, draw, &render_data, center, radius);
+        queue.enqueue(bin_mask, draw, render_data, center, radius);
     }
 }
 ```
@@ -113,7 +113,7 @@ my::Renderer::BinMask to_render = OpaqueBin | TransparentBin;
 re->draw(
     /* render type */,
     my::MainView,
-    1, &to_render,
+    {&to_render, 1},
     /* render context */,
     /* resource binder */,
     /* user data */);

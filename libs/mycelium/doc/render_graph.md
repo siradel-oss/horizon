@@ -108,7 +108,7 @@ PresentPass present_pass(forward_pass.output_name);
 
 rg->add_pass("forward", &forward_pass);
 auto present_pass_id = rg->add_pass("present", &present_pass);
-rg->build(my, rc, 1, &present_pass_id);
+rg->build(my, rc, {&present_pass_id, 1});
 
 // ...
 

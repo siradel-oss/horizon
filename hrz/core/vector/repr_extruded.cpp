@@ -4,6 +4,7 @@
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/core/channel_group.h"
+#include "hrz/core/global_flags.h"
 #include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/core/render/context.h"
@@ -18,7 +19,6 @@
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/viewsheds.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/static_vector.h"
 
@@ -121,26 +121,24 @@ struct RenderableFeatures : public my::Renderer::Renderable
 
         my::UboBinding ubo_bindings[] = {
             {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}};
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         if (render_type == hrz::RenderVisual)
         {
             my::TextureBinding texture_bindings[] = {
                 {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}};
-            rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+            rb->bind(texture_bindings);
         }
         else if (render_type == hrz::RenderSelection)
         {
             my::TextureBinding texture_bindings[] = {
                 {SamplerSelection, data->selection_texture, data->metadata_sampler}};
-            rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+            rb->bind(texture_bindings);
         }
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -150,7 +148,7 @@ struct RenderableFeatures : public my::Renderer::Renderable
     {
         if (culler.is_visible_in_any_view(center, radius, bin_mask))
         {
-            queue.enqueue(bin_mask, render_callback, &data, center, radius);
+            queue.enqueue(bin_mask, render_callback, data, center, radius);
         }
     }
 };
@@ -312,12 +310,19 @@ public:
         const char* color_outputs[] = {"o_color"};
 
         hrz::StaticVector<my::IndexName, 32> visual_samplers;
-        visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
 
-        for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+        if (get_flag(hrz::Flag::EnableAtmosphere))
         {
-            visual_samplers.push_back(
-                {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+            visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+        }
+
+        if (get_flag(hrz::Flag::EnableShadows))
+        {
+            for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+            {
+                visual_samplers.push_back(
+                    {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+            }
         }
 
         for (int i = 0; i < HRZ_S_VIEWSHED_CNT; ++i)
@@ -336,13 +341,9 @@ public:
             res.vertex_source = hrz_shaders::ExtrudedVectors_vert;
             res.fragment_source_len = hrz_shaders::ExtrudedVectors_frag_len;
             res.fragment_source = hrz_shaders::ExtrudedVectors_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = (uint32_t)visual_samplers.size();
-            res.samplers = visual_samplers.data();
-            res.output_count = HRZ_ARRAY_COUNT(color_outputs);
+            res.samplers = visual_samplers;
             res.outputs = color_outputs;
             res.initial_state.depth.test = true;
             res.initial_state.color_blend.enable = false;
@@ -363,10 +364,9 @@ public:
             res.vertex_source = hrz_shaders::ExtrudedVectors_picking_vert;
             res.fragment_source_len = hrz_shaders::ExtrudedVectors_picking_frag_len;
             res.fragment_source = hrz_shaders::ExtrudedVectors_picking_frag;
-            res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
             res.outputs = picking_color_outputs;
             res.initial_state.color_blend.enable = false;
-            res.sampler_count = 0;
+            res.samplers = {};
             rc->alloc(&res, hrz::monitoring::systems::ExtrudedVectors);
 
             const char* selection_color_outputs[] = {"o_highlight"};
@@ -380,10 +380,8 @@ public:
             res.vertex_source = hrz_shaders::ExtrudedVectors_selection_vert;
             res.fragment_source_len = hrz_shaders::ExtrudedVectors_selection_frag_len;
             res.fragment_source = hrz_shaders::ExtrudedVectors_selection_frag;
-            res.output_count = HRZ_ARRAY_COUNT(selection_color_outputs);
             res.outputs = selection_color_outputs;
             res.initial_state.color_blend.enable = false;
-            res.sampler_count = HRZ_ARRAY_COUNT(selection_samplers);
             res.samplers = selection_samplers;
             rc->alloc(&res, hrz::monitoring::systems::ExtrudedVectors);
 
@@ -392,10 +390,9 @@ public:
             res.vertex_source = hrz_shaders::ExtrudedVectors_depth_vert;
             res.fragment_source_len = hrz_shaders::ExtrudedVectors_depth_frag_len;
             res.fragment_source = hrz_shaders::ExtrudedVectors_depth_frag;
-            res.output_count = 0;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos_depth);
+            res.outputs = {};
             res.uniform_blocks = ubos_depth;
-            res.sampler_count = 0;
+            res.samplers = {};
             res.initial_state.color_blend.enable = false;
             res.initial_state.rasterization.depth_bias_factor = 1.0f;
             res.initial_state.rasterization.depth_bias_units = 1.0f;
@@ -793,7 +790,6 @@ public:
 
         my::VertexInputResource vi_res;
         vi_res.indices = index_buffer;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
         my::ResourceHandle vertex_input = render->rc->alloc(
             &vi_res, hrz::monitoring::systems::ExtrudedVectors, tile->layer_id,

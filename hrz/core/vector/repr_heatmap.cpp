@@ -91,12 +91,10 @@ struct RenderableFeatures : public my::Renderer::Renderable
         my::UboBinding ubo_bindings[] = {
             {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)},
         };
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
-        r->draw(
-            points_batch, data->shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(points_batch, data->shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -106,7 +104,7 @@ struct RenderableFeatures : public my::Renderer::Renderable
     {
         if (culler.is_visible_in_some_views(bsphere.center, bsphere.radius, main_views))
         {
-            queue.enqueue(bin_mask, render_callback, &data, bsphere.center, bsphere.radius, 0);
+            queue.enqueue(bin_mask, render_callback, data, bsphere.center, bsphere.radius, 0);
         }
     }
 };
@@ -267,13 +265,9 @@ public:
             res.vertex_source = hrz_shaders::HeatmapPoints_vert;
             res.fragment_source_len = hrz_shaders::HeatmapPoints_frag_len;
             res.fragment_source = hrz_shaders::HeatmapPoints_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(visual_samplers);
             res.samplers = visual_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(color_outputs);
             res.outputs = color_outputs;
 
             res.initial_state.depth.test = true;
@@ -627,7 +621,6 @@ public:
             };
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
             my::ResourceHandle vertex_input = render->rc->alloc(
                 &vi_res, hrz::monitoring::systems::Heatmaps, tile->layer_id,

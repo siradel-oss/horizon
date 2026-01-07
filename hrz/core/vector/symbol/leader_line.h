@@ -56,7 +56,7 @@ struct LeaderLineRenderable : public my::Renderer::Renderable
 
         if (culler.is_visible_in_any_view(center, radius, bin))
         {
-            queue.enqueue(bin, render_callback, &data, center, radius, z_index);
+            queue.enqueue(bin, render_callback, data, center, radius, z_index);
         }
     }
 };

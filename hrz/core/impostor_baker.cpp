@@ -108,7 +108,6 @@ struct ImpostorBakingTechnique
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             fbo = render->rc->alloc(&res, hrz::monitoring::systems::Impostors);
@@ -135,7 +134,7 @@ struct ImpostorBakingTechnique
         };
 
         render->my->set_framebuffer(fbo, viewport_state);
-        render->my->clear(HRZ_ARRAY_COUNT(clear_values), clear_values);
+        render->my->clear(clear_values);
 
         // We don't give an attribution registry because we don't want this render to count in the
         // attributions! Yes we're at risk of a segfault but that's OK, this will help us catch

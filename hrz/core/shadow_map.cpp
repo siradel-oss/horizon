@@ -88,7 +88,6 @@ void ShadowMapPass::retrieve_resources(
         };
 
         my::FramebufferResource res;
-        res.attachment_count = HRZ_ARRAY_COUNT(attachments);
         res.attachments = attachments;
 
         _cascades[i].fbo =
@@ -167,7 +166,7 @@ void ShadowMapPass::execute_timed(const my::RenderGraph::ExecutionContext& ctx)
         {
             ctx.render->set_framebuffer(
                 _cascades[i].fbo, my::ViewportState{{0, 0, _size, _size}, {0, 0, _size, _size}});
-            ctx.render->clear(HRZ_ARRAY_COUNT(clear_targets), clear_targets);
+            ctx.render->clear(clear_targets);
         }
 
         _initialized = true;
@@ -193,24 +192,23 @@ void ShadowMapPass::execute_timed(const my::RenderGraph::ExecutionContext& ctx)
         my::ClearValue::make_depth(1.0),
     }};
 
-    ctx.render->clear(HRZ_ARRAY_COUNT(clear_targets), clear_targets);
+    ctx.render->clear(clear_targets);
 
     my::UboBinding ubo_binding{
         hrz::UboView, _view_ubos.get_for_gpu(), (uint32_t)(_ubo_aligned_size * ctx.invocation),
         sizeof(AuxViewUniformData)};
-    ctx.binder->bind(1, &ubo_binding);
+    ctx.binder->bind({&ubo_binding, 1});
 
     my::TextureBinding texture_binding = {
         hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler};
-    ctx.binder->bind(1, &texture_binding);
+    ctx.binder->bind({&texture_binding, 1});
 
     static const my::Renderer::BinMask pass_masks[] = {
         hrz::RenderWorldOpaqueBin | hrz::RenderWorldTransparentBin,
     };
 
     ctx.renderer->draw(
-        _render_type, cascade.view, HRZ_ARRAY_COUNT(pass_masks), pass_masks, ctx.render, ctx.binder,
-        ctx.user_data);
+        _render_type, cascade.view, pass_masks, ctx.render, ctx.binder, ctx.user_data);
 
     ctx.binder->pop_state();
 }

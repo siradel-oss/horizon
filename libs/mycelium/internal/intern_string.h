@@ -16,12 +16,12 @@ class InternString
     absl::flat_hash_set<std::string_view> _index;
 
 public:
-    uintptr_t intern(std::string_view str)
+    const char* intern_as_str(std::string_view str)
     {
-        uintptr_t interned = intern_or_null(str);
+        const uintptr_t interned = intern_or_null(str);
         if (interned)
         {
-            return interned;
+            return reinterpret_cast<const char*>(interned);
         }
         else
         {
@@ -29,9 +29,11 @@ public:
             memcpy(ptr, str.data(), str.size());
             ptr[str.size()] = '\0';
             _index.insert(std::string_view(ptr, str.size()));
-            return absl::bit_cast<uintptr_t>(ptr);
+            return ptr;
         }
     }
+
+    uintptr_t intern(std::string_view str) { return absl::bit_cast<uintptr_t>(intern_as_str(str)); }
 
     uintptr_t intern_or_null(std::string_view str) const
     {

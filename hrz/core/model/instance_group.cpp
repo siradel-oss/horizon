@@ -359,7 +359,7 @@ std::span<const my::TextureBinding> InstanceGroup::write_texture_bindings(
     Render* render,
     SharedResources* sr)
 {
-    my::TextureBinding bindings[] = {
+    const my::TextureBinding bindings[] = {
         {Instanced_SelectionSampler, _selection_storage.get_texture(render),
          sr->fallback_data_sampler},
         {Instanced_PositionSampler, _positions_texture.get_resource(), sr->fallback_data_sampler},
@@ -375,9 +375,7 @@ std::span<const my::TextureBinding> InstanceGroup::write_texture_bindings(
          sr->fallback_data_sampler},
     };
 
-    return {
-        render->rd->as_queue().write_n(bindings, HRZ_ARRAY_COUNT(bindings)),
-        HRZ_ARRAY_COUNT(bindings)};
+    return render->rd->as_queue().write_n(bindings);
 }
 
 void InstanceGroup::patch_primitive(RenderablePrimitive* prim) const

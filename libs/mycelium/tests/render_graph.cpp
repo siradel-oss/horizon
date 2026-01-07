@@ -80,7 +80,7 @@ public:
 
     // Render context
 
-    void clear(uint32_t clear_count, const my::ClearTarget* values) override {}
+    void clear(std::span<const my::ClearTarget> values) override {}
 
     void set_viewport(const my::ViewportState&) override {}
 
@@ -110,10 +110,8 @@ public:
         const my::DrawBatchInfo& info,
         my::ResourceHandle shader,
         my::ResourceHandle vertex_input,
-        uint32_t ubo_count,
-        const my::UboBinding* ubos,
-        uint32_t texture_count,
-        const my::TextureBinding* textures) override
+        std::span<const my::UboBinding> ubos,
+        std::span<const my::TextureBinding> textures) override
     {
     }
 
@@ -123,8 +121,7 @@ public:
         my::Rect dst_rect,
         my::AspectFlags,
         my::Attachment smy_attachment,
-        uint32_t dst_attachment_count,
-        const my::Attachment* dst_attachments,
+        std::span<const my::Attachment> dst_attachments,
         my::SamplerParams::Filter) override
     {
     }
@@ -423,7 +420,7 @@ TEST(RenderGraph, UnknownFinal)
     rg->add_pass("pass", &pass);
 
     my::RenderPassId id = 131354;
-    ASSERT_FALSE(rg->build(&my, &my, 1, &id));
+    ASSERT_FALSE(rg->build(&my, &my, {&id, 1}));
 }
 
 TEST(RenderGraph, SinglePass)
@@ -436,7 +433,7 @@ TEST(RenderGraph, SinglePass)
     MyPassCreate pass(&order, "1");
     auto final_pass = rg->add_pass("pass", &pass);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 
     my::RenderGraph::ExecutionContext ctx = {};
     ctx.instance = &my;
@@ -460,7 +457,7 @@ TEST(RenderGraph, Disjoint)
     MyPassCreate pass2(&order, "3");
     rg->add_pass("pass2", &pass2);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 
     my::RenderGraph::ExecutionContext ctx = {};
     ctx.instance = &my;
@@ -488,7 +485,7 @@ TEST(RenderGraph, ChainInOrder)
     MyPassReadWrite pass3(&order, "2", "3");
     auto final_pass = rg->add_pass("pass3", &pass3);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 
     my::RenderGraph::ExecutionContext ctx = {};
     ctx.instance = &my;
@@ -517,7 +514,7 @@ TEST(RenderGraph, ChainOutOfOrder)
     MyPassCreate pass1(&order, "1");
     rg->add_pass("pass", &pass1);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 
     my::RenderGraph::ExecutionContext ctx = {};
     ctx.instance = &my;
@@ -546,7 +543,7 @@ TEST(RenderGraph, ReadWriteConflict)
     MyPassRead pass3(&order, "1");
     rg->add_pass("pass3", &pass3);
 
-    ASSERT_FALSE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_FALSE(rg->build(&my, &my, {&final_pass, 1}));
 }
 
 TEST(RenderGraph, Cycle)
@@ -562,7 +559,7 @@ TEST(RenderGraph, Cycle)
     MyPassReadWrite pass2(&order, "1", "2");
     auto final_pass = rg->add_pass("pass2", &pass2);
 
-    ASSERT_FALSE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_FALSE(rg->build(&my, &my, {&final_pass, 1}));
 }
 
 TEST(RenderGraph, ManyResources)
@@ -577,7 +574,7 @@ TEST(RenderGraph, ManyResources)
     MyPassReadMultiple pass2(15, "resource");
     auto final_pass = rg->add_pass("pass2", &pass2);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 }
 
 TEST(RenderGraph, CycleSeparate)
@@ -593,7 +590,7 @@ TEST(RenderGraph, CycleSeparate)
     MyPassReadWriteSeparate pass2(&order, "1", "2");
     auto final_pass = rg->add_pass("pass2", &pass2);
 
-    ASSERT_FALSE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_FALSE(rg->build(&my, &my, {&final_pass, 1}));
 }
 
 TEST(RenderGraph, Complex)
@@ -618,7 +615,7 @@ TEST(RenderGraph, Complex)
     MyPassCreate pass_b(&order, "2");
     rg->add_pass("B", &pass_b);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 
     my::RenderGraph::ExecutionContext ctx = {};
     ctx.instance = &my;
@@ -660,11 +657,11 @@ TEST(RenderGraph, Subset)
 
     my::RenderPassId final_passes[2] = {pass_e_id, pass_d_id};
 
-    ASSERT_TRUE(rg->build(&my, &my, 2, final_passes));
+    ASSERT_TRUE(rg->build(&my, &my, final_passes));
 
     my::RenderPassId subset_final_passes[1] = {pass_d_id};
 
-    auto subset_id = rg->make_subset(&my, 1, subset_final_passes);
+    auto subset_id = rg->make_subset(&my, subset_final_passes);
     ASSERT_TRUE(subset_id != my::RenderGraph::SubsetError);
 
     my::RenderGraph::ExecutionContext ctx = {};
@@ -701,11 +698,11 @@ TEST(RenderGraph, InvalidSubset)
 
     my::RenderPassId final_passes[1] = {pass_d_id};
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, final_passes));
+    ASSERT_TRUE(rg->build(&my, &my, final_passes));
 
     my::RenderPassId subset_final_passes[1] = {1000};
 
-    auto subset_id = rg->make_subset(&my, 1, subset_final_passes);
+    auto subset_id = rg->make_subset(&my, subset_final_passes);
     ASSERT_TRUE(subset_id == my::RenderGraph::SubsetError);
 }
 
@@ -731,7 +728,7 @@ TEST(RenderGraph, ResourceAlias)
     MyPassReadWriteSeparate pass5(&order, "4", "5");
     auto final_pass = rg->add_pass("pass2", &pass5);
 
-    ASSERT_TRUE(rg->build(&my, &my, 1, &final_pass));
+    ASSERT_TRUE(rg->build(&my, &my, {&final_pass, 1}));
 
     // Test continuity
     EXPECT_EQ(pass1.handle, pass2.in_handle);

@@ -219,7 +219,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _sky_view_fbo =
@@ -246,7 +245,6 @@ public:
                 {0, _quad_vb, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}};
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
 
             _quad_vi =
@@ -264,7 +262,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _trans_fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::Sky);
@@ -291,7 +288,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _aerial_fbo =
@@ -340,7 +336,6 @@ public:
             };
 
             my::FramebufferResource res_fbo;
-            res_fbo.attachment_count = 1;
             res_fbo.attachments = attachments;
 
             _sh_initial_copy_fbo =
@@ -397,13 +392,9 @@ public:
             res.vertex_source = hrz_shaders::SkyViewPrecompute_vert;
             res.fragment_source_len = hrz_shaders::SkyViewPrecompute_frag_len;
             res.fragment_source = hrz_shaders::SkyViewPrecompute_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 1;
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = 1;
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -434,12 +425,9 @@ public:
             res.vertex_source = hrz_shaders::SkyTransmittancePrecompute_vert;
             res.fragment_source_len = hrz_shaders::SkyTransmittancePrecompute_frag_len;
             res.fragment_source = hrz_shaders::SkyTransmittancePrecompute_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 1;
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = 0;
-            res.output_count = 2;
+            res.samplers = {};
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -475,13 +463,9 @@ public:
             res.vertex_source = hrz_shaders::SkyAerialPrecompute_vert;
             res.fragment_source_len = hrz_shaders::SkyAerialPrecompute_frag_len;
             res.fragment_source = hrz_shaders::SkyAerialPrecompute_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 2;
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = 1;
             res.samplers = samplers;
-            res.output_count = 1;
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -516,13 +500,9 @@ public:
             res.vertex_source = hrz_shaders::SkyEnvShInit_vert;
             res.fragment_source_len = hrz_shaders::SkyEnvShInit_frag_len;
             res.fragment_source = hrz_shaders::SkyEnvShInit_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 1;
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = 1;
             res.samplers = samplers;
-            res.output_count = 1;
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -553,12 +533,9 @@ public:
             res.vertex_source = hrz_shaders::SkyEnvShSubsample_vert;
             res.fragment_source_len = hrz_shaders::SkyEnvShSubsample_frag_len;
             res.fragment_source = hrz_shaders::SkyEnvShSubsample_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 0;
-            res.sampler_count = 1;
+            res.uniform_blocks = {};
             res.samplers = samplers;
-            res.output_count = 1;
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -656,7 +633,7 @@ public:
                 {UboSkyParams, _sky_ubo.get_for_gpu(), 0, sizeof(UboData)},
             };
 
-            ctx.render->draw(batch_info, _trans_shader, _quad_vi, 1, ubo_bindings, 0, nullptr);
+            ctx.render->draw(batch_info, _trans_shader, _quad_vi, ubo_bindings, {});
 
             _refresh_transmittance = false;
         }
@@ -686,7 +663,7 @@ public:
                 };
 
                 ctx.render->draw(
-                    batch_info, _sky_view_shader, _quad_vi, 1, ubo_bindings, 1, texture_bindings);
+                    batch_info, _sky_view_shader, _quad_vi, ubo_bindings, texture_bindings);
 
                 _refresh_sky_view = false;
             }
@@ -710,8 +687,7 @@ public:
                 };
 
                 ctx.render->draw(
-                    batch_info, _sh_initial_copy_shader, _quad_vi, 1, ubo_bindings, 1,
-                    texture_bindings);
+                    batch_info, _sh_initial_copy_shader, _quad_vi, ubo_bindings, texture_bindings);
             }
 
             {
@@ -728,8 +704,7 @@ public:
                     {0, _sh_initial_copy_texture, _sh_sampler},
                 };
 
-                ctx.render->draw(
-                    batch_info, _sh_subsample_shader, _quad_vi, 0, nullptr, 1, texture_bindings);
+                ctx.render->draw(batch_info, _sh_subsample_shader, _quad_vi, {}, texture_bindings);
             }
 
             {
@@ -746,8 +721,7 @@ public:
                     {0, _sh_first_subsample_texture, _sh_sampler},
                 };
 
-                ctx.render->draw(
-                    batch_info, _sh_subsample_shader, _quad_vi, 0, nullptr, 1, texture_bindings);
+                ctx.render->draw(batch_info, _sh_subsample_shader, _quad_vi, {}, texture_bindings);
             }
 
             {
@@ -785,12 +759,10 @@ public:
             };
 
             ctx.binder->push_state();
-            ctx.binder->bind(1, ubo_bindings);
+            ctx.binder->bind(ubo_bindings);
             auto state = ctx.binder->get_current_state();
 
-            ctx.render->draw(
-                batch_info, _aerial_shader, _quad_vi, state.ubo_count, state.ubos, 1,
-                texture_bindings);
+            ctx.render->draw(batch_info, _aerial_shader, _quad_vi, state.ubos, texture_bindings);
 
             ctx.binder->pop_state();
 
@@ -915,7 +887,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::Sky);
@@ -952,7 +923,6 @@ public:
 
             my::VertexInputResource vi_res;
             vi_res.indices = _sky_box_ib;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
             _sky_box_vi =
                 ((hrz::GpuResourceContext*)rc)->alloc(&vi_res, hrz::monitoring::systems::Sky);
@@ -1019,13 +989,9 @@ public:
             res.vertex_source = hrz_shaders::SkyRenderBackgroundSkyView_vert;
             res.fragment_source_len = hrz_shaders::SkyRenderBackgroundSkyView_frag_len;
             res.fragment_source = hrz_shaders::SkyRenderBackgroundSkyView_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(uniform_blocks);
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -1055,13 +1021,9 @@ public:
             res.vertex_source = hrz_shaders::SkyRenderBackgroundSimple_vert;
             res.fragment_source_len = hrz_shaders::SkyRenderBackgroundSimple_frag_len;
             res.fragment_source = hrz_shaders::SkyRenderBackgroundSimple_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(uniform_blocks);
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = 0;
-            res.samplers = nullptr;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
+            res.samplers = {};
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -1111,19 +1073,17 @@ public:
 
         if (_atmosphere_enabled)
         {
-            ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+            ctx.binder->bind(texture_bindings);
         }
 
-        ctx.binder->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        ctx.binder->bind(ubo_bindings);
 
         auto state = ctx.binder->get_current_state();
 
         auto shader =
             (_atmosphere_enabled) ? _sky_view_background_shader : _simple_background_shader;
 
-        ctx.render->draw(
-            batch_info, shader, _sky_box_vi, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        ctx.render->draw(batch_info, shader, _sky_box_vi, state.ubos, state.textures);
 
         ctx.binder->pop_state();
     }
@@ -1219,7 +1179,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::Sky);
@@ -1232,7 +1191,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _blit_src_fbo =
@@ -1270,7 +1228,6 @@ public:
 
             my::VertexInputResource vi_res;
             vi_res.indices = _sky_box_ib;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
             _sky_box_vi =
                 ((hrz::GpuResourceContext*)rc)->alloc(&vi_res, hrz::monitoring::systems::Sky);
@@ -1348,13 +1305,9 @@ public:
             res.vertex_source = hrz_shaders::SkyRenderWorldSkyView_vert;
             res.fragment_source_len = hrz_shaders::SkyRenderWorldSkyView_frag_len;
             res.fragment_source = hrz_shaders::SkyRenderWorldSkyView_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(uniform_blocks);
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -1391,13 +1344,9 @@ public:
             res.vertex_source = hrz_shaders::SkyRenderWorldFog_vert;
             res.fragment_source_len = hrz_shaders::SkyRenderWorldFog_frag_len;
             res.fragment_source = hrz_shaders::SkyRenderWorldFog_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(uniform_blocks);
             res.uniform_blocks = uniform_blocks;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -1444,7 +1393,7 @@ public:
             const my::UboBinding ubo_bindings[] = {
                 {UboSkyParams, _sky_ubo.get_for_gpu(), 0, sizeof(UboData)},
             };
-            ctx.binder->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+            ctx.binder->bind(ubo_bindings);
 
             my::ResourceHandle shader{};
             if (_fog_enabled)
@@ -1455,7 +1404,7 @@ public:
                     {0, _depth_input, _depth_color_sampler},
                     {1, _color_input, _depth_color_sampler},
                 };
-                ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                ctx.binder->bind(texture_bindings);
             }
             else
             {
@@ -1468,14 +1417,12 @@ public:
                     {2, _depth_input, _depth_color_sampler},
                     {3, _color_input, _depth_color_sampler},
                 };
-                ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                ctx.binder->bind(texture_bindings);
             }
 
             auto state = ctx.binder->get_current_state();
 
-            ctx.render->draw(
-                batch_info, shader, _sky_box_vi, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            ctx.render->draw(batch_info, shader, _sky_box_vi, state.ubos, state.textures);
 
             ctx.binder->pop_state();
         }
@@ -1493,7 +1440,7 @@ public:
             ctx.render->blit_framebuffers_colors(
                 _blit_src_fbo, my::Rect{0, 0, ctx.backbuffer_width, ctx.backbuffer_height},
                 my::Rect{0, 0, ctx.backbuffer_width, ctx.backbuffer_height}, my::Attachment::Color0,
-                1, dst_attachments, my::SamplerParams::Filter::Nearest);
+                dst_attachments, my::SamplerParams::Filter::Nearest);
         }
     }
 };

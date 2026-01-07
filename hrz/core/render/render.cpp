@@ -406,8 +406,7 @@ std::pair<my::ResourceHandle, my::ResourceHandle> VertexInputBuilder::build(
     }
 
     my::VertexInputResource vi_res;
-    vi_res.attrib_count = (uint32_t)vertex_input_streams.size();
-    vi_res.attribs = vertex_input_streams.data();
+    vi_res.attribs = vertex_input_streams;
 
     my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, system, layer_id, metadata);
 

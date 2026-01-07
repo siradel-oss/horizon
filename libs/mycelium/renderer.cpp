@@ -243,26 +243,27 @@ struct QueueImpl
     // We use this buffer for sorting primitives. We declare it to recycle its memory.
     std::vector<SortHeader> _sort_headers;
 
-    void* write_raw(const void* data, size_t size)
+    void* alloc_raw(size_t size) { return _arena.alloc(size); }
+
+    void* write_raw(std::span<const std::byte> data)
     {
-        void* dst_data = _arena.alloc(size);
-        if (data)
+        void* dst_data = alloc_raw(data.size());
+        if (!data.empty())
         {
-            memcpy(dst_data, data, size);
+            memcpy(dst_data, data.data(), data.size());
         }
         return dst_data;
     }
 
     void* enqueue_raw(
         BinMask mask,
-        const void* src_data,
-        size_t data_size,
+        std::span<const std::byte> data,
         RenderFunction fn,
         const lm::dvec3& center,
         uint32_t user_sort,
         Renderer::ViewMask view_mask)
     {
-        void* dst_data = write_raw(src_data, data_size);
+        void* dst_data = write_raw(data);
 
         _render_entries.push_back(RenderEntry{dst_data, fn});
         _cull_entries.push_back(CullEntry{mask, view_mask, center, user_sort});
@@ -346,33 +347,33 @@ public:
     void* enqueue_raw(
         BinMask mask,
         RenderFunction fn,
-        const void* data,
-        size_t data_size,
+        std::span<const std::byte> data,
         const lm::dvec3& center,
         double radius,
         uint32_t user_sort) override
     {
-        ViewMask view_mask = make_view_mask(mask);
+        const ViewMask view_mask = make_view_mask(mask);
         ViewMask culled_view_mask = 0;
 
         for (uint32_t i = 0; i < _aux_view_count + 1; ++i)
         {
-            if ((view_mask & (1u << i)) && _views[i].culler.intersects(center, radius))
+            if ((view_mask & (1U << i)) && _views[i].culler.intersects(center, radius))
             {
-                culled_view_mask |= 1u << i;
+                culled_view_mask |= 1U << i;
             }
         }
 
         if (culled_view_mask)
         {
-            return _queue.enqueue_raw(
-                mask, data, data_size, fn, center, user_sort, culled_view_mask);
+            return _queue.enqueue_raw(mask, data, fn, center, user_sort, culled_view_mask);
         }
 
         return nullptr;
     }
 
-    void* write_raw(const void* data, size_t size) override { return _queue.write_raw(data, size); }
+    void* alloc_raw(size_t size) override { return _queue.alloc_raw(size); }
+
+    void* write_raw(std::span<const std::byte> data) override { return _queue.write_raw(data); }
 
     void register_bin(unsigned int bit, DepthSortMode sort_mode) override
     {
@@ -393,9 +394,9 @@ public:
 
         for (uint32_t bin = 0; bin < _bin_count; ++bin)
         {
-            if (bin_mask & (1u << bin))
+            if (bin_mask & (1U << bin))
             {
-                _bins[bin].view_mask |= 1u << view_id;
+                _bins[bin].view_mask |= 1U << view_id;
             }
         }
     }
@@ -413,7 +414,7 @@ public:
             return 0;
         }
 
-        ViewId view_id = _aux_view_count + 1;
+        const ViewId view_id = _aux_view_count + 1;
         register_view(view_id, view, bin_mask);
         _aux_view_count += 1;
         return view_id;
@@ -425,7 +426,7 @@ public:
 
         for (uint32_t i = 0; i < (uint32_t)_bin_count; ++i)
         {
-            if (bin_mask & (1u << i))
+            if (bin_mask & (1U << i))
             {
                 view_mask |= _bins[i].view_mask;
             }
@@ -434,13 +435,13 @@ public:
         return view_mask;
     }
 
-    ViewMask make_view_mask(int view_count, const ViewId* views) const override
+    ViewMask make_view_mask(std::span<const ViewId> views) const override
     {
         ViewMask view_mask = 0;
 
-        for (uint32_t i = 0; i < (uint32_t)view_count; ++i)
+        for (const auto view : views)
         {
-            view_mask |= (1u << views[i]);
+            view_mask |= (1U << view);
         }
 
         return view_mask;
@@ -456,7 +457,7 @@ public:
     {
         for (uint32_t i = 0; i < _aux_view_count + 1; ++i)
         {
-            if ((view_mask & (1u << i)) && _views[i].culler.intersects(center, radius))
+            if ((view_mask & (1U << i)) && _views[i].culler.intersects(center, radius))
             {
                 return true;
             }
@@ -468,10 +469,9 @@ public:
     bool is_visible_in_some_views(
         const lm::dvec3& center,
         double radius,
-        int view_count,
-        const ViewId* views) const override
+        std::span<const ViewId> views) const override
     {
-        return is_visible_in_some_views(center, radius, make_view_mask(view_count, views));
+        return is_visible_in_some_views(center, radius, make_view_mask(views));
     }
 
     bool is_visible_in_any_view(const lm::dvec3& center, double radius, BinMask bin_mask)
@@ -490,7 +490,7 @@ public:
     {
         for (uint32_t i = 0; i < _aux_view_count + 1; ++i)
         {
-            if ((view_mask & (1u << i)) && _views[i].culler.intersects(bbox))
+            if ((view_mask & (1U << i)) && _views[i].culler.intersects(bbox))
             {
                 return true;
             }
@@ -499,12 +499,10 @@ public:
         return false;
     }
 
-    bool is_visible_in_some_views(
-        const OrientedBoundingBox& bbox,
-        int view_count,
-        const ViewId* views) const override
+    bool is_visible_in_some_views(const OrientedBoundingBox& bbox, std::span<const ViewId> views)
+        const override
     {
-        return is_visible_in_some_views(bbox, make_view_mask(view_count, views));
+        return is_visible_in_some_views(bbox, make_view_mask(views));
     }
 
     bool is_visible_in_any_view(const OrientedBoundingBox& bbox, BinMask bin_mask = AllBins)
@@ -536,8 +534,7 @@ public:
     void draw(
         uint32_t render_type,
         ViewId view_id,
-        uint32_t pass_count,
-        const BinMask* pass_masks,
+        std::span<const BinMask> pass_masks,
         RenderContext* r,
         ResourceBinder* rb,
         const void* user_data) override
@@ -548,15 +545,13 @@ public:
             return;
         }
 
-        if (pass_count > 32)
+        if (pass_masks.size() > 32)
         {
             MY_LOG_ERROR("Too many passes");
         }
 
-        for (uint8_t pass = 0; pass < pass_count; ++pass)
+        for (auto mask : pass_masks)
         {
-            BinMask mask = pass_masks[pass];
-
             mask = mask & _registered_bins & _queue._all_masks;
             if (mask == 0) continue;
 

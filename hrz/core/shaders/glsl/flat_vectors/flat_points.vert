@@ -2,7 +2,8 @@
 #include "common/ubo_frame.glsl"
 #include "common/flat_overlay_cameras.glsl"
 #include "common/camera_height.glsl"
-#include "flat_vectors/defs.glsl"
+#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/overlay_passes_defs.glsl"
 
 layout(location = 0) in vec2 i_in_mesh_pos;
 layout(location = 1) in vec3 i_position;

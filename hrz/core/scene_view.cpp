@@ -101,7 +101,6 @@ public:
         };
 
         my::FramebufferResource res;
-        res.attachment_count = HRZ_ARRAY_COUNT(attachments);
         res.attachments = attachments;
 
         _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -121,7 +120,7 @@ public:
             my::Attachment::Depth,
             my::ClearValue::make_depth(1.0),
         }};
-        ctx.render->clear(HRZ_ARRAY_COUNT(clear_targets), clear_targets);
+        ctx.render->clear(clear_targets);
     }
 };
 
@@ -341,7 +340,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -408,7 +406,7 @@ public:
             }
         }
 
-        ctx.binder->bind(bindings.size(), bindings.data());
+        ctx.binder->bind(bindings);
 
         ctx.render->set_framebuffer(_fbo, viewport_state);
 
@@ -418,8 +416,8 @@ public:
         };
 
         ctx.renderer->draw(
-            hrz::RenderVisual, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-            ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderVisual, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -475,7 +473,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -526,15 +523,15 @@ public:
         my::TextureBinding texture_bindings[] = {
             {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler},
         };
-        ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        ctx.binder->bind(texture_bindings);
 
         my::Renderer::BinMask pass_masks[] = {
             hrz::RenderDecalBin,
         };
 
         ctx.renderer->draw(
-            hrz::RenderDecal, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-            ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderDecal, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -608,7 +605,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -670,7 +666,7 @@ public:
             {0, _scene_depth, _depth_sampler},
             {1, _dummy_peel_depth, _depth_sampler},
         };
-        ctx.binder->bind(HRZ_ARRAY_COUNT(binding), binding);
+        ctx.binder->bind(binding);
 
         ctx.render->set_framebuffer(_fbo, viewport_state);
 
@@ -683,10 +679,10 @@ public:
             hrz::RenderUiBin,
         };
 
-        ctx.render->clear(1, clear_targets);
+        ctx.render->clear(clear_targets);
         ctx.renderer->draw(
-            hrz::RenderVisual, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-            ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderVisual, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -785,7 +781,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _peel_fbos[i] =
                 ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -797,7 +792,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _accum_fbo =
                 ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -809,7 +803,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _apply_accum_fbo =
                 ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -851,7 +844,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _vi = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -877,13 +869,9 @@ public:
             res.vertex_source = hrz_shaders::UiPeelAccum_vert;
             res.fragment_source_len = hrz_shaders::UiPeelAccum_frag_len;
             res.fragment_source = hrz_shaders::UiPeelAccum_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = 0;
-            res.uniform_blocks = nullptr;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
+            res.uniform_blocks = {};
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.color_blend.enable = true;
             res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
@@ -914,13 +902,9 @@ public:
             res.vertex_source = hrz_shaders::UiApplyAccum_vert;
             res.fragment_source_len = hrz_shaders::UiApplyAccum_frag_len;
             res.fragment_source = hrz_shaders::UiApplyAccum_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = 0;
-            res.uniform_blocks = nullptr;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
+            res.uniform_blocks = {};
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.color_blend.enable = true;
             res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
@@ -971,7 +955,7 @@ public:
                 my::ClearValue::make_depth(0.0),
             };
 
-            ctx.render->clear(1, &clear_target);
+            ctx.render->clear({&clear_target, 1});
 
             // Clear the color accum buffer
             ctx.render->set_framebuffer(_accum_fbo, viewport_state);
@@ -981,7 +965,7 @@ public:
                 my::ClearValue::make_color_float(0.0, 0.0, 0.0, 0.0),
             };
 
-            ctx.render->clear(1, &clear_target_2);
+            ctx.render->clear({&clear_target_2, 1});
         }
 
         int peel_pass = ctx.invocation;
@@ -999,7 +983,7 @@ public:
                 {0, _input_depth, _sampler},
                 {1, _depth_buffers[read_index], _sampler},
             };
-            ctx.binder->bind(HRZ_ARRAY_COUNT(binding), binding);
+            ctx.binder->bind(binding);
 
             ctx.render->set_framebuffer(_peel_fbos[write_index], viewport_state);
 
@@ -1017,10 +1001,10 @@ public:
                 hrz::RenderUiBin,
             };
 
-            ctx.render->clear(HRZ_ARRAY_COUNT(clear_targets), clear_targets);
+            ctx.render->clear(clear_targets);
             ctx.renderer->draw(
-                hrz::RenderVisual, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-                ctx.render, ctx.binder, ctx.user_data);
+                hrz::RenderVisual, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+                ctx.user_data);
 
             ctx.binder->pop_state();
         }
@@ -1032,15 +1016,13 @@ public:
 
             my::TextureBinding texture_binding = {0, _color_peel, _sampler};
 
-            ctx.binder->bind(1, &texture_binding);
+            ctx.binder->bind({&texture_binding, 1});
 
             auto state = ctx.binder->get_current_state();
 
             static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
-            ctx.render->draw(
-                info, _accum_shader, _vi, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            ctx.render->draw(info, _accum_shader, _vi, state.ubos, state.textures);
 
             ctx.binder->pop_state();
         }
@@ -1053,15 +1035,13 @@ public:
 
             my::TextureBinding texture_binding = {0, _color_accum, _sampler};
 
-            ctx.binder->bind(1, &texture_binding);
+            ctx.binder->bind({&texture_binding, 1});
 
             auto state = ctx.binder->get_current_state();
 
             static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
-            ctx.render->draw(
-                info, _apply_accum_shader, _vi, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            ctx.render->draw(info, _apply_accum_shader, _vi, state.ubos, state.textures);
 
             ctx.binder->pop_state();
         }
@@ -1139,7 +1119,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -1151,7 +1130,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _overlay_fbo =
                 ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -1197,7 +1175,7 @@ public:
         my::TextureBinding texture_bindings[] = {
             {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler},
         };
-        ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        ctx.binder->bind(texture_bindings);
 
         ctx.render->set_framebuffer(
             fbo,
@@ -1211,7 +1189,7 @@ public:
             static const my::ClearTarget clear_target = {
                 my::Attachment::Depth, my::ClearValue::make_depth(1.0)};
 
-            ctx.render->clear(1, &clear_target);
+            ctx.render->clear({&clear_target, 1});
         }
 
         my::Renderer::BinMask pass_masks[] = {
@@ -1219,8 +1197,8 @@ public:
         };
 
         ctx.renderer->draw(
-            hrz::RenderVisual, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-            ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderVisual, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -1268,7 +1246,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -1309,7 +1286,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _vi = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -1333,12 +1309,10 @@ public:
         res.vertex_source = hrz_shaders::MergeDepths_vert;
         res.fragment_source_len = hrz_shaders::MergeDepths_frag_len;
         res.fragment_source = hrz_shaders::MergeDepths_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = 0;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
+        res.uniform_blocks = {};
         res.samplers = samplers;
-        res.output_count = 0;
+        res.outputs = {};
         res.initial_state.color_blend.enable = false;
         res.initial_state.depth.test = true;
         res.initial_state.depth.write = true;
@@ -1370,14 +1344,13 @@ public:
         ctx.binder->push_state();
 
         my::TextureBinding texture_bindings[] = {{0, _input_depth, _sampler}};
-        ctx.binder->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        ctx.binder->bind(texture_bindings);
 
         auto state = ctx.binder->get_current_state();
 
         static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
-        ctx.render->draw(
-            info, _shader, _vi, state.ubo_count, state.ubos, state.texture_count, state.textures);
+        ctx.render->draw(info, _shader, _vi, state.ubos, state.textures);
 
         ctx.binder->pop_state();
     }
@@ -1431,7 +1404,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -1460,8 +1432,8 @@ public:
         };
 
         ctx.renderer->draw(
-            hrz::RenderVisual, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-            ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderVisual, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -1540,7 +1512,6 @@ public:
             };
 
             my::FramebufferResource fb_res;
-            fb_res.attachment_count = 1;
             fb_res.attachments = attachments;
 
             for (int i = 0; i < 2; ++i)
@@ -1593,7 +1564,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _vi = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -1652,13 +1622,9 @@ public:
             res.vertex_source = hrz_shaders::DepthReductionInitialCopy_vert;
             res.fragment_source_len = hrz_shaders::DepthReductionInitialCopy_frag_len;
             res.fragment_source = hrz_shaders::DepthReductionInitialCopy_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.color_blend.enable = false;
             res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
@@ -1687,13 +1653,9 @@ public:
             res.vertex_source = hrz_shaders::DepthReductionReduce_vert;
             res.fragment_source_len = hrz_shaders::DepthReductionReduce_frag_len;
             res.fragment_source = hrz_shaders::DepthReductionReduce_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.color_blend.enable = false;
             res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
@@ -1773,16 +1735,14 @@ public:
 
             my::UboBinding ubo_binding = {UboDepthReduction, _ubo, 0, sizeof(DepthReductionUbo)};
 
-            ctx.binder->bind(1, &texture_binding);
-            ctx.binder->bind(1, &ubo_binding);
+            ctx.binder->bind({&texture_binding, 1});
+            ctx.binder->bind({&ubo_binding, 1});
 
             auto state = ctx.binder->get_current_state();
 
             static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
-            ctx.render->draw(
-                info, _initial_shader, _vi, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            ctx.render->draw(info, _initial_shader, _vi, state.ubos, state.textures);
 
             swap_fbos();
         }
@@ -1800,15 +1760,13 @@ public:
 
             my::TextureBinding texture_binding = {0, _buffers[read_fbo], _sampler};
 
-            ctx.binder->bind(1, &texture_binding);
+            ctx.binder->bind({&texture_binding, 1});
 
             auto state = ctx.binder->get_current_state();
 
             static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
-            ctx.render->draw(
-                info, _reduce_shader, _vi, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            ctx.render->draw(info, _reduce_shader, _vi, state.ubos, state.textures);
 
             swap_fbos();
 
@@ -1989,7 +1947,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -2033,14 +1990,14 @@ public:
         bindings.push_back(
             {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler});
 
-        ctx.binder->bind(bindings.size(), bindings.data());
+        ctx.binder->bind(bindings);
 
         ctx.render->set_framebuffer(_fbo, viewport_state);
 
         my::ClearTarget clears[] = {
             {my::Attachment::Color0, my::ClearValue::make_color_float(0, 0, 0, 0)},
             {my::Attachment::Depth, my::ClearValue::make_depth(1.0)}};
-        ctx.render->clear(HRZ_ARRAY_COUNT(clears), clears);
+        ctx.render->clear(clears);
 
         my::Renderer::BinMask pass_masks[] = {
             hrz::RenderWorldOpaqueBin | hrz::RenderWorldTransparentBin | hrz::RenderSymbolicBin
@@ -2048,8 +2005,8 @@ public:
         };
 
         ctx.renderer->draw(
-            hrz::RenderSelection, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-            ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderSelection, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.binder->pop_state();
     }
@@ -2149,7 +2106,6 @@ public:
             };
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
         }
@@ -2204,7 +2160,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _vi = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::SceneView);
@@ -2248,13 +2203,9 @@ public:
         res.vertex_source = hrz_shaders::HighlightApply_vert;
         res.fragment_source_len = hrz_shaders::HighlightApply_frag_len;
         res.fragment_source = hrz_shaders::HighlightApply_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
         res.initial_state.color_blend.enable = true;
         res.initial_state.color_blend.mask = my::ColorBlendState::RGBA;
@@ -2308,17 +2259,16 @@ public:
             {0, _highlight_texture, _highlight_sampler},
             {1, _scene_depth_target, _depth_sampler},
             {2, _highlight_depth_target, _depth_sampler}};
-        ctx.binder->bind(HRZ_ARRAY_COUNT(binding), binding);
+        ctx.binder->bind(binding);
 
         my::UboBinding ubo_binding = {HighlightUboLocation, _ubo, 0, sizeof(UboData)};
-        ctx.binder->bind(1, &ubo_binding);
+        ctx.binder->bind({&ubo_binding, 1});
 
         auto state = ctx.binder->get_current_state();
 
         static const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
-        ctx.render->draw(
-            info, _shader, _vi, state.ubo_count, state.ubos, state.texture_count, state.textures);
+        ctx.render->draw(info, _shader, _vi, state.ubos, state.textures);
 
         ctx.binder->pop_state();
     }
@@ -2674,13 +2624,13 @@ void initialize_rendering(SceneView* view, Render* render_global)
     hrz::GpuResourceContext gpu_rc = *render.rc;
     gpu_rc.default_system_for_allocs = monitoring::systems::SceneView;
 
-    if (render.rg->build(render.my, &gpu_rc, final_passes.size(), final_passes.data()))
+    if (render.rg->build(render.my, &gpu_rc, final_passes))
     {
         HRZ_LOG_INFO("Render graph built");
 
-        view->rg_picking_subset = render.rg->make_subset(render.my, 1, &picking_pass_id);
+        view->rg_picking_subset = render.rg->make_subset(render.my, {&picking_pass_id, 1});
         view->rg_planet_feedback_subset =
-            render.rg->make_subset(render.my, 1, &planet_feedback_pass_id);
+            render.rg->make_subset(render.my, {&planet_feedback_pass_id, 1});
     }
     else
     {
@@ -3031,7 +2981,7 @@ void draw(
                 hrz::UboFrame, view->frame_uniforms.get_for_gpu(), 0,
                 sizeof(hrz::FrameUniformData)};
 
-            render.rb->bind(1, &binding);
+            render.rb->bind({&binding, 1});
         }
 
         if (view->shadows.has_value())

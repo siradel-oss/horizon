@@ -22,6 +22,7 @@ enum PolylineSide {
     SIDE_OUTSIDE = 2;
 }
 
+// Keep this in sync with hrz/core/shaders/glsl/flat_vectors/pattern_defs.glsl
 enum PolygonPatternSizeUnit {
     // @label="Size in meters"
     POLYGON_PATTERN_SIZE_IN_METERS                    = 0;
@@ -41,6 +42,7 @@ enum PolygonPatternSizeUnit {
     POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_PIXELS = 3;
 }
 
+// Keep this in sync with hrz/core/shaders/glsl/flat_vectors/pattern_defs.glsl
 enum PolygonPatternTilingType {
     // The pattern instances form a consistent grid, but their size vary
     // considerably, and becomes very small towards the poles.
@@ -55,6 +57,7 @@ enum PolygonPatternTilingType {
     POLYGON_PATTERN_FAVOR_SIZE = 1;
 }
 
+// Keep this in sync with hrz/core/shaders/glsl/flat_vectors/pattern_defs.glsl
 enum PolygonPatternReferenceLatitudeType {
     // Pattern instances have a size close to the intended one near the given
     // latitude, and scale breaks are as far as possible from this latitude.

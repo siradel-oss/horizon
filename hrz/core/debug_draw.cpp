@@ -120,13 +120,11 @@ struct TextRenderable : public my::Renderer::Renderable
         };
 
         rb->push_state();
-        rb->bind(HRZ_ARRAY_COUNT(textures), textures);
+        rb->bind(textures);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -136,7 +134,7 @@ struct TextRenderable : public my::Renderer::Renderable
     {
         if (data.index_count > 0)
         {
-            queue.enqueue(hrz::RenderUiBin, render_callback, &data, BsCenter, BsRadius);
+            queue.enqueue(hrz::RenderUiBin, render_callback, data, BsCenter, BsRadius);
         }
     }
 };
@@ -333,9 +331,7 @@ struct PrimitiveRenderable : public my::Renderer::Renderable
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
     }
 
     void collect_render_info(my::Renderer::Queue& queue, const my::Renderer::Culler& culler)
@@ -343,7 +339,7 @@ struct PrimitiveRenderable : public my::Renderer::Renderable
     {
         if (data.vertex_count > 0)
         {
-            queue.enqueue(hrz::RenderUiBin, render_callback, &data, BsCenter, BsRadius);
+            queue.enqueue(hrz::RenderUiBin, render_callback, data, BsCenter, BsRadius);
         }
     }
 };
@@ -455,15 +451,13 @@ struct Display
             const auto batch = my::DrawBatchInfo(my::PrimitiveType::TriangleStrip, 3);
             const auto state = rb->get_current_state();
 
-            r->draw(
-                batch, data->shader, data->vertex_input, state.ubo_count, state.ubos,
-                state.texture_count, state.textures);
+            r->draw(batch, data->shader, data->vertex_input, state.ubos, state.textures);
         }
 
         void collect_render_info(my::Renderer::Queue& queue, const my::Renderer::Culler& culler)
             const override
         {
-            queue.enqueue(hrz::RenderBin::RenderUiBin, render_callback, &data, BsCenter, BsRadius);
+            queue.enqueue(hrz::RenderBin::RenderUiBin, render_callback, data, BsCenter, BsRadius);
         }
     };
 
@@ -492,7 +486,6 @@ struct Display
                  my::VertexRate::PerVertex}};
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
 
             pixel_grid_renderable.data.vertex_input =
@@ -514,13 +507,9 @@ struct Display
             res.vertex_source = hrz_shaders::PixelGrid_vert;
             res.fragment_source_len = hrz_shaders::PixelGrid_frag_len;
             res.fragment_source = hrz_shaders::PixelGrid_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 0;
-            res.uniform_blocks = nullptr;
-            res.sampler_count = 0;
-            res.samplers = nullptr;
-            res.output_count = 1;
+            res.uniform_blocks = {};
+            res.samplers = {};
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -546,8 +535,8 @@ struct Display
         {
             const auto info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
             r->draw(
-                info, pixel_grid_renderable.data.shader, pixel_grid_renderable.data.vertex_input, 0,
-                nullptr, 0, nullptr);
+                info, pixel_grid_renderable.data.shader, pixel_grid_renderable.data.vertex_input,
+                {}, {});
         }
     }
 };
@@ -587,7 +576,6 @@ struct TextureRenderable : public my::Renderer::Renderable
             {0, data.vertex_buffer, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}};
 
         my::VertexInputResource vi_res;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
         data.vertex_input = render->rc->alloc(&vi_res, hrz::monitoring::systems::DevTools);
 
@@ -613,13 +601,9 @@ struct TextureRenderable : public my::Renderer::Renderable
             res.vertex_source = hrz_shaders::DebugTexture_vert;
             res.fragment_source_len = hrz_shaders::DebugTexture_frag_len;
             res.fragment_source = hrz_shaders::DebugTexture_frag;
-            res.attrib_count = 1;
             res.attribs = attribs;
-            res.uniform_block_count = 1;
             res.uniform_blocks = ubos;
-            res.sampler_count = 1;
             res.samplers = samplers;
-            res.output_count = 1;
             res.outputs = outputs;
             res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
             res.initial_state.depth.test = false;
@@ -653,13 +637,11 @@ struct TextureRenderable : public my::Renderer::Renderable
 
         my::TextureBinding texture_bindings[] = {
             {SamplerTextureTexture, data->texture, data->sampler}};
-        rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        rb->bind(texture_bindings);
 
         const auto state = rb->get_current_state();
 
-        r->draw(
-            batch, data->shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, data->shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -669,7 +651,7 @@ struct TextureRenderable : public my::Renderer::Renderable
     {
         static constexpr lm::dvec3 BsCenter = {0.0, 0.0, 0.0};
         static constexpr double BsRadius = hrz::EARTH_RADIUS * 2.0;
-        queue.enqueue(hrz::RenderBin::RenderUiBin, render_callback, &data, BsCenter, BsRadius);
+        queue.enqueue(hrz::RenderBin::RenderUiBin, render_callback, data, BsCenter, BsRadius);
     }
 };
 
@@ -743,7 +725,6 @@ void init_text_renderable(
 
     my::VertexInputResource vi_res;
     vi_res.indices = index_buffer;
-    vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
 
     my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, monitoring::systems::DevTools);
@@ -919,7 +900,6 @@ void init_primitive_renderable(
     };
 
     my::VertexInputResource vi_res;
-    vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
     vi_res.attribs = streams;
 
     my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, monitoring::systems::DevTools);
@@ -994,13 +974,9 @@ void init_render(DebugDrawSystem* dd, Render* render)
         res.vertex_source = hrz_shaders::DebugDraw_vert;
         res.fragment_source_len = hrz_shaders::DebugDraw_frag_len;
         res.fragment_source = hrz_shaders::DebugDraw_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = 0;
-        res.samplers = nullptr;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
+        res.samplers = {};
         res.outputs = outputs;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.depth.test = false;
@@ -1015,7 +991,10 @@ void init_render(DebugDrawSystem* dd, Render* render)
 
     // Text shader
     {
-        static const my::IndexName attribs[] = {{0, "i_position"}};
+        static const my::IndexName attribs[] = {
+            {0, "i_pixel_position"},
+            {1, "i_uv"},
+            {2, "i_instance_index"}};
 
         static const my::IndexName ubos[] = {{hrz::UboFrame, "Frame"}};
 
@@ -1032,13 +1011,9 @@ void init_render(DebugDrawSystem* dd, Render* render)
         res.vertex_source = hrz_shaders::DebugText_vert;
         res.fragment_source_len = hrz_shaders::DebugText_frag_len;
         res.fragment_source = hrz_shaders::DebugText_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.color_blend.enable = true;

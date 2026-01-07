@@ -123,7 +123,7 @@ struct TextRenderable : public my::Renderer::Renderable
 
         if (culler.is_visible_in_any_view(center, radius, bin))
         {
-            queue.enqueue(bin, render_callback, &data, center, radius, z_index);
+            queue.enqueue(bin, render_callback, data, center, radius, z_index);
         }
     }
 };
@@ -203,7 +203,6 @@ private:
     my::ResourceHandle _outline_visual_shader = my::ResourceHandle::null();
     my::ResourceHandle _picking_shader = my::ResourceHandle::null();
     my::ResourceHandle _selection_shader = my::ResourceHandle::null();
-    my::ResourceHandle _vertex_id_buffer = my::ResourceHandle::null();
     my::ResourceHandle _data_texture_sampler = my::ResourceHandle::null();
     my::ResourceHandle _font_texture_sampler = my::ResourceHandle::null();
 

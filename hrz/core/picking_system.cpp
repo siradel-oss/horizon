@@ -193,7 +193,6 @@ public:
                 {my::Attachment::Color1, _depth_read_value_target}};
 
             my::FramebufferResource res;
-            res.attachment_count = HRZ_ARRAY_COUNT(attachments);
             res.attachments = attachments;
 
             _fbo = ((hrz::GpuResourceContext*)rc)->alloc(&res, hrz::monitoring::systems::Picking);
@@ -230,7 +229,7 @@ public:
                 _overlay_texture_sampler};
         }
 
-        ctx.binder->bind(HRZ_ARRAY_COUNT(bindings), bindings);
+        ctx.binder->bind(bindings);
 
         ctx.render->set_framebuffer(_fbo, viewport_state);
 
@@ -256,7 +255,7 @@ public:
             },
             depth_clear_target};
 
-        ctx.render->clear(3, all_clear_targets);
+        ctx.render->clear(all_clear_targets);
 
         {
             my::Renderer::BinMask pass_masks[] = {
@@ -264,16 +263,16 @@ public:
                 | hrz::RenderSymbolicBin};
 
             ctx.renderer->draw(
-                hrz::RenderPicking, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-                ctx.render, ctx.binder, ctx.user_data);
+                hrz::RenderPicking, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+                ctx.user_data);
         }
 
         {
             my::Renderer::BinMask pass_masks[] = {hrz::RenderDecalBin, hrz::RenderInWorldBin};
 
             ctx.renderer->draw(
-                hrz::RenderPicking, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-                ctx.render, ctx.binder, ctx.user_data);
+                hrz::RenderPicking, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+                ctx.user_data);
         }
 
         // Everything in the SymbolicOverlay bin appears above other world elements (except for UI
@@ -281,14 +280,14 @@ public:
         // bin should not be obstructed during the picking render either.
         // The depth buffer used for the picking renders is not used for anything else either, so
         // clearing it is OK.
-        ctx.render->clear(1, &depth_clear_target);
+        ctx.render->clear({&depth_clear_target, 1});
 
         {
             my::Renderer::BinMask pass_masks[] = {hrz::RenderSymbolicOverlayBin};
 
             ctx.renderer->draw(
-                hrz::RenderPicking, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks), pass_masks,
-                ctx.render, ctx.binder, ctx.user_data);
+                hrz::RenderPicking, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+                ctx.user_data);
         }
 
         size_t id_buffer_size = scissor.w * scissor.h * sizeof(uint32_t) * 4;

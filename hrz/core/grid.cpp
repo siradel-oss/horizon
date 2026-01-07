@@ -90,13 +90,11 @@ class GridRenderable : public my::Renderer::Renderable
         my::UboBinding ubo_bindings[] = {
             {UboGrid, data->ubo, (uint32_t)data->ubo_offset, sizeof(GridUniformData)},
         };
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, data->visual_shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, data->visual_shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -116,7 +114,7 @@ class GridRenderable : public my::Renderer::Renderable
                 render_data.scene_views = instance.scene_views;
 
                 queue.enqueue(
-                    hrz::RenderUiBin, render_callback, &render_data, instance.center,
+                    hrz::RenderUiBin, render_callback, render_data, instance.center,
                     instance.radius);
             }
         }
@@ -150,13 +148,9 @@ public:
             res.vertex_source = hrz_shaders::Grid_vert;
             res.fragment_source_len = hrz_shaders::Grid_frag_len;
             res.fragment_source = hrz_shaders::Grid_frag;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
 
             res.initial_state.depth.test = true;
@@ -195,7 +189,6 @@ public:
             };
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
 
             _vertex_input = render->rc->alloc(&vi_res, monitoring::systems::Gizmos);

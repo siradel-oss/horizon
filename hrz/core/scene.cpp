@@ -1496,12 +1496,10 @@ void register_views(Scene* scene)
         register_aux_views(entry.second.view, &scene->render, view_id, scene_view_views);
 
         entry.second.render_info.view_main = view_id;
-        entry.second.render_info.all_views =
-            scene->render.rd->make_view_mask((int)scene_view_views.size(), scene_view_views.data());
+        entry.second.render_info.all_views = scene->render.rd->make_view_mask(scene_view_views);
     }
 
-    scene->render.main_views =
-        scene->render.rd->make_view_mask((int)main_views.size(), main_views.data());
+    scene->render.main_views = scene->render.rd->make_view_mask(main_views);
 }
 
 void work_gpu(Scene* scene, my::Instance* my, GpuResourceContext* gpu_rc, BlobAllocator* ba)

@@ -1869,7 +1869,6 @@ public:
             {my::Attachment::Color0, _color_target}};
 
         my::FramebufferResource res;
-        res.attachment_count = HRZ_ARRAY_COUNT(attachments);
         res.attachments = attachments;
 
         _fbo =
@@ -1934,15 +1933,15 @@ public:
                 my::ClearValue::make_depth(1.0),
             }};
 
-        ctx.render->clear(2, clear_targets);
+        ctx.render->clear(clear_targets);
 
         my::Renderer::BinMask pass_masks[] = {
             hrz::RenderPlanetBin,
         };
 
         ctx.renderer->draw(
-            hrz::RenderPlanetFeedback, user_data->main_view, HRZ_ARRAY_COUNT(pass_masks),
-            pass_masks, ctx.render, ctx.binder, ctx.user_data);
+            hrz::RenderPlanetFeedback, user_data->main_view, pass_masks, ctx.render, ctx.binder,
+            ctx.user_data);
 
         ctx.render->color_texture_download_async(
             _texture_download_id, _fbo, my::Attachment::Color0, viewport_state.viewport,
@@ -2008,13 +2007,9 @@ struct HeightPrecomputation
         res.vertex_source = hrz_shaders::PlanetPrecomputeHeightLut_vert;
         res.fragment_source_len = hrz_shaders::PlanetPrecomputeHeightLut_frag_len;
         res.fragment_source = hrz_shaders::PlanetPrecomputeHeightLut_frag;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(uniform_blocks);
         res.uniform_blocks = uniform_blocks;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.depth.test = false;
@@ -2065,7 +2060,6 @@ struct HeightPrecomputation
             };
 
             my::FramebufferResource res;
-            res.attachment_count = 2;
             res.attachments = attachments;
 
             _height_lut_fbo = rc->alloc(&res, hrz::monitoring::systems::PlanetGeometry);
@@ -2092,7 +2086,6 @@ struct HeightPrecomputation
                 {0, _quad_vb, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}};
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
 
             _quad_vi = rc->alloc(&vi_res, hrz::monitoring::systems::PlanetGeometry);
@@ -2156,8 +2149,7 @@ struct HeightPrecomputation
                 my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3).instanced(1, first_patch);
 
             render->my->draw(
-                batch_info, _height_lut_shader, _quad_vi, HRZ_ARRAY_COUNT(ubo_bindings),
-                ubo_bindings, HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                batch_info, _height_lut_shader, _quad_vi, ubo_bindings, texture_bindings);
 
             first_patch += bin.patch_count;
         }
@@ -2191,8 +2183,6 @@ struct PlanetRenderable : public my::Renderer::Renderable
 
     my::ResourceHandle _nearest_sampler;
     my::ResourceHandle _indices_buffer;
-    // @Workaround(001-Firefox-DrawElementsWithNoAttributes)
-    my::ResourceHandle _dummy_vertex_attribute;
     my::ResourceHandle _vertex_input;
     my::ResourceHandle _visual_shader;
     my::ResourceHandle _visual_transparent_shader;
@@ -2211,23 +2201,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
         load_shaders(render->rc);
 
         {
-            // @Workaround(001-Firefox-DrawElementsWithNoAttributes)
-            std::vector<uint8_t> dummy_data(vertices_count_after_subdivision(SubdivisionCount), 0);
-
-            my::BufferResource dummy_res(my::BufferResource::BufferType::Vertex);
-            dummy_res.data = dummy_data.data();
-            dummy_res.size = sizeof(uint8_t) * dummy_data.size();
-            dummy_res.usage = my::UsageHint::Static;
-            _dummy_vertex_attribute = render->rc->alloc(&dummy_res);
-
-            my::VertexInputStream attribs[] = {
-                {0, _dummy_vertex_attribute, my::VertexFormat::UInt8Norm, 0, sizeof(uint8_t),
-                 my::VertexRate::PerVertex},
-            };
-
             my::VertexInputResource res;
-            res.attrib_count = 1;
-            res.attribs = attribs;
+            res.attribs = {};
             res.indices = _indices_buffer;
             _vertex_input = render->rc->alloc(&res, monitoring::systems::PlanetGeometry);
         }
@@ -2255,7 +2230,11 @@ struct PlanetRenderable : public my::Renderer::Renderable
         samplers.push_back({SamplerHeightLut, "hrz_height_lut"});
         samplers.push_back({SamplerNormalLut, "hrz_normal_lut"});
         samplers.push_back({SamplerTessellation, "hrz_planet_tessellation"});
-        samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+
+        if (get_flag(Flag::EnableAtmosphere))
+        {
+            samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+        }
 
         for (int i = 0; i < HRZ_S_MAX_OVERLAY_CASCADES; i++)
         {
@@ -2272,10 +2251,13 @@ struct PlanetRenderable : public my::Renderer::Renderable
                 {sampler_imagery_indirection(i), sampler_imagery_indirection_name[i]});
         }
 
-        for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+        if (get_flag(Flag::EnableShadows))
         {
-            samplers.push_back(
-                {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+            for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+            {
+                samplers.push_back(
+                    {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+            }
         }
 
         for (int i = 0; i < HRZ_S_VIEWSHED_CNT; ++i)
@@ -2287,9 +2269,6 @@ struct PlanetRenderable : public my::Renderer::Renderable
 
         static const char* outputs[] = {"o_color"};
 
-        // @Workaround(001-Firefox-DrawElementsWithNoAttributes)
-        static my::IndexName inputs[] = {{0, "i_dummy"}};
-
         my::ShaderResource res{};
         res.name = hrz_shaders::Planet_name;
         res.link_hint = my::ShaderLinkHint::Initial;
@@ -2297,14 +2276,10 @@ struct PlanetRenderable : public my::Renderer::Renderable
         res.vertex_source = hrz_shaders::Planet_vert;
         res.fragment_source_len = hrz_shaders::Planet_frag_len;
         res.fragment_source = hrz_shaders::Planet_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
-        res.attrib_count = 1;
-        res.attribs = inputs;
-        res.sampler_count = samplers.size();
-        res.samplers = samplers.data();
+        res.attribs = {};
+        res.samplers = samplers;
 
         auto visual_shader = rc->alloc(&res, monitoring::systems::PlanetGeometry);
 
@@ -2347,12 +2322,9 @@ struct PlanetRenderable : public my::Renderer::Renderable
         res.vertex_source = hrz_shaders::Planet_feedback_vert;
         res.fragment_source_len = hrz_shaders::Planet_feedback_frag_len;
         res.fragment_source = hrz_shaders::Planet_feedback_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
-        res.attrib_count = 0;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
+        res.attribs = {};
         res.samplers = samplers;
 
         rc->alloc(&res, monitoring::systems::PlanetGeometry);
@@ -2392,13 +2364,10 @@ struct PlanetRenderable : public my::Renderer::Renderable
         res.vertex_source = hrz_shaders::Planet_picking_vert;
         res.fragment_source_len = hrz_shaders::Planet_picking_frag_len;
         res.fragment_source = hrz_shaders::Planet_picking_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
-        res.attrib_count = 0;
-        res.sampler_count = samplers.size();
-        res.samplers = samplers.data();
+        res.attribs = {};
+        res.samplers = samplers;
 
         rc->alloc(&res, monitoring::systems::PlanetGeometry);
     }
@@ -2427,11 +2396,9 @@ struct PlanetRenderable : public my::Renderer::Renderable
         res.vertex_source = hrz_shaders::Planet_depth_vert;
         res.fragment_source_len = hrz_shaders::Planet_depth_frag_len;
         res.fragment_source = hrz_shaders::Planet_depth_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = 0;
-        res.attrib_count = 0;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
+        res.outputs = {};
+        res.attribs = {};
         res.samplers = samplers;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
         res.initial_state.rasterization.depth_bias_factor = 1.0f;
@@ -2474,13 +2441,10 @@ struct PlanetRenderable : public my::Renderer::Renderable
         res.vertex_source = hrz_shaders::Planet_selection_vert;
         res.fragment_source_len = hrz_shaders::Planet_selection_frag_len;
         res.fragment_source = hrz_shaders::Planet_selection_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
-        res.attrib_count = 0;
-        res.sampler_count = samplers.size();
-        res.samplers = samplers.data();
+        res.attribs = {};
+        res.samplers = samplers;
 
         rc->alloc(&res, monitoring::systems::PlanetGeometry);
     }
@@ -2580,17 +2544,13 @@ struct PlanetRenderable : public my::Renderer::Renderable
             {SamplerHeightLut, data->height_lut_texture, data->nearest_sampler},
             {SamplerNormalLut, data->normal_lut_texture, data->nearest_sampler},
         };
-        rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
-        rb->bind(1, &data->external_resources.planet_params);
+        rb->bind(texture_bindings);
+        rb->bind({&data->external_resources.planet_params, 1});
 
         if (bind_imagery_rasters)
         {
-            rb->bind(
-                HRZ_ARRAY_COUNT(data->external_resources.imagery_indirection),
-                data->external_resources.imagery_indirection);
-            rb->bind(
-                HRZ_ARRAY_COUNT(data->external_resources.imagery_atlas),
-                data->external_resources.imagery_atlas);
+            rb->bind(data->external_resources.imagery_indirection);
+            rb->bind(data->external_resources.imagery_atlas);
         }
 
         uint32_t first_instance = 0;
@@ -2601,7 +2561,7 @@ struct PlanetRenderable : public my::Renderer::Renderable
             my::UboBinding ubo_binding{
                 UboRenderBinData, data->render_bins_ubo, bin.render_bin_ubo_offset,
                 sizeof(PatchTree::RenderBinData)};
-            rb->bind(1, &ubo_binding);
+            rb->bind({&ubo_binding, 1});
 
             auto state = rb->get_current_state();
 
@@ -2610,9 +2570,7 @@ struct PlanetRenderable : public my::Renderer::Renderable
                     .indexed(my::IndexType::UShort, bin.geometry_info.first_index)
                     .instanced(bin.instance_count, first_instance);
 
-            r->draw(
-                info, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-                state.textures);
+            r->draw(info, shader, data->vertex_input, state.ubos, state.textures);
 
             first_instance += bin.instance_count;
         }
@@ -2634,7 +2592,7 @@ struct PlanetRenderable : public my::Renderer::Renderable
         data.selection_shader = _selection_shader;
 
         data.bin_count = (uint32_t)_tree.patch_bins.size();
-        auto* bins = queue.write_n<RenderData::Bin>(nullptr, _tree.patch_bins.size());
+        auto bins = queue.alloc_n_uninit<RenderData::Bin>(_tree.patch_bins.size());
         for (size_t i = 0; i < _tree.patch_bins.size(); ++i)
         {
             auto& dst = bins[i];
@@ -2644,7 +2602,7 @@ struct PlanetRenderable : public my::Renderer::Renderable
             dst.instance_count = src.patch_count;
             dst.render_bin_ubo_offset = src.render_data_offset;
         }
-        data.bins = bins;
+        data.bins = bins.data();
 
         data.vertex_input = _vertex_input;
         data.tessellation_texture = _tree.geometry_texture.get_for_gpu();
@@ -2663,7 +2621,7 @@ struct PlanetRenderable : public my::Renderer::Renderable
             data.external_resources.imagery_atlas[i].index = sampler_imagery_atlas(i);
         }
 
-        queue.enqueue(bin_mask, render_callback, &data, lm::dvec3(0, 0, 0), hrz::EARTH_RADIUS * 2);
+        queue.enqueue(bin_mask, render_callback, data, lm::dvec3(0, 0, 0), hrz::EARTH_RADIUS * 2);
     }
 
     void update(

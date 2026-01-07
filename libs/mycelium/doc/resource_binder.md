@@ -16,8 +16,7 @@ void draw_something(my::ResourceBinder* rb, my::RenderContext* r)
     auto state = rb->get_current_state();
 
     r->draw(/* ... */
-        state.ubo_count, state.ubos,
-        state.texture_count, state.textures);
+        state.ubos, state.textures);
 
     rb->pop_state();
 }

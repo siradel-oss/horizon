@@ -406,13 +406,11 @@ class LineRenderable : public my::Renderer::Renderable
         rb->push_state();
 
         my::UboBinding ubo_bindings[] = {{UboGizmo, data->ubo, 0, sizeof(LineUniformData)}};
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, data->shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, data->shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -420,7 +418,7 @@ class LineRenderable : public my::Renderer::Renderable
     void collect_render_info(my::Renderer::Queue& queue, const my::Renderer::Culler& culler)
         const override
     {
-        queue.enqueue(hrz::RenderUiBin, render_callback, &_data, lm::dvec3(0), 100'000'000'000);
+        queue.enqueue(hrz::RenderUiBin, render_callback, _data, lm::dvec3(0), 100'000'000'000);
     }
 
 public:
@@ -451,13 +449,9 @@ public:
             res.vertex_source = hrz_shaders::Gizmo_line_vert;
             res.fragment_source_len = hrz_shaders::Gizmo_line_frag_len;
             res.fragment_source = hrz_shaders::Gizmo_line_frag;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
 
             res.initial_state.depth.test = true;
@@ -489,7 +483,6 @@ public:
             };
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
 
             my::ResourceHandle vi = render->rc->alloc(&vi_res, hrz::monitoring::systems::Gizmos);
@@ -649,13 +642,11 @@ class GizmoRenderable : public my::Renderer::Renderable
         my::UboBinding ubo_bindings[] = {
             {UboGizmo, data->ubo, (uint32_t)data->ubo_offset, sizeof(UniformData)},
         };
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, data->shader, data->vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, data->shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -676,7 +667,7 @@ class GizmoRenderable : public my::Renderer::Renderable
                 data.scene_views_bitset = instance.scene_views_bitset;
 
                 queue.enqueue(
-                    hrz::RenderUiBin, render_callback, &data, instance.center, instance.radius);
+                    hrz::RenderUiBin, render_callback, data, instance.center, instance.radius);
             }
         }
     }
@@ -2367,7 +2358,6 @@ void initialize_rendering(GizmoLayerSystem* system, Render* render)
 
         my::VertexInputResource vi_res;
         vi_res.indices = index_buffer;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
 
         my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, monitoring::systems::Gizmos);
@@ -2404,7 +2394,6 @@ void initialize_rendering(GizmoLayerSystem* system, Render* render)
 
         my::VertexInputResource vi_res;
         vi_res.indices = index_buffer;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
 
         my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, monitoring::systems::Gizmos);
@@ -2441,7 +2430,6 @@ void initialize_rendering(GizmoLayerSystem* system, Render* render)
 
         my::VertexInputResource vi_res;
         vi_res.indices = index_buffer;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
 
         my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, monitoring::systems::Gizmos);
@@ -2482,7 +2470,6 @@ void initialize_rendering(GizmoLayerSystem* system, Render* render)
 
         my::VertexInputResource vi_res;
         vi_res.indices = index_buffer;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
         my::ResourceHandle vertex_input = render->rc->alloc(&vi_res, monitoring::systems::Gizmos);
 
@@ -2707,13 +2694,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::Gizmo_mesh_vert;
         res.fragment_source_len = hrz_shaders::Gizmo_mesh_frag_len;
         res.fragment_source = hrz_shaders::Gizmo_mesh_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
 
         res.initial_state.depth.test = true;
@@ -2748,13 +2731,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         res.vertex_source = hrz_shaders::Gizmo_circle_vert;
         res.fragment_source_len = hrz_shaders::Gizmo_circle_frag_len;
         res.fragment_source = hrz_shaders::Gizmo_circle_frag;
-        res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
         res.uniform_blocks = ubos;
-        res.output_count = HRZ_ARRAY_COUNT(outputs);
         res.outputs = outputs;
-        res.attrib_count = HRZ_ARRAY_COUNT(attribs);
         res.attribs = attribs;
-        res.sampler_count = HRZ_ARRAY_COUNT(samplers);
         res.samplers = samplers;
 
         res.initial_state.depth.test = true;

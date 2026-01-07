@@ -72,7 +72,7 @@ void ImageRenderable::render_callback(
         {AnchorParamsUbo, data->anchor_ubo, 0, sizeof(AnchorUniformData)},
         {ImageParamsUbo, data->image_ubo, 0, sizeof(ImageUniformData)},
     };
-    rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+    rb->bind(ubo_bindings);
 
     my::TextureBinding texture_bindings[] = {
         {AnchorDataTextureSamplerIndex, data->anchor_data_texture, data->data_texture_sampler},
@@ -81,7 +81,7 @@ void ImageRenderable::render_callback(
          data->data_texture_sampler},
         {ImageSamplerIndex, data->image_texture, data->image_texture_sampler},
     };
-    rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+    rb->bind(texture_bindings);
 
     auto state = rb->get_current_state();
 
@@ -91,9 +91,7 @@ void ImageRenderable::render_callback(
                          .indexed(my::IndexType::UShort, batch_info.first_index)
                          .instanced(batch_info.instance_count);
 
-        r->draw(
-            batch, shader, batch_info.vertex_input, state.ubo_count, state.ubos,
-            state.texture_count, state.textures);
+        r->draw(batch, shader, batch_info.vertex_input, state.ubos, state.textures);
     }
 
     rb->pop_state();
@@ -134,13 +132,9 @@ void ImageElementSystem::collect_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Symbol_image_vert;
     res.fragment_source_len = hrz_shaders::Symbol_image_frag_len;
     res.fragment_source = hrz_shaders::Symbol_image_frag;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
-    res.output_count = HRZ_ARRAY_COUNT(outputs);
     res.outputs = outputs;
     res.attribs = attribs;
-    res.attrib_count = HRZ_ARRAY_COUNT(attribs);
-    res.sampler_count = HRZ_ARRAY_COUNT(visual_samplers);
     res.samplers = visual_samplers;
 
     res.initial_state.depth.test = true;
@@ -161,7 +155,6 @@ void ImageElementSystem::collect_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Symbol_image_picking_vert;
     res.fragment_source_len = hrz_shaders::Symbol_image_picking_frag_len;
     res.fragment_source = hrz_shaders::Symbol_image_picking_frag;
-    res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
     res.outputs = picking_color_outputs;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Symbols);
@@ -179,9 +172,7 @@ void ImageElementSystem::collect_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Symbol_image_selection_vert;
     res.fragment_source_len = hrz_shaders::Symbol_image_selection_frag_len;
     res.fragment_source = hrz_shaders::Symbol_image_selection_frag;
-    res.output_count = HRZ_ARRAY_COUNT(selection_outputs);
     res.outputs = selection_outputs;
-    res.sampler_count = HRZ_ARRAY_COUNT(selection_samplers);
     res.samplers = selection_samplers;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Symbols);
@@ -778,7 +769,6 @@ std::optional<ElementSystem::RenderableH> ImageElementSystem::make_renderable(
              my::VertexRate::PerInstance}};
 
         my::VertexInputResource vi_res;
-        vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
         vi_res.attribs = streams;
         vi_res.indices = prototype->index_buffer;
 

@@ -472,9 +472,7 @@ public:
         return true;
     }
 
-    std::vector<uint32_t> build_pass_order(
-        uint32_t final_pass_count,
-        const RenderPassId* final_passes) const
+    std::vector<uint32_t> build_pass_order(std::span<const RenderPassId> final_passes) const
     {
         // Build passes order
         uint32_t next_order = 0;
@@ -488,12 +486,12 @@ public:
         absl::flat_hash_set<RenderPassId> visiting_stack;
         std::vector<RenderPassId> to_visit;
 
-        for (uint32_t i = 0; i < final_pass_count; ++i)
+        for (const RenderPassId& pass_id : final_passes)
         {
             to_visit.clear();
             visiting_stack.clear();
 
-            to_visit.push_back(final_passes[i]);
+            to_visit.push_back(pass_id);
 
             while (!to_visit.empty())
             {
@@ -707,8 +705,7 @@ public:
     bool build(
         my::Instance* instance,
         my::ResourceContext* rc,
-        uint32_t final_pass_count,
-        const RenderPassId* final_passes) override
+        std::span<const RenderPassId> final_passes) override
     {
         if (_built)
         {
@@ -731,9 +728,9 @@ public:
             return false;
         }
 
-        for (uint32_t i = 0; i < final_pass_count; ++i)
+        for (const RenderPassId& pass_id : final_passes)
         {
-            if (final_passes[i] >= _passes.size())
+            if (pass_id >= _passes.size())
             {
                 MY_LOG_ERROR("Unknown final render pass");
                 return false;
@@ -757,7 +754,7 @@ public:
             }
         }
 
-        std::vector<uint32_t> order = build_pass_order(final_pass_count, final_passes);
+        std::vector<uint32_t> order = build_pass_order(final_passes);
 
         if (order.size() == 0)
         {
@@ -804,8 +801,7 @@ public:
 
     RenderGraphSubsetId make_subset(
         my::Instance* instance,
-        uint32_t final_pass_count,
-        const RenderPassId* final_passes) override
+        std::span<const RenderPassId> final_passes) override
     {
         if (!_built)
         {
@@ -813,16 +809,16 @@ public:
             return SubsetError;
         }
 
-        for (uint32_t i = 0; i < final_pass_count; ++i)
+        for (const RenderPassId& pass_id : final_passes)
         {
-            if (final_passes[i] >= _passes.size())
+            if (pass_id >= _passes.size())
             {
                 MY_LOG_ERROR("Unknown final render pass");
                 return SubsetError;
             }
         }
 
-        std::vector<uint32_t> order = build_pass_order(final_pass_count, final_passes);
+        std::vector<uint32_t> order = build_pass_order(final_passes);
 
         if (order.size() == 0)
         {

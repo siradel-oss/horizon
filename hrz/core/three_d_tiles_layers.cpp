@@ -176,13 +176,11 @@ struct RenderableBox : public my::Renderer::Renderable
 
         my::UboBinding ubo_bindings[] = {
             {Box_UboTileParams, data->ubo_buffer, 0, sizeof(BoxUniformData)}};
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -192,7 +190,7 @@ struct RenderableBox : public my::Renderer::Renderable
     {
         if (culler.is_visible_in_any_view(center, radius))
         {
-            queue.enqueue(bin_mask, render_callback, &data, center, radius);
+            queue.enqueue(bin_mask, render_callback, data, center, radius);
         }
     }
 };
@@ -821,13 +819,9 @@ struct ThreeDTilesSystem
             res.vertex_source = hrz_shaders::Three_d_tiles_box_vert;
             res.fragment_source_len = hrz_shaders::Three_d_tiles_box_frag_len;
             res.fragment_source = hrz_shaders::Three_d_tiles_box_frag;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.attribs = attribs;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
 
             res.initial_state.depth.test = true;
@@ -6000,7 +5994,6 @@ struct ThreeDTilesSystem
                 my::VertexInputStream streams[] = {pos_stream, normal_stream, color_stream};
 
                 my::VertexInputResource vi_res;
-                vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
                 vi_res.attribs = streams;
                 my::ResourceHandle vertex_input = render->rc->alloc(
                     &vi_res, hrz::monitoring::systems::ThreeDTilesLayers,

@@ -266,7 +266,7 @@ struct RenderableFeatures : public my::Renderer::Renderable
         {
             my::UboBinding ubo_bindings[] = {
                 {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}};
-            rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+            rb->bind(ubo_bindings);
 
             hrz::StaticVector<my::TextureBinding, 3> texture_bindings;
 
@@ -295,40 +295,40 @@ struct RenderableFeatures : public my::Renderer::Renderable
 
             if (!texture_bindings.empty())
             {
-                rb->bind(texture_bindings.size(), texture_bindings.data());
+                rb->bind(texture_bindings);
             }
 
             auto state = rb->get_current_state();
             r->draw(
-                polygons_batch, polygons_shader, data->polygons_data.vertex_input, state.ubo_count,
-                state.ubos, state.texture_count, state.textures);
+                polygons_batch, polygons_shader, data->polygons_data.vertex_input, state.ubos,
+                state.textures);
         }
 
         if (draw_polylines)
         {
             my::UboBinding ubo_bindings[] = {
                 {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}};
-            rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+            rb->bind(ubo_bindings);
 
             if (render_type == hrz::RenderVisual)
             {
                 my::TextureBinding texture_bindings[] = {
                     {SamplerFeatureIds, data->polylines_data.feature_id_texture,
                      data->polylines_data.metadata_sampler}};
-                rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                rb->bind(texture_bindings);
             }
             else if (render_type == hrz::RenderSelection)
             {
                 my::TextureBinding texture_bindings[] = {
                     {SamplerSelection, data->polylines_data.selection_texture,
                      data->polylines_data.metadata_sampler}};
-                rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                rb->bind(texture_bindings);
             }
 
             auto state = rb->get_current_state();
             r->draw(
-                polylines_batch, polylines_shader, data->polylines_data.vertex_input,
-                state.ubo_count, state.ubos, state.texture_count, state.textures);
+                polylines_batch, polylines_shader, data->polylines_data.vertex_input, state.ubos,
+                state.textures);
         }
 
         if (draw_points)
@@ -336,27 +336,27 @@ struct RenderableFeatures : public my::Renderer::Renderable
             my::UboBinding ubo_bindings[] = {
                 {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)},
             };
-            rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+            rb->bind(ubo_bindings);
 
             if (render_type == hrz::RenderVisual)
             {
                 my::TextureBinding texture_bindings[] = {
                     {SamplerFeatureIds, data->points_data.feature_id_texture,
                      data->points_data.metadata_sampler}};
-                rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                rb->bind(texture_bindings);
             }
             else if (render_type == hrz::RenderSelection)
             {
                 my::TextureBinding texture_bindings[] = {
                     {SamplerSelection, data->points_data.selection_texture,
                      data->points_data.metadata_sampler}};
-                rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+                rb->bind(texture_bindings);
             }
 
             auto state = rb->get_current_state();
             r->draw(
-                points_batch, points_shader, data->points_data.vertex_input, state.ubo_count,
-                state.ubos, state.texture_count, state.textures);
+                points_batch, points_shader, data->points_data.vertex_input, state.ubos,
+                state.textures);
         }
 
         data->draw_report->features_drawn += 1;
@@ -371,7 +371,7 @@ struct RenderableFeatures : public my::Renderer::Renderable
         if (culler.is_visible_in_some_views(clamped_center, clamped_radius, main_views)
             && culler.is_visible_in_any_view(sea_center, sea_radius, bin_mask))
         {
-            queue.enqueue(bin_mask, render_callback, &data, sea_center, sea_radius, z_index);
+            queue.enqueue(bin_mask, render_callback, data, sea_center, sea_radius, z_index);
         }
     }
 };
@@ -643,7 +643,6 @@ public:
                 {InputStreamPolygonFeatureIndex, "i_feature_index"}};
 
             my::IndexName solid_color_visual_samplers[] = {
-                {hrz::SamplerCameraHeight, "u_camera_height"},
                 {SamplerFeatureIds, "u_feature_ids"},
             };
 
@@ -654,10 +653,6 @@ public:
                 {SamplerPatternStyle, "u_pattern_styles"},
             };
 
-            my::IndexName solid_color_picking_samplers[] = {
-                {hrz::SamplerCameraHeight, "u_camera_height"},
-            };
-
             my::IndexName pattern_picking_samplers[] = {
                 {hrz::SamplerCameraHeight, "u_camera_height"},
                 {SamplerPattern, "u_pattern"},
@@ -665,7 +660,6 @@ public:
             };
 
             my::IndexName solid_color_selection_samplers[] = {
-                {hrz::SamplerCameraHeight, "u_camera_height"},
                 {SamplerSelection, "u_selection"},
             };
 
@@ -682,13 +676,9 @@ public:
             res.vertex_source = hrz_shaders::FlatPolygonsSolidColor_vert;
             res.fragment_source_len = hrz_shaders::FlatPolygonsSolidColor_frag_len;
             res.fragment_source = hrz_shaders::FlatPolygonsSolidColor_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(solid_color_attribs);
             res.attribs = solid_color_attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(solid_color_visual_samplers);
             res.samplers = solid_color_visual_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(color_outputs);
             res.outputs = color_outputs;
 
             res.initial_state.depth.test = true;
@@ -709,9 +699,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPolygonsPattern_vert;
             res.fragment_source_len = hrz_shaders::FlatPolygonsPattern_frag_len;
             res.fragment_source = hrz_shaders::FlatPolygonsPattern_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(pattern_attribs);
             res.attribs = pattern_attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(pattern_visual_samplers);
             res.samplers = pattern_visual_samplers;
 
             rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
@@ -721,11 +709,8 @@ public:
             res.vertex_source = hrz_shaders::FlatPolygonsSolidColor_picking_vert;
             res.fragment_source_len = hrz_shaders::FlatPolygonsSolidColor_picking_frag_len;
             res.fragment_source = hrz_shaders::FlatPolygonsSolidColor_picking_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(solid_color_attribs);
             res.attribs = solid_color_attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(solid_color_picking_samplers);
-            res.samplers = solid_color_picking_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(picking_outputs);
+            res.samplers = {};
             res.outputs = picking_outputs;
             res.initial_state.color_blend.enable = false;
 
@@ -736,9 +721,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPolygonsPattern_picking_vert;
             res.fragment_source_len = hrz_shaders::FlatPolygonsPattern_picking_frag_len;
             res.fragment_source = hrz_shaders::FlatPolygonsPattern_picking_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(pattern_attribs);
             res.attribs = pattern_attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(pattern_picking_samplers);
             res.samplers = pattern_picking_samplers;
 
             rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
@@ -748,11 +731,8 @@ public:
             res.vertex_source = hrz_shaders::FlatPolygonsSolidColor_selection_vert;
             res.fragment_source_len = hrz_shaders::FlatPolygonsSolidColor_selection_frag_len;
             res.fragment_source = hrz_shaders::FlatPolygonsSolidColor_selection_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(solid_color_attribs);
             res.attribs = solid_color_attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(solid_color_selection_samplers);
             res.samplers = solid_color_selection_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(selection_outputs);
             res.outputs = selection_outputs;
 
             rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
@@ -762,9 +742,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPolygonsPattern_selection_vert;
             res.fragment_source_len = hrz_shaders::FlatPolygonsPattern_selection_frag_len;
             res.fragment_source = hrz_shaders::FlatPolygonsPattern_selection_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(pattern_attribs);
             res.attribs = pattern_attribs;
-            res.sampler_count = HRZ_ARRAY_COUNT(pattern_selection_samplers);
             res.samplers = pattern_selection_samplers;
 
             rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
@@ -806,13 +784,9 @@ public:
             res.vertex_source = hrz_shaders::FlatPolylinesSquare_vert;
             res.fragment_source_len = hrz_shaders::FlatPolylinesSquare_frag_len;
             res.fragment_source = hrz_shaders::FlatPolylinesSquare_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(visual_samplers);
             res.samplers = visual_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(color_outputs);
             res.outputs = color_outputs;
 
             res.initial_state.depth.test = true;
@@ -841,9 +815,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPolylinesSquare_picking_vert;
             res.fragment_source_len = hrz_shaders::FlatPolylinesSquare_picking_frag_len;
             res.fragment_source = hrz_shaders::FlatPolylinesSquare_picking_frag;
-            res.sampler_count = HRZ_ARRAY_COUNT(picking_samplers);
             res.samplers = picking_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(picking_outputs);
             res.outputs = picking_outputs;
             res.initial_state.color_blend.enable = false;
 
@@ -862,9 +834,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPolylinesSquare_selection_vert;
             res.fragment_source_len = hrz_shaders::FlatPolylinesSquare_selection_frag_len;
             res.fragment_source = hrz_shaders::FlatPolylinesSquare_selection_frag;
-            res.sampler_count = HRZ_ARRAY_COUNT(selection_samplers);
             res.samplers = selection_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(selection_outputs);
             res.outputs = selection_outputs;
 
             rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
@@ -884,7 +854,7 @@ public:
                 {InputStreamPointsPosition, "i_position"},
                 {InputStreamPointsColor, "i_color"},
                 {InputStreamPointsRadius, "i_radius"},
-                {InputStreamPointsFeatureIndex, "i_instance_position"},
+                {InputStreamPointsFeatureIndex, "i_feature_index"},
             };
 
             my::IndexName visual_samplers[] = {
@@ -907,13 +877,9 @@ public:
             res.vertex_source = hrz_shaders::FlatPoints_vert;
             res.fragment_source_len = hrz_shaders::FlatPoints_frag_len;
             res.fragment_source = hrz_shaders::FlatPoints_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(visual_samplers);
             res.samplers = visual_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(color_outputs);
             res.outputs = color_outputs;
 
             res.initial_state.depth.test = true;
@@ -934,9 +900,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPoints_picking_vert;
             res.fragment_source_len = hrz_shaders::FlatPoints_picking_frag_len;
             res.fragment_source = hrz_shaders::FlatPoints_picking_frag;
-            res.sampler_count = HRZ_ARRAY_COUNT(picking_samplers);
             res.samplers = picking_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(picking_outputs);
             res.outputs = picking_outputs;
             res.initial_state.color_blend.enable = false;
 
@@ -947,9 +911,7 @@ public:
             res.vertex_source = hrz_shaders::FlatPoints_selection_vert;
             res.fragment_source_len = hrz_shaders::FlatPoints_selection_frag_len;
             res.fragment_source = hrz_shaders::FlatPoints_selection_frag;
-            res.sampler_count = HRZ_ARRAY_COUNT(selection_samplers);
             res.samplers = selection_samplers;
-            res.output_count = HRZ_ARRAY_COUNT(selection_outputs);
             res.outputs = selection_outputs;
 
             rc->alloc(&res, hrz::monitoring::systems::FlatOverlays);
@@ -2063,8 +2025,7 @@ public:
 
             my::VertexInputResource vi_res;
             vi_res.indices = index_buffer;
-            vi_res.attrib_count = streams.size();
-            vi_res.attribs = streams.data();
+            vi_res.attribs = streams;
             my::ResourceHandle vertex_input = render->rc->alloc(
                 &vi_res, hrz::monitoring::systems::FlatOverlays, tile->layer_id,
                 {{"tile coords"_ss, tile_coords_str}});
@@ -2144,7 +2105,6 @@ public:
             };
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
             my::ResourceHandle vertex_input = render->rc->alloc(
                 &vi_res, hrz::monitoring::systems::FlatOverlays, tile->layer_id,
@@ -2200,7 +2160,6 @@ public:
             };
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
             my::ResourceHandle vertex_input = render->rc->alloc(
                 &vi_res, hrz::monitoring::systems::FlatOverlays, tile->layer_id,

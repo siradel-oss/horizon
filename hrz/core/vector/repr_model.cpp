@@ -5,6 +5,7 @@
 #include "hrz/common/proto_maths.h"
 #include "hrz/core/assets_loader/assets_loader.h"
 #include "hrz/core/channel_group.h"
+#include "hrz/core/global_flags.h"
 #include "hrz/core/impostor_baker.h"
 #include "hrz/core/jobs/jobs_tickets.h"
 #include "hrz/core/jobs/vector_tiles_jobs_params.h"
@@ -21,7 +22,6 @@
 #include "hrz/core/vector/repr.h"
 #include "hrz/core/viewsheds.h"
 #include "hrz/fnd/gen_object_pool.h"
-#include "hrz/fnd/mem.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/fnd/static_vector.h"
 #include "hrz/protocol/3d_model/material.pb.h"
@@ -146,7 +146,7 @@ struct ImpostorRenderable : public my::Renderer::Renderable
             {UboFeatureParams, data->ubo_tile_buffer, 0, sizeof(ImpostorTileUniformData)},
             {UboImpostor, data->ubo_impostor_buffer, 0, sizeof(ImpostorUniformData)},
         };
-        rb->bind(HRZ_ARRAY_COUNT(ubo_bindings), ubo_bindings);
+        rb->bind(ubo_bindings);
 
         my::TextureBinding texture_bindings[] = {
             {SamplerImpostorTexture, data->impostor_texture, data->impostor_sampler},
@@ -154,13 +154,11 @@ struct ImpostorRenderable : public my::Renderer::Renderable
             {SamplerImpostorScaleCoefficientsTexture, data->scale_coefficients_texture,
              data->impostor_sampler},
         };
-        rb->bind(HRZ_ARRAY_COUNT(texture_bindings), texture_bindings);
+        rb->bind(texture_bindings);
 
         auto state = rb->get_current_state();
 
-        r->draw(
-            batch, shader, data->vertex_input, state.ubo_count, state.ubos, state.texture_count,
-            state.textures);
+        r->draw(batch, shader, data->vertex_input, state.ubos, state.textures);
 
         rb->pop_state();
     }
@@ -170,7 +168,7 @@ struct ImpostorRenderable : public my::Renderer::Renderable
     {
         if (culler.is_visible_in_any_view(center, radius, bin_mask))
         {
-            queue.enqueue(bin_mask, render_callback, &data, center, radius);
+            queue.enqueue(bin_mask, render_callback, data, center, radius);
         }
     }
 };
@@ -332,6 +330,7 @@ struct ImpostorGpuResources
                     {InputStreamScale, "i_scale"},
                     {InputStreamImpostorPosition, "i_impostor_position"},
                     {InputStreamImpostorOrientation, "i_impostor_orientation"},
+                    {InputStreamFeatureId, "i_feature_id"},
                     {InputStreamObjectId, "i_object_id"},
                     {InputStreamSelection, "i_selection"},
                 };
@@ -361,7 +360,11 @@ struct ImpostorGpuResources
                          hrz::viewsheds::VIEWSHED_SHADOW_MAP_SAMPLER_NAMES[i]});
                 }
 
-                visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+                if (get_flag(hrz::Flag::EnableAtmosphere))
+                {
+                    visual_samplers.push_back(
+                        {hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+                }
 
                 hrz::StaticVector<my::IndexName, 16> non_visual_samplers;
                 non_visual_samplers.push_back(atlas_sampler);
@@ -375,13 +378,9 @@ struct ImpostorGpuResources
                 res.vertex_source = hrz_shaders::Impostor_vert;
                 res.fragment_source_len = hrz_shaders::Impostor_frag_len;
                 res.fragment_source = hrz_shaders::Impostor_frag;
-                res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
                 res.uniform_blocks = ubos;
                 res.attribs = attribs;
-                res.attrib_count = HRZ_ARRAY_COUNT(attribs);
-                res.sampler_count = (uint32_t)visual_samplers.size();
-                res.samplers = visual_samplers.data();
-                res.output_count = HRZ_ARRAY_COUNT(outputs);
+                res.samplers = visual_samplers;
                 res.outputs = outputs;
 
                 res.initial_state.depth.test = true;
@@ -401,9 +400,7 @@ struct ImpostorGpuResources
                 res.vertex_source = hrz_shaders::Impostor_picking_vert;
                 res.fragment_source_len = hrz_shaders::Impostor_picking_frag_len;
                 res.fragment_source = hrz_shaders::Impostor_picking_frag;
-                res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
-                res.sampler_count = (uint32_t)non_visual_samplers.size();
-                res.samplers = non_visual_samplers.data();
+                res.samplers = non_visual_samplers;
                 res.outputs = picking_color_outputs;
                 res.initial_state.color_blend.enable = false;
                 picking_shader = render->rc->alloc(&res, hrz::monitoring::systems::Impostors);
@@ -415,7 +412,6 @@ struct ImpostorGpuResources
                 res.vertex_source = hrz_shaders::Impostor_selection_vert;
                 res.fragment_source_len = hrz_shaders::Impostor_selection_frag_len;
                 res.fragment_source = hrz_shaders::Impostor_selection_frag;
-                res.output_count = HRZ_ARRAY_COUNT(selection_color_outputs);
                 res.outputs = selection_color_outputs;
                 res.initial_state.color_blend.enable = false;
                 selection_shader = render->rc->alloc(&res, hrz::monitoring::systems::Impostors);
@@ -1511,7 +1507,6 @@ private:
             };
 
             my::VertexInputResource vi_res;
-            vi_res.attrib_count = HRZ_ARRAY_COUNT(streams);
             vi_res.attribs = streams;
             renderable.data.vertex_input = render->rc->alloc(
                 &vi_res, hrz::monitoring::systems::Impostors, tile->layer_id,

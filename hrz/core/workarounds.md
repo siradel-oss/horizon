@@ -2,10 +2,6 @@ Workarounds are marked with the `@Workaround(ID)` annotation in the code.
 
 # Active
 
-## `001-Firefox-DrawElementsWithNoAttributes` (2022-12-01)
-
-In Firefox < 107 (released on 2022-11-15), calling glDrawElements without any active vertex attributes *per vertex* does not work. So we have to make a dummy vertex attribute and use it in the shader.
-
 ## `002-AngleWindows-StructuredBufferNameAndLoading` (2022-12-13)
 
 Angle on Windows (when using D3D as backend) sometimes translated constant buffers to structured buffers for compilation efficiency reasons. However, there are issues where uniform blocks with an alias get their alias lost so we need to use the name of variables inside the block instead.
@@ -109,3 +105,7 @@ The workaround is based on the one in this comment: https://github.com/emscripte
 * https://github.com/emscripten-core/emscripten/issues/15217
 * https://github.com/emscripten-core/emscripten/issues/18034
 * https://github.com/emscripten-core/emscripten/pull/16994
+
+## `001-Firefox-DrawElementsWithNoAttributes` (2022-12-01)
+
+In Firefox < 107 (released on 2022-11-15), calling glDrawElements without any active vertex attributes *per vertex* does not work. So we have to make a dummy vertex attribute and use it in the shader.

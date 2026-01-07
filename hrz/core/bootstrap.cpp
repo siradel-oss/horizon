@@ -94,13 +94,9 @@ void collect_present_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Present_vert;
     res.fragment_source_len = hrz_shaders::Present_frag_len;
     res.fragment_source = hrz_shaders::Present_frag;
-    res.attrib_count = HRZ_ARRAY_COUNT(attribs);
     res.attribs = attribs;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers);
     res.samplers = samplers;
-    res.output_count = HRZ_ARRAY_COUNT(outputs);
     res.outputs = outputs;
     res.initial_state.color_blend.enable = true;
     res.initial_state.color_blend.color.src = my::ColorBlendState::One;
@@ -198,7 +194,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _vertex_input = rc->alloc(&res, hrz::monitoring::systems::Presentation);
@@ -255,7 +250,7 @@ public:
                     )};
 
             render->set_framebuffer(my::ResourceHandle::null(), {vp, vp});
-            render->clear(1, &clear);
+            render->clear({&clear, 1});
         }
 
         bool update_ubo = false;
@@ -303,7 +298,8 @@ public:
 
             const auto batch_info = my::DrawBatchInfo(my::PrimitiveType::TriangleStrip, 4);
 
-            render->draw(batch_info, _shader, _vertex_input, 1, &ubo_binding, 1, &texture_binding);
+            render->draw(
+                batch_info, _shader, _vertex_input, {&ubo_binding, 1}, {&texture_binding, 1});
         }
     }
 };
@@ -1367,10 +1363,10 @@ public:
     // RenderContext
     //
 
-    void clear(uint32_t clear_count, const my::ClearTarget* values) override
+    void clear(std::span<const my::ClearTarget> values) override
     {
         HRZ_SCOPED_SAMPLE("mycelium: cmd clear");
-        _inst->clear(clear_count, values);
+        _inst->clear(values);
     }
 
     void set_viewport(const my::ViewportState& viewport) override { _inst->set_viewport(viewport); }
@@ -1409,13 +1405,11 @@ public:
         const my::DrawBatchInfo& info,
         my::ResourceHandle shader,
         my::ResourceHandle vertex_input,
-        uint32_t ubo_count,
-        const my::UboBinding* ubos,
-        uint32_t texture_count,
-        const my::TextureBinding* textures) override
+        std::span<const my::UboBinding> ubos,
+        std::span<const my::TextureBinding> textures) override
     {
         HRZ_SCOPED_SAMPLE_A("mycelium: cmd draw");
-        _inst->draw(info, shader, vertex_input, ubo_count, ubos, texture_count, textures);
+        _inst->draw(info, shader, vertex_input, ubos, textures);
     }
 
     void blit_framebuffers(
@@ -1424,14 +1418,12 @@ public:
         my::Rect dst_rect,
         my::AspectFlags aspects,
         my::Attachment src_attachment,
-        uint32_t dst_attachment_count,
-        const my::Attachment* dst_attachments,
+        std::span<const my::Attachment> dst_attachments,
         my::SamplerParams::Filter filter) override
     {
         HRZ_SCOPED_SAMPLE("mycelium: cmd blit_framebuffers");
         _inst->blit_framebuffers(
-            src, src_rect, dst_rect, aspects, src_attachment, dst_attachment_count, dst_attachments,
-            filter);
+            src, src_rect, dst_rect, aspects, src_attachment, dst_attachments, filter);
     }
 
     my::TextureDownloadData color_texture_download_sync(
@@ -1543,7 +1535,6 @@ public:
             };
 
             my::VertexInputResource res;
-            res.attrib_count = HRZ_ARRAY_COUNT(streams);
             res.attribs = streams;
 
             _vertex_input = rc->alloc(&res, hrz::monitoring::systems::LoadingScreen);
@@ -1592,13 +1583,9 @@ public:
             res.vertex_source = hrz_shaders::LoadingScreen_vert;
             res.fragment_source_len = hrz_shaders::LoadingScreen_frag_len;
             res.fragment_source = hrz_shaders::LoadingScreen_frag;
-            res.attrib_count = HRZ_ARRAY_COUNT(attribs);
             res.attribs = attribs;
-            res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
             res.uniform_blocks = ubos;
-            res.sampler_count = HRZ_ARRAY_COUNT(samplers);
             res.samplers = samplers;
-            res.output_count = HRZ_ARRAY_COUNT(outputs);
             res.outputs = outputs;
             res.initial_state.color_blend.enable = true;
             res.initial_state.color_blend.color.src = my::ColorBlendState::One;
@@ -1666,12 +1653,12 @@ public:
         // Loading bar
         uniform_data.draw_logo = false;
         render->update_buffer(_ubo, 0, sizeof(LoadingScreenUniformData), &uniform_data);
-        render->draw(batch_info, _shader, _vertex_input, 1, &ubo_binding, 1, &texture_binding);
+        render->draw(batch_info, _shader, _vertex_input, {&ubo_binding, 1}, {&texture_binding, 1});
 
         // Logo
         uniform_data.draw_logo = true;
         render->update_buffer(_ubo, 0, sizeof(LoadingScreenUniformData), &uniform_data);
-        render->draw(batch_info, _shader, _vertex_input, 1, &ubo_binding, 1, &texture_binding);
+        render->draw(batch_info, _shader, _vertex_input, {&ubo_binding, 1}, {&texture_binding, 1});
 
         return _fadeout && elapsed <= FadeoutDurationMs;
     }

@@ -68,28 +68,29 @@ public:
         _texture_stack.pop_back();
     }
 
-    void bind(uint32_t count, const UboBinding* bindings) override
+    void bind(std::span<const UboBinding> bindings) override
     {
-        for (uint32_t i = 0; i < count; ++i)
+        for (const auto& binding : bindings)
         {
-            _ubo_stack.back().assign(bindings[i].index, bindings[i]);
+            _ubo_stack.back().assign(binding.index, binding);
         }
     }
 
-    void bind(uint32_t count, const TextureBinding* bindings) override
+    void bind(std::span<const TextureBinding> bindings) override
     {
-        for (uint32_t i = 0; i < count; ++i)
+        for (const auto& binding : bindings)
         {
-            _texture_stack.back().assign(bindings[i].index, bindings[i]);
+            _texture_stack.back().assign(binding.index, binding);
         }
     }
 
     State get_current_state() override
     {
         return State{
-            (uint32_t)_ubo_stack.back().assigned_count,
-            (uint32_t)_texture_stack.back().assigned_count, _ubo_stack.back().states,
-            _texture_stack.back().states};
+            std::span<const UboBinding>(
+                _ubo_stack.back().states, (size_t)_ubo_stack.back().assigned_count),
+            std::span<const TextureBinding>(
+                _texture_stack.back().states, (size_t)_texture_stack.back().assigned_count)};
     }
 };
 

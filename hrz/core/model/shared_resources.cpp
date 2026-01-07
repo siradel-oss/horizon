@@ -1,6 +1,7 @@
 #include "hrz/core/model/shared_resources.h"
 
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/core/global_flags.h"
 #include "hrz/core/model/ubo_defs.h"
 #include "hrz/core/render/context.h"
 #include "hrz/core/render/resource_context.h"
@@ -9,7 +10,6 @@
 #include "hrz/core/sky.h"
 #include "hrz/core/vector/flat_overlay.h"
 #include "hrz/core/viewsheds.h"
-#include "hrz/fnd/mem.h"
 #include "hrz/fnd/static_vector.h"
 
 #include <mycelium/properties.h>
@@ -89,13 +89,19 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     samplers_visual.push_back({Material0Sampler, "hrz_material_texture_0"});
     samplers_visual.push_back({Material1Sampler, "hrz_material_texture_1"});
 
-    for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+    if (get_flag(Flag::EnableShadows))
     {
-        samplers_visual.push_back(
-            {SamplerSunShadow0 + i, shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+        {
+            samplers_visual.push_back(
+                {SamplerSunShadow0 + i, shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        }
     }
 
-    samplers_visual.push_back({SamplerSunColor, sky::SUN_COLOR_SAMPLER_NAME});
+    if (get_flag(Flag::EnableAtmosphere))
+    {
+        samplers_visual.push_back({SamplerSunColor, sky::SUN_COLOR_SAMPLER_NAME});
+    }
 
     for (int i = 0; i < HRZ_S_VIEWSHED_CNT; ++i)
     {
@@ -116,13 +122,9 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Gltf_vert;
     res.fragment_source_len = hrz_shaders::Gltf_frag_len;
     res.fragment_source = hrz_shaders::Gltf_frag;
-    res.attrib_count = HRZ_ARRAY_COUNT(attribs);
     res.attribs = attribs;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
-    res.sampler_count = (uint32_t)samplers_visual.size();
-    res.samplers = samplers_visual.data();
-    res.output_count = HRZ_ARRAY_COUNT(color_outputs);
+    res.samplers = samplers_visual;
     res.outputs = color_outputs;
     res.initial_state.rasterization.cull_mode = my::RasterizationState::Back;
     res.initial_state.depth.test = true;
@@ -145,9 +147,7 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Gltf_picking_vert;
     res.fragment_source_len = hrz_shaders::Gltf_picking_frag_len;
     res.fragment_source = hrz_shaders::Gltf_picking_frag;
-    res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
     res.outputs = picking_color_outputs;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers_non_visual);
     res.samplers = samplers_non_visual;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Models);
@@ -158,8 +158,7 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Gltf_depth_vert;
     res.fragment_source_len = hrz_shaders::Gltf_depth_frag_len;
     res.fragment_source = hrz_shaders::Gltf_depth_frag;
-    res.output_count = 0;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos_depth);
+    res.outputs = {};
     res.uniform_blocks = ubos_depth;
     res.initial_state.rasterization.depth_bias_factor = 1.0f;
     res.initial_state.rasterization.depth_bias_units = 1.0f;
@@ -173,11 +172,8 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::Gltf_selection_vert;
     res.fragment_source_len = hrz_shaders::Gltf_selection_frag_len;
     res.fragment_source = hrz_shaders::Gltf_selection_frag;
-    res.output_count = HRZ_ARRAY_COUNT(selection_color_outputs);
     res.outputs = selection_color_outputs;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers_non_visual);
     res.samplers = samplers_non_visual;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
     rc->alloc(&res, hrz::monitoring::systems::Models);
 }
@@ -196,7 +192,9 @@ static void collect_impostor_shaders(hrz::GpuResourceContext* rc)
         {CompressedNormalStreamIndex, "i_compressed_normal"},
         {ColorStreamIndex, "i_color"},
         {Uv0StreamIndex, "i_uv_0"},
+        {Uv1StreamIndex, "i_uv_1"},
         {CompressedUv0StreamIndex, "i_compressed_uv_0"},
+        {CompressedUv1StreamIndex, "i_compressed_uv_1"},
     };
 
     static const my::IndexName ubos[] = {
@@ -218,13 +216,9 @@ static void collect_impostor_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::GltfImpostorBaking_vert;
     res.fragment_source_len = hrz_shaders::GltfImpostorBaking_frag_len;
     res.fragment_source = hrz_shaders::GltfImpostorBaking_frag;
-    res.attrib_count = HRZ_ARRAY_COUNT(attribs);
     res.attribs = attribs;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers);
     res.samplers = samplers;
-    res.output_count = HRZ_ARRAY_COUNT(color_outputs);
     res.outputs = color_outputs;
 
     res.initial_state.rasterization.cull_mode = my::RasterizationState::Back;
@@ -294,13 +288,19 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     samplers_visual.push_back({Instanced_ColorSampler, "u_instance_color"});
     samplers_visual.push_back({Instanced_FeatureIdSampler, "u_instance_feature_id"});
 
-    for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+    if (get_flag(Flag::EnableShadows))
     {
-        samplers_visual.push_back(
-            {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+        {
+            samplers_visual.push_back(
+                {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        }
     }
 
-    samplers_visual.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+    if (get_flag(Flag::EnableAtmosphere))
+    {
+        samplers_visual.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+    }
 
     for (int i = 0; i < HRZ_S_VIEWSHED_CNT; ++i)
     {
@@ -352,13 +352,9 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::GltfInstanced_vert;
     res.fragment_source_len = hrz_shaders::GltfInstanced_frag_len;
     res.fragment_source = hrz_shaders::GltfInstanced_frag;
-    res.attrib_count = HRZ_ARRAY_COUNT(attribs);
     res.attribs = attribs;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
-    res.sampler_count = (uint32_t)samplers_visual.size();
-    res.samplers = samplers_visual.data();
-    res.output_count = HRZ_ARRAY_COUNT(color_outputs);
+    res.samplers = samplers_visual;
     res.outputs = color_outputs;
     res.initial_state.rasterization.cull_mode = my::RasterizationState::Back;
     res.initial_state.depth.test = true;
@@ -380,9 +376,7 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::GltfInstanced_picking_vert;
     res.fragment_source_len = hrz_shaders::GltfInstanced_picking_frag_len;
     res.fragment_source = hrz_shaders::GltfInstanced_picking_frag;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers_picking);
     res.samplers = samplers_picking;
-    res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
     res.outputs = picking_color_outputs;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Models);
@@ -394,9 +388,7 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::GltfInstanced_selection_vert;
     res.fragment_source_len = hrz_shaders::GltfInstanced_selection_frag_len;
     res.fragment_source = hrz_shaders::GltfInstanced_selection_frag;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers_selection);
     res.samplers = samplers_selection;
-    res.output_count = HRZ_ARRAY_COUNT(selection_color_outputs);
     res.outputs = selection_color_outputs;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Models);
@@ -406,11 +398,9 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::GltfInstanced_depth_vert;
     res.fragment_source_len = hrz_shaders::GltfInstanced_depth_frag_len;
     res.fragment_source = hrz_shaders::GltfInstanced_depth_frag;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos_depth);
     res.uniform_blocks = ubos_depth;
-    res.sampler_count = HRZ_ARRAY_COUNT(samplers_depth);
     res.samplers = samplers_depth;
-    res.output_count = 0;
+    res.outputs = {};
     res.initial_state.rasterization.depth_bias_factor = 1.0f;
     res.initial_state.rasterization.depth_bias_units = 1.0f;
     res.initial_state.color_blend.enable = false;
@@ -482,13 +472,19 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
              hrz::vector_flat_overlay::sampler_names[i]});
     }
 
-    for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+    if (get_flag(Flag::EnableShadows))
     {
-        visual_samplers.push_back(
-            {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
+        {
+            visual_samplers.push_back(
+                {hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]});
+        }
     }
 
-    visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+    if (get_flag(Flag::EnableAtmosphere))
+    {
+        visual_samplers.push_back({hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME});
+    }
 
     for (int i = 0; i < HRZ_S_VIEWSHED_CNT; ++i)
     {
@@ -535,13 +531,9 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::ThreeDTilesB3dm_vert;
     res.fragment_source_len = hrz_shaders::ThreeDTilesB3dm_frag_len;
     res.fragment_source = hrz_shaders::ThreeDTilesB3dm_frag;
-    res.attrib_count = HRZ_ARRAY_COUNT(attribs);
     res.attribs = attribs;
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos);
     res.uniform_blocks = ubos;
-    res.sampler_count = (uint32_t)visual_samplers.size();
-    res.samplers = visual_samplers.data();
-    res.output_count = HRZ_ARRAY_COUNT(color_outputs);
+    res.samplers = visual_samplers;
     res.outputs = color_outputs;
     res.initial_state.rasterization.cull_mode = my::RasterizationState::Back;
     res.initial_state.depth.test = true;
@@ -581,9 +573,7 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::ThreeDTilesB3dm_picking_vert;
     res.fragment_source_len = hrz_shaders::ThreeDTilesB3dm_picking_frag_len;
     res.fragment_source = hrz_shaders::ThreeDTilesB3dm_picking_frag;
-    res.sampler_count = picking_samplers.size();
-    res.samplers = picking_samplers.data();
-    res.output_count = HRZ_ARRAY_COUNT(picking_color_outputs);
+    res.samplers = picking_samplers;
     res.outputs = picking_color_outputs;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Models);
@@ -603,9 +593,7 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::ThreeDTilesB3dm_selection_vert;
     res.fragment_source_len = hrz_shaders::ThreeDTilesB3dm_selection_frag_len;
     res.fragment_source = hrz_shaders::ThreeDTilesB3dm_selection_frag;
-    res.sampler_count = selection_samplers.size();
-    res.samplers = selection_samplers.data();
-    res.output_count = HRZ_ARRAY_COUNT(selection_color_outputs);
+    res.samplers = selection_samplers;
     res.outputs = selection_color_outputs;
     rc->alloc(&res, hrz::monitoring::systems::Models);
 
@@ -622,10 +610,8 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
     res.vertex_source = hrz_shaders::ThreeDTilesB3dm_depth_vert;
     res.fragment_source_len = hrz_shaders::ThreeDTilesB3dm_depth_frag_len;
     res.fragment_source = hrz_shaders::ThreeDTilesB3dm_depth_frag;
-    res.output_count = 0;
-    res.sampler_count = depth_samplers.size();
-    res.samplers = depth_samplers.data();
-    res.uniform_block_count = HRZ_ARRAY_COUNT(ubos_depth);
+    res.outputs = {};
+    res.samplers = depth_samplers;
     res.uniform_blocks = ubos_depth;
     res.initial_state.rasterization.depth_bias_factor = 1.0f;
     res.initial_state.rasterization.depth_bias_units = 1.0f;
