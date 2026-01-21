@@ -13,7 +13,7 @@ All communications with this backend must always happen on the same thread the e
 
 The Core backend is made available to integrators through the `@siradel/horizon-core` npm package. This package contains some JavaScript and TypeScript definition files, that are used directly by the bundler (such as Webpack), as well as files that must be available to the browser through HTTPS requests at runtime. The latter group of files comprises `hrz_core.js` and `hrz_core.wasm`.
 
-A browser supporting [WebGL 2](https://caniuse.com/webgl2), [shared array buffers](https://caniuse.com/sharedarraybuffer), and [atomics](https://caniuse.com/mdn-javascript_builtins_atomics) are required in order to run Horizon.
+A browser supporting [WebGL 2](https://caniuse.com/webgl2), [shared array buffers](https://caniuse.com/sharedarraybuffer), and [atomics](https://caniuse.com/mdn-javascript_builtins_atomics) is required in order to run Horizon.
 
 To embed Horizon in a web page, first you need a canvas.
 
@@ -69,34 +69,53 @@ export default defineConfig({
 });
 ```
 
+Alternatively, bundlers can detect references to assets and automatically include them in the build. When used in combination with the runtime file location callback in `HrzCoreBackend.init` (see below), the two files can be handled like any other asset. This includes allowing the bundler to rename the files.
+
 All the files must be served with the HTTPS protocol.
 
 The initialisation of the core is performed by calling the `HrzCoreBackend.init()` function, which takes four parameters:
 
  * The canvas HTML element where the planet will be drawn,
- * The base address of Horizon’s runtime files, which can be relative to the current page’s,
+ * The base address of Horizon’s runtime files (which can be relative to the current page’s), or a callback to locate runtime files,
  * The viewer options, of type [[ViewerOptions]].
  * A callback function, whose parameters are:
    * A reference to the backend, of type `HrzCoreBackend`, which implements both `HrzApi.AsyncBackend` and `HrzApi.SyncBackend`,
    * An initialisation status, of type [[ViewerInitStatus]].
 
-
-Once the page is loaded, a WebGL 2 context will then be created by Horizon. Unlike in C++, the user is not responsible for calling `frame`, this is already done by the browser's event loop.
-
 ```ts
 import { HrzApi } from "@siradel/horizon-api";
-import { HrzCoreBackend } from "@siradel/horizon-core";
+import { HrzCoreBackend, HrzCoreRuntimeFile } from "@siradel/horizon-core";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 
 HrzCoreBackend.init(
     myCanvas: HTMLCanvasElement,
-    runtimeFilesBaseUrl: string,
+    runtimeFilesBaseUrl: string | ((file: HrzCoreRuntimeFile) => string),
     options: HrzProtocol.ViewerOptions,
     function(backend: HrzCoreBackend, initStatus: HrzProtocol.ViewerInitStatus) {
         // You got the backend here, do what you want with it.
         // It implements both SyncBackend and AsyncBackend.
     });
 ```
+
+Here is an example of a runtime file location callback, that uses the bundler’s ability to resolve file locations from their asset paths:
+
+```ts
+HrzCoreBackend.init(
+    myCanvas,
+    (file: HrzCoreRuntimeFile) => {
+        switch (file) {
+            case "hrz_core.js":
+                return new URL("/node_modules/@siradel/horizon-core/dist/hrz_core.js", import.meta.url).href;
+            case "hrz_core.wasm":
+                return new URL("/node_modules/@siradel/horizon-core/dist/hrz_core.wasm", import.meta.url).href;
+        }
+    },
+    myOptions,
+    () => { /* ... */}
+);
+```
+
+Once the page is loaded, a WebGL 2 context will then be created by Horizon. Unlike in C++, the user is not responsible for calling `frame`, this is already done by the browser's event loop.
 
 ## Initialising the viewer (C++)
 

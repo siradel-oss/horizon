@@ -10,20 +10,14 @@ export default defineConfig({
     plugins: [nodeResolve(), tailwindcss(), vue()],
     build: {
         target: "ES2021",
-        rollupOptions: {
-            output: {
-                entryFileNames: "[name].js",
-                assetFileNames: "[name].[ext]",
-            },
-        },
     },
     resolve: {
         preserveSymlinks: true,
         alias: {
             vue: path.resolve(__dirname, "node_modules/vue/dist/vue.esm-browser.prod.js"),
             "@": path.resolve(__dirname, "./src"),
-            // Go up bazel-out/<arch>/bin/hrz/doc/gallery.
-            $: path.resolve(__dirname, "../../../../../../"),
+            // Go up hrz/doc/gallery.
+            $: path.resolve(__dirname, "../../../"),
         },
     },
 });

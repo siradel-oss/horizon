@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("//tools/bazel/cc_resources:cc_resources.bzl", "cc_resources")
 
 exports_files(
@@ -24,5 +25,28 @@ cc_resources(
     },
     header_name = "icons.h",
     namespace = "hrz_icons",
+    visibility = ["//visibility:public"],
+)
+
+copy_to_bin(
+    name = "favicons",
+    srcs = [
+        "favicon.ico",
+        "favicon-128x128.png",
+        "favicon-16x16.png",
+        "favicon-32x32.png",
+        "favicon-96x96.png",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+copy_to_bin(
+    name = "logos",
+    srcs = [
+        "logo.svg",
+        "logo_text.svg",
+        "logo_text_dark.svg",
+        "logo_white.svg",
+    ],
     visibility = ["//visibility:public"],
 )

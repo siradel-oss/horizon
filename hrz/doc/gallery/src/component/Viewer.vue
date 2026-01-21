@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import { HrzCoreBackend } from "@siradel/horizon-core";
+import { HrzCoreBackend, HrzCoreRuntimeFile } from "@siradel/horizon-core";
 import { HrzApi } from "@siradel/horizon-api";
 import { HrzProtocol } from "@siradel/horizon-protocol";
 import { MessageHandler } from "@/utils/messages";
@@ -82,7 +82,20 @@ onMounted(() => {
     if (canvas.value) {
         HrzCoreBackend.init(
             canvas.value as HTMLCanvasElement,
-            "assets/",
+            (file: HrzCoreRuntimeFile) => {
+                switch (file) {
+                    case "hrz_core.js":
+                        return new URL(
+                            "/node_modules/@siradel/horizon-core/dist/hrz_core.js",
+                            import.meta.url
+                        ).href;
+                    case "hrz_core.wasm":
+                        return new URL(
+                            "/node_modules/@siradel/horizon-core/dist/hrz_core.wasm",
+                            import.meta.url
+                        ).href;
+                }
+            },
             options.value,
             async (backend, status) => {
                 if (!backend) {

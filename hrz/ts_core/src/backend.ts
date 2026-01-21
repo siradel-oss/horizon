@@ -279,6 +279,8 @@ function allocateWasmMemory(
     return null;
 }
 
+export type HrzCoreRuntimeFile = "hrz_core.js" | "hrz_core.wasm";
+
 export class HrzCoreBackend implements HrzApi.AsyncBackend, HrzApi.SyncBackend {
     nativeApi: Core.NativeApi;
 
@@ -288,7 +290,7 @@ export class HrzCoreBackend implements HrzApi.AsyncBackend, HrzApi.SyncBackend {
 
     public static init(
         canvas: HTMLCanvasElement,
-        runtimeFilesBaseUrl: string,
+        locateRuntimeFiles: string | ((file: HrzCoreRuntimeFile) => string),
         options: HrzProtocol.IViewerOptions,
         cb: {
             (HrzCoreBackend: HrzCoreBackend | null, initStatus: HrzProtocol.ViewerInitStatus): void;
@@ -303,16 +305,22 @@ export class HrzCoreBackend implements HrzApi.AsyncBackend, HrzApi.SyncBackend {
             return;
         }
 
-        runtimeFilesBaseUrl = runtimeFilesBaseUrl || "";
-        if (runtimeFilesBaseUrl != "" && !runtimeFilesBaseUrl.endsWith("/")) {
-            runtimeFilesBaseUrl += "/";
+        if (typeof locateRuntimeFiles === "string") {
+            var runtimeFilesBaseUrl = locateRuntimeFiles;
+            if (runtimeFilesBaseUrl != "" && !runtimeFilesBaseUrl.endsWith("/")) {
+                runtimeFilesBaseUrl += "/";
+            }
+
+            locateRuntimeFiles = function (file: HrzCoreRuntimeFile) {
+                return runtimeFilesBaseUrl + file;
+            };
         }
 
         const locateFile = function (path: string) {
-            if (path.startsWith("/")) {
-                return path;
+            if (path === "hrz_core.js" || path === "hrz_core.wasm") {
+                return locateRuntimeFiles(path as HrzCoreRuntimeFile);
             } else {
-                return runtimeFilesBaseUrl + path;
+                throw new Error("Unexpected runtime file requested: " + path);
             }
         };
 

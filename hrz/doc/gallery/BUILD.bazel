@@ -102,13 +102,13 @@ vue_tsc_bin.vue_tsc(
     name = "type_check",
     srcs = COMMON_DATA,
     outs = [
-        "dist/tsmarker.d.ts",
+        "tsmarker.d.ts",
     ],
     args = [
         "--emitDeclarationOnly",
         "-d",
         "--outFile",
-        "dist/tsmarker.d.ts",
+        "tsmarker.d.ts",
         "-p",
         "tsconfig.json",
     ],
@@ -121,11 +121,11 @@ vite_bin.vite(
         "index.html",
         "vite.config.ts",
         ":type_check",
+        "//hrz/branding:favicons",
+        "//hrz/branding:logos",
     ],
     outs = [
-        "dist/index.css",
         "dist/index.html",
-        "dist/index.js",
     ],
     args = [
         "build",
@@ -133,6 +133,7 @@ vite_bin.vite(
         "dist",
     ],
     chdir = package_name(),
+    out_dirs = ["dist/assets/"],
 )
 
 pkg_files(
@@ -161,19 +162,6 @@ pkg_files(
 )
 
 pkg_files(
-    name = "pkg_assets",
-    srcs = [
-        "//hrz/branding:favicon.ico",
-        "//hrz/branding:favicon-16x16.png",
-        "//hrz/branding:favicon-32x32.png",
-        "//hrz/branding:favicon-96x96.png",
-        "//hrz/core:hrz_core.js",
-        "//hrz/core:hrz_core.wasm",
-    ],
-    prefix = "assets",
-)
-
-pkg_files(
     name = "pkg_scenes",
     srcs = [
         ":scenes",
@@ -192,7 +180,6 @@ pkg_files(
 pkg_filegroup(
     name = "pkg_all",
     srcs = [
-        ":pkg_assets",
         ":pkg_demo_assets",
         ":pkg_root",
         ":pkg_scenes",
