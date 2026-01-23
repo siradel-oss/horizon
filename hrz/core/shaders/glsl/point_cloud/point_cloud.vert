@@ -29,14 +29,14 @@ uvec2 fetch_feature_id()
 {
     uint batch_id = i_batch_id;
     uvec2 coord = uvec2(batch_id % uint(DATA_TEXTURE_WIDTH), batch_id / uint(DATA_TEXTURE_WIDTH));
-    return texelFetch(u_feature_ids, ivec2(coord), 0).rg;
+    return texelFetch(u_feature_ids, min(ivec2(coord), textureSize(u_feature_ids, 0) - ivec2(1)), 0).rg;
 }
 
 vec4 fetch_feature_color()
 {
     uint batch_id = i_batch_id;
     uvec2 coord = uvec2(batch_id % uint(DATA_TEXTURE_WIDTH), batch_id / uint(DATA_TEXTURE_WIDTH));
-    return texelFetch(u_feature_colors, ivec2(coord), 0);
+    return texelFetch(u_feature_colors, min(ivec2(coord), textureSize(u_feature_colors, 0) - ivec2(1)), 0);
 }
 
 bool fetch_selection()

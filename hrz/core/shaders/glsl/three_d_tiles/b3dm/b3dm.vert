@@ -43,14 +43,14 @@ uvec2 fetch_feature_id()
 {
     uint batch_id = uint(i_batch_id);
     uvec2 coord = uvec2(batch_id % 2048u, batch_id / 2048u);
-    return texelFetch(u_feature_ids_texture, ivec2(coord), 0).rg;
+    return texelFetch(u_feature_ids_texture, min(ivec2(coord), textureSize(u_feature_ids_texture, 0) - ivec2(1)), 0).rg;
 }
 
 vec4 fetch_feature_color()
 {
     uint batch_id = uint(i_batch_id);
     uvec2 coord = uvec2(batch_id % 2048u, batch_id / 2048u);
-    return texelFetch(u_color_attribute_texture, ivec2(coord), 0);
+    return texelFetch(u_color_attribute_texture, min(ivec2(coord), textureSize(u_color_attribute_texture, 0) - ivec2(1)), 0);
 }
 
 void main()
