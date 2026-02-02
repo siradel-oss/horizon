@@ -29,27 +29,25 @@ uniform lowp sampler2D u_color_attribute_texture;
 uniform highp usampler2D u_selection_texture;
 uniform highp usampler2D u_feature_ids_texture;
 
+#include "common/selection.glsl"
 bool fetch_selection()
 {
-    uint batch_id = uint(i_batch_id);
-    uint bucket_index = batch_id / 32u;
-    uvec2 coord = uvec2(bucket_index % 2048u, bucket_index / 2048u);
-    uint bit_index = batch_id % 32u;
-    uint bitmask = texelFetch(u_selection_texture, ivec2(coord), 0).r;
-    return (bitmask & (1u << bit_index)) != 0u;
+    return fetch_selection_storage(u_selection_texture, uint(i_batch_id));
 }
 
 uvec2 fetch_feature_id()
 {
+    const uint TEXTURE_WIDTH = uint(HRZ_S_B3DM_DATA_TEXTURE_WIDTH);
     uint batch_id = uint(i_batch_id);
-    uvec2 coord = uvec2(batch_id % 2048u, batch_id / 2048u);
+    uvec2 coord = uvec2(batch_id % TEXTURE_WIDTH, batch_id / TEXTURE_WIDTH);
     return texelFetch(u_feature_ids_texture, min(ivec2(coord), textureSize(u_feature_ids_texture, 0) - ivec2(1)), 0).rg;
 }
 
 vec4 fetch_feature_color()
 {
+    const uint TEXTURE_WIDTH = uint(HRZ_S_B3DM_DATA_TEXTURE_WIDTH);
     uint batch_id = uint(i_batch_id);
-    uvec2 coord = uvec2(batch_id % 2048u, batch_id / 2048u);
+    uvec2 coord = uvec2(batch_id % TEXTURE_WIDTH, batch_id / TEXTURE_WIDTH);
     return texelFetch(u_color_attribute_texture, min(ivec2(coord), textureSize(u_color_attribute_texture, 0) - ivec2(1)), 0);
 }
 

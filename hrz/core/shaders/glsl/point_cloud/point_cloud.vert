@@ -39,13 +39,10 @@ vec4 fetch_feature_color()
     return texelFetch(u_feature_colors, min(ivec2(coord), textureSize(u_feature_colors, 0) - ivec2(1)), 0);
 }
 
+#include "common/selection.glsl"
 bool fetch_selection()
 {
-    uint bucket_index = i_batch_id / 32u;
-    uvec2 coord = uvec2(bucket_index % 2048u, bucket_index / 2048u);
-    uint bit_index = i_batch_id % 32u;
-    uint bitmask = texelFetch(u_selection, ivec2(coord), 0).r;
-    return (bitmask & (1u << bit_index)) != 0u;
+    return fetch_selection_storage(u_selection, i_batch_id);
 }
 
 void main()

@@ -12,10 +12,6 @@
 
 uniform highp usampler2D u_anchors;
 
-#ifdef SYMBOL_SELECTION
-uniform highp usampler2D u_selection;
-#endif
-
 #define SYMBOL_SIZE_UNIT_METERS 0u
 #define SYMBOL_SIZE_UNIT_PIXELS 1u
 #define SYMBOL_SIZE_UNIT_PIXELS_RELATIVE_TO_ANCHOR_DISTANCE 2u
@@ -65,13 +61,11 @@ Anchor fetch_anchor(uint anchor_index)
 }
 
 #ifdef SYMBOL_SELECTION
+#include "common/selection.glsl"
+uniform highp usampler2D u_selection;
 bool fetch_selection(uint feature_index)
 {
-    uint bucket_index = feature_index / 32u;
-    uvec2 coord = uvec2(bucket_index % 2048u, bucket_index / 2048u);
-    uint bit_index = feature_index % 32u;
-    uint bitmask = texelFetch(u_selection, ivec2(coord), 0).r;
-    return (bitmask & (1u << bit_index)) != 0u;
+    return fetch_selection_storage(u_selection, feature_index);
 }
 #endif
 

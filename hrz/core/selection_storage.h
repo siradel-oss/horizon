@@ -2,6 +2,7 @@
 
 #include "hrz/common/metadata.h"
 #include "hrz/common/monitoring_defs.h"
+#include "hrz/common/shader_defines.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/variant.h"
@@ -178,7 +179,7 @@ public:
 template<typename Indirection>
 class SelectionStorageUint32Texture
 {
-    static const uint32_t MAX_WIDTH = 2048;
+    static const uint32_t MAX_WIDTH = HRZ_S_SELECTION_STORAGE_UINT32_TEXTURE_WIDTH;
 
     Indirection _indirection;
     my::ResourceHandle _texture;

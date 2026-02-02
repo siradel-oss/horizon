@@ -120,4 +120,16 @@ std::pair<lm::vec3, bool> compute_joint_normal(
         lm::vec3(lm::normalize(lm::cross(direction_normal, direction_coplanar_inside))), true);
 }
 
+double max_segment_angular_length_for_lod(uint8_t lod) // in radians
+{
+    // Once this LOD is passed, the curvature of the planet is a lot less
+    // pronounced, and if the source data is actually related to the size
+    // of the tile (i.e. if it's not for example LOD 0 data shoved into a
+    // LOD 10 tile), the tile is sufficiently small that its bounds act
+    // as the subdivision.
+    if (lod > MAX_LOD_FOR_SUBDIVISION) return std::numeric_limits<double>::max();
+
+    return lm::radians(hrz::lerp(4.0, 1.0, (double)hrz::clamp(lod - 4, 0, 3) / 3.0));
+}
+
 } // namespace hrz::vector_repr

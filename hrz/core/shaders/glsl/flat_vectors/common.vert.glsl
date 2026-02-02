@@ -1,34 +1,23 @@
 #pragma once
 
+const uint DATA_TEXTURE_SIZE = uint(HRZ_S_VECTOR_REPR_DATA_TEXTURE_WIDTH);
+
+#ifdef FLAT_SELECTION
+#include "common/selection.glsl"
 uniform highp usampler2D u_selection;
+
+bool fetch_selection()
+{
+    return fetch_selection_storage(u_selection, i_feature_index);
+}
+#endif
 
 #ifdef FLAT_VISUAL
 uniform highp usampler2D u_feature_ids;
 
-const uint DATA_TEXTURE_SIZE = 512u;
-#endif
-
-#define varying out
-#include "flat_vectors/interface.glsl"
-
-bool fetch_selection()
-{
-    if (!hrz_tile.has_feature_ids)
-    {
-        return false;
-    }
-
-    uint bucket_index = i_feature_index / 32u;
-    uvec2 coord = uvec2(bucket_index % 2048u, bucket_index / 2048u);
-    uint bit_index = i_feature_index % 32u;
-    uint bitmask = texelFetch(u_selection, ivec2(coord), 0).r;
-    return (bitmask & (1u << bit_index)) != 0u;
-}
-
-#ifdef FLAT_VISUAL
 uvec2 fetch_feature_id()
 {
-    if (!hrz_tile.has_feature_ids)
+    if (!hrz_tile.base.has_feature_ids)
     {
         return uvec2(0, 0);
     }

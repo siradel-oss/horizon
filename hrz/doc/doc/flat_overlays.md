@@ -3,25 +3,28 @@ Title: Flat overlays
 Category: Vectors
 ---
 
-A [flat overlay](HrzProtocol.FlatOverlayVectorRepr.html) is a 2D representation where features are draped onto the ground. It can be convenient for vector data that does not need to be visualised in volume (roads, railways, areas).
+Flat overlays are a set of 2D representations where features are draped onto the ground. They can be convenient for vector data that does not need to be visualised in volume (roads, railways, areas). There are three distinct flat overlay representations, each specialised for a specific geometry type: [[FlatOverlayPolygonVectorRepr]], [[FlatOverlayPolylineVectorRepr]], and [[FlatOverlayPointVectorRepr]].
 
-* Polygons can be filled or displayed as an outline (in which case they are treated as polylines).
-    * Filled polygons can be drawn with just a solid colour, or tiled with a pattern image.
-    * The pattern is drawn on top of and blended with the first colour.
-    * The pattern itself can be coloured with a secondary colour.
-    * Although the sprite definition accounts for stretchable areas, they are ignored when drawing patterns on polygons.
-* Polylines can be filled, dashed, or have only one of their sides displayed.
-* Points are displayed as discs and can have an outline.
-* Polyline widths and point radii can be expressed in either metres or pixels.
-* Different flat overlay representations can be combined to create complex representations like having a filled polygon with a dashed outline on the inside.
+## [Flat overlay points](HrzProtocol.FlatOverlayPointVectorRepr.html)
+
+This representation displays point features as discs that can have an outline. The radius of the discs and the width of the outlines can be expressed in either metres or pixels.
+
+## [Flat overlay polylines](HrzProtocol.FlatOverlayPolylineVectorRepr.html)
+
+This representation displays line features as flat polylines that can be filled, dashed, or have only one of their sides displayed. The width of the polylines can be expressed in either metres or pixels.
+
+Additionally this representation can also display the outlines of polygons.
 
 !!! note "Animation support"
-    Polylines dashes (including polygon outline dashes) can be animated using the `animation_speed` property. Be aware that the engine will have to redraw the entire scene at every update when any animated feature is visible on screen, which will have a strong impact on the device's power consumption.
+    Dashes (including polygon outline dashes) can be animated using the `animation_speed` property. Be aware that the engine will have to redraw the entire scene at every update when any animated feature is visible on screen, which will have a strong impact on the device's power consumption.
 
+## [Flat overlay polygons](HrzProtocol.FlatOverlayPolygonVectorRepr.html)
+
+This representation displays polygon features filled either with a solid colour or a tiled pattern. The pattern is drawn on top and blended with the base colour. The pattern itself can be coloured with a secondary colour.
 
 ### Polygon pattern reference latitude
 
-Polygon patterns form grids on the surface of the planet. A grid cannot be laid out on a sphere without sacrificing either of shape or size consistency. The `polygon_pattern_tiling_type` property allows choosing whether the grid is unbroken, but pattern instances are smaller toward the poles, or the sizes are more consistent but the grid is broken at multiple latitude lines. At these places, the scale of the patterns is doubled, trading global consistency for local size uniformity.
+Polygon patterns form grids on the surface of the planet. A grid cannot be laid out on a sphere without sacrificing either of shape or size consistency. The `tiling_type` property of [[PolygonPattern]] allows choosing whether the grid is unbroken, but pattern instances are smaller toward the poles, or the sizes are more consistent but the grid is broken at multiple latitude lines. At these places, the scale of the patterns is doubled, trading global consistency for local size uniformity.
 
 If the first option (favour the grid) is chosen, the reference latitude determines where the pattern instances have the intended size. They are larger closer to the equator and small closer to the poles.
 

@@ -59,6 +59,19 @@ inline void split_double(double double_value, float& float_low, float& float_hig
     }
 }
 
+inline void split_double(lm::dvec2 double_value, lm::vec2& float_low, lm::vec2& float_high)
+{
+    split_double(double_value.x, float_low.x, float_high.x);
+    split_double(double_value.y, float_low.y, float_high.y);
+}
+
+inline void split_double(lm::dvec3 double_value, lm::vec3& float_low, lm::vec3& float_high)
+{
+    split_double(double_value.x, float_low.x, float_high.x);
+    split_double(double_value.y, float_low.y, float_high.y);
+    split_double(double_value.z, float_low.z, float_high.z);
+}
+
 template<typename T>
 constexpr T lerp(T start, T end, T t)
 {

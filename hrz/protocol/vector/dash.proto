@@ -3,13 +3,19 @@ package HrzProtocol;
 option  cc_enable_arenas = true;
 option  optimize_for     = LITE_RUNTIME;
 
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/color/color.proto";
+
 enum DashMode {
+    // No dashes, the lines are solid.
     // @label="Disable dashes"
     DASH_DISABLED         = 0;
 
+    // Dashes are enabled.
     // @label="Enable filled dashes"
     DASH_ENABLED_FILLED   = 1;
 
+    // Dashes are enabled with a gradient effect.
     // @label="Enable gradient dashes"
     DASH_ENABLED_GRADIENT = 2;
 }
@@ -17,9 +23,49 @@ enum DashMode {
 enum DashSizeUnit {
     // @label="Size in meters"
     DASH_SIZE_IN_METERS                   = 0;
+
     // In logical pixels.
     // @label="Size in pixels"
     DASH_SIZE_IN_PIXELS                   = 1;
+
     // @label="Size relative to polyline length"
     DASH_SIZE_RELATIVE_TO_POLYLINE_LENGTH = 2;
+}
+
+message Dashes {
+    DashMode      mode                        = 1;
+
+    // Dashes use two colours, the primary and secondary
+    // colours. The primary colour is the colour that is
+    // set on the representation itself.
+    // Either colour can be transparent to create gaps
+    // in the line.
+    ColorProperty secondary_color             = 2;
+
+    // Distance between two dash patterns.
+    // A dash pattern comprises a primary colour
+    // segment and a secondary colour segment.
+    // A dashed line is drawn as a succession of
+    // dash patterns.
+    // Unit is `period_unit`.
+    FloatProperty period                      = 3;
+
+    DashSizeUnit  period_unit                 = 4;
+
+    // Length of the first dash segment in each
+    // dash pattern.
+    // Drawn as either the primary colour, or as
+    // a gradient of the primary and secondary
+    // colours, depending on the mode.
+    // Unit is `primary_segment_length_unit`.
+    FloatProperty primary_segment_length      = 5;
+
+    DashSizeUnit  primary_segment_length_unit = 6;
+
+    // Speed at which dashes move on the polyline.
+    // Negative values will also reverse the direction of the gradient if it is
+    // enabled. Unit is `animation_speed_unit` per second.
+    FloatProperty animation_speed             = 7;
+
+    DashSizeUnit  animation_speed_unit        = 8;
 }

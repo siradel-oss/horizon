@@ -388,7 +388,14 @@ VectorTilesLayerSystem* create_system(PickingIdAllocator* picking_id_allocator)
         hrz_proto::VectorReprType::EXTRUDED_GEOMETRY_VECTOR_REPR,
         vt::create_extruded_repr_system());
     system->reprs.register_repr(
-        hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR, vt::create_flat_overlay_repr_system());
+        hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR,
+        vt::create_flat_overlay_polygon_repr_system());
+    system->reprs.register_repr(
+        hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR,
+        vt::create_flat_overlay_polyline_repr_system());
+    system->reprs.register_repr(
+        hrz_proto::VectorReprType::FLAT_OVERLAY_POINT_VECTOR_REPR,
+        vt::create_flat_overlay_point_repr_system());
     system->reprs.register_repr(
         hrz_proto::VectorReprType::MODEL_VECTOR_REPR, vt::create_model_repr_system());
     system->reprs.register_repr(

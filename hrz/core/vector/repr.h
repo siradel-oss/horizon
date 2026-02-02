@@ -310,7 +310,9 @@ public:
 
 std::unique_ptr<ReprSystem> create_null_repr_system();
 std::unique_ptr<ReprSystem> create_extruded_repr_system();
-std::unique_ptr<ReprSystem> create_flat_overlay_repr_system();
+std::unique_ptr<ReprSystem> create_flat_overlay_point_repr_system();
+std::unique_ptr<ReprSystem> create_flat_overlay_polygon_repr_system();
+std::unique_ptr<ReprSystem> create_flat_overlay_polyline_repr_system();
 std::unique_ptr<ReprSystem> create_cylinder_repr_system();
 std::unique_ptr<ReprSystem> create_model_repr_system();
 std::unique_ptr<ReprSystem> create_heatmap_repr_system();

@@ -9,41 +9,22 @@ import "hrz/protocol/lighting_settings.proto";
 import "hrz/protocol/vector/dash.proto";
 
 message CylinderVectorRepr {
-    reserved 1, 2, 3, 8 to 11;
+    reserved 1 to 3, 5, 7 to 12, 14, 15, 19 to 22;
 
     // Controls the colour of the cylinder.
     ColorProperty    color                = 16;
+
+    Dashes           dashes               = 23;
+
     // Controls the radius in meters of the cylinder.
     FloatProperty    radius               = 17;
+
     // Controls the offset of the entire polyline form the ground, in meters.
     FloatProperty    altitude_offset      = 18;
-    // Controls the distance between the start of two dashes. Unit is
-    // `dash_period_unit`.
-    FloatProperty    dash_period          = 19;
-    // Controls the length of the dashes. Unit is `dash_length_unit`.
-    FloatProperty    dash_length          = 20;
-    // Controls the colour to display for the gaps in-between dashes.
-    ColorProperty    empty_color          = 21;
-    // Controls the speed (per second) at which dashes move from the first to
-    // last point of the line. Negative values will reverse the direction of the
-    // gradient if it is enabled. Unit is `animation_speed_unit` per second.
-    FloatProperty    animation_speed      = 22;
 
     int32            clip_id              = 4;
 
     LightingSettings lighting             = 6;
-
-    // Controls the existence and appearance of the dashes.
-    DashMode         dash_mode            = 7;
-
-    // Controls the unit of the dash period.
-    DashSizeUnit     dash_period_unit     = 12;
-
-    // Controls the unit of the dash length.
-    DashSizeUnit     dash_length_unit     = 14;
-
-    // Controls the unit per second of the animation speed.
-    DashSizeUnit     animation_speed_unit = 15;
 
     // Used to make the insides of the cylinders visible. Note that there are
     // transparency issues when used in conjunction with semi-transparent colors

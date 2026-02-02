@@ -32,7 +32,7 @@ void main()
 
         const vec4 border_color = vec4(0.79311013, 0.79311013, 0.79311013, 1);
         const vec4 blue_color = vec4(0.043297686, 0.099300094, 1, 1);
-        vec4 empty_color = mix(vec4(0.0, 0.0, 0.0, 1), bg_color, 0.5);
+        vec4 secondary_color = mix(vec4(0.0, 0.0, 0.0, 1), bg_color, 0.5);
 
 		vec2 mid_point = vec2(
 		    float(hrz_load.viewport_width) * 0.5,
@@ -48,7 +48,7 @@ void main()
 
 		const float radius = 8.0;
 		o_color = mix(border_color, bg_color, aastep(radius + 1.5, d));
-        o_color = mix(empty_color, o_color, aastep(radius, d));
+        o_color = mix(secondary_color, o_color, aastep(radius, d));
 		o_color = mix(blue_color, o_color, aastep(radius - 0.5, sdf(gl_FragCoord.xy, left, progress)));
     }
 

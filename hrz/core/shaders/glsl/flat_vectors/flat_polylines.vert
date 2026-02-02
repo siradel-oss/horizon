@@ -3,7 +3,7 @@
 #include "common/octahedral.glsl"
 #include "common/polylines.vert.glsl"
 #include "common/ubo_frame.glsl"
-#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/tile_polylines_defs.glsl"
 #include "flat_vectors/overlay_passes_defs.glsl"
 
 layout(location = 0) in vec3 i_in_mesh_pos;
@@ -15,11 +15,14 @@ layout(location = 5) in vec3 i_pos1;
 layout(location = 6) in uint i_normal0;
 layout(location = 7) in uint i_normal1;
 layout(location = 8) in float i_animation_speed;
-layout(location = 9) in vec4 i_empty_color;
+layout(location = 9) in vec4 i_secondary_color;
 layout(location = 10) in float i_total_length;
 layout(location = 11) in uint i_feature_index;
 
 #include "flat_vectors/common.vert.glsl"
+
+#define varying out
+#include "flat_vectors/interface_polylines.glsl"
 
 float compute_dash_size_unit_coef(uint dash_size_unit, float pixel_to_meter)
 {
@@ -41,7 +44,7 @@ float compute_dash_size_unit_coef(uint dash_size_unit, float pixel_to_meter)
 void main()
 {
 #ifdef FLAT_SELECTION
-    if (!fetch_selection())
+    if (!hrz_tile.base.has_feature_ids || !fetch_selection())
     {
         gl_Position = vec4(0);
         return;
@@ -61,8 +64,8 @@ void main()
 
     float width = i_width;
     v_color = i_color;
-    v_empty_color_oklab = i_empty_color;
-    vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.center_low.xyz, hrz_tile.center_high.xyz), 0.0);
+    v_secondary_color_oklab = i_secondary_color;
+    vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.base.center_low.xyz, hrz_tile.base.center_high.xyz), 0.0);
 
     float pixel_to_meter = fetch_camera_height() * hrz_frame.camera_height_to_perceived_distance * hrz_frame.pixel_size_in_meters;
     float line_meter_width = bool(hrz_tile.line_width_unit) ? pixel_to_meter * width : width;
@@ -104,7 +107,7 @@ void main()
     v_pos_along_line = mix(i_geometry.x, i_geometry.y, i_in_mesh_pos.z);
 
     float dash_period_unit_coef = compute_dash_size_unit_coef(hrz_tile.dash_period_unit, pixel_to_meter);
-    float dash_length_unit_coef = compute_dash_size_unit_coef(hrz_tile.dash_length_unit, pixel_to_meter);
+    float dash_primary_length_unit_coef = compute_dash_size_unit_coef(hrz_tile.dash_primary_length_unit, pixel_to_meter);
     float animation_unit_coef = compute_dash_size_unit_coef(hrz_tile.animation_speed_unit, pixel_to_meter);
 
     float dash_meter_period = i_geometry.z * dash_period_unit_coef;
@@ -112,7 +115,7 @@ void main()
 
     v_pos_along_line = (v_pos_along_line - animation_advance) / dash_meter_period;
     v_invert_gradient_direction = (i_animation_speed < 0.0) ? 1u : 0u;
-    v_polyline_dash_ratio = i_geometry.w / i_geometry.z * dash_length_unit_coef / dash_period_unit_coef;
+    v_polyline_dash_ratio = i_geometry.w / i_geometry.z * dash_primary_length_unit_coef / dash_period_unit_coef;
 
     float offset_along_x_axis = 0.0;
 

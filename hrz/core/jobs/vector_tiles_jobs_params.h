@@ -14,7 +14,7 @@
 #include "hrz/protocol/scene/index.pb.h"
 #include "hrz/protocol/vector/clamping.pb.h"
 #include "hrz/protocol/vector/dash.pb.h"
-#include "hrz/protocol/vector/flat_overlay_repr.pb.h"
+#include "hrz/protocol/vector/polygon_pattern.pb.h"
 #include "hrz/protocol/vector/symbol_repr.pb.h"
 
 #include <lin_maths.h>
@@ -139,32 +139,61 @@ struct ModelGeometry
     hrz::BSphere<double> bsphere;
 };
 
-struct FlatVectorData
+struct DashesStyleData
 {
-    hrz::BlobArray<hrz::vector_data::FeatureIdHash> feature_ids;
+    hrz_proto::DashMode mode;
+
+    lm::ubvec4 default_secondary_color_srgb;
+    float default_period;
+    float default_primary_length;
+    float default_animation_speed;
+
+    uint64_t period_prp;
+    uint64_t primary_length_prp;
+    uint64_t animation_speed_prp;
+    uint64_t secondary_color_prp;
+};
+
+struct BaseFlatVectorBakingData
+{
     hrz::TileCoords coords;
+    hrz::BlobArray<hrz::vector_data::FeatureIdHash> feature_ids;
     hrz::vector_data::VectorTileGeometry geometry;
     hrz::style::StyledFeatures style;
-
-    float default_line_width;
-    lm::ubvec4 default_color_srgb;
-    float default_disc_radius;
-    lm::ubvec4 default_empty_color_srgb;
-
     uint32_t repr_id;
-    uint64_t line_width_prp;
+};
+
+struct FlatPointData : public BaseFlatVectorBakingData
+{
+    lm::ubvec4 default_color_srgb;
+    float default_radius;
+
     uint64_t color_prp;
-    uint64_t disc_radius_prp;
-    uint64_t dash_period_prp;
-    uint64_t dash_length_prp;
-    uint64_t animation_speed_prp;
-    uint64_t empty_color_prp;
+    uint64_t radius_prp;
 
     bool clip_to_tile;
-    bool polygons_outline;
-    float default_dash_period;
-    float default_dash_length;
-    float default_animation_speed;
+};
+
+struct FlatPolylineData : public BaseFlatVectorBakingData
+{
+    float default_line_width;
+    lm::ubvec4 default_color_srgb;
+
+    uint64_t line_width_prp;
+    uint64_t color_prp;
+
+    DashesStyleData dashes;
+
+    bool clip_to_tile;
+};
+
+struct FlatPolygonData : public BaseFlatVectorBakingData
+{
+    lm::ubvec4 default_color_srgb;
+
+    uint64_t color_prp;
+
+    bool clip_to_tile;
 
     struct Sprite
     {
@@ -195,7 +224,65 @@ struct FlatVectorData
     hrz_proto::PolygonPatternSizeUnit polygon_pattern_size_unit;
 };
 
-struct FlatVectorGeometry
+struct BaseFlatVectorBakedGeometry
+{
+    // Padded so that it can be uploaded to a 512-pixel-wide texture.
+    hrz::BlobArray<hrz::vector_data::FeatureIdHash> feature_ids;
+
+    uint32_t max_feature_index;
+
+    lm::dbbox2 wmerc_bounds;
+    lm::dvec3 sea_bsphere_center;
+    double sea_bsphere_radius;
+};
+
+struct FlatPointGeometry : public BaseFlatVectorBakedGeometry
+{
+#pragma pack(push, 4)
+
+    struct PointInstance
+    {
+        lm::vec3 position;
+        lm::ubvec4 color; // sRGB
+        float disc_radius;
+        uint32_t feature_index;
+    };
+
+#pragma pack(pop)
+
+    hrz::BlobArray<PointInstance> point_data;
+};
+
+struct FlatPolylineGeometry : public BaseFlatVectorBakedGeometry
+{
+#pragma pack(push, 4)
+
+    struct PolylineInstance
+    {
+        lm::vec3 position0;
+        lm::vec3 position1;
+        uint32_t normal0; // oct-encoded
+        uint32_t normal1; // oct-encoded
+        lm::ubvec4 color; // sRGB
+        float line_width;
+        float line_total_length;
+        float progress_at_start;
+        float progress_at_end;
+        float dash_period;
+        float dash_primary_length;
+        float animation_speed;
+        lm::ubvec4 secondary_color; // sRGB
+        uint32_t feature_index;
+    };
+
+#pragma pack(pop)
+
+    hrz::BlobArray<PolylineInstance> polyline_data;
+
+    bool is_animated;
+};
+
+struct FlatPolygonGeometry : public BaseFlatVectorBakedGeometry
 {
 #pragma pack(push, 4)
 
@@ -263,55 +350,6 @@ struct FlatVectorGeometry
         polygon_data;
     hrz::BlobArray<uint32_t> polygon_indices;
 
-#pragma pack(push, 4)
-
-    struct PolylineInstance
-    {
-        lm::vec3 position0;
-        lm::vec3 position1;
-        uint32_t normal0; // oct-encoded
-        uint32_t normal1; // oct-encoded
-        lm::ubvec4 color; // sRGB
-        float line_width;
-        float line_total_length;
-        float progress_at_start;
-        float progress_at_end;
-        float dash_period;
-        float dash_length;
-        float animation_speed;
-        lm::ubvec4 empty_color; // sRGB
-        uint32_t feature_index;
-    };
-
-#pragma pack(pop)
-
-    hrz::BlobArray<PolylineInstance> polyline_data;
-
-#pragma pack(push, 4)
-
-    struct PointInstance
-    {
-        lm::vec3 position;
-        lm::ubvec4 color; // sRGB
-        float disc_radius;
-        uint32_t feature_index;
-    };
-
-#pragma pack(pop)
-
-    hrz::BlobArray<PointInstance> point_data;
-
-    // Padded so that it can be uploaded to a 512-pixel-wide texture.
-    hrz::BlobArray<hrz::vector_data::FeatureIdHash> feature_ids;
-
-    uint32_t max_feature_index;
-
-    lm::dbbox2 wmerc_bounds;
-    lm::dvec3 sea_bsphere_center;
-    double sea_bsphere_radius;
-
-    bool is_animated;
-
     lm::dvec2 origin_uv;
     double origin_lat;
     double lat_span;
@@ -358,23 +396,15 @@ struct CylinderVectorData
     hrz::BlobArray<float> clamps;
 
     lm::ubvec4 default_color_srgb;
-    lm::ubvec4 default_empty_color_srgb;
     float default_radius;
     float default_altitude_offset;
-    float default_dash_period;
-    float default_dash_length;
-    float default_animation_speed;
 
     uint32_t repr_id;
     uint64_t color_prp;
-    uint64_t empty_color_prp;
     uint64_t radius_prp;
     uint64_t altitude_offset_prp;
-    uint64_t dash_period_prp;
-    uint64_t dash_length_prp;
-    uint64_t animation_speed_prp;
 
-    hrz_proto::DashMode dash_mode;
+    DashesStyleData dashes;
 };
 
 struct CylinderVectorGeometry

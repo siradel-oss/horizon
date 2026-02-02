@@ -1,7 +1,7 @@
 #pragma once
 
 varying vec4 v_color_oklab; // Non-premultiplied
-varying vec4 v_empty_color_oklab; // Non-premultiplied
+varying vec4 v_secondary_color_oklab; // Non-premultiplied
 varying vec3 v_normal;
 varying float v_altitude;
 varying vec3 v_normal_to_ground;

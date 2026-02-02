@@ -77,7 +77,7 @@ void main()
     // The colours are not premulitiplied. If one of the two colours is fully transparent,
     // its non-alpha components will have an effect.
     // This is different from typical blending, and is voluntary.
-    vec4 color = oklab_to_linear(mix(v_empty_color_oklab, v_color_oklab, dash_value));
+    vec4 color = oklab_to_linear(mix(v_secondary_color_oklab, v_color_oklab, dash_value));
 
     // The blended colour is now premultiplied.
     color.rgb *= color.a;

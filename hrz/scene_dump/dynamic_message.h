@@ -242,6 +242,13 @@ struct DynamicMessage
             ->MergeFrom(*value.msg);
     }
 
+    void add_copy_repeated_message(std::string_view field_name, const DynamicMessage& value)
+    {
+        msg->GetReflection()
+            ->AddMessage(msg, _get_field_descriptor(field_name), &factory->factory)
+            ->MergeFromString(value.msg->SerializeAsString());
+    }
+
     // Deep copy a message field by field.
     // Can be used to copy a message from a source message to a destination message
     // when the protocol has changed and the message is not at the same location.

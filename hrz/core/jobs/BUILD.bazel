@@ -24,7 +24,9 @@ cc_library(
     srcs = [
         "bake_cylinder_geometry.cpp",
         "bake_extruded_vector_geometry.cpp",
-        "bake_flat_vector_geometry.cpp",
+        "bake_flat_point_geometry.cpp",
+        "bake_flat_polygon_geometry.cpp",
+        "bake_flat_polyline_geometry.cpp",
         "bake_heatmap_geometry.cpp",
         "bake_model_geometry.cpp",
         "bake_symbols.cpp",

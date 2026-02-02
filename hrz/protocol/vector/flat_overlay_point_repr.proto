@@ -1,0 +1,30 @@
+syntax = "proto3";
+package HrzProtocol;
+option  cc_enable_arenas = true;
+option  optimize_for     = LITE_RUNTIME;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/size_unit.proto";
+
+message FlatOverlayPointVectorRepr {
+    ColorProperty   color         = 1;
+    FloatProperty   radius        = 2;
+
+    // In the same unit as the main radius.
+    float           outline_width = 3;
+    Color           outline_color = 4;
+
+    // Indicates whether the disc radius is expressed in meters or in pixels.
+    InWorldSizeUnit radius_unit   = 5;
+
+    // Used to set the rendering order of the layer, features with a higher
+    // value are drawn on top of features with a lower value. For instance,
+    // features with the z-index value `1` are drawn over (and therefore can
+    // hide) features with the value `0`.
+    uint32          z_index       = 6;
+
+    // Clip the geometry to the borders of the tiles. Useful for hiding margins
+    // often added by vector data tilers.
+    bool            clip_to_tile  = 7;
+}

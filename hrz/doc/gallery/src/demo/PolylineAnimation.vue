@@ -27,7 +27,7 @@ const LENGTH_UNIT = {
 
 const api = ref<HrzApi.AsyncApi | null>(null);
 const layer = ref<HrzProtocol.ILayerHandle | undefined>(undefined);
-let model = new HrzProtocol.FlatOverlayVectorRepr();
+let model = new HrzProtocol.FlatOverlayPolylineVectorRepr();
 
 const animationSpeed = ref<number>(0);
 const dashPeriod = ref<number>(500);
@@ -79,27 +79,27 @@ watch(
             return;
         }
 
-        model.animationSpeed = { defaultValue: animationSpeed.value };
-        model.dashPeriod = { defaultValue: dashPeriod.value };
-        model.dashLength = { defaultValue: dashRatio.value * dashPeriod.value };
+        model.dashes.animationSpeed = { defaultValue: animationSpeed.value };
+        model.dashes.period = { defaultValue: dashPeriod.value };
+        model.dashes.primarySegmentLength = { defaultValue: dashRatio.value * dashPeriod.value };
 
-        model.dashPeriodUnit =
+        model.dashes.periodUnit =
             dashLengthUnit.value === LengthUnit.METERS
                 ? HrzProtocol.DashSizeUnit.DASH_SIZE_IN_METERS
                 : HrzProtocol.DashSizeUnit.DASH_SIZE_IN_PIXELS;
-        model.dashLengthUnit = model.dashPeriodUnit;
-        model.animationSpeedUnit = model.dashPeriodUnit;
+        model.dashes.primarySegmentLengthUnit = model.dashes.periodUnit;
+        model.dashes.animationSpeedUnit = model.dashes.periodUnit;
 
         if (dashStyle.value == DashStyle.DASHES || dashStyle.value == DashStyle.DASHES_BG) {
-            model.dashMode = HrzProtocol.DashMode.DASH_ENABLED_FILLED;
+            model.dashes.mode = HrzProtocol.DashMode.DASH_ENABLED_FILLED;
         } else {
-            model.dashMode = HrzProtocol.DashMode.DASH_ENABLED_GRADIENT;
+            model.dashes.mode = HrzProtocol.DashMode.DASH_ENABLED_GRADIENT;
         }
 
         HrzApi.VectorTilesLayerPathBuilder.create(layer.value!)
             .style()
             .representations(0)
-            .flatOverlayGeometry()
+            .flatOverlayPolyline()
             .set(api.value, model);
     }, 300)
 );
@@ -112,12 +112,13 @@ async function onHorizonReady(api_: HrzApi.AsyncApi) {
         model = await HrzApi.VectorTilesLayerPathBuilder.create(layer.value!)
             .style()
             .representations(0)
-            .flatOverlayGeometry()
+            .flatOverlayPolyline()
             .get(api.value!);
 
-        animationSpeed.value = model.animationSpeed?.defaultValue ?? 400;
-        dashPeriod.value = model.dashPeriod?.defaultValue ?? 500;
-        dashRatio.value = (model.dashLength?.defaultValue ?? 200) / dashPeriod.value;
+        animationSpeed.value = model.dashes.animationSpeed?.defaultValue ?? 400;
+        dashPeriod.value = model.dashes.period?.defaultValue ?? 500;
+        dashRatio.value =
+            (model.dashes.primarySegmentLength?.defaultValue ?? 200) / dashPeriod.value;
     });
 }
 
@@ -140,8 +141,8 @@ async function retrieveMetroLayerModel(): Promise<any> {
                 </p>
                 <p>
                     There are two dash modes: the filled mode uses the polyline color for the dash
-                    and the "empty" color for the background, while the gradient mode uses a
-                    gradient from the polyline color to the "empty" color.
+                    and the secondary color for the background, while the gradient mode uses a
+                    gradient from the polyline color to the secondary color.
                 </p>
                 <hr />
                 <p>

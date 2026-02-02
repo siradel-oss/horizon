@@ -789,11 +789,6 @@ public:
         }
     }
 
-    bool tile_is_ready(const Tile* tile) const
-    {
-        return tile->status == Tile::Status::Ready || tile->status == Tile::Status::Error;
-    }
-
     void remove_tile(TileH tile_handle) { _tiles_to_remove.push_back(tile_handle); }
 
     void _destroy_model(WorkCtx& ctx, Config* cfg)

@@ -2,7 +2,7 @@
 #include "common/ubo_frame.glsl"
 #include "common/flat_overlay_cameras.glsl"
 #include "common/round_to_power_of_two.glsl"
-#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/tile_polygons_defs.glsl"
 #include "flat_vectors/overlay_passes_defs.glsl"
 #include "flat_vectors/pattern_defs.glsl"
 
@@ -21,6 +21,9 @@ layout(location = 4) in uint i_pattern_style_index;
 layout(location = 5) in uint i_feature_index;
 
 #include "flat_vectors/common.vert.glsl"
+
+#define varying out
+#include "flat_vectors/interface_polygons.glsl"
 
 #ifdef FLAT_POLYGONS_PATTERN
 uniform highp usampler2D u_pattern_styles;
@@ -43,7 +46,7 @@ vec4 unpackColor(uint p)
 
 void fetch_pattern_style(uint style_index)
 {
-    const uint DATA_TEXTURE_SIZE = 512u;
+    const uint DATA_TEXTURE_SIZE = uint(HRZ_S_VECTOR_REPR_DATA_TEXTURE_WIDTH);
     const int pixels_per_style = 3;
 
     ivec2 style_data_coords = ivec2(
@@ -77,7 +80,7 @@ void fetch_pattern_style(uint style_index)
 void main()
 {
 #ifdef FLAT_SELECTION
-    if (!fetch_selection())
+    if (!hrz_tile.base.has_feature_ids || !fetch_selection())
     {
         gl_Position = vec4(0);
         return;
@@ -97,7 +100,7 @@ void main()
     v_feature_index = i_feature_index;
 #endif
 
-    vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.center_low.xyz, hrz_tile.center_high.xyz), 0);
+    vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.base.center_low.xyz, hrz_tile.base.center_high.xyz), 0);
     gl_Position = hrz_overlay_cameras.overlay_cams_pv_cc_matrix[hrz_overlay_passes.pass_id] * (vec4(i_in_tile_pos, 1) + offset);
 
 #ifdef FLAT_POLYGONS_PATTERN

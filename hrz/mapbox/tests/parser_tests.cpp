@@ -1068,13 +1068,13 @@ TEST_F(MapboxTranslation, parse_vector_fill_layer)
             EXPECT_EQ(vtl.style().representations_size(), 1);
             EXPECT_EQ(
                 vtl.style().representations(0).type(),
-                hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR);
 
-            const auto& flat_overlay = vtl.style().representations(0).flat_overlay_geometry();
+            const auto& flat_overlay = vtl.style().representations(0).flat_overlay_polygon();
 
             auto color_rgba =
                 hrz::convert_uint_color_to_rgba(hrz::parse_color_string("#7faf75").value());
-            color_rgba.a = 0.8;
+            color_rgba.a = 0.8F;
             EXPECT_EQ(
                 hrz::convert_proto_color_to_uint(flat_overlay.color().default_value()),
                 hrz::convert_rgba_color_to_uint(color_rgba));
@@ -1120,30 +1120,31 @@ TEST_F(MapboxTranslation, parse_vector_fill_layer_outline)
 
             for (const auto& repr : vtl.style().representations())
             {
-                EXPECT_EQ(repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
                 if (repr.name() == "no_outline_antialias" || repr.name() == "no_outline_pattern")
                 {
-                    EXPECT_EQ(repr.flat_overlay_geometry().polygons_outline(), false);
+                    EXPECT_EQ(
+                        repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR);
                 }
                 else if (repr.name() == "outline")
                 {
-                    EXPECT_EQ(repr.flat_overlay_geometry().polygons_outline(), false);
-                    fill_z_index = repr.flat_overlay_geometry().z_index();
+                    EXPECT_EQ(
+                        repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR);
+                    fill_z_index = repr.flat_overlay_polygon().z_index();
                 }
                 else if (repr.name() == "outline_hrz_outline")
                 {
-                    const auto& flat_overlay = repr.flat_overlay_geometry();
-
+                    EXPECT_EQ(
+                        repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
+                    const auto& flat_overlay = repr.flat_overlay_polyline();
                     auto color = hrz::parse_color_string("#000000").value();
                     EXPECT_EQ(
                         hrz::convert_proto_color_to_uint(flat_overlay.color().default_value()),
                         color);
 
-                    EXPECT_EQ(flat_overlay.polygons_outline(), true);
                     EXPECT_EQ(
-                        flat_overlay.line_width_unit(),
+                        flat_overlay.width_unit(),
                         hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
-                    EXPECT_EQ(flat_overlay.line_width().default_value(), 1.0);
+                    EXPECT_EQ(flat_overlay.width().default_value(), 1.0);
                     EXPECT_EQ(flat_overlay.side(), hrz_proto::PolylineSide::SIDE_INSIDE);
                     EXPECT_EQ(flat_overlay.clip_to_tile(), true);
 
@@ -1157,7 +1158,7 @@ TEST_F(MapboxTranslation, parse_vector_fill_layer_outline)
 
             EXPECT_EQ(outline_z_index, fill_z_index + 1);
         }
-    };
+    }
 }
 
 TEST_F(MapboxTranslation, parse_vector_fill_pattern)
@@ -1185,12 +1186,12 @@ TEST_F(MapboxTranslation, parse_vector_fill_pattern)
 
             for (const auto& repr : vtl.style().representations())
             {
-                EXPECT_EQ(repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
                 if (repr.name() == "pattern")
                 {
-                    const auto& flat_overlay = repr.flat_overlay_geometry();
+                    EXPECT_EQ(
+                        repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR);
+                    const auto& flat_overlay = repr.flat_overlay_polygon();
 
-                    EXPECT_EQ(flat_overlay.polygons_outline(), false);
                     fill_z_index = flat_overlay.z_index();
 
                     auto background_color = hrz::parse_color_string("#ffffff00").value();
@@ -1199,39 +1200,40 @@ TEST_F(MapboxTranslation, parse_vector_fill_pattern)
                         background_color);
 
                     EXPECT_STREQ(
-                        flat_overlay.polygon_pattern_sprite_name().default_value().c_str(),
+                        flat_overlay.pattern().sprite_name().default_value().c_str(),
                         "SableHumide");
 
                     const auto& polygon_pattern_color =
-                        flat_overlay.polygon_pattern_color().default_value();
-                    EXPECT_EQ(polygon_pattern_color.r(), 1.0f);
-                    EXPECT_EQ(polygon_pattern_color.g(), 1.0f);
-                    EXPECT_EQ(polygon_pattern_color.b(), 1.0f);
-                    EXPECT_EQ(polygon_pattern_color.a(), 0.5f);
+                        flat_overlay.pattern().color().default_value();
+                    EXPECT_EQ(polygon_pattern_color.r(), 1.0F);
+                    EXPECT_EQ(polygon_pattern_color.g(), 1.0F);
+                    EXPECT_EQ(polygon_pattern_color.b(), 1.0F);
+                    EXPECT_EQ(polygon_pattern_color.a(), 0.5F);
 
-                    EXPECT_EQ(flat_overlay.polygon_pattern_size().default_value().x(), 1.0f);
-                    EXPECT_EQ(flat_overlay.polygon_pattern_size().default_value().y(), 1.0f);
+                    EXPECT_EQ(flat_overlay.pattern().size().default_value().x(), 1.0F);
+                    EXPECT_EQ(flat_overlay.pattern().size().default_value().y(), 1.0F);
                     EXPECT_EQ(
-                        flat_overlay.polygon_pattern_size_unit(),
+                        flat_overlay.pattern().size_unit(),
                         hrz_proto::PolygonPatternSizeUnit::
                             POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_PIXELS);
-                    EXPECT_EQ(flat_overlay.polygon_pattern_rotation().default_value(), 0.0f);
+                    EXPECT_EQ(flat_overlay.pattern().rotation().default_value(), 0.0F);
                 }
                 else if (repr.name() == "pattern_hrz_outline")
                 {
-                    const auto& flat_overlay = repr.flat_overlay_geometry();
+                    EXPECT_EQ(
+                        repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
+                    const auto& flat_overlay = repr.flat_overlay_polyline();
 
                     const auto& line_color = flat_overlay.color().default_value();
-                    EXPECT_EQ(line_color.r(), 0.0f);
-                    EXPECT_EQ(line_color.g(), 1.0f);
-                    EXPECT_EQ(line_color.b(), 0.0f);
-                    EXPECT_EQ(line_color.a(), 0.5f);
+                    EXPECT_EQ(line_color.r(), 0.0F);
+                    EXPECT_EQ(line_color.g(), 1.0F);
+                    EXPECT_EQ(line_color.b(), 0.0F);
+                    EXPECT_EQ(line_color.a(), 0.5F);
 
-                    EXPECT_EQ(flat_overlay.polygons_outline(), true);
                     EXPECT_EQ(
-                        flat_overlay.line_width_unit(),
+                        flat_overlay.width_unit(),
                         hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
-                    EXPECT_EQ(flat_overlay.line_width().default_value(), 1.0);
+                    EXPECT_EQ(flat_overlay.width().default_value(), 1.0);
                     EXPECT_EQ(flat_overlay.side(), hrz_proto::PolylineSide::SIDE_INSIDE);
                     EXPECT_EQ(flat_overlay.clip_to_tile(), true);
 
@@ -1276,23 +1278,23 @@ TEST_F(MapboxTranslation, parse_vector_line_layer)
             EXPECT_EQ(vtl.style().representations_size(), 1);
             EXPECT_EQ(
                 vtl.style().representations(0).type(),
-                hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
 
-            const auto& style = vtl.style().representations(0).flat_overlay_geometry();
+            const auto& style = vtl.style().representations(0).flat_overlay_polyline();
 
             auto color_rgba =
                 hrz::convert_uint_color_to_rgba(hrz::parse_color_string("#ff0000").value());
-            color_rgba.a = 0.8;
+            color_rgba.a = 0.8F;
             EXPECT_EQ(
                 hrz::convert_proto_color_to_uint(style.color().default_value()),
                 hrz::convert_rgba_color_to_uint(color_rgba));
 
             EXPECT_TRUE(style.round_tips());
 
-            EXPECT_EQ(style.line_width().default_value(), 4);
-            EXPECT_EQ(style.line_width_unit(), hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
+            EXPECT_EQ(style.width().default_value(), 4);
+            EXPECT_EQ(style.width_unit(), hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
 
-            EXPECT_EQ(style.dash_mode(), hrz_proto::DashMode::DASH_DISABLED);
+            EXPECT_EQ(style.dashes().mode(), hrz_proto::DashMode::DASH_DISABLED);
         }
         else if (layer.has_vector_data())
         {
@@ -1333,28 +1335,30 @@ TEST_F(MapboxTranslation, parse_vector_line_layer_dashes)
             EXPECT_EQ(vtl.style().representations_size(), 1);
             EXPECT_EQ(
                 vtl.style().representations(0).type(),
-                hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
 
-            const auto& style = vtl.style().representations(0).flat_overlay_geometry();
+            const auto& style = vtl.style().representations(0).flat_overlay_polyline();
 
             auto main_color = hrz::parse_color_string("#ff0000").value();
             EXPECT_EQ(hrz::convert_proto_color_to_uint(style.color().default_value()), main_color);
 
-            auto empty_color = hrz::convert_rgba_color_to_uint({});
+            auto secondary_color = hrz::convert_rgba_color_to_uint({});
             EXPECT_EQ(
-                hrz::convert_proto_color_to_uint(style.line_empty_color().default_value()),
-                empty_color);
+                hrz::convert_proto_color_to_uint(style.dashes().secondary_color().default_value()),
+                secondary_color);
 
             EXPECT_FALSE(style.round_tips());
 
-            EXPECT_EQ(style.line_width().default_value(), 4);
-            EXPECT_EQ(style.line_width_unit(), hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
+            EXPECT_EQ(style.width().default_value(), 4);
+            EXPECT_EQ(style.width_unit(), hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
 
-            EXPECT_EQ(style.dash_mode(), hrz_proto::DashMode::DASH_ENABLED_FILLED);
-            EXPECT_EQ(style.dash_length().default_value(), 4 * 4 * 2);
-            EXPECT_EQ(style.dash_period().default_value(), (4 + 2) * 4 * 2);
-            EXPECT_EQ(style.dash_length_unit(), hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
-            EXPECT_EQ(style.dash_period_unit(), hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
+            EXPECT_EQ(style.dashes().mode(), hrz_proto::DashMode::DASH_ENABLED_FILLED);
+            EXPECT_EQ(style.dashes().primary_segment_length().default_value(), 4 * 4 * 2);
+            EXPECT_EQ(style.dashes().period().default_value(), (4 + 2) * 4 * 2);
+            EXPECT_EQ(
+                style.dashes().primary_segment_length_unit(),
+                hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
+            EXPECT_EQ(style.dashes().period_unit(), hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
         }
     };
 }
@@ -2184,14 +2188,15 @@ TEST_F(MapboxTranslation, parse_vector_layer_z_order)
                 EXPECT_EQ(vtl.style().representations_size(), 2);
                 for (const auto& repr : vtl.style().representations())
                 {
-                    EXPECT_EQ(repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                    EXPECT_EQ(
+                        repr.type(), hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR);
                     if (repr.name() == "fill-1")
                     {
-                        flat_overlay_z_indices[0] = repr.flat_overlay_geometry().z_index();
+                        flat_overlay_z_indices[0] = repr.flat_overlay_polygon().z_index();
                     }
                     else if (repr.name() == "fill-2")
                     {
-                        flat_overlay_z_indices[2] = repr.flat_overlay_geometry().z_index();
+                        flat_overlay_z_indices[2] = repr.flat_overlay_polygon().z_index();
                     }
                     else
                     {
@@ -2205,9 +2210,9 @@ TEST_F(MapboxTranslation, parse_vector_layer_z_order)
                 EXPECT_EQ(vtl.style().representations(0).name(), "line");
                 EXPECT_EQ(
                     vtl.style().representations(0).type(),
-                    hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                    hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
                 flat_overlay_z_indices[1] =
-                    vtl.style().representations(0).flat_overlay_geometry().z_index();
+                    vtl.style().representations(0).flat_overlay_polyline().z_index();
             }
             else if (layer.name() == "grid")
             {

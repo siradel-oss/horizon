@@ -458,23 +458,7 @@ public:
         }
     }
 
-    bool tile_is_ready(const Tile* tile) const
-    {
-        return tile->status == Tile::Status::Ready || tile->status == Tile::Status::Error;
-    }
-
     void remove_tile(TileH handle) { _removed.insert(handle); }
-
-    void remove_from_set(TileH handle, Tile::Status status)
-    {
-        switch (status)
-        {
-            case Tile::Status::ReadyToBake: _to_bake.erase(handle); break;
-            case Tile::Status::Baking: _baking.erase(handle); break;
-            case Tile::Status::FinishedBaking: _finished_baking.erase(handle); break;
-            default: break;
-        }
-    }
 
     void work_remove_tile(WorkCtx& ctx, TileH handle, Tile* tile)
     {

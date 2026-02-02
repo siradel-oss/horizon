@@ -44,6 +44,7 @@ build:wasm_common --per_file_copt=external/.*$@-Wno-everything
 
 build:wasm_windows --config=wasm_common
 build:wasm_windows --host_cxxopt=/std:c++20
+build:wasm_windows --host_copt=/utf-8
 build:wasm_windows --host_copt=/wd4141 # Disables "'inline': used more than once"
 
 build:wasm_linux --config=wasm_common

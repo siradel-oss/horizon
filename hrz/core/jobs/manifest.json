@@ -65,9 +65,23 @@
       "hrz/core/jobs/vector_tiles_jobs_params.h"
     ]
   },
-  "bake_flat_vector_geometry": {
-    "params_type": "struct hrz_jobs::FlatVectorData",
-    "response_type": "struct hrz_jobs::FlatVectorGeometry",
+  "bake_flat_point_geometry": {
+    "params_type": "struct hrz_jobs::FlatPointData",
+    "response_type": "struct hrz_jobs::FlatPointGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
+  },
+  "bake_flat_polyline_geometry": {
+    "params_type": "struct hrz_jobs::FlatPolylineData",
+    "response_type": "struct hrz_jobs::FlatPolylineGeometry",
+    "includes": [
+      "hrz/core/jobs/vector_tiles_jobs_params.h"
+    ]
+  },
+  "bake_flat_polygon_geometry": {
+    "params_type": "struct hrz_jobs::FlatPolygonData",
+    "response_type": "struct hrz_jobs::FlatPolygonGeometry",
     "includes": [
       "hrz/core/jobs/vector_tiles_jobs_params.h"
     ]

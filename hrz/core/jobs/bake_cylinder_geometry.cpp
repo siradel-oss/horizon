@@ -53,7 +53,7 @@ hrz_jobs::JobResult run(
         context.get_blob_allocator(), InitialBSpherePointCapacity);
     bool has_transparency = false;
     bool is_animated = false;
-    bool has_caps = input.dash_mode == hrz_proto::DASH_DISABLED;
+    bool has_caps = input.dashes.mode == hrz_proto::DASH_DISABLED;
 
     hrz::FeatureClampingGenerator clamps_gen(input_clamps.as_span(), input.clamping);
 
@@ -76,10 +76,10 @@ hrz_jobs::JobResult run(
         double altitude_offset = input.default_altitude_offset;
         float radius = input.default_radius;
         lm::ubvec4 fill_color_srgb = input.default_color_srgb;
-        lm::ubvec4 empty_color_srgb = input.default_empty_color_srgb;
-        float dash_period = input.default_dash_period;
-        float dash_length = input.default_dash_length;
-        float animation_speed = input.default_animation_speed;
+        lm::ubvec4 secondary_color_srgb = input.dashes.default_secondary_color_srgb;
+        float dash_period = input.dashes.default_period;
+        float dash_primary_length = input.dashes.default_primary_length;
+        float animation_speed = input.dashes.default_animation_speed;
 
         for (uint64_t j = prp_begin; j < prp_end; ++j)
         {
@@ -95,19 +95,19 @@ hrz_jobs::JobResult run(
             {
                 fill_color_srgb = style_values.as_color(j);
             }
-            if (style_prps[j] == input.empty_color_prp)
+            if (style_prps[j] == input.dashes.secondary_color_prp)
             {
-                empty_color_srgb = style_values.as_color(j);
+                secondary_color_srgb = style_values.as_color(j);
             }
-            if (style_prps[j] == input.dash_period_prp)
+            if (style_prps[j] == input.dashes.period_prp)
             {
                 dash_period = (float)style_values.as_number(j);
             }
-            if (style_prps[j] == input.dash_length_prp)
+            if (style_prps[j] == input.dashes.primary_length_prp)
             {
-                dash_length = (float)style_values.as_number(j);
+                dash_primary_length = (float)style_values.as_number(j);
             }
-            if (style_prps[j] == input.animation_speed_prp)
+            if (style_prps[j] == input.dashes.animation_speed_prp)
             {
                 animation_speed = (float)style_values.as_number(j);
             }
@@ -115,8 +115,8 @@ hrz_jobs::JobResult run(
 
         lm::vec4 fill_color_oklab =
             hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(fill_color_srgb));
-        lm::vec4 empty_color_oklab =
-            hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(empty_color_srgb));
+        lm::vec4 secondary_color_oklab =
+            hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(secondary_color_srgb));
 
         // This stores Oklab colours in 8-bit-per-channel vectors. It's not
         // great, and some precision is lost. (Usually only sRGB colours should
@@ -124,9 +124,10 @@ hrz_jobs::JobResult run(
         // between these two colours in done with floats in the shader, so
         // the precision loss should be acceptable.
         lm::ubvec4 fill_color_oklab_uint8 = hrz::convert_rgba_color_to_bytes(fill_color_oklab);
-        lm::ubvec4 empty_color_oklab_uint8 = hrz::convert_rgba_color_to_bytes(empty_color_oklab);
+        lm::ubvec4 secondary_color_oklab_uint8 =
+            hrz::convert_rgba_color_to_bytes(secondary_color_oklab);
 
-        switch (input.dash_mode)
+        switch (input.dashes.mode)
         {
             case hrz_proto::DASH_DISABLED:
                 has_transparency =
@@ -136,12 +137,12 @@ hrz_jobs::JobResult run(
             case hrz_proto::DASH_ENABLED_FILLED:
                 has_transparency =
                     (fill_color_oklab_uint8.a != 255 && fill_color_oklab_uint8.a != 0)
-                    || (empty_color_oklab_uint8.a != 255 && empty_color_oklab_uint8.a != 0);
+                    || (secondary_color_oklab_uint8.a != 255 && secondary_color_oklab_uint8.a != 0);
                 break;
 
             case hrz_proto::DASH_ENABLED_GRADIENT:
                 has_transparency =
-                    (fill_color_oklab_uint8.a != 255 || empty_color_oklab_uint8.a != 255);
+                    (fill_color_oklab_uint8.a != 255 || secondary_color_oklab_uint8.a != 255);
                 break;
 
             default: assert(false && "Unhandled case");
@@ -233,9 +234,9 @@ hrz_jobs::JobResult run(
                      progress0,
                      progress,
                      dash_period,
-                     dash_length,
+                     dash_primary_length,
                      animation_speed,
-                     empty_color_oklab_uint8,
+                     secondary_color_oklab_uint8,
                      feature_index,
                      feature_id});
 
@@ -256,9 +257,9 @@ hrz_jobs::JobResult run(
                          progress0,
                          progress0,
                          dash_period,
-                         dash_length,
+                         dash_primary_length,
                          animation_speed,
-                         empty_color_oklab_uint8,
+                         secondary_color_oklab_uint8,
                          feature_index,
                          feature_id});
                 }
@@ -278,9 +279,9 @@ hrz_jobs::JobResult run(
                          progress,
                          progress,
                          dash_period,
-                         dash_length,
+                         dash_primary_length,
                          animation_speed,
-                         empty_color_oklab_uint8,
+                         secondary_color_oklab_uint8,
                          feature_index,
                          feature_id});
                 }

@@ -32,13 +32,10 @@ uniform highp usampler2D u_instance_feature_id;
 uniform highp usampler2D u_instance_object_id;
 #endif
 
+#include "common/selection.glsl"
 bool fetch_selection()
 {
-    int bucket_index = gl_InstanceID / 32;
-    ivec2 coord = ivec2(bucket_index % 2048, bucket_index / 2048);
-    int bit_index = gl_InstanceID % 32;
-    uint bitmask = texelFetch(u_selection, coord, 0).r;
-    return (bitmask & (1u << bit_index)) != 0u;
+    return fetch_selection_storage(u_selection, uint(gl_InstanceID));
 }
 
 ivec2 get_pixel_coords(int instance)

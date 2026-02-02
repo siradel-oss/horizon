@@ -2277,7 +2277,9 @@ struct VectorTilesActor : public Actor
     {
         switch (type)
         {
-            case hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR:
+            case hrz_proto::VectorReprType::FLAT_OVERLAY_POINT_VECTOR_REPR:
+            case hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR:
+            case hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR:
             case hrz_proto::VectorReprType::HEATMAP_VECTOR_REPR: return true;
 
             case hrz_proto::VectorReprType::CYLINDER_VECTOR_REPR:

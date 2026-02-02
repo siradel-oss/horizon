@@ -1017,20 +1017,14 @@ bool create_fill_repr(
     const rapidjson::Value& layout_node,
     const rapidjson::Value& sprite_index,
     std::string_view sprite_image_url,
-    hrz_proto::FlatOverlayVectorRepr* flat_overlay,
-    std::optional<hrz_proto::FlatOverlayVectorRepr>* outline_flat_overlay,
+    hrz_proto::FlatOverlayPolygonVectorRepr* flat_overlay,
+    std::optional<hrz_proto::FlatOverlayPolylineVectorRepr>* outline_flat_overlay,
     uint32_t* next_flat_overlay_z_index,
     ExpressionContext& expr,
     PropertyAdder& properties)
 {
-    auto initialize_flat_overlay_repr = [&](hrz_proto::FlatOverlayVectorRepr* repr)
-    {
-        repr->set_z_index(*next_flat_overlay_z_index);
-        *next_flat_overlay_z_index += 1;
-        repr->set_clip_to_tile(true);
-    };
-
-    initialize_flat_overlay_repr(flat_overlay);
+    flat_overlay->set_z_index((*next_flat_overlay_z_index)++);
+    flat_overlay->set_clip_to_tile(true);
 
     // https://docs.mapbox.com/style-spec/reference/layers/#paint-fill-fill-antialias
     Value fill_antialias(Value::from(true));
@@ -1065,11 +1059,12 @@ bool create_fill_repr(
             "fill-pattern", MapboxPropertyType::String, paint_node, &fill_pattern, expr);
     }
 
-    bool has_fill_pattern = !fill_pattern.is_literal() || !fill_pattern.default_value.str.empty();
+    const bool has_fill_pattern =
+        !fill_pattern.is_literal() || !fill_pattern.default_value.str.empty();
 
     // The spec says about fill-outline-color "Disabled by fill-pattern".
     // But in practice it isn't true.
-    bool has_outline = fill_antialias.b64 == true && fill_outline_color_opt.has_value()
+    const bool has_outline = fill_antialias.b64 == true && fill_outline_color_opt.has_value()
         && (!fill_opacity.is_literal() || fill_opacity.default_value.f64 > 0.0);
 
     if (!has_fill_pattern)
@@ -1080,21 +1075,22 @@ bool create_fill_repr(
     }
     else
     {
-        flat_overlay->mutable_color()->mutable_default_value()->set_r(1.0f);
-        flat_overlay->mutable_color()->mutable_default_value()->set_g(1.0f);
-        flat_overlay->mutable_color()->mutable_default_value()->set_b(1.0f);
-        flat_overlay->mutable_color()->mutable_default_value()->set_a(0.0f);
+        flat_overlay->mutable_color()->mutable_default_value()->set_r(1.0F);
+        flat_overlay->mutable_color()->mutable_default_value()->set_g(1.0F);
+        flat_overlay->mutable_color()->mutable_default_value()->set_b(1.0F);
+        flat_overlay->mutable_color()->mutable_default_value()->set_a(0.0F);
     }
 
     if (has_outline)
     {
         outline_flat_overlay->emplace();
-        initialize_flat_overlay_repr(&outline_flat_overlay->value());
 
-        outline_flat_overlay->value().set_polygons_outline(true);
-        outline_flat_overlay->value().set_line_width_unit(
+        outline_flat_overlay->value().set_z_index((*next_flat_overlay_z_index)++);
+        outline_flat_overlay->value().set_clip_to_tile(true);
+
+        outline_flat_overlay->value().set_width_unit(
             hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
-        outline_flat_overlay->value().mutable_line_width()->set_default_value(1.0f);
+        outline_flat_overlay->value().mutable_width()->set_default_value(1.0F);
         outline_flat_overlay->value().set_side(hrz_proto::PolylineSide::SIDE_INSIDE);
 
         properties.add(
@@ -1115,26 +1111,25 @@ bool create_fill_repr(
             }
         }
 
-        flat_overlay->set_pattern_image_url(sprite_image_url.data(), sprite_image_url.size());
-        flat_overlay->mutable_pattern_image_http_headers()->CopyFrom(image.http_headers());
+        auto* pattern = flat_overlay->mutable_pattern();
+        pattern->set_image_url(sprite_image_url.data(), sprite_image_url.size());
+        pattern->mutable_image_http_headers()->CopyFrom(image.http_headers());
 
         for (const auto& sprite : image.sprites())
         {
-            flat_overlay->add_pattern_sprites()->CopyFrom(sprite);
+            pattern->add_sprites()->CopyFrom(sprite);
         }
 
-        properties.add(
-            "polygon_pattern_sprite_name", fill_pattern,
-            flat_overlay->mutable_polygon_pattern_sprite_name());
-        flat_overlay->mutable_polygon_pattern_size()->mutable_default_value()->set_x(1.0f);
-        flat_overlay->mutable_polygon_pattern_size()->mutable_default_value()->set_y(1.0f);
-        flat_overlay->set_polygon_pattern_size_unit(
+        properties.add("polygon_pattern_sprite_name", fill_pattern, pattern->mutable_sprite_name());
+        pattern->mutable_size()->mutable_default_value()->set_x(1.0F);
+        pattern->mutable_size()->mutable_default_value()->set_y(1.0F);
+        pattern->set_size_unit(
             hrz_proto::PolygonPatternSizeUnit::POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_PIXELS);
 
-        Property::Generic white(Value::from((uint64_t)0xffffffff));
+        const Property::Generic white(Value::from((uint64_t)0xffffffff));
         properties.add(
             "polygon_pattern_color", Property::ColorWithOpacity(white, fill_opacity),
-            flat_overlay->mutable_polygon_pattern_color());
+            pattern->mutable_color());
     }
 
     return true;
@@ -1143,16 +1138,17 @@ bool create_fill_repr(
 bool create_line_repr(
     const rapidjson::Value& paint_node,
     const rapidjson::Value& layout_node,
-    hrz_proto::FlatOverlayVectorRepr* flat_overlay,
+    hrz_proto::FlatOverlayPolylineVectorRepr* flat_overlay,
     uint32_t* next_flat_overlay_z_index,
     ExpressionContext& expr,
     PropertyAdder& properties)
 {
-    flat_overlay->set_line_width_unit(hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
-    flat_overlay->set_dash_length_unit(hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
-    flat_overlay->set_dash_period_unit(hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
+    auto* dashes = flat_overlay->mutable_dashes();
+
+    flat_overlay->set_width_unit(hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
+    dashes->set_primary_segment_length_unit(hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
+    dashes->set_period_unit(hrz_proto::DashSizeUnit::DASH_SIZE_IN_PIXELS);
     flat_overlay->set_z_index((*next_flat_overlay_z_index)++);
-    flat_overlay->set_polygons_outline(true);
     flat_overlay->set_clip_to_tile(true);
 
     // https://docs.mapbox.com/style-spec/reference/layers/#paint-line-line-color
@@ -1239,19 +1235,19 @@ bool create_line_repr(
         "line_color", Property::ColorWithOpacity(line_color, line_opacity),
         flat_overlay->mutable_color());
 
-    properties.add("line_width", line_width, flat_overlay->mutable_line_width());
+    properties.add("line_width", line_width, flat_overlay->mutable_width());
 
-    properties.add("dash_length", dash_length, flat_overlay->mutable_dash_length());
+    properties.add("dash_length", dash_length, dashes->mutable_primary_segment_length());
 
-    properties.add("dash_period", dash_period, flat_overlay->mutable_dash_period());
+    properties.add("dash_period", dash_period, dashes->mutable_period());
 
     if (dash_length.is_literal() && dash_length.default_value.f64 == 0.0)
     {
-        flat_overlay->set_dash_mode(hrz_proto::DashMode::DASH_DISABLED);
+        dashes->set_mode(hrz_proto::DashMode::DASH_DISABLED);
     }
     else
     {
-        flat_overlay->set_dash_mode(hrz_proto::DashMode::DASH_ENABLED_FILLED);
+        dashes->set_mode(hrz_proto::DashMode::DASH_ENABLED_FILLED);
     }
 
     flat_overlay->set_round_tips(line_cap.str == std::string_view("round"));
@@ -2464,7 +2460,7 @@ bool parse_vector_layer(
         auto* style = vector_layer->model.mutable_style();
 
         hrz::InlinedVector<std::string_view, 2> new_representation_names;
-        uint32_t first_new_representation_index = style->representations_size();
+        const int first_new_representation_index = style->representations_size();
 
         auto add_repr = [&](std::string_view name)
         {
@@ -2494,20 +2490,20 @@ bool parse_vector_layer(
             case MapboxVectorReprType::Fill:
             {
                 auto* repr = add_repr(layer_id);
-                repr->set_type(hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                repr->set_type(hrz_proto::VectorReprType::FLAT_OVERLAY_POLYGON_VECTOR_REPR);
 
-                std::optional<hrz_proto::FlatOverlayVectorRepr> outline_flat_overlay;
+                std::optional<hrz_proto::FlatOverlayPolylineVectorRepr> outline_flat_overlay;
 
                 create_fill_repr(
                     paint, layout, sprite_index, ctx->sprite_image_url,
-                    repr->mutable_flat_overlay_geometry(), &outline_flat_overlay,
+                    repr->mutable_flat_overlay_polygon(), &outline_flat_overlay,
                     &ctx->next_flat_overlay_z_index, expr, property_adder);
 
                 if (outline_flat_overlay.has_value())
                 {
                     auto* outline_repr = add_repr(fmt::format("{}_hrz_outline", layer_id));
-                    outline_repr->set_type(hrz_proto::FLAT_OVERLAY_VECTOR_REPR);
-                    outline_repr->mutable_flat_overlay_geometry()->CopyFrom(
+                    outline_repr->set_type(hrz_proto::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
+                    outline_repr->mutable_flat_overlay_polyline()->CopyFrom(
                         outline_flat_overlay.value());
                 }
 
@@ -2516,10 +2512,10 @@ bool parse_vector_layer(
             case MapboxVectorReprType::Line:
             {
                 auto* repr = add_repr(layer_id);
-                repr->set_type(hrz_proto::VectorReprType::FLAT_OVERLAY_VECTOR_REPR);
+                repr->set_type(hrz_proto::VectorReprType::FLAT_OVERLAY_POLYLINE_VECTOR_REPR);
 
                 create_line_repr(
-                    paint, layout, repr->mutable_flat_overlay_geometry(),
+                    paint, layout, repr->mutable_flat_overlay_polyline(),
                     &ctx->next_flat_overlay_z_index, expr, property_adder);
                 break;
             }
@@ -2595,7 +2591,7 @@ bool parse_vector_layer(
             vector_layer->model.mutable_clamping()->set_method(repr_clamp_mode);
         }
 
-        if (first_new_representation_index < (size_t)style->representations_size())
+        if (first_new_representation_index < style->representations_size())
         {
             assert(!new_representation_names.empty());
             generate_representations_script(

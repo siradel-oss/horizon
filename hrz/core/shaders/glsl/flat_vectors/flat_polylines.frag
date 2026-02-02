@@ -4,11 +4,11 @@
 #include "common/highlight.glsl"
 #include "common/maths.glsl"
 #include "common/polylines.frag.glsl"
-#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/tile_polylines_defs.glsl"
 #include "flat_vectors/overlay_passes_defs.glsl"
 
 #define varying in
-#include "flat_vectors/interface.glsl"
+#include "flat_vectors/interface_polylines.glsl"
 
 #include "flat_vectors/common.frag.glsl"
 
@@ -100,10 +100,10 @@ void main()
     }
 
 #ifdef FLAT_VISUAL
-    // The colours are not premulitiplied. If one of the two colours is fully transparent,
+    // The colours are not premultiplied. If one of the two colours is fully transparent,
     // its non-alpha components will have an effect.
     // This is different from typical blending, and is voluntary.
-    vec4 color = oklab_to_linear(mix(v_empty_color_oklab, v_color, dash_value));
+    vec4 color = oklab_to_linear(mix(v_secondary_color_oklab, v_color, dash_value));
 
     // The blended colour is now premultiplied.
     color.rgb *= color.a;

@@ -14,7 +14,7 @@ layout(std140) uniform Tile
 
     // See `DASH_SIZE_UNIT` defines.
     uint dash_period_unit;
-    uint dash_length_unit;
+    uint dash_primary_length_unit;
 
     uvec3 feature_reference;
 

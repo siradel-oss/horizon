@@ -60,7 +60,9 @@ namespace vt
 {
 void collect_cylinder_shaders(hrz::GpuResourceContext*);
 void collect_extruded_shaders(hrz::GpuResourceContext*);
-void collect_flat_overlay_shaders(hrz::GpuResourceContext*);
+void collect_flat_overlay_point_shaders(hrz::GpuResourceContext*);
+void collect_flat_overlay_polyline_shaders(hrz::GpuResourceContext*);
+void collect_flat_overlay_polygon_shaders(hrz::GpuResourceContext*);
 void collect_heatmap_shaders(hrz::GpuResourceContext*);
 void collect_symbol_shaders(hrz::GpuResourceContext*);
 
@@ -68,7 +70,9 @@ void collect_shaders(hrz::GpuResourceContext* rc)
 {
     collect_cylinder_shaders(rc);
     collect_extruded_shaders(rc);
-    collect_flat_overlay_shaders(rc);
+    collect_flat_overlay_point_shaders(rc);
+    collect_flat_overlay_polyline_shaders(rc);
+    collect_flat_overlay_polygon_shaders(rc);
     collect_heatmap_shaders(rc);
     collect_symbol_shaders(rc);
 }

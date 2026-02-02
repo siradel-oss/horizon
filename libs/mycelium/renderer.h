@@ -197,6 +197,12 @@ public:
     class UserDataRenderable
     {
     public:
+        UserDataRenderable() = default;
+        UserDataRenderable(const UserDataRenderable&) = default;
+        UserDataRenderable& operator=(const UserDataRenderable&) = default;
+        UserDataRenderable(UserDataRenderable&&) = default;
+        UserDataRenderable& operator=(UserDataRenderable&&) = default;
+
         virtual ~UserDataRenderable() = default;
 
         virtual void collect_render_info_user_data(Queue&, const Culler&, void*) const = 0;

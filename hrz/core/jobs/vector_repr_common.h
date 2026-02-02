@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hrz/common/geo.h"
 #include "hrz/common/maths.h"
 #include "hrz/common/tile_coords.h"
 #include "hrz/fnd/array_view.h"
@@ -33,5 +34,11 @@ std::pair<lm::vec3, bool> compute_joint_normal(
     const lm::dvec3& a,
     const lm::dvec3& b,
     const lm::dvec3& c);
+
+static constexpr uint8_t MAX_LOD_FOR_SUBDIVISION = 7;
+
+// Computes the maximum angular length of a segment for a given LOD above
+// which it is a good idea to subdivide it for better appearance.
+double max_segment_angular_length_for_lod(uint8_t lod);
 
 } // namespace hrz::vector_repr

@@ -57,6 +57,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
+        "//hrz/fnd",
         "//hrz/protocol/history:descriptor_sets_list",
         "//hrz/protocol/history:scene_model_version",
     ],

@@ -1,6 +1,11 @@
+#include "hrz/fnd/function_ref.h"
+#include "hrz/fnd/meta.h"
 #include "hrz/scene_dump/dynamic_message.h"
 
+#include <fmt/format.h>
+
 #include <array>
+#include <regex>
 #include <unordered_map>
 
 namespace hrz::migration
@@ -10,7 +15,7 @@ namespace
 bool walk_common_fields(
     const DynamicMessage& src_msg,
     DynamicMessage* dst_msg,
-    std::function<bool(const DynamicMessage&, DynamicMessage*)> migration_func)
+    hrz::function_ref<bool(const DynamicMessage&, DynamicMessage*)> migration_func)
 {
     if (!migration_func(src_msg, dst_msg)) return false;
 
@@ -62,9 +67,9 @@ bool visit_layers_of_type(
     const char* layer_type_name,
     const DynamicMessage& src,
     DynamicMessage* dst,
-    std::function<bool(const DynamicMessage&, DynamicMessage*)> cb)
+    hrz::function_ref<bool(std::string_view layer_name, const DynamicMessage&, DynamicMessage*)> cb)
 {
-    int layer_count = src.field_size("layers");
+    const int layer_count = src.field_size("layers");
     if (dst->field_size("layers") != layer_count) return false;
 
     for (int i = 0; i < layer_count; ++i)
@@ -77,11 +82,23 @@ bool visit_layers_of_type(
         {
             auto src_layer = src_layer_dump.get_message(layer_type_name);
             auto dst_layer = dst_layer_dump.get_message(layer_type_name);
-            if (!cb(src_layer, &dst_layer)) return false;
+            if (!cb(src_layer_dump.get_string("name"), src_layer, &dst_layer)) return false;
         }
     }
 
     return true;
+}
+
+bool visit_layers_of_type(
+    const char* layer_type_name,
+    const DynamicMessage& src,
+    DynamicMessage* dst,
+    hrz::function_ref<bool(const DynamicMessage&, DynamicMessage*)> cb)
+{
+    return visit_layers_of_type(
+        layer_type_name, src, dst,
+        [&](std::string_view, const DynamicMessage& src_layer, DynamicMessage* dst_layer)
+        { return cb(src_layer, dst_layer); });
 }
 
 bool walk_fields_of_type(
@@ -655,23 +672,62 @@ bool migration_ead9a411_to_c3c66848(const DynamicMessage& src, DynamicMessage* d
 // Runtime provided properties. Use the old property name in the new property name text field.
 bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* dst)
 {
-#define UPDATE_SCALAR_FIELD(NAME, TYPE)                                     \
-    do                                                                      \
-    {                                                                       \
-        auto field = dst.get_message(NAME);                                 \
-        field.set_string("name", NAME);                                     \
-        field.set_##TYPE("default_value", src.get_##TYPE("default_" NAME)); \
+    // Check that the script has things of the form 'set "<property name>" =';
+    auto script_has_property_setters = [](std::string_view script,
+                                          std::string_view property_name) -> bool
+    {
+        const std::regex pattern(fmt::format(R"(set\s+"{}"\s*=)", property_name));
+        return std::regex_search(script.begin(), script.end(), pattern);
+    };
+
+    auto migrate_scalar_field = hrz::overload{
+        [&script_has_property_setters](
+            std::type_identity<float>, const DynamicMessage& src, DynamicMessage& dst,
+            std::string_view property_name, std::string_view default_property_name,
+            std::string_view styling_script)
+        {
+            const float default_value = src.get_float(default_property_name);
+            if (default_value != 0.0F)
+            {
+                dst.get_message(property_name).set_float("default_value", default_value);
+            }
+
+            if (script_has_property_setters(styling_script, property_name))
+            {
+                dst.get_message(property_name).set_string("name", std::string(property_name));
+            }
+        },
+    };
+
+    auto migrate_message_field =
+        [&script_has_property_setters](
+            const DynamicMessage& src, DynamicMessage& dst, std::string_view property_name,
+            std::string_view default_property_name, std::string_view styling_script)
+    {
+        dst.get_message(property_name)
+            .copy_message("default_value", src.get_message(default_property_name));
+
+        if (script_has_property_setters(styling_script, property_name))
+        {
+            dst.get_message(property_name).set_string("name", std::string(property_name));
+        }
+    };
+
+#define UPDATE_SCALAR_FIELD(NAME, TYPE)                                                   \
+    do                                                                                    \
+    {                                                                                     \
+        migrate_scalar_field(                                                             \
+            std::type_identity<TYPE>{}, src, dst, NAME, "default_" NAME, styling_script); \
     } while (0)
 
-#define UPDATE_MESSAGE_FIELD(NAME)                                             \
-    do                                                                         \
-    {                                                                          \
-        auto field = dst.get_message(NAME);                                    \
-        field.set_string("name", NAME);                                        \
-        field.copy_message("default_value", src.get_message("default_" NAME)); \
+#define UPDATE_MESSAGE_FIELD(NAME)                                              \
+    do                                                                          \
+    {                                                                           \
+        migrate_message_field(src, dst, NAME, "default_" NAME, styling_script); \
     } while (0)
 
-    auto migrate_extruded_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_extruded_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                     std::string_view styling_script) -> bool
     {
         UPDATE_SCALAR_FIELD("extrusion", float);
         UPDATE_MESSAGE_FIELD("color");
@@ -679,21 +735,25 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         return true;
     };
 
-    auto migrate_sprite_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_sprite_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                   std::string_view styling_script) -> bool
     {
         UPDATE_MESSAGE_FIELD("color");
         UPDATE_SCALAR_FIELD("size", float);
         UPDATE_MESSAGE_FIELD("world_offset");
         UPDATE_MESSAGE_FIELD("screen_offset");
 
-        auto scale = dst.get_message("scale");
-        scale.set_string("name", "scale");
-        scale.set_float("default_value", 1.0);
+        dst.get_message("scale").set_float("default_value", 1.0);
+        if (script_has_property_setters(styling_script, "scale"))
+        {
+            dst.get_message("scale").set_string("name", "scale");
+        }
 
         return true;
     };
 
-    auto migrate_model_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_model_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                  std::string_view styling_script) -> bool
     {
         UPDATE_MESSAGE_FIELD("color");
         UPDATE_SCALAR_FIELD("scale", float);
@@ -702,7 +762,8 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         return true;
     };
 
-    auto migrate_stem_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_stem_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                 std::string_view styling_script) -> bool
     {
         UPDATE_MESSAGE_FIELD("color");
         UPDATE_SCALAR_FIELD("height", float);
@@ -710,7 +771,8 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         return true;
     };
 
-    auto migrate_cylinder_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_cylinder_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                     std::string_view styling_script) -> bool
     {
         UPDATE_MESSAGE_FIELD("color");
         UPDATE_SCALAR_FIELD("radius", float);
@@ -722,7 +784,8 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         return true;
     };
 
-    auto migrate_text_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_text_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                 std::string_view styling_script) -> bool
     {
         UPDATE_MESSAGE_FIELD("text_color");
         UPDATE_MESSAGE_FIELD("outline_color");
@@ -731,18 +794,22 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         UPDATE_MESSAGE_FIELD("world_offset");
         UPDATE_MESSAGE_FIELD("screen_offset");
 
-        auto text = dst.get_message("text");
-        text.set_string("name", "text");
-        text.set_string("default_value", "");
+        if (script_has_property_setters(styling_script, "text"))
+        {
+            dst.get_message("text").set_string("name", "text");
+        }
 
-        auto scale = dst.get_message("scale");
-        scale.set_string("name", "scale");
-        scale.set_float("default_value", 1.0);
+        dst.get_message("scale").set_float("default_value", 1.0);
+        if (script_has_property_setters(styling_script, "scale"))
+        {
+            dst.get_message("scale").set_string("name", "scale");
+        }
 
         return true;
     };
 
-    auto migrate_flat_overlay_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_flat_overlay_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                         std::string_view styling_script) -> bool
     {
         UPDATE_SCALAR_FIELD("line_width", float);
         UPDATE_MESSAGE_FIELD("color");
@@ -754,7 +821,8 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         return true;
     };
 
-    auto migrate_heatmap_repr = [&](const DynamicMessage& src, DynamicMessage& dst) -> bool
+    auto migrate_heatmap_repr = [&](const DynamicMessage& src, DynamicMessage& dst,
+                                    std::string_view styling_script) -> bool
     {
         UPDATE_SCALAR_FIELD("disc_radius", float);
         UPDATE_SCALAR_FIELD("value", float);
@@ -769,11 +837,13 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
         auto src_style = src.get_message("style");
         auto dst_style = dst->get_message("style");
 
-        size_t repr_count = dst_style.field_size("representations");
-        for (size_t j = 0; j < repr_count; ++j)
+        const auto styling_script = src_style.get_string("styling_script");
+
+        const int repr_count = dst_style.field_size("representations");
+        for (int i = 0; i < repr_count; ++i)
         {
-            auto src_repr = src_style.get_repeated_message("representations", j);
-            auto dst_repr = dst_style.get_repeated_message("representations", j);
+            auto src_repr = src_style.get_repeated_message("representations", i);
+            auto dst_repr = dst_style.get_repeated_message("representations", i);
 
             if (src_repr.get_enum("type") == "NONE")
             {
@@ -784,56 +854,56 @@ bool migration_c3c66848_to_7363df2a(const DynamicMessage& src, DynamicMessage* d
                 dst_repr.set_enum("type", "EXTRUDED_GEOMETRY_VECTOR_REPR");
                 auto src_extruded = src_repr.get_message("extruded_geometry");
                 auto dst_extruded = dst_repr.get_message("extruded_geometry");
-                migrate_extruded_repr(src_extruded, dst_extruded);
+                migrate_extruded_repr(src_extruded, dst_extruded, styling_script);
             }
             else if (src_repr.get_enum("type") == "SPRITE")
             {
                 dst_repr.set_enum("type", "SPRITE_VECTOR_REPR");
                 auto src_sprite = src_repr.get_message("sprite");
                 auto dst_sprite = dst_repr.get_message("sprite");
-                migrate_sprite_repr(src_sprite, dst_sprite);
+                migrate_sprite_repr(src_sprite, dst_sprite, styling_script);
             }
             else if (src_repr.get_enum("type") == "MODEL")
             {
                 dst_repr.set_enum("type", "MODEL_VECTOR_REPR");
                 auto src_model = src_repr.get_message("model");
                 auto dst_model = dst_repr.get_message("model");
-                migrate_model_repr(src_model, dst_model);
+                migrate_model_repr(src_model, dst_model, styling_script);
             }
             else if (src_repr.get_enum("type") == "STEM")
             {
                 dst_repr.set_enum("type", "STEM_VECTOR_REPR");
                 auto src_stem = src_repr.get_message("stem");
                 auto dst_stem = dst_repr.get_message("stem");
-                migrate_stem_repr(src_stem, dst_stem);
+                migrate_stem_repr(src_stem, dst_stem, styling_script);
             }
             else if (src_repr.get_enum("type") == "CYLINDER")
             {
                 dst_repr.set_enum("type", "CYLINDER_VECTOR_REPR");
                 auto src_cylinder = src_repr.get_message("cylinder");
                 auto dst_cylinder = dst_repr.get_message("cylinder");
-                migrate_cylinder_repr(src_cylinder, dst_cylinder);
+                migrate_cylinder_repr(src_cylinder, dst_cylinder, styling_script);
             }
             else if (src_repr.get_enum("type") == "TEXT_REPRESENTATION")
             {
                 dst_repr.set_enum("type", "TEXT_VECTOR_REPR");
                 auto src_text = src_repr.get_message("text");
                 auto dst_text = dst_repr.get_message("text");
-                migrate_text_repr(src_text, dst_text);
+                migrate_text_repr(src_text, dst_text, styling_script);
             }
             else if (src_repr.get_enum("type") == "FLAT_OVERLAY")
             {
                 dst_repr.set_enum("type", "FLAT_OVERLAY_VECTOR_REPR");
                 auto src_flat_overlay = src_repr.get_message("flat_overlay_geometry");
                 auto dst_flat_overlay = dst_repr.get_message("flat_overlay_geometry");
-                migrate_flat_overlay_repr(src_flat_overlay, dst_flat_overlay);
+                migrate_flat_overlay_repr(src_flat_overlay, dst_flat_overlay, styling_script);
             }
             else if (src_repr.get_enum("type") == "HEATMAP")
             {
                 dst_repr.set_enum("type", "HEATMAP_VECTOR_REPR");
                 auto src_heatmap = src_repr.get_message("heatmap");
                 auto dst_heatmap = dst_repr.get_message("heatmap");
-                migrate_heatmap_repr(src_heatmap, dst_heatmap);
+                migrate_heatmap_repr(src_heatmap, dst_heatmap, styling_script);
             }
         }
 
@@ -1997,4 +2067,239 @@ bool migration_b232d003_to_1814b7c1(const DynamicMessage& src, DynamicMessage* d
             return true;
         });
 }
+
+bool migration_1814b7c1_to_7ff33fec(const DynamicMessage& src, DynamicMessage* dst)
+{
+    auto migrate_cylinder_dashes = [](const DynamicMessage& src, DynamicMessage* dst)
+    {
+        auto dst_dashes = dst->get_message("dashes");
+        dst_dashes.set_enum("mode", src.get_enum("dash_mode"));
+        dst_dashes.copy_message("period", src.get_message("dash_period"));
+        dst_dashes.copy_message("length", src.get_message("dash_length"));
+        dst_dashes.copy_message("empty_color", src.get_message("empty_color"));
+        dst_dashes.copy_message("animation_speed", src.get_message("animation_speed"));
+        dst_dashes.set_enum("period_unit", src.get_enum("dash_period_unit"));
+        dst_dashes.set_enum("length_unit", src.get_enum("dash_length_unit"));
+        dst_dashes.set_enum("animation_speed_unit", src.get_enum("animation_speed_unit"));
+    };
+
+    auto migrate_flat_overlay_dashes = [](const DynamicMessage& src, DynamicMessage* dst)
+    {
+        auto dst_dashes = dst->get_message("dashes");
+        dst_dashes.set_enum("mode", src.get_enum("dash_mode"));
+        dst_dashes.copy_message("period", src.get_message("dash_period"));
+        dst_dashes.copy_message("length", src.get_message("dash_length"));
+        dst_dashes.copy_message("empty_color", src.get_message("line_empty_color"));
+        dst_dashes.copy_message("animation_speed", src.get_message("animation_speed"));
+        dst_dashes.set_enum("period_unit", src.get_enum("dash_period_unit"));
+        dst_dashes.set_enum("length_unit", src.get_enum("dash_length_unit"));
+        dst_dashes.set_enum("animation_speed_unit", src.get_enum("animation_speed_unit"));
+    };
+
+    auto migrate_flat_overlay_polygon_pattern = [&](const DynamicMessage& src, DynamicMessage* dst)
+    {
+        auto dst_pattern = dst->get_message("polygon_pattern");
+        dst_pattern.set_string("image_url", src.get_string("pattern_image_url"));
+        dst_pattern.copy_message(
+            "image_http_headers", src.get_message("pattern_image_http_headers"));
+
+        const int sprite_count = src.field_size("pattern_sprites");
+        for (int i = 0; i < sprite_count; ++i)
+        {
+            auto src_sprite = src.get_repeated_message("pattern_sprites", i);
+            dst_pattern.add_copy_repeated_message("sprites", src_sprite);
+        }
+
+        dst_pattern.copy_message("sprite_index", src.get_message("polygon_pattern_sprite_index"));
+        dst_pattern.copy_message("sprite_name", src.get_message("polygon_pattern_sprite_name"));
+        dst_pattern.copy_message("size", src.get_message("polygon_pattern_size"));
+        dst_pattern.set_enum("size_unit", src.get_enum("polygon_pattern_size_unit"));
+        dst_pattern.copy_message("rotation", src.get_message("polygon_pattern_rotation"));
+        dst_pattern.set_enum("tiling_type", src.get_enum("polygon_pattern_tiling_type"));
+        dst_pattern.set_enum(
+            "reference_latitude_type", src.get_enum("polygon_pattern_reference_latitude_type"));
+        dst_pattern.set_float(
+            "reference_latitude", src.get_float("polygon_pattern_reference_latitude"));
+        dst_pattern.copy_message("color", src.get_message("polygon_pattern_color"));
+        dst_pattern.set_enum("color_blend_mode", src.get_enum("polygon_pattern_color_blend_mode"));
+        dst_pattern.copy_message(
+            "color_blend_strength", src.get_message("polygon_pattern_color_blend_strength"));
+    };
+
+    auto migrate_layer_fn = [&](const DynamicMessage& src, DynamicMessage* dst) -> bool
+    {
+        auto dst_style = dst->get_message("style");
+        auto src_style = src.get_message("style");
+
+        const int repr_count = dst_style.field_size("representations");
+        for (int j = 0; j < repr_count; ++j)
+        {
+            auto dst_repr = dst_style.get_repeated_message("representations", j);
+            auto src_repr = src_style.get_repeated_message("representations", j);
+
+            if (src_repr.get_enum("type") == "FLAT_OVERLAY_VECTOR_REPR")
+            {
+                auto dst_flat_overlay = dst_repr.get_message("flat_overlay_geometry");
+                migrate_flat_overlay_dashes(
+                    src_repr.get_message("flat_overlay_geometry"), &dst_flat_overlay);
+                migrate_flat_overlay_polygon_pattern(
+                    src_repr.get_message("flat_overlay_geometry"), &dst_flat_overlay);
+            }
+            else if (src_repr.get_enum("type") == "CYLINDER_VECTOR_REPR")
+            {
+                auto dst_cylinder = dst_repr.get_message("cylinder");
+                migrate_cylinder_dashes(src_repr.get_message("cylinder"), &dst_cylinder);
+            }
+        }
+        return true;
+    };
+
+    return visit_layers_of_type("vector_tiles", src, dst, migrate_layer_fn);
+}
+
+bool migration_7ff33fec_to_5c6d28db(const DynamicMessage& src, DynamicMessage* dst)
+{
+    static constexpr uint32_t kPoint = 1;
+    static constexpr uint32_t kPolyline = 2;
+    static constexpr uint32_t kPolygon = 4;
+
+    // Check that the script has things of the form 'set "<property name>" =';
+    auto script_has_property_setters = [](std::string_view script,
+                                          std::string_view property_name) -> bool
+    {
+        const std::regex pattern(fmt::format(R"(set\s+"{}"\s*=)", property_name));
+        return std::regex_search(script.begin(), script.end(), pattern);
+    };
+
+    auto is_null_float_property = [&script_has_property_setters](
+                                      const DynamicMessage& repr, std::string_view property_name,
+                                      std::string_view styling_script) -> bool
+    {
+        const auto& property = repr.get_message(property_name);
+        if (property.get_float("default_value") != 0.0F)
+        {
+            return false;
+        }
+
+        return property.get_string("name").empty()
+            || !script_has_property_setters(styling_script, property.get_string("name"));
+    };
+
+    auto guess_geometry_type = [&](const DynamicMessage& src_repr,
+                                   std::string_view styling_script) -> uint32_t
+    {
+        uint32_t type = 0;
+
+        if (!is_null_float_property(src_repr, "line_width", styling_script))
+        {
+            type |= kPolyline;
+        }
+
+        if (!is_null_float_property(src_repr, "disc_radius", styling_script))
+        {
+            type |= kPoint;
+        }
+
+        if (src_repr.get_bool("polygons_outline"))
+        {
+            type |= kPolyline;
+        }
+
+        // There is not really a good way to detect polygon geometry for all cases.
+        // Polygons patterns can work, but there are very few scenes that use them.
+        if (type == 0)
+        {
+            type |= kPolygon;
+        }
+
+        return type;
+    };
+
+    auto migrate_points = [](const DynamicMessage& src, DynamicMessage* dst)
+    {
+        dst->copy_message("color", src.get_message("color"));
+        dst->copy_message("radius", src.get_message("disc_radius"));
+        dst->set_enum("radius_unit", src.get_enum("disc_radius_unit"));
+        dst->set_float("outline_width", src.get_float("disc_outline_width"));
+        dst->copy_message("outline_color", src.get_message("disc_outline_color"));
+        dst->set_uint32("z_index", src.get_uint32("z_index"));
+        dst->set_bool("clip_to_tile", src.get_bool("clip_to_tile"));
+    };
+
+    auto migrate_polylines = [](const DynamicMessage& src, DynamicMessage* dst)
+    {
+        dst->copy_message("color", src.get_message("color"));
+        dst->copy_message("width", src.get_message("line_width"));
+        dst->set_enum("width_unit", src.get_enum("line_width_unit"));
+        dst->copy_message("dashes", src.get_message("dashes"));
+        dst->set_bool("round_tips", src.get_bool("round_tips"));
+        dst->set_enum("side", src.get_enum("side"));
+        dst->set_uint32("z_index", src.get_uint32("z_index"));
+        dst->set_bool("clip_to_tile", src.get_bool("clip_to_tile"));
+    };
+
+    auto migrate_polygons = [](const DynamicMessage& src, DynamicMessage* dst)
+    {
+        dst->copy_message("color", src.get_message("color"));
+        dst->copy_message("pattern", src.get_message("polygon_pattern"));
+        dst->set_uint32("z_index", src.get_uint32("z_index"));
+        dst->set_bool("clip_to_tile", src.get_bool("clip_to_tile"));
+    };
+
+    auto migrate_layer_fn = [&](std::string_view layer_name, const DynamicMessage& src,
+                                DynamicMessage* dst) -> bool
+    {
+        auto dst_style = dst->get_message("style");
+        auto src_style = src.get_message("style");
+
+        const auto styling_script = src_style.get_string("styling_script");
+
+        const int repr_count = dst_style.field_size("representations");
+        for (int i = 0; i < repr_count; ++i)
+        {
+            auto dst_repr = dst_style.get_repeated_message("representations", i);
+            auto src_repr = src_style.get_repeated_message("representations", i);
+
+            if (src_repr.get_enum("type") != "FLAT_OVERLAY_VECTOR_REPR") continue;
+
+            auto type =
+                guess_geometry_type(src_repr.get_message("flat_overlay_geometry"), styling_script);
+            if (std::popcount(type) != 1)
+            {
+                fmt::println(
+                    "Multiple geometry types detected for representation #{} on layer {}: "
+                    "{:b}",
+                    i, layer_name, type);
+                return false;
+            }
+
+            if (type == kPoint)
+            {
+                dst_repr.set_enum("type", "FLAT_OVERLAY_POINT_VECTOR_REPR");
+                auto dst_flat_overlay = dst_repr.get_message("flat_overlay_point");
+                migrate_points(src_repr.get_message("flat_overlay_geometry"), &dst_flat_overlay);
+            }
+            else if (type == kPolyline)
+            {
+                dst_repr.set_enum("type", "FLAT_OVERLAY_POLYLINE_VECTOR_REPR");
+                auto dst_flat_overlay = dst_repr.get_message("flat_overlay_polyline");
+                migrate_polylines(src_repr.get_message("flat_overlay_geometry"), &dst_flat_overlay);
+            }
+            else if (type == kPolygon)
+            {
+                dst_repr.set_enum("type", "FLAT_OVERLAY_POLYGON_VECTOR_REPR");
+                auto dst_flat_overlay = dst_repr.get_message("flat_overlay_polygon");
+                migrate_polygons(src_repr.get_message("flat_overlay_geometry"), &dst_flat_overlay);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    return visit_layers_of_type("vector_tiles", src, dst, migrate_layer_fn);
+}
+
 } // namespace hrz::migration

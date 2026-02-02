@@ -24,13 +24,10 @@ uniform highp usampler2D u_feature_ids;
 #define varying out
 #include "extruded_vectors/interface.glsl"
 
+#include "common/selection.glsl"
 bool fetch_selection()
 {
-    uint bucket_index = i_feature_index / 32u;
-    uvec2 coord = uvec2(bucket_index % 2048u, bucket_index / 2048u);
-    uint bit_index = i_feature_index % 32u;
-    uint bitmask = texelFetch(u_selection, ivec2(coord), 0).r;
-    return (bitmask & (1u << bit_index)) != 0u;
+    return fetch_selection_storage(u_selection, i_feature_index);
 }
 
 void main()

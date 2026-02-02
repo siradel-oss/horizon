@@ -560,11 +560,6 @@ public:
         }
     }
 
-    bool tile_is_ready(const Tile* tile) const
-    {
-        return tile->status == Tile::Status::Renderable || tile->status == Tile::Status::Error;
-    }
-
     void remove_tile(TileH tile_handle)
     {
         _loading_tiles.erase(tile_handle);

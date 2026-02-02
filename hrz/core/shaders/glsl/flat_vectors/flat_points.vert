@@ -2,7 +2,7 @@
 #include "common/ubo_frame.glsl"
 #include "common/flat_overlay_cameras.glsl"
 #include "common/camera_height.glsl"
-#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/tile_points_defs.glsl"
 #include "flat_vectors/overlay_passes_defs.glsl"
 
 layout(location = 0) in vec2 i_in_mesh_pos;
@@ -13,10 +13,13 @@ layout(location = 4) in uint i_feature_index;
 
 #include "flat_vectors/common.vert.glsl"
 
+#define varying out
+#include "flat_vectors/interface_points.glsl"
+
 void main()
 {
 #ifdef FLAT_SELECTION
-    if (!fetch_selection())
+    if (!hrz_tile.base.has_feature_ids || !fetch_selection())
     {
         gl_Position = vec4(0.0);
         return;
@@ -41,7 +44,7 @@ void main()
 
     v_disc_dist = (i_radius / full_radius) * 0.5;
 
-    vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.center_low.xyz, hrz_tile.center_high.xyz), 0.0);
+    vec4 offset = vec4(translate_relative_to_overlay_cameras(hrz_tile.base.center_low.xyz, hrz_tile.base.center_high.xyz), 0.0);
     vec4 vertex = hrz_overlay_cameras.overlay_cams_view_cc * (vec4(i_position, 1.0) + offset);
     vertex.xy += (i_in_mesh_pos * 2.0 * scaled_radius);
     gl_Position = hrz_overlay_cameras.overlay_cams_proj[hrz_overlay_passes.pass_id] * vertex;

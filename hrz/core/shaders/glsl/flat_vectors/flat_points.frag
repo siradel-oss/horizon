@@ -1,11 +1,11 @@
-#include "flat_vectors/tile_defs.glsl"
+#include "flat_vectors/tile_points_defs.glsl"
 #include "flat_vectors/overlay_passes_defs.glsl"
 #include "common/colors.glsl"
 #include "common/frag_processing.glsl"
 #include "common/highlight.glsl"
 
 #define varying in
-#include "flat_vectors/interface.glsl"
+#include "flat_vectors/interface_points.glsl"
 
 #include "flat_vectors/common.frag.glsl"
 

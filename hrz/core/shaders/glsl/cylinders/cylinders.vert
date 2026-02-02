@@ -26,7 +26,7 @@ layout(location = 5) in vec3 i_instance_pos1;
 layout(location = 6) in uint i_normal1;
 layout(location = 7) in vec4 i_geometry;
 layout(location = 8) in float i_animation_speed;
-layout(location = 9) in vec4 i_empty_color;
+layout(location = 9) in vec4 i_secondary_color;
 layout(location = 10) in float i_total_length;
 layout(location = 11) in uint i_feature_index;
 layout(location = 12) in uvec2 i_feature_id;
@@ -126,7 +126,7 @@ void main()
     float size_pixel_to_meter = dist * hrz_frame.pixel_size_in_meters;
 
     float dash_period_unit_coef = compute_dash_size_unit_coef(hrz_tile.dash_period_unit, size_pixel_to_meter);
-    float dash_length_unit_coef = compute_dash_size_unit_coef(hrz_tile.dash_length_unit, size_pixel_to_meter);
+    float dash_primary_length_unit_coef = compute_dash_size_unit_coef(hrz_tile.dash_primary_length_unit, size_pixel_to_meter);
     float animation_unit_coef = compute_dash_size_unit_coef(hrz_tile.animation_speed_unit, speed_pixel_to_meter);
 
     float dash_meter_period = i_geometry.z * dash_period_unit_coef;
@@ -135,11 +135,11 @@ void main()
     v_pos_along_line = mix(i_geometry.x, i_geometry.y, i_vertex_pos.z);
     v_pos_along_line += joint_offset;
     v_pos_along_line = (v_pos_along_line - animation_advance) / dash_meter_period;
-    v_dash_ratio = i_geometry.w / i_geometry.z * dash_length_unit_coef / dash_period_unit_coef;
+    v_dash_ratio = i_geometry.w / i_geometry.z * dash_primary_length_unit_coef / dash_period_unit_coef;
     v_invert_gradient_direction = i_animation_speed < 0.0 ? 1u : 0u;
 
     v_color_oklab = i_color;
-    v_empty_color_oklab = i_empty_color;
+    v_secondary_color_oklab = i_secondary_color;
 
 #ifdef CYLINDER_VISUAL
     mat3 normal_matrix = mat3(hrz_frame.view_matrix);

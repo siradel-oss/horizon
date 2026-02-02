@@ -39,7 +39,7 @@ enum
     InputStreamNormal1 = 6,
     InputStreamGeometry = 7,
     InputStreamAnimationSpeed = 8,
-    InputStreamEmptyColor = 9,
+    InputStreamSecondaryColor = 9,
     InputStreamTotalLength = 10,
     InputStreamFeatureIndex = 11,
     InputStreamFeatureId = 12,
@@ -56,7 +56,7 @@ struct TileUniformData
     hrz::bool32 receive_shadows;
     uint32_t dash_mode;
     uint32_t dash_period_unit;
-    uint32_t dash_length_unit;
+    uint32_t dash_primary_length_unit;
     lm::uvec3 feature_ref;
     uint32_t animation_speed_unit;
 };
@@ -179,21 +179,21 @@ struct Config
     uint64_t radius_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t altitude_offset_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t color_prp = hrz::style::Parser::INVALID_PROPERTY;
-    uint64_t empty_color_prp = hrz::style::Parser::INVALID_PROPERTY;
+    uint64_t secondary_color_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t dash_period_prp = hrz::style::Parser::INVALID_PROPERTY;
-    uint64_t dash_length_prp = hrz::style::Parser::INVALID_PROPERTY;
+    uint64_t dash_primary_length_prp = hrz::style::Parser::INVALID_PROPERTY;
     uint64_t animation_speed_prp = hrz::style::Parser::INVALID_PROPERTY;
 
     lm::ubvec4 default_color_srgb = {0, 0, 0, 0};
-    lm::ubvec4 default_empty_color_srgb = {0, 0, 0, 0};
+    lm::ubvec4 default_secondary_color_srgb = {0, 0, 0, 0};
     float default_radius = 0;
     float default_altitude_offset = 0;
     hrz_proto::DashMode dash_mode{};
     hrz_proto::DashSizeUnit dash_period_unit{};
-    hrz_proto::DashSizeUnit dash_length_unit{};
+    hrz_proto::DashSizeUnit dash_primary_length_unit{};
     hrz_proto::DashSizeUnit animation_speed_unit{};
     float default_dash_period = 0;
-    float default_dash_length = 0;
+    float default_primary_dash_length = 0;
     float default_animation_speed = 0;
     bool disable_face_culling = false;
     uint32_t scene_views = 0;
@@ -326,7 +326,7 @@ public:
             {InputStreamNormal1, "i_normal1"},
             {InputStreamGeometry, "i_geometry"},
             {InputStreamAnimationSpeed, "i_animation_speed"},
-            {InputStreamEmptyColor, "i_empty_color"},
+            {InputStreamSecondaryColor, "i_secondary_color"},
             {InputStreamTotalLength, "i_total_length"},
             {InputStreamFeatureIndex, "i_feature_index"},
             {InputStreamFeatureId, "i_feature_id"},
@@ -523,10 +523,13 @@ public:
         std::string_view radius_prp_name = repr.cylinder().radius().name();
         std::string_view altitude_offset_prp_name = repr.cylinder().altitude_offset().name();
         std::string_view color_prp_name = repr.cylinder().color().name();
-        std::string_view empty_color_prp_name = repr.cylinder().empty_color().name();
-        std::string_view dash_period_prp_name = repr.cylinder().dash_period().name();
-        std::string_view dash_length_prp_name = repr.cylinder().dash_length().name();
-        std::string_view animation_speed_prp_name = repr.cylinder().animation_speed().name();
+        std::string_view secondary_color_prp_name =
+            repr.cylinder().dashes().secondary_color().name();
+        std::string_view dash_period_prp_name = repr.cylinder().dashes().period().name();
+        std::string_view dash_primary_length_prp_name =
+            repr.cylinder().dashes().primary_segment_length().name();
+        std::string_view animation_speed_prp_name =
+            repr.cylinder().dashes().animation_speed().name();
 
         Config config;
         config.repr_id = repr.id();
@@ -535,11 +538,12 @@ public:
         config.default_color_srgb =
             hrz::convert_proto_color_to_bytes(repr.cylinder().color().default_value());
         config.default_altitude_offset = repr.cylinder().altitude_offset().default_value();
-        config.default_dash_period = repr.cylinder().dash_period().default_value();
-        config.default_dash_length = repr.cylinder().dash_length().default_value();
-        config.default_animation_speed = repr.cylinder().animation_speed().default_value();
-        config.default_empty_color_srgb =
-            hrz::convert_proto_color_to_bytes(repr.cylinder().empty_color().default_value());
+        config.default_dash_period = repr.cylinder().dashes().period().default_value();
+        config.default_primary_dash_length =
+            repr.cylinder().dashes().primary_segment_length().default_value();
+        config.default_animation_speed = repr.cylinder().dashes().animation_speed().default_value();
+        config.default_secondary_color_srgb = hrz::convert_proto_color_to_bytes(
+            repr.cylinder().dashes().secondary_color().default_value());
 
         config.radius_prp = register_prp(radius_prp_name, config.default_radius);
         config.altitude_offset_prp =
@@ -548,19 +552,20 @@ public:
             color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
                 config.default_color_srgb));
-        config.empty_color_prp = register_prp(
-            empty_color_prp_name,
+        config.secondary_color_prp = register_prp(
+            secondary_color_prp_name,
             hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
-                config.default_empty_color_srgb));
+                config.default_secondary_color_srgb));
         config.dash_period_prp = register_prp(dash_period_prp_name, config.default_dash_period);
-        config.dash_length_prp = register_prp(dash_length_prp_name, config.default_dash_length);
+        config.dash_primary_length_prp =
+            register_prp(dash_primary_length_prp_name, config.default_primary_dash_length);
         config.animation_speed_prp =
             register_prp(animation_speed_prp_name, config.default_animation_speed);
 
-        config.dash_mode = repr.cylinder().dash_mode();
-        config.dash_period_unit = repr.cylinder().dash_period_unit();
-        config.dash_length_unit = repr.cylinder().dash_length_unit();
-        config.animation_speed_unit = repr.cylinder().animation_speed_unit();
+        config.dash_mode = repr.cylinder().dashes().mode();
+        config.dash_period_unit = repr.cylinder().dashes().period_unit();
+        config.dash_primary_length_unit = repr.cylinder().dashes().primary_segment_length_unit();
+        config.animation_speed_unit = repr.cylinder().dashes().animation_speed_unit();
         config.disable_face_culling = repr.cylinder().disable_face_culling();
         config.scene_views = repr.scene_views().bits();
         config.lighting_settings = hrz::render::from_proto(repr.cylinder().lighting());
@@ -583,9 +588,9 @@ public:
         unregister_property(cfg->radius_prp);
         unregister_property(cfg->altitude_offset_prp);
         unregister_property(cfg->color_prp);
-        unregister_property(cfg->empty_color_prp);
+        unregister_property(cfg->secondary_color_prp);
         unregister_property(cfg->dash_period_prp);
-        unregister_property(cfg->dash_length_prp);
+        unregister_property(cfg->dash_primary_length_prp);
         unregister_property(cfg->animation_speed_prp);
 
         _configs.release(config_handle);
@@ -631,21 +636,20 @@ public:
         bake_data.default_color_srgb = cfg.default_color_srgb;
         bake_data.default_radius = cfg.default_radius;
         bake_data.default_altitude_offset = cfg.default_altitude_offset;
-        bake_data.default_empty_color_srgb = cfg.default_empty_color_srgb;
-        bake_data.default_dash_period = cfg.default_dash_period;
-        bake_data.default_dash_length = cfg.default_dash_length;
-        bake_data.default_animation_speed = cfg.default_animation_speed;
+        bake_data.dashes.default_secondary_color_srgb = cfg.default_secondary_color_srgb;
+        bake_data.dashes.default_period = cfg.default_dash_period;
+        bake_data.dashes.default_primary_length = cfg.default_primary_dash_length;
+        bake_data.dashes.default_animation_speed = cfg.default_animation_speed;
         bake_data.repr_id = cfg.repr_id;
 
         bake_data.color_prp = cfg.color_prp;
         bake_data.radius_prp = cfg.radius_prp;
         bake_data.altitude_offset_prp = cfg.altitude_offset_prp;
-        bake_data.empty_color_prp = cfg.empty_color_prp;
-        bake_data.dash_period_prp = cfg.dash_period_prp;
-        bake_data.dash_length_prp = cfg.dash_length_prp;
-        bake_data.animation_speed_prp = cfg.animation_speed_prp;
-
-        bake_data.dash_mode = cfg.dash_mode;
+        bake_data.dashes.secondary_color_prp = cfg.secondary_color_prp;
+        bake_data.dashes.period_prp = cfg.dash_period_prp;
+        bake_data.dashes.primary_length_prp = cfg.dash_primary_length_prp;
+        bake_data.dashes.animation_speed_prp = cfg.animation_speed_prp;
+        bake_data.dashes.mode = cfg.dash_mode;
 
         bake_data.feature_ids = feature_ids.hashes();
         bake_data.geometry = geometry.geometry;
@@ -666,7 +670,7 @@ public:
         tile.ubo.receive_shadows = cfg.lighting_settings.receive_shadows;
         tile.ubo.dash_mode = cfg.dash_mode;
         tile.ubo.dash_period_unit = cfg.dash_period_unit;
-        tile.ubo.dash_length_unit = cfg.dash_length_unit;
+        tile.ubo.dash_primary_length_unit = cfg.dash_primary_length_unit;
         tile.ubo.animation_speed_unit = cfg.animation_speed_unit;
         tile.ubo_dirty = true;
 
@@ -693,23 +697,7 @@ public:
         }
     }
 
-    bool tile_is_ready(const Tile* tile) const
-    {
-        return tile->status == Tile::Status::Ready || tile->status == Tile::Status::Error;
-    }
-
     void remove_tile(TileH handle) { _removed.insert(handle); }
-
-    void remove_from_set(TileH handle, Tile::Status status)
-    {
-        switch (status)
-        {
-            case Tile::Status::ReadyToBake: _to_bake.erase(handle); break;
-            case Tile::Status::Baking: _baking.erase(handle); break;
-            case Tile::Status::FinishedBaking: _finished_baking.erase(handle); break;
-            default: break;
-        }
-    }
 
     void work_remove_tile(WorkCtx& ctx, TileH handle, Tile* tile)
     {
@@ -857,7 +845,7 @@ public:
 
             {InputStreamColor, instance_data_buffer, my::VertexFormat::UInt8Norm_4,
              offsetof(Instance, color), sizeof(Instance), my::VertexRate::PerInstance},
-            {InputStreamEmptyColor, instance_data_buffer, my::VertexFormat::UInt8Norm_4,
+            {InputStreamSecondaryColor, instance_data_buffer, my::VertexFormat::UInt8Norm_4,
              offsetof(Instance, alternative_color), sizeof(Instance), my::VertexRate::PerInstance},
 
             {InputStreamRadii, instance_data_buffer, my::VertexFormat::Float32_2,
