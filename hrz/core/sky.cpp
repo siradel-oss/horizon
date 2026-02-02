@@ -1795,7 +1795,8 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
                 ubo_data.color_transition_end_horizon_angle =
                     ubo_data.horizon_horizon_angle + (float)transition_end_angle;
 
-                ubo_data.space_color = sky->space_color_oklab;
+                ubo_data.space_color =
+                    ubo_data.oklab_gradient ? sky->space_color_oklab : sky->space_color_linear;
                 break;
             }
             default: assert(false && "Unhandled case"); break;
