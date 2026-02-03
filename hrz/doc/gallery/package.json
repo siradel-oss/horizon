@@ -5,7 +5,7 @@
     "@siradel/horizon-core": "workspace:*",
     "@siradel/horizon-doc-common": "workspace:*",
     "@siradel/horizon-protocol": "workspace:*",
-    "@tailwindcss/vite": "^4.1.13",
+    "@tailwindcss/vite": "^4.1.18",
     "long": "^5.3.2",
     "tailwindcss": "^4.1.7",
     "vue": "^3.5.15"

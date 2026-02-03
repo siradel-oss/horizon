@@ -2,8 +2,8 @@
     "name": "@siradel/horizon-monitoring-protocol",
     "type": "module",
     "dependencies": {
-        "protobufjs": "^7.5.4",
-        "long": "^5.3.2"
+        "long": "^5.3.2",
+        "protobufjs": "^8.0.0"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
