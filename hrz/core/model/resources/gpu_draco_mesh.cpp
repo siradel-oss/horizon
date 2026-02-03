@@ -79,8 +79,9 @@ void GpuDracoMeshResource::work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler
                         blobs::make_sub_blob(ba, blob, blob_byte_offset, blob_byte_length);
                     sub_blob_opt.has_value())
                 {
+                    auto blob_copy = sub_blob_opt.value();
                     decompression_ticket =
-                        hrz_jobs::add_job_decompress_draco_mesh(js, sub_blob_opt.value(), owner);
+                        hrz_jobs::add_job_decompress_draco_mesh(js, std::move(blob_copy), owner);
 
                     bl->release(blob_handle.value(), NullCfg);
                     blob_handle = std::nullopt;
@@ -116,7 +117,7 @@ void GpuDracoMeshResource::work(BlobLibrary* bl, BlobAllocator* ba, JobScheduler
             if (hrz_jobs::get_job_status(js, decompression_ticket)
                 == job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::get_job_response(js, decompression_ticket, mesh);
+                mesh = hrz_jobs::get_job_response(js, decompression_ticket);
 
                 for (size_t i = 0; i < (size_t)mesh.attributes.size(); ++i)
                 {

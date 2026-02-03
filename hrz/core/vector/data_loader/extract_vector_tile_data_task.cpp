@@ -156,8 +156,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::ExtractVectorTi
             {
                 const auto& data_source = layer_model.data_sources.at(task_data.data_source);
 
-                vector_data::DecodedVectorTile extracted_tile;
-                hrz_jobs::get_job_response(js, task_data.extract_ticket, extracted_tile);
+                auto extracted_tile = hrz_jobs::get_job_response(js, task_data.extract_ticket);
 
                 assert(
                     extracted_tile.feature_ids.size() == extracted_tile.geometry.features.size());
@@ -207,7 +206,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::ExtractVectorTi
             params.bounds = provider.bounds;
 
             task_data.extract_ticket = hrz_jobs::add_job_extract_vector_tile(
-                js, params,
+                js, std::move(params),
                 hrz::monitoring::ResourceOwner(
                     hrz::monitoring::systems::VectorDataLoader, layer_model.layer_handle));
 

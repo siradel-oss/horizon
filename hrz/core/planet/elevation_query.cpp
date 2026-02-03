@@ -226,7 +226,8 @@ void hrz::planet::ElevationQuery::_start_culling(
         job_data.rasters.push_back({raster_geometries[i], rasters[i]->display_bounds});
     }
 
-    batch->cull_ticket = hrz_jobs::add_job_cull_points_query(js, job_data, batch->resource_owner);
+    batch->cull_ticket =
+        hrz_jobs::add_job_cull_points_query(js, std::move(job_data), batch->resource_owner);
     batch->raster_count = rasters.size();
     batch->raster_ids_hash = raster_ids_hash;
     batch->status = Batch::Culling;
@@ -242,8 +243,7 @@ void hrz::planet::ElevationQuery::_start_waiting_for_tiles(
     Batch* batch = _batchs.get_object(ticket);
     assert(batch && batch->status == Batch::Culling);
 
-    hrz_jobs::CulledPointsQuery results;
-    hrz_jobs::get_job_response(js, batch->cull_ticket, results);
+    auto results = hrz_jobs::get_job_response(js, batch->cull_ticket);
 
     batch->tiles.clear();
 
@@ -319,7 +319,7 @@ void hrz::planet::ElevationQuery::_start_sampling(
     }
 
     batch->sample_ticket =
-        hrz_jobs::add_job_sample_points_query(js, job_data, batch->resource_owner);
+        hrz_jobs::add_job_sample_points_query(js, std::move(job_data), batch->resource_owner);
     batch->status = Batch::Sampling;
     _sampling.push_back(ticket);
 }
@@ -658,8 +658,7 @@ void hrz::planet::ElevationQuery::work(
                 if (hrz_jobs::get_job_status(js, batch->sample_ticket)
                     == hrz::job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz_jobs::SampledPointsQuery response;
-                    hrz_jobs::get_job_response(js, batch->sample_ticket, response);
+                    auto response = hrz_jobs::get_job_response(js, batch->sample_ticket);
 
                     batch->elevations = std::move(response.values);
                 }

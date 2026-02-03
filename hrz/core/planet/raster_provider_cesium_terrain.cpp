@@ -75,7 +75,7 @@ public:
         params.blob = blob;
         params.format = tile_format;
         tile->rasterize_ticket = hrz_jobs::add_job_rasterize_cesium_terrain_tile(
-            js, params, {monitoring::systems::PlanetSurface, raster_id});
+            js, std::move(params), {monitoring::systems::PlanetSurface, raster_id});
         return handle;
     }
 
@@ -100,9 +100,7 @@ public:
                 auto status = hrz_jobs::get_job_status(js, tile->rasterize_ticket);
                 if (status == job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz::BlobImage response;
-                    hrz_jobs::get_job_response(js, tile->rasterize_ticket, response);
-                    tile->image = std::move(response);
+                    tile->image = hrz_jobs::get_job_response(js, tile->rasterize_ticket);
                     tile->status = Status::Decoded;
                 }
                 else

@@ -2232,7 +2232,7 @@ struct VectorTilesActor : public Actor
                 }
 
                 content.style_job.ticket = hrz_jobs::add_job_style_features(
-                    js, data, {hrz::monitoring::systems::Styling, _global_layer_id});
+                    js, std::move(data), {hrz::monitoring::systems::Styling, _global_layer_id});
 
                 return true;
             };
@@ -2257,8 +2257,7 @@ struct VectorTilesActor : public Actor
             if (hrz_jobs::get_job_status(js, content.style_job.ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::StylingResult result;
-                hrz_jobs::get_job_response(js, content.style_job.ticket, result);
+                auto result = hrz_jobs::get_job_response(js, content.style_job.ticket);
 
                 content.style_job.result_repr = std::move(result.features);
                 content.style_job.result_unique_reprs = std::move(result.unique_reprs);

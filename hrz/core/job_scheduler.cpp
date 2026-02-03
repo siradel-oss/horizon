@@ -277,7 +277,7 @@ void destroy(JobScheduler* scheduler, bool leak_workers)
 Ticket add_job(
     JobScheduler* scheduler,
     hrz_jobs::JobType job_type,
-    std::any& parameters,
+    std::any&& parameters,
     const hrz::monitoring::ResourceOwner& resource_owner)
 {
     assert(scheduler);

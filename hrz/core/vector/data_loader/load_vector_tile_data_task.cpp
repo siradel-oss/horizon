@@ -251,7 +251,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorTileD
         task_data.attribution = attribution;
 
         task_data.decode_ticket = hrz_jobs::add_job_decode_vector_tile(
-            js, job_params,
+            js, std::move(job_params),
             {monitoring::systems::VectorDataLoader, task_data.layer_model->layer_handle});
     };
 
@@ -286,8 +286,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorTileD
             if (hrz_jobs::get_job_status(js, task_data.decode_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                vector_data::DecodedVectorTile data;
-                hrz_jobs::get_job_response(js, task_data.decode_ticket, data);
+                auto data = hrz_jobs::get_job_response(js, task_data.decode_ticket);
 
                 task_data.feature_ids = feature_id_lists.alloc();
                 task_data.feature_ids.value() = std::move(data.feature_ids);

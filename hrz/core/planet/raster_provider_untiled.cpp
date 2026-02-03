@@ -211,8 +211,7 @@ public:
             auto convert_ticket_status = hrz_jobs::get_job_status(js, decode_ticket);
             if (convert_ticket_status == job_scheduler::JobStatus::Finished_Success)
             {
-                hrz::BlobImage response;
-                hrz_jobs::get_job_response(js, decode_ticket, response);
+                auto response = hrz_jobs::get_job_response(js, decode_ticket);
 
                 if (response.valid())
                 {
@@ -226,7 +225,7 @@ public:
                     mipmap_generation_params.nodata = nodata;
                     mipmap_generation_params.tile_size = hrz::MERCATOR_TILE_SIZE;
                     generate_mipmaps_ticket = hrz_jobs::add_job_generate_mipmaps(
-                        js, mipmap_generation_params,
+                        js, std::move(mipmap_generation_params),
                         {monitoring::systems::PlanetSurface, raster_id});
                     image_status = ImageStatus::GeneratingMipmaps;
                 }
@@ -253,8 +252,7 @@ public:
 
             if (mipmaps_ticket_status == job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::Mipmaps response;
-                hrz_jobs::get_job_response(js, generate_mipmaps_ticket, response);
+                auto response = hrz_jobs::get_job_response(js, generate_mipmaps_ticket);
 
                 for (unsigned int i = 0; i < response.tiles.size(); i++)
                 {

@@ -2951,7 +2951,7 @@ struct PlanetGeometry
             }
 
             feedback_job_ticket = hrz_jobs::add_job_process_feedback_texture(
-                js, feedback_data, {monitoring::systems::PlanetGeometry});
+                js, std::move(feedback_data), {monitoring::systems::PlanetGeometry});
             feedback_status = FeedbackStatus::JobScheduled;
         }
 
@@ -2963,8 +2963,7 @@ struct PlanetGeometry
             assert(feedback_status == FeedbackStatus::JobScheduled);
             HRZ_SCOPED_SAMPLE("receive feedback job result");
 
-            hrz_jobs::TileList response;
-            hrz_jobs::get_job_response(js, feedback_job_ticket, response);
+            auto response = hrz_jobs::get_job_response(js, feedback_job_ticket);
             feedback_job_ticket.ticket = 0;
 
             feedback_status = FeedbackStatus::Idle;

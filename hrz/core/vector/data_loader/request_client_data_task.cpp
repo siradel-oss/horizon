@@ -200,8 +200,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::RequestClientDa
             if (hrz_jobs::get_job_status(js, task_data.move_to_blobs_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                vector_data::DecodedVectorTile tile_data;
-                hrz_jobs::get_job_response(js, task_data.move_to_blobs_ticket, tile_data);
+                auto tile_data = hrz_jobs::get_job_response(js, task_data.move_to_blobs_ticket);
 
                 task_data.geometry = tile_geometries.alloc();
                 task_data.geometry.value() = std::move(tile_data.geometry);
@@ -240,7 +239,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::RequestClientDa
         task_data.attribution =
             attribution::register_attribution(attributions, {params.client_data.attribution(), {}});
         task_data.move_to_blobs_ticket = hrz_jobs::add_job_move_client_vector_data_to_blobs(
-            js, params, {monitoring::systems::VectorDataLoader, layer_model.layer_handle});
+            js, std::move(params),
+            {monitoring::systems::VectorDataLoader, layer_model.layer_handle});
     }
     else if (
         task_data.client_ticket == NO_CLIENT_TICKET

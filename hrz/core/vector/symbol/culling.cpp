@@ -338,8 +338,8 @@ RenderRequest work(
 
         params.frame = sys->saved_groups_frame;
 
-        sys->cull_ticket =
-            hrz_jobs::add_job_cull_symbols(js, params, hrz::monitoring::systems::Symbols);
+        sys->cull_ticket = hrz_jobs::add_job_cull_symbols(
+            js, std::move(params), hrz::monitoring::systems::Symbols);
         sys->last_cull_groups_drawn_hash = sys->saved_groups_drawn_hash;
         sys->last_cull_start_time_s = hrz::clock::CurrentFrameRealTime.s;
     }
@@ -348,8 +348,7 @@ RenderRequest work(
         auto ticket = std::exchange(sys->cull_ticket, std::nullopt).value();
         if (hrz_jobs::get_job_status(js, ticket) == job_scheduler::JobStatus::Finished_Success)
         {
-            hrz_jobs::SymbolCullingResponse response;
-            hrz_jobs::get_job_response(js, ticket, response);
+            auto response = hrz_jobs::get_job_response(js, ticket);
 
             for (uint64_t handle : sys->groups_with_some_symbols_shown)
             {

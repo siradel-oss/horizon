@@ -19,12 +19,12 @@ namespace hrz_jobs
 
 {% for job in jobs %}
 
-{{ job.name|snake_to_pascal }}Ticket add_job_{{ job.name }}(::hrz::JobScheduler* scheduler, {{ job.params_type }}& parameters, const hrz::monitoring::ResourceOwner& owner)
+{{ job.name|snake_to_pascal }}Ticket add_job_{{ job.name }}(::hrz::JobScheduler* scheduler, {{ job.params_type }}&& parameters, const hrz::monitoring::ResourceOwner& owner)
 {
     auto parameters_any = std::make_any<{{ job.params_type }}>(std::move(parameters));
 
     {{ job.name|snake_to_pascal }}Ticket ticket;
-    ticket.ticket = ::hrz::job_scheduler::add_job(scheduler, JobType::{{ job.name|upper }}, parameters_any, owner);
+    ticket.ticket = ::hrz::job_scheduler::add_job(scheduler, JobType::{{ job.name|upper }}, std::move(parameters_any), owner);
 
     return ticket;
 }
@@ -49,11 +49,9 @@ bool is_job_finished(::hrz::JobScheduler* scheduler, {{ job.name|snake_to_pascal
     return ::hrz::job_scheduler::get_job_status(scheduler, ticket.ticket);
 }
 
-void get_job_response(::hrz::JobScheduler* scheduler, {{ job.name|snake_to_pascal }}Ticket ticket, {{ job.response_type }}& response)
+{{ job.response_type }} get_job_response(::hrz::JobScheduler* scheduler, {{ job.name|snake_to_pascal }}Ticket ticket)
 {
-    std::any response_any = ::hrz::job_scheduler::get_job_response(scheduler, ticket.ticket);
-    auto cast_response = std::any_cast<{{ job.response_type }}>(std::move(response_any));
-    std::swap(response, cast_response);
+    return std::any_cast<{{ job.response_type }}>(::hrz::job_scheduler::get_job_response(scheduler, ticket.ticket));
 }
 
 {% endfor %}

@@ -154,8 +154,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadUntiledVect
             if (hrz_jobs::get_job_status(js, task_data.build_aabb_tree_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::AabbTree aabb_tree;
-                hrz_jobs::get_job_response(js, task_data.build_aabb_tree_ticket, aabb_tree);
+                auto aabb_tree = hrz_jobs::get_job_response(js, task_data.build_aabb_tree_ticket);
 
                 task_data.aabb_tree = std::move(aabb_tree);
                 task_data.attribution = data_source.untiled_data_provider().attribution;
@@ -184,7 +183,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadUntiledVect
 
             vector_data::VectorTileGeometry geometry = task_data.geometry.value();
             task_data.build_aabb_tree_ticket = hrz_jobs::add_job_build_aabb_tree(
-                js, geometry, {monitoring::systems::VectorDataLoader});
+                js, std::move(geometry), {monitoring::systems::VectorDataLoader});
 
             task_data.load_vector_tile_data_task.release_data();
         }

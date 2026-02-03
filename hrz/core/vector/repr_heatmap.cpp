@@ -484,7 +484,8 @@ public:
         assert(tile->bake_data.has_value());
 
         tile->bake_ticket = hrz_jobs::add_job_bake_heatmap_geometry(
-            ctx.js, tile->bake_data.value(), {hrz::monitoring::systems::Heatmaps, tile->layer_id});
+            ctx.js, std::move(tile->bake_data).value(),
+            {hrz::monitoring::systems::Heatmaps, tile->layer_id});
         tile->bake_data = std::nullopt;
         tile->status = Tile::Status::Baking;
         _baking.insert(handle);
@@ -501,8 +502,7 @@ public:
             if (hrz_jobs::get_job_status(ctx.js, tile->bake_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::HeatmapGeometry response;
-                hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
+                auto response = hrz_jobs::get_job_response(ctx.js, tile->bake_ticket);
 
                 TileGeometry geometry;
                 geometry.bsphere = response.bsphere;

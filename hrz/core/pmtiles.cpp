@@ -732,7 +732,7 @@ public:
             params.compressed = data;
             params.type = compression.value();
 
-            query->tile_data = hrz_jobs::add_job_decompress_blob(js, params, {});
+            query->tile_data = hrz_jobs::add_job_decompress_blob(js, std::move(params), {});
             query->status = TileQuery::kDecompressTileData;
         }
         else
@@ -839,8 +839,7 @@ public:
                 if (hrz_jobs::get_job_status(js, ticket)
                     == hrz::job_scheduler::JobStatus::Finished_Success)
                 {
-                    blobs::BlobHandle response_blob;
-                    hrz_jobs::get_job_response(js, ticket, response_blob);
+                    auto response_blob = hrz_jobs::get_job_response(js, ticket);
                     query->tile_data = response_blob;
                     query->status = TileQuery::kDone;
                 }

@@ -835,7 +835,7 @@ public:
                     }
 
                     tile->baking_ticket = hrz_jobs::add_job_bake_symbols(
-                        ctx.js, tile->baking_data.value(),
+                        ctx.js, std::move(tile->baking_data).value(),
                         {hrz::monitoring::systems::Symbols, tile->layer_id});
                     tile->baking_data = std::nullopt;
                     tile->status = Tile::Status::Baking;
@@ -853,9 +853,7 @@ public:
                     if (hrz_jobs::get_job_status(ctx.js, tile->baking_ticket)
                         == hrz::job_scheduler::JobStatus::Finished_Success)
                     {
-                        tile->baked_data = {hrz_jobs::BakedSymbols{}};
-                        hrz_jobs::get_job_response(
-                            ctx.js, tile->baking_ticket, tile->baked_data.value());
+                        tile->baked_data = hrz_jobs::get_job_response(ctx.js, tile->baking_ticket);
 
                         tile->center = tile->baked_data->tile_center;
                         tile->bsphere_center = tile->baked_data->bsphere_center;

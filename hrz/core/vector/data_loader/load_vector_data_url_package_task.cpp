@@ -151,8 +151,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataU
             if (hrz_jobs::get_job_status(js, task_data.parse_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::ParsedMvt parsed_mvt;
-                hrz_jobs::get_job_response(js, task_data.parse_ticket, parsed_mvt);
+                auto parsed_mvt = hrz_jobs::get_job_response(js, task_data.parse_ticket);
 
                 task_data.package = {
                     {std::move(parsed_mvt)},
@@ -180,7 +179,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataU
                 // the load URL data task.
                 auto mvt_blob = load_url_data_task.load_url_data().blob;
                 task_data.parse_ticket = hrz_jobs::add_job_parse_mvt(
-                    js, mvt_blob, {monitoring::systems::VectorDataLoader});
+                    js, std::move(mvt_blob), {monitoring::systems::VectorDataLoader});
             }
             else
             {

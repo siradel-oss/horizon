@@ -354,7 +354,7 @@ public:
 
                         tile->attribution = std::move(child_image.attribution);
                         tile->palettize_image_ticket = hrz_jobs::add_job_palettize_image(
-                            js, palettize_image_params,
+                            js, std::move(palettize_image_params),
                             {monitoring::systems::PlanetSurface, raster_id});
                         tile->status = PalettizedTile::Status::Palettizing;
                     }
@@ -370,8 +370,7 @@ public:
 
                 if (hrz_jobs::is_job_finished(js, tile->palettize_image_ticket))
                 {
-                    BlobImage image;
-                    hrz_jobs::get_job_response(js, tile->palettize_image_ticket, image);
+                    auto image = hrz_jobs::get_job_response(js, tile->palettize_image_ticket);
 
                     if (image.valid() && image.width() > 0 && image.height() > 0)
                     {

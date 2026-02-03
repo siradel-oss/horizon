@@ -223,8 +223,7 @@ void GpuTextureResource::work(
             if (hrz_jobs::get_job_status(js, decompress_ticket)
                 == job_scheduler::JobStatus::Finished_Success)
             {
-                BlobImage image;
-                hrz_jobs::get_job_response(js, decompress_ticket, image);
+                auto image = hrz_jobs::get_job_response(js, decompress_ticket);
                 image.register_blob_metadata(ba, "image type"_ss, "model texture"_ss);
                 image.register_blob_owner(ba, owner);
 

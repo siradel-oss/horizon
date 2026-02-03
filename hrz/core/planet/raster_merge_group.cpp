@@ -315,7 +315,7 @@ hrz_jobs::ReprojectRasterTileTicket RasterMergeGroup::create_reprojection_job(
     tile_reproj_params.raster_display_bounds = raster->display_bounds;
 
     return hrz_jobs::add_job_reproject_raster_tile(
-        js, tile_reproj_params, {monitoring::systems::PlanetSurface, raster->id});
+        js, std::move(tile_reproj_params), {monitoring::systems::PlanetSurface, raster->id});
 }
 
 void RasterMergeGroup::get_attributions(
@@ -944,9 +944,8 @@ void RasterMergeGroup::work(
                     {
                         tile_raster.reprojected_tiles.clear();
 
-                        hrz_jobs::ReprojectedTiles reprojected_tiles;
-                        hrz_jobs::get_job_response(
-                            js, tile_raster.reproject_tile_ticket, reprojected_tiles);
+                        auto reprojected_tiles =
+                            hrz_jobs::get_job_response(js, tile_raster.reproject_tile_ticket);
 
                         for (const auto& reprojected_tile : reprojected_tiles.tiles)
                         {
@@ -1218,7 +1217,7 @@ void RasterMergeGroup::work(
             }
 
             tile.compose_tile_ticket = hrz_jobs::add_job_compose_raster_tile(
-                js, job_params, {monitoring::systems::PlanetSurface});
+                js, std::move(job_params), {monitoring::systems::PlanetSurface});
             tile.status = ComposedTile::Status::Composing;
 
             // The sources images have been copied to the composition job.
@@ -1247,8 +1246,7 @@ void RasterMergeGroup::work(
                 if (hrz_jobs::get_job_status(js, tile.compose_tile_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz_jobs::RasterTileCompositionResponse response;
-                    hrz_jobs::get_job_response(js, tile.compose_tile_ticket, response);
+                    auto response = hrz_jobs::get_job_response(js, tile.compose_tile_ticket);
 
                     assert(
                         response.image.width() == ATLAS_TILE_SIZE
@@ -1271,7 +1269,7 @@ void RasterMergeGroup::work(
                         job_params.image = std::move(response.image);
                         job_params.output_format = _atlas_image_format;
                         tile.compress_tile_ticket = hrz_jobs::add_job_compress_blob_image(
-                            js, job_params, {monitoring::systems::PlanetSurface});
+                            js, std::move(job_params), {monitoring::systems::PlanetSurface});
                         tile.status = ComposedTile::Status::Compressing;
                     }
                     else
@@ -1318,9 +1316,7 @@ void RasterMergeGroup::work(
                 if (hrz_jobs::get_job_status(js, tile.compress_tile_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz::BlobImage image;
-                    hrz_jobs::get_job_response(js, tile.compress_tile_ticket, image);
-                    tile.image = std::move(image);
+                    tile.image = hrz_jobs::get_job_response(js, tile.compress_tile_ticket);
 
                     tile.status = ComposedTile::Status::Composed;
                 }

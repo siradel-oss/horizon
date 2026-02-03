@@ -170,8 +170,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataP
             if (hrz_jobs::get_job_status(js, task_data.parse_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::ParsedMvt parsed_mvt;
-                hrz_jobs::get_job_response(js, task_data.parse_ticket, parsed_mvt);
+                auto parsed_mvt = hrz_jobs::get_job_response(js, task_data.parse_ticket);
 
                 task_data.package = {
                     {std::move(parsed_mvt)},
@@ -210,7 +209,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataP
                 {
                     auto mvt_blob = pmtiles.retrieve_blob(task_data.tile_query.value());
                     task_data.parse_ticket = hrz_jobs::add_job_parse_mvt(
-                        js, mvt_blob, {monitoring::systems::VectorDataLoader});
+                        js, std::move(mvt_blob), {monitoring::systems::VectorDataLoader});
                 }
                 else
                 {

@@ -269,7 +269,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorData>
             }
 
             task_data.join_ticket = hrz_jobs::add_job_join_vector_data(
-                js, params, {monitoring::systems::VectorDataLoader, layer_model.layer_handle});
+                js, std::move(params),
+                {monitoring::systems::VectorDataLoader, layer_model.layer_handle});
         }
         else
         {
@@ -304,8 +305,7 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorData>
             if (hrz_jobs::get_job_status(js, task_data.join_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::JoinedVectorData data;
-                hrz_jobs::get_job_response(js, task_data.join_ticket, data);
+                auto data = hrz_jobs::get_job_response(js, task_data.join_ticket);
                 size_t feature_count = task_data.reference_feature_ids->size();
 
                 task_data.feature_ids = task_data.reference_feature_ids;

@@ -330,7 +330,7 @@ public:
                     params.override_max_level = override_max_level;
                     params.max_level = max_level;
                     parsing_ticket = hrz_jobs::add_job_parse_wms_resource(
-                        js, params, {monitoring::systems::PlanetSurface, raster_id});
+                        js, std::move(params), {monitoring::systems::PlanetSurface, raster_id});
 
                     status = InternalStatus::ParsingDescriptor;
                 }
@@ -350,8 +350,7 @@ public:
                 if (hrz_jobs::get_job_status(js, parsing_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz_jobs::WmsResourceResponse response;
-                    hrz_jobs::get_job_response(js, parsing_ticket, response);
+                    auto response = hrz_jobs::get_job_response(js, parsing_ticket);
 
                     fmt::memory_buffer buffer;
                     hrz::InlinedUniqueVector<AttributionHandle, 8> unique_attributions;

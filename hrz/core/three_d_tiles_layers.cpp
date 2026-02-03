@@ -2673,7 +2673,7 @@ struct ThreeDTilesSystem
                 batch_table_bin_size);
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
-                js, params,
+                js, std::move(params),
                 {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
@@ -2798,7 +2798,7 @@ struct ThreeDTilesSystem
                 batch_table_bin_size);
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
-                js, params,
+                js, std::move(params),
                 {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
@@ -2970,7 +2970,7 @@ struct ThreeDTilesSystem
                 batch_table_bin_size);
             params.attributes = config->attributes;
             content.decode_batch_table_ticket =
-                hrz_jobs::add_job_decode_three_d_tiles_batch_table(js, params, owner);
+                hrz_jobs::add_job_decode_three_d_tiles_batch_table(js, std::move(params), owner);
         }
 
         // If the batch length is 0, all the geometry takes on the same style.
@@ -3070,7 +3070,7 @@ struct ThreeDTilesSystem
             params.bin_data = {};
             params.attributes = config->attributes;
             content.decode_batch_table_ticket = hrz_jobs::add_job_decode_three_d_tiles_batch_table(
-                js, params,
+                js, std::move(params),
                 {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
         }
 
@@ -3393,7 +3393,7 @@ struct ThreeDTilesSystem
         params.transform = tileset->transform;
         params.root_depth = tileset->root_depth;
         tileset->decode_descriptor_ticket = hrz_jobs::add_job_decode_three_d_tiles_tileset(
-            js, params,
+            js, std::move(params),
             {hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id});
 
         tileset->status = Tileset::Status::DECODING_DESCRIPTOR;
@@ -3493,8 +3493,8 @@ struct ThreeDTilesSystem
                     if (hrz_jobs::get_job_status(js, tileset->decode_descriptor_ticket)
                         == hrz::job_scheduler::JobStatus::Finished_Success)
                     {
-                        hrz::three_d_tiles::ThreeDTilesTilesetDescriptor response;
-                        hrz_jobs::get_job_response(js, tileset->decode_descriptor_ticket, response);
+                        auto response =
+                            hrz_jobs::get_job_response(js, tileset->decode_descriptor_ticket);
 
                         for (size_t i = 0; i < response.tiles.size(); ++i)
                         {
@@ -3910,7 +3910,8 @@ struct ThreeDTilesSystem
         }
 
         subtile.style_job_ticket = hrz_jobs::add_job_style_features(
-            js, job_data, {hrz::monitoring::systems::ThreeDTilesLayers, config.global_layer_id});
+            js, std::move(job_data),
+            {hrz::monitoring::systems::ThreeDTilesLayers, config.global_layer_id});
 
         return true;
     }
@@ -3919,8 +3920,7 @@ struct ThreeDTilesSystem
         ThreeDTile::Subtile& subtile,
         hrz::JobScheduler* js)
     {
-        hrz_jobs::StylingResult result;
-        hrz_jobs::get_job_response(js, subtile.style_job_ticket, result);
+        auto result = hrz_jobs::get_job_response(js, subtile.style_job_ticket);
 
         // This scratch buffer can be used by to temporarily store per batch colors.
         std::vector<lm::ubvec4> scratch;
@@ -4462,8 +4462,8 @@ struct ThreeDTilesSystem
             if (hrz_jobs::get_job_status(ctx.js, content.decode_batch_table_ticket)
                 == hrz::job_scheduler::JobStatus::Finished_Success)
             {
-                hrz_jobs::DecodedBatchTable response;
-                hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket, response);
+                auto response =
+                    hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket);
 
                 subtile.attribute_values = std::move(response.attribute_values);
                 subtile.batches_to_feature_ids = std::move(response.batches_to_feature_ids);
@@ -4575,8 +4575,7 @@ struct ThreeDTilesSystem
                     content.prototype, *content.geometry, *content.material)};
             }
 
-            hrz_jobs::DecodedBatchTable response;
-            hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket, response);
+            auto response = hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket);
 
             subtile.attribute_values = std::move(response.attribute_values);
             subtile.batches_to_feature_ids = std::move(response.batches_to_feature_ids);
@@ -4766,8 +4765,7 @@ struct ThreeDTilesSystem
                 return render_request;
             }
 
-            hrz_jobs::DecodedBatchTable response;
-            hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket, response);
+            auto response = hrz_jobs::get_job_response(ctx.js, content.decode_batch_table_ticket);
 
             content.decode_batch_table_ticket = {};
             content.has_loaded_batch_table = true;

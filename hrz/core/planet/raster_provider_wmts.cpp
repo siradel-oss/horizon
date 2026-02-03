@@ -219,7 +219,7 @@ public:
                     params.style_identifier = style_identifier;
                     params.image_format = desired_image_format;
                     parsing_ticket = hrz_jobs::add_job_parse_wmts_resource(
-                        js, params, {monitoring::systems::PlanetSurface, raster_id});
+                        js, std::move(params), {monitoring::systems::PlanetSurface, raster_id});
 
                     status = InternalStatus::ParsingDescriptor;
                 }
@@ -239,8 +239,7 @@ public:
                 if (hrz_jobs::get_job_status(js, parsing_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz_jobs::WmtsResourceResponse response;
-                    hrz_jobs::get_job_response(js, parsing_ticket, response);
+                    auto response = hrz_jobs::get_job_response(js, parsing_ticket);
 
                     fetcher = TileFetcher(
                         std::make_unique<UrlTileRequester>(

@@ -292,7 +292,7 @@ struct Tile
     ConfigH config_handle;
     bool has_feature_ids;
 
-    hrz_jobs::ModelData bake_data;
+    std::optional<hrz_jobs::ModelData> bake_data;
     hrz_jobs::Bake3dModelGeometryTicket bake_ticket;
     TileGeometry geometry;
 
@@ -1715,7 +1715,9 @@ private:
                 assert(tile->status == Tile::Status::StartBaking);
 
                 tile->bake_ticket = hrz_jobs::add_job_bake_3d_model_geometry(
-                    ctx.js, tile->bake_data, {hrz::monitoring::systems::Models, tile->layer_id});
+                    ctx.js, std::move(tile->bake_data).value(),
+                    {hrz::monitoring::systems::Models, tile->layer_id});
+                tile->bake_data = std::nullopt;
                 tile->status = Tile::Status::Baking;
                 _tiles_baking.insert(handle);
             }
@@ -1732,8 +1734,7 @@ private:
                 if (hrz_jobs::is_job_valid(ctx.js, tile->bake_ticket)
                     && hrz_jobs::is_job_finished(ctx.js, tile->bake_ticket))
                 {
-                    hrz_jobs::ModelGeometry response;
-                    hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, response);
+                    auto response = hrz_jobs::get_job_response(ctx.js, tile->bake_ticket);
 
                     TileGeometry geometry;
 

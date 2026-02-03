@@ -882,7 +882,7 @@ public:
     void start_baking_job(WorkCtx& ctx, Tile* tile) override
     {
         tile->bake_ticket = hrz_jobs::add_job_bake_flat_polygon_geometry(
-            ctx.js, tile->bake_data.value(),
+            ctx.js, std::move(tile->bake_data).value(),
             {hrz::monitoring::systems::FlatOverlays, tile->layer_id});
     }
 
@@ -900,7 +900,7 @@ public:
 
     void get_baking_job_response(WorkCtx& ctx, Tile* tile, BakedData& out_baked_data) override
     {
-        hrz_jobs::get_job_response(ctx.js, tile->bake_ticket, out_baked_data);
+        out_baked_data = hrz_jobs::get_job_response(ctx.js, tile->bake_ticket);
     }
 
     void cancel_baking_job(WorkCtx& ctx, Tile* tile) override

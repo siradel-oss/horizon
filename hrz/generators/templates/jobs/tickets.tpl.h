@@ -25,7 +25,7 @@ struct {{ job.name|snake_to_pascal }}Ticket
 };
 
 {{ job.documentation|to_documentation_block }}
-{{ job.name|snake_to_pascal }}Ticket add_job_{{ job.name }}(::hrz::JobScheduler* scheduler, {{ job.params_type }}& parameters, const hrz::monitoring::ResourceOwner& owner);
+{{ job.name|snake_to_pascal }}Ticket add_job_{{ job.name }}(::hrz::JobScheduler* scheduler, {{ job.params_type }}&& parameters, const hrz::monitoring::ResourceOwner& owner);
 
 /**
  * Cancel a job and discard the result.
@@ -53,7 +53,7 @@ bool is_job_finished(::hrz::JobScheduler* scheduler, {{ job.name|snake_to_pascal
  * The job must be finished before calling this function.
  * This call removes the job from the scheduler.
  */
-void get_job_response(::hrz::JobScheduler* scheduler, {{ job.name|snake_to_pascal }}Ticket ticket, {{ job.response_type }}& response);
+{{ job.response_type }} get_job_response(::hrz::JobScheduler* scheduler, {{ job.name|snake_to_pascal }}Ticket ticket);
 
 {% endfor %}
 

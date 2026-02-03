@@ -200,7 +200,7 @@ public:
                     hrz_jobs::TilemapResourceParams params;
                     params.raw_xml = std::move(raw_data);
                     parsing_ticket = hrz_jobs::add_job_parse_tilemap_resource(
-                        js, params, {monitoring::systems::PlanetSurface, raster_id});
+                        js, std::move(params), {monitoring::systems::PlanetSurface, raster_id});
 
                     status = InternalStatus::ParsingDescriptor;
                 }
@@ -220,8 +220,7 @@ public:
                 if (hrz_jobs::get_job_status(js, parsing_ticket)
                     == job_scheduler::JobStatus::Finished_Success)
                 {
-                    hrz_jobs::TilemapResourceResponse response;
-                    hrz_jobs::get_job_response(js, parsing_ticket, response);
+                    auto response = hrz_jobs::get_job_response(js, parsing_ticket);
 
                     auto url_patterns = std::move(response.url_patterns);
 

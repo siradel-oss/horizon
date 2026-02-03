@@ -53,7 +53,7 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     params.platform_info = decoder->platform_info;
     params.my_instance_info = decoder->my_instance_info;
 
-    return hrz_jobs::add_job_decode_blob_image(job_scheduler, params, resource_owner);
+    return hrz_jobs::add_job_decode_blob_image(job_scheduler, std::move(params), resource_owner);
 }
 
 hrz_jobs::DecodeBlobImageTicket decode_async(
@@ -74,7 +74,7 @@ hrz_jobs::DecodeBlobImageTicket decode_async(
     // so without the image decoder instance, it cannot be done.
     params.allow_decoding_to_compressed_image = false;
 
-    return hrz_jobs::add_job_decode_blob_image(job_scheduler, params, resource_owner);
+    return hrz_jobs::add_job_decode_blob_image(job_scheduler, std::move(params), resource_owner);
 }
 
 BlobImage job_to_image(JobScheduler* job_scheduler, hrz_jobs::DecodeBlobImageTicket ticket)
@@ -82,9 +82,7 @@ BlobImage job_to_image(JobScheduler* job_scheduler, hrz_jobs::DecodeBlobImageTic
     if (hrz_jobs::get_job_status(job_scheduler, ticket)
         == job_scheduler::JobStatus::Finished_Success)
     {
-        hrz::BlobImage response;
-        hrz_jobs::get_job_response(job_scheduler, ticket, response);
-
+        auto response = hrz_jobs::get_job_response(job_scheduler, ticket);
         return response;
     }
     else
