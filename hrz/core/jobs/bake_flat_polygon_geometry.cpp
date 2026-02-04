@@ -27,7 +27,7 @@ namespace hrz_jobs::bake_flat_polygon_geometry
 {
 namespace
 {
-static constexpr size_t InitialVertexCapacity = 4096;
+constexpr size_t InitialVertexCapacity = 4096;
 
 double lm_dvec2_get_x(const lm::dvec2& v)
 {
@@ -309,8 +309,8 @@ void generate_polygon_geometry(
         // it behave more nicely under deformation. (When it is wrapped on the planet's
         // surface.
 
-        auto point_grid_bbox = lm::intersection(tile_bounds, polygon_bbox);
-        if (lm::is_valid(point_grid_bbox))
+        if (auto point_grid_bbox = lm::intersection(tile_bounds, polygon_bbox);
+            lm::is_valid(point_grid_bbox))
         {
             auto lon_angle_to_distance = [&](double lon_angle, double lat)
             {
@@ -606,13 +606,6 @@ hrz_jobs::JobResult run(
     auto style_prps = input.style.prps.get_data();
     auto style_values = input.style.get_values_reader();
 
-    auto points_geo_blob_opt = hrz::blobs::allocate_blob_sync(
-        context.get_blob_allocator(), input_points.size() * sizeof(hrz::GeoPosition3));
-    if (!points_geo_blob_opt.has_value())
-    {
-        return hrz_jobs::JobResult::FAILURE;
-    }
-
     // Baked positions for later reprojection
     hrz::BlobVector<lm::dvec3> polygon_positions(
         context.get_blob_allocator(), InitialVertexCapacity);
@@ -755,8 +748,8 @@ hrz_jobs::JobResult run(
             pattern_style.pattern_color_blend_strength = polygon_pattern_blend_strength;
 
             uint32_t pattern_style_index = 0;
-            auto style_it = polygon_pattern_styles.find(pattern_style);
-            if (style_it != polygon_pattern_styles.end())
+            if (auto style_it = polygon_pattern_styles.find(pattern_style);
+                style_it != polygon_pattern_styles.end())
             {
                 pattern_style_index = style_it->second;
             }
@@ -873,16 +866,14 @@ hrz_jobs::JobResult run(
     {
         hrz::vector_repr::compute_rel_coords(
             {polygon_positions_data}, bsphere.center,
-            {(lm::vec3*)&pattern_polygon_vertices_data.data()->position,
-             polygon_positions_data.size(),
+            {&pattern_polygon_vertices_data.data()->position, polygon_positions_data.size(),
              sizeof(hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex)});
     }
     else
     {
         hrz::vector_repr::compute_rel_coords(
             {polygon_positions_data}, bsphere.center,
-            {(lm::vec3*)&solid_color_polygon_vertices_data.data()->position,
-             polygon_positions_data.size(),
+            {&solid_color_polygon_vertices_data.data()->position, polygon_positions_data.size(),
              sizeof(hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex)});
     }
 
@@ -915,9 +906,9 @@ hrz_jobs::JobResult run(
             return hrz_jobs::JobResult::FAILURE;
         }
 
-        for (const auto& pattern_style : polygon_pattern_styles)
+        for (const auto& [pattern_style, index] : polygon_pattern_styles)
         {
-            polygon_pattern_styles_span.value()[pattern_style.second] = pattern_style.first;
+            polygon_pattern_styles_span.value()[index] = pattern_style;
         }
 
         if (polygon_pattern_styles.size() > hrz::vt::DATA_TEXTURE_SIZE

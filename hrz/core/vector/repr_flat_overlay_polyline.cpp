@@ -537,7 +537,7 @@ public:
         return false;                                                                     \
     }
 
-        auto& geometry = tile->geometry.value();
+        const auto& geometry = tile->geometry.value();
         auto tile_coords_str = fmt::to_string(tile->coords);
 
         using Instance = hrz_jobs::FlatPolylineGeometry::PolylineInstance;
@@ -664,7 +664,7 @@ namespace hrz::vt
 
 std::unique_ptr<ReprSystem> create_flat_overlay_polyline_repr_system()
 {
-    return std::unique_ptr<ReprSystem>(new FlatOverlayPolylineReprSystem());
+    return std::make_unique<FlatOverlayPolylineReprSystem>();
 }
 
 void collect_flat_overlay_polyline_shaders(hrz::GpuResourceContext* rc)

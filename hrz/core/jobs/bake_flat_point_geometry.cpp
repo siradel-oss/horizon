@@ -13,7 +13,7 @@ namespace hrz_jobs::bake_flat_point_geometry
 {
 namespace
 {
-static constexpr size_t InitialVertexCapacity = 4096;
+constexpr size_t InitialVertexCapacity = 4096;
 
 void generate_points_geometry(
     uint32_t feature_index,
@@ -31,10 +31,8 @@ void generate_points_geometry(
         point_data.push_back({{}, rgba, disc_radius, feature_index});
     };
 
-    for (unsigned int i = 0; i < feature_span.size(); ++i)
+    for (const auto& p : feature_span)
     {
-        const lm::dvec3 p = feature_span[i];
-
         append_vertex(lm::dvec3(p.xy, 0));
     }
 }
@@ -149,7 +147,7 @@ hrz_jobs::JobResult run(
     // Compute relative coordinates
     hrz::vector_repr::compute_rel_coords(
         {point_positions_data}, bsphere.center,
-        {(lm::vec3*)&point_vertices_data.data()->position, point_positions_data.size(),
+        {&point_vertices_data.data()->position, point_positions_data.size(),
          sizeof(hrz_jobs::FlatPointGeometry::PointInstance)});
 
     auto point_vertices_array_opt = point_vertices.to_blob_array();

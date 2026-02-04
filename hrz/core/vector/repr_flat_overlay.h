@@ -56,13 +56,13 @@ struct DrawReport
 
 struct BaseRenderable : public my::Renderer::Renderable
 {
-    my::Renderer::BinMask bin_mask;
-    my::Renderer::ViewMask main_views;
+    my::Renderer::BinMask bin_mask{};
+    my::Renderer::ViewMask main_views{};
     lm::dvec3 clamped_center;
-    double clamped_radius;
+    double clamped_radius{};
     lm::dvec3 sea_center;
-    double sea_radius;
-    uint32_t z_index;
+    double sea_radius{};
+    uint32_t z_index{};
 
     struct BaseRenderData
     {
@@ -678,9 +678,7 @@ public:
         return;                                                                           \
     }
 
-        const bool has_baked_data = tile_geometry_has_necessary_baked_data(*tile);
-
-        if (!has_baked_data)
+        if (!tile_geometry_has_necessary_baked_data(*tile))
         {
             // No data to render
             set_and_send_tile_status(tile, Tile::Status::Ready);
@@ -794,11 +792,8 @@ public:
 
         _channels.work();
 
-        for (auto& it : _channels)
+        for (auto& [channel_id, channel] : _channels)
         {
-            auto channel_id = it.first;
-            auto& channel = it.second;
-
             for (auto& generic_message : channel.receive())
             {
                 std::visit(
@@ -814,7 +809,6 @@ public:
                                  &registered_properties](
                                     std::string_view name,
                                     const hrz::vector_data::OwnedAttributeValue& default_value)
-                                    -> uint64_t
                                 {
                                     uint64_t prp_id = repr_reg->register_property(layer_id, name);
                                     registered_properties.push_back({prp_id, default_value});
@@ -1044,9 +1038,9 @@ public:
 
     void draw(DrawCtx& ctx) override
     {
-        for (const auto& entry : _drawn_tiles)
+        for (const auto& [tile_handle, scene_views] : _drawn_tiles)
         {
-            Tile* tile = _tiles.get_object(entry.first);
+            Tile* tile = _tiles.get_object(tile_handle);
             if (!tile) continue;
 
             auto* renderable = get_renderable(tile);
@@ -1057,7 +1051,7 @@ public:
                 tile->selection_storage.work_gpu(ctx.render);
             }
 
-            renderable->get_base_render_data().scene_views = tile->scene_views & entry.second;
+            renderable->get_base_render_data().scene_views = tile->scene_views & scene_views;
             renderable->main_views = ctx.render->main_views;
 
             ctx.render->rd->collect_renderable(*renderable);

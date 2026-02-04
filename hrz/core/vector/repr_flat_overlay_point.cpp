@@ -401,7 +401,7 @@ public:
         return false;                                                                     \
     }
 
-        auto& geometry = tile->geometry.value();
+        const auto& geometry = tile->geometry.value();
         auto tile_coords_str = fmt::to_string(tile->coords);
 
         using Instance = hrz_jobs::FlatPointGeometry::PointInstance;
@@ -506,7 +506,7 @@ namespace hrz::vt
 
 std::unique_ptr<ReprSystem> create_flat_overlay_point_repr_system()
 {
-    return std::unique_ptr<ReprSystem>(new FlatOverlayPointReprSystem());
+    return std::make_unique<FlatOverlayPointReprSystem>();
 }
 
 void collect_flat_overlay_point_shaders(hrz::GpuResourceContext* rc)

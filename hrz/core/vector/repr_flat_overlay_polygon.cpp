@@ -463,9 +463,9 @@ public:
             config->default_pattern_sprite_name);
         for (const auto& proto_sprite : repr.flat_overlay_polygon().pattern().sprites())
         {
-            config->pattern_sprites.push_back(
-                {proto_sprite.name(), lm::uvec2(hrz::to_lm(proto_sprite.size())),
-                 lm::uvec2(hrz::to_lm(proto_sprite.offset()))});
+            config->pattern_sprites.emplace_back(
+                proto_sprite.name(), lm::uvec2(hrz::to_lm(proto_sprite.size())),
+                lm::uvec2(hrz::to_lm(proto_sprite.offset())));
         }
 
         config->default_pattern_size =
@@ -916,7 +916,7 @@ namespace hrz::vt
 
 std::unique_ptr<ReprSystem> create_flat_overlay_polygon_repr_system()
 {
-    return std::unique_ptr<ReprSystem>(new FlatOverlayPolygonReprSystem());
+    return std::make_unique<FlatOverlayPolygonReprSystem>();
 }
 
 void collect_flat_overlay_polygon_shaders(hrz::GpuResourceContext* rc)

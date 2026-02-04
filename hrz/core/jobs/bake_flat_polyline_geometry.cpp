@@ -18,7 +18,7 @@ namespace hrz_jobs::bake_flat_polyline_geometry
 {
 namespace
 {
-static constexpr size_t InitialVertexCapacity = 4096;
+constexpr size_t InitialVertexCapacity = 4096;
 
 void transform_wmerc_to_geo(int n, const lm::dvec3* in, hrz::GeoPosition3* out)
 {
@@ -521,10 +521,11 @@ hrz_jobs::JobResult run(
 
                 if (lm::length2(second_prev - first) < 0.1) // Close enough to be continuous
                 {
-                    auto result = hrz::vector_repr::compute_joint_normal(second, first, first_prev);
-                    if (result.second)
+                    if (auto [normal, is_nice_joint] =
+                            hrz::vector_repr::compute_joint_normal(second, first, first_prev);
+                        is_nice_joint)
                     {
-                        n0 = result.first;
+                        n0 = normal;
                     }
                 }
 
@@ -543,11 +544,11 @@ hrz_jobs::JobResult run(
 
                 if (lm::length2(second - first_next) < 0.1) // Close enough to be continuous
                 {
-                    auto result =
-                        hrz::vector_repr::compute_joint_normal(first, second, second_next);
-                    if (result.second)
+                    if (auto [normal, is_nice_joint] =
+                            hrz::vector_repr::compute_joint_normal(first, second, second_next);
+                        is_nice_joint)
                     {
-                        n1 = result.first;
+                        n1 = normal;
                     }
                 }
 
@@ -572,13 +573,13 @@ hrz_jobs::JobResult run(
         {polyline_positions_data.data() + 0, polyline_positions_data.size() / 2,
          2 * sizeof(lm::dvec3)},
         bsphere.center,
-        {(lm::vec3*)&polyline_vertices_data.data()->position0, polyline_positions_data.size() / 2,
+        {&polyline_vertices_data.data()->position0, polyline_positions_data.size() / 2,
          sizeof(hrz_jobs::FlatPolylineGeometry::PolylineInstance)});
     hrz::vector_repr::compute_rel_coords(
         {polyline_positions_data.data() + 1, polyline_positions_data.size() / 2,
          2 * sizeof(lm::dvec3)},
         bsphere.center,
-        {(lm::vec3*)&polyline_vertices_data.data()->position1, polyline_positions_data.size() / 2,
+        {&polyline_vertices_data.data()->position1, polyline_positions_data.size() / 2,
          sizeof(hrz_jobs::FlatPolylineGeometry::PolylineInstance)});
 
     auto polyline_vertices_array_opt = polyline_vertices.to_blob_array();
