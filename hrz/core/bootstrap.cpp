@@ -323,7 +323,7 @@ public:
         const hrz::RenderRequest& last_frame_render_request,
         float device_pixel_ratio)
     {
-        const double now = hrz::clock::CurrentFrameRealTime.s;
+        const double now = hrz::clock::CurrentFrameRealTime.ms;
 
         _force_picking_after_delay |=
             (_current_pick_mouse_pos != _mouse_pos
