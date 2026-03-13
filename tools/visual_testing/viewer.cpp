@@ -1,10 +1,12 @@
 #include "hrz/core/backend.h"
+#include "hrz/fnd/defines.h"
 #include "hrz/protocol/image.pb.h"
 #include "hrz/protocol/mapbox/service.pb.h"
 #include "hrz/protocol/message_queue/service.pb.h"
 #include "hrz/protocol/scene_dump/service.pb.h"
 #include "hrz/protocol/scene_model_version.h"
 #include "hrz/scene_dump/migration.h"
+#include "hrz/version/version.h"
 
 #include <argparser.h>
 #include <wsi.h>
@@ -199,7 +201,8 @@ public:
         uint32_t log_filter_level)
     {
         // Initialize Horizon.
-        std::optional<WsiInstance> wsi = wsi_init(width, height, show_window);
+        std::string window_title = std::string("Horizon ") + hrz::Version;
+        std::optional<WsiInstance> wsi = wsi_init(width, height, window_title.c_str(), show_window);
         if (!wsi.has_value())
         {
             printf("Could not create window\n");
@@ -378,10 +381,11 @@ int main(int argc, char* argv[])
     argparser::add_argument(arg_parser, arg);
 
     arg.name = "help";
-    arg.type = argparser::ArgType::Bool;
-    arg.required = false;
-    arg.has_default = true;
-    arg.default_bool = false;
+    arg.type = argparser::ArgType::Switch;
+    argparser::add_argument(arg_parser, arg);
+
+    arg.name = "version";
+    arg.type = argparser::ArgType::Switch;
     argparser::add_argument(arg_parser, arg);
 
     auto print_help = [&]()
@@ -396,13 +400,25 @@ int main(int argc, char* argv[])
     if (!argparser::parse(arg_parser, argc, argv))
     {
         print_help();
-        return ExitCode::MissingArguments;
+        return ExitCode::InvalidArguments;
     }
 
-    if (argparser::get_value_bool(arg_parser, "help").value_or(false))
+    if (argparser::get_switch(arg_parser, "version"))
+    {
+        printf("Horizon visual test viewer %s\n", hrz::Version);
+        return ExitCode::Ok;
+    }
+
+    if (argparser::get_switch(arg_parser, "help"))
     {
         print_help();
         return ExitCode::Ok;
+    }
+
+    if (!argparser::check_required(arg_parser))
+    {
+        print_help();
+        return ExitCode::MissingArguments;
     }
 
     const char* input_file = argparser::get_value_string(arg_parser, "input").value();

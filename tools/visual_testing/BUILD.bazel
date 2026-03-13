@@ -27,6 +27,7 @@ cc_binary(
         "//hrz/cpp_api",
         "//hrz/fnd",
         "//hrz/scene_dump:migration",
+        "//hrz/version",
         "//libs/argparser",
         "//libs/wsi",
         "//third_party/stb_image_write",

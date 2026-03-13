@@ -6,9 +6,9 @@
 #include "hrz/core/client_messages.h"
 #include "hrz/core/clock.h"
 #include "hrz/core/monitoring/monitoring.h"
-#include "hrz/core/version.h"
 #include "hrz/monitoring/monitoring.h"
 #include "hrz/protocol/monitoring/message.pb.h"
+#include "hrz/version/version.h"
 
 #include <fmt/chrono.h>
 #include <string.h>

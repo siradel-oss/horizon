@@ -21,9 +21,9 @@ extern "C"
 #include "hrz/core/resources/resources.h"
 #include "hrz/core/scene.h"
 #include "hrz/core/shaders/collection.h"
-#include "hrz/core/version.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/static_vector.h"
+#include "hrz/version/version.h"
 
 #include <mycelium/backend.h>
 
@@ -413,7 +413,7 @@ DevUi* create(PlatformContext* platform)
 {
     DevUi* ui = new DevUi();
 
-    ui->main_window_name = std::string("Horizon v") + hrz::Version;
+    ui->main_window_name = std::string("Horizon ") + hrz::Version;
     ui->status = DevUi::Status::LoadingAtlas;
 
     ui->is_open = false;

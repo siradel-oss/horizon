@@ -10,6 +10,7 @@ struct ArgParser;
 
 enum class ArgType
 {
+    Switch,
     Bool,
     Float,
     Int,
@@ -41,9 +42,11 @@ void destroy(ArgParser*);
 
 void add_argument(ArgParser*, const ArgDef& arg);
 
-bool parse(ArgParser*, int argc, char* argv[]);
+bool parse(ArgParser*, int argc, char* argv[], bool check_required_args = false);
+bool check_required(ArgParser*);
 void show_help(const ArgParser*);
 
+bool get_switch(ArgParser*, const char* arg_name);
 std::optional<bool> get_value_bool(ArgParser*, const char* arg_name);
 std::optional<int64_t> get_value_int(ArgParser*, const char* arg_name);
 std::optional<uint64_t> get_value_uint(ArgParser*, const char* arg_name);

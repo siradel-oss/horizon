@@ -1,18 +1,16 @@
 #include "hrz/core/backend.h"
+#include "hrz/fnd/defines.h"
 #include "hrz/protocol/layer/defs.pb.h"
 #include "hrz/protocol/mapbox/service.pb.h"
 #include "hrz/protocol/scene_dump/service.pb.h"
 #include "hrz/protocol/scene_model_version.h"
 #include "hrz/scene_dump/migration.h"
+#include "hrz/version/version.h"
 
 #include <argparser.h>
 #include <inttypes.h>
 #include <ws_server.h>
 #include <wsi.h>
-
-#define HRZ_VERSION_STR3(X) #X
-#define HRZ_VERSION_STR2(X) HRZ_VERSION_STR3(X)
-#define HRZ_VERSION_STR HRZ_VERSION_STR2(HRZ_VERSION)
 
 #define __STDC_FORMAT_MACROS
 
@@ -95,11 +93,12 @@ int main(int argc, char* argv[])
     arg.default_bool = false;
     argparser::add_argument(arg_parser, arg);
 
+    std::string default_user_agent = std::string("Horizon/") + hrz::Version;
     arg.name = "user-agent";
     arg.type = argparser::ArgType::String;
     arg.required = false;
     arg.has_default = true;
-    arg.default_string = "Horizon/" HRZ_VERSION_STR;
+    arg.default_string = default_user_agent.c_str();
     argparser::add_argument(arg_parser, arg);
 
     arg.name = "log-filter-level";
@@ -282,10 +281,11 @@ int main(int argc, char* argv[])
     argparser::add_argument(arg_parser, arg);
 
     arg.name = "help";
-    arg.type = argparser::ArgType::Bool;
-    arg.required = false;
-    arg.has_default = true;
-    arg.default_bool = false;
+    arg.type = argparser::ArgType::Switch;
+    argparser::add_argument(arg_parser, arg);
+
+    arg.name = "version";
+    arg.type = argparser::ArgType::Switch;
     argparser::add_argument(arg_parser, arg);
 
     arg.name = "w";
@@ -310,14 +310,28 @@ int main(int argc, char* argv[])
 
     if (!argparser::parse(arg_parser, argc, argv))
     {
-        printf("Invalid, or missing, command line arguments.\n");
+        printf("Invalid command line arguments.\n");
+        argparser::show_help(arg_parser);
         return 1;
     }
 
-    if (argparser::get_value_bool(arg_parser, "help").value_or(false))
+    if (argparser::get_switch(arg_parser, "version"))
+    {
+        printf("Horizon %s\n", hrz::Version);
+        return 0;
+    }
+
+    if (argparser::get_switch(arg_parser, "help"))
     {
         argparser::show_help(arg_parser);
         return 0;
+    }
+
+    if (!argparser::check_required(arg_parser))
+    {
+        printf("Missing command line arguments.\n");
+        argparser::show_help(arg_parser);
+        return 1;
     }
 
     hrz_proto::ViewerOptions options;
@@ -394,7 +408,9 @@ int main(int argc, char* argv[])
     int width = argparser::get_value_uint(arg_parser, "w").value();
     int height = argparser::get_value_uint(arg_parser, "h").value();
 
-    std::optional<WsiInstance> wsi = wsi_init(width, height);
+    std::string window_title = std::string("Horizon ") + hrz::Version;
+
+    std::optional<WsiInstance> wsi = wsi_init(width, height, window_title.c_str());
     if (!wsi.has_value())
     {
         printf("Could not create window");

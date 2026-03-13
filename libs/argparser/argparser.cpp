@@ -78,6 +78,15 @@ void add_argument(ArgParser* ap, const ArgDef& arg)
 
     switch (arg.type)
     {
+        case ArgType::Switch:
+        {
+            ap->actions[arg.name] = [index](ArgParser* ap, const char* next_token) -> bool
+            {
+                ap->args[index].value.is_set = true;
+                return true;
+            };
+            break;
+        }
         case ArgType::Bool:
         {
             ap->actions[arg.name] = [index](ArgParser* ap, const char* next_token) -> bool
@@ -143,7 +152,7 @@ void add_argument(ArgParser* ap, const ArgDef& arg)
     }
 }
 
-bool parse(ArgParser* ap, int argc, char* argv[])
+bool parse(ArgParser* ap, int argc, char* argv[], bool check_required_args)
 {
     assert(ap);
 
@@ -166,6 +175,18 @@ bool parse(ArgParser* ap, int argc, char* argv[])
             return false;
         }
     }
+
+    if (check_required_args && !check_required(ap))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool check_required(ArgParser* ap)
+{
+    assert(ap);
 
     for (const Arg& arg : ap->args)
     {
@@ -238,6 +259,26 @@ std::optional<T> get_value(ArgParser* ap, const char* arg_name, ArgType expected
     return std::nullopt;
 }
 
+bool get_switch(ArgParser* ap, const char* arg_name)
+{
+    assert(ap);
+
+    auto it = ap->name_to_arg_index.find(arg_name);
+    if (it == std::end(ap->name_to_arg_index))
+    {
+        return false;
+    }
+
+    Arg& arg = ap->args[it->second];
+    if (arg.def.type != ArgType::Switch)
+    {
+        assert(false && "Requested type and argument type don't match.\n");
+        return false;
+    }
+
+    return arg.value.is_set;
+}
+
 std::optional<bool> get_value_bool(ArgParser* ap, const char* arg_name)
 {
     return get_value<bool>(ap, arg_name, ArgType::Bool);
@@ -303,12 +344,13 @@ void show_help(const ArgParser* ap)
 
         switch (arg.def.type)
         {
+            case ArgType::Switch: printf("--%s\n", arg.def.name.c_str()); break;
             case ArgType::Bool:
                 printf("--[no-]%s\n", arg.def.name.c_str());
                 print_required();
                 if (arg.def.has_default)
                 {
-                    printf("        default = %s\n", arg.def.default_bool ? "enabled" : "disabled");
+                    printf("        default: %s\n", arg.def.default_bool ? "enabled" : "disabled");
                 }
                 break;
             case ArgType::Int:
@@ -316,7 +358,7 @@ void show_help(const ArgParser* ap)
                 print_required();
                 if (arg.def.has_default)
                 {
-                    printf("        default = %" PRIi64 "\n", arg.def.default_int);
+                    printf("        default: %" PRIi64 "\n", arg.def.default_int);
                 }
                 break;
             case ArgType::Uint:
@@ -324,7 +366,7 @@ void show_help(const ArgParser* ap)
                 print_required();
                 if (arg.def.has_default)
                 {
-                    printf("        default = %" PRIu64 "\n", arg.def.default_uint);
+                    printf("        default: %" PRIu64 "\n", arg.def.default_uint);
                 }
                 break;
             case ArgType::Float:
@@ -333,7 +375,7 @@ void show_help(const ArgParser* ap)
                 print_required();
                 if (arg.def.has_default)
                 {
-                    printf("        default = %lf\n", arg.def.default_double);
+                    printf("        default: %lf\n", arg.def.default_double);
                 }
                 break;
             case ArgType::String:
@@ -341,7 +383,7 @@ void show_help(const ArgParser* ap)
                 print_required();
                 if (arg.def.has_default)
                 {
-                    printf("        default = %s\n", arg.def.default_string);
+                    printf("        default: \"%s\"\n", arg.def.default_string);
                 }
                 break;
         }

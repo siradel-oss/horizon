@@ -35,7 +35,6 @@
 #include "hrz/core/shape_editor.h"
 #include "hrz/core/stylus.h"
 #include "hrz/core/vector/data_loader/data_loader.h"
-#include "hrz/core/version.h"
 #include "hrz/fnd/defines.h"
 #include "hrz/fnd/format.h"
 #include "hrz/fnd/log.h"
@@ -48,6 +47,7 @@
 #include "hrz/protocol/message_queue/service.pb.h"
 #include "hrz/protocol/scene_model/service.pb.h"
 #include "hrz/protocol/viewer/service.pb.h"
+#include "hrz/version/version.h"
 
 #include <basisu_transcoder.h>
 #include <etcpak/bc7enc.h>

@@ -10,10 +10,6 @@
 #    include <memory>
 #    include <stdio.h>
 
-#    define HRZ_VERSION_STR3(X) #X
-#    define HRZ_VERSION_STR2(X) HRZ_VERSION_STR3(X)
-#    define HRZ_VERSION_STR HRZ_VERSION_STR2(HRZ_VERSION)
-
 namespace
 {
 const char* class_name = "Horizon window";
@@ -117,7 +113,11 @@ void set_window_icon(HWND window, WPARAM icon_id, int metric)
     }
 }
 
-std::optional<WsiInstance> wsi_init(int width, int height, bool show_window)
+std::optional<WsiInstance> wsi_init(
+    int width,
+    int height,
+    const char* window_title,
+    bool show_window)
 {
     HINSTANCE instance = GetModuleHandle(NULL);
 
@@ -134,7 +134,7 @@ std::optional<WsiInstance> wsi_init(int width, int height, bool show_window)
     AdjustWindowRect(&rect, GWL_STYLE, FALSE);
 
     window = CreateWindowA(
-        class_name, "Horizon " HRZ_VERSION_STR, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+        class_name, window_title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
         rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, instance, NULL);
     assert(window);
 

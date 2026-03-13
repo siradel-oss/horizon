@@ -1,4 +1,4 @@
-#include "hrz/core/version.h"
+#include "hrz/version/version.h"
 
 namespace hrz
 {

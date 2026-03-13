@@ -1,0 +1,18 @@
+load("//:version.bzl", "HRZ_VERSION")
+load("//tools/bazel:utils.bzl", "make_template")
+
+make_template(
+    name = "version_cpp",
+    input = "version.tpl.cpp",
+    output = "version.cpp",
+    substitutions = {
+        "@@VERSION@@": HRZ_VERSION,
+    },
+)
+
+cc_library(
+    name = "version",
+    srcs = [":version_cpp"],
+    hdrs = ["version.h"],
+    visibility = ["//visibility:public"],
+)

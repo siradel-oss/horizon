@@ -1,8 +1,7 @@
-load("//:version.bzl", "HRZ_VERSION")
 load("//hrz/protocol:list_proto_files.bzl", "list_proto_files")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
-load("//tools/bazel:utils.bzl", "make_dbg", "make_template")
+load("//tools/bazel:utils.bzl", "make_dbg")
 load(":core_shared_build.bzl", "hrz_cc_shared")
 
 GENERATED_TEMPLATES_SRCS = [
@@ -39,15 +38,6 @@ filegroup(
 filegroup(
     name = "generated_templates_hdrs",
     srcs = GENERATED_TEMPLATES_HDRS,
-)
-
-make_template(
-    name = "hrz_version",
-    input = "version.tpl.cpp",
-    output = "version.cpp",
-    substitutions = {
-        "@@VERSION@@": HRZ_VERSION,
-    },
 )
 
 cc_library(
@@ -184,7 +174,6 @@ cc_library(
         "vector/tiles.cpp",
         "vector/tiles_actor.cpp",
         "vector/tiles_layers.cpp",
-        "version.cpp",
         "viewsheds.cpp",
         "visibility_constraints.cpp",
         "vtex/clipmap_params.cpp",
@@ -329,7 +318,6 @@ cc_library(
         "vector/tiles.h",
         "vector/tiles_actor.h",
         "vector/tiles_layers.h",
-        "version.h",
         "viewsheds.h",
         "visibility_constraints.h",
         "vtex/clipmap_params.h",
@@ -360,6 +348,7 @@ cc_library(
         "//hrz/mapbox",
         "//hrz/monitoring",
         "//hrz/protocol/history:scene_model_version",
+        "//hrz/version",
         "//libs/lm",
         "//libs/mycelium",
         "//libs/proj_lite",

@@ -1,5 +1,3 @@
-load("//:version.bzl", "HRZ_VERSION")
-
 cc_library(
     name = "wsi",
     srcs = select({
@@ -11,9 +9,6 @@ cc_library(
     }),
     hdrs = [
         "wsi.h",
-    ],
-    defines = [
-        "HRZ_VERSION=" + HRZ_VERSION + "",
     ],
     includes = ["."],
     linkopts = select({

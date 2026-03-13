@@ -15,10 +15,6 @@
 #    define RES_NAME "horizon-test-client"
 #    define RES_CLASS "Horizon Test Client"
 
-#    define HRZ_VERSION_STR3(X) #X
-#    define HRZ_VERSION_STR2(X) HRZ_VERSION_STR3(X)
-#    define HRZ_VERSION_STR HRZ_VERSION_STR2(HRZ_VERSION)
-
 namespace
 {
 Display* display = nullptr;
@@ -48,7 +44,11 @@ std::span<unsigned long> create_icon_from_bytes(int width, int height, const uns
 
 static_assert(sizeof(Window) == sizeof(void*), "Wrong size for Window struct");
 
-std::optional<WsiInstance> wsi_init(int width, int height, bool show_window)
+std::optional<WsiInstance> wsi_init(
+    int width,
+    int height,
+    const char* window_title,
+    bool show_window)
 {
     display = XOpenDisplay(nullptr);
     assert(display);
@@ -57,7 +57,7 @@ std::optional<WsiInstance> wsi_init(int width, int height, bool show_window)
     window = XCreateSimpleWindow(
         display, RootWindow(display, screen), 10, 10, width, height, 1, BlackPixel(display, screen),
         WhitePixel(display, screen));
-    XStoreName(display, window, "Horizon " HRZ_VERSION_STR);
+    XStoreName(display, window, window_title);
 
     char res_name[sizeof(RES_NAME)] = RES_NAME;
     char res_class[sizeof(RES_CLASS)] = RES_CLASS;

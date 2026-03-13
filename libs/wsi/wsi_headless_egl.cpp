@@ -16,7 +16,7 @@ EGLDisplay display = EGL_NO_DISPLAY;
 EGLSurface surface_;
 } // namespace
 
-std::optional<WsiInstance> wsi_init(int width, int height, bool)
+std::optional<WsiInstance> wsi_init(int width, int height, const char*, bool)
 {
     if (!gladLoaderLoadEGL(nullptr))
     {
