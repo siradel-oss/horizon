@@ -22,8 +22,9 @@ archive_override(
     ],
 )
 
-# @Todo(1098) Use an hermetic Python toolchain & dependencies
-register_toolchains("@rules_python//python/runtime_env_toolchains:all")
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.11")
+use_repo(python, "python_3_11")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(

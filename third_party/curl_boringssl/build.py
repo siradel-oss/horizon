@@ -114,6 +114,8 @@ patch_file.path.write_bytes(patch.encode())
 if not run_command(["git", "apply", patch_file.path], directory=source_dir):
     raise RuntimeError(f"Failed to apply zlib patch")
 
+(source_dir / ".bazelversion").write_text("8.3.1")
+
 build_args = []
 lib_ext = ""
 lib_prefix = ""

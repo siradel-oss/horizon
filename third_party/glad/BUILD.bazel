@@ -51,6 +51,13 @@ cc_library(
         "egl_15/include/glad/egl.h",
     ],
     includes = ["egl_15/include"],
+    linkopts = select({
+        "//:os_linux": [
+            "-lEGL",
+            "-ldl",
+        ],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
 )
 

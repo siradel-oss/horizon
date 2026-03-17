@@ -1,5 +1,6 @@
 import platform
 import hashlib
+import os
 import subprocess
 import shutil
 import sys
@@ -24,8 +25,21 @@ def compute_file_hash(path):
 
 
 def build_current_descriptor_set():
+    # When running in CI, we need to set the necessary Bazel options
+    # are also applied to this build command.
+    # This is for the check-migrations-integrity job.
+    # @Todo Replace this with using the BAZELRC environment variable
+    #       once Bazel 9 is used.
+    cmd = ["bazel"]
+    if "BZL_OPTS" in os.environ:
+        cmd.extend(os.environ["BZL_OPTS"].split())
+    cmd.append("build")
+    if "BZL_BUILD_OPTS" in os.environ:
+        cmd.extend(os.environ["BZL_BUILD_OPTS"].split())
+    cmd.extend(["//hrz/protocol:descriptor_set.pbf", BZL_CONFIG])
+
     ret = subprocess.run(
-        ["bazel", "build", "//hrz/protocol:descriptor_set.pbf", BZL_CONFIG],
+        cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )

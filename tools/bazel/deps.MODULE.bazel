@@ -73,8 +73,8 @@ local_archive(
     name = "clang-format_linux",
     src = "//third_party/clang-format:prebuilt_linux.MTcuMC42.tar.gz",
     build_file = "//third_party/clang-format:clang-format_linux.BUILD.bazel",
-    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/clang-format/08ee5b36_clang-format-linux-17.0.6.tar.gz",
-    mirror_digest = "08ee5b3614d87ed66f5cdc4b8037c9bb43c53442c82179d34a5894dd71ee5016",
+    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/clang-format/6a8bba92_clang-format-linux-17.0.6.tar.gz",
+    mirror_digest = "6a8bba926960c26f4c3288cad9d54a181d7e24cd577f1c3e29549d5d47f76329",
 )
 local_archive(
     name = "clang-format_windows",
@@ -94,8 +94,8 @@ local_archive(
     name = "curl_boringssl_linux",
     src = "//third_party/curl_boringssl:prebuilt_linux.OC44LjAuYmNyLjEvaHJ6LjE=.tar.gz",
     build_file = "//third_party/curl_boringssl:curl_boringssl_linux.BUILD.bazel",
-    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/69e41243_curl_boringssl-linux-8.8.0.bcr.1/hrz.1.tar.gz",
-    mirror_digest = "69e412434817f98d3fe9e94d0b1ad9c49b921d2746285d8b8578ad1acc1a1d09",
+    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/curl_boringssl/092016c9_curl_boringssl-linux-8.8.0.bcr.1/hrz.1.tar.gz",
+    mirror_digest = "092016c98e0a1938d930c3065522a3687673e355082fa006ebd99b1d562de03c",
 )
 local_archive(
     name = "curl_boringssl_windows",
@@ -132,8 +132,8 @@ local_archive(
     name = "draco_linux",
     src = "//third_party/draco:prebuilt_linux.MS41LjcvaHJ6LjE=.tar.gz",
     build_file = "//third_party/draco:draco_linux.BUILD.bazel",
-    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/b5f90f49_draco-linux-1.5.7/hrz.1.tar.gz",
-    mirror_digest = "b5f90f49f5aa8a0ba146591e3f024cb5301dee0603c9385f470683b21956d442",
+    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/draco/e5ce7b0c_draco-linux-1.5.7/hrz.1.tar.gz",
+    mirror_digest = "e5ce7b0c5a6450c77deb4bf411d355b90779176d3f0563b9871003ccc3888da6",
 )
 local_archive(
     name = "draco_wasm",
@@ -183,8 +183,8 @@ local_archive(
     name = "glslang_linux",
     src = "//third_party/glslang:prebuilt_linux.MTUuMC4w.tar.gz",
     build_file = "//third_party/glslang:glslang_linux.BUILD.bazel",
-    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/glslang/34644010_glslang-linux-15.0.0.tar.gz",
-    mirror_digest = "346440102915efb8a5d77cf0461ea5901684e787f7ddab854824f0fd7bf7e86b",
+    mirror_url = "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/glslang/f03d4e0d_glslang-linux-15.0.0.tar.gz",
+    mirror_digest = "f03d4e0d9fec7c9efd553a7b17b1d2b770754a3d61914ed687770b65ac20b783",
 )
 local_archive(
     name = "glslang_windows",
@@ -250,6 +250,16 @@ http_archive(
         "//third_party:patches/microui_includes.patch",
         "//third_party:patches/microui_fix_hover_focus_update.patch",
     ],
+)
+http_archive(
+    name = "msdfgen",
+    urls = [
+        "https://github.com/Chlumsky/msdfgen/archive/v1.12.1.tar.gz",
+        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/msdfgen/24541c9f_v1.12.1.tar.gz",
+    ],
+    sha256 = "24541c9fbb459e8c62adeb3eb22cb21fa07a4b5091e2ae1f041d144a4baf08cd",
+    build_file = "//third_party:msdfgen.BUILD.bazel",
+    strip_prefix = "msdfgen-1.12.1",
 )
 http_archive(
     name = "pcg_basic",
@@ -346,14 +356,4 @@ http_archive(
     sha256 = "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c",
     build_file = "//third_party:zlib.BUILD.bazel",
     strip_prefix = "zlib-1.3.1",
-)
-http_archive(
-    name = "msdfgen",
-    urls = [
-        "https://github.com/Chlumsky/msdfgen/archive/v1.12.1.tar.gz",
-        "http://redacted.localhost/repository/raw-releases/horizon/3rd_party/msdfgen/24541c9f_v1.12.1.tar.gz",
-    ],
-    sha256 = "24541c9fbb459e8c62adeb3eb22cb21fa07a4b5091e2ae1f041d144a4baf08cd",
-    build_file = "//third_party:msdfgen.BUILD.bazel",
-    strip_prefix = "msdfgen-1.12.1",
 )
