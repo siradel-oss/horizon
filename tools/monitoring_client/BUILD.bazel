@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
 cc_binary(
     name = "monitoring_client",
     srcs = [
@@ -67,11 +69,11 @@ cc_binary(
         "//hrz/monitoring",
         "//libs/lm",
         "//libs/ws:ws_server",
-        "//third_party:dear_imgui",
-        "//third_party:portable_file_dialogs",
-        "//third_party:rapidjson",
-        "//third_party:sokol",
         "//third_party/stb_image:stb_image_default_malloc",
         "//tools/monitoring_client/resources",
+        "@dear_imgui",
+        "@portable_file_dialogs",
+        "@rapidjson",
+        "@sokol",
     ],
 )

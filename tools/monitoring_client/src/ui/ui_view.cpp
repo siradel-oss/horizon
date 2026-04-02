@@ -13,6 +13,7 @@
 
 namespace
 {
+
 void _default_ruler_formatter(fmt::memory_buffer& buffer, ui::helpers::MetricValue value)
 {
     ui::helpers::format_buffer(buffer, "{}", value);
@@ -42,10 +43,12 @@ std::pair<uint32_t, uint32_t> _get_graduations_colors()
 
     return {grad_color, subgrad_color};
 }
+
 } // namespace
 
 namespace ui::view
 {
+
 using namespace helpers;
 
 Layout make_layout(
@@ -179,7 +182,7 @@ void View::scroll_by(const lm::dvec2& value)
 
 void View::zoom_by(const lm::dvec2& value)
 {
-    const lm::dvec2 center = (_visible_area.p0 + _visible_area.p1) / 2.0f;
+    const lm::dvec2 center = (_visible_area.p0 + _visible_area.p1) / 2.0F;
     zoom_by(value, center);
 }
 
@@ -196,7 +199,8 @@ void View::zoom_by(const lm::dvec2& value, const lm::dvec2& anchor)
 
     _target_visible_area = {
         anchor - (anchor - _target_visible_area.p0) * zoom / target_zoom,
-        anchor - (anchor - _target_visible_area.p1) * zoom / target_zoom};
+        anchor - (anchor - _target_visible_area.p1) * zoom / target_zoom
+    };
 
     const auto target_before_clamp = _target_visible_area;
 
@@ -269,7 +273,7 @@ ViewEvents View::catch_events(const Rect& area, bool prevent_scrolling, bool pre
 
     auto& io = ImGui::GetIO();
 
-    if (area.size().x <= 1.0f || area.size().y <= 1.0f)
+    if (area.size().x <= 1.0F || area.size().y <= 1.0F)
     {
         return events;
     }
@@ -296,7 +300,7 @@ ViewEvents View::catch_events(const Rect& area, bool prevent_scrolling, bool pre
 
         const auto mouse_unit_pos = px_to_unit(io.MousePos, area);
 
-        if (std::abs(io.MouseWheel) > 0.1f)
+        if (std::abs(io.MouseWheel) > 0.1F)
         {
             auto input_zoom = lm::dvec2(io.MouseWheel, io.MouseWheel) * 5.0;
             events.zoom = ViewEvents::Zoom{input_zoom, mouse_unit_pos};
@@ -316,7 +320,7 @@ void View::process_events(const ViewEvents& events)
 
     if (events.zoom)
     {
-        auto multiplier = get_current_zoom() / 20.0f;
+        auto multiplier = get_current_zoom() / 20.0F;
         zoom_by(events.zoom->value * multiplier, events.zoom->focus);
     }
 
@@ -333,7 +337,7 @@ void View::process_events(const ViewEvents& events)
 
 void View::process_smoothing()
 {
-    static constexpr double INTERPOLATION_STRENGTH = .2f;
+    static constexpr double INTERPOLATION_STRENGTH = .2F;
 
     _visible_area.p0 += (_target_visible_area.p0 - _visible_area.p0) * INTERPOLATION_STRENGTH;
     _visible_area.p1 += (_target_visible_area.p1 - _visible_area.p1) * INTERPOLATION_STRENGTH;
@@ -468,7 +472,8 @@ void Ruler::draw_vertical(const Layout& layout, const View& view, bool with_rule
             const float text_height = ImGui::GetFontSize();
             const float spacing = get_spacing().x;
             const lm::dvec2 text_edge = {
-                ruler_area.p0.x + ruler_area.size().x - spacing, y_px - text_height / 2.0};
+                ruler_area.p0.x + ruler_area.size().x - spacing, y_px - text_height / 2.0
+            };
 
             auto& buffer = static_fmt_memory_buffer();
             _format_metric_value(buffer, y * grad_step);

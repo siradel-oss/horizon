@@ -7,6 +7,7 @@
 
 namespace ui::widget
 {
+
 // Because of the limitations of view::Ruler, which has to represent a uniform range
 // of finite size, we use a custom ruler drawing logic for the horizontal ruler of an
 // histogram.

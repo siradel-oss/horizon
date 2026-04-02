@@ -79,7 +79,7 @@ public:
         return compute_screen_space_size(geometric_error, distance) / max_screen_space_error;
     }
 
-    constexpr bool operator==(const ScreenSpaceError& other) const = default;
+    constexpr bool operator ==(const ScreenSpaceError& other) const = default;
 };
 
 } // namespace hrz::render

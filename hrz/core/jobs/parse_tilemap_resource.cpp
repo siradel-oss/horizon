@@ -7,12 +7,13 @@
 #include "hrz/core/jobs/job_result.h"
 #include "hrz/fnd/log.h"
 
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 // See https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification
 
 namespace
 {
+
 enum class Profile
 {
     Unknown,
@@ -21,10 +22,12 @@ enum class Profile
     Local,
     Raster,
 };
+
 } // namespace
 
 namespace hrz_jobs::parse_tilemap_resource
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::TilemapResourceParams& params,
     hrz_jobs::TilemapResourceResponse& response,

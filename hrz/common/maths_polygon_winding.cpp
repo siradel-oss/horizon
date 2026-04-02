@@ -7,6 +7,7 @@
 
 namespace
 {
+
 template<typename T>
 bool compare(const T& a, const T& b)
 {
@@ -35,10 +36,12 @@ double det<hrz::GeoPosition2>(
 {
     return (b.lat - a.lat) * (c.lon - a.lon) - (c.lat - a.lat) * (b.lon - a.lon);
 }
+
 } // namespace
 
 namespace hrz
 {
+
 template<typename T>
 bool is_clockwise(std::span<const T> pts)
 {

@@ -57,5 +57,5 @@ if MODE == "cpp":
         % (RES_NAME, RES_NAME)
     )
 
-fp = open(OUTPUT_PATH, mode="w+")
-fp.write(full_str)
+with open(OUTPUT_PATH, mode="w+") as fp:
+    fp.write(full_str)

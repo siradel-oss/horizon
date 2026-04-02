@@ -19,6 +19,7 @@
 
 namespace hrz_jobs::move_client_vector_data_to_blobs
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::RawClientVectorData& params,
     hrz::vector_data::DecodedVectorTile& response,
@@ -85,7 +86,8 @@ hrz_jobs::JobResult run(
             lm::dvec3 point = {
                 proto_feature.geometry().coords(i * 3 + 0),
                 proto_feature.geometry().coords(i * 3 + 1),
-                proto_feature.geometry().coords(i * 3 + 2)};
+                proto_feature.geometry().coords(i * 3 + 2)
+            };
             points.push_back(point);
 
             bounds = lm::expand(bounds, point.xy);
@@ -285,4 +287,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::move_client_vector_data_to_blobs

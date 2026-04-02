@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 cc_library(
     name = "wsi",
     srcs = select({
@@ -10,6 +12,15 @@ cc_library(
     hdrs = [
         "wsi.h",
     ],
+    implementation_deps = [
+        "//hrz/branding:icons",
+        "//third_party/stb_image:stb_image_default_malloc",
+    ] + select({
+        "//:use_egl": [
+            "//third_party/glad:egl_15",
+        ],
+        "//conditions:default": [],
+    }),
     includes = ["."],
     linkopts = select({
         "//:os_windows": [
@@ -28,13 +39,6 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [
-        "//hrz/branding:icons",
         "//hrz/fnd",
-        "//third_party/stb_image:stb_image_default_malloc",
-    ] + select({
-        "//:use_egl": [
-            "//third_party/glad:egl_15",
-        ],
-        "//conditions:default": [],
-    }),
+    ],
 )

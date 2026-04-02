@@ -13,6 +13,7 @@
 
 namespace hrz_jobs::palettize_image
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::PalettizeImageParams& params,
     hrz::BlobImage& response,
@@ -91,9 +92,10 @@ hrz_jobs::JobResult run(
                 lm::ubvec4 color_srgb;
                 if (!pixel.is_nodata)
                 {
-                    color_srgb = hrz::convert_rgba_color_to_bytes(hrz::linear_to_srgb(
-                        hrz::palette::numeric_palettization(params.palette, pixel.value[0])
-                            .value()));
+                    color_srgb = hrz::convert_rgba_color_to_bytes(
+                        hrz::linear_to_srgb(
+                            hrz::palette::numeric_palettization(params.palette, pixel.value[0])
+                                .value()));
                 }
                 else
                 {

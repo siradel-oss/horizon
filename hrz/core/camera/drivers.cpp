@@ -9,6 +9,7 @@ namespace hrz::camera
 {
 namespace
 {
+
 // If not stiff enough, can fill a bit slugish.
 constexpr double kDragTerrainCollisionTimeFactor = 0.5;
 
@@ -23,6 +24,7 @@ double add_or_replace_if_opposite(double a, double b)
     else
         return a + b;
 }
+
 } // namespace
 
 class OrbitLimiter

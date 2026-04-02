@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 /**
  * Pool that recycles indices by appending them with a generation index.
  * Useful for checking lifetime of internally managed objects from the

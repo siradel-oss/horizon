@@ -36,7 +36,7 @@ public:
         lm::uvec3 feature_reference;
         float feature_color_blend_strength;
 
-        bool operator!=(const UniformData& other) const
+        bool operator !=(const UniformData& other) const
         {
             return linear_transform != other.linear_transform
                 || normal_matrix != other.normal_matrix || rtc_low != other.rtc_low
@@ -87,7 +87,8 @@ public:
             hrz::BlobArray<uint8_t>,
             hrz::BlobArray<uint16_t>,
             hrz::BlobArray<uint32_t>,
-            uint32_t>
+            uint32_t
+        >
             batch_ids;
 
         hrz::BlobArray<uint64_t> feature_ids;

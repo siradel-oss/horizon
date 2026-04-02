@@ -2,6 +2,7 @@
 
 namespace ws
 {
+
 #define STATUS_MSGS             \
     STATUS_MSG(Ok)              \
     STATUS_MSG(NotSupported)    \

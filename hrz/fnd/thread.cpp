@@ -15,6 +15,7 @@ namespace hrz
 {
 namespace
 {
+
 void pin_thread_to_cpu_core(const std::thread::native_handle_type& native_handle, size_t core_id)
 {
 #if HRZ_LINUX
@@ -36,6 +37,7 @@ void pin_thread_to_cpu_core(const std::thread::native_handle_type& native_handle
     }
 #endif
 }
+
 } // namespace
 
 void pin_thread_to_cpu_core(std::thread& thread, size_t core_id)
@@ -54,6 +56,7 @@ void pin_current_thread_to_cpu_core(size_t core_id)
 
 namespace
 {
+
 void set_thread_priority(
     const std::thread::native_handle_type& native_handle,
     ThreadPriority priority)
@@ -92,6 +95,7 @@ void set_thread_priority(
     }
 #endif
 }
+
 } // namespace
 
 void set_thread_priority(std::thread& thread, ThreadPriority priority)
@@ -107,4 +111,5 @@ void set_current_thread_priority(ThreadPriority priority)
     set_thread_priority(::GetCurrentThread(), priority);
 #endif
 }
+
 } // namespace hrz

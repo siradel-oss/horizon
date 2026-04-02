@@ -23,6 +23,7 @@
 
 namespace my
 {
+
 inline const char* gl_error_string(GLenum e)
 {
     switch (e)
@@ -149,7 +150,7 @@ struct GLSamplerParams
     GLenum compare_mode;
     GLenum compare_func;
 
-    constexpr bool operator==(const GLSamplerParams& other) const = default;
+    constexpr bool operator ==(const GLSamplerParams& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const GLSamplerParams& p)

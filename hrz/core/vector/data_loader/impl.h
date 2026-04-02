@@ -169,7 +169,7 @@ private:
         {
         }
 
-        TaskDependency& operator=(TaskDependency&& dep)
+        TaskDependency& operator =(TaskDependency&& dep)
         {
             task = std::exchange(dep.task, {});
             dependent_task = std::exchange(dep.dependent_task, {});
@@ -380,7 +380,8 @@ private:
                 InMemoryDataProvider,
                 TileJsonDataProvider,
                 PmTilesDataProvider,
-                UntiledDataProvider>
+                UntiledDataProvider
+            >
                 provider;
             bool has_geometry;
             hrz::flat_hash_map<uint32_t, Attribute> attributes;
@@ -536,7 +537,7 @@ private:
             return std::get<hrz::TileCoords>(data);
         }
 
-        constexpr bool operator==(const FeatureSelection& other) const = default;
+        constexpr bool operator ==(const FeatureSelection& other) const = default;
 
         uint64_t hash() const
         {
@@ -565,7 +566,7 @@ private:
         uint64_t channel_id;
         uint64_t request_id;
 
-        constexpr bool operator==(const RequestId& other) const = default;
+        constexpr bool operator ==(const RequestId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const RequestId& request)
@@ -626,7 +627,7 @@ private:
     class ClientRequestTimeoutComparator
     {
     public:
-        bool operator()(ClientRequestTimeout a, ClientRequestTimeout b)
+        bool operator ()(ClientRequestTimeout a, ClientRequestTimeout b)
         {
             return a.timeout_date > b.timeout_date;
         }
@@ -1031,7 +1032,8 @@ private:
             LoadTileJson,
             LoadPmTiles,
             LoadLayerModel,
-            LoadSourceModel>
+            LoadSourceModel
+        >
             data;
 
         bool is_load_geometry() const { return std::holds_alternative<LoadGeometry>(data); }
@@ -1222,7 +1224,7 @@ private:
 
     struct WeakTaskRefHasher
     {
-        size_t operator()(const WeakTaskRef& task_ref) const { return hrz::hash_value(task_ref); }
+        size_t operator ()(const WeakTaskRef& task_ref) const { return hrz::hash_value(task_ref); }
     };
 
     hrz::flat_hash_map<RequestId, DataRequest> request_ids_to_data_requests;
@@ -1250,7 +1252,8 @@ private:
     std::priority_queue<
         ClientRequestTimeout,
         std::vector<ClientRequestTimeout>,
-        ClientRequestTimeoutComparator>
+        ClientRequestTimeoutComparator
+    >
         client_tickets_timeouts;
 
     ClientRequestHistory client_request_history;
@@ -1450,7 +1453,8 @@ private:
         std::variant<
             TileGeometry,
             hrz::InlinedVector<vector_data::AttributeValues, 16>,
-            vector_data::FeatureIds> data,
+            vector_data::FeatureIds
+        > data,
         AttributionHandle attribution);
 
     void send_geometry_message(WeakTaskRef& task_ref, Task& task);
@@ -1628,4 +1632,5 @@ private:
 public:
     void dev_ui(mu_Context* ctx);
 };
+
 } // namespace hrz

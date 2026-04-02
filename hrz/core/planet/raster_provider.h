@@ -15,6 +15,7 @@ extern "C"
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct JobScheduler;
 
@@ -266,5 +267,6 @@ hrz_proto::ImageFormat get_image_format(const hrz_proto::CesiumTerrainRasterProv
 hrz_proto::ImageFormat get_image_format(const hrz_proto::UntiledRasterProviderParams&);
 hrz_proto::ImageFormat get_image_format(const hrz_proto::PalettizedRasterProviderParams&);
 hrz_proto::ImageFormat get_image_format(const hrz_proto::RasterProvider&);
+
 } // namespace planet
 } // namespace hrz

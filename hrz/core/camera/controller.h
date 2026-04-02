@@ -9,6 +9,7 @@
 
 namespace hrz::camera
 {
+
 struct PositionPickingTicketWithContext
 {
     picking::PositionTicket ticket;

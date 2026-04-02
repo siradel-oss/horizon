@@ -4,5 +4,7 @@
 
 namespace hrz_monitoring_proto
 {
+
 using namespace ::HrzMonitoringProtocol;
+
 }

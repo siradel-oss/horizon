@@ -9,6 +9,7 @@ namespace hrz::planet
 
 namespace details
 {
+
 assets_loader::Queue raster_group_to_priority_queue(hrz_proto::RasterGroup group)
 {
     switch (group)
@@ -131,7 +132,9 @@ lm::dbbox2 project_to_web_mercator(const hrz_proto::GeographicBounds& wgs84_boun
 
     return lm::dbbox2{
         hrz::geo_to_web_mercator(GeoPosition2{display_bounds.south, display_bounds.west}),
-        hrz::geo_to_web_mercator(GeoPosition2{display_bounds.north, display_bounds.east})};
+        hrz::geo_to_web_mercator(GeoPosition2{display_bounds.north, display_bounds.east})
+    };
 }
+
 } // namespace details
 } // namespace hrz::planet

@@ -1,0 +1,10 @@
+--- MODULE.bazel
++++ MODULE.bazel
+@@ -1,6 +1,4 @@
+-module(
+-    name = "emsdk",
+-    version = "5.0.4",
++module(name = "emsdk", version = "5.0.4.hrz.3",
+ )
+ 
+ bazel_dep(name = "platforms", version = "1.0.0")

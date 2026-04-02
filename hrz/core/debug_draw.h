@@ -11,11 +11,13 @@
 
 namespace hrz
 {
+
 struct DebugDrawSystem;
 struct Render;
 
 namespace debug_draw
 {
+
 #define HRZ_DEBUG_DRAW_GROUPS     \
     HRZ_DEBUG_DRAW_GROUP(Default) \
     HRZ_DEBUG_DRAW_GROUP(Camera)  \

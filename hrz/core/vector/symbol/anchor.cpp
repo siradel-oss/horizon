@@ -6,13 +6,14 @@
 
 namespace hrz::vt::symbol
 {
+
 ElementSystem::PrototypeH AnchorElementSystem::make_prototype(
     const hrz_proto::SymbolElement& element_descriptor,
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -278,4 +279,5 @@ void AnchorElementSystem::work_gpu(Render* render)
     }
     _loading_prototypes.clear();
 }
+
 } // namespace hrz::vt::symbol

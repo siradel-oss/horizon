@@ -10,6 +10,7 @@
 
 namespace
 {
+
 using namespace hrz::sampling;
 
 class RasterSampling : public ::testing::Test
@@ -286,10 +287,10 @@ TEST_F(RasterSampling, color_nodata_set_to_zero_imagery)
     std::array<uint8_t, 4> nodata_color = {64, 65, 66, 67};
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::COLOR_NODATA);
-    nodata_value.mutable_color()->set_r((float)nodata_color[0] / 255.0f);
-    nodata_value.mutable_color()->set_g((float)nodata_color[1] / 255.0f);
-    nodata_value.mutable_color()->set_b((float)nodata_color[2] / 255.0f);
-    nodata_value.mutable_color()->set_a((float)nodata_color[3] / 255.0f);
+    nodata_value.mutable_color()->set_r((float)nodata_color[0] / 255.0F);
+    nodata_value.mutable_color()->set_g((float)nodata_color[1] / 255.0F);
+    nodata_value.mutable_color()->set_b((float)nodata_color[2] / 255.0F);
+    nodata_value.mutable_color()->set_a((float)nodata_color[3] / 255.0F);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::SRGBA_8);
@@ -531,13 +532,13 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
-    nodata_value.set_float_value(-9999.9f);
+    nodata_value.set_float_value(-9999.9F);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO, hrz_proto::ImageFormat::R_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<float, 1> v = {-9999.9f};
+        std::array<float, 1> v = {-9999.9F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -552,7 +553,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<float, 1> v = {1234.56f};
+        std::array<float, 1> v = {1234.56F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -562,7 +563,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_dtm)
         bool discard = nodata.apply<float, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], 1234.56f);
+        EXPECT_EQ(pixel.value[0], 1234.56F);
     }
 }
 
@@ -576,7 +577,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_dtm)
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<float, 1> v = {-9999.0f};
+        std::array<float, 1> v = {-9999.0F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -591,7 +592,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<float, 1> v = {1234.56f};
+        std::array<float, 1> v = {1234.56F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -601,7 +602,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_dtm)
         bool discard = nodata.apply<float, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], 1234.56f);
+        EXPECT_EQ(pixel.value[0], 1234.56F);
     }
 }
 
@@ -609,13 +610,13 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(-9999.9f));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(-9999.9F));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO, hrz_proto::ImageFormat::R_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<float, 1> v = {-9999.9f};
+        std::array<float, 1> v = {-9999.9F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -630,7 +631,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<float, 1> v = {1234.56f};
+        std::array<float, 1> v = {1234.56F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -640,7 +641,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_dtm)
         bool discard = nodata.apply<float, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], 1234.56f);
+        EXPECT_EQ(pixel.value[0], 1234.56F);
     }
 }
 
@@ -668,7 +669,7 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<float, 1> v = {1234.56f};
+        std::array<float, 1> v = {1234.56F};
 
         bool is_nodata = nodata.is_nodata<float, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -678,7 +679,7 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_dtm)
         bool discard = nodata.apply<float, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], 1234.56f);
+        EXPECT_EQ(pixel.value[0], 1234.56F);
     }
 }
 
@@ -686,14 +687,14 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
-    nodata_value.set_float_value(-9999.9f);
+    nodata_value.set_float_value(-9999.9F);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::SIRADEL_LEGACY_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.9f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.9F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -708,7 +709,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -718,7 +719,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56F));
     }
 }
 
@@ -733,7 +734,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.0f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.0F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -748,7 +749,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -758,7 +759,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56F));
     }
 }
 
@@ -766,14 +767,14 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_siradel_legacy_f32_d
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_siradel_legacy_f32(-9999.9f)));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_siradel_legacy_f32(-9999.9F)));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::SIRADEL_LEGACY_F32);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.9f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(-9999.9F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -788,7 +789,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_siradel_legacy_f32_d
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -798,7 +799,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_r_f32_siradel_legacy_f32_d
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56F));
     }
 }
 
@@ -812,8 +813,8 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {
-            to_siradel_legacy_f32(std::numeric_limits<float>::quiet_NaN())};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(
+            std::numeric_limits<float>::quiet_NaN())};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -828,7 +829,7 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56f)};
+        std::array<uint32_t, 1> v = {to_siradel_legacy_f32(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -838,7 +839,7 @@ TEST_F(RasterSampling, nan_nodata_set_to_zero_r_f32_siradel_legacy_f32_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_siradel_legacy_f32(1234.56F));
     }
 }
 
@@ -846,14 +847,14 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::FLOAT_VALUE_NODATA);
-    nodata_value.set_float_value(-9999.0f);
+    nodata_value.set_float_value(-9999.0F);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_terrarium(-9999.0f)};
+        std::array<uint32_t, 1> v = {to_terrarium(-9999.0F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -868,7 +869,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_terrarium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_terrarium(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -878,7 +879,7 @@ TEST_F(RasterSampling, float_nodata_set_to_zero_terrarium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56F));
     }
 }
 
@@ -893,7 +894,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_terrarium(-9999.0f)};
+        std::array<uint32_t, 1> v = {to_terrarium(-9999.0F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -908,7 +909,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_terrarium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_terrarium(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -918,7 +919,7 @@ TEST_F(RasterSampling, int_nodata_set_to_zero_terrarium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56F));
     }
 }
 
@@ -926,14 +927,14 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_terrarium(-9999.0f)));
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_terrarium(-9999.0F)));
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_terrarium(-9999.0f)};
+        std::array<uint32_t, 1> v = {to_terrarium(-9999.0F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -948,7 +949,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_terrarium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_terrarium(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -958,7 +959,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56F));
     }
 }
 
@@ -966,14 +967,14 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
 {
     hrz_proto::NodataValue nodata_value;
     nodata_value.set_type(hrz_proto::NodataValueType::BIT_PATTERN_NODATA);
-    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_terrarium(-9999.0f)) + 0xff000000);
+    nodata_value.set_bit_pattern(std::bit_cast<uint32_t>(to_terrarium(-9999.0F)) + 0xff000000);
     NodataFunction nodata(
         nodata_value, hrz_proto::NodataHandling::SET_NODATA_TO_ZERO,
         hrz_proto::ImageFormat::TERRARIUM);
 
     {
         SCOPED_TRACE("Same value as nodata");
-        std::array<uint32_t, 1> v = {to_terrarium(-9999.0f)};
+        std::array<uint32_t, 1> v = {to_terrarium(-9999.0F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_TRUE(is_nodata);
@@ -988,7 +989,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
 
     {
         SCOPED_TRACE("Other value");
-        std::array<uint32_t, 1> v = {to_terrarium(1234.56f)};
+        std::array<uint32_t, 1> v = {to_terrarium(1234.56F)};
 
         bool is_nodata = nodata.is_nodata<uint32_t, 1>(v);
         EXPECT_FALSE(is_nodata);
@@ -998,7 +999,7 @@ TEST_F(RasterSampling, bit_pattern_nodata_set_to_zero_terrarium_dtm_extra_bits)
         bool discard = nodata.apply<uint32_t, 1>(pixel);
         EXPECT_FALSE(discard);
 
-        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56f));
+        EXPECT_EQ(pixel.value[0], to_terrarium(1234.56F));
     }
 }
 
@@ -1128,7 +1129,8 @@ TEST_F(RasterSampling, sampling_nearest_nodata)
         std::move(nodata), hrz_proto::TextureFiltering::NEAREST);
 
     const int32_t contents[] = {
-        to_fixed_24_8(100), to_fixed_24_8(-9999), to_fixed_24_8(-9999), to_fixed_24_8(-9999)};
+        to_fixed_24_8(100), to_fixed_24_8(-9999), to_fixed_24_8(-9999), to_fixed_24_8(-9999)
+    };
 
     hrz::ImageView img(
         {(std::byte*)contents, 2 * 2 * sizeof(int32_t)}, hrz_proto::ImageFormat::SIGNED_FIXED_24_8,

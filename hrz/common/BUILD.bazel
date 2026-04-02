@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_library(
     name = "common",
     srcs = [
@@ -107,6 +110,19 @@ cc_library(
         "vertex_utils.h",
         "woff.h",
     ],
+    implementation_deps = [
+        "//third_party/tlsf",
+        "@abseil-cpp//absl/container:btree",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@brotli//:brotlidec",
+        "@msdfgen",
+        "@woff2//:dec",
+        "@zlib",
+        "@zstd",
+    ] + select({
+        "//:os_web": ["@harfbuzz//:harfbuzz_tiny"],
+        "//conditions:default": ["@harfbuzz"],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         "//hrz/cpp_protocol",
@@ -115,20 +131,11 @@ cc_library(
         "//libs/lm",
         "//libs/mycelium",
         "//libs/proj_lite",
-        "//third_party:brotlidec",
-        "//third_party:earcut",
-        "//third_party:fmtlib",
-        "//third_party:harfbuzz",
-        "//third_party:microui",
-        "//third_party:msdfgen",
-        "//third_party:pcg_basic",
-        "//third_party:woff2_dec",
-        "//third_party:zlib",
-        "//third_party:zstd",
         "//third_party/stb_truetype",
-        "//third_party/tlsf",
-        "@abseil-cpp//absl/container:btree",
-        "@abseil-cpp//absl/container:flat_hash_map",
+        "@earcut",
+        "@fmt",
+        "@microui",
+        "@pcg_basic",
     ],
 )
 
@@ -157,8 +164,8 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":common",
-        "//third_party:gtest",
-        "//third_party:gtest_main",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
         "@rules_cc//cc/runfiles",
     ],
 )

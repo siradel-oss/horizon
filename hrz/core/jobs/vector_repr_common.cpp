@@ -4,6 +4,7 @@
 
 namespace hrz::vector_repr
 {
+
 void compute_rel_coords(
     hrz::ArrayView<const lm::dvec3> abs_coords,
     const lm::dvec3& center,
@@ -42,9 +43,10 @@ void compute_tile_radius_center(const TileCoords& tile_coords, double* radius, l
                             tile_center.x, tile_center.y, 0};
     pl_transform_in_place_canonical(&hrz_proj::wmerc_to_ecef, 3, tile_points);
 
-    *radius = lm::radius(lm::dbbox3(
-        {tile_points[0], tile_points[1], tile_points[2]},
-        {tile_points[3], tile_points[4], tile_points[5]}));
+    *radius = lm::radius(
+        lm::dbbox3(
+            {tile_points[0], tile_points[1], tile_points[2]},
+            {tile_points[3], tile_points[4], tile_points[5]}));
 
     *center = lm::dvec3(tile_points[6], tile_points[7], tile_points[8]);
 }
@@ -57,9 +59,10 @@ void compute_tile_radius_center(const lm::dbbox2& bbox, double* radius, lm::dvec
                             bbox_center.x, bbox_center.y, 0};
     pl_transform_in_place_canonical(&hrz_proj::wmerc_to_ecef, 3, tile_points);
 
-    *radius = lm::radius(lm::dbbox3(
-        {tile_points[0], tile_points[1], tile_points[2]},
-        {tile_points[3], tile_points[4], tile_points[5]}));
+    *radius = lm::radius(
+        lm::dbbox3(
+            {tile_points[0], tile_points[1], tile_points[2]},
+            {tile_points[3], tile_points[4], tile_points[5]}));
 
     *center = lm::dvec3(tile_points[6], tile_points[7], tile_points[8]);
 }

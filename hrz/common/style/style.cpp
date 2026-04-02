@@ -20,6 +20,7 @@
 
 namespace
 {
+
 using namespace hrz;
 using namespace style;
 using namespace vector_data;
@@ -42,7 +43,7 @@ RawValue compute_label_palette_value(const hrz::Palette& palette, std::string_vi
 
 struct AndOp
 {
-    inline bool operator()(const RawValue& lhs, const RawValue& rhs, RawValue* res) const
+    inline bool operator ()(const RawValue& lhs, const RawValue& rhs, RawValue* res) const
     {
         *res = attr_as_bool(lhs) ? rhs : lhs; // Same semantics as JS
         return true;
@@ -51,7 +52,7 @@ struct AndOp
 
 struct OrOp
 {
-    inline bool operator()(const RawValue& lhs, const RawValue& rhs, RawValue* res) const
+    inline bool operator ()(const RawValue& lhs, const RawValue& rhs, RawValue* res) const
     {
         *res = attr_as_bool(lhs) ? lhs : rhs; // Same semantics as JS
         return true;
@@ -60,7 +61,7 @@ struct OrOp
 
 struct NotOp
 {
-    inline bool operator()(const RawValue& rhs, RawValue* res) const
+    inline bool operator ()(const RawValue& rhs, RawValue* res) const
     {
         *res = attr_from<RawValue>(!attr_as_bool(rhs));
         return true;
@@ -70,7 +71,7 @@ struct NotOp
 template<typename Op>
 struct ArithmeticBinaryOp
 {
-    inline bool operator()(const RawValue& lhs, const RawValue& rhs, RawValue* res) const
+    inline bool operator ()(const RawValue& lhs, const RawValue& rhs, RawValue* res) const
     {
         if (attr_is_string(lhs) || attr_is_string(rhs))
         {
@@ -88,7 +89,7 @@ struct ArithmeticBinaryOp
 
 struct MulOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         return attr_from<RawValue>(lhs * rhs);
     }
@@ -96,7 +97,7 @@ struct MulOp
 
 struct DivOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         if (rhs == 0)
         {
@@ -113,7 +114,7 @@ struct DivOp
 
 struct AddOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         return attr_from<RawValue>(lhs + rhs);
     }
@@ -121,7 +122,7 @@ struct AddOp
 
 struct SubOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         return attr_from<RawValue>(lhs - rhs);
     }
@@ -129,7 +130,7 @@ struct SubOp
 
 struct MinOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         return attr_from<RawValue>(lhs < rhs ? lhs : rhs);
     }
@@ -137,7 +138,7 @@ struct MinOp
 
 struct MaxOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         return attr_from<RawValue>(lhs > rhs ? lhs : rhs);
     }
@@ -145,7 +146,7 @@ struct MaxOp
 
 struct ModOp
 {
-    inline RawValue operator()(double lhs, double rhs) const
+    inline RawValue operator ()(double lhs, double rhs) const
     {
         return rhs != 0 ? attr_from<RawValue>(lhs - rhs * std::floor(lhs / rhs))
                         : attr_from<RawValue>(std::numeric_limits<double>::quiet_NaN());
@@ -155,7 +156,7 @@ struct ModOp
 template<typename Op>
 struct ArithmeticUnaryOp
 {
-    inline bool operator()(const RawValue& v, RawValue* res) const
+    inline bool operator ()(const RawValue& v, RawValue* res) const
     {
         if (attr_is_string(v))
         {
@@ -172,7 +173,7 @@ struct ArithmeticUnaryOp
 
 struct InvOp
 {
-    inline RawValue operator()(double rhs) const
+    inline RawValue operator ()(double rhs) const
     {
         return rhs != 0 ? attr_from<RawValue>(1.0 / rhs)
                         : attr_from<RawValue>(std::numeric_limits<double>::infinity());
@@ -181,7 +182,7 @@ struct InvOp
 
 struct AbsOp
 {
-    inline RawValue operator()(double rhs) const
+    inline RawValue operator ()(double rhs) const
     {
         return attr_from<RawValue>((rhs < 0.0) ? -rhs : rhs);
     }
@@ -189,22 +190,22 @@ struct AbsOp
 
 struct NegOp
 {
-    inline RawValue operator()(double rhs) const { return attr_from<RawValue>(-rhs); }
+    inline RawValue operator ()(double rhs) const { return attr_from<RawValue>(-rhs); }
 };
 
 struct RoundOp
 {
-    inline RawValue operator()(double v) const { return attr_from<RawValue>(std::round(v)); }
+    inline RawValue operator ()(double v) const { return attr_from<RawValue>(std::round(v)); }
 };
 
 struct FloorOp
 {
-    inline RawValue operator()(double v) const { return attr_from<RawValue>(std::floor(v)); }
+    inline RawValue operator ()(double v) const { return attr_from<RawValue>(std::floor(v)); }
 };
 
 struct CeilOp
 {
-    inline RawValue operator()(double v) const { return attr_from<RawValue>(std::ceil(v)); }
+    inline RawValue operator ()(double v) const { return attr_from<RawValue>(std::ceil(v)); }
 };
 
 template<typename Op>
@@ -331,11 +332,11 @@ bool execute_color_functions(
         rgba.r = attr_as_number(arg_buffers[0][i]);
         rgba.g = attr_as_number(arg_buffers[1][i]);
         rgba.b = attr_as_number(arg_buffers[2][i]);
-        rgba.a = has_alpha ? attr_as_number(arg_buffers[3][i]) : 1.0f;
+        rgba.a = has_alpha ? attr_as_number(arg_buffers[3][i]) : 1.0F;
 
         if (is_hsl)
         {
-            rgba.r /= 360.0f;
+            rgba.r /= 360.0F;
             rgba.rgb = hsl_to_rgb(rgba.rgb);
         }
 
@@ -348,12 +349,12 @@ bool execute_color_functions(
 // @Todo(c++23) Use static operator()
 struct SetAlphaColorModifier
 {
-    constexpr lm::vec4 operator()(lm::vec4 color, float mod) const { return {color.rgb, mod}; }
+    constexpr lm::vec4 operator ()(lm::vec4 color, float mod) const { return {color.rgb, mod}; }
 };
 
 struct RotateHueColorModifier
 {
-    inline lm::vec4 operator()(lm::vec4 color, float hue_shift) const
+    inline lm::vec4 operator ()(lm::vec4 color, float hue_shift) const
     {
         color.rgb = rgb_to_hsv(color.rgb);
         color.x += hue_shift / 360.0F;
@@ -364,7 +365,7 @@ struct RotateHueColorModifier
 
 struct LightenColorModifier
 {
-    inline lm::vec4 operator()(lm::vec4 color, float mod) const
+    inline lm::vec4 operator ()(lm::vec4 color, float mod) const
     {
         const float end = mod > 0.0F ? 1.0F : 0.0F;
         return lm::mix(color, lm::vec4(end, end, end, color.a), std::min(std::abs(mod), 1.0F));
@@ -373,7 +374,7 @@ struct LightenColorModifier
 
 struct BrightenColorModifier
 {
-    inline lm::vec4 operator()(lm::vec4 color, float mod) const
+    inline lm::vec4 operator ()(lm::vec4 color, float mod) const
     {
         return lm::vec4(color.rgb * std::max(0.0F, mod + 1.0F), color.a);
     }
@@ -383,12 +384,12 @@ struct DarkenColorModifier
 {
     HRZ_NO_UNIQUE_ADDRESS LightenColorModifier inner{};
 
-    inline lm::vec4 operator()(lm::vec4 color, float mod) const { return inner(color, -mod); }
+    inline lm::vec4 operator ()(lm::vec4 color, float mod) const { return inner(color, -mod); }
 };
 
 struct SaturateColorModifier
 {
-    inline lm::vec4 operator()(lm::vec4 color, float mod) const
+    inline lm::vec4 operator ()(lm::vec4 color, float mod) const
     {
         const float l = std::pow(
             lm::dot(lm::vec3(0.21F, 0.72F, 0.07F), srgb_to_linear(color.rgb)), 1.0F / 2.2F);
@@ -400,7 +401,7 @@ struct DesaturateColorModifier
 {
     HRZ_NO_UNIQUE_ADDRESS SaturateColorModifier inner{};
 
-    inline lm::vec4 operator()(lm::vec4 color, float mod) const { return inner(color, -mod); }
+    inline lm::vec4 operator ()(lm::vec4 color, float mod) const { return inner(color, -mod); }
 };
 
 template<typename Modifier>
@@ -802,6 +803,7 @@ bool execute_op(
 
     return true;
 }
+
 } // anonymous namespace
 
 namespace hrz::style
@@ -828,7 +830,7 @@ std::optional<uint8_t> get_func_operand_count(Operator kind)
     return 0;
 }
 
-bool OperatorEvaluator::operator()(
+bool OperatorEvaluator::operator ()(
     Context& ctx,
     Operator op,
     std::span<const std::span<const RawValue>> arg_buffers,

@@ -13,6 +13,7 @@
 
 namespace hrz
 {
+
 static inline uint8_t image_format_channel_count(hrz_proto::ImageFormat format)
 {
     switch (format)
@@ -149,7 +150,8 @@ static inline uint32_t encode_float_to_terrarium(float value)
         hrz::clamp((value + 32768.0F) * 256.0F, 0.0F, 256 * 256 * 256 - 1.0F));
     const lm::ubvec4 rgba = {
         (uint8_t)(int_value / (256 * 256)), (uint8_t)((int_value % (256 * 256)) / 256),
-        (uint8_t)(int_value % 256), 0};
+        (uint8_t)(int_value % 256), 0
+    };
     return std::bit_cast<uint32_t>(rgba);
 }
 
@@ -168,7 +170,9 @@ static inline uint32_t encode_float_to_terrain_rgb(float value)
         static_cast<uint32_t>(hrz::clamp((value + 10000.0F) * 10.0F, 0.0F, 256 * 256 * 256 - 1.0F));
     const lm::ubvec4 rgba = {
         (uint8_t)(int_value / (256 * 256)), (uint8_t)((int_value % (256 * 256)) / 256),
-        (uint8_t)(int_value % 256), 0};
+        (uint8_t)(int_value % 256), 0
+    };
     return std::bit_cast<uint32_t>(rgba);
 }
+
 } // namespace hrz

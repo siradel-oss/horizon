@@ -1,0 +1,15 @@
+{
+  "url": "https://github.com/rxi/microui/archive/0850aba860959c3e75fb3e97120ca92957f9d057.tar.gz",
+  "strip_prefix": "microui-0850aba860959c3e75fb3e97120ca92957f9d057",
+  "integrity": "sha256-niCmGF1rNsd/RQlUrkp/I49bQiiD27earxHbtM4QeTY=",
+  "overlay": {
+    "MODULE.bazel": "sha256-6I6FQZTmTYFE9izvOySXY+u5DBA+Gddx13A/MbhTpdg=",
+    "BUILD.bazel": "sha256-OIp3cp3zhFTRCtt3eL/472HUlDq9gvvx0qjdV4uGDDY="
+  },
+  "patches": {
+    "fix_hover_focus_update.patch": "sha256-et/LrvnwfGnknjuAgprsF5jISehogxHFiB/3MiMXzZs=",
+    "includes.patch": "sha256-uheLPgHmvc497oWl+csbrwzyVnc2vrpPKiGChf2w/lw=",
+    "text_color.patch": "sha256-/FUmG/raaajZLr6fo/+zuz3hL975hAgXifQ50UGjw9M=",
+    "unique_header_label.patch": "sha256-bCjtXn25UbBiyvasTIjnR2h31WMbCdONUUg08reKP8c="
+  }
+}

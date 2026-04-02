@@ -16,11 +16,14 @@
 
 namespace HrzProtocol
 {
+
 class ViewScaleAltitude;
+
 } // namespace HrzProtocol
 
 namespace hrz
 {
+
 struct SceneView;
 struct AssetsLoader;
 struct JobScheduler;
@@ -39,12 +42,16 @@ struct ClippingPlaneInfo;
 
 namespace camera
 {
+
 class Camera;
+
 } // namespace camera
 
 namespace planet
 {
+
 struct GeometryResources;
+
 }
 
 namespace scene

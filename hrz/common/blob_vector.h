@@ -11,6 +11,7 @@
 
 namespace hrz
 {
+
 // An analogue to `std::vector` that allocates its data in blobs.
 //
 // Because an instance of this class always keeps an access to the
@@ -40,7 +41,7 @@ class BlobVector
 private:
     // See https://github.com/facebook/folly/blob/main/folly/docs/FBVector.md#memory-handling
     static constexpr size_t SmallBlobGrowthFactor = 2;
-    static constexpr float BigBlobGrowthFactor = 1.5f;
+    static constexpr float BigBlobGrowthFactor = 1.5F;
     static constexpr size_t BigBlobCutoffSize = 1024 * 1024; // 1 MiB
     static constexpr size_t DefaultCapacity = 128;
 
@@ -346,4 +347,5 @@ private:
         }
     }
 };
+
 } // namespace hrz

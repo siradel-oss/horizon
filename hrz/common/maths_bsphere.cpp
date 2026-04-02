@@ -6,6 +6,7 @@
 
 namespace
 {
+
 // See: Larsson, Thomas. "Fast and tight fitting bounding spheres." SIGRAD 2008.
 // The Annual SIGRAD Conference Special Theme: Interaction; November 27-28;
 // 2008 Stockholm; Sweden. No. 034. Linköping University Electronic Press, 2008.
@@ -254,6 +255,7 @@ void _compute_exact_bounding_sphere(
 
 namespace hrz
 {
+
 template<typename T>
 BSphere<T> compute_bounding_sphere(std::span<const lm::Vector<T, 3>> pts)
 {

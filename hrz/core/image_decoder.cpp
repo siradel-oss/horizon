@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 struct ImageDecoder
 {
     PlatformInfo platform_info;
@@ -16,6 +17,7 @@ struct ImageDecoder
 
 namespace image_decoder
 {
+
 ImageDecoder* create(const PlatformInfo& platform_info, const my::Instance::Info& my_instance_info)
 {
     auto decoder = new ImageDecoder();
@@ -91,5 +93,6 @@ BlobImage job_to_image(JobScheduler* job_scheduler, hrz_jobs::DecodeBlobImageTic
         return {};
     }
 }
+
 } // namespace image_decoder
 } // namespace hrz

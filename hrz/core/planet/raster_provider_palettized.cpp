@@ -16,11 +16,13 @@ namespace hrz::planet
 {
 namespace
 {
+
 RasterProvider::LockTicket generate_lock_ticket()
 {
     static std::atomic<uint64_t> lock_ticket_generator;
     return (RasterProvider::LockTicket)++lock_ticket_generator;
 }
+
 } // namespace
 
 bool is_provider_model_complete(const hrz_proto::PalettizedRasterProviderParams& model)

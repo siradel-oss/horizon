@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 bool ray_sphere_intersection(
     const Ray& ray,
     const lm::dvec3& center,

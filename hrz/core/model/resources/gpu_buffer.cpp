@@ -4,6 +4,7 @@
 
 namespace hrz::model
 {
+
 static constexpr BlobLibrary::ConfigH NullCfg = {0};
 
 template<my::BufferResource::BufferType TYPE>

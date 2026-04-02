@@ -4,6 +4,7 @@
 
 namespace
 {
+
 static constexpr double MARKER_HALF_SIZE = 8.0;
 
 struct Snapshots
@@ -68,10 +69,12 @@ std::optional<int64_t> get_first_snapshot_timestamp_after(
 
     return result;
 }
+
 } // namespace
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 void SnapshotGraph::draw_header_column_contents(const Rect& area)
@@ -252,7 +255,8 @@ void SnapshotGraph::draw(
                 {
                     const double view_half_width = visible_area.size().x / 2.0;
                     view_events.horizontal_focus = {
-                        snapshot.timestamp - view_half_width, snapshot.timestamp + view_half_width};
+                        snapshot.timestamp - view_half_width, snapshot.timestamp + view_half_width
+                    };
                 }
 
                 ImGui::PopID();
@@ -274,7 +278,8 @@ void SnapshotGraph::draw(
                 {
                     const double view_half_width = visible_area.size().x / 2.0;
                     view_events.horizontal_focus = {
-                        snapshot.timestamp - view_half_width, snapshot.timestamp + view_half_width};
+                        snapshot.timestamp - view_half_width, snapshot.timestamp + view_half_width
+                    };
                 }
 
                 ImGui::PopID();
@@ -297,7 +302,8 @@ void SnapshotGraph::draw(
             const double view_half_width = visible_area.size().x / 2.0;
             view_events.horizontal_focus = {
                 previous_timestamp.value() - view_half_width,
-                previous_timestamp.value() + view_half_width};
+                previous_timestamp.value() + view_half_width
+            };
         }
         ImGui::EndDisabled();
 
@@ -306,7 +312,8 @@ void SnapshotGraph::draw(
         {
             const double view_half_width = visible_area.size().x / 2.0;
             view_events.horizontal_focus = {
-                next_timestamp.value() - view_half_width, next_timestamp.value() + view_half_width};
+                next_timestamp.value() - view_half_width, next_timestamp.value() + view_half_width
+            };
         }
         ImGui::EndDisabled();
 

@@ -6,6 +6,7 @@
 
 namespace my
 {
+
 enum class LogSeverity : uint8_t
 {
     Debug = 0,

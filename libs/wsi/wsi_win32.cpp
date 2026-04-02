@@ -12,9 +12,11 @@
 
 namespace
 {
+
 const char* class_name = "Horizon window";
 bool running = true;
 HWND window;
+
 } // namespace
 
 static_assert(sizeof(HINSTANCE) == sizeof(void*), "HINSTANCE size");

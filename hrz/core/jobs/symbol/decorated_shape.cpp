@@ -2,6 +2,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 static constexpr size_t InitialComponentCapacity = 256;
 
 hrz_jobs::JobResult SymbolBaker::DecoratedShapeVisitor::init_element_instances(
@@ -33,7 +34,7 @@ ElementGeometry SymbolBaker::DecoratedShapeVisitor::visit_element(
     Size fitted_size = constrain_box_fit(
         constraints.min, candidate_size, params.fit_mode, hrz_proto::BOX_FIT_AXES_BOTH);
 
-    auto alignment = params.alignment * 0.5f + lm::vec2(0.5f);
+    auto alignment = params.alignment * 0.5F + lm::vec2(0.5F);
     Size clamped_size = lm::clamp(fitted_size, constraints.min, constraints.max);
     lm::vec2 alignment_offset = (clamped_size - fitted_size) * alignment;
 
@@ -52,7 +53,7 @@ ElementGeometry SymbolBaker::DecoratedShapeVisitor::visit_element(
     if (element.anchor_index.has_value())
     {
         DecoratedShapeInstance instance;
-        instance.transform = lm::translation(lm::vec3(alignment_offset, 0.0f));
+        instance.transform = lm::translation(lm::vec3(alignment_offset, 0.0F));
         instance.size = fitted_size;
         instance.color = color_srgb;
         instance.border_color = border_color_srgb;
@@ -103,6 +104,8 @@ std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBak
 
     return {{hrz_jobs::BakedSymbols::ElementInstances{
         hrz_proto::SymbolElementType::DECORATED_SHAPE_SYMBOL_ELEMENT,
-        std::move(instance_array_opt.value())}}};
+        std::move(instance_array_opt.value())
+    }}};
 }
+
 } // namespace hrz_jobs::symbol

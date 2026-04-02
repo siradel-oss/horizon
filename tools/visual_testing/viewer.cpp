@@ -19,6 +19,7 @@ using namespace std::chrono;
 
 namespace
 {
+
 constexpr double DEFAULT_TIMEOUT_SEC = 300; // 5 min
 constexpr size_t INACTIVE_FRAMES_BEFORE_CAPTURE = 2;
 
@@ -326,6 +327,7 @@ public:
         return exit_code;
     }
 };
+
 } // namespace
 
 int main(int argc, char* argv[])

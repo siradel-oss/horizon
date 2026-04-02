@@ -1,0 +1,12 @@
+{
+  "url": "https://github.com/floooh/sokol/archive/c07c12b1eac7fe56ca28c81bf88fb039dbdb7375.tar.gz",
+  "strip_prefix": "sokol-c07c12b1eac7fe56ca28c81bf88fb039dbdb7375",
+  "integrity": "sha256-Ib/Y5XM02mz5S4L8EeyXEt4rBCxwhWX8T36SP7tFqv4=",
+  "overlay": {
+    "MODULE.bazel": "sha256-4OBr2bjCRxjQp68ASaazG1E6Az6vgr49JcIVb07w0aQ=",
+    "BUILD.bazel": "sha256-nYM+l355uhPeAbExqSc8FFV69NnHe6ngrd0cH/V5cDk="
+  },
+  "patches": {
+    "imgui_soft_scroll.patch": "sha256-ShcD4CDz/hs7ZvauCyyKXvgYDktVvuQ+LStgaOSl2uo="
+  }
+}

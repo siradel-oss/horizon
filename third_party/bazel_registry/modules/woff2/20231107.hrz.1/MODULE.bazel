@@ -1,0 +1,4 @@
+module(name = "woff2", version = "20231107.hrz.1")
+
+bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "brotli", version = "1.2.0")

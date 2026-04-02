@@ -1,4 +1,3 @@
-
 #include "hrz/core/js/lib.h"
 #include "hrz/core/platform/platform.h"
 #include "hrz/fnd/flat_hash_map.h"
@@ -20,6 +19,7 @@ extern "C"
 
 namespace
 {
+
 enum class PointerType : int
 {
     Unknown = 0,
@@ -103,22 +103,22 @@ struct ControlIterator
     uint8_t mask{};
     uint8_t it{};
 
-    std::pair<typename Traits::Type, bool> operator*() const
+    std::pair<typename Traits::Type, bool> operator *() const
     {
         return std::make_pair(Traits::translate_bit((unsigned short)it), (mask & (1 << it)) != 0);
     }
 
-    Self& operator++()
+    Self& operator ++()
     {
         it += 1;
         return *this;
     }
 
-    Self operator++(int) const { return {mask, (uint8_t)(it + 1)}; }
+    Self operator ++(int) const { return {mask, (uint8_t)(it + 1)}; }
 
-    constexpr bool operator==(const Self& other) const { return it == other.it; }
+    constexpr bool operator ==(const Self& other) const { return it == other.it; }
 
-    constexpr bool operator!=(const Self& other) const { return it != other.it; }
+    constexpr bool operator !=(const Self& other) const { return it != other.it; }
 };
 
 template<typename Traits>
@@ -150,18 +150,19 @@ using ModKeySet = ControlSet<ModKeySetTraits>;
 
 namespace hrz
 {
+
 struct PlatformContext
 {
     std::string canvas;
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE gl_ctx;
     std::deque<platform::Event> events;
 
-    lm::vec2 css_size{400.0f, 300.0f};
-    lm::vec2 device_size{400.0f, 300.0f};
+    lm::vec2 css_size{400.0F, 300.0F};
+    lm::vec2 device_size{400.0F, 300.0F};
     lm::ivec2 render_size{400, 300};
     int override_device_pixel_ratio = 0;
-    float overriden_device_pixel_ratio = 1.0f;
-    float actual_device_pixel_ratio = 1.0f;
+    float overriden_device_pixel_ratio = 1.0F;
+    float actual_device_pixel_ratio = 1.0F;
 
     constexpr float device_pixel_ratio() const
     {
@@ -293,6 +294,7 @@ struct PlatformContext
 
 namespace platform
 {
+
 static char translate_char(const char key[32])
 {
     if (key[1] == 0 && key[0] >= 32 && key[0] < 127)
@@ -468,11 +470,11 @@ static EM_BOOL wheel_callback(int eventType, const EmscriptenWheelEvent* wheelEv
             float scroll = -wheelEvent->deltaY;
             switch (wheelEvent->deltaMode)
             {
-                case DOM_DELTA_LINE: scroll /= 10.0f; break;
+                case DOM_DELTA_LINE: scroll /= 10.0F; break;
                 case DOM_DELTA_PAGE: scroll /= (float)ctx->css_size.y; break;
                 default: break;
             }
-            scroll /= 100.0f;
+            scroll /= 100.0F;
             if (scroll != 0)
             {
                 ctx->events.push_back(
@@ -776,7 +778,7 @@ PlatformContext* initialize(
 
     ctx->actual_device_pixel_ratio = hrz_js_get_device_pixel_ratio();
 
-    if (device_pixel_ratio_override > 0.0f)
+    if (device_pixel_ratio_override > 0.0F)
     {
         ctx->override_device_pixel_ratio = 1;
         ctx->overriden_device_pixel_ratio = device_pixel_ratio_override;
@@ -841,6 +843,7 @@ PlatformContext* initialize(
 
 namespace
 {
+
 bool try_enable_webgl_extension(
     PlatformContext* ctx,
     const char* extension_name,
@@ -857,6 +860,7 @@ bool try_enable_webgl_extension(
         return false;
     }
 }
+
 } // namespace
 
 hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
@@ -1063,14 +1067,14 @@ void viewport_dev_ui(PlatformContext* ctx, mu_Context* ui)
     {
         static int layout[] = {50, 50, 50, 40};
         mu_layout_row(ui, 4, layout, 0);
-        if (mu_button(ui, "0.5")) ctx->overriden_device_pixel_ratio = 0.5f;
-        if (mu_button(ui, "0.75")) ctx->overriden_device_pixel_ratio = 0.75f;
-        if (mu_button(ui, "0.9")) ctx->overriden_device_pixel_ratio = 0.9f;
-        if (mu_button(ui, "1")) ctx->overriden_device_pixel_ratio = 1.0f;
-        if (mu_button(ui, "1.1")) ctx->overriden_device_pixel_ratio = 1.1f;
-        if (mu_button(ui, "1.5")) ctx->overriden_device_pixel_ratio = 1.5f;
-        if (mu_button(ui, "1.618")) ctx->overriden_device_pixel_ratio = 1.618f;
-        if (mu_button(ui, "2")) ctx->overriden_device_pixel_ratio = 2.0f;
+        if (mu_button(ui, "0.5")) ctx->overriden_device_pixel_ratio = 0.5F;
+        if (mu_button(ui, "0.75")) ctx->overriden_device_pixel_ratio = 0.75F;
+        if (mu_button(ui, "0.9")) ctx->overriden_device_pixel_ratio = 0.9F;
+        if (mu_button(ui, "1")) ctx->overriden_device_pixel_ratio = 1.0F;
+        if (mu_button(ui, "1.1")) ctx->overriden_device_pixel_ratio = 1.1F;
+        if (mu_button(ui, "1.5")) ctx->overriden_device_pixel_ratio = 1.5F;
+        if (mu_button(ui, "1.618")) ctx->overriden_device_pixel_ratio = 1.618F;
+        if (mu_button(ui, "2")) ctx->overriden_device_pixel_ratio = 2.0F;
     }
 }
 

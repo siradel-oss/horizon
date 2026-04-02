@@ -8,6 +8,7 @@
 
 namespace hrz::model
 {
+
 struct ModelPrototype;
 
 // Draw properties that require rebuilding only mesh data
@@ -20,10 +21,10 @@ struct MeshDrawProperties
     size_t material_revisions[MaterialCount] = {};
     bool overlay_material_enabled = false;
     bool apply_feature_color_to_overlay = false;
-    float overlay_material_opacity = 1.0f;
+    float overlay_material_opacity = 1.0F;
     bool draw_under_flat_overlays = false;
 
-    bool operator!=(const MeshDrawProperties& other) const
+    bool operator !=(const MeshDrawProperties& other) const
     {
         for (int i = 0; i < MaterialCount; i++)
         {
@@ -47,7 +48,7 @@ struct PrimitiveDrawProperties
     render::LightingSettings lighting;
     size_t material_revisions[MaterialCount] = {};
 
-    bool operator!=(const PrimitiveDrawProperties& other) const
+    bool operator !=(const PrimitiveDrawProperties& other) const
     {
         for (int i = 0; i < MaterialCount; i++)
         {
@@ -68,7 +69,7 @@ struct PrimitiveTransformProperties
     float animation_speed{};
     float animation_phase{};
 
-    bool operator!=(const PrimitiveTransformProperties& other) const
+    bool operator !=(const PrimitiveTransformProperties& other) const
     {
         return transform != other.transform || animation_speed != other.animation_speed
             || animation_phase != other.animation_phase;

@@ -42,12 +42,13 @@
 
 namespace
 {
+
 struct Edge
 {
     size_t from;
     size_t to;
 
-    constexpr bool operator==(const Edge& other) const = default;
+    constexpr bool operator ==(const Edge& other) const = default;
 
     static Edge create(size_t index0, size_t index1)
     {
@@ -89,7 +90,8 @@ hrz::GeoPosition2 normalize_to_wmerc(const hrz::GeoPosition2& geo)
 {
     return {
         hrz::clamp(geo.lat, -hrz::MERCATOR_MAX_LAT, hrz::MERCATOR_MAX_LAT),
-        hrz::normalize_longitude(geo.lon)};
+        hrz::normalize_longitude(geo.lon)
+    };
 }
 
 hrz::GeoPosition2 normalize_position(const hrz::GeoPosition2& geo, LineType line_type)
@@ -583,15 +585,15 @@ Mesh generate_polyline_mesh(
 
         bool left_turn = lm::dot(lm::normalize(ecef - prev_ecef), bisector) > 0;
 
-        extrusion_params[index].y = left_turn ? 1.0f : -1.0f;
-        extrusion_params[top_index].y = left_turn ? 1.0f : -1.0f;
-        extrusion_params[next_index].y = left_turn ? 1.0f : -1.0f;
-        extrusion_params[top_next_index].y = left_turn ? 1.0f : -1.0f;
+        extrusion_params[index].y = left_turn ? 1.0F : -1.0F;
+        extrusion_params[top_index].y = left_turn ? 1.0F : -1.0F;
+        extrusion_params[next_index].y = left_turn ? 1.0F : -1.0F;
+        extrusion_params[top_next_index].y = left_turn ? 1.0F : -1.0F;
 
-        extrusion_params[index + 2].y = left_turn ? -1.0f : 1.0f;
-        extrusion_params[top_index + 2].y = left_turn ? -1.0f : 1.0f;
-        extrusion_params[next_index + 2].y = left_turn ? -1.0f : 1.0f;
-        extrusion_params[top_next_index + 2].y = left_turn ? -1.0f : 1.0f;
+        extrusion_params[index + 2].y = left_turn ? -1.0F : 1.0F;
+        extrusion_params[top_index + 2].y = left_turn ? -1.0F : 1.0F;
+        extrusion_params[next_index + 2].y = left_turn ? -1.0F : 1.0F;
+        extrusion_params[top_next_index + 2].y = left_turn ? -1.0F : 1.0F;
     };
 
     for (size_t l = 1; l < line_boundary_indices.size() - 1; ++l)
@@ -910,7 +912,8 @@ Mesh generate_polygon_mesh(
 
             uint32_t actual_linestring_size = 0;
             hrz::GeoPosition2 previous_geo = {
-                std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()};
+                std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()
+            };
 
             for (size_t p = current_linestring_start;
                  p < linestring_end && p < input_positions_geo.size(); ++p)
@@ -944,8 +947,9 @@ Mesh generate_polygon_mesh(
 
             if (linestring_size < 3) continue;
 
-            linestrings.push_back(std::span<const hrz::GeoPosition2>(positions_geo)
-                                      .subspan(current_position, linestring_size));
+            linestrings.push_back(
+                std::span<const hrz::GeoPosition2>(positions_geo)
+                    .subspan(current_position, linestring_size));
             current_position += linestring_size;
         }
     }
@@ -953,7 +957,8 @@ Mesh generate_polygon_mesh(
     // Whatever the winding order of the input positions, Earcut always returns
     // indices for counter-clockwise triangles.
     std::span<const std::span<const hrz::GeoPosition2>> linestring_span = {
-        linestrings.data(), linestrings.size()};
+        linestrings.data(), linestrings.size()
+    };
     auto triangulation_indices = mapbox::earcut<uint32_t>(linestring_span);
 
     if (!check_triangulation(triangulation_indices, positions_geo.size(), linestring_sizes))
@@ -1213,9 +1218,9 @@ Mesh generate_sphere_mesh(const lm::vec3& center, float radius, size_t subdivisi
     // Values for the icosahedron taken from
     // https://www.danielsieger.com/blog/2021/01/03/generating-platonic-solids.html
 
-    float phi = (1.0f + std::sqrt(5.0f)) * 0.5f; // Golden ratio
-    float a = 1.0f;
-    float b = 1.0f / phi;
+    float phi = (1.0F + std::sqrt(5.0F)) * 0.5F; // Golden ratio
+    float a = 1.0F;
+    float b = 1.0F / phi;
 
     std::vector<lm::vec3> vertices = {{0, b, -a}, {b, a, 0},   {-b, a, 0},  {0, b, a},
                                       {0, -b, a}, {-a, 0, b},  {0, -b, -a}, {a, 0, -b},
@@ -1246,7 +1251,7 @@ Mesh generate_sphere_mesh(const lm::vec3& center, float radius, size_t subdivisi
         }
 
         uint32_t i = vertices.size();
-        vertices.push_back((vertices.at(i0) + vertices.at(i1)) * 0.5f);
+        vertices.push_back((vertices.at(i0) + vertices.at(i1)) * 0.5F);
         edges_to_indices.insert({edge, i});
         return i;
     };
@@ -1418,7 +1423,8 @@ struct RenderableShape : public my::Renderer::Renderable
         rb->push_state();
 
         my::UboBinding ubo_bindings[] = {
-            {ShapeParamsUbo, data->uniform_buffer, 0, sizeof(ShapeUniformData)}};
+            {ShapeParamsUbo, data->uniform_buffer, 0, sizeof(ShapeUniformData)}
+        };
         rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
@@ -1519,8 +1525,8 @@ struct RenderableControl : public my::Renderer::Renderable
         my::UboBinding ubo_bindings[] = {
             {ControlParamsUbo, data->uniform_buffer, 0, sizeof(ControlUniformData)},
             {PlanetParamsUbo, data->planet_resources.planet_params.buffer,
-             data->planet_resources.planet_params.offset,
-             data->planet_resources.planet_params.size}};
+             data->planet_resources.planet_params.offset, data->planet_resources.planet_params.size}
+        };
         rb->bind(ubo_bindings);
 
         my::TextureBinding texture_bindings[] = {
@@ -1615,10 +1621,12 @@ struct Shape
     std::vector<RenderableShape> renderable_outlines; // Only for polygons, one per linestring
     RenderableControl renderable_control;
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct ShapeEditor
 {
     enum class Mode
@@ -1739,6 +1747,7 @@ namespace editor
 {
 namespace
 {
+
 // Update the model after the shape has been modified by the user
 // with mouse and keyboard events.
 void update_shape_model(
@@ -2071,7 +2080,7 @@ void init_render(ShapeEditor* editor, hrz::Render* render)
         render->rc->retrieve_shader(hrz_shaders::ShapeEditorControl_picking_name);
 
     {
-        auto mesh = generate_sphere_mesh({0, 0, 0}, 1.0f, 1);
+        auto mesh = generate_sphere_mesh({0, 0, 0}, 1.0F, 1);
 
         my::BufferResource vb_res(my::BufferResource::BufferType::Vertex);
         vb_res.size = mesh.vertex_data.size() * sizeof(lm::vec3);
@@ -2104,7 +2113,8 @@ void init_render(ShapeEditor* editor, hrz::Render* render)
 
         my::VertexInputStream streams[] = {
             {0, editor->fullscreen_vertex_buffer, my::VertexFormat::Float32_2, 0, 0,
-             my::VertexRate::PerVertex}};
+             my::VertexRate::PerVertex}
+        };
 
         my::VertexInputResource vi_res;
         vi_res.attribs = streams;
@@ -2140,6 +2150,7 @@ ShapeEditor::Mode get_mode_after_events(ShapeEditor* editor)
 
     return editor->mode;
 }
+
 } // namespace
 
 ShapeEditor* create_editor(PickingIdAllocator* pia)
@@ -2419,6 +2430,7 @@ std::pair<size_t, size_t> make_typed_object_references(
 
 namespace
 {
+
 std::optional<Shape::Handle> get_shape_handle_for_picking_id(
     ShapeEditor* editor,
     uint32_t complementary_picking_id)
@@ -2545,7 +2557,8 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
             for (int i = 0; i + 1 < geometry.coords_size(); i += 2)
             {
                 GeoPosition2 point{
-                    lm::radians(geometry.coords(i + 0)), lm::radians(geometry.coords(i + 1))};
+                    lm::radians(geometry.coords(i + 0)), lm::radians(geometry.coords(i + 1))
+                };
                 shape.points.push_back(normalize_position(point, shape.line_type));
             }
 
@@ -2652,11 +2665,11 @@ RenderRequest work_shapes(ShapeEditor* editor, SceneModel* scene_model, ClientMe
             shape.control_point_size = builder.clone().control_point_size().get();
             shape.control_point_color = hrz::srgb_to_linear(
                 hrz::convert_proto_color_to_float(builder.clone().control_point_color().get()));
-            shape.midpoint_control_point_color =
-                hrz::srgb_to_linear(hrz::convert_proto_color_to_float(
+            shape.midpoint_control_point_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(
                     builder.clone().midpoint_control_point_color().get()));
-            shape.selected_control_point_color =
-                hrz::srgb_to_linear(hrz::convert_proto_color_to_float(
+            shape.selected_control_point_color = hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(
                     builder.clone().selected_control_point_color().get()));
             shape.show_midpoint_control_points =
                 builder.clone().show_midpoint_control_points().get()
@@ -3330,7 +3343,8 @@ bool work_events(ShapeEditor* editor, SceneModel* scene_model, ClientMessageQueu
                             // makes a control point appear just before it, shift the index
                             // of the dragged point by one.
                             editor->current_dragged_control_point = {
-                                editor->current_dragged_control_point.value() + 1};
+                                editor->current_dragged_control_point.value() + 1
+                            };
                         }
 
                         select_control_point(editor->current_dragged_control_point);
@@ -3413,6 +3427,7 @@ bool work_events(ShapeEditor* editor, SceneModel* scene_model, ClientMessageQueu
         return false;
     }
 }
+
 } // namespace
 
 RenderRequest work(ShapeEditor* editor, SceneModel* scene_model, ClientMessageQueue* mq)
@@ -3500,7 +3515,8 @@ void work_picking(ShapeEditor* editor, PickingSystem* picking, hrz_proto::SceneV
                         if (pick_result.ref.system_id == editor->picking_id)
                         {
                             mouse.picked_id = {
-                                pick_result.ref.complementary_id, pick_result.ref.object_id};
+                                pick_result.ref.complementary_id, pick_result.ref.object_id
+                            };
                         }
 
                         mouse.has_picking_results = true;
@@ -3513,6 +3529,7 @@ void work_picking(ShapeEditor* editor, PickingSystem* picking, hrz_proto::SceneV
 
 namespace
 {
+
 bool consume_mouse_event(ShapeEditor* editor, hrz_proto::SceneViewIndex view_index)
 {
     return editor->current_drag_mouse_start.has_value()
@@ -3663,13 +3680,14 @@ bool handle_platform_event(
 
             if (editor->last_button_down_events[view_index].has_value())
             {
-                float distance = is_in_viewport ? lm::length(
-                                     lm::ivec2(event.mouse_move.x, event.mouse_move.y)
-                                     - editor->last_button_down_events[view_index]
-                                           .value()
-                                           .mouse()
-                                           .screen_position.value())
-                                                : std::numeric_limits<float>::max();
+                float distance = is_in_viewport
+                    ? lm::length(
+                          lm::ivec2(event.mouse_move.x, event.mouse_move.y)
+                          - editor->last_button_down_events[view_index]
+                                .value()
+                                .mouse()
+                                .screen_position.value())
+                    : std::numeric_limits<float>::max();
                 if (distance > ClickMaxDistance)
                 {
                     editor->last_button_down_events[view_index] = std::nullopt;
@@ -3874,6 +3892,7 @@ bool handle_gesture_event(
 
     return consume_event;
 }
+
 } // namespace
 
 bool handle_event(
@@ -4006,6 +4025,7 @@ void set_mode(ShapeEditor* editor, hrz_proto::ShapeEditorMode mode)
 
 namespace
 {
+
 // Area preserving projection
 lm::dvec2 project_to_sinusoidal(const hrz::GeoPosition2& geo)
 {
@@ -4023,6 +4043,7 @@ struct SinusoidalVectorCollector
         sinusoidal_positions.push_back(project_to_sinusoidal(p));
     }
 };
+
 } // namespace
 
 hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t global_layer_id)
@@ -4168,7 +4189,8 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
                 // Perimeter
 
                 std::span<const hrz::GeoPosition2> points_span = {
-                    shape.points.data(), shape.points.size()};
+                    shape.points.data(), shape.points.size()
+                };
 
                 size_t outer_linestring_size = shape.linestring_sizes.front();
                 total_perimeter += compute_polyline_length(
@@ -4245,7 +4267,8 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
                     }
 
                     linestring_sizes_span = std::span<const size_t>{
-                        linestring_sizes_opt.value().data(), linestring_sizes_opt.value().size()};
+                        linestring_sizes_opt.value().data(), linestring_sizes_opt.value().size()
+                    };
                 }
                 else
                 {
@@ -4277,11 +4300,13 @@ hrz_proto::ShapeInformation get_shape_information(ShapeEditor* editor, uint64_t 
                     }
 
                     linestring_sizes_span = std::span<const size_t>{
-                        shape.linestring_sizes.data(), shape.linestring_sizes.size()};
+                        shape.linestring_sizes.data(), shape.linestring_sizes.size()
+                    };
                 }
 
                 std::span<const lm::dvec2> sinusoidal_points_span = {
-                    sinusoidal_points.data(), sinusoidal_points.size()};
+                    sinusoidal_points.data(), sinusoidal_points.size()
+                };
 
                 size_t outer_linestring_size = linestring_sizes_span.front();
 
@@ -4329,6 +4354,7 @@ void delete_selected_control_point(ShapeEditor* editor)
 
 namespace
 {
+
 ShapeUniformData make_shape_uniforms(const Shape& shape, const ShapeEditor* editor)
 {
     bool selected = editor->selected_shape == shape.handle;
@@ -4436,7 +4462,8 @@ void generate_polyline_renderable(
         {BisectorInputStream, vertex_buffer, my::VertexFormat::Float32_3, sizeof(lm::vec3) * 3,
          sizeof(lm::vec3) * 5, my::VertexRate::PerVertex},
         {ExtrusionParamsInputStream, vertex_buffer, my::VertexFormat::Float32_3,
-         sizeof(lm::vec3) * 4, sizeof(lm::vec3) * 5, my::VertexRate::PerVertex}};
+         sizeof(lm::vec3) * 4, sizeof(lm::vec3) * 5, my::VertexRate::PerVertex}
+    };
 
     my::VertexInputResource vi_res;
     vi_res.indices = index_buffer;
@@ -4477,7 +4504,8 @@ void generate_polyline_renderable(Shape& shape, ShapeEditor* editor, Render* ren
     assert(shape.kind == Shape::Kind::Polyline);
 
     std::span<const hrz::GeoPosition2> points = {
-        shape.points.data(), std::min(shape.points.size(), shape.max_point_count)};
+        shape.points.data(), std::min(shape.points.size(), shape.max_point_count)
+    };
     generate_polyline_renderable(
         shape.global_layer_id, points, false, shape.line_type, shape.z_index << 1,
         shape.scene_views_bitset, make_shape_uniforms(shape, editor), shape.renderable, editor,
@@ -4522,7 +4550,8 @@ void regenerate_polyline_renderable(Shape& shape, Render* render)
     assert(shape.kind == Shape::Kind::Polyline);
 
     std::span<const hrz::GeoPosition2> points = {
-        shape.points.data(), std::min(shape.points.size(), shape.max_point_count)};
+        shape.points.data(), std::min(shape.points.size(), shape.max_point_count)
+    };
 
     regenerate_polyline_renderable(points, false, shape.line_type, shape.renderable, render);
 }
@@ -4563,7 +4592,8 @@ void generate_polygon_renderable(
         {PositionLowInputStream, vertex_buffer, my::VertexFormat::Float32_3, 0,
          sizeof(lm::vec3) * 2, my::VertexRate::PerVertex},
         {PositionHighInputStream, vertex_buffer, my::VertexFormat::Float32_3, sizeof(lm::vec3),
-         sizeof(lm::vec3) * 2, my::VertexRate::PerVertex}};
+         sizeof(lm::vec3) * 2, my::VertexRate::PerVertex}
+    };
 
     my::VertexInputResource vi_res;
     vi_res.indices = index_buffer;
@@ -4825,7 +4855,8 @@ void generate_control_points_renderable(Shape& shape, ShapeEditor* editor, Rende
         {GroundNormalInputStream, instance_buffer, my::VertexFormat::Float32_3,
          sizeof(lm::vec3) * 4, sizeof(lm::vec3) * 5, my::VertexRate::PerInstance},
         {LocalPositionInputStream, editor->control_vertex_buffer, my::VertexFormat::Float32_3, 0,
-         sizeof(lm::vec3) * 2, my::VertexRate::PerVertex}};
+         sizeof(lm::vec3) * 2, my::VertexRate::PerVertex}
+    };
 
     my::VertexInputResource vi_res;
     vi_res.indices = editor->control_index_buffer;
@@ -4909,6 +4940,7 @@ void update_control_points_ubo(Shape& shape, ShapeEditor* editor, Render* render
     render->my->update_buffer(
         shape.renderable_control.data.uniform_buffer, 0, sizeof(ControlUniformData), &uniforms);
 }
+
 } // namespace
 
 RenderRequest work_gpu(ShapeEditor* editor, Render* render)
@@ -5216,5 +5248,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         rc->alloc(&res, hrz::monitoring::systems::ShapeEditor);
     }
 }
+
 } // namespace editor
 } // namespace hrz

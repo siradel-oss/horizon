@@ -1,0 +1,39 @@
+From b738655c40efca3e0dc8c435617178fec9f7f13e Mon Sep 17 00:00:00 2001
+From: Jakub Marcowski <37378746+Chubercik@users.noreply.github.com>
+Date: Tue, 11 Mar 2025 18:35:04 +0100
+Subject: [PATCH] Fix ambiguous calls to `safe_shift_left()` in
+ `basisu_containers.h`
+
+Explicitly cast 1 to `uint64_t` to resolve overload ambiguity between `safe_shift_left(uint32_t, uint32_t)` and `safe_shift_left(uint64_t, uint32_t)`.
+---
+ transcoder/basisu_containers.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/transcoder/basisu_containers.h b/transcoder/basisu_containers.h
+index 03fae339..7fff4c24 100644
+--- transcoder/basisu_containers.h
++++ transcoder/basisu_containers.h
+@@ -3349,7 +3349,7 @@ namespace basisu
+
+ 		inline size_t hash_key(const Key& k) const
+ 		{
+-			assert((safe_shift_left(1ULL, (SIZE_T_BITS - m_hash_shift))) == m_values.size());
++			assert((safe_shift_left(static_cast<uint64_t>(1), (SIZE_T_BITS - m_hash_shift))) == m_values.size());
+
+ 			// Fibonacci hashing
+ 			if (SIZE_T_BITS == 32)
+@@ -3433,7 +3433,7 @@ namespace basisu
+ 				return false;
+
+ 			new_map.m_hash_shift = SIZE_T_BITS - helpers::floor_log2i((uint64_t)new_hash_size);
+-			assert(new_hash_size == safe_shift_left(1ULL, SIZE_T_BITS - new_map.m_hash_shift));
++			assert(new_hash_size == safe_shift_left(static_cast<uint64_t>(1), SIZE_T_BITS - new_map.m_hash_shift));
+
+ 			new_map.m_grow_threshold = std::numeric_limits<size_t>::max();
+
+
+--- transcoder/basisu_transcoder.cpp
++++ transcoder/basisu_transcoder.cpp
+@@ -172,1 +172,1 @@
+-		#include "../zstd/zstd.h"
++		#include <zstd.h>

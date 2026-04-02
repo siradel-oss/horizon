@@ -8,6 +8,7 @@ namespace hrz_jobs::rasterizer
 {
 namespace
 {
+
 static constexpr int SUBPIXEL_PRECISION = 256;
 
 inline bool _is_top_left_edge(lm::ivec2 a, lm::ivec2 b)
@@ -32,6 +33,7 @@ inline int _weight(const lm::ivec2& a, const lm::ivec2& b, const lm::ivec2& c, i
     int64_t weight = c_x * (a_y - b_y) + c_y * (b_x - a_x) + a_x * b_y - b_x * a_y + bias;
     return (int32_t)(weight / SUBPIXEL_PRECISION);
 }
+
 } // namespace
 
 // https://fgiesen.wordpress.com/2013/02/08/triangle-rasterization-in-practice/
@@ -128,4 +130,5 @@ void rasterize_triangle(
         w2_row += step_01.y;
     }
 }
+
 } // namespace hrz_jobs::rasterizer

@@ -22,13 +22,13 @@ entries["shared"] = [
 
 for (let example of EXAMPLES) {
     entries["example." + example] = {
-        import: `./dist/example/${example}.js`,
+        import: `./dist_${VARIANT}/example/${example}.js`,
         dependOn: "shared",
     };
 }
 
 entries["ui"] = {
-    import: "./dist/ui/index.js",
+    import: `./dist_${VARIANT}/ui/index.js`,
 };
 
 module.exports = {

@@ -11,9 +11,11 @@ namespace hrz
 {
 namespace platform
 {
+
 struct GlContext;
 
 void cleanup_gl(PlatformContext*);
+
 } // namespace platform
 
 struct PlatformContext

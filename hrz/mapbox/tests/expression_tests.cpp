@@ -676,7 +676,8 @@ TEST(MapboxExpression, parse_unsupported_interpolate)
     ASSERT_NE(type_pos, std::string::npos);
 
     const char* types[] = {
-        "[\"linear\"]", "[\"exponential\", 2]", "[\"cubic-bezier\", 1, 0, 0, 1]"};
+        "[\"linear\"]", "[\"exponential\", 2]", "[\"cubic-bezier\", 1, 0, 0, 1]"
+    };
 
     for (auto type : types)
     {
@@ -744,7 +745,8 @@ TEST(MapboxExpression, parse_color)
         "hsla(0, 0%, 0%, 0)", "hsla(0, 0%, 0%, 0.4)", "hsla(0, 0%, 0%, 0.6)", "hsla(0, 0%, 0%, 1)",
 
         // HTML color names
-        "yellow", "turquoise", "sienna"};
+        "yellow", "turquoise", "sienna"
+    };
 
     static const uint32_t expected_colors[] = {
         // Short RGB hexadecimal colors.

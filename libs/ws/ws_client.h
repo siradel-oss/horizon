@@ -7,6 +7,7 @@
 
 namespace ws
 {
+
 struct ClientHandler
 {
     virtual ~ClientHandler() = default;

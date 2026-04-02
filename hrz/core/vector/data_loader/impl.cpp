@@ -655,9 +655,11 @@ void VectorDataLoader::send_layer_model_message(LayerLoader& loader, const Layer
     if (it != channels.end())
     {
         auto& channel = it->second;
-        channel.send(vector_data::messages::LayerModelUpdate{
-            loader.request_id.request_id, get_min_lod(layer_model), get_max_lod(layer_model),
-            get_bounds(layer_model), get_attribute_ids(layer_model)});
+        channel.send(
+            vector_data::messages::LayerModelUpdate{
+                loader.request_id.request_id, get_min_lod(layer_model), get_max_lod(layer_model),
+                get_bounds(layer_model), get_attribute_ids(layer_model)
+            });
     }
 }
 
@@ -686,17 +688,20 @@ void VectorDataLoader::send_data_message(
     std::variant<
         TileGeometry,
         hrz::InlinedVector<vector_data::AttributeValues, 16>,
-        vector_data::FeatureIds> data,
+        vector_data::FeatureIds
+    > data,
     AttributionHandle attribution)
 {
     auto it = channels.find(request.request_id.channel_id);
     if (it != channels.end())
     {
         auto& channel = it->second;
-        channel.send(vector_data::messages::DataUpdate{
-            request.request_id.request_id,
-            {std::move(data)},
-            attribution});
+        channel.send(
+            vector_data::messages::DataUpdate{
+                request.request_id.request_id,
+                {std::move(data)},
+                attribution
+            });
     }
 }
 
@@ -1450,8 +1455,7 @@ void VectorDataLoader::cancel_task_jobs(Task& task, JobScheduler* js)
 
     std::visit(
         [&]<typename TaskDataType>(TaskDataType& data)
-        { cancel_task_jobs<TaskDataType>(task, data, js); },
-        task.data);
+        { cancel_task_jobs<TaskDataType>(task, data, js); }, task.data);
 
     tasks_by_hash.erase(task.hash);
 }
@@ -1572,8 +1576,7 @@ void VectorDataLoader::work_unloaded_task(WeakTaskRef& task_ref, Task& task)
 
     std::visit(
         [&]<typename TaskDataType>(TaskDataType& data)
-        { work_unloaded_task<TaskDataType>(task_ref, task, data); },
-        task.data);
+        { work_unloaded_task<TaskDataType>(task_ref, task, data); }, task.data);
 
     set_task_status(task_ref, task, TaskStatus::Loading);
 }
@@ -1812,12 +1815,14 @@ void VectorDataLoader::work_messages(SceneModel* scene_model, JobScheduler* js)
                         {
                             std::visit(
                                 hrz::overload{
-                                    [&](const TileCoords& tile_coords) {
+                                    [&](const TileCoords& tile_coords)
+                                    {
                                         request_data(
                                             request_id, layer_request_id, tile_coords,
                                             message.data_kind);
                                     },
-                                    [&](const vector_data::FeatureIds& feature_ids) {
+                                    [&](const vector_data::FeatureIds& feature_ids)
+                                    {
                                         request_data(
                                             request_id, layer_request_id, feature_ids,
                                             message.data_kind);
@@ -2621,4 +2626,5 @@ void VectorDataLoader::dev_ui(mu_Context* ctx)
         mu_text(ctx, bytes_to_string(tile_geometries_memory, buffer));
     }
 }
+
 } // namespace hrz

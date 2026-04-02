@@ -9,10 +9,12 @@
 
 namespace hrz
 {
+
 struct Render;
 
 namespace grid
 {
+
 struct GridParams
 {
     float extent;
@@ -58,7 +60,9 @@ public:
 
     void draw(Render*);
 };
+
 } // namespace grid
 
 grid::GridParams from_proto(const hrz_proto::Grid& grid);
+
 } // namespace hrz

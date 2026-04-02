@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 // This is an intrusive doubly-linked list with externally-managed nodes memory.
 // The list is circular and delimited by a sentinel.
 // I suggest using hrz::ObjectPool for managing the nodes.
@@ -44,8 +45,8 @@ struct LinkedList
     // Implementing those isn't hard, but we don't need them for now.
     LinkedList(const LinkedList&) = delete;
     LinkedList(LinkedList&&) = delete;
-    LinkedList& operator=(const LinkedList&) = delete;
-    LinkedList& operator=(LinkedList&&) = delete;
+    LinkedList& operator =(const LinkedList&) = delete;
+    LinkedList& operator =(LinkedList&&) = delete;
 
     void insert_after(T* in_list, T* to_insert)
     {
@@ -91,4 +92,5 @@ struct LinkedList
     // not implementing a dangerous primitive.
     //  -slerouzic, 2023-11-09
 };
+
 } // namespace hrz

@@ -178,7 +178,7 @@ static VertexCompressionParamsUniformData _to_compression_uniform_data(
         // encoding 0.
         // See normal_compression_utils.h in the Draco sources.
         uniform_data.quantization_scale =
-            lm::vec3(2.0f / (float)((1 << attr.quantization_bits) - 2));
+            lm::vec3(2.0F / (float)((1 << attr.quantization_bits) - 2));
     }
     else
     {

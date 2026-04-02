@@ -78,46 +78,54 @@ run_buildifier = run_all or args.buildifier
 run_black = run_all or args.black
 fix_line_endings = run_all or args.line_endings
 
-fd = "fd"
-if mode == "all":
-    if not shutil.which("fd"):
-        if shutil.which("fdfind"):
-            fd = "fdfind"
-        else:
-            print(
-                "\033[93mERROR: fd required (install package 'fd-find' (cargo, apt, etc) or https://github.com/sharkdp/fd/releases)\033[0m"
-            )
-            sys.exit(1)
-
 bazel_info = subprocess.check_output(["bazel", "info"]).decode("utf-8").splitlines()
 repo_mapping = json.loads(
     subprocess.check_output(["bazel", "mod", "dump_repo_mapping", ""])
 )
 output_base = Path(retrieve_bazel_info(bazel_info, "output_base"))
+bin_dir = Path(retrieve_bazel_info(bazel_info, "bazel-bin"))
 
-clang_format_config = {
-    "Windows": {
-        "workspace": repo_mapping["clang-format_windows"],
-        "file": "clang-format.exe",
-    },
-    "Linux": {
-        "workspace": repo_mapping["clang-format_linux"],
-        "file": "clang-format",
-    },
-}[platform.system()]
+platform_exe_extension = ".exe" if platform.system() == "Windows" else ""
 
-clang_format_target = (
-    "@@" + clang_format_config["workspace"] + "//:" + clang_format_config["file"]
+
+def fetch_clang_format():
+    output = subprocess.run(
+        ["bazel", "build", "@clang_format_prebuilt//clang-format"],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if output.returncode != 0:
+        raise RuntimeError("Failed to build clang_format")
+    return (
+        bin_dir
+        / "external"
+        / repo_mapping["clang_format_prebuilt"]
+        / "clang-format"
+        / ("clang-format" + platform_exe_extension)
+    )
+
+
+clang_format_exe = fetch_clang_format()
+
+
+def fetch_file(workspace: str, file: str) -> Path:
+    workspace = repo_mapping[workspace]
+    target = "@@" + workspace + "//:" + file
+    output = subprocess.run(
+        ["bazel", "fetch", target],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if output.returncode != 0:
+        raise RuntimeError(f"Failed to fetch {target}")
+    return output_base / "external" / workspace / file
+
+
+buildifier_exe = fetch_file(
+    f"buildifier_{platform.system().lower()}", f"buildifier{platform_exe_extension}"
 )
-clang_format_exe = (
-    output_base
-    / "external"
-    / clang_format_config["workspace"]
-    / clang_format_config["file"]
-)
-
-subprocess.run(["bazel", "build", clang_format_target])
-subprocess.run([clang_format_exe, "--version"])
 
 if not shutil.which("git"):
     print("\033[93mERROR: Git required (really? :thinking:)\033[0m")
@@ -168,24 +176,21 @@ all_extensions = [
 ]
 all_files_names = [".gitlab-ci.yml", "Dockerfile"]
 cpp_extensions = ["cpp", "h", "c", "cc", "hpp", "inl", "proto"]
+bazel_extensions = ["bzl", "bazel"]
 
 all_files = []
 cpp_files = []
+bazel_files = []
 
 print("Discovering files....")
 
 if mode == "all":
-    extensions_args = " ".join(["-e %s" % e for e in all_extensions])
-    all_files = (
-        subprocess.check_output((fd + " " + extensions_args).split(" "))
-        .decode("utf-8")
-        .splitlines()
-    )
-    all_files += (
-        subprocess.check_output([fd, '"' + "|".join(all_files_names) + '"'])
-        .decode("utf-8")
-        .splitlines()
-    )
+    cmd = ["git", "ls-files", "--cached", "--others", "--exclude-standard"]
+    for line in subprocess.check_output(cmd).decode("utf-8").splitlines():
+        ext = os.path.splitext(line)[1][1:]
+        basename = os.path.basename(line)
+        if ext in all_extensions or basename in all_files_names:
+            all_files.append(line)
 elif mode == "staged":
     files = (
         subprocess.check_output(
@@ -253,11 +258,25 @@ elif mode == "jj":
         elif basename in all_files_names:
             all_files.append(filename)
 
+print("Excluding bazel registry module files...")
+
+# Remove files that are in third_party/bazel_registry/modules/
+bazel_registry_modules_path = Path("third_party/bazel_registry/modules")
+all_files = [
+    f for f in all_files if not Path(f).is_relative_to(bazel_registry_modules_path)
+]
+
 print("Filtering C++ files...")
 for f in all_files:
     ext = os.path.splitext(f)[1][1:]
     if ext in cpp_extensions:
         cpp_files.append(f)
+
+print("Filtering Bazel files...")
+for f in all_files:
+    ext = os.path.splitext(f)[1][1:]
+    if ext in bazel_extensions:
+        bazel_files.append(f)
 
 print("Excluding third_party files from C++ files...")
 cpp_files = [f for f in cpp_files if not f.startswith("third_party")]
@@ -297,19 +316,23 @@ if run_prettier:
     run_command(prettier_cmd, "Prettier")
 
 if run_buildifier:
-    # Run Buildifier for Bazel files
     print("Running Buildifier...")
-    buildifier_cmd = [
-        "bazel",
-        "run",
-        "//third_party:buildifier",
-        "--",
-        "-lint",
-        "fix",
-        "-r",
-        os.getcwd(),
-    ]
-    run_command(buildifier_cmd, "Buildifier")
+    i = 0
+    while i < len(bazel_files):
+        cmd = [
+            str(buildifier_exe),
+            "-lint",
+            "fix",
+        ]
+        cmd_len = sum(len(x) + 1 for x in cmd)
+        MAX_CMD_LEN = 8000
+        while i < len(bazel_files) and cmd_len + len(bazel_files[i]) + 1 < MAX_CMD_LEN:
+            cmd.append(bazel_files[i])
+            cmd_len += len(bazel_files[i]) + 1
+            i += 1
+        print(f"\r    Formatting files {i}/{len(bazel_files)}", end="")
+        run_command(cmd, "Buildifier")
+    print("\n    Done")
 
 if run_black:
     # Run Black for Python files
@@ -334,7 +357,7 @@ if fix_line_endings:
 
     for i, f in enumerate(all_files):
         print("\r    Fixing file %d/%d" % (i + 1, len(all_files)), end="")
-        lines = open(f, "rb").readlines()
+        lines = Path(f).read_bytes().splitlines()
         fixed_output = ""
         has_differences = False
         for l in lines:
@@ -346,7 +369,7 @@ if fix_line_endings:
         if has_differences:
             # Only write the file if there are differences,
             # to avoid messing with the last-modified date.
-            open(f, "wb+").write(fixed_output.encode("utf-8"))
+            Path(f).write_bytes(fixed_output.encode("utf-8"))
     print("\n    Done")
 
 if mode == "staged":

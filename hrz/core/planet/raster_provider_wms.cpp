@@ -17,6 +17,7 @@
 
 namespace
 {
+
 struct UrlGenerator : public hrz::TileUrlGenerator
 {
     UrlGenerator(
@@ -62,7 +63,8 @@ struct UrlGenerator : public hrz::TileUrlGenerator
             uint64_t level_multiplier = 1 << (tiling.max_level() - z);
             uint64_t tile_max_level_pixel_size = tile_pixel_size * level_multiplier;
             lm::ulvec2 tile_max_level_pixel_origin = {
-                x * tile_pixel_size * level_multiplier, y * tile_pixel_size * level_multiplier};
+                x * tile_pixel_size * level_multiplier, y * tile_pixel_size * level_multiplier
+            };
 
             double projection_width = bounds.max.x - bounds.min.x;
             double pixel_size = projection_width / tiling.full_image_width();
@@ -89,10 +91,12 @@ private:
     std::string url_template;
     hrz::planet::TiledRasterGeometry geometry;
 };
+
 } // namespace
 
 namespace hrz::planet
 {
+
 bool is_provider_model_complete(const hrz_proto::WmsRasterProviderParams& params)
 {
     if (params.url().empty() || params.layers_size() == 0) return false;
@@ -357,8 +361,9 @@ public:
 
                     if (!additional_attribution.empty())
                     {
-                        unique_attributions.push_back(attribution::register_attribution(
-                            attributions, {additional_attribution, ""}));
+                        unique_attributions.push_back(
+                            attribution::register_attribution(
+                                attributions, {additional_attribution, ""}));
                     }
 
                     for (const auto& resp_attribution : response.attributions)
@@ -393,7 +398,8 @@ public:
                         TileFetcher::MetricInfo{
                             provider_request_tally_metric_name(
                                 hrz_proto::RasterProviderType::WMS_RASTER_PROVIDER),
-                            response.url_template.c_str()});
+                            response.url_template.c_str()
+                        });
 
                     geometry = std::move(response.geometry);
 
@@ -549,4 +555,5 @@ std::unique_ptr<RasterProvider> create_wms_provider(
     return std::unique_ptr<RasterProvider>(
         new WmsProvider(params, queue, default_tile_cache_size, raster_id));
 }
+
 } // namespace hrz::planet

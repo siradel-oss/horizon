@@ -86,34 +86,35 @@ static void set_preferred_provoking_vertex()
 
 namespace my
 {
-bool operator!=(const Rect& a, const Rect& b)
+
+bool operator !=(const Rect& a, const Rect& b)
 {
     return a.x != b.x || a.y != b.y || a.w != b.w || a.h != b.h;
 }
 
-bool operator!=(const Color& a, const Color& b)
+bool operator !=(const Color& a, const Color& b)
 {
     return a.r != b.r || a.g != b.g || a.b != b.b || a.a != b.a;
 }
 
-bool operator!=(const ViewportState& a, const ViewportState& b)
+bool operator !=(const ViewportState& a, const ViewportState& b)
 {
     return a.viewport != b.viewport || a.scissor != b.scissor;
 }
 
-bool operator!=(const RasterizationState& a, const RasterizationState& b)
+bool operator !=(const RasterizationState& a, const RasterizationState& b)
 {
     return a.depth_bias_factor != b.depth_bias_factor || a.depth_bias_units != b.depth_bias_units
         || a.cull_mode != b.cull_mode || a.front_face != b.front_face
         || a.line_width != b.line_width;
 }
 
-bool operator!=(const DepthState& a, const DepthState& b)
+bool operator !=(const DepthState& a, const DepthState& b)
 {
     return a.test != b.test || a.write != b.write || a.compare != b.compare;
 }
 
-bool operator!=(const StencilState::Face& a, const StencilState::Face& b)
+bool operator !=(const StencilState::Face& a, const StencilState::Face& b)
 {
     return a.fail_op != b.fail_op || a.depth_pass_op != b.depth_pass_op
         || a.depth_fail_op != b.depth_fail_op || a.compare != b.compare
@@ -121,17 +122,17 @@ bool operator!=(const StencilState::Face& a, const StencilState::Face& b)
         || a.reference != b.reference;
 }
 
-bool operator!=(const StencilState& a, const StencilState& b)
+bool operator !=(const StencilState& a, const StencilState& b)
 {
     return a.enable != b.enable || a.front != b.front || a.back != b.back;
 }
 
-bool operator!=(const ColorBlendState::Channel& a, const ColorBlendState::Channel& b)
+bool operator !=(const ColorBlendState::Channel& a, const ColorBlendState::Channel& b)
 {
     return a.src != b.src || a.dst != b.dst || a.op != b.op;
 }
 
-bool operator!=(const ColorBlendState& a, const ColorBlendState& b)
+bool operator !=(const ColorBlendState& a, const ColorBlendState& b)
 {
     return a.enable != b.enable || a.constant_color != b.constant_color || a.mask != b.mask
         || a.color != b.color || a.alpha != b.alpha;
@@ -183,7 +184,7 @@ my::GLInstance::GLInstance() : Instance()
     for (int i = 0; i < MaxTextureUnits; ++i)
     {
         _last_textures[i].target = 0;
-        _last_textures[i].texture = ~0u;
+        _last_textures[i].texture = ~0U;
         _last_textures[i].sampler = 0;
     }
 
@@ -445,7 +446,7 @@ void my::GLInstance::apply_rasterization_state(const RasterizationState& state)
     if (state.depth_bias_factor != current_state.depth_bias_factor
         || state.depth_bias_units != current_state.depth_bias_units)
     {
-        if (state.depth_bias_factor != 0.0f || state.depth_bias_units != 0.0f)
+        if (state.depth_bias_factor != 0.0F || state.depth_bias_units != 0.0F)
         {
             glEnable(GL_POLYGON_OFFSET_FILL);
 #if MYCELIUM_WEBGL_2
@@ -468,7 +469,7 @@ void my::GLInstance::apply_rasterization_state(const RasterizationState& state)
 
     if (state.line_width != current_state.line_width)
     {
-        glLineWidth(std::max(state.line_width, 1.0f));
+        glLineWidth(std::max(state.line_width, 1.0F));
         GL_ERROR();
     }
 
@@ -818,7 +819,8 @@ static void setup_and_validate_uniform_blocks(my::GLInstance* my, my::GLShader* 
     int referenced_in_fragment_count = 0;
 
     const std::span<my::IndexName> uniform_block_defs_span{
-        s->uniform_block_defs, s->uniform_block_count};
+        s->uniform_block_defs, s->uniform_block_count
+    };
 
     for (GLint i = 0; i < actual_uniform_block_count; ++i)
     {

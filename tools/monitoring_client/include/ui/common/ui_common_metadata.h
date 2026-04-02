@@ -11,11 +11,14 @@
 
 namespace data
 {
+
 struct Metadata;
+
 }
 
 namespace metadata
 {
+
 enum class FilterComparisonId
 {
     Equal = 0,
@@ -59,4 +62,5 @@ bool draw_editable_filter_row(
 
 // Draws a table with all the given metadata with buttons to copy any value to the clipboard
 void draw_metadata_table(std::span<const data::Metadata>, const char* table_id = "##Metadata");
+
 } // namespace metadata

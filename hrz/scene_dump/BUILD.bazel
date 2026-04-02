@@ -1,5 +1,6 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 py_binary(
     name = "gen",
@@ -15,7 +16,7 @@ py_binary(
     ],
 )
 
-hrz_genrule(
+run_binary(
     name = "generate_migrations_list",
     srcs = [
         "//hrz/protocol/history:versions_manifest.csv",
@@ -23,8 +24,13 @@ hrz_genrule(
     outs = [
         "migrations_list.h",
     ],
-    cmd = "$(location gen) -m $(location //hrz/protocol/history:versions_manifest.csv) gen-cpp-migrations-list $@",
-    tools = [":gen"],
+    args = [
+        "-m",
+        "$(location //hrz/protocol/history:versions_manifest.csv)",
+        "gen-cpp-migrations-list",
+        "$@",
+    ],
+    tool = ":gen",
 )
 
 cc_library(
@@ -35,11 +41,11 @@ cc_library(
     hdrs = [
         "utils.h",
     ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//third_party:libprotobuf",
-        "//third_party:lz4",
+    implementation_deps = [
+        "@lz4",
+        "@protobuf",
     ],
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
@@ -53,12 +59,15 @@ cc_library(
     hdrs = [
         "migration.h",
     ],
+    implementation_deps = [
+        ":utils",
+        "//hrz/protocol/history:descriptor_sets_list",
+        "//hrz/protocol/history:scene_model_version",
+        "@protobuf",
+    ],
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
-        ":utils",
         "//hrz/fnd",
-        "//hrz/protocol/history:descriptor_sets_list",
-        "//hrz/protocol/history:scene_model_version",
     ],
 )

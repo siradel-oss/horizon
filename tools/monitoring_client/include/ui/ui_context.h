@@ -9,17 +9,22 @@
 
 namespace data
 {
+
 struct SampleId;
 class Database;
+
 } // namespace data
 
 namespace userdata
 {
+
 class Userdata;
+
 }
 
 namespace ui::context
 {
+
 struct Action
 {
     virtual void execute() = 0;

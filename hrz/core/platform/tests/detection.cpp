@@ -4,6 +4,7 @@
 
 namespace
 {
+
 using namespace hrz;
 
 TEST(PlatformDetection, WindowsNativeNvidia)

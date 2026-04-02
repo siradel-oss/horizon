@@ -16,6 +16,7 @@ using namespace hrz;
 
 namespace
 {
+
 static const int MERCATOR_BORDER_SIZE = ATLAS_TILE_BORDER_SIZE == 0
     ? 0
     : std::max(MERCATOR_TILE_SIZE / (ATLAS_TILE_SIZE - 2 * ATLAS_TILE_BORDER_SIZE), 1);
@@ -30,7 +31,7 @@ struct SignedTileCoords
     int32_t x, y;
     uint8_t lod;
 
-    constexpr bool operator==(const SignedTileCoords& t) const = default;
+    constexpr bool operator ==(const SignedTileCoords& t) const = default;
 
     SignedTileCoords to_parent_tile() const
     {
@@ -56,10 +57,12 @@ struct TileInfos
     double bounds_x0, bounds_y0;
     double bounds_width, bounds_height;
 };
+
 } // namespace
 
 namespace hrz_jobs::reproject_raster_tile
 {
+
 void compute_tiled_mercator_reprojection(
     const hrz_jobs::RasterTileReprojParams& params,
     hrz_jobs::ReprojectedTiles& response)
@@ -218,8 +221,8 @@ void compute_tiled_mercator_reprojection(
 
             // Reverse the Y axis
             std::swap(uv_clipping.min.y, uv_clipping.max.y);
-            uv_clipping.min.y = 1.0f - uv_clipping.min.y;
-            uv_clipping.max.y = 1.0f - uv_clipping.max.y;
+            uv_clipping.min.y = 1.0F - uv_clipping.min.y;
+            uv_clipping.max.y = 1.0F - uv_clipping.max.y;
         }
 
         response.tiles.emplace_back();
@@ -909,8 +912,8 @@ void project_tiled_image_tiles(
         // This is computed in order to use a reasonable number of quad for the
         // projection.
 
-        float image_tile_coverage_x = 1.0f;
-        float image_tile_coverage_y = 1.0f;
+        float image_tile_coverage_x = 1.0F;
+        float image_tile_coverage_y = 1.0F;
         if (!info.tiles_always_full_size)
         {
             int64_t covered_pixels_x = tile_pixel_size;
@@ -988,8 +991,8 @@ void project_tiled_image_tiles(
 
             // Reverse the Y axis
             std::swap(uv_clipping.min.y, uv_clipping.max.y);
-            uv_clipping.min.y = 1.0f - uv_clipping.min.y;
-            uv_clipping.max.y = 1.0f - uv_clipping.max.y;
+            uv_clipping.min.y = 1.0F - uv_clipping.min.y;
+            uv_clipping.max.y = 1.0F - uv_clipping.max.y;
         }
 
         // Transform the positions to web Mercator.

@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_extract_vector_tile_data_task(
     const LayerModelRef& layer_model,
     uint32_t data_source,
@@ -227,20 +228,18 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::ExtractVectorTi
 }
 
 template<>
-bool VectorDataLoader::unload_task_data_if_not_needed<
-    VectorDataLoader::Task::ExtractVectorTileData>()
+bool VectorDataLoader::
+    unload_task_data_if_not_needed<VectorDataLoader::Task::ExtractVectorTileData>()
 {
     return true;
 }
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::ExtractVectorTileData>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::ExtractVectorTileData& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::ExtractVectorTileData
+>(WeakTaskRef& task_ref, Task& task, Task::ExtractVectorTileData& task_data, JobScheduler* js)
 {
     // No-op
 }
+
 } // namespace hrz

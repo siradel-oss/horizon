@@ -3,6 +3,7 @@
 
 namespace hrz::model
 {
+
 std::optional<GpuSamplerResource> GpuSamplerResource::acquire(
     SamplerWithParams sampler,
     BlobLibrary* bl,

@@ -8,8 +8,10 @@ namespace color
 {
 namespace detail
 {
+
 alignas(hrz::L1CacheLineSize) float srgb_to_linear_lut[256];
 alignas(hrz::L1CacheLineSize) uint8_t linear_to_srgb_lut[4096];
+
 } // namespace detail
 
 // When `std::pow` is `constexpr`, (C++26) this function can be
@@ -21,17 +23,18 @@ void initialize_srgb_luts()
 {
     for (size_t i = 0; i < 256; ++i)
     {
-        float srgb_val = i / 255.0f;
+        float srgb_val = i / 255.0F;
         detail::srgb_to_linear_lut[i] = detail::srgb_to_linear(srgb_val);
     }
 
     for (size_t i = 0; i < 4096; ++i)
     {
-        float linear_val = i / 4095.0f;
+        float linear_val = i / 4095.0F;
         detail::linear_to_srgb_lut[i] = static_cast<uint8_t>(
-            hrz::clamp(detail::linear_to_srgb(linear_val), 0.0f, 1.0f) * 255.0f + 0.5f);
+            hrz::clamp(detail::linear_to_srgb(linear_val), 0.0F, 1.0F) * 255.0F + 0.5F);
     }
 }
+
 } // namespace color
 
 namespace
@@ -1979,7 +1982,7 @@ lm::vec3 hsl_to_rgb(const lm::vec3& hsl)
         lm::abs(glsl_mod(lm::vec3(hsl.x * 6) + lm::vec3(0, 4, 2), 6) - lm::vec3(3)) - lm::vec3(1.5),
         lm::vec3(-0.5), lm::vec3(0.5));
 
-    return lm::vec3(hsl.z) + hsl.y * rgb * (1.0f - std::abs(2.0f * hsl.z - 1.0f));
+    return lm::vec3(hsl.z) + hsl.y * rgb * (1.0F - std::abs(2.0F * hsl.z - 1.0F));
 }
 
 // From https://www.shadertoy.com/view/lsS3Wc
@@ -2007,9 +2010,10 @@ lm::vec3 rgb_to_hsv(const lm::vec3& c)
 lm::vec4 linear_to_oklab(const lm::vec4& rgb_lin)
 {
     static const lm::mat3 lin_rgb_to_lin_lms{
-        {0.4122214708f, 0.2119034982f, 0.0883024619f},
-        {0.5363325363f, 0.6806995451f, 0.2817188376f},
-        {0.0514459929f, 0.1073969566f, 0.6299787005f}};
+        {0.4122214708F, 0.2119034982F, 0.0883024619F},
+        {0.5363325363F, 0.6806995451F, 0.2817188376F},
+        {0.0514459929F, 0.1073969566F, 0.6299787005F}
+    };
 
     lm::vec3 lms_lin = lin_rgb_to_lin_lms * rgb_lin.rgb;
     lm::vec3 lms = {std::cbrtf(lms_lin.x), std::cbrtf(lms_lin.y), std::cbrtf(lms_lin.z)};
@@ -2027,12 +2031,13 @@ lm::vec4 oklab_to_linear(const lm::vec4& lms)
     lm::vec3 lms_lin = lms.xyz * lms.xyz * lms.xyz;
 
     static const lm::mat3 lin_lms_to_lin_rgb{
-        {+4.0767416621f, -1.2684380046f, -0.0041960863f},
-        {-3.3077115913f, +2.6097574011f, -0.7034186147f},
-        {+0.2309699292f, -0.3413193965f, +1.7076147010f}};
+        {+4.0767416621F, -1.2684380046F, -0.0041960863F},
+        {-3.3077115913F, +2.6097574011F, -0.7034186147F},
+        {+0.2309699292F, -0.3413193965F, +1.7076147010F}
+    };
 
     lm::vec3 rgb_lin = lin_lms_to_lin_rgb * lms_lin;
-    rgb_lin = lm::clamp(rgb_lin, lm::vec3(0.0f), lm::vec3(1.0f));
+    rgb_lin = lm::clamp(rgb_lin, lm::vec3(0.0F), lm::vec3(1.0F));
 
     return lm::vec4(rgb_lin, lms.a);
 }
@@ -2071,7 +2076,8 @@ lm::ubvec4 premultiply_alpha(const lm::ubvec4& rgba)
 
     return {
         premultiply_channel(rgba.r), premultiply_channel(rgba.g), premultiply_channel(rgba.b),
-        rgba.a};
+        rgba.a
+    };
 }
 
 std::optional<uint32_t> parse_html_color_string(std::string_view str)

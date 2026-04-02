@@ -8,6 +8,7 @@
 
 namespace hrz::vector_data
 {
+
 RefAttributeValueTraits::Type OwnedAttributeValueTraits::as_ref(const Type& value, empty)
 {
     return std::visit(
@@ -224,8 +225,9 @@ uint64_t attr_hashed_inner(const RefAttributeValue& value)
                 std::bit_cast<uint64_t>(RefAttributeValueTraits::get_int64(
                     unsafe{"type has been checked"}, value, empty{})));
         case AttributeValueType::kString:
-            return hrz::murmur3_x64_64(RefAttributeValueTraits::get_string(
-                unsafe{"type has been checked"}, value, empty{}));
+            return hrz::murmur3_x64_64(
+                RefAttributeValueTraits::get_string(
+                    unsafe{"type has been checked"}, value, empty{}));
         default: assert(false && "Unhandled case"); return 0;
     }
 }

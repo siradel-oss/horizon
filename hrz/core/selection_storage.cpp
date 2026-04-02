@@ -7,6 +7,7 @@
 
 namespace hrz::selection
 {
+
 template<typename Indirection>
 SelectionStorageUint32Buffer<Indirection>::SelectionStorageUint32Buffer(
     size_t index_count,

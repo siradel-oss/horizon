@@ -23,6 +23,7 @@
 
 namespace
 {
+
 enum
 {
     PlanetParamsUbo = hrz::UboCustomStart,
@@ -290,7 +291,8 @@ public:
         ctx.render->clear(clear_targets);
 
         my::UboBinding ubo_binding{
-            hrz::UboView, _view_ubo.get_for_gpu(), 0, sizeof(hrz::AuxViewUniformData)};
+            hrz::UboView, _view_ubo.get_for_gpu(), 0, sizeof(hrz::AuxViewUniformData)
+        };
         ctx.binder->bind({&ubo_binding, 1});
 
         static const my::Renderer::BinMask pass_masks[] = {
@@ -386,10 +388,12 @@ public:
         prepare_download(ctx);
     }
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct CameraHeightSystem
 {
     bool disabled;
@@ -406,6 +410,7 @@ struct CameraHeightSystem
 
 namespace camera_height
 {
+
 CameraHeightSystem* create_system()
 {
     auto system = new CameraHeightSystem();

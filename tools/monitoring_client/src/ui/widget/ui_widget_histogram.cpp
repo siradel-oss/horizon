@@ -6,6 +6,7 @@
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 void HistogramRuler::draw_horizontal(const view::Layout& layout)

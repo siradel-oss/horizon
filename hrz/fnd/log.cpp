@@ -12,6 +12,7 @@
 
 namespace
 {
+
 #if HRZ_EMSCRIPTEN
 int severity_to_em_flag(hrz::log::Severity severity)
 {
@@ -23,10 +24,12 @@ int severity_to_em_flag(hrz::log::Severity severity)
     }
 }
 #endif
+
 } // namespace
 
 namespace hrz::log
 {
+
 enum
 {
     HISTORY_COUNT = 128,

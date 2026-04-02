@@ -27,10 +27,8 @@ tpl_env.lstrip_blocks = True
 tpl_cc = tpl_env.get_template("collection.tpl.cpp")
 tpl_h = tpl_env.get_template("collection.tpl.h")
 
-fp = open(CC_PATH, "w+")
-fp.write(tpl_cc.render(values))
-fp.close()
+with open(CC_PATH, "w+") as fp:
+    fp.write(tpl_cc.render(values))
 
-fp = open(H_PATH, "w+")
-fp.write(tpl_h.render(values))
-fp.close()
+with open(H_PATH, "w+") as fp:
+    fp.write(tpl_h.render(values))

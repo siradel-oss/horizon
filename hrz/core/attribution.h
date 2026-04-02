@@ -15,7 +15,7 @@ struct AttributionHandle
 
     constexpr operator bool() const { return o != 0; }
 
-    constexpr auto operator<=>(const AttributionHandle& other) const = default;
+    constexpr auto operator <=>(const AttributionHandle& other) const = default;
 };
 
 template<typename H>

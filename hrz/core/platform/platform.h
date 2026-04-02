@@ -10,10 +10,12 @@
 
 namespace hrz
 {
+
 struct PlatformContext;
 
 namespace platform
 {
+
 PlatformContext* initialize(
     bool disable_events_capture,
     void* wsi_instance,

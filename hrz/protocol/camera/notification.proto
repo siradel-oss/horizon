@@ -11,21 +11,21 @@ message CameraNotification {
     CameraIndex camera_index = 1;
 
     oneof       kind {
-        Void               animation_started           = 101;
-        Void               animation_ended             = 102;
-        Void               animation_interrupted       = 103;
+        Void               animation_started                           = 101;
+        Void               animation_ended                             = 102;
+        Void               animation_interrupted                       = 103;
 
-        CameraMovementType continuous_movement_started = 104;
-        CameraMovementType continuous_movement_interrupted_no_resume = 105;
+        CameraMovementType continuous_movement_started                 = 104;
+        CameraMovementType continuous_movement_interrupted_no_resume   = 105;
         CameraMovementType continuous_movement_interrupted_will_resume = 106;
-        CameraMovementType continuous_movement_resumed = 107;
-        CameraMovementType continuous_movement_ended   = 108;
+        CameraMovementType continuous_movement_resumed                 = 107;
+        CameraMovementType continuous_movement_ended                   = 108;
 
         // Sent when the camera starts moving after a few frames of inactivity.
         // Any kind of movement can trigger this event.
-        Void               motion_started              = 109;
+        Void               motion_started                              = 109;
 
         // Sent after a few frames without any camera motion.
-        Void               motion_ended                = 110;
+        Void               motion_ended                                = 110;
     }
 }

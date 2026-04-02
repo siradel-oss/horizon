@@ -2,6 +2,7 @@
 
 namespace hrz::json
 {
+
 size_t copy_array_values(std::span<int> values, const rapidjson::Value& array, int default_value)
 {
     size_t index = 0;

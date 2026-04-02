@@ -9,6 +9,7 @@
 
 namespace hrz::str
 {
+
 std::string_view rtrim_s(std::string_view str, char c)
 {
     int index = (int)str.size() - 1;
@@ -190,7 +191,8 @@ static const Base64Chars base64_variants[] = {
       49,   50,   51,   0xff, 0xff, 0xff, 0xff, 0xff},
      // No encoding table as the "Both" variant can only be used for decoding.
      {},
-     '='}};
+     '='}
+};
 
 size_t decode_base64_size_hint(std::string_view str, Base64DecodingVariant variant)
 {
@@ -220,7 +222,8 @@ inline int _decode_base64_group(
         static_cast<uint8_t>(base64_variant.decoding_table[static_cast<int>(group[0])]),
         static_cast<uint8_t>(base64_variant.decoding_table[static_cast<int>(group[1])]),
         static_cast<uint8_t>(base64_variant.decoding_table[static_cast<int>(group[2])]),
-        static_cast<uint8_t>(base64_variant.decoding_table[static_cast<int>(group[3])])};
+        static_cast<uint8_t>(base64_variant.decoding_table[static_cast<int>(group[3])])
+    };
 
     uint32_t group_decoded_uint;
     memcpy(&group_decoded_uint, group_decoded, 4);

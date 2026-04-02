@@ -36,6 +36,7 @@ std::string generate_session_id()
 
 namespace hrz
 {
+
 struct RemoteMonitoring : public ws::ClientHandler
 {
     enum class Status
@@ -268,6 +269,7 @@ struct RemoteMonitoring : public ws::ClientHandler
 
 namespace monitoring
 {
+
 RemoteMonitoring* create_remote_monitoring()
 {
     RemoteMonitoring* mon = new RemoteMonitoring();

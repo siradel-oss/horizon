@@ -12,8 +12,10 @@
 
 namespace
 {
+
 EGLDisplay display = EGL_NO_DISPLAY;
 EGLSurface surface_;
+
 } // namespace
 
 std::optional<WsiInstance> wsi_init(int width, int height, const char*, bool)
@@ -121,7 +123,8 @@ std::optional<WsiInstance> wsi_init(int width, int height, const char*, bool)
         8,
         EGL_RENDERABLE_TYPE,
         EGL_OPENGL_BIT,
-        EGL_NONE};
+        EGL_NONE
+    };
 
     EGLint num_configs;
     EGLConfig config;

@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Siradel
+# SPDX-License-Identifier: MIT
+
+module(name = "glslang_prebuilt", version = "16.2.0.hrz.1",
+)
+
+bazel_dep(name = "platforms", version = "1.0.0")
+
+prebuilt_extension = use_extension("//glslang:extensions.bzl", "prebuilt_extension")
+use_repo(prebuilt_extension, "glslang_prebuilt_toolchains")
+
+register_toolchains("@glslang_prebuilt_toolchains//:all")

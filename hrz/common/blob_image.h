@@ -15,6 +15,7 @@
 
 namespace hrz
 {
+
 struct BlobImageDecodingParams
 {
     hrz::blobs::BlobHandle encoded_image_data;

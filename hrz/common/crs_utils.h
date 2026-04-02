@@ -5,6 +5,7 @@
 
 namespace hrz::crs
 {
+
 // Only valid as long as the source string is alive.
 struct Srid
 {
@@ -19,4 +20,5 @@ struct Srid
 // are returned as "OCG" and 84.
 // "urn:ogc:def:crs:CRS::84" is returned as "CRS" and 84.
 std::optional<Srid> parse_srid(std::string_view srid);
+
 } // namespace hrz::crs

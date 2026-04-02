@@ -7,6 +7,7 @@ namespace hrz::camera
 {
 namespace
 {
+
 // Because angles are between [-180, 180] animations don't take the shortest
 // path, for instance when going from longitude 170 to -170 it will pass through
 // zero whereas what the user really want is an animation from 170 to 190.
@@ -20,6 +21,7 @@ double angle_diff_for_shortest_path(double from, double to)
     if (diff < -lm::PI) diff += 2 * lm::PI;
     return diff;
 }
+
 } // namespace
 
 Animation make_animation_around_target(
@@ -32,7 +34,8 @@ Animation make_animation_around_target(
         from.bearing,  angle_diff_for_shortest_path(from.bearing, to_bearing),
         from.tilt,     to_tilt - from.tilt,
         from.distance, to_dist - from.distance,
-        from.target};
+        from.target
+    };
 }
 
 LinearAnimation make_linear_animation(const lm::ddual_quat& from, const lm::ddual_quat& to)

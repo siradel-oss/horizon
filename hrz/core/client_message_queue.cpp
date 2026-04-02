@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 struct ClientMessageQueue
 {
     std::queue<hrz_proto::TypedMessage> messages;
@@ -16,6 +17,7 @@ struct ClientMessageQueue
 
 namespace client_message_queue
 {
+
 ClientMessageQueue* create()
 {
     auto queue = new ClientMessageQueue();

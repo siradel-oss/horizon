@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_tilejson_task(
     const std::string_view& url,
     const hrz::HttpHeaders& headers,
@@ -193,4 +194,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<VectorDataLoader::Tas
 {
     // No-op
 }
+
 } // namespace hrz

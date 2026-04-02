@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 /**
  * Stores some data and observes modifications applied to it.
  * It's basically an automatic dirty flag.
@@ -26,7 +27,7 @@ public:
     {
     }
 
-    constexpr const T* operator->() const { return &_data; }
+    constexpr const T* operator ->() const { return &_data; }
 
     void mutate(hrz::function_ref<void(T&)> fn)
     {

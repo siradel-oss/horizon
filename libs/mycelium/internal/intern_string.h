@@ -9,6 +9,7 @@
 
 namespace my
 {
+
 class InternString
 {
     Arena _arena{1024 * 1024};

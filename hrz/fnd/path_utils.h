@@ -5,6 +5,7 @@
 
 namespace hrz::path
 {
+
 // All paths must use forward slashes.
 // Consecutive slashes are considered as a single one.
 // The _s variants don't allocate memory, so are more lighweight, but the

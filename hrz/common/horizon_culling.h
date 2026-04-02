@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 class HorizonCuller
 {
     lm::dvec3 _eye_pos;
@@ -20,11 +21,12 @@ public:
 
     bool is_occluded(lm::dvec3 position) const;
 
-    constexpr bool operator==(const HorizonCuller& other) const = default;
+    constexpr bool operator ==(const HorizonCuller& other) const = default;
 };
 
 namespace horizon_culling
 {
+
 // Return a point whose occlusion by the horizon implies the occlusion of the whole volume.
 // Such a point does not always exist, in which case it should be considered that the volume
 // can never be fully occluded by the horizon.

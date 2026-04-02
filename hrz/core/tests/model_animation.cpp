@@ -9,17 +9,21 @@ TEST(AnimationPlayer, animation_valid)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 0,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 0,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     EXPECT_TRUE(anim.is_valid());
 }
@@ -28,17 +32,21 @@ TEST(AnimationPlayer, animation_invalid_sampler)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 2,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 2,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     EXPECT_FALSE(anim.is_valid());
 }
@@ -47,17 +55,21 @@ TEST(AnimationPlayer, animation_not_enough_keyframes)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 2,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 2,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     EXPECT_FALSE(anim.is_valid());
 }
@@ -66,17 +78,21 @@ TEST(AnimationPlayer, animation_not_enough_keyframes_2)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::CubicSpline,
-        .timestamps = {0.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::CubicSpline,
+            .timestamps = {0.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 2,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 2,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     EXPECT_FALSE(anim.is_valid());
 }
@@ -85,21 +101,22 @@ TEST(AnimationPlayer, animation_not_enough_values)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::CubicSpline,
-        .timestamps = {0.0F, 1.0F},
-        .values =
-            {
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::CubicSpline,
+            .timestamps = {0.0F, 1.0F},
+            .values = {
                 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
                 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
             },
-    });
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 2,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Rotation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 2,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Rotation,
+        });
 
     EXPECT_FALSE(anim.is_valid());
 }
@@ -108,17 +125,21 @@ TEST(AnimationPlayer, sampler_set_time_linear)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 0,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 0,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     AnimationPlayer player(anim);
 
@@ -158,17 +179,21 @@ TEST(AnimationPlayer, sampler_set_time_step)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Step,
-        .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Step,
+            .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 0,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 0,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     AnimationPlayer player(anim);
 
@@ -208,17 +233,21 @@ TEST(AnimationPlayer, sampler_advance_time)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 0,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 0,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     AnimationPlayer player(anim);
 
@@ -260,17 +289,21 @@ TEST(AnimationPlayer, sampler_advance_time_backwards)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
-        .values = {0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {0.0F, 1.0F, 2.0F, 3.0F},
+            .values = {
+                0.0F, 1.0F, 2.0F, 10.0F, 11.0F, 12.0F, 20.0F, 21.0F, 22.0F, 30.0F, 31.0F, 32.0F
+            },
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 0,
-        .target_id = 8,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 0,
+            .target_id = 8,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     AnimationPlayer player(anim);
 
@@ -312,29 +345,33 @@ TEST(AnimationPlayer, multiple_samplers)
 {
     Animation anim;
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {1.0F, 3.0F},
-        .values = {0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {1.0F, 3.0F},
+            .values = {0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F},
+        });
 
-    anim.samplers.push_back(Animation::Sampler{
-        .interpolation = AnimationInterpolation::Linear,
-        .timestamps = {0.0F, 4.0F},
-        .values = {0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F},
-    });
+    anim.samplers.push_back(
+        Animation::Sampler{
+            .interpolation = AnimationInterpolation::Linear,
+            .timestamps = {0.0F, 4.0F},
+            .values = {0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F},
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 0,
-        .target_id = 0,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 0,
+            .target_id = 0,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
-    anim.channels.push_back(Animation::Channel{
-        .sampler = 1,
-        .target_id = 1,
-        .target_property = AnimationTargetProperty::Translation,
-    });
+    anim.channels.push_back(
+        Animation::Channel{
+            .sampler = 1,
+            .target_id = 1,
+            .target_property = AnimationTargetProperty::Translation,
+        });
 
     AnimationPlayer player(anim);
 

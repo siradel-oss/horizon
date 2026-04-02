@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_untiled_vector_data_task(
     const LayerModelRef& layer_model,
     uint32_t data_source)
@@ -200,8 +201,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadUntiledVect
 }
 
 template<>
-bool VectorDataLoader::unload_task_data_if_not_needed<
-    VectorDataLoader::Task::LoadUntiledVectorData>()
+bool VectorDataLoader::
+    unload_task_data_if_not_needed<VectorDataLoader::Task::LoadUntiledVectorData>()
 {
     // We don't want to unload untiled vector data even when it's not used because
     // it could lead to the source data file being reloaded multiple times, and
@@ -212,11 +213,8 @@ bool VectorDataLoader::unload_task_data_if_not_needed<
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::LoadUntiledVectorData>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::LoadUntiledVectorData& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::LoadUntiledVectorData
+>(WeakTaskRef& task_ref, Task& task, Task::LoadUntiledVectorData& task_data, JobScheduler* js)
 {
     const auto& layer_model = task_data.layer_model.value();
 
@@ -240,4 +238,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<
         }
     }
 }
+
 } // namespace hrz

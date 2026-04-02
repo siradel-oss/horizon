@@ -9,6 +9,7 @@
 
 namespace
 {
+
 enum
 {
     MaxCascadeCount = HRZ_S_MAX_SUN_CASCADES,
@@ -21,10 +22,12 @@ static constexpr const char* SHADOW_MAP_NAMES[MaxCascadeCount] = {
     "sm_sun_far",
     "sm_sun_really_far",
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct ShadowsSystem
 {
     uint32_t cascade_count;
@@ -50,6 +53,7 @@ struct ShadowsSystem
 
 namespace shadows
 {
+
 void get_shadow_map_names(const ShadowsSystem* sys, const char* names[MaxCascadeCount])
 {
     for (size_t i = 0; i < MaxCascadeCount; ++i)
@@ -96,18 +100,18 @@ void update(
     bool must_recompute_frusta = false;
 
     {
-        float near_shadows = near_far.x * 0.9f;
-        float far_shadows = near_far.y * 1.1f;
+        float near_shadows = near_far.x * 0.9F;
+        float far_shadows = near_far.y * 1.1F;
 
         // Degenerate case, use default values
         if (near_shadows >= far_shadows)
         {
-            near_shadows = 1.0f;
-            far_shadows = 5000.0f;
+            near_shadows = 1.0F;
+            far_shadows = 5000.0F;
         }
 
-        near_shadows = std::max(1.0f, near_shadows);
-        far_shadows = std::min(5000.0f, far_shadows);
+        near_shadows = std::max(1.0F, near_shadows);
+        far_shadows = std::min(5000.0F, far_shadows);
 
         if (near_shadows != sys->near_plane || far_shadows != sys->far_plane)
         {

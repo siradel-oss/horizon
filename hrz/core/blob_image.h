@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 struct GpuResourceContext;
 
 my::ResourceHandle to_gpu(
@@ -17,4 +18,5 @@ my::ResourceHandle to_gpu(
     bool allow_allocation_failure,
     const monitoring::ResourceOwner& resource_owner,
     std::initializer_list<std::pair<MetadataString, MetadataString>> metadata = {});
+
 } // namespace hrz

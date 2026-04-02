@@ -3,6 +3,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_all_attributes_task(
     const LayerModelRef& layer_model,
     const FeatureSelection& feature_selection)
@@ -188,20 +189,18 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadAllAttribut
 }
 
 template<>
-bool VectorDataLoader::unload_task_data_if_not_needed<
-    VectorDataLoader::Task::LoadAllAttributeValues>()
+bool VectorDataLoader::
+    unload_task_data_if_not_needed<VectorDataLoader::Task::LoadAllAttributeValues>()
 {
     return true;
 }
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::LoadAllAttributeValues>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::LoadAllAttributeValues& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::LoadAllAttributeValues
+>(WeakTaskRef& task_ref, Task& task, Task::LoadAllAttributeValues& task_data, JobScheduler* js)
 {
     // No-op
 }
+
 } // namespace hrz

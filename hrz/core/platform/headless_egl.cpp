@@ -1,4 +1,3 @@
-
 #include "hrz/core/platform/platform.h"
 
 #include <glad/egl.h>
@@ -13,6 +12,7 @@ extern "C"
 
 namespace hrz
 {
+
 struct PlatformContext
 {
     EGLDisplay display;
@@ -26,6 +26,7 @@ struct PlatformContext
 
 namespace platform
 {
+
 PlatformContext* initialize(
     bool disable_events_capture,
     void* wsi_instance,
@@ -77,7 +78,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
     }
 
     const EGLint context_attribs[] = {
-        EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 3, EGL_NONE};
+        EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 3, EGL_NONE
+    };
 
     EGLContext gl_ctx =
         eglCreateContext(ctx->display, ctx->config, EGL_NO_CONTEXT, context_attribs);
@@ -171,9 +173,10 @@ void add_key_bypassing_focus(PlatformContext*, hrz::platform::Event::Key) {}
 
 float get_current_device_pixel_ratio(const PlatformContext* ctx)
 {
-    return 1.0f;
+    return 1.0F;
 }
 
 void viewport_dev_ui(PlatformContext* ctx, mu_Context* ui) {}
+
 } // namespace platform
 } // namespace hrz

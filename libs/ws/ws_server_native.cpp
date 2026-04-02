@@ -8,29 +8,30 @@ using RawServer = websocketpp::server<websocketpp::config::asio>;
 struct OpenHandlerServer
 {
     ws::Server* server;
-    void operator()(websocketpp::connection_hdl con);
+    void operator ()(websocketpp::connection_hdl con);
 };
 
 struct CloseHandlerServer
 {
     ws::Server* server;
-    void operator()(websocketpp::connection_hdl con);
+    void operator ()(websocketpp::connection_hdl con);
 };
 
 struct ValidateHandlerServer
 {
     ws::Server* server;
-    bool operator()(websocketpp::connection_hdl con);
+    bool operator ()(websocketpp::connection_hdl con);
 };
 
 struct MessageHandlerServer
 {
     ws::Server* server;
-    void operator()(websocketpp::connection_hdl, RawServer::message_ptr msg);
+    void operator ()(websocketpp::connection_hdl, RawServer::message_ptr msg);
 };
 
 namespace ws
 {
+
 struct Server
 {
     std::unique_ptr<RawServer> raw;
@@ -55,12 +56,12 @@ struct Server
 
 } // namespace ws
 
-bool ValidateHandlerServer::operator()(websocketpp::connection_hdl con)
+bool ValidateHandlerServer::operator ()(websocketpp::connection_hdl con)
 {
     return server->accepting_connection;
 }
 
-void OpenHandlerServer::operator()(websocketpp::connection_hdl con)
+void OpenHandlerServer::operator ()(websocketpp::connection_hdl con)
 {
     assert(server->accepting_connection);
     server->accepting_connection = false;
@@ -68,7 +69,7 @@ void OpenHandlerServer::operator()(websocketpp::connection_hdl con)
     server->connection = con;
 }
 
-void CloseHandlerServer::operator()(websocketpp::connection_hdl con)
+void CloseHandlerServer::operator ()(websocketpp::connection_hdl con)
 {
     assert(!server->accepting_connection);
     server->accepting_connection = true;
@@ -76,7 +77,7 @@ void CloseHandlerServer::operator()(websocketpp::connection_hdl con)
     server->connection.reset();
 }
 
-void MessageHandlerServer::operator()(websocketpp::connection_hdl, RawServer::message_ptr msg)
+void MessageHandlerServer::operator ()(websocketpp::connection_hdl, RawServer::message_ptr msg)
 {
     if (msg->get_opcode() == websocketpp::frame::opcode::text
         || msg->get_opcode() == websocketpp::frame::opcode::binary)

@@ -1,28 +1,94 @@
 module(name = "horizon")
 
-bazel_dep(name = "bazel_skylib", version = "1.8.2")
-bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "aspect_bazel_lib", version = "2.21.2")
-bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "bazel_features", version = "1.37.0")
-bazel_dep(name = "rules_python", version = "1.6.3")
-bazel_dep(name = "rules_cc", version = "0.1.1")
+#--------------------------------------------------------
+# Bazel rules
+#--------------------------------------------------------
 
-# @Todo Remove this once https://github.com/bazelbuild/rules_cc/pull/363 is merged and possibly
-# a new release of rules_cc is made.
-archive_override(
-    module_name = "rules_cc",
-    integrity = "sha256-cS13hosxUt1hjE1k+q3e/MWWX5D13m5t0dXdzQvoLUI=",
-    patches = [
-        "//third_party:patches/rules_cc_clang_cl_dumpbin.patch",
-    ],
-    strip_prefix = "rules_cc-0.1.1",
-    urls = [
-        "https://github.com/bazelbuild/rules_cc/releases/download/0.1.1/rules_cc-0.1.1.tar.gz",
-    ],
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "bazel_features", version = "1.43.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "bazel_lib", version = "3.2.0")
+bazel_dep(name = "rules_pkg", version = "1.1.0")
+
+# @Todo Once https://github.com/bazelbuild/rules_cc/pull/363 is merged and possibly
+# a new release of rules_cc is made we can stop using our custom patched version.
+bazel_dep(name = "rules_cc", version = "0.2.17.hrz.1")
+bazel_dep(name = "rules_python", version = "1.8.5")
+bazel_dep(name = "rules_nodejs", version = "6.7.3")
+bazel_dep(name = "aspect_rules_ts", version = "3.8.5")
+bazel_dep(name = "aspect_rules_js", version = "3.0.1")
+
+#--------------------------------------------------------
+# Libraries & tools
+#--------------------------------------------------------
+
+bazel_dep(name = "zlib", version = "1.3.1.bcr.8")
+bazel_dep(name = "curl", version = "8.11.0.hrz.1")
+bazel_dep(name = "protobuf", version = "34.0.bcr.1")
+bazel_dep(name = "abseil-cpp", version = "20250814.1")
+bazel_dep(name = "stb", version = "20251026.hrz.1")
+bazel_dep(name = "emsdk", version = "5.0.4.hrz.3")
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
+bazel_dep(name = "brotli", version = "1.2.0.hrz.2")
+bazel_dep(name = "fmt", version = "12.1.0")
+bazel_dep(name = "lz4", version = "1.10.0.hrz.1")
+bazel_dep(name = "pugixml", version = "1.15.hrz.1")
+bazel_dep(name = "earcut", version = "2.2.4.hrz.1")
+bazel_dep(name = "libwebp", version = "1.6.0.hrz.1")
+bazel_dep(name = "asio", version = "1.28.2.hrz.1")
+bazel_dep(name = "websocketpp", version = "0.8.2.hrz.1")
+bazel_dep(name = "harfbuzz", version = "12.1.0.hrz.2")
+bazel_dep(name = "zstd", version = "1.60.basisu.hrz.1")
+bazel_dep(name = "basisu", version = "1.60.hrz.1")
+bazel_dep(name = "cdt", version = "1.4.4.hrz.1")
+bazel_dep(name = "delabella", version = "2.0.hrz.1")
+bazel_dep(name = "rapidjson", version = "1.2.1.hrz.1")
+bazel_dep(name = "microui", version = "2.02.hrz.1")
+bazel_dep(name = "sokol", version = "20220629.hrz.1")
+bazel_dep(name = "dear_imgui", version = "20220228.hrz.1")
+bazel_dep(name = "portable_file_dialogs", version = "20220316.hrz.1")
+bazel_dep(name = "msdfgen", version = "1.12.1.hrz.1")
+bazel_dep(name = "pcg_basic", version = "20141018.hrz.1")
+bazel_dep(name = "etcpak", version = "2.0.hrz.1")
+bazel_dep(name = "woff2", version = "20231107.hrz.1")
+bazel_dep(name = "draco", version = "1.5.7.hrz.1")
+bazel_dep(name = "glslang_prebuilt", version = "16.2.0.hrz.1")
+bazel_dep(name = "clang_format_prebuilt", version = "22.1.1.hrz.1")
+
+http_download = use_extension("//tools/bazel:http_download_extension.bzl", "http_download")
+http_download.file(
+    name = "buildifier_windows",
+    executable = True,
+    file_name = "buildifier.exe",
+    integrity = "sha256-9Oy5xz3ivDi4RdTuJ2aPYkjEgTpmR9tLSTGnVWBS5OE=",
+    url = "https://github.com/bazelbuild/buildtools/releases/download/v8.5.1/buildifier-windows-amd64.exe",
+)
+http_download.file(
+    name = "buildifier_linux",
+    executable = True,
+    file_name = "buildifier",
+    integrity = "sha256-iHN3/GTSOoUPTRigd7XbBbGZE/S5mycNGT88czS1qac=",
+    url = "https://github.com/bazelbuild/buildtools/releases/download/v8.5.1/buildifier-linux-amd64",
+)
+http_download.file(
+    name = "copybara",
+    file_name = "copybara.jar",
+    integrity = "sha256-/w0h/j8UxP7eHzs6U1BwVO4jdYSGwWCr+o0pY7jrQuY=",
+    url = "https://github.com/google/copybara/releases/download/v20260223/copybara_deploy.jar",
+)
+use_repo(
+    http_download,
+    "buildifier_linux",
+    "buildifier_windows",
+    "copybara",
 )
 
+#--------------------------------------------------------
+# Python setup
+#--------------------------------------------------------
+
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.defaults(python_version = "3.11")
 python.toolchain(python_version = "3.11")
 use_repo(python, "python_3_11")
 
@@ -34,14 +100,13 @@ pip.parse(
 )
 use_repo(pip, "pypi")
 
-bazel_dep(name = "aspect_rules_ts", version = "3.7.0")
+#--------------------------------------------------------
+# JS, TS, NPM
+#--------------------------------------------------------
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps(ts_version_from = "//:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
-
-bazel_dep(name = "aspect_rules_js", version = "2.5.0")
-bazel_dep(name = "rules_nodejs", version = "6.5.2")
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
 node.toolchain(node_version = "20.19.0")
@@ -53,59 +118,34 @@ use_repo(
     "nodejs_windows_amd64",
 )
 
-npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+use_repo(pnpm, "pnpm")
+
+pnpm.pnpm(pnpm_version_from = "//:package.json")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 npm.npm_translate_lock(
     name = "npm",
-    data = [
-        "//:package.json",
-        "//:pnpm-workspace.yaml",
-
-        # This must match the content of the pnpm-workspace.yaml file.
-        "//apps/web_example:package.json",
-        "//hrz/ts_protocol:package.json",
-        "//hrz/ts_api:package.json",
-        "//hrz/ts_core:package.json",
-        "//hrz/ts_monitoring_protocol:package.json",
-        "//hrz/ts_scene_dump:package.json",
-        "//hrz/doc:package.json",
-        "//hrz/doc/common:package.json",
-        "//hrz/doc/gallery:package.json",
-    ],
     npm_package_target_name = "npm_pkg",
     npmrc = "//:.npmrc",
     pnpm_lock = "//:pnpm-lock.yaml",
 )
 use_repo(npm, "npm")
 
-# @Todo(1211) Somehow automatically mirror these.
-# We probably need a new type of deps in the dependencies management system.
-
-include("//tools/bazel:deps.MODULE.bazel")
-
-bazel_dep(name = "protobuf", version = "32.1")
-
-
-bazel_dep(name = "abseil-cpp", version = "20250814.1")
-
-
-bazel_dep(name = "emsdk")
-archive_override(
-    module_name = "emsdk",
-    integrity = "sha256-JBQvVQapnat1sYzOzy46I7TiQ/pvrBtsILIIG7T7yMU=",
-    strip_prefix = "emsdk-4.0.14/bazel",
-    urls = [
-        "https://github.com/emscripten-core/emsdk/archive/refs/tags/4.0.14.tar.gz",
-    ],
-)
+#--------------------------------------------------------
+# Emscripten setup
+#--------------------------------------------------------
 
 emsdk_deps = use_extension("@emsdk//:emscripten_deps.bzl", "emscripten_deps")
-emsdk_deps.config(version = "4.0.14")
+emsdk_deps.config(version = "5.0.4")
+
+#--------------------------------------------------------
+# Non-dependencies stuff
+#--------------------------------------------------------
 
 register_toolchains(
-    "//:glslc_core_windows_toolchain",
-    "//:glslc_core_linux_toolchain",
-    "//:glslc_es_windows_toolchain",
-    "//:glslc_es_linux_toolchain",
+    "//:glsl_core_toolchain",
+    "//:glsl_es_toolchain",
 )
 
 make_versions_list = use_repo_rule("//hrz/protocol/history:make_versions_list.bzl", "make_versions_list")

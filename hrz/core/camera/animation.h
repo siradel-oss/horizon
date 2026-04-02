@@ -9,6 +9,7 @@
 
 namespace hrz::camera
 {
+
 inline double easing_in(double t, double p)
 {
     assert(p >= 0.0);
@@ -49,17 +50,18 @@ struct LinearAnimation
     double lon_0, lon_diff;
     double alt_0, alt_diff;
 
-    lm::ddual_quat operator()(double t) const
+    lm::ddual_quat operator ()(double t) const
     {
-        return to_dual_quat(Pose{
-            GeoPosition3{
-                lat_0 + t * lat_diff,
-                lon_0 + t * lon_diff,
-                alt_0 + t * alt_diff,
-            },
-            bearing_0 + t * bearing_diff,
-            tilt_0 + t * tilt_diff,
-        });
+        return to_dual_quat(
+            Pose{
+                GeoPosition3{
+                    lat_0 + t * lat_diff,
+                    lon_0 + t * lon_diff,
+                    alt_0 + t * alt_diff,
+                },
+                bearing_0 + t * bearing_diff,
+                tilt_0 + t * tilt_diff,
+            });
     }
 };
 
@@ -70,14 +72,15 @@ struct AroundTargetAnimation
     double dist_0, dist_diff;
     hrz::GeoPosition3 target;
 
-    lm::ddual_quat operator()(double t) const
+    lm::ddual_quat operator ()(double t) const
     {
-        return to_dual_quat(AngularViewpoint{
-            target,
-            dist_0 + t * dist_diff,
-            bearing_0 + t * bearing_diff,
-            tilt_0 + t * tilt_diff,
-        });
+        return to_dual_quat(
+            AngularViewpoint{
+                target,
+                dist_0 + t * dist_diff,
+                bearing_0 + t * bearing_diff,
+                tilt_0 + t * tilt_diff,
+            });
     }
 };
 
@@ -102,7 +105,7 @@ struct ArcAnimation
         return h_arc - h_path;
     }
 
-    lm::ddual_quat operator()(double t) const
+    lm::ddual_quat operator ()(double t) const
     {
         lm::ddual_quat target = target_animation(t);
         lm::dvec3 forward = target.r * lm::dvec3(0, 0, -1);

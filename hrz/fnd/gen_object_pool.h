@@ -20,6 +20,7 @@
 
 namespace hrz
 {
+
 /**
  * Object pool using generational indices for lookup.
  * It is recommended to always lookup objects by handle, except in
@@ -35,7 +36,8 @@ namespace hrz
 template<
     typename T,
     typename IndexPool = GenIndexPool<uint32_t, 16, 16>,
-    uint32_t ChunkSize = 128> // Number of objects per allocated chunk
+    uint32_t ChunkSize = 128
+> // Number of objects per allocated chunk
 class GenObjectPool
 {
     static_assert(ChunkSize > 0, "ChunkSize non-zero");
@@ -63,7 +65,7 @@ private:
         {
         }
 
-        Chunk& operator=(Chunk&& other)
+        Chunk& operator =(Chunk&& other)
         {
             if (&other != this)
             {
@@ -141,7 +143,7 @@ public:
     {
     }
 
-    GenObjectPool& operator=(GenObjectPool&& other)
+    GenObjectPool& operator =(GenObjectPool&& other)
     {
         if (&other != this)
         {

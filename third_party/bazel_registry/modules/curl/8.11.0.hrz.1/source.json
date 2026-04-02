@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/curl/curl/releases/download/curl-8_11_0/curl-8.11.0.tar.gz",
+  "integrity": "sha256-JkU32Q5Y0rCd3cUJRLrzw45wiRUciYZxXiquqvK4EY8=",
+  "strip_prefix": "curl-8.11.0",
+  "overlay": {
+    "BUILD.bazel": "sha256-zqMyHrQhwIDvR5LH6K5bmpko4uRZUOsg/5xuBP7U/WU=",
+    "MODULE.bazel": "sha256-Ssfuq7Vo20R5GCMY4hoGbhV9uqLuuzjSjkfY8uRN734="
+  }
+}

@@ -10,12 +10,14 @@
 
 namespace hrz
 {
+
 struct ViewshedsSystem;
 struct CameraViewInfo;
 struct RenderView;
 
 namespace viewsheds
 {
+
 static const char* const VIEWSHED_SHADOW_MAP_SAMPLER_NAMES[] = {
     "hrz_viewshed_shadow_map[0]", "hrz_viewshed_shadow_map[1]", "hrz_viewshed_shadow_map[2]",
     "hrz_viewshed_shadow_map[3]", "hrz_viewshed_shadow_map[4]", "hrz_viewshed_shadow_map[5]",

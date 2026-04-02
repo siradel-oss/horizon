@@ -1,0 +1,11 @@
+{
+  "url": "https://github.com/lz4/lz4/releases/download/v1.10.0/lz4-1.10.0.tar.gz",
+  "integrity": "sha256-U3USkEdEs14jKRIFXM+Oxm12hjn/Or5XiNkNeS7F9Is=",
+  "strip_prefix": "lz4-1.10.0",
+  "overlay": {
+    "BUILD.bazel": "sha256-bwJ4h26ikjOutKDv9Pp9RjS0ijerfRhtmma/UuDOYEc=",
+    "MODULE.bazel": "sha256-zYVQbhEsNIZZngYum0Idv7v4yzUEaAvRSxe5QPmoeAA=",
+    "programs/BUILD.bazel": "sha256-6fGZGoIm1acmBketv1jTlVLMA+T85mTsinoZaBNxwvs="
+  },
+  "patch_strip": 0
+}

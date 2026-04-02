@@ -17,6 +17,7 @@
 
 namespace hrz::planet
 {
+
 class TileDecoder
 {
 public:
@@ -251,7 +252,8 @@ public:
         }
         return {
             assets_loader::get_blob(al, ba, std::bit_cast<assets_loader::Ticket>(ticket)),
-            std::string(mime_type)};
+            std::string(mime_type)
+        };
     }
 
     bool set_http_headers(const HttpHeaders& http_headers) override

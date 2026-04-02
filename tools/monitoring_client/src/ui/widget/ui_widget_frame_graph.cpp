@@ -9,6 +9,7 @@
 
 namespace
 {
+
 using namespace ui::helpers;
 
 uint32_t _get_frame_color(int render_types)
@@ -264,10 +265,12 @@ FrameRender _get_merged_frames_render(std::span<const FrameRender> frames)
     result.min = min.value_or(result.value);
     return result;
 }
+
 } // namespace
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 FrameGraph::FrameGraph() : _view({{0.0, 0.0}, {120.0, 75.0}}, false, true)
@@ -315,9 +318,8 @@ void FrameGraph::draw(
     std::vector<FrameFilter> filters = {
         {"Visual", [](const data::Frame& f) { return f.render_types & data::Frame::VisualRender; },
          &_show_visual_frames},
-        {"Picking",
-         [](const data::Frame& f) { return f.render_types & data::Frame::PickingRender; },
-         &_show_picking_frames},
+        {"Picking", [](const data::Frame& f)
+         { return f.render_types & data::Frame::PickingRender; }, &_show_picking_frames},
         {"Planet Feedback",
          [](const data::Frame& f) { return f.render_types & data::Frame::PlanetFeedbackRender; },
          &_show_planet_feedback_frames},

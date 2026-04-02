@@ -4,6 +4,7 @@ static bool g_flag_values[(int)hrz::Flag::_FlagCount] = {};
 
 namespace hrz
 {
+
 void set_flag(Flag flag, bool value)
 {
     g_flag_values[(int)flag] = value;

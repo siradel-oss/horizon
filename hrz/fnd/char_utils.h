@@ -2,6 +2,7 @@
 
 namespace hrz
 {
+
 // Non-locale-dependent functions
 
 constexpr inline bool is_ascii_digit(const char c)
@@ -39,4 +40,5 @@ constexpr inline int ascii_to_lower(int c)
     if (c >= 'A' && c <= 'Z') return c + 'a' - 'A';
     return c;
 }
+
 } // namespace hrz

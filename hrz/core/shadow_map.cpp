@@ -13,6 +13,7 @@
 
 namespace hrz::shadow_map
 {
+
 void ShadowMapPass::set_enabled(bool enabled)
 {
     _enabled = enabled;
@@ -196,11 +197,13 @@ void ShadowMapPass::execute_timed(const my::RenderGraph::ExecutionContext& ctx)
 
     my::UboBinding ubo_binding{
         hrz::UboView, _view_ubos.get_for_gpu(), (uint32_t)(_ubo_aligned_size * ctx.invocation),
-        sizeof(AuxViewUniformData)};
+        sizeof(AuxViewUniformData)
+    };
     ctx.binder->bind({&ubo_binding, 1});
 
     my::TextureBinding texture_binding = {
-        hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler};
+        hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler
+    };
     ctx.binder->bind({&texture_binding, 1});
 
     static const my::Renderer::BinMask pass_masks[] = {

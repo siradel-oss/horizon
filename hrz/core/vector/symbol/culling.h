@@ -12,6 +12,7 @@
 
 namespace hrz
 {
+
 struct SymbolCullingSystem;
 struct Render;
 struct JobScheduler;
@@ -19,6 +20,7 @@ struct RenderViewInfo;
 
 namespace symbol_culling
 {
+
 struct GroupInfo
 {
     hrz::BSphere<double> culling_bsphere;

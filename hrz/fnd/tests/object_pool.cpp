@@ -6,6 +6,7 @@ using namespace hrz;
 
 namespace
 {
+
 struct DestructorWatcher
 {
     bool* destroyed;

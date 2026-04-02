@@ -6,6 +6,7 @@
 
 namespace
 {
+
 using namespace hrz;
 
 TEST(BaseUrl, empty)
@@ -183,4 +184,5 @@ TEST(BaseUrl, derive_base)
             base2.derive("index.html?key3=value3", true));
     }
 }
+
 } // namespace

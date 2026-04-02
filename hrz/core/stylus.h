@@ -4,10 +4,12 @@
 
 namespace hrz
 {
+
 struct StylusSystem;
 
 namespace stylus
 {
+
 /**
  * Creates a stylus system.
  *
@@ -35,5 +37,6 @@ bool handle_platform_event(StylusSystem*, const platform::Event&);
  * Removes the oldest element from the queue and returns it. The event returned _is_ a mouse event.
  */
 bool dequeue_event(StylusSystem*, platform::Event&);
+
 } // namespace stylus
 } // namespace hrz

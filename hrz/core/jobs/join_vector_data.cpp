@@ -36,6 +36,7 @@ namespace hrz_jobs::join_vector_data
 {
 namespace
 {
+
 hrz::vector_data::VectorTileGeometry::Feature make_empty_feature()
 {
     hrz::vector_data::VectorTileGeometry::Feature feature;
@@ -276,6 +277,7 @@ hrz_jobs::JobResult match_feature_counts(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace
 
 hrz_jobs::JobResult run(
@@ -312,4 +314,5 @@ hrz_jobs::JobResult run(
 
     return res;
 }
+
 } // namespace hrz_jobs::join_vector_data

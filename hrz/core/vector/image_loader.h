@@ -10,6 +10,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct JobScheduler;
@@ -17,10 +18,12 @@ struct Render;
 
 namespace vt
 {
+
 struct ImageLoader;
 
 namespace image_loader
 {
+
 using ImageH = uint32_t;
 
 enum class ImageStatus
@@ -53,6 +56,7 @@ Texture get_image_texture(ImageLoader*, ImageH);
 
 void work(ImageLoader*, AssetsLoader*, BlobAllocator*, JobScheduler*);
 void work_gpu(ImageLoader*, Render*);
+
 } // namespace image_loader
 } // namespace vt
 } // namespace hrz

@@ -52,7 +52,7 @@ using devoid_t = select_t<T, const empty, std::is_void_v<T>>;
 template<typename... Ts>
 struct overload : Ts...
 {
-    using Ts::operator()...;
+    using Ts::operator ()...;
 };
 
 template<typename... Ts>

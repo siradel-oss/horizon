@@ -1,12 +1,11 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:protobufjs-cli/package_json.bzl", pbjs_bin = "bin")
 load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
-load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
 load("//tools/bazel:utils.bzl", "merge_dicts")
 
 package(default_visibility = ["//visibility:public"])
@@ -21,7 +20,7 @@ pbjs_bin.pbjs(
         "//hrz/monitoring:proto",
     ],
     outs = [
-        "dist/hrz_monitoring_protocol_unpatched.js",
+        "src/hrz_monitoring_protocol_unpatched.js",
     ],
     args = [
         "--es6",
@@ -39,23 +38,23 @@ pbjs_bin.pbjs(
 
 expand_template(
     name = "replace_in_hrz_monitoring_protocol_js",
-    out = "dist/hrz_monitoring_protocol.js",
+    out = "src/hrz_monitoring_protocol.js",
     substitutions = {
         "protobufjs/minimal": "protobufjs/minimal.js",
     },
-    template = "dist/hrz_monitoring_protocol_unpatched.js",
+    template = "src/hrz_monitoring_protocol_unpatched.js",
 )
 
 pbjs_bin.pbts(
     name = "generate_ts",
     srcs = [
-        "dist/hrz_monitoring_protocol.js",
+        "src/hrz_monitoring_protocol.js",
     ],
     outs = [
-        "dist/hrz_monitoring_protocol_unpatched.d.ts",
+        "src/hrz_monitoring_protocol_unpatched.d.ts",
     ],
     args = [
-        "$(location dist/hrz_monitoring_protocol.js)",
+        "$(location src/hrz_monitoring_protocol.js)",
         "-o",
         "$@",
     ],
@@ -64,30 +63,22 @@ pbjs_bin.pbts(
 
 expand_template(
     name = "fix_import_in_ts",
-    out = "dist/hrz_monitoring_protocol.d.ts",
+    out = "src/hrz_monitoring_protocol.d.ts",
     substitutions = {
         'import Long = require("long");': 'import Long from "long";',
     },
-    template = "dist/hrz_monitoring_protocol_unpatched.d.ts",
-)
-
-structured_files_copy(
-    name = "src_copies",
-    files = {
-        "": ["src/index.ts"],
-    },
-    output_dir = "dist",
+    template = "src/hrz_monitoring_protocol_unpatched.d.ts",
 )
 
 ts_project(
     name = "ts_lib",
     srcs = [
-        ":fix_import_in_ts",
-        ":src_copies",
+        "src/hrz_monitoring_protocol.d.ts",
+        "src/index.ts",
     ],
     declaration = True,
     out_dir = "dist",
-    root_dir = "dist",
+    root_dir = "src",
     tsconfig = merge_dicts(
         TSCONFIG,
         {
@@ -110,28 +101,30 @@ package_json(
     version = PACKAGE_JSON_HRZ_VERSION,
 )
 
-copy_file(
-    name = "license",
-    src = "//:LICENSE",
-    out = "dist-root/LICENSE",
+structured_files_copy(
+    name = "pkg_copy",
+    files = {
+        "dist": [
+            ":ts_lib",
+            ":ts_lib_types",
+            "src/hrz_monitoring_protocol.js",
+            "src/hrz_monitoring_protocol.d.ts",
+        ],
+        "": [
+            "//:LICENSE",
+            ":package_json",
+        ],
+    },
+    output_dir = "dist_pkg",
 )
 
 npm_package(
     name = "npm_pkg",
     srcs = [
-        "dist/hrz_monitoring_protocol.js",
-        ":license",
-        ":package_json",
-        ":ts_lib",
-    ],
-    include_srcs_patterns = [
-        "**/LICENSE",
-        "**/*.json",
-        "**/*.js",
-        "**/*.d.ts",
+        ":pkg_copy",
     ],
     replace_prefixes = {
-        "dist-root/": "",
+        "dist_pkg": "",
     },
 )
 

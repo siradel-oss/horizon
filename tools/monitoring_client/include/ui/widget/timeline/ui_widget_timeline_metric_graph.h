@@ -5,6 +5,7 @@
 
 namespace ui::widget
 {
+
 class MetricGraph : public TimelineWidget
 {
 public:

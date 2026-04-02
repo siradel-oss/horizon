@@ -229,6 +229,7 @@ static LRESULT CALLBACK MyWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 namespace platform
 {
+
 PlatformContext* initialize(
     bool disable_events_capture,
     void* wsi_instance,
@@ -434,7 +435,7 @@ void add_key_bypassing_focus(PlatformContext*, hrz::platform::Event::Key) {}
 
 float get_current_device_pixel_ratio(const PlatformContext* ctx)
 {
-    return 1.0f;
+    return 1.0F;
 }
 
 void viewport_dev_ui(PlatformContext* ctx, mu_Context* ui)

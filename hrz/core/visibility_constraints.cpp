@@ -7,6 +7,7 @@
 
 namespace hrz::layers
 {
+
 bool are_visibility_constraints_satisfied(
     const lm::dvec3& camera_ecef_pos,
     const hrz_proto::LayerVisibilityConstraintList& visibility_constraints)

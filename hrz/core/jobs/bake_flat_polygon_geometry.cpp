@@ -27,6 +27,7 @@ namespace hrz_jobs::bake_flat_polygon_geometry
 {
 namespace
 {
+
 constexpr size_t InitialVertexCapacity = 4096;
 
 double lm_dvec2_get_x(const lm::dvec2& v)
@@ -114,7 +115,8 @@ struct CdtTriangulationIterator
         auto result = std::optional<Triangle>{
             {it->vertices[0], to_lm(triangulation->vertices[it->vertices[0]]), it->vertices[1],
              to_lm(triangulation->vertices[it->vertices[1]]), it->vertices[2],
-             to_lm(triangulation->vertices[it->vertices[2]])}};
+             to_lm(triangulation->vertices[it->vertices[2]])}
+        };
 
         it++;
 
@@ -389,8 +391,8 @@ void generate_polygon_geometry(
 
                     hrz::clip_triangle<double>(
                         p0.xy, p1.xy, p2.xy, p0.z, p1.z, p2.z, tile_bounds,
-                        [&](const lm::dvec2& a, const lm::dvec2& b, const lm::dvec2& c, double az,
-                            double bz, double cz)
+                        [&](const lm::dvec2 & a, const lm::dvec2 & b, const lm::dvec2 & c,
+                            double az, double bz, double cz)
                         {
                             auto get_index = [&](const lm::dvec2& v,
                                                  double z) -> std::optional<uint32_t>

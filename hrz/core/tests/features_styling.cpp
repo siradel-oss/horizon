@@ -11,6 +11,7 @@
 
 namespace
 {
+
 class TestJobContext : public hrz_jobs::JobContext
 {
 public:
@@ -27,10 +28,12 @@ public:
 private:
     hrz::BlobAllocator* blob_allocator;
 };
+
 } // namespace
 
 namespace
 {
+
 using namespace hrz_jobs;
 using namespace hrz::style;
 using namespace hrz::vector_data;
@@ -727,7 +730,7 @@ TEST_F(FeatureStyling, set_colorize_numeric)
     lower.set_a(1);
 
     auto color_point = palette.mutable_numeric()->add_color_points();
-    color_point->set_value(0.0f);
+    color_point->set_value(0.0F);
     color_point->mutable_first_color()->CopyFrom(lower);
     color_point->mutable_second_color()->CopyFrom(lower);
 
@@ -738,7 +741,7 @@ TEST_F(FeatureStyling, set_colorize_numeric)
     upper.set_a(1);
 
     color_point = palette.mutable_numeric()->add_color_points();
-    color_point->set_value(100.0f);
+    color_point->set_value(100.0F);
     color_point->mutable_first_color()->CopyFrom(upper);
     color_point->mutable_second_color()->CopyFrom(upper);
 
@@ -821,9 +824,9 @@ TEST_F(FeatureStyling, set_colorize_labels)
     label->mutable_color()->CopyFrom(a_color);
 
     hrz_proto::Color b_color;
-    b_color.set_r(0.5f);
-    b_color.set_g(0.5f);
-    b_color.set_b(0.5f);
+    b_color.set_r(0.5F);
+    b_color.set_g(0.5F);
+    b_color.set_b(0.5F);
     b_color.set_a(1);
 
     label = palette.mutable_label()->add_labels();
@@ -1189,7 +1192,9 @@ TEST_F(FeatureStyling, arithmetic_expressions_floats)
     };
 
     static const double attribute_values[] = {
-        0, 0, 0,
+        0,
+        0,
+        0,
         5.5, // attr("i") % 2.5
     };
 
@@ -2592,7 +2597,8 @@ TEST_F(FeatureStyling, value_or)
     OwnedAttributeValue expected[3][2] = {
         {attr_from<OwnedAttributeValue>(1000.0), attr_from<OwnedAttributeValue>("str")},
         {attr_from<OwnedAttributeValue>("hello"), attr_from<OwnedAttributeValue>("hello")},
-        {attr_from<OwnedAttributeValue>(0.0), attr_from<OwnedAttributeValue>(0.0)}};
+        {attr_from<OwnedAttributeValue>(0.0), attr_from<OwnedAttributeValue>(0.0)}
+    };
 
     for (size_t i = 0; i < data.feature_count; ++i)
     {

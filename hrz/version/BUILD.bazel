@@ -1,13 +1,14 @@
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//:version.bzl", "HRZ_VERSION")
-load("//tools/bazel:utils.bzl", "make_template")
 
-make_template(
+expand_template(
     name = "version_cpp",
-    input = "version.tpl.cpp",
-    output = "version.cpp",
+    out = "version.cpp",
     substitutions = {
         "@@VERSION@@": HRZ_VERSION,
     },
+    template = "version.tpl.cpp",
 )
 
 cc_library(

@@ -9,6 +9,7 @@
 
 namespace hrz_core
 {
+
 class HRZ_API Backend : public hrz_api::Backend
 {
 public:

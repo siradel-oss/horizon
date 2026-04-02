@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/wolfpld/etcpak/archive/refs/tags/2.0.tar.gz",
+  "strip_prefix": "etcpak-2.0",
+  "integrity": "sha256-3HobI6A5WUs9Dp0AWBp9PS70tmVq1TL37SuES9m0ujk=",
+  "overlay": {
+    "MODULE.bazel": "sha256-6vJHta1FUObMTI3lsnnJ5Bq+CDckNDNNHTNVGXK4zno=",
+    "BUILD.bazel": "sha256-bU/E5Zr/b0FzRAXiK/7S5XrxRW3cZ71z6MaS/vlfss4="
+  }
+}

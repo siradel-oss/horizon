@@ -7,6 +7,7 @@
 
 namespace hrz::camera
 {
+
 // For tilt between -pi and pi
 static constexpr double kPoseTiltLimit = lm::PI / 2 - 0.0001;
 

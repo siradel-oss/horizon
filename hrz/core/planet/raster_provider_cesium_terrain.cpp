@@ -24,6 +24,7 @@ namespace hrz::planet
 {
 namespace
 {
+
 // https://github.com/CesiumGS/quantized-mesh
 HttpHeaders build_headers(hrz_proto::HttpHeaderList header_list)
 {
@@ -150,6 +151,7 @@ private:
     std::string tile_format;
     uint64_t raster_id;
 };
+
 } // namespace
 
 bool is_provider_model_complete(const hrz_proto::CesiumTerrainRasterProviderParams& params)
@@ -343,11 +345,13 @@ private:
                 if (pattern.IsString())
                 {
                     static constexpr std::string_view kValidArgs[] = {"x", "y", "z", "version"};
-                    url_patterns.push_back(base_url.derive(fmt::format(
-                        fmt::runtime(hrz::str::sanitize_named_fmt_arguments(
-                            pattern.GetString(), kValidArgs)),
-                        fmt::arg("x", "{x}"), fmt::arg("y", "{y}"), fmt::arg("z", "{z}"),
-                        fmt::arg("version", version))));
+                    url_patterns.push_back(base_url.derive(
+                        fmt::format(
+                            fmt::runtime(
+                                hrz::str::sanitize_named_fmt_arguments(
+                                    pattern.GetString(), kValidArgs)),
+                            fmt::arg("x", "{x}"), fmt::arg("y", "{y}"), fmt::arg("z", "{z}"),
+                            fmt::arg("version", version))));
                 }
             }
         }
@@ -510,7 +514,8 @@ private:
             TileFetcher::MetricInfo{
                 provider_request_tally_metric_name(
                     hrz_proto::RasterProviderType::CESIUM_TERRAIN_RASTER_PROVIDER),
-                raw_url.c_str()});
+                raw_url.c_str()
+            });
 
         return true;
     }
@@ -670,4 +675,5 @@ std::unique_ptr<RasterProvider> create_cesium_terrain_provider(
     return std::unique_ptr<RasterProvider>(
         new CesiumProvider(params, queue, default_tile_cache_size, raster_id));
 }
+
 } // namespace hrz::planet

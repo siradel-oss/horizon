@@ -1,5 +1,7 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:defs.bzl", "py_binary")
-load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 
 cc_binary(
     name = "viewer",
@@ -26,6 +28,7 @@ cc_binary(
         "//hrz/core:hrz_core",
         "//hrz/cpp_api",
         "//hrz/fnd",
+        "//hrz/protocol/history:scene_model_version",
         "//hrz/scene_dump:migration",
         "//hrz/version",
         "//libs/argparser",
@@ -64,18 +67,32 @@ py_binary(
     ],
 )
 
-pkg_tar_aggregate(
+pkg_files(
+    name = "kit_normal_files",
+    srcs = [
+        "README.md",
+        "//:LICENSE",
+        "//hrz/core:hrz_core_shared_lib",
+        "//third_party:LICENSE-THIRD-PARTY.txt",
+    ],
+    attributes = pkg_attributes(mode = "0644"),
+)
+
+pkg_files(
+    name = "kit_executable_files",
+    srcs = [
+        ":comparator",
+        ":viewer",
+        "//tools/scene_dump:migrate_dump",
+    ],
+    attributes = pkg_attributes(mode = "0755"),
+)
+
+pkg_tar(
     name = "kit",
-    dirs = {
-        "": [
-            ":comparator",
-            ":viewer",
-            "//hrz/core:hrz_core_shared_lib",
-            "//tools/scene_dump:migrate_dump",
-            "//third_party:LICENSE-THIRD-PARTY.txt",
-            "//:LICENSE",
-            "README.md",
-        ],
-    },
+    srcs = [
+        ":kit_executable_files",
+        ":kit_normal_files",
+    ],
     extension = "tar.gz",
 )

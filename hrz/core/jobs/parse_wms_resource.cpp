@@ -15,7 +15,7 @@
 #include <fmt/format.h>
 #include <lin_maths.h>
 #include <proj_lite.h>
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <cassert>
 #include <cmath>
@@ -28,6 +28,7 @@
 
 namespace
 {
+
 // Equivalent to OpenStreetMap level 20.
 constexpr double DefaultMinScale = (hrz::MERCATOR_RANGE / (256 * (1 << 20))) / hrz::ogc::PixelSize;
 constexpr double DefaultMinScale_OldWms = (hrz::MERCATOR_RANGE / (256 * (1 << 20))) * lm::SQRT2;
@@ -592,10 +593,12 @@ void get_layers(
             layer_styles, attributions, srs_bounds, scale_denominators);
     }
 }
+
 } // namespace
 
 namespace hrz_jobs::parse_wms_resource
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::WmsResourceParams& params,
     hrz_jobs::WmsResourceResponse& response,
@@ -933,16 +936,20 @@ hrz_jobs::JobResult run(
 
         min_scale_full_image_size = {
             bounds_size.x / (scale_denominators.min_scale.value() * pixel_size),
-            bounds_size.y / (scale_denominators.min_scale.value() * pixel_size)};
+            bounds_size.y / (scale_denominators.min_scale.value() * pixel_size)
+        };
         lm::dvec2 max_scale_full_image_size = {
             bounds_size.x / (scale_denominators.max_scale.value() * pixel_size),
-            bounds_size.y / (scale_denominators.max_scale.value() * pixel_size)};
+            bounds_size.y / (scale_denominators.max_scale.value() * pixel_size)
+        };
 
         // Level with enough tiles to fit the most zoomed-in image the server can provide.
         if (std::max(min_scale_full_image_size.x, min_scale_full_image_size.y) > tile_size)
         {
-            max_level = std::ceil(std::log2(
-                std::max(min_scale_full_image_size.x, min_scale_full_image_size.y) / tile_size));
+            max_level = std::ceil(
+                std::log2(
+                    std::max(min_scale_full_image_size.x, min_scale_full_image_size.y)
+                    / tile_size));
         }
 
         // Lowest level at which the image its self (not the full tiles) is larger than
@@ -1047,4 +1054,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::parse_wms_resource

@@ -13,6 +13,7 @@ namespace hrz_jobs::bake_flat_point_geometry
 {
 namespace
 {
+
 constexpr size_t InitialVertexCapacity = 4096;
 
 void generate_points_geometry(

@@ -12,6 +12,7 @@
 
 namespace ui::widget
 {
+
 class Treemap
 {
 public:

@@ -3,6 +3,7 @@
 
 namespace
 {
+
 using namespace hrz;
 using namespace style;
 
@@ -575,8 +576,10 @@ struct LexerImpl : public Lexer
 
 namespace hrz::style
 {
+
 std::unique_ptr<Lexer> Lexer::create(std::string_view input)
 {
     return std::unique_ptr<Lexer>(new LexerImpl(input));
 }
+
 } // namespace hrz::style

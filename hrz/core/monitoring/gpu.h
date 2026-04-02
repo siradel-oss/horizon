@@ -10,6 +10,7 @@
 
 namespace hrz::monitoring
 {
+
 class GpuResourceMonitoring
 {
 public:
@@ -33,4 +34,5 @@ public:
         uint64_t layer_id) = 0;
     virtual void unregister_gpu_resource(my::ResourceHandle) = 0;
 };
+
 } // namespace hrz::monitoring

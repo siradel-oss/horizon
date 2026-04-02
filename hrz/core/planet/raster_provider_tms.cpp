@@ -4,7 +4,7 @@
 #include "hrz/core/planet/raster_provider.h"
 #include "hrz/core/planet/tile_fetcher.h"
 
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <cassert>
 #include <optional>
@@ -46,10 +46,12 @@ struct TilesetTileUrlGenerator : public hrz::TileUrlGenerator
 private:
     std::vector<std::string> tileset_urls;
 };
+
 } // namespace
 
 namespace hrz::planet
 {
+
 bool is_provider_model_complete(const hrz_proto::TmsRasterProviderParams& model)
 {
     if (model.url().empty()) return false;
@@ -230,7 +232,8 @@ public:
                         attribution::register_attribution(
                             attributions, {additional_attribution, ""}),
                         attribution::register_attribution(
-                            attributions, {response.attribution_title, response.attribution_logo})};
+                            attributions, {response.attribution_title, response.attribution_logo})
+                    };
                     auto attribution =
                         attribution::register_attribution_group(attributions, attribution_handles);
 
@@ -246,7 +249,8 @@ public:
                         TileFetcher::MetricInfo{
                             provider_request_tally_metric_name(
                                 hrz_proto::RasterProviderType::TMS_RASTER_PROVIDER),
-                            url.c_str()});
+                            url.c_str()
+                        });
 
                     geometry = std::move(response.geometry);
 

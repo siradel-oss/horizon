@@ -2,6 +2,7 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct JobScheduler;
 
@@ -17,4 +18,5 @@ struct Actor
     virtual ~Actor() = default;
     virtual ActorStatus work_async(BlobAllocator*, JobScheduler*) = 0;
 };
+
 } // namespace hrz

@@ -24,6 +24,7 @@
 
 namespace
 {
+
 constexpr uint32_t CircleResolution = 12;
 
 enum
@@ -149,7 +150,8 @@ struct RenderableFeatures : public my::Renderer::Renderable
         rb->push_state();
 
         my::UboBinding ubo_bindings[] = {
-            {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}};
+            {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}
+        };
         rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
@@ -215,7 +217,7 @@ struct TileId
     uint64_t channel_id;
     uint64_t tile_id;
 
-    constexpr bool operator==(const TileId& other) const = default;
+    constexpr bool operator ==(const TileId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TileId& request)
@@ -281,7 +283,7 @@ class CylinderReprSystem : public hrz::vt::ReprSystem
         uint64_t channel_id;
         uint64_t config_id;
 
-        constexpr bool operator==(const ConfigId& other) const = default;
+        constexpr bool operator ==(const ConfigId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ConfigId& request)
@@ -422,8 +424,8 @@ public:
         res.fragment_source = hrz_shaders::Cylinders_depth_frag;
         res.outputs = {};
         res.uniform_blocks = ubos_depth;
-        res.initial_state.rasterization.depth_bias_factor = 1.0f;
-        res.initial_state.rasterization.depth_bias_units = 1.0f;
+        res.initial_state.rasterization.depth_bias_factor = 1.0F;
+        res.initial_state.rasterization.depth_bias_units = 1.0F;
         rc->alloc(&res, hrz::monitoring::systems::Cylinders);
     }
 
@@ -449,8 +451,8 @@ public:
             float x = (float)std::cos((double)i * 2.0 * lm::PI / CircleResolution);
             float y = (float)std::sin((double)i * 2.0 * lm::PI / CircleResolution);
 
-            points.push_back(lm::vec3(x, y, 0.0f));
-            points.push_back(lm::vec3(x, y, 1.0f));
+            points.push_back(lm::vec3(x, y, 0.0F));
+            points.push_back(lm::vec3(x, y, 1.0F));
         }
 
         for (uint32_t i = 0; i < CircleResolution; ++i)
@@ -502,8 +504,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         uint64_t,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         ConfigId style_id)
     {
         if (repr.type() != hrz_proto::VectorReprType::CYLINDER_VECTOR_REPR)
@@ -873,7 +875,8 @@ public:
             {InputStreamFeatureId, instance_data_buffer, my::VertexFormat::UInt32_2,
              offsetof(Instance, feature_id), sizeof(Instance), my::VertexRate::PerInstance},
 
-            selection_storage.get_vertex_input_stream(render, InputStreamSelection)};
+            selection_storage.get_vertex_input_stream(render, InputStreamSelection)
+        };
 
         my::VertexInputResource vi_res;
         vi_res.indices = _cylinder_index_buffer;
@@ -989,9 +992,11 @@ public:
                                 },
                                 ConfigId{channel_id, message.style_id});
 
-                            channel.send(hrz::vt::repr::messages::StyleRegistrationResult{
-                                message.style_id, handle.has_value(),
-                                std::move(registered_properties)});
+                            channel.send(
+                                hrz::vt::repr::messages::StyleRegistrationResult{
+                                    message.style_id, handle.has_value(),
+                                    std::move(registered_properties)
+                                });
                         },
                         [&](const hrz::vt::repr::messages::UnregisterStyle& message)
                         {
@@ -1227,6 +1232,7 @@ public:
 
 namespace hrz::vt
 {
+
 std::unique_ptr<ReprSystem> create_cylinder_repr_system()
 {
     return std::unique_ptr<ReprSystem>(new CylinderReprSystem());
@@ -1236,4 +1242,5 @@ void collect_cylinder_shaders(hrz::GpuResourceContext* rc)
 {
     CylinderReprSystem::collect_shaders(rc);
 }
+
 } // namespace hrz::vt

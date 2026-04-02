@@ -26,6 +26,7 @@ extern "C"
 
 namespace
 {
+
 using namespace hrz;
 
 struct Worker
@@ -64,6 +65,7 @@ struct Job
 
 namespace hrz
 {
+
 struct JobScheduler
 {
     using IndexPool = GenIndexPool<job_scheduler::Ticket, 12, 20>;
@@ -84,6 +86,7 @@ namespace job_scheduler
 {
 namespace
 {
+
 struct JobStatusSetResult
 {
     bool status_changed;
@@ -199,6 +202,7 @@ void worker_func(Worker* worker, BlobAllocator* blob_allocator, FontRasterizer* 
     hrz::profiling::destroy_thread_profiler(worker->profiler);
     hrz::metrics::destroy_thread_registry(worker->metrics);
 }
+
 } // namespace
 
 JobScheduler* create(

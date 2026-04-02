@@ -11,6 +11,7 @@
 
 namespace hrz::model
 {
+
 struct RenderablePrimitive : public my::Renderer::UserDataRenderable
 {
     static constexpr size_t MaxShaderCollections = 2;

@@ -12,6 +12,7 @@ namespace hrz::vt::symbol
 {
 namespace
 {
+
 enum
 {
     PlaceholderParamsUbo = ElementCustomUboStart,
@@ -30,6 +31,7 @@ struct PlaceholderUniformData
 };
 
 HRZ_CHECK_UBO_SIZE(PlaceholderUniformData);
+
 } // namespace
 
 void PlaceholderRenderable::render_callback(
@@ -198,8 +200,8 @@ ElementSystem::PrototypeH PlaceholderElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>&)
 {
     assert(element_descriptor.type() == ElementType);
@@ -341,8 +343,8 @@ std::optional<ElementSystem::RenderableH> PlaceholderElementSystem::make_rendera
 
     auto tile_coords_str = fmt::to_string(tile_coords);
 
-    auto instance_blob =
-        std::move(std::get<hrz::BlobArray<hrz_jobs::BakedSymbols::PlaceholderInstance>>(
+    auto instance_blob = std::move(
+        std::get<hrz::BlobArray<hrz_jobs::BakedSymbols::PlaceholderInstance>>(
             baked_instances.data));
     auto instance_data = instance_blob.get_data();
 
@@ -381,7 +383,8 @@ std::optional<ElementSystem::RenderableH> PlaceholderElementSystem::make_rendera
          my::VertexRate::PerInstance},
         {AnchorIndexInputStream, instance_data_buffer, my::VertexFormat::UInt32,
          offsetof(PlaceholderInstance, anchor_index), sizeof(PlaceholderInstance),
-         my::VertexRate::PerInstance}};
+         my::VertexRate::PerInstance}
+    };
 
     my::VertexInputResource vi_res;
     vi_res.attribs = streams;
@@ -500,4 +503,5 @@ void PlaceholderElementSystem::work_gpu(Render* render)
     }
     _loading_prototypes.clear();
 }
+
 } // namespace hrz::vt::symbol

@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 enum class DataTextureStatus
 {
     Uninitialized,
@@ -25,7 +26,8 @@ template<
     my::TextureFormat Format,
     typename ExternalType,
     typename InternalType = ExternalType,
-    bool kRetainData = true>
+    bool kRetainData = true
+>
 struct DataTexture
 {
     monitoring::ResourceOwner owner;
@@ -45,7 +47,8 @@ struct DataTexture
 
         return {
             std::min(element_count, (T)TextureWidth),
-            std::max((element_count - 1) / (T)TextureWidth + 1, (T)1)};
+            std::max((element_count - 1) / (T)TextureWidth + 1, (T)1)
+        };
     }
 
     DataTexture(

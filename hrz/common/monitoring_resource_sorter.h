@@ -10,6 +10,7 @@
 
 namespace hrz::monitoring
 {
+
 template<typename Handle, typename Resource>
 class ResourceSorter
 {
@@ -130,4 +131,5 @@ public:
         dirty = false;
     }
 };
+
 } // namespace hrz::monitoring

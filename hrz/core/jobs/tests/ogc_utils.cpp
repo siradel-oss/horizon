@@ -1,7 +1,7 @@
 #include "hrz/core/jobs/ogc_utils.h"
 
 #include <gtest/gtest.h>
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 TEST(OgcUtils, find_image_format_1)
 {

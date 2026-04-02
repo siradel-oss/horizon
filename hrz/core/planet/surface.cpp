@@ -21,6 +21,7 @@
 
 namespace
 {
+
 constexpr uint32_t SetCenterDelayMs = 1000;
 constexpr uint32_t ClipmapBakeDelayMs = 100;
 
@@ -73,10 +74,12 @@ float mipmap_bias_to_max_screen_space_error(float mipmap_bias)
 {
     return std::exp2(mipmap_bias + 1);
 }
+
 } // namespace
 
 namespace hrz
 {
+
 struct RasterDataFetch
 {
     struct Fetch
@@ -99,7 +102,7 @@ struct TerrainVersionSubscription
     uint64_t channel_id;
     uint64_t subscription_id;
 
-    constexpr bool operator==(const TerrainVersionSubscription& other) const = default;
+    constexpr bool operator ==(const TerrainVersionSubscription& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TerrainVersionSubscription& update)
@@ -173,11 +176,12 @@ struct PlanetSurface
         clipmap_params(vtex::ClipmapParams(CLIPMAP_SIZE, MERCATOR_TILE_SIZE, CLIPMAP_LOD_COUNT)),
         clip_id(-1),
         must_update_uniforms(true),
-        imagery_merge_group_count(hrz::clamp(
-            imagery_merge_group_count,
-            (uint32_t)1,
-            (uint32_t)hrz::MAX_IMAGERY_GROUP_COUNT)),
-        min_mipmap_bias(0.0f),
+        imagery_merge_group_count(
+            hrz::clamp(
+                imagery_merge_group_count,
+                (uint32_t)1,
+                (uint32_t)hrz::MAX_IMAGERY_GROUP_COUNT)),
+        min_mipmap_bias(0.0F),
         request_tile_count_history_size(0),
         has_increased_mipmap_bias(false),
         elevation_query(new planet::ElevationQuery()),
@@ -197,8 +201,8 @@ struct PlanetSurface
         picking_system_id = picking::allocate_system_id(pia);
         planet_params_ubo.object_reference =
             picking::ObjectReference{picking_system_id, 0, 0}.to_uvec2();
-        planet_params_ubo.mipmap_bias = max_screen_space_error_to_mipmap_bias(2.0f);
-        planet_params_ubo.compensate_inclination = (uint32_t) true;
+        planet_params_ubo.mipmap_bias = max_screen_space_error_to_mipmap_bias(2.0F);
+        planet_params_ubo.compensate_inclination = (uint32_t)true;
     }
 
     RenderRequest update(Render* render)
@@ -388,7 +392,8 @@ struct PlanetSurface
                                 message)
                         {
                             TerrainVersionSubscription subscription_id{
-                                channel_id, message.subscription_id};
+                                channel_id, message.subscription_id
+                            };
                             if (!terrain_version_subscriptions.contains(subscription_id))
                             {
                                 terrain_version_subscriptions.insert(subscription_id);
@@ -401,7 +406,8 @@ struct PlanetSurface
                             }
                         },
                         [&](const planet::surface::messages::
-                                CancelTerrainVersionUpdatesSubscription& message) {
+                                CancelTerrainVersionUpdatesSubscription& message)
+                        {
                             terrain_version_subscriptions.erase(
                                 {channel_id, message.subscription_id});
                         },
@@ -412,10 +418,12 @@ struct PlanetSurface
                             bool success = dtm_rasters.get_tile_bounds(
                                 message.coords, &min_elevation, &max_elevation);
 
-                            channel.send(planet::surface::messages::TileElevationBounds{
-                                message.request_id,
-                                success ? std::optional<double>{min_elevation} : std::nullopt,
-                                success ? std::optional<double>{max_elevation} : std::nullopt});
+                            channel.send(
+                                planet::surface::messages::TileElevationBounds{
+                                    message.request_id,
+                                    success ? std::optional<double>{min_elevation} : std::nullopt,
+                                    success ? std::optional<double>{max_elevation} : std::nullopt
+                                });
                         },
                     },
                     generic_message);
@@ -434,8 +442,10 @@ struct PlanetSurface
                     if (it != channels.end())
                     {
                         auto& channel = it->second;
-                        channel.send(planet::surface::messages::TerrainVersionUpdate{
-                            subscription.subscription_id, new_terrain_version});
+                        channel.send(
+                            planet::surface::messages::TerrainVersionUpdate{
+                                subscription.subscription_id, new_terrain_version
+                            });
                     }
                 }
             }
@@ -498,14 +508,14 @@ struct PlanetSurface
                 // We can tolerate requesting a bit too many tiles, but if there isn't enough
                 // requested tiles to fill the atlases, we want to readjust the mipmap bias
                 // as soon as possible.
-                if (average_count > atlas_tile_count * 1.25f || average_count < atlas_tile_count)
+                if (average_count > atlas_tile_count * 1.25F || average_count < atlas_tile_count)
                 {
                     float factor = average_count / atlas_tile_count;
                     float mipmap_bias_change = std::log2(factor);
 
                     // Limit the rate of change.
-                    mipmap_bias_change = hrz::clamp(std::abs(mipmap_bias_change), 0.0f, 0.5f)
-                        * std::copysign(1.0f, mipmap_bias_change);
+                    mipmap_bias_change = hrz::clamp(std::abs(mipmap_bias_change), 0.0F, 0.5F)
+                        * std::copysign(1.0F, mipmap_bias_change);
 
                     auto new_mipmap_bias = planet_params_ubo.mipmap_bias + mipmap_bias_change;
                     if (new_mipmap_bias < min_mipmap_bias)
@@ -593,11 +603,13 @@ struct PlanetSurface
 
         resources->dtm_indirection = my::TextureBinding{
             0, dtm_rasters.get_group(0)->get_clipmap_texture(),
-            dtm_rasters.get_group(0)->get_clipmap_sampler()};
+            dtm_rasters.get_group(0)->get_clipmap_sampler()
+        };
 
         resources->dtm_atlas = my::TextureBinding{
             0, dtm_rasters.get_group(0)->get_table_texture(),
-            my_info.has_texture_float_linear ? linear_sampler : nearest_sampler};
+            my_info.has_texture_float_linear ? linear_sampler : nearest_sampler
+        };
 
         // If there are more rasters than MAX_IMAGERY_GROUP_COUNT, those above
         // the limit are not displayed.
@@ -608,7 +620,8 @@ struct PlanetSurface
                 auto* group = img_rasters.get_group(i);
 
                 resources->imagery_indirection[i] = my::TextureBinding{
-                    0, group->get_clipmap_texture(), group->get_clipmap_sampler()};
+                    0, group->get_clipmap_texture(), group->get_clipmap_sampler()
+                };
 
                 resources->imagery_atlas[i] =
                     my::TextureBinding{0, group->get_table_texture(), linear_sampler};
@@ -689,6 +702,7 @@ struct PlanetSurface
 
 namespace planet
 {
+
 PlanetSurface* create_surface(
     uint32_t imagery_merge_group_count,
     uint32_t atlas_size,
@@ -1109,5 +1123,6 @@ SurfaceChannel create_surface_channel(PlanetSurface* planet)
 
     return planet->channels.create_channel().second;
 }
+
 } // namespace planet
 } // namespace hrz

@@ -15,6 +15,7 @@ namespace hrz::camera
 // https://stackoverflow.com/questions/53408962/try-to-understand-compiler-error-message-default-member-initializer-required-be
 namespace
 {
+
 constexpr double kMinHeightAboveTerrain = std::numeric_limits<double>::lowest();
 constexpr double kTerrainCollisionInertia = 0.0;
 
@@ -24,6 +25,7 @@ struct Config
     double min_tilt{};
     double max_tilt{};
 };
+
 } // namespace
 
 class FixedPositionManipulator : public CameraManipulator
@@ -98,9 +100,9 @@ class FixedPositionManipulator : public CameraManipulator
             else if (type == MovementEventType::BeginContinuous && movement.has_rotation())
             {
                 return std::make_unique<
-                    ContinuousMovementInterruptionController<InitializedState, BaseController>>(
-                    std::make_unique<ContinuousMovementRotationController>(state),
-                    movement.continuous_movement_interruption());
+                    ContinuousMovementInterruptionController<InitializedState, BaseController>
+                >(std::make_unique<ContinuousMovementRotationController>(state),
+                  movement.continuous_movement_interruption());
             }
 
             return nullptr;
@@ -184,7 +186,6 @@ class FixedPositionManipulator : public CameraManipulator
 
         void on_start(CameraManipulatorContext* ctx) override
         {
-            hrz_proto::CameraNotification notification;
             ctx->add_notification()->mutable_animation_started();
         }
 
@@ -622,8 +623,9 @@ public:
 
         if (params.animation_options().duration() > 0)
         {
-            replace_controller(std::make_unique<AnimationController>(
-                state.pose, to_dual_quat(new_pose), params.animation_options()));
+            replace_controller(
+                std::make_unique<AnimationController>(
+                    state.pose, to_dual_quat(new_pose), params.animation_options()));
         }
         else
         {

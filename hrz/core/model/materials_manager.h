@@ -11,6 +11,7 @@
 
 namespace hrz::model
 {
+
 struct SingleModelMaterialManagerTraits
 {
     using BakedModelHandleType = SingleBakedModelH;
@@ -87,8 +88,7 @@ class MaterialsManager
     std::optional<MaterialHandle> find_material_by_name(std::string_view name)
     {
         auto it = std::ranges::find_if(
-            _materials,
-            [&](const MaterialHandle handle)
+            _materials, [&](const MaterialHandle handle)
             { return _materials_pool.get_object(handle)->definition.name() == name; });
 
         if (it != _materials.end())

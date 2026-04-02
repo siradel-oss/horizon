@@ -18,14 +18,17 @@ extern "C"
 
 namespace
 {
+
 constexpr float DoubleClickDelayMs = 400;           // ms
 constexpr float DoubleClickMaxDistanceSquared = 16; // pixels
+
 } // namespace
 
 namespace hrz::platform
 {
 namespace
 {
+
 static Event::Key keycode_to_key[256];
 
 bool initialize_touch_input(PlatformContext* ctx)
@@ -104,6 +107,7 @@ bool initialize_touch_input(PlatformContext* ctx)
 
     return true;
 }
+
 } // namespace
 
 PlatformContext* initialize(
@@ -275,16 +279,19 @@ void advance_events(PlatformContext* ctx)
                 switch (devev->evtype)
                 {
                     case XI_TouchBegin:
-                        ctx->events.push_back(platform::Event::make_touch_start(
-                            devev->detail, devev->event_x, devev->event_y));
+                        ctx->events.push_back(
+                            platform::Event::make_touch_start(
+                                devev->detail, devev->event_x, devev->event_y));
                         break;
                     case XI_TouchUpdate:
-                        ctx->events.push_back(platform::Event::make_touch_move(
-                            devev->detail, devev->event_x, devev->event_y));
+                        ctx->events.push_back(
+                            platform::Event::make_touch_move(
+                                devev->detail, devev->event_x, devev->event_y));
                         break;
                     case XI_TouchEnd:
-                        ctx->events.push_back(platform::Event::make_touch_end(
-                            devev->detail, devev->event_x, devev->event_y));
+                        ctx->events.push_back(
+                            platform::Event::make_touch_end(
+                                devev->detail, devev->event_x, devev->event_y));
                         break;
                 }
             }
@@ -391,8 +398,9 @@ void advance_events(PlatformContext* ctx)
                         }
                         if (value != 0)
                         {
-                            ctx->events.push_back(platform::Event::make_mouse_wheel(
-                                ctx->mouse_x, ctx->mouse_y, value));
+                            ctx->events.push_back(
+                                platform::Event::make_mouse_wheel(
+                                    ctx->mouse_x, ctx->mouse_y, value));
                         }
                     }
                     else if (ev.xbutton.button >= 1 && ev.xbutton.button <= 3)
@@ -625,7 +633,7 @@ void add_key_bypassing_focus(PlatformContext*, hrz::platform::Event::Key) {}
 
 float get_current_device_pixel_ratio(const PlatformContext* ctx)
 {
-    return 1.0f;
+    return 1.0F;
 }
 
 void viewport_dev_ui(PlatformContext* ctx, mu_Context* ui)

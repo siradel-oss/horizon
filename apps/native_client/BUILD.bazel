@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
 cc_binary(
     name = "native_client",
     srcs = [
@@ -21,6 +23,7 @@ cc_binary(
         "//hrz/branding:icons",
         "//hrz/core:hrz_core",
         "//hrz/cpp_api",
+        "//hrz/protocol/history:scene_model_version",
         "//hrz/scene_dump:migration",
         "//hrz/version",
         "//libs/argparser",

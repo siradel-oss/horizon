@@ -8,6 +8,7 @@
 
 namespace hrz::ogc
 {
+
 std::optional<std::string_view> find_image_format(
     const pugi::xml_node& get_map_node,
     std::string_view desired_format,
@@ -254,7 +255,8 @@ static constexpr uint16_t kFlippedEpsgSrids[] = {
     30163, 30164, 30165, 30166, 30167, 30168, 30169, 30170, 30171, 30172, 30173, 30174, 30175,
     30176, 30177, 30178, 30179, 30800, 31251, 31252, 31253, 31254, 31255, 31256, 31257, 31258,
     31259, 31275, 31276, 31277, 31278, 31279, 31281, 31282, 31283, 31284, 31285, 31286, 31287,
-    31288, 31289, 31290, 31466, 31467, 31468, 31469, 31700, 32661, 32761};
+    31288, 31289, 31290, 31466, 31467, 31468, 31469, 31700, 32661, 32761
+};
 
 bool crs_has_flipped_axes(std::string_view authority, unsigned int srid)
 {
@@ -263,4 +265,5 @@ bool crs_has_flipped_axes(std::string_view authority, unsigned int srid)
 
     return std::ranges::binary_search(kFlippedEpsgSrids, (uint16_t)srid);
 }
+
 } // namespace hrz::ogc

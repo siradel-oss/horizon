@@ -9,6 +9,7 @@ namespace hrz::planet
 {
 namespace
 {
+
 unsigned int level_zero_tile_count_y(const hrz_proto::TilingSchemeParams& tiling_scheme)
 {
     switch (tiling_scheme.type())
@@ -19,6 +20,7 @@ unsigned int level_zero_tile_count_y(const hrz_proto::TilingSchemeParams& tiling
         default: assert(false && "Unhandled case"); return 1;
     }
 }
+
 } // namespace
 
 bool is_provider_model_complete(const hrz_proto::TiledRasterProviderParams& model)
@@ -70,10 +72,12 @@ public:
             TileFetcher::MetricInfo{
                 provider_request_tally_metric_name(
                     hrz_proto::RasterProviderType::TILED_RASTER_PROVIDER),
-                params.url_pattern().c_str()}),
-        geometry(TiledRasterGeometry::from_geometry_and_tiling_scheme(
-            params.geometry(),
-            params.tiling_scheme()))
+                params.url_pattern().c_str()
+            }),
+        geometry(
+            TiledRasterGeometry::from_geometry_and_tiling_scheme(
+                params.geometry(),
+                params.tiling_scheme()))
     {
     }
 

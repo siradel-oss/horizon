@@ -10,6 +10,7 @@ namespace hrz::tilejson
 {
 namespace
 {
+
 enum class TileJsonVersion
 {
     V1_0_0 = 100,
@@ -55,6 +56,7 @@ TileJsonVersion get_tilejson_version(const char* version_string)
         return TileJsonVersion::Latest;
     }
 }
+
 } // namespace
 
 std::optional<TileJsonInfo> parse_tilejson(
@@ -147,7 +149,8 @@ std::optional<TileJsonInfo> parse_tilejson(
     }
 
     hrz::GeoBounds bounds = {
-        lm::radians(-180.0), lm::radians(180.0), -hrz::MERCATOR_MAX_LAT, hrz::MERCATOR_MAX_LAT};
+        lm::radians(-180.0), lm::radians(180.0), -hrz::MERCATOR_MAX_LAT, hrz::MERCATOR_MAX_LAT
+    };
     if (doc.HasMember("bounds") && doc["bounds"].IsArray())
     {
         const auto& bounds_array = doc["bounds"].GetArray();
@@ -178,4 +181,5 @@ std::optional<TileJsonInfo> parse_tilejson(
 
     return {{bounds, min_level, max_level, std::move(url_patterns), std::move(attribution)}};
 }
+
 } // namespace hrz::tilejson

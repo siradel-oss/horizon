@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 struct Event
 {
     enum class Kind

@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 void clip_triangle(
     const lm::vec2& p0,
     const lm::vec2& p1,
@@ -32,8 +33,8 @@ void clip_triangle(
     const lm::Vector<T, 2>& p2,
     const lm::Bbox<T, 2>& bbox,
     hrz::function_ref<
-        void(const lm::Vector<T, 2>& p0, const lm::Vector<T, 2>& p1, const lm::Vector<T, 2>& p2)>
-        rasterize_fn);
+        void(const lm::Vector<T, 2>& p0, const lm::Vector<T, 2>& p1, const lm::Vector<T, 2>& p2)
+    > rasterize_fn);
 
 template<typename T>
 void clip_triangle(

@@ -85,6 +85,7 @@ extern "C"
 
 namespace
 {
+
 enum
 {
     DEV_UI_LOG_SIZE = 64,
@@ -112,10 +113,12 @@ struct AreaPicking
     hrz_proto::SceneViewIndex view;
     hrz::picking::AreaTicket ticket;
 };
+
 } // anonymous namespace
 
 namespace hrz
 {
+
 struct PlatformContext;
 
 struct Scene : public hrz_proto::ICameraService
@@ -236,10 +239,11 @@ struct Scene : public hrz_proto::ICameraService
         {
             SceneModelAccessor accessor(model);
 
-            float fovy = lm::radians(hrz_proto::CameraSettingsPathBuilder<hrz::SceneModelAccessor>(
-                                         accessor, input.camera_index())
-                                         .fovy()
-                                         .get());
+            float fovy = lm::radians(
+                hrz_proto::CameraSettingsPathBuilder<hrz::SceneModelAccessor>(
+                    accessor, input.camera_index())
+                    .fovy()
+                    .get());
 
             lm::bbox2 viewport = lm::bbox2::invalid();
             for (size_t i = 0; i < SCENE_VIEW_COUNT; ++i)
@@ -253,12 +257,12 @@ struct Scene : public hrz_proto::ICameraService
                 if (camera != input.camera_index()) continue;
 
                 // The first view that uses the camera has authority on the viewport
-                viewport =
-                    hrz::to_lm(hrz_proto::SceneViewSettingsPathBuilder<hrz::SceneModelAccessor>(
-                                   accessor, scene_view)
-                                   .viewport()
-                                   .viewport()
-                                   .get());
+                viewport = hrz::to_lm(
+                    hrz_proto::SceneViewSettingsPathBuilder<hrz::SceneModelAccessor>(
+                        accessor, scene_view)
+                        .viewport()
+                        .viewport()
+                        .get());
             }
 
             if (!lm::is_valid(viewport))
@@ -479,7 +483,7 @@ struct Scene : public hrz_proto::ICameraService
         hrz_proto::CameraIndex cam_index)
     {
         static constexpr float kMargin = 0.005F;
-        static constexpr lm::bbox2 kTargetZone{{0.5f - kMargin, 0.5f}, {0.5f + kMargin, 1.0f}};
+        static constexpr lm::bbox2 kTargetZone{{0.5F - kMargin, 0.5F}, {0.5F + kMargin, 1.0F}};
 
         float max_area_best_view = std::numeric_limits<float>::min();
         std::optional<hrz_proto::SceneViewIndex> best_view;
@@ -497,12 +501,12 @@ struct Scene : public hrz_proto::ICameraService
 
             if (camera != cam_index) continue;
 
-            auto scissor =
-                hrz::to_lm(hrz_proto::SceneViewSettingsPathBuilder<hrz::SceneModelAccessor>(
-                               accessor, scene_view)
-                               .viewport()
-                               .scissor()
-                               .get());
+            auto scissor = hrz::to_lm(
+                hrz_proto::SceneViewSettingsPathBuilder<hrz::SceneModelAccessor>(
+                    accessor, scene_view)
+                    .viewport()
+                    .scissor()
+                    .get());
 
             auto intersection = lm::intersection(scissor, kTargetZone);
             float area = lm::area(intersection);
@@ -608,6 +612,7 @@ namespace scene
 {
 namespace
 {
+
 void layer_path_to_buffer(
     const Scene* scene,
     const hrz_proto::Path& path,
@@ -812,6 +817,7 @@ std::string_view get_default_layer_name(Scene* scene, hrz_proto::LayerType type)
     }
     return {buffer.data(), buffer.size()};
 }
+
 } // anonymous namespace
 
 void notify_model_update(
@@ -1056,9 +1062,10 @@ StaticVector<std::pair<my::ResourceHandle, lm::ibbox2>, SCENE_VIEW_COUNT> get_co
     StaticVector<std::pair<my::ResourceHandle, lm::ibbox2>, SCENE_VIEW_COUNT> vec;
     for (auto& entry : scene->views)
     {
-        vec.push_back(std::make_pair(
-            get_color_output(entry.second.view),
-            get_color_output_viewport_on_canvas(entry.second.view)));
+        vec.push_back(
+            std::make_pair(
+                get_color_output(entry.second.view),
+                get_color_output_viewport_on_canvas(entry.second.view)));
     }
     return vec;
 }
@@ -1092,9 +1099,10 @@ bool handle_event(Scene* scene, const Event& event, float device_pixel_ratio)
         {
             return true;
         }
-        else if (editor::handle_event(
-                     scene->shape_editor, viewport_event, entry.first,
-                     entry.second.render_info.cam_view_info))
+        else if (
+            editor::handle_event(
+                scene->shape_editor, viewport_event, entry.first,
+                entry.second.render_info.cam_view_info))
         {
             return true;
         }
@@ -2078,7 +2086,8 @@ std::optional<PositionPickingTicket> schedule_pick(
         {
             return PositionPickingTicket{
                 scene->position_picking_pool.alloc(PositionPicking{entry.first, ticket.value()}),
-                entry.first};
+                entry.first
+            };
         }
     }
     return std::nullopt;
@@ -2093,7 +2102,8 @@ std::optional<AreaPickingTicket> schedule_pick(Scene* scene, lm::ibbox2 rect)
         {
             return AreaPickingTicket{
                 scene->area_picking_pool.alloc(AreaPicking{entry.first, ticket.value()}),
-                entry.first};
+                entry.first
+            };
         }
     }
     return std::nullopt;
@@ -2168,21 +2178,28 @@ static std::pair<size_t, size_t> make_typed_object_references(
 
     while (in_cursor < objs.size())
     {
-        advance_fn(single_model_layers::make_typed_object_references(
-            scene->single_model_layer_system, objs.subspan(in_cursor), output.subspan(out_cursor)));
+        advance_fn(
+            single_model_layers::make_typed_object_references(
+                scene->single_model_layer_system, objs.subspan(in_cursor),
+                output.subspan(out_cursor)));
 
-        advance_fn(vector_tiles_layers::make_typed_object_references(
-            scene->vector_tiles_layer_system, objs.subspan(in_cursor), output.subspan(out_cursor)));
+        advance_fn(
+            vector_tiles_layers::make_typed_object_references(
+                scene->vector_tiles_layer_system, objs.subspan(in_cursor),
+                output.subspan(out_cursor)));
 
-        advance_fn(three_d_tiles_layers::make_typed_object_references(
-            scene->three_d_tiles_layer_system, objs.subspan(in_cursor),
-            output.subspan(out_cursor)));
+        advance_fn(
+            three_d_tiles_layers::make_typed_object_references(
+                scene->three_d_tiles_layer_system, objs.subspan(in_cursor),
+                output.subspan(out_cursor)));
 
-        advance_fn(editor::make_typed_object_references(
-            scene->shape_editor, objs.subspan(in_cursor), output.subspan(out_cursor)));
+        advance_fn(
+            editor::make_typed_object_references(
+                scene->shape_editor, objs.subspan(in_cursor), output.subspan(out_cursor)));
 
-        advance_fn(planet::make_typed_object_references(
-            scene->planet, objs.subspan(in_cursor), output.subspan(out_cursor)));
+        advance_fn(
+            planet::make_typed_object_references(
+                scene->planet, objs.subspan(in_cursor), output.subspan(out_cursor)));
 
         if (!std::exchange(has_advanced_this_iteration, false))
         {
@@ -2949,7 +2966,7 @@ void load_scene_dump(
         [&buffer, scene](const hrz_proto::Path& path, const google::protobuf::MessageLite& msg)
     {
         buffer.clear();
-        msg.SerializeToString(&buffer);
+        (void)msg.SerializeToString(&buffer);
         set_model(scene, path, buffer);
     };
 

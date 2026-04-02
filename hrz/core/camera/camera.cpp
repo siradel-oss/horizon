@@ -38,6 +38,7 @@ extern "C"
 
 namespace hrz::camera
 {
+
 bool is_interruptible_event(const ViewportEvent& e)
 {
     return e.is_in_viewport
@@ -286,7 +287,8 @@ public:
         double min_height_above_terrain,
         double terrain_collision_inertia) :
         _energy_half_time{
-            std::max(kMinInertia, user_controls_inertia), std::max(kMinInertia, movements_inertia)},
+            std::max(kMinInertia, user_controls_inertia), std::max(kMinInertia, movements_inertia)
+        },
         _min_height_above_terrain(min_height_above_terrain),
         _terrain_collision_inertia(terrain_collision_inertia),
         _last_work_time(hrz::clock::CurrentFrameRealTime.s),
@@ -356,7 +358,8 @@ public:
             _baked_info.fovy = lm::radians(settings.fovy());
             _energy_half_time = EnergyHalfTime{
                 std::max(kMinInertia, (double)settings.user_controls_inertia()),
-                std::max(kMinInertia, (double)settings.movements_inertia())};
+                std::max(kMinInertia, (double)settings.movements_inertia())
+            };
             _min_height_above_terrain = settings.min_height_above_terrain();
             _terrain_collision_inertia = settings.terrain_collision_inertia();
             if (_manipulator)
@@ -496,9 +499,10 @@ public:
 
         if (go_to_animation.duration() > 0)
         {
-            replace_manipulator(std::make_unique<TransitionAnimationManipulator>(
-                std::exchange(_manipulator, nullptr), current_pose, new_pose, go_to_animation,
-                is_interruptible, _min_height_above_terrain, _terrain_collision_inertia));
+            replace_manipulator(
+                std::make_unique<TransitionAnimationManipulator>(
+                    std::exchange(_manipulator, nullptr), current_pose, new_pose, go_to_animation,
+                    is_interruptible, _min_height_above_terrain, _terrain_collision_inertia));
         }
         else if (new_pose)
         {
@@ -763,7 +767,8 @@ public:
         // https://fgiesen.wordpress.com/2012/08/31/frustum-planes-from-the-projection-matrix/
         lm::dmat4 pv_t = lm::transpose(view_info.pv);
         lm::dvec4 camera_planes[4] = {
-            pv_t.w - pv_t.x, pv_t.w + pv_t.x, pv_t.w - pv_t.y, pv_t.w + pv_t.y};
+            pv_t.w - pv_t.x, pv_t.w + pv_t.x, pv_t.w - pv_t.y, pv_t.w + pv_t.y
+        };
 
         // 1 = inside, -1 = outside, 0 = on plane.
         auto side_fn = [](const lm::dvec3& pt, const lm::dvec4& plane) -> int
@@ -900,15 +905,18 @@ public:
         // they are visible.
         {
             static constexpr lm::dvec3 north_pole{
-                0, 0, hrz::EARTH_RADIUS * hrz::WGS84_AXES_LENGTH_RATIO};
+                0, 0, hrz::EARTH_RADIUS * hrz::WGS84_AXES_LENGTH_RATIO
+            };
             static constexpr lm::dvec3 south_pole{
-                0, 0, -hrz::EARTH_RADIUS * hrz::WGS84_AXES_LENGTH_RATIO};
+                0, 0, -hrz::EARTH_RADIUS * hrz::WGS84_AXES_LENGTH_RATIO
+            };
 
             static constexpr lm::dvec3 north_pole_sph{0, 0, hrz::EARTH_RADIUS};
             static constexpr lm::dvec3 south_pole_sph{0, 0, -hrz::EARTH_RADIUS};
 
             lm::dvec4 all_planes[] = {
-                camera_planes[0], camera_planes[1], camera_planes[2], camera_planes[3]};
+                camera_planes[0], camera_planes[1], camera_planes[2], camera_planes[3]
+            };
             bool north_in = true;
             bool south_in = true;
 

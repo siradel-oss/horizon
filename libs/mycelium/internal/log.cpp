@@ -12,6 +12,7 @@ namespace my
 {
 namespace
 {
+
 const char* severity_to_string(LogSeverity severity)
 {
     switch (severity)
@@ -35,6 +36,7 @@ int severity_to_em_flag(LogSeverity severity)
     }
 }
 #endif
+
 } // namespace
 
 constexpr size_t MAX_MESSAGE_LENGTH = 512;

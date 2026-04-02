@@ -2,6 +2,7 @@
 
 namespace hrz
 {
+
 double distance_to_triangle(
     const lm::dvec3& a,
     const lm::dvec3& b,

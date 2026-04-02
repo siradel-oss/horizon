@@ -6,6 +6,7 @@
 
 namespace hrz::unicode
 {
+
 struct CodePoint
 {
     uint32_t code_point;
@@ -39,4 +40,5 @@ inline bool is_cjk_character(const CodePoint& code_point)
 {
     return is_cjk_character(code_point.code_point);
 }
+
 } // namespace hrz::unicode

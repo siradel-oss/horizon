@@ -13,6 +13,7 @@ const std::string UNKNOWN_SESSION_ID = "0";
 
 namespace server
 {
+
 struct Handler : public ws::ServerHandler
 {
     ws::Server* _server = nullptr;

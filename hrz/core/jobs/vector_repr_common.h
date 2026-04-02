@@ -9,6 +9,7 @@
 
 namespace hrz::vector_repr
 {
+
 void compute_rel_coords(
     hrz::ArrayView<const lm::dvec3> abs_coords,
     const lm::dvec3& center,

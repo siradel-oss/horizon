@@ -10,14 +10,28 @@ startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
 # Sometimes cxxopt is applied to C-only targets. So we use per_file_copt
 # to filter only C++ source files. Not ideal...
 
-build:windows --host_cxxopt=/std:c++20
+common --registry="https://bcr.bazel.build/"
+common --registry="file:///%workspace%/third_party/bazel_registry/"
+common --downloader_config=bazel_downloader_config.cfg
+
+build --features=-default_cpp_std
+build --host_features=-default_cpp_std
+
+build:host_windows --host_cxxopt=/std:c++20
+build:host_windows --host_copt=/utf-8
+build:host_windows --host_copt=/bigobj
+build:host_windows --host_copt=/wd4141 # Disables "'inline': used more than once"
+build:host_windows --host_cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
+build:host_windows --host_per_file_copt=external/.*$@/wd4047,/wd4715,/wd5287,/wd4005,/wd4834
+build:host_windows --build_python_zip=false
+
 build:windows --cxxopt=/std:c++20
 build:windows --copt=/utf-8
 build:windows --copt=/bigobj
-build:windows --per_file_copt=.*\.(cc|cpp)$@/D_CRT_USE_BUILTIN_OFFSETOF
 build:windows --copt=/wd4141 # Disables "'inline': used more than once"
-build:windows --host_copt=/wd4141 # Disables "'inline': used more than once"
-build:windows --build_python_zip=false
+build:windows --cxxopt=/D_CRT_USE_BUILTIN_OFFSETOF
+build:windows --per_file_copt=external/.*$@/wd4047,/wd4715,/wd5287,/wd4005,/wd4834
+build:windows --config=host_windows
 
 build:windows_clang --action_env="BAZEL_LLVM=C:\\Program Files\\LLVM\\"
 build:windows_clang --action_env=USE_CLANG_CL=1
@@ -25,30 +39,31 @@ build:windows_clang --copt=-Wno-unknown-warning-option
 build:windows_clang --copt=-Wno-builtin-macro-redefined
 build:windows_clang --host_copt=-Wno-builtin-macro-redefined
 build:windows_clang --cxxopt=/std:c++20
-build:windows_clang --host_cxxopt=/std:c++20
-build:windows_clang --cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
-build:windows_clang --host_cxxopt=-D_CRT_USE_BUILTIN_OFFSETOF
+build:windows_clang --cxxopt=/D_CRT_USE_BUILTIN_OFFSETOF
+build:windows_clang --config=host_windows
 
-build:linux --host_cxxopt=-std=c++20
+build:host_linux --host_cxxopt=-std=c++20
+
 build:linux --cxxopt=-std=c++20
 build:linux --copt=-fvisibility=hidden
 build:linux --linkopt=-fvisibility=hidden
 build:linux --copt=-fPIC
+build:linux --linkopt=-fPIC
+build:linux --config=host_linux
 
 build:linux_clang --config=linux
 build:linux_clang --repo_env=CC=clang
 
-build:wasm_common --per_file_copt=.*\.(cc|cpp)$@-std=c++20
+build:wasm_common --cxxopt=-std=c++20
 build:wasm_common --features=-wasm_warnings_as_errors
 build:wasm_common --per_file_copt=external/.*$@-Wno-everything
+build:wasm_common --copt=-Wno-deprecated-pragma
 
 build:wasm_windows --config=wasm_common
-build:wasm_windows --host_cxxopt=/std:c++20
-build:wasm_windows --host_copt=/utf-8
-build:wasm_windows --host_copt=/wd4141 # Disables "'inline': used more than once"
+build:wasm_windows --config=host_windows
 
 build:wasm_linux --config=wasm_common
-build:wasm_linux --host_cxxopt=-std=c++20
+build:wasm_linux --config=host_linux
 
 startup --windows_enable_symlinks
 build --enable_runfiles
@@ -56,6 +71,9 @@ run --enable_runfiles
 test --enable_runfiles
 
 build --experimental_cc_implementation_deps
+
+# @Todo(Bazel 9) Remove this
+build --incompatible_enable_proto_toolchain_resolution
 
 build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig

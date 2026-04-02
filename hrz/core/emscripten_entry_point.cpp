@@ -11,6 +11,7 @@ using namespace emscripten;
 
 namespace
 {
+
 struct Buffer
 {
     intptr_t data;

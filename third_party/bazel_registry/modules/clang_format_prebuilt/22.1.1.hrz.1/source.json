@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/siradel-oss/clang-format-prebuilt/archive/refs/tags/v22.1.1.tar.gz",
+  "strip_prefix": "clang-format-prebuilt-22.1.1",
+  "integrity": "sha256-2YnFzg19QyLJdazksidke+2jMjK/AMxeRbyFkdxqaDU=",
+  "patches": {
+    "module_dot_bazel_version.patch": "sha256-gluaXEchrPARuuAtqGv9QvZq/ai0LQl56Le1qATK2IA="
+  }
+}

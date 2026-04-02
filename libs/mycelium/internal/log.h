@@ -10,6 +10,7 @@
 
 namespace my
 {
+
 // Don't call this directly, use the macros MY_LOG_DEBUG, MY_LOG_INFO,
 // MY_LOG_WARNING and MY_LOG_ERROR.
 void log_message(

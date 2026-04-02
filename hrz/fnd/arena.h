@@ -14,6 +14,7 @@
 
 namespace hrz
 {
+
 class Arena
 {
     struct BlockHeader
@@ -89,7 +90,7 @@ public:
 
         constexpr const T* end() const { return ptr + count; }
 
-        const T& operator[](unsigned int i) const { return ptr[i]; }
+        const T& operator [](unsigned int i) const { return ptr[i]; }
 
         void reset()
         {
@@ -105,7 +106,7 @@ public:
 
     Arena(Arena&& other) : Arena(other._block_size) { *this = std::move(other); }
 
-    Arena& operator=(Arena&& other)
+    Arena& operator =(Arena&& other)
     {
         if (&other == this) return *this;
 

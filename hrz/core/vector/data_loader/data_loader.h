@@ -15,6 +15,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct InMemoryVectorDataBase;
@@ -25,11 +26,14 @@ struct VectorDataLoader;
 
 namespace scene_model
 {
+
 class VectorDataLayerPath;
+
 } // namespace scene_model
 
 namespace vector_data
 {
+
 enum class DataKind
 {
     Geometry,
@@ -81,6 +85,7 @@ void work(
 
 namespace messages
 {
+
 struct LoadLayer
 {
     uint64_t request_id;
@@ -114,6 +119,7 @@ struct ReleaseDataRequest
 {
     uint64_t request_id;
 };
+
 } // namespace messages
 
 using ToLoaderMessage = std::variant<
@@ -191,10 +197,12 @@ using ToLoaderMessage = std::variant<
      * This triggers the creation of new requests to the client
      * for these values, if they are still needed.
      */
-    hrz_proto::VectorDataInvalidation>;
+    hrz_proto::VectorDataInvalidation
+>;
 
 namespace messages
 {
+
 struct LayerModelUpdate
 {
     uint64_t request_id;
@@ -225,6 +233,7 @@ struct DataError
 {
     uint64_t request_id;
 };
+
 } // namespace messages
 
 using FromLoaderMessage = std::variant<
@@ -232,7 +241,8 @@ using FromLoaderMessage = std::variant<
     messages::LayerModelError,
     messages::LayerNewData,
     messages::DataUpdate,
-    messages::DataError>;
+    messages::DataError
+>;
 
 using VectorDataLoaderChannel = Channel<ToLoaderMessage, FromLoaderMessage>;
 
@@ -240,5 +250,6 @@ using VectorDataLoaderChannel = Channel<ToLoaderMessage, FromLoaderMessage>;
  * Create a channel to communicate with the vector data loader.
  */
 VectorDataLoaderChannel create_channel(VectorDataLoader*);
+
 } // namespace vector_data
 } // namespace hrz

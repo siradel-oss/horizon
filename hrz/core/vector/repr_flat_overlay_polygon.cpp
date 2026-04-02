@@ -24,6 +24,7 @@ using namespace hrz::vt::flat_overlay;
 
 namespace
 {
+
 enum
 {
     UboTileParams = hrz::vector_flat_overlay::UboVectorOverlayPass + 1,
@@ -109,7 +110,8 @@ struct PolygonsRenderable final : public BaseRenderable
             {
                 shader = data->shader;
                 const my::TextureBinding bindings[] = {
-                    {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}};
+                    {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}
+                };
                 rb->bind(bindings);
                 break;
             }
@@ -119,7 +121,8 @@ struct PolygonsRenderable final : public BaseRenderable
                 if (!data->has_selected_features) return;
                 shader = data->selection_shader;
                 const my::TextureBinding bindings[] = {
-                    {SamplerSelection, data->selection_texture, data->metadata_sampler}};
+                    {SamplerSelection, data->selection_texture, data->metadata_sampler}
+                };
                 rb->bind(bindings);
                 break;
             }
@@ -128,7 +131,8 @@ struct PolygonsRenderable final : public BaseRenderable
 
         auto batch = my::DrawBatchInfo(my::PrimitiveType::TriangleList, data->vertex_count);
         const my::UboBinding ubo_bindings[] = {
-            {UboTileParams, data->ubo_buffer, 0, sizeof(PolygonsTileUniformData)}};
+            {UboTileParams, data->ubo_buffer, 0, sizeof(PolygonsTileUniformData)}
+        };
         rb->bind(ubo_bindings);
 
         if (!data->pattern_texture.is_null())
@@ -194,7 +198,8 @@ struct PolygonConfig : public BaseConfig
     uint64_t pattern_sprite_name_prp = hrz::style::Parser::INVALID_PROPERTY;
     lm::vec2 default_pattern_size = {0, 0};
     lm::ulvec2 pattern_size_prp = {
-        hrz::style::Parser::INVALID_PROPERTY, hrz::style::Parser::INVALID_PROPERTY};
+        hrz::style::Parser::INVALID_PROPERTY, hrz::style::Parser::INVALID_PROPERTY
+    };
     hrz_proto::PolygonPatternSizeUnit pattern_size_unit;
     float default_pattern_rotation = 0.0F;
     uint64_t pattern_rotation_prp = hrz::style::Parser::INVALID_PROPERTY;
@@ -215,7 +220,8 @@ struct PolygonTileGeometry : public BaseTileGeometry
 {
     std::variant<
         hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex>,
-        hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>>
+        hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>
+    >
         baked_data;
     hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::PolygonPatternStyle> pattern_style_data;
     hrz::BlobArray<uint32_t> indices;
@@ -278,14 +284,16 @@ public:
         static const my::IndexName solid_color_attribs[] = {
             {InputStreamInTilePos, "i_in_tile_pos"},
             {InputStreamColor, "i_color"},
-            {InputStreamFeatureIndex, "i_feature_index"}};
+            {InputStreamFeatureIndex, "i_feature_index"}
+        };
 
         static const my::IndexName pattern_attribs[] = {
             {InputStreamInTilePos, "i_in_tile_pos"},
             {InputStreamUv, "i_uv"},
             {InputStreamInTileLat, "i_in_tile_lat"},
             {InputStreamPatternStyleIndex, "i_pattern_style_index"},
-            {InputStreamFeatureIndex, "i_feature_index"}};
+            {InputStreamFeatureIndex, "i_feature_index"}
+        };
 
         static const my::IndexName solid_color_visual_samplers[] = {
             {SamplerFeatureIds, "u_feature_ids"},
@@ -431,8 +439,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         Config* config,
         const hrz::function_ref<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp) override
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp) override
     {
         if (repr.type() != hrz_proto::FLAT_OVERLAY_POLYGON_VECTOR_REPR) return false;
 
@@ -561,7 +569,7 @@ public:
         }
         else
         {
-            tile->ubo_template.polygon_pattern_reference_lat_scale_factor_offset = 0.0f;
+            tile->ubo_template.polygon_pattern_reference_lat_scale_factor_offset = 0.0F;
         }
 
         auto& bake_data = tile->bake_data.value();
@@ -682,16 +690,16 @@ public:
 
         return (!tile.has_pattern
                 && std::holds_alternative<
-                    hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex>>(
-                    tile.geometry->baked_data)
-                && !std::get<
-                        hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex>>(
-                        tile.geometry->baked_data)
-                        .empty())
+                    hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex>
+                >(tile.geometry->baked_data)
+                && !std::
+                        get<hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex>>(
+                            tile.geometry->baked_data)
+                            .empty())
             || (tile.has_pattern
                 && std::holds_alternative<
-                    hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>>(
-                    tile.geometry->baked_data)
+                    hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>
+                >(tile.geometry->baked_data)
                 && !std::get<hrz::BlobArray<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>>(
                         tile.geometry->baked_data)
                         .empty());
@@ -923,4 +931,5 @@ void collect_flat_overlay_polygon_shaders(hrz::GpuResourceContext* rc)
 {
     FlatOverlayPolygonReprSystem::collect_shaders(rc);
 }
+
 } // namespace hrz::vt

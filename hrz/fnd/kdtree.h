@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 // This implementation of a kdtree stores 2D quads and is used to lookup intersections. It is
 // implemented as a 4D kdtree with point coordinates being (x_min, x_max, y_min, y_max). Unlike
 // traditional kdtrees, all points are in the leaves, and each leaf can have multiple points. They
@@ -219,10 +220,10 @@ public:
     Kdtree() { _root = _arena.alloc<Node>(std::in_place, Leaf{}); }
 
     Kdtree(const Kdtree&) = delete;
-    Kdtree& operator=(const Kdtree&) = delete;
+    Kdtree& operator =(const Kdtree&) = delete;
 
     Kdtree(Kdtree&&) = delete;
-    Kdtree& operator=(Kdtree&&) = delete;
+    Kdtree& operator =(Kdtree&&) = delete;
 
     void insert(const lm::bbox2 box)
     {

@@ -24,11 +24,14 @@
 
 namespace vector_tile
 {
+
 class Tile;
+
 }
 
 namespace hrz_jobs
 {
+
 struct AttributeModel
 {
     uint32_t id;

@@ -3,6 +3,7 @@
 
 namespace hrz
 {
+
 template<typename T>
 OrientedBBox2<T> compute_minimum_bbox(std::span<const lm::Vector<T, 2>> pts)
 {
@@ -53,7 +54,8 @@ OrientedBBox2<T> compute_minimum_bbox(std::span<const lm::Vector<T, 2>> pts)
     {
         lm::Matrix<T, 2> rotation{
             {std::cos(angle), -std::sin(angle)},
-            {std::sin(angle), std::cos(angle)}};
+            {std::sin(angle), std::cos(angle)}
+        };
 
         lm::Bbox<T, 2> bbox(
             {std::numeric_limits<T>::max(), std::numeric_limits<T>::max()},

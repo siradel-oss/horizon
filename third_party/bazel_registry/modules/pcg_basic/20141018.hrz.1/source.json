@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/imneme/pcg-c-basic/archive/bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3.tar.gz",
+  "strip_prefix": "pcg-c-basic-bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3",
+  "integrity": "sha256-e2Ad0CPJ3VbVrgfzFR2+csmS8XY2ptLQsO6UmqKMUvk=",
+  "overlay": {
+    "MODULE.bazel": "sha256-8YhUG7gW1sU6qRrvREaI00HoBIVm5ZIz0wo8cmIf7eE=",
+    "BUILD.bazel": "sha256-qVfwJ6D9R31XBDtCyD4AdWiBUmxccz3HJo0o/X5dKFw="
+  }
+}

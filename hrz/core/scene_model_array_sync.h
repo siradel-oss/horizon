@@ -5,6 +5,7 @@
 
 namespace hrz::scene_model
 {
+
 // ArraySync is used to synchronize two arrays that might received progressive
 // updated. There is an authoritative scene model array that receives
 // progressive updates (add element, remove element, update element, rebuild
@@ -158,7 +159,8 @@ private:
         // Find the command that added the element we're removing now, if it exists.
         auto add_cmd_it = std::find_if(
             _cmds.rbegin(), _cmds.rend(),
-            [&](const Command& cmd) {
+            [&](const Command& cmd)
+            {
                 return cmd.type == Command::Add && cmd.info.add.index_auth == index_auth_to_remove;
             });
 

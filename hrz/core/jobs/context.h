@@ -7,17 +7,21 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct FontRasterizer;
 
 namespace blobs
 {
+
 using BlobId = uint64_t;
+
 }
 } // namespace hrz
 
 namespace hrz_jobs
 {
+
 class JobContext
 {
 public:
@@ -30,4 +34,5 @@ public:
     virtual hrz::FontRasterizer* get_font_rasterizer() const = 0;
     virtual hrz::monitoring::ResourceOwner get_resource_owner() const = 0;
 };
+
 } // namespace hrz_jobs

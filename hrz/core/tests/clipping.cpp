@@ -6,6 +6,7 @@
 
 namespace
 {
+
 TEST(TriangleClipping, full_inside)
 {
     std::vector<lm::vec2> p;

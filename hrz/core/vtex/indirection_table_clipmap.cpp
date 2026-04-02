@@ -6,6 +6,7 @@
 
 namespace hrz::vtex
 {
+
 // Indirection encoding: (RGBA8UI)
 //      R: Page address X
 //      G: Page address Y

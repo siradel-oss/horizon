@@ -12,6 +12,7 @@ namespace hrz::vt::symbol
 {
 namespace
 {
+
 enum
 {
     LeaderLineParamsUbo = ElementCustomUboStart,
@@ -31,6 +32,7 @@ struct LeaderLineUniformData
 };
 
 HRZ_CHECK_UBO_SIZE(LeaderLineUniformData);
+
 } // namespace
 
 void LeaderLineRenderable::render_callback(
@@ -199,8 +201,8 @@ ElementSystem::PrototypeH LeaderLineElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -478,4 +480,5 @@ void LeaderLineElementSystem::work_gpu(Render* render)
     }
     _loading_prototypes.clear();
 }
+
 } // namespace hrz::vt::symbol

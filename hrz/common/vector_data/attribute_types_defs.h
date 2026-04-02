@@ -183,33 +183,19 @@ concept AttributeValueTraits =
         uint64_t uint64_value,
         int64_t int64_value,
         std::string_view string_value) {
-           {
-               Traits::type(const_value)
-           } -> std::same_as<AttributeValueType>;
-           {
-               Traits::empty_string()
-           } -> std::same_as<typename Traits::Type>;
-           {
-               Traits::as_ref(const_value, read_ctx)
-           } -> std::same_as<RefAttributeValueTraits::Type>;
-           {
-               Traits::null()
-           } -> std::same_as<typename Traits::Type>;
-           {
-               Traits::from_bool(bool_value)
-           } -> std::same_as<typename Traits::Type>;
-           {
-               Traits::from_number(number_value)
-           } -> std::same_as<typename Traits::Type>;
+           { Traits::type(const_value) } -> std::same_as<AttributeValueType>;
+           { Traits::empty_string() } -> std::same_as<typename Traits::Type>;
+           { Traits::as_ref(const_value, read_ctx) } -> std::same_as<RefAttributeValueTraits::Type>;
+           { Traits::null() } -> std::same_as<typename Traits::Type>;
+           { Traits::from_bool(bool_value) } -> std::same_as<typename Traits::Type>;
+           { Traits::from_number(number_value) } -> std::same_as<typename Traits::Type>;
            {
                Traits::from_uint64(unsafe{"caller must ensure safety"}, uint64_value, write_ctx)
            } -> std::same_as<typename Traits::Type>;
            {
                Traits::from_int64(unsafe{"caller must ensure safety"}, int64_value, write_ctx)
            } -> std::same_as<typename Traits::Type>;
-           {
-               Traits::from_string(string_value, write_ctx)
-           } -> std::same_as<typename Traits::Type>;
+           { Traits::from_string(string_value, write_ctx) } -> std::same_as<typename Traits::Type>;
            {
                Traits::get_bool(unsafe{"caller must ensure safety"}, const_value, read_ctx)
            } -> std::same_as<bool>;
@@ -433,7 +419,8 @@ ATTR_FROM_IMPL(const RefAttributeValueTraits::Type& value)
                 static_assert(
                     hrz::is_one_of<ArgType, bool, double, uint64_t, int64_t, std::string_view>);
                 return attr_from<T, Traits>(arg, ctx);
-            }},
+            }
+        },
         value);
 }
 

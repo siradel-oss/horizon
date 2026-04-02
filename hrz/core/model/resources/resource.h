@@ -12,8 +12,10 @@
 
 namespace hrz
 {
+
 struct ImageDecoder;
 struct Render;
+
 } // namespace hrz
 
 namespace hrz::model
@@ -29,9 +31,7 @@ enum class ResourceStatus
 
 template<typename T>
 concept ResourceKey = std::equality_comparable<T> && requires(const T& a) {
-    {
-        absl::Hash<T>{}(a)
-    } -> std::convertible_to<size_t>;
+    { absl::Hash<T>{}(a) } -> std::convertible_to<size_t>;
 };
 
 template<typename T, typename Key>
@@ -46,21 +46,11 @@ concept Resource = ResourceKey<Key>
                 ModelDescriptor* descriptor,
                 Render* render,
                 const monitoring::ResourceOwner& owner) {
-           {
-               T::acquire(key, bl, descriptor, owner)
-           } -> std::convertible_to<std::optional<T>>;
-           {
-               res.work(bl, ba, js, imgdec)
-           };
-           {
-               res.work_gpu(ba, bl, render)
-           };
-           {
-               res.destroy(bl, ba, js, std::declval<std::vector<my::ResourceHandle>&>())
-           };
-           {
-               res_const.get_status()
-           } -> std::same_as<ResourceStatus>;
+           { T::acquire(key, bl, descriptor, owner) } -> std::convertible_to<std::optional<T>>;
+           { res.work(bl, ba, js, imgdec) };
+           { res.work_gpu(ba, bl, render) };
+           { res.destroy(bl, ba, js, std::declval<std::vector<my::ResourceHandle>&>()) };
+           { res_const.get_status() } -> std::same_as<ResourceStatus>;
        };
 
 template<my::BufferResource::BufferType TYPE>
@@ -169,7 +159,7 @@ struct SamplerWithParams
     bool can_use_linear_filtering;
     bool can_use_mipmaps;
 
-    constexpr bool operator==(const SamplerWithParams& other) const = default;
+    constexpr bool operator ==(const SamplerWithParams& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const SamplerWithParams& k)
@@ -218,7 +208,7 @@ struct TextureWithCfg
     bool is_data;
     BlobLibrary::ConfigH cfg;
 
-    constexpr bool operator==(const TextureWithCfg& other) const
+    constexpr bool operator ==(const TextureWithCfg& other) const
     {
         return texture_id == other.texture_id && is_data == other.is_data && cfg.o == other.cfg.o;
     }

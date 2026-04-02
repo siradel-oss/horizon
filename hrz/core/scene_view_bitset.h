@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 static constexpr size_t SCENE_VIEW_COUNT = (size_t)hrz_proto::SceneViewIndex_ARRAYSIZE;
 
 using SceneViewBitset = Bitset32<SCENE_VIEW_COUNT>;

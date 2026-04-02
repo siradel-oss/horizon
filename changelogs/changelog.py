@@ -260,7 +260,8 @@ def merge_into_cmd(args):
     date = datetime.strftime(datetime.now(), "%Y-%m-%d")
 
     changelog = Changelog(version, date, merged)
-    changelog.write_to(args.output_file)
+    with args.output_file as fp:
+        changelog.write_to(fp)
 
 
 class Generator:
@@ -334,18 +335,19 @@ def generate_cmd(args):
 
     changelogs.sort(key=parse_version_order, reverse=True)
 
-    generator = Generator(args.output_file)
-    generator.write_header()
+    with args.output_file as fp:
+        generator = Generator(fp)
+        generator.write_header()
 
-    for changelog in changelogs:
-        generator.write_version(changelog.version, changelog.date)
+        for changelog in changelogs:
+            generator.write_version(changelog.version, changelog.date)
 
-        for section_name in SECTION_NAMES:
-            node = changelog.root.find_child(section_name)
-            if node and len(node.children) > 0:
-                generator.write_section(section_name, node.children)
+            for section_name in SECTION_NAMES:
+                node = changelog.root.find_child(section_name)
+                if node and len(node.children) > 0:
+                    generator.write_section(section_name, node.children)
 
-    generator.write_footer()
+        generator.write_footer()
 
 
 parser = argparse.ArgumentParser()

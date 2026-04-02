@@ -6,6 +6,7 @@
 
 namespace hrz::vt
 {
+
 // Picking IDs (object reference):
 //
 // 2 bits per character, least significant bits are on the right.

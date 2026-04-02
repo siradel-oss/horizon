@@ -47,7 +47,7 @@ struct GeoPosition2
 
     explicit constexpr operator lm::dvec2() const { return lm::dvec2{lat, lon}; }
 
-    constexpr bool operator==(const GeoPosition2& other) const = default;
+    constexpr bool operator ==(const GeoPosition2& other) const = default;
 };
 
 // In radians.
@@ -67,7 +67,7 @@ struct GeoPosition3
 
     constexpr GeoPosition2 latlon() const { return GeoPosition2(lat, lon); }
 
-    constexpr bool operator==(const GeoPosition3& other) const = default;
+    constexpr bool operator ==(const GeoPosition3& other) const = default;
 };
 
 /**
@@ -82,7 +82,7 @@ struct GeoBounds
     double west, east;
     double south, north;
 
-    constexpr GeoBounds() : west(0.0), east(0.0), south(1.0), north(-1.0){};
+    constexpr GeoBounds() : west(0.0), east(0.0), south(1.0), north(-1.0) {};
 
     constexpr GeoBounds(double west, double east, double south, double north) :
         west(west), east(east), south(south), north(north)
@@ -94,7 +94,7 @@ struct GeoBounds
     {
     }
 
-    constexpr bool operator==(const GeoBounds& other) const = default;
+    constexpr bool operator ==(const GeoBounds& other) const = default;
 
     static constexpr GeoBounds empty() { return {0.0, 0.0, 1.0, -1.0}; }
 
@@ -118,7 +118,7 @@ struct GeoVolumeBounds
     double min_height, max_height;
 
     constexpr GeoVolumeBounds() :
-        west(0.0), east(0.0), south(1.0), north(-1.0), min_height(1.0), max_height(-1.0){};
+        west(0.0), east(0.0), south(1.0), north(-1.0), min_height(1.0), max_height(-1.0) {};
 
     constexpr GeoVolumeBounds(
         double west,
@@ -175,7 +175,7 @@ struct GeoVolumeBounds
             mask & 1 ? north : south, mask & 2 ? east : west, mask & 4 ? max_height : min_height);
     }
 
-    constexpr bool operator==(const GeoVolumeBounds& other) const = default;
+    constexpr bool operator ==(const GeoVolumeBounds& other) const = default;
 
     static constexpr GeoVolumeBounds empty() { return {0.0, 0.0, 1.0, -1.0, 1.0, -1.0}; }
 
@@ -187,7 +187,8 @@ struct GeoVolumeBounds
             -lm::PI * 0.5,
             lm::PI * 0.5,
             std::numeric_limits<double>::lowest(),
-            std::numeric_limits<double>::max()};
+            std::numeric_limits<double>::max()
+        };
     }
 
     bool is_empty() const { return max_height < min_height || north < south; }

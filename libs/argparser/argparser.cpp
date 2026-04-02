@@ -11,6 +11,7 @@
 
 namespace argparser
 {
+
 struct ParsedValue
 {
     bool is_set = false;

@@ -7,6 +7,7 @@
 
 namespace
 {
+
 using namespace ui::helpers;
 
 static constexpr double SAMPLE_HEIGHT = 20.0;
@@ -42,7 +43,7 @@ ui::widget::SampleColors _sample_colors_from_fill(ImVec4 fill)
 
 ui::widget::SampleColors _compute_default_sample_colors(const data::Sample& sample)
 {
-    uint32_t fill = ui::color::from_string(sample.name, 0.5f, 0.9f, 0.65f);
+    uint32_t fill = ui::color::from_string(sample.name, 0.5F, 0.9F, 0.65F);
     return _sample_colors_from_fill((ImColor)fill);
 }
 
@@ -572,10 +573,12 @@ double _interpolate_size(double current, double target)
     }
     return current;
 }
+
 } // namespace
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 void SampleGraph::draw_header_column_contents(const Rect& area)
@@ -891,8 +894,9 @@ void SampleGraph::_sample_context_menu(
         if (ImGui::MenuItem("Inspect sample"))
         {
             const auto& sample = sample_systemm.get_sample(_sample_context_menu_sample_id);
-            action_bus.push_back(context::Action::inspect_sample(
-                sample.record_hash, _sample_context_menu_sample_id));
+            action_bus.push_back(
+                context::Action::inspect_sample(
+                    sample.record_hash, _sample_context_menu_sample_id));
         }
 
         open_tree_popup = ImGui::MenuItem("View as tree...");

@@ -16,6 +16,7 @@
 
 namespace hrz::model
 {
+
 // @Optimisation Only one array, with offsets, could be used.
 template<typename T>
 my::ResourceHandle _build_constant_vertex_array(
@@ -160,8 +161,8 @@ static void collect_single_shaders(hrz::GpuResourceContext* rc)
     res.fragment_source = hrz_shaders::Gltf_depth_frag;
     res.outputs = {};
     res.uniform_blocks = ubos_depth;
-    res.initial_state.rasterization.depth_bias_factor = 1.0f;
-    res.initial_state.rasterization.depth_bias_units = 1.0f;
+    res.initial_state.rasterization.depth_bias_factor = 1.0F;
+    res.initial_state.rasterization.depth_bias_units = 1.0F;
     rc->alloc(&res, hrz::monitoring::systems::Models);
 
     const char* selection_color_outputs[] = {"o_highlight"};
@@ -401,8 +402,8 @@ static void collect_instanced_shaders(hrz::GpuResourceContext* rc)
     res.uniform_blocks = ubos_depth;
     res.samplers = samplers_depth;
     res.outputs = {};
-    res.initial_state.rasterization.depth_bias_factor = 1.0f;
-    res.initial_state.rasterization.depth_bias_units = 1.0f;
+    res.initial_state.rasterization.depth_bias_factor = 1.0F;
+    res.initial_state.rasterization.depth_bias_units = 1.0F;
     res.initial_state.color_blend.enable = false;
     rc->alloc(&res, hrz::monitoring::systems::Models);
 }
@@ -441,7 +442,8 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
         {CompressedUv0StreamIndex, "i_compressed_uv_0"},
         {Uv1StreamIndex, "i_uv_1"},
         {CompressedUv1StreamIndex, "i_compressed_uv_1"},
-        {B3dm_BatchIdStreamIndex, "i_batch_id"}};
+        {B3dm_BatchIdStreamIndex, "i_batch_id"}
+    };
 
     static const my::IndexName ubos[] = {
         {hrz::UboFrame, "Frame"},
@@ -613,8 +615,8 @@ static void collect_batched_shaders(hrz::GpuResourceContext* rc)
     res.outputs = {};
     res.samplers = depth_samplers;
     res.uniform_blocks = ubos_depth;
-    res.initial_state.rasterization.depth_bias_factor = 1.0f;
-    res.initial_state.rasterization.depth_bias_units = 1.0f;
+    res.initial_state.rasterization.depth_bias_factor = 1.0F;
+    res.initial_state.rasterization.depth_bias_units = 1.0F;
     rc->alloc(&res, hrz::monitoring::systems::Models);
 
     res_f = res;
@@ -770,4 +772,5 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     collect_instanced_shaders(rc);
     collect_batched_shaders(rc);
 }
+
 } // namespace hrz::model

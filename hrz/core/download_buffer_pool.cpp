@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 DownloadBuffer DownloadBufferPool::acquire(
     GpuResourceContext* rc,
     size_t size,

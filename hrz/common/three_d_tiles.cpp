@@ -10,6 +10,7 @@
 
 namespace
 {
+
 using namespace hrz::three_d_tiles;
 
 void normalize_box(BoundingVolume::Box& box)
@@ -23,9 +24,11 @@ void normalize_box(BoundingVolume::Box& box)
     auto perpendicular_to_one = [](const lm::dvec3& v)
     {
         // From https://math.stackexchange.com/a/4112622
-        return lm::normalize(lm::dvec3{
-            std::copysign(v.z, v.x), std::copysign(v.z, v.y),
-            -std::copysign(std::abs(v.x) + std::abs(v.y), v.z)});
+        return lm::normalize(
+            lm::dvec3{
+                std::copysign(v.z, v.x), std::copysign(v.z, v.y),
+                -std::copysign(std::abs(v.x) + std::abs(v.y), v.z)
+            });
     };
 
     auto perpendicular_to_two = [](const lm::dvec3& v1, lm::dvec3& v2)
@@ -83,7 +86,7 @@ BoundingVolume::Box make_box_from_region(const hrz::GeoVolumeBounds& wgs84_bbox)
     lm::dvec3 ecef_center = {0, 0, 0};
     for (const auto& corner : ecef_corners)
     {
-        ecef_center += corner / 8.0f;
+        ecef_center += corner / 8.0F;
     }
 
     lm::dvec3 u_axis = ecef_corners[5] - ecef_corners[4];
@@ -164,7 +167,8 @@ BoundingVolume::Sphere make_sphere_from_region(const hrz::GeoVolumeBounds& wgs84
         hrz::geo_to_ecef(max_lat, mid_lon, min_ele), hrz::geo_to_ecef(max_lat, mid_lon, max_ele),
         hrz::geo_to_ecef(mid_lat, min_lon, min_ele), hrz::geo_to_ecef(mid_lat, min_lon, max_ele),
         hrz::geo_to_ecef(mid_lat, max_lon, min_ele), hrz::geo_to_ecef(mid_lat, max_lon, max_ele),
-        hrz::geo_to_ecef(mid_lat, mid_lon, min_ele), hrz::geo_to_ecef(mid_lat, mid_lon, max_ele)};
+        hrz::geo_to_ecef(mid_lat, mid_lon, min_ele), hrz::geo_to_ecef(mid_lat, mid_lon, max_ele)
+    };
 
     lm::dvec3 origin = points[0];
     for (unsigned int i = 0; i < 18; ++i)
@@ -200,10 +204,12 @@ double get_box_radius(const BoundingVolume::Box& box)
         box.u_half_length * box.u_half_length + box.v_half_length * box.v_half_length
         + box.w_half_length * box.w_half_length);
 }
+
 } // namespace
 
 namespace hrz::three_d_tiles
 {
+
 void optimize(BoundingVolume& volume)
 {
     if (std::holds_alternative<BoundingVolume::Region>(volume.volume))
@@ -274,7 +280,8 @@ double distance(const BoundingVolume& volume, const lm::dvec3& ecef_pos)
         // Transform `ecef_pos` into `box`s coordinate frame.
         lm::dvec3 offset = ecef_pos - box.center;
         lm::dvec3 p_prime = {
-            lm::dot(offset, box.u_axis), lm::dot(offset, box.v_axis), lm::dot(offset, box.w_axis)};
+            lm::dot(offset, box.u_axis), lm::dot(offset, box.v_axis), lm::dot(offset, box.w_axis)
+        };
 
         // Project `p_prime` onto box.
         double distance_squared = 0;
@@ -727,4 +734,5 @@ std::optional<AttributeComponentType> component_type_from_string(std::string_vie
     HRZ_LOG_ERROR("Invalid component type: {}", str.data());
     return {};
 }
+
 } // namespace hrz::three_d_tiles

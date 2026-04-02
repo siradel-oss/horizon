@@ -14,6 +14,7 @@
 
 namespace hrz
 {
+
 struct PlanetSurface;
 struct Render;
 struct RenderViewInfo;
@@ -34,12 +35,16 @@ struct ActorRunner;
 
 namespace scene_model
 {
+
 class VectorTilesLayerPath;
+
 }
 
 namespace camera
 {
+
 class Camera;
+
 };
 
 /**
@@ -49,6 +54,7 @@ struct VectorTilesLayerSystem;
 
 namespace vector_tiles_layers
 {
+
 /**
  * Create a vector tiles layer system.
  */

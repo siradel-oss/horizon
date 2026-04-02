@@ -4,11 +4,14 @@
 
 namespace data
 {
+
 class Database;
+
 }
 
 namespace server
 {
+
 enum class State
 {
     WaitingForConnection,

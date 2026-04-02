@@ -12,6 +12,7 @@
 
 namespace preset_menu
 {
+
 enum class PresetAction
 {
     None,
@@ -220,4 +221,5 @@ PresetMenuResult preset_system_menu(
 
     return result;
 }
+
 } // namespace preset_menu

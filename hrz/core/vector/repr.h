@@ -26,6 +26,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct FontRasterizer;
@@ -39,11 +40,14 @@ struct AttributionRegistry;
 
 namespace camera
 {
+
 class Camera;
+
 }
 
 namespace vt
 {
+
 struct ImageLoader;
 
 // Data model of the geometry of a vector tile that needs to be passed down to
@@ -62,6 +66,7 @@ struct ReprGeometry
 
 namespace repr::messages
 {
+
 // Registers a config into the system.
 // The `layer_id` is only for allocation identification purposes. See `ResourceOwner`.
 struct RegisterStyle
@@ -147,6 +152,7 @@ struct TileStatusUpdate
     uint64_t tile_id;
     bool is_ready;
 };
+
 } // namespace repr::messages
 
 using ToReprMessage = std::variant<
@@ -157,7 +163,8 @@ using ToReprMessage = std::variant<
     repr::messages::UpdateTileElevation,
     repr::messages::UpdateSelection,
     repr::messages::UpdateClipId,
-    repr::messages::UpdateLighting>;
+    repr::messages::UpdateLighting
+>;
 
 using FromReprMessage =
     std::variant<repr::messages::StyleRegistrationResult, repr::messages::TileStatusUpdate>;
@@ -317,5 +324,6 @@ std::unique_ptr<ReprSystem> create_cylinder_repr_system();
 std::unique_ptr<ReprSystem> create_model_repr_system();
 std::unique_ptr<ReprSystem> create_heatmap_repr_system();
 std::unique_ptr<ReprSystem> create_symbol_repr_system();
+
 } // namespace vt
 } // namespace hrz

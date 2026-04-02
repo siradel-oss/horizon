@@ -4,6 +4,7 @@
 
 namespace my
 {
+
 GLenum to_gl(PrimitiveType p)
 {
     switch (p)

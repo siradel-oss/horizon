@@ -1,4 +1,3 @@
-
 #include "hrz/common/metrics.h"
 #include "hrz/common/profiling.h"
 #include "hrz/core/assets_loader/http_platform.h"
@@ -29,6 +28,7 @@ extern "C"
 
 namespace hrz::assets_loader
 {
+
 class EmscriptenHttpLoader : public IHttpLoader
 {
     struct AddRequestMsg

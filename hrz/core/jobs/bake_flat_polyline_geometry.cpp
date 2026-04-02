@@ -18,6 +18,7 @@ namespace hrz_jobs::bake_flat_polyline_geometry
 {
 namespace
 {
+
 constexpr size_t InitialVertexCapacity = 4096;
 
 void transform_wmerc_to_geo(int n, const lm::dvec3* in, hrz::GeoPosition3* out)
@@ -196,7 +197,8 @@ void generate_polylines_geometry(
         polyline_data,   rgba,
         line_width,      dash_length,
         dash_period,     animation_speed,
-        background_rgba, hrz::vector_repr::max_segment_angular_length_for_lod(tile_coords.lod)};
+        background_rgba, hrz::vector_repr::max_segment_angular_length_for_lod(tile_coords.lod)
+    };
 
     for (const auto& linestring_size : linestring_sizes)
     {
@@ -231,7 +233,8 @@ void generate_polylines_geometry(
                     {
                         lm::dvec3 clipped[2] = {
                             lm::dvec3(a, hrz::lerp(pp0.z, pp1.z, ta)),
-                            lm::dvec3(b, hrz::lerp(pp0.z, pp1.z, tb))};
+                            lm::dvec3(b, hrz::lerp(pp0.z, pp1.z, tb))
+                        };
 
                         hrz::GeoPosition3 clipped_geo[2];
                         transform_wmerc_to_geo(2, clipped, clipped_geo);

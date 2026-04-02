@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 struct GpuResourceContext;
 
 struct DownloadBuffer

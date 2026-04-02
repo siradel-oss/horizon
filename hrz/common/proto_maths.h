@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 inline lm::vec2 to_lm(const hrz_proto::Vec2f& v)
 {
     return lm::vec2(v.x(), v.y());

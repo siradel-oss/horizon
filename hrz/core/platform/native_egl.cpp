@@ -38,6 +38,7 @@
 
 namespace hrz::platform
 {
+
 struct GlContext
 {
     EGLDisplay egl_display;
@@ -150,7 +151,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
         EGL_OPENGL_ES3_BIT,
         EGL_RENDERABLE_TYPE,
         EGL_OPENGL_ES3_BIT,
-        EGL_NONE};
+        EGL_NONE
+    };
 
     EGLint num_configs;
     if (eglChooseConfig(gl_ctx.egl_display, config_attribs, &gl_ctx.egl_config, 1, &num_configs)
@@ -182,7 +184,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
         0,
         EGL_CONTEXT_OPENGL_DEBUG,
         EGL_TRUE,
-        EGL_NONE};
+        EGL_NONE
+    };
 
     gl_ctx.egl_ctx =
         eglCreateContext(gl_ctx.egl_display, gl_ctx.egl_config, EGL_NO_CONTEXT, context_attribs);
@@ -239,4 +242,5 @@ void cleanup_gl(PlatformContext* ctx)
     delete ctx->gl_ctx;
     ctx->gl_ctx = nullptr;
 }
+
 } // namespace hrz::platform

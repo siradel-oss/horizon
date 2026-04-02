@@ -20,14 +20,14 @@ public:
     }
 
     DeferFinalizer(const DeferFinalizer&) = delete;
-    DeferFinalizer& operator=(const DeferFinalizer&) = delete;
+    DeferFinalizer& operator =(const DeferFinalizer&) = delete;
 
     DeferFinalizer(DeferFinalizer&& other) :
         _finalizer(std::move(other._finalizer)), _moved(std::exchange(other._moved, true))
     {
     }
 
-    DeferFinalizer& operator=(DeferFinalizer&&) = delete;
+    DeferFinalizer& operator =(DeferFinalizer&&) = delete;
 
     ~DeferFinalizer()
     {
@@ -38,7 +38,7 @@ public:
 struct DeferInitializer
 {
     template<typename Finalizer>
-    DeferFinalizer<Finalizer> operator<<(Finalizer&& finalizer) const
+    DeferFinalizer<Finalizer> operator <<(Finalizer&& finalizer) const
     {
         return DeferFinalizer<Finalizer>(std::forward<Finalizer>(finalizer));
     }

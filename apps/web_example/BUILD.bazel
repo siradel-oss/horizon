@@ -2,7 +2,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//apps/web_example:webpack-cli/package_json.bzl", webpack_bin = "bin")
 load("@tsconfig_util//:defs.bzl", "TSCONFIG")
-load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
 load("//tools/bazel:utils.bzl", "merge_dicts")
 load("//tools/http_server:http_server.bzl", "http_server")
 
@@ -38,14 +38,14 @@ ts_project(
 webpack_bin.webpack_cli(
     name = "bundle",
     srcs = [
-        "ts_lib",
         "webpack.config.js",
+        ":ts_lib",
     ],
     outs = [
         "bundle.js",
     ],
     args = [
-        "./$(RULEDIR)/dist/main.js",
+        "$(locations :ts_lib)",
         "--config",
         "$(location webpack.config.js)",
         "-o",

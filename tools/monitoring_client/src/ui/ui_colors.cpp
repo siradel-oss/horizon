@@ -11,6 +11,7 @@
 
 namespace ui::color
 {
+
 uint32_t multiply(uint32_t color, double value)
 {
     auto vec_color = ImGui::ColorConvertU32ToFloat4(color);
@@ -47,7 +48,7 @@ uint32_t from_string(std::string_view string, float saturation, float value, flo
     int64_t seed = hrz::murmur3_x64_64(string);
 
     float hue = (float)((double)seed / (double)std::numeric_limits<uint64_t>::max());
-    hue = std::fmod(hue + hue_shift, 1.0f);
+    hue = std::fmod(hue + hue_shift, 1.0F);
 
     return from_hsv(hue, saturation, value, 1.0);
 }
@@ -56,4 +57,5 @@ uint32_t get_hover_shadow()
 {
     return (style::is_dark_mode()) ? 0x18ffffff : 0x08000000;
 }
+
 } // namespace ui::color

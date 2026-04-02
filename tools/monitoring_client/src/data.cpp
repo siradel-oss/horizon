@@ -11,6 +11,7 @@
 
 namespace
 {
+
 template<typename T>
 using identifier = std::function<int64_t(const T&)>;
 
@@ -383,6 +384,7 @@ size_t _gpu_buckets_total_size(std::span<const data::GpuResourceBucket*> buckets
 
 namespace data
 {
+
 int64_t Sample::exclusive_time() const
 {
     return duration() - time_in_children;
@@ -737,7 +739,7 @@ const char* metric_unit_label(MetricUnit unit)
     }
 }
 
-bool operator==(const Metric& lhs, const Metric& rhs)
+bool operator ==(const Metric& lhs, const Metric& rhs)
 {
     if (&lhs == &rhs)
     {
@@ -747,12 +749,12 @@ bool operator==(const Metric& lhs, const Metric& rhs)
     return rhs.labels == lhs.labels && rhs.name == lhs.name;
 }
 
-bool operator!=(const Metric& lhs, const Metric& rhs)
+bool operator !=(const Metric& lhs, const Metric& rhs)
 {
     return !(lhs == rhs);
 }
 
-size_t MetricHash::operator()(const Metric& metric) const
+size_t MetricHash::operator ()(const Metric& metric) const
 {
     auto str_hash = std::hash<std::string>{};
 

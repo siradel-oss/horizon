@@ -1,0 +1,35 @@
+--- MODULE.bazel
++++ MODULE.bazel
+@@ -36,27 +36,27 @@
+ npm.npm_translate_lock(
+     name = "emscripten_npm_linux",
+     data = ["@emscripten_bin_linux//:emscripten/package.json"],
+-    npm_package_lock = "@emscripten_bin_linux//:emscripten/package-lock.json",
++    pnpm_lock = "//:pnpm-lock.yaml",
+ )
+ npm.npm_translate_lock(
+     name = "emscripten_npm_linux_arm64",
+     data = ["@emscripten_bin_linux_arm64//:emscripten/package.json"],
+-    npm_package_lock = "@emscripten_bin_linux_arm64//:emscripten/package-lock.json",
++    pnpm_lock = "//:pnpm-lock.yaml",
+ )
+ npm.npm_translate_lock(
+     name = "emscripten_npm_mac",
+     data = ["@emscripten_bin_mac//:emscripten/package.json"],
+-    npm_package_lock = "@emscripten_bin_mac//:emscripten/package-lock.json",
++    pnpm_lock = "//:pnpm-lock.yaml",
+ )
+ npm.npm_translate_lock(
+     name = "emscripten_npm_mac_arm64",
+     data = ["@emscripten_bin_mac_arm64//:emscripten/package.json"],
+-    npm_package_lock = "@emscripten_bin_mac_arm64//:emscripten/package-lock.json",
++    pnpm_lock = "//:pnpm-lock.yaml",
+ )
+ npm.npm_translate_lock(
+     name = "emscripten_npm_win",
+     data = ["@emscripten_bin_win//:emscripten/package.json"],
+-    npm_package_lock = "@emscripten_bin_win//:emscripten/package-lock.json",
++    pnpm_lock = "//:pnpm-lock.yaml",
+ )
+ use_repo(
+     npm,

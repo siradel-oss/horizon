@@ -10,6 +10,7 @@
 
 namespace
 {
+
 double _value_to_angle(double value)
 {
     return value * 2.0 * lm::PI;
@@ -31,12 +32,13 @@ lm::dvec2 _draw_pie_slice(
 {
     const bool perfect_circle = (b - a > 0.999);
 
-    static constexpr float MIN_SEGMENT_COUNT = 16.0f;
-    static constexpr float MAX_SEGMENT_COUNT = 128.0f;
+    static constexpr float MIN_SEGMENT_COUNT = 16.0F;
+    static constexpr float MAX_SEGMENT_COUNT = 128.0F;
     static constexpr double MAX_SEGMENT_RADIUS = 800.0;
 
-    const size_t full_segment_count = std::ceil(ui::helpers::lerp(
-        MIN_SEGMENT_COUNT, MAX_SEGMENT_COUNT, std::min(radius / MAX_SEGMENT_RADIUS, 1.0)));
+    const size_t full_segment_count = std::ceil(
+        ui::helpers::lerp(
+            MIN_SEGMENT_COUNT, MAX_SEGMENT_COUNT, std::min(radius / MAX_SEGMENT_RADIUS, 1.0)));
     const size_t segment_count = std::ceil(full_segment_count * (b - a));
 
     const auto line_col = ui::color::multiply(color, 0.8);
@@ -69,10 +71,12 @@ lm::dvec2 _draw_pie_slice(
 
     return text_center;
 }
+
 } // namespace
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 MetricsPie::MetricsPie()
@@ -233,7 +237,7 @@ std::vector<MetricsPie::Slice> MetricsPie::_compute_slices(
 
             if (slice.label.empty()) slice.label = metric.display_string;
 
-            slice.color = color::from_string(slice.label, 0.50f, 0.90f);
+            slice.color = color::from_string(slice.label, 0.50F, 0.90F);
             result.push_back(slice);
         }
     }
@@ -377,7 +381,7 @@ void MetricsPie::_draw_table(const Rect& area, bool sort_scheduled)
         {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn(
-                "Metric", ImGuiTableColumnFlags_WidthStretch, 0.0f, (ImGuiID)ColumnId::Label);
+                "Metric", ImGuiTableColumnFlags_WidthStretch, 0.0F, (ImGuiID)ColumnId::Label);
             ImGui::TableSetupColumn("Value", 0, 100.0, (ImGuiID)ColumnId::Value);
             ImGui::TableHeadersRow();
 
@@ -418,7 +422,7 @@ Rect MetricsPie::_footer(const Rect& available_area, const data::Database& datab
     cursor.y -= font_size;
     ImGui::SetCursorScreenPos(cursor);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0F, 0.0F));
     const size_t slider_min = 0;
     const size_t slider_max = database.get_frames().size() - 1;
 
@@ -433,7 +437,7 @@ Rect MetricsPie::_footer(const Rect& available_area, const data::Database& datab
         _selected_frame -= (_selected_frame > slider_min) ? 1 : 0;
         _update_slices = true;
     }
-    ImGui::SameLine(0.0f, 2.0f);
+    ImGui::SameLine(0.0F, 2.0F);
     if (ImGui::ArrowButton("Next frame", ImGuiDir_Right))
     {
         _selected_frame += (_selected_frame < slider_max) ? 1 : 0;
@@ -442,13 +446,13 @@ Rect MetricsPie::_footer(const Rect& available_area, const data::Database& datab
     ImGui::PopButtonRepeat();
 
     ImGui::SameLine();
-    ImGui::PushItemWidth(120.0f);
+    ImGui::PushItemWidth(120.0F);
 
     std::string slider_label =
         fmt::format("{}###Frame", (Duration)database.get_frames()[_selected_frame].begin);
     std::string slider_format = fmt::format("%zu / {}", slider_max);
     if (ImGui::DragScalar(
-            slider_label.c_str(), ImGuiDataType_U64, &_selected_frame, 1.0f, &slider_min,
+            slider_label.c_str(), ImGuiDataType_U64, &_selected_frame, 1.0F, &slider_min,
             &slider_max, slider_format.c_str(), ImGuiSliderFlags_AlwaysClamp))
     {
         _update_slices = true;
@@ -475,7 +479,7 @@ Rect MetricsPie::_footer(const Rect& available_area, const data::Database& datab
 
     if (display_mode == DisplayMode::PieChart)
     {
-        ImGui::SameLine(220.0f);
+        ImGui::SameLine(220.0F);
         ImGui::Checkbox("Show labels", &_show_labels);
     }
 

@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 template<typename T, size_t CAPACITY>
 class StaticVector
 {
@@ -63,13 +64,13 @@ public:
         _size = new_size;
     }
 
-    inline T& operator[](size_t i)
+    inline T& operator [](size_t i)
     {
         assert(i < _size);
         return _data[i];
     }
 
-    inline const T& operator[](size_t i) const
+    inline const T& operator [](size_t i) const
     {
         assert(i < _size);
         return _data[i];
@@ -79,7 +80,7 @@ public:
 
     inline operator std::span<const T>() const { return std::span<const T>(_data.data(), _size); }
 
-    inline bool operator==(const StaticVector& other) const
+    inline bool operator ==(const StaticVector& other) const
     {
         if (_size != other._size)
         {

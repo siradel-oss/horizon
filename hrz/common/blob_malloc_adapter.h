@@ -4,6 +4,7 @@
 
 namespace hrz::blobs
 {
+
 /**
  * This structure allows using the blob allocator to emulate
  * the API of the standard memory allocator.
@@ -23,4 +24,5 @@ struct MallocAdapter
 private:
     hrz::BlobAllocator* allocator;
 };
+
 } // namespace hrz::blobs

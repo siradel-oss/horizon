@@ -5,7 +5,7 @@
 #include "hrz/fnd/hash.h"
 #include "hrz/fnd/string_utils.h"
 
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <cassert>
 #include <optional>
@@ -13,6 +13,7 @@
 
 namespace
 {
+
 static constexpr const char* BING_API_URL_PATTERN =
     "https://dev.virtualearth.net/REST/V1/Imagery/Metadata/"
     "{imagery_type}?output=xml&include=ImageryProviders&key={api_key}&culture={culture}&uriScheme="
@@ -43,7 +44,8 @@ struct TilesetInfo
 };
 
 static constexpr std::string_view kSupportedUrlSubstitutions[] = {
-    "subdomain", "quadkey", "culture", "zoom", "tileId"};
+    "subdomain", "quadkey", "culture", "zoom", "tileId"
+};
 
 struct UrlGenerator : public hrz::TileUrlGenerator
 {
@@ -71,6 +73,7 @@ struct UrlGenerator : public hrz::TileUrlGenerator
 
 namespace hrz::planet
 {
+
 bool is_provider_model_complete(const hrz_proto::BingRasterProviderParams& model)
 {
     return !model.api_key().empty();

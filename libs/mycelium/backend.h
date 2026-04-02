@@ -10,6 +10,7 @@
 
 namespace my
 {
+
 enum
 {
     MaxVertexAttributes = 15,
@@ -47,9 +48,9 @@ struct RasterizationState
 
     CullMode cull_mode = Back;
     FrontFace front_face = CounterClockwise;
-    float depth_bias_factor = 0.0f;
-    float depth_bias_units = 0.0f;
-    float line_width = 1.0f;
+    float depth_bias_factor = 0.0F;
+    float depth_bias_units = 0.0F;
+    float line_width = 1.0F;
 };
 
 struct DepthState
@@ -182,7 +183,7 @@ struct ResourceHandle
 
     constexpr operator bool() const { return handle; }
 
-    constexpr bool operator==(const ResourceHandle& h) const = default;
+    constexpr bool operator ==(const ResourceHandle& h) const = default;
 };
 
 enum class IndexType
@@ -1055,7 +1056,7 @@ public:
 template<>
 struct std::hash<my::ResourceHandle>
 {
-    std::size_t operator()(const my::ResourceHandle& s) const noexcept
+    std::size_t operator ()(const my::ResourceHandle& s) const noexcept
     {
         return std::hash<uint64_t>{}(s.handle);
     }

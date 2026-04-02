@@ -1,0 +1,27 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "cdt",
+    srcs = [
+        "CDT/include/CDT.h",
+        "CDT/include/CDT.hpp",
+        "CDT/include/CDTUtils.h",
+        "CDT/include/CDTUtils.hpp",
+        "CDT/include/KDTree.h",
+        "CDT/include/LocatorKDTree.h",
+        "CDT/include/Triangulation.h",
+        "CDT/include/Triangulation.hpp",
+        "CDT/include/portable_nth_element.hpp",
+        "CDT/include/predicates.h",
+        "CDT/include/remove_at.hpp",
+        "CDT/src/CDT.cpp",
+    ],
+    hdrs = [
+        "CDT/include/CDT.h",
+    ],
+    includes = ["CDT/include"],
+)
+
+exports_files(["LICENSE"])

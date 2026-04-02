@@ -7,6 +7,7 @@ namespace hrz::monitoring
 {
 namespace systems
 {
+
 enum Name : uint8_t
 {
     NoSystem = 0,
@@ -55,6 +56,7 @@ enum Name : uint8_t
 };
 
 const char* to_string(Name name);
+
 } // namespace systems
 
 constexpr uint64_t NoLayer = 0;
@@ -73,4 +75,5 @@ struct ResourceOwner
     {
     }
 };
+
 } // namespace hrz::monitoring

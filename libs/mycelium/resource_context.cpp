@@ -19,6 +19,7 @@
 
 namespace my
 {
+
 static my::ResourceHandle create_buffer(GLInstance* my, const BufferResource& res)
 {
     if (res.allow_allocation_failure && my->get_available_gpu_memory() < res.size)
@@ -199,7 +200,8 @@ static GLuint create_shader_inner(
 
     const GLchar* strings[] = {VERSION_STRING_LINE, global_shader_defines.c_str(), source};
     const GLint lengths[] = {
-        (int)strlen(VERSION_STRING_LINE), (int)global_shader_defines.size(), len};
+        (int)strlen(VERSION_STRING_LINE), (int)global_shader_defines.size(), len
+    };
 
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 3, strings, lengths);

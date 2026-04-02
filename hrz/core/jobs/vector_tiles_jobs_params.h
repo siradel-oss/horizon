@@ -299,7 +299,7 @@ struct FlatPolygonGeometry : public BaseFlatVectorBakedGeometry
         float pattern_color_blend_strength;
         uint32_t _padding;
 
-        constexpr bool operator==(const PolygonPatternStyle& other) const
+        constexpr bool operator ==(const PolygonPatternStyle& other) const
         {
             return sprite_size == other.sprite_size && sprite_offset == other.sprite_offset
                 && polygon_pattern_transform == other.polygon_pattern_transform
@@ -733,7 +733,8 @@ struct SymbolBakingData
         Transform,
         Text,
         Optional,
-        Variant>;
+        Variant
+    >;
 
     struct Element
     {
@@ -890,7 +891,8 @@ struct BakedSymbols
             ImageInstances,
             hrz::BlobArray<DecoratedShapeInstance>,
             hrz::BlobArray<LeaderLineInstance>,
-            TextInstances>
+            TextInstances
+        >
             data;
     };
 

@@ -34,6 +34,7 @@ extern "C"
 
 namespace
 {
+
 struct ArraySyncTraits
 {
     enum ElementUpdateType
@@ -110,6 +111,7 @@ struct Layer
 
 namespace hrz
 {
+
 struct VectorTilesLayerSystem
 {
     using IndexPool = GenIndexPool<uint32_t, 2, 12>;
@@ -132,6 +134,7 @@ namespace vector_tiles_layers
 {
 namespace
 {
+
 Layer* _get_layer(VectorTilesLayerSystem* system, uint64_t global_layer_id)
 {
     auto it = system->global_layer_id_to_handle.find(global_layer_id);
@@ -373,6 +376,7 @@ RenderRequest _update_layer(
 
     return render_request;
 }
+
 } // namespace
 
 VectorTilesLayerSystem* create_system(PickingIdAllocator* picking_id_allocator)
@@ -611,7 +615,7 @@ void register_layer(
         data.mutable_lighting()->set_cast_shadows(true);
         data.mutable_lighting()->set_receive_shadows(true);
         data.mutable_style()->set_rng_seed(0);
-        data.mutable_scene_views()->set_bits((1u << SCENE_VIEW_COUNT) - 1u);
+        data.mutable_scene_views()->set_bits((1U << SCENE_VIEW_COUNT) - 1U);
 
         hrz_proto::VectorTilesLayerPathBuilder<hrz::SceneModelAccessor>(
             model, root.vector_tiles_layer())

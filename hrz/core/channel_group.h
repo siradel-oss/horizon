@@ -11,6 +11,7 @@
 
 namespace hrz
 {
+
 /**
  * Maintains a group of channels, each one associated with a unique ID.
  *
@@ -84,14 +85,14 @@ public:
         {
         }
 
-        typename decltype(ChannelGroup::channels)::iterator::reference operator*() { return *it; }
+        typename decltype(ChannelGroup::channels)::iterator::reference operator *() { return *it; }
 
-        typename decltype(ChannelGroup::channels)::iterator::pointer operator->()
+        typename decltype(ChannelGroup::channels)::iterator::pointer operator ->()
         {
-            return it.operator->();
+            return it.operator ->();
         }
 
-        Iterator& operator++()
+        Iterator& operator ++()
         {
             auto& channel = it->second;
             if (channel.is_closed())
@@ -106,7 +107,7 @@ public:
             return *this;
         }
 
-        bool operator==(const Iterator& other) const { return it == other.it; }
+        bool operator ==(const Iterator& other) const { return it == other.it; }
 
         const uint64_t& first() const { return it->first; }
 
@@ -119,4 +120,5 @@ public:
 
     Iterator find(uint64_t channel_id) { return Iterator{&channels, channels.find(channel_id)}; }
 };
+
 } // namespace hrz

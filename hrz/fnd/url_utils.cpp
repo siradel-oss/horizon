@@ -8,6 +8,7 @@
 
 namespace
 {
+
 inline bool is_domain_char(const char c)
 {
     return hrz::is_ascii_alpha_numeric(c) || c == '.' || c == '-' || c == '_';
@@ -17,10 +18,12 @@ inline bool is_unreserved_char(const char c)
 {
     return is_domain_char(c) || c == '~';
 }
+
 } // namespace
 
 namespace hrz::url
 {
+
 bool is_absolute(std::string_view url)
 {
     if (url.empty()) return false;

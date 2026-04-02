@@ -11,7 +11,9 @@ namespace hrz
 
 namespace planet
 {
+
 struct TiledRasterGeometry;
+
 }
 
 // This structure's role is to unify the cases of global and local

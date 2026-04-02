@@ -14,12 +14,13 @@
 
 namespace hrz::vt::symbol
 {
+
 struct FontReference
 {
     std::string url;
     hrz::HttpHeaders headers;
 
-    bool operator==(const FontReference& r) const
+    bool operator ==(const FontReference& r) const
     {
         return headers.hash_content() == r.headers.hash_content() && url == r.url;
     }
@@ -224,8 +225,8 @@ public:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -273,4 +274,5 @@ private:
     FontH ref_font(const std::string& font_url, const hrz_proto::HttpHeaderList& headers);
     void unref_font(FontH handle);
 };
+
 } // namespace hrz::vt::symbol

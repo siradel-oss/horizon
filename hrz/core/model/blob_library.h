@@ -11,6 +11,7 @@
 
 namespace hrz::model
 {
+
 /**
  * The blob library is a common interface to access all resources of a model.
  * The resources can either be embedded or come from a URL. When they come from
@@ -31,7 +32,7 @@ public:
     {
         uint64_t o;
 
-        constexpr bool operator==(const Handle& other) const = default;
+        constexpr bool operator ==(const Handle& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const Handle& handle)
@@ -44,7 +45,7 @@ public:
     {
         uint64_t o;
 
-        constexpr bool operator==(const ConfigH& other) const = default;
+        constexpr bool operator ==(const ConfigH& other) const = default;
     };
 
     enum Status

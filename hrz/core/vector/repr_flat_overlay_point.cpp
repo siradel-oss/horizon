@@ -21,6 +21,7 @@ using namespace hrz::vt::flat_overlay;
 
 namespace
 {
+
 enum
 {
     UboTileParams = hrz::vector_flat_overlay::UboVectorOverlayPass + 1,
@@ -94,7 +95,8 @@ struct PointsRenderable final : public BaseRenderable
             {
                 shader = data->shader;
                 const my::TextureBinding texture_bindings[] = {
-                    {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}};
+                    {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}
+                };
                 rb->bind(texture_bindings);
                 break;
             }
@@ -104,7 +106,8 @@ struct PointsRenderable final : public BaseRenderable
                 if (!data->has_selected_features) return;
                 shader = data->selection_shader;
                 const my::TextureBinding texture_bindings[] = {
-                    {SamplerSelection, data->selection_texture, data->metadata_sampler}};
+                    {SamplerSelection, data->selection_texture, data->metadata_sampler}
+                };
                 rb->bind(texture_bindings);
                 break;
             }
@@ -311,8 +314,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         Config* config,
         const hrz::function_ref<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp) override
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp) override
     {
         if (repr.type() != hrz_proto::FLAT_OVERLAY_POINT_VECTOR_REPR) return false;
 
@@ -513,4 +516,5 @@ void collect_flat_overlay_point_shaders(hrz::GpuResourceContext* rc)
 {
     FlatOverlayPointReprSystem::collect_shaders(rc);
 }
+
 } // namespace hrz::vt

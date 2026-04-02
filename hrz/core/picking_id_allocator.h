@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 /**
  * This allocator is responsible for giving out picking ids.
  * Ids from this allocator are guaranteed to be unique, as long
@@ -14,6 +15,7 @@ struct PickingIdAllocator;
 
 namespace picking
 {
+
 /**
  * Create an id allocator.
  */

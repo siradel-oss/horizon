@@ -21,6 +21,7 @@
 
 namespace hrz
 {
+
 struct ActorRunner;
 struct BlobAllocator;
 struct JobScheduler;
@@ -29,11 +30,14 @@ struct VectorDataLoader;
 
 namespace style
 {
+
 struct Parser;
+
 }
 
 namespace vt
 {
+
 enum class ElevationSource
 {
     None,
@@ -61,7 +65,7 @@ struct VectorTilesCuller
             geometric_error, distance_from_camera, max_screen_space_error);
     }
 
-    constexpr bool operator==(const VectorTilesCuller& other) const = default;
+    constexpr bool operator ==(const VectorTilesCuller& other) const = default;
 };
 
 using TileId = uint32_t;
@@ -100,6 +104,7 @@ struct VisibilitySet
 
 namespace to_actor
 {
+
 struct SetBounds
 {
     std::optional<hrz::GeoBounds> bounds;
@@ -208,6 +213,7 @@ struct SignalVisibilitySetDestroyed
 {
     uint64_t visibility_set_id;
 };
+
 } // namespace to_actor
 
 using ToActorMessage = std::variant<
@@ -230,10 +236,12 @@ using ToActorMessage = std::variant<
     to_actor::UpdateSelection,
     to_actor::SignalPropertiesRegistered,
     to_actor::GenerateNewVisibilitySet,
-    to_actor::SignalVisibilitySetDestroyed>;
+    to_actor::SignalVisibilitySetDestroyed
+>;
 
 namespace from_actor
 {
+
 struct RegisterProperties
 {
     style::Parser* parser;
@@ -278,6 +286,7 @@ struct NewVisibilitySet
 {
     VisibilitySet visibility_set;
 };
+
 } // namespace from_actor
 
 using FromActorMessage = std::variant<
@@ -288,7 +297,8 @@ using FromActorMessage = std::variant<
     from_actor::TileFeatureAnchors,
     from_actor::DiscardTile,
     from_actor::RenderRequest,
-    from_actor::NewVisibilitySet>;
+    from_actor::NewVisibilitySet
+>;
 
 struct VectorTilesActor;
 using VectorTilesActorChannel = Channel<ToActorMessage, FromActorMessage>;
@@ -302,5 +312,6 @@ VectorTilesActorChannel spawn_vector_tiles_actor(
     PlanetSurface* planet,
     VectorDataLoader* vdl,
     ActorRunner* ar);
+
 } // namespace vt
 } // namespace hrz

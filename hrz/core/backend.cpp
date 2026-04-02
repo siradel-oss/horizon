@@ -63,11 +63,12 @@ extern "C" void hrz_free_rpc(char* data)
 
 namespace hrz_core
 {
+
 Backend::Backend(void* wsi_instance, void* wsi_window, const hrz_proto::ViewerOptions& options) :
     _init_status(hrz_proto::ViewerInitStatus::INIT_SUCCESS)
 {
     std::string serialized_options;
-    options.SerializeToString(&serialized_options);
+    (void)options.SerializeToString(&serialized_options);
     assert(serialized_options.size() >= 0 && serialized_options.size() < INT_MAX);
 
     const char* args_data = serialized_options.c_str();
@@ -103,4 +104,5 @@ std::vector<uint8_t> Backend::rpc(uint32_t service, uint32_t method, const void*
 
     return output;
 }
+
 } // namespace hrz_core

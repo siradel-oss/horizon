@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 // This struct does not own the pixel data.
 template<typename Backing>
 struct ImageViewBase
@@ -76,4 +77,5 @@ struct MutImageView : public ImageViewBase<std::byte>
         return (T*)(data.data()) + ((x + y * width) * CHANNELS);
     }
 };
+
 } // namespace hrz

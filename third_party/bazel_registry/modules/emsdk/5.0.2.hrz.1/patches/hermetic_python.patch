@@ -1,0 +1,30 @@
+diff --git a/emscripten_toolchain/emar.bat b/emscripten_toolchain/emar.bat
+index c8068089f2..da25dbc724 100644
+--- emscripten_toolchain/emar.bat
++++ emscripten_toolchain/emar.bat
+@@ -2,4 +2,4 @@
+
+ call %~dp0\env.bat
+
+-py -3 %EMSCRIPTEN%\emar.py %*
++"%EMSDK_PYTHON%" %EMSCRIPTEN%\emar.py %*
+diff --git a/emscripten_toolchain/emcc.bat b/emscripten_toolchain/emcc.bat
+index 4088bc4ae3..7e056ddd4f 100644
+--- emscripten_toolchain/emcc.bat
++++ emscripten_toolchain/emcc.bat
+@@ -2,4 +2,4 @@
+
+ call %~dp0\env.bat
+
+-py -3 %EMSCRIPTEN%\emcc.py %*
++"%EMSDK_PYTHON%" %EMSCRIPTEN%\emcc.py %*
+diff --git a/emscripten_toolchain/emcc_link.bat b/emscripten_toolchain/emcc_link.bat
+index f49cb0d582..b1b966413c 100644
+--- emscripten_toolchain/emcc_link.bat
++++ emscripten_toolchain/emcc_link.bat
+@@ -2,4 +2,4 @@
+
+ call %~dp0\env.bat
+
+-py -3 %~dp0\link_wrapper.py %*
++"%EMSDK_PYTHON%" %~dp0\link_wrapper.py %*

@@ -16,7 +16,8 @@ inline lm::uvec2 compute_data_texture_size(uint32_t entry_count)
 
     return {
         std::min(entry_count, DATA_TEXTURE_SIZE),
-        std::max((entry_count - 1) / DATA_TEXTURE_SIZE + 1, (uint32_t)1)};
+        std::max((entry_count - 1) / DATA_TEXTURE_SIZE + 1, (uint32_t)1)
+    };
 }
 
 inline uint32_t compute_data_texture_array_size(uint32_t entry_count)

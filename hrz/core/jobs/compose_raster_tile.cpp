@@ -19,6 +19,7 @@ using namespace hrz::sampling;
 
 namespace hrz_jobs::compose_raster_tile
 {
+
 struct Bounds
 {
     double min = std::numeric_limits<double>::max();
@@ -37,6 +38,7 @@ struct Bounds
 
 namespace
 {
+
 template<typename ChannelType, unsigned int CHANNELS>
 struct SamplingBlendingFunctionAdapter : public rasterizer::SampleAndComposeFunction<lm::vec2>
 {
@@ -158,7 +160,8 @@ void _rasterize_tile(
                     hrz::clip_triangle(
                         uva, uvb, uvc, pa, pb, pc, clip_uv,
                         [&](lm::vec2 uva, lm::vec2 uvb, lm::vec2 uvc, lm::vec2 pa, lm::vec2 pb,
-                            lm::vec2 pc) {
+                            lm::vec2 pc)
+                        {
                             rasterize_function(
                                 output, pa, pb, pc, uva, uvb, uvc,
                                 sample_and_compose_function.get());
@@ -172,7 +175,8 @@ void _rasterize_tile(
                     hrz::clip_triangle(
                         uva, uvb, uvc, pa, pb, pc, clip_uv,
                         [&](lm::vec2 uva, lm::vec2 uvb, lm::vec2 uvc, lm::vec2 pa, lm::vec2 pb,
-                            lm::vec2 pc) {
+                            lm::vec2 pc)
+                        {
                             rasterize_function(
                                 output, pa, pb, pc, uva, uvb, uvc,
                                 sample_and_compose_function.get());
@@ -645,6 +649,7 @@ std::unique_ptr<BlendingFunction> _make_blending_function(
         return nullptr;
     }
 }
+
 } // namespace
 
 hrz_jobs::JobResult run(

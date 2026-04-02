@@ -31,7 +31,7 @@ struct FeatureId
         hrz::InlinedVector<Value, 2> _values;
     };
 
-    bool operator==(const FeatureId& other) const { return other._hash == _hash; }
+    bool operator ==(const FeatureId& other) const { return other._hash == _hash; }
 
     size_t value_count() const { return _values.size(); }
 

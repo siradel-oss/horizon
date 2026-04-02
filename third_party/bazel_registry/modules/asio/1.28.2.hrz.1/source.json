@@ -1,0 +1,10 @@
+{
+  "integrity": "sha256-QXU27U0xZFtVDWxHWpUlRNGqswoE1yKObObKk1vy3Bs=",
+  "patch_strip": 0,
+  "overlay": {
+    "BUILD.bazel": "sha256-DLErPMLI4MPnZpWk2Yf46EmFgGdPzC0GC1Z2DklW7ns=",
+    "MODULE.bazel": "sha256-hZjLp/Az/sDf0xR99hVpZmiBqa62gDu4n4FNLq74Jj4="
+  },
+  "strip_prefix": "asio-asio-1-28-2",
+  "url": "https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-28-2.zip"
+}

@@ -2,5 +2,7 @@
 
 namespace hrz
 {
+
 extern const char* const Version;
+
 }

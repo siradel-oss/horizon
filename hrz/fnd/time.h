@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 // Initializes the time point that time will be measured relative
 // to to now.
 void set_epoch();

@@ -7,6 +7,7 @@
 
 namespace hrz::vtex
 {
+
 //            Full size = 16
 //            Clip size =  4
 //

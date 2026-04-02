@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_attribute_values_task(
     const LayerModelRef& layer_model,
     uint32_t attribute_id,
@@ -165,12 +166,10 @@ bool VectorDataLoader::unload_task_data_if_not_needed<VectorDataLoader::Task::Lo
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::LoadAttributeValues>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::LoadAttributeValues& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::LoadAttributeValues
+>(WeakTaskRef& task_ref, Task& task, Task::LoadAttributeValues& task_data, JobScheduler* js)
 {
     // No-op
 }
+
 } // namespace hrz

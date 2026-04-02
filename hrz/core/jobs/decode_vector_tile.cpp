@@ -38,6 +38,7 @@ namespace hrz_jobs::decode_vector_tile
 {
 namespace
 {
+
 struct MutableVectorGeometry
 {
     lm::dbbox2 bounds;
@@ -971,7 +972,7 @@ void finalize_latlon_tile(MutableVectorTile& tile)
             case hrz_proto::VectorGeometryType::POINT_GEOMETRY:
             {
                 feature.anchor = points_data[feature.first_point];
-                feature.anchor_angle = 0.0f;
+                feature.anchor_angle = 0.0F;
                 break;
             }
             case hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY:
@@ -986,12 +987,12 @@ void finalize_latlon_tile(MutableVectorTile& tile)
                     auto linestring = points_data.subspan(
                         feature.first_point, sizes_data[feature.first_linestring_size]);
                     feature.anchor = hrz::vector_data::compute_ring_average(linestring);
-                    feature.anchor_angle = 0.0f;
+                    feature.anchor_angle = 0.0F;
                 }
                 else
                 {
                     feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-                    feature.anchor_angle = 0.0f;
+                    feature.anchor_angle = 0.0F;
                 }
                 break;
             }
@@ -1182,14 +1183,16 @@ void decode_geobuf_geometry(
         {
             encoded_position = {
                 geometry.coords(x_index), geometry.coords(y_index),
-                has_z ? geometry.coords(z_index) : 0};
+                has_z ? geometry.coords(z_index) : 0
+            };
         }
         else
         {
             encoded_position = {
                 current_encoded_position.x + geometry.coords(x_index),
                 current_encoded_position.y + geometry.coords(y_index),
-                current_encoded_position.z + (has_z ? geometry.coords(z_index) : 0)};
+                current_encoded_position.z + (has_z ? geometry.coords(z_index) : 0)
+            };
         }
         current_encoded_position = encoded_position;
         current_position_index += 1;
@@ -1197,7 +1200,8 @@ void decode_geobuf_geometry(
 
         return lm::dvec3{
             (double)encoded_position.x * coord_factor, (double)encoded_position.y * coord_factor,
-            (double)encoded_position.z * coord_factor};
+            (double)encoded_position.z * coord_factor
+        };
     };
 
     auto add_position = [&](lm::dvec3 position) { tile.geometry.points.push_back(position); };
@@ -1591,6 +1595,7 @@ bool decode_geobuf(
 
     return true;
 }
+
 } // anonymous namespace
 
 hrz_jobs::JobResult run(
@@ -1614,7 +1619,8 @@ hrz_jobs::JobResult run(
             hrz::BlobVector<lm::dvec3>(blob_allocator, InitialPointCapacity),
             hrz::BlobVector<uint32_t>(blob_allocator, InitialLinestringSizeCapacity),
         },
-        {}};
+        {}
+    };
     mutable_tile.geometry.features.register_blob_metadata(
         "contents"_ss, "vector geometry features"_ss);
     mutable_tile.geometry.points.register_blob_metadata("contents"_ss, "vector geometry points"_ss);

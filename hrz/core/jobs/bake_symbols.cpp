@@ -4,6 +4,7 @@
 
 namespace hrz_jobs::bake_symbols
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::SymbolBakingData& params,
     hrz_jobs::BakedSymbols& response,
@@ -14,4 +15,5 @@ hrz_jobs::JobResult run(
     symbol::SymbolBaker baker(params, context);
     return baker.bake(response);
 }
+
 } // namespace hrz_jobs::bake_symbols

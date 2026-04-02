@@ -11,6 +11,7 @@
 
 namespace ui::widget
 {
+
 class BlobInspector
 {
 public:
@@ -56,4 +57,5 @@ private:
     std::string _save_filter_to_json_string() const;
     bool _load_filter_from_json_string(std::string_view json);
 };
+
 } // namespace ui::widget

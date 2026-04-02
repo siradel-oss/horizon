@@ -3,23 +3,25 @@ load(":os_info.bzl", "os_info")
 
 os_info(
     name = "os_info",
+    is_windows = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
     visibility = ["//tools/bazel:__pkg__"],
-)
-
-py_binary(
-    name = "untar",
-    srcs = [
-        "untar.py",
-    ],
-    main = "untar.py",
-    python_version = "PY3",
-    visibility = ["//visibility:public"],
 )
 
 py_binary(
     name = "qualify_package_json_version",
     srcs = ["qualify_package_json_version.py"],
     main = "qualify_package_json_version.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "pkg_copy",
+    srcs = ["pkg_copy.py"],
+    main = "pkg_copy.py",
     python_version = "PY3",
     visibility = ["//visibility:public"],
 )

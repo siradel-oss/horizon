@@ -108,6 +108,7 @@
 
 namespace
 {
+
 using hrz::three_d_tiles::BoundingVolume;
 using LayerH = uint32_t;
 using TilesetH = uint32_t;
@@ -175,7 +176,8 @@ struct RenderableBox : public my::Renderer::Renderable
         rb->push_state();
 
         my::UboBinding ubo_bindings[] = {
-            {Box_UboTileParams, data->ubo_buffer, 0, sizeof(BoxUniformData)}};
+            {Box_UboTileParams, data->ubo_buffer, 0, sizeof(BoxUniformData)}
+        };
         rb->bind(ubo_bindings);
 
         auto state = rb->get_current_state();
@@ -563,11 +565,11 @@ struct ThreeDTile
         {
             return std::visit(
                 hrz::overload{
-                    [](const std::monostate&) { return 0U; },
-                    [](const B3dmContent& c) { return c.batch_length; },
-                    [](const TilesetContent&) { return 0U; },
+                    [](const std::monostate&) { return 0U; }, [](const B3dmContent& c)
+                    { return c.batch_length; }, [](const TilesetContent&) { return 0U; },
                     [](const I3dmContent& c) { return c.batch_length; },
-                    [](const PntsContent& c) { return c.batch_length; }},
+                    [](const PntsContent& c) { return c.batch_length; }
+                },
                 content);
         }
     };
@@ -806,10 +808,12 @@ struct ThreeDTilesSystem
             for (int i = 0; i < HRZ_S_MAX_SUN_CASCADES; ++i)
             {
                 samplers[i] = {
-                    hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]};
+                    hrz::SamplerSunShadow0 + i, hrz::shadows::SUN_SHADOW_MAP_SAMPLER_NAMES[i]
+                };
             }
             samplers[HRZ_S_MAX_SUN_CASCADES] = {
-                hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME};
+                hrz::SamplerSunColor, hrz::sky::SUN_COLOR_SAMPLER_NAME
+            };
 
             static const char* outputs[] = {"o_color"};
 
@@ -906,8 +910,7 @@ struct ThreeDTilesSystem
 
         config->attributes = attributes;
         config->has_vector_data_layer_attributes = std::ranges::any_of(
-            config->attributes,
-            [](const hrz::three_d_tiles::AttributeConfig& attribute)
+            config->attributes, [](const hrz::three_d_tiles::AttributeConfig& attribute)
             { return attribute.has_vector_data_layer_source(); });
         config->vector_data_layer_id = 0;
         config->vector_data_layer_request_id =
@@ -1153,8 +1156,10 @@ struct ThreeDTilesSystem
                     if (subtile.styling_status
                         == ThreeDTile::StylingStatus::WAITING_FOR_ATTRIBUTE_VALUES)
                     {
-                        _vector_data_channel.send(hrz::vector_data::messages::ReleaseDataRequest{
-                            subtile.vector_data_attribute_request_id});
+                        _vector_data_channel.send(
+                            hrz::vector_data::messages::ReleaseDataRequest{
+                                subtile.vector_data_attribute_request_id
+                            });
                         subtile.vector_data_attribute_status =
                             ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED;
                         subtile.styling_status = ThreeDTile::StylingStatus::IDLE;
@@ -1247,7 +1252,7 @@ struct ThreeDTilesSystem
 
     struct RecreateAllMaterialsVisitor
     {
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             if (b3d_model.prototype)
             {
@@ -1256,12 +1261,12 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             // No-op
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             // No-op
         }
@@ -1271,7 +1276,7 @@ struct ThreeDTilesSystem
     {
         const hrz_proto::Material& material;
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             if (b3d_model.prototype)
             {
@@ -1279,12 +1284,12 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             // No-op
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             // No-op
         }
@@ -1294,7 +1299,7 @@ struct ThreeDTilesSystem
     {
         size_t index;
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             assert(index < b3d_model.materials.material_count());
 
@@ -1304,12 +1309,12 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             // No-op
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             // No-op
         }
@@ -1320,7 +1325,7 @@ struct ThreeDTilesSystem
         size_t index;
         const hrz_proto::Material& material;
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             if (b3d_model.prototype)
             {
@@ -1328,12 +1333,12 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             // No-op
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             // No-op
         }
@@ -1344,7 +1349,7 @@ struct ThreeDTilesSystem
         size_t index;
         const hrz_proto::NumericPalette& palette;
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             if (b3d_model.prototype)
             {
@@ -1352,12 +1357,12 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             // No-op
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             // No-op
         }
@@ -1365,7 +1370,7 @@ struct ThreeDTilesSystem
 
     struct UpdateActiveMaterialsVisitor
     {
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             if (b3d_model.prototype)
             {
@@ -1377,12 +1382,12 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             // No-op
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             // No-op
         }
@@ -1390,7 +1395,7 @@ struct ThreeDTilesSystem
 
     struct UpdateSelectedFeaturesVisitor
     {
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             if (b3d_model.prototype && b3d_model.geometry)
             {
@@ -1399,7 +1404,7 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             if (i3d_model.prototype && i3d_model.instance_group.has_value())
             {
@@ -1409,7 +1414,7 @@ struct ThreeDTilesSystem
             }
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             if (pnts.point_cloud)
             {
@@ -1420,7 +1425,7 @@ struct ThreeDTilesSystem
 
     struct UpdateMaterialPropertiesVisitor
     {
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             b3d_model.draw_prps.feature_color_blend_mode =
                 tileset.config->inherited_draw_prps.feature_color_blend_mode;
@@ -1434,7 +1439,7 @@ struct ThreeDTilesSystem
                 tileset.config->inherited_draw_prps.overlay_material_opacity;
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             i3d_model.draw_prps.feature_color_blend_mode =
                 tileset.config->inherited_draw_prps.feature_color_blend_mode;
@@ -1442,7 +1447,7 @@ struct ThreeDTilesSystem
                 tileset.config->inherited_draw_prps.feature_color_blend_strength;
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             pnts.update_appearance(tileset.config->inherited_draw_prps);
         }
@@ -1450,7 +1455,7 @@ struct ThreeDTilesSystem
 
     struct UpdateAppearanceVisitor
     {
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::B3dmContent& b3d_model) const
         {
             b3d_model.draw_prps.clip_id = tileset.config->inherited_draw_prps.clip_id;
             b3d_model.draw_prps.lighting = tileset.config->inherited_draw_prps.lighting;
@@ -1458,7 +1463,7 @@ struct ThreeDTilesSystem
                 tileset.config->inherited_draw_prps.draw_under_flat_overlays;
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::I3dmContent& i3d_model) const
         {
             i3d_model.draw_prps.clip_id = tileset.config->inherited_draw_prps.clip_id;
             i3d_model.draw_prps.lighting = tileset.config->inherited_draw_prps.lighting;
@@ -1466,7 +1471,7 @@ struct ThreeDTilesSystem
                 tileset.config->inherited_draw_prps.draw_under_flat_overlays;
         }
 
-        void operator()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
+        void operator ()(Tileset& tileset, ThreeDTile&, ThreeDTile::PntsContent& pnts) const
         {
             pnts.update_appearance(tileset.config->inherited_draw_prps);
         }
@@ -1616,7 +1621,8 @@ struct ThreeDTilesSystem
                         {
                             // We do nothing, because reloading happens for materials,
                             // but i3dm and pnts don't use dynamic materials.
-                        }},
+                        }
+                    },
                     subtile.content);
             }
 
@@ -1890,8 +1896,10 @@ struct ThreeDTilesSystem
             },
             subtile.content);
 
-        _vector_data_channel.send(hrz::vector_data::messages::ReleaseDataRequest{
-            subtile.vector_data_attribute_request_id});
+        _vector_data_channel.send(
+            hrz::vector_data::messages::ReleaseDataRequest{
+                subtile.vector_data_attribute_request_id
+            });
         subtile.vector_data_attribute_status =
             ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED;
 
@@ -1965,8 +1973,10 @@ struct ThreeDTilesSystem
         {
             auto config = tileset->config;
 
-            _vector_data_channel.send(hrz::vector_data::messages::ReleaseLayerLoader{
-                config->vector_data_layer_request_id});
+            _vector_data_channel.send(
+                hrz::vector_data::messages::ReleaseLayerLoader{
+                    config->vector_data_layer_request_id
+                });
 
             delete config;
         }
@@ -2859,7 +2869,8 @@ struct ThreeDTilesSystem
                 proto_ref.load_queue = get_request_queue(tileset->config);
                 proto_ref.loading_priority = request_priority;
                 proto_ref.resource_owner = {
-                    hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id};
+                    hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id
+                };
 
                 proto_ref.ref_count = 1;
 
@@ -2938,7 +2949,8 @@ struct ThreeDTilesSystem
         auto config = tileset->config;
 
         const hrz::monitoring::ResourceOwner owner{
-            hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id};
+            hrz::monitoring::systems::ThreeDTilesLayers, tileset->config->global_layer_id
+        };
 
         ThreeDTile::Subtile subtile;
 
@@ -3412,7 +3424,8 @@ struct ThreeDTilesSystem
                 [](const ThreeDTile::I3dmContent& content) { return content.has_been_styled_once; },
                 [](const ThreeDTile::PntsContent& content) { return content.has_been_styled_once; },
                 [](const ThreeDTile::TilesetContent&) { return true; },
-                [](const std::monostate&) { return true; }},
+                [](const std::monostate&) { return true; }
+            },
             subtile.content);
     }
 
@@ -3808,10 +3821,12 @@ struct ThreeDTilesSystem
                     }
                     case TilesetConfig::VectorDataLayerStatus::LOADED:
                     {
-                        _vector_data_channel.send(hrz::vector_data::messages::RequestData{
-                            subtile.vector_data_attribute_request_id,
-                            config.vector_data_layer_request_id, subtile.batches_to_feature_ids,
-                            hrz::vector_data::DataKind::AttributeValues});
+                        _vector_data_channel.send(
+                            hrz::vector_data::messages::RequestData{
+                                subtile.vector_data_attribute_request_id,
+                                config.vector_data_layer_request_id, subtile.batches_to_feature_ids,
+                                hrz::vector_data::DataKind::AttributeValues
+                            });
                         subtile.vector_data_attribute_status =
                             ThreeDTile::Subtile::VectorDataAttributeStatus::LOADING;
                         return ThreeDTile::StylingStatus::WAITING_FOR_ATTRIBUTE_VALUES;
@@ -4186,8 +4201,10 @@ struct ThreeDTilesSystem
                 && subtile.vector_data_attribute_status
                     != ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED)
             {
-                _vector_data_channel.send(hrz::vector_data::messages::ReleaseDataRequest{
-                    subtile.vector_data_attribute_request_id});
+                _vector_data_channel.send(
+                    hrz::vector_data::messages::ReleaseDataRequest{
+                        subtile.vector_data_attribute_request_id
+                    });
                 subtile.vector_data_attribute_status =
                     ThreeDTile::Subtile::VectorDataAttributeStatus::UNREQUESTED;
             }
@@ -4355,7 +4372,8 @@ struct ThreeDTilesSystem
                 [&](std::monostate&)
                 {
                     // No action needed for std::monostate
-                }},
+                }
+            },
             subtile->content);
     }
 
@@ -4602,7 +4620,7 @@ struct ThreeDTilesSystem
                 group_data.position_compression.quantization_mins =
                     lm::vec3(content.quantized_volume_offset);
                 group_data.position_compression.quantization_scale =
-                    lm::vec3(content.quantized_volume_scale) / 65535.0f;
+                    lm::vec3(content.quantized_volume_scale) / 65535.0F;
             }
             else
             {
@@ -4614,7 +4632,7 @@ struct ThreeDTilesSystem
             {
                 group_data.compressed_normals = content.normal_oct32p_data;
                 group_data.normal_compression.type = hrz::model::DracoCompressionType::OctEncoded;
-                group_data.normal_compression.quantization_scale = lm::vec3(2.0f / 65535.0f);
+                group_data.normal_compression.quantization_scale = lm::vec3(2.0F / 65535.0F);
             }
             else
             {
@@ -4969,7 +4987,8 @@ struct ThreeDTilesSystem
 
                     render_request |= std::visit(
                         hrz::overload{
-                            [&](ThreeDTile::B3dmContent&) {
+                            [&](ThreeDTile::B3dmContent&)
+                            {
                                 return _work_loading_subtile_b3dm(
                                     *tileset, tile, subtile, tile_object_reference, ctx);
                             },
@@ -4987,15 +5006,18 @@ struct ThreeDTilesSystem
                                 }
                                 return hrz::RenderRequest{};
                             },
-                            [&](ThreeDTile::I3dmContent&) {
+                            [&](ThreeDTile::I3dmContent&)
+                            {
                                 return _work_loading_subtile_i3dm(
                                     *tileset, tile, subtile, tile_object_reference, ctx);
                             },
-                            [&](ThreeDTile::PntsContent&) {
+                            [&](ThreeDTile::PntsContent&)
+                            {
                                 return _work_loading_subtile_pnts(
                                     *tileset, tile, subtile, tile_object_reference, ctx);
                             },
-                            [&](std::monostate&) { return hrz::RenderRequest{}; }},
+                            [&](std::monostate&) { return hrz::RenderRequest{}; }
+                        },
                         subtile.content);
                 }
 
@@ -5059,7 +5081,7 @@ struct ThreeDTilesSystem
             hrz::get_flag(hrz::Flag::DebugDrawHorizonOcclusionPoints);
         if (debug_draw_horizon_occlusion_points && tile.horizon_occlusion_point.has_value())
         {
-            static constexpr lm::vec4 OccludedColor = {0.7f, 0.7f, 0.7f, 1};
+            static constexpr lm::vec4 OccludedColor = {0.7F, 0.7F, 0.7F, 1};
             static constexpr lm::vec4 VisibleColor = {1, 0, 0, 1};
 
             hrz::debug_draw::points(
@@ -5349,7 +5371,6 @@ struct ThreeDTilesSystem
         const TilesetWorkContext& ctx)
     {
         hrz::RenderRequest render_request;
-        google::protobuf::Arena arena;
 
         auto* config = tileset->config;
 
@@ -5365,12 +5386,16 @@ struct ThreeDTilesSystem
             if (config->vector_data_layer_status
                 != TilesetConfig::VectorDataLayerStatus::UNREQUESTED)
             {
-                _vector_data_channel.send(hrz::vector_data::messages::ReleaseLayerLoader{
-                    config->vector_data_layer_request_id});
+                _vector_data_channel.send(
+                    hrz::vector_data::messages::ReleaseLayerLoader{
+                        config->vector_data_layer_request_id
+                    });
             }
 
-            _vector_data_channel.send(hrz::vector_data::messages::LoadLayer{
-                config->vector_data_layer_request_id, config->vector_data_layer_id});
+            _vector_data_channel.send(
+                hrz::vector_data::messages::LoadLayer{
+                    config->vector_data_layer_request_id, config->vector_data_layer_id
+                });
             config->vector_data_layer_status = TilesetConfig::VectorDataLayerStatus::LOADING;
 
             config->renew_vector_data_layer_request = false;
@@ -5435,9 +5460,11 @@ struct ThreeDTilesSystem
 
         for (const auto& view_info : ctx.views_info)
         {
-            sses.push_back(hrz::render::ScreenSpaceError(
-                view_info.cam_view_info.cam.fovy, (double)view_info.cam_view_info.viewport.size.y,
-                view_info.cam_view_info.viewport.device_pixel_ratio));
+            sses.push_back(
+                hrz::render::ScreenSpaceError(
+                    view_info.cam_view_info.cam.fovy,
+                    (double)view_info.cam_view_info.viewport.size.y,
+                    view_info.cam_view_info.viewport.device_pixel_ratio));
             horizon_cullers.push_back(hrz::HorizonCuller(view_info.cam_view_info.cam.pos));
         }
 
@@ -5516,8 +5543,8 @@ struct ThreeDTilesSystem
                     HRZ_LOG_ERROR("Error: Could not download external glTF.");
                     proto_ref.status = ModelPrototypeRef::Status::ERROR;
                 }
-                else if (hrz::assets_loader::is_finished(
-                             ctx.al, proto_ref.load_external_gltf_ticket))
+                else if (
+                    hrz::assets_loader::is_finished(ctx.al, proto_ref.load_external_gltf_ticket))
                 {
                     if (hrz::assets_loader::get_status(ctx.al, proto_ref.load_external_gltf_ticket)
                         == hrz::assets_loader::RequestStatus::Loaded)
@@ -5633,8 +5660,8 @@ struct ThreeDTilesSystem
                                     && subtile->attribute_values.size() > attribute_index)
                                 {
                                     auto& all_values = std::get<
-                                        hrz::InlinedVector<hrz::vector_data::AttributeValues, 16>>(
-                                        message.data);
+                                        hrz::InlinedVector<hrz::vector_data::AttributeValues, 16>
+                                    >(message.data);
                                     bool values_found = false;
 
                                     for (auto& values : all_values)
@@ -5738,7 +5765,8 @@ struct ThreeDTilesSystem
                                 _trigger_restyling(tileset, false);
                             }
                         }
-                    }},
+                    }
+                },
                 generic_message);
         }
     }
@@ -5868,7 +5896,8 @@ struct ThreeDTilesSystem
                 },
                 [&](ThreeDTile::TilesetContent&)
                 { subtile.styling_status = ThreeDTile::StylingStatus::IDLE; },
-                [&](std::monostate&) { subtile.styling_status = ThreeDTile::StylingStatus::IDLE; }},
+                [&](std::monostate&) { subtile.styling_status = ThreeDTile::StylingStatus::IDLE; }
+            },
             subtile.content);
 
         return hrz::RenderRequest::visual();
@@ -5918,7 +5947,8 @@ struct ThreeDTilesSystem
                 [&](std::monostate&)
                 {
                     // Empty block for std::monostate
-                }},
+                }
+            },
             subtile.content);
     }
 
@@ -6207,7 +6237,8 @@ struct ThreeDTilesSystem
                 [&](std::monostate&)
                 {
                     // No action needed for std::monostate
-                }},
+                }
+            },
             subtile.content);
 
         return rr;
@@ -6357,7 +6388,8 @@ struct ThreeDTilesSystem
                             [&](std::monostate&)
                             {
                                 // No action needed for these types
-                            }},
+                            }
+                        },
                         subtile.content);
                 }
             }
@@ -6640,10 +6672,12 @@ struct Layer
     size_t material_count = 0;
     ArraySync materials_array_sync;
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct ThreeDTilesLayerSystem
 {
     using IndexPool = GenIndexPool<LayerH, 8, 16>;
@@ -6664,6 +6698,7 @@ namespace three_d_tiles_layers
 {
 namespace
 {
+
 Layer* _get_layer(ThreeDTilesLayerSystem* system, uint64_t global_layer_id)
 {
     auto it = system->global_layer_id_to_handle.find(global_layer_id);
@@ -6812,7 +6847,8 @@ RenderRequest _update_layer(
                     attributes.push_back(
                         {attribute.name(),
                          hrz::three_d_tiles::AttributeConfig::BatchClassId{
-                             attribute.is_feature_id()},
+                             attribute.is_feature_id()
+                         },
                          attribute.vector_data_attr_id(), style::Parser::INSERT_ERROR,
                          attribute.transform()});
                     break;
@@ -6820,7 +6856,8 @@ RenderRequest _update_layer(
                     attributes.push_back(
                         {attribute.name(),
                          hrz::three_d_tiles::AttributeConfig::BatchClassName{
-                             attribute.is_feature_id()},
+                             attribute.is_feature_id()
+                         },
                          attribute.vector_data_attr_id(), style::Parser::INSERT_ERROR,
                          attribute.transform()});
                     break;
@@ -7068,6 +7105,7 @@ RenderRequest _update_layer(
 
     return render_request;
 }
+
 } // namespace
 
 ThreeDTilesLayerSystem* create_system(
@@ -7134,14 +7172,14 @@ void register_layer(ThreeDTilesLayerSystem* system, SceneModel* model, uint64_t 
         hrz_proto::ThreeDTilesLayer data;
         data.set_url("");
         data.set_visible(true);
-        data.set_max_screen_space_error(16.0f);
-        data.set_refinement_hysteresis(0.3f);
+        data.set_max_screen_space_error(16.0F);
+        data.set_refinement_hysteresis(0.3F);
 
         auto* transform = data.mutable_transform();
-        transform->mutable_scale()->set_x(1.0f);
-        transform->mutable_scale()->set_y(1.0f);
-        transform->mutable_scale()->set_z(1.0f);
-        transform->mutable_rotation()->set_w(1.0f);
+        transform->mutable_scale()->set_x(1.0F);
+        transform->mutable_scale()->set_y(1.0F);
+        transform->mutable_scale()->set_z(1.0F);
+        transform->mutable_rotation()->set_w(1.0F);
         transform->mutable_frame()->set_front(hrz_proto::Axis::POS_Y);
         transform->mutable_frame()->set_up(hrz_proto::Axis::POS_Z);
         transform->mutable_frame()->set_handedness(hrz_proto::Handedness::RIGHT);
@@ -7150,7 +7188,7 @@ void register_layer(ThreeDTilesLayerSystem* system, SceneModel* model, uint64_t 
         data.set_vector_data_layer_id(0);
         data.set_rng_seed(0);
         data.set_styling_script("");
-        data.mutable_scene_views()->set_bits((1u << hrz::SCENE_VIEW_COUNT) - 1);
+        data.mutable_scene_views()->set_bits((1U << hrz::SCENE_VIEW_COUNT) - 1);
         data.set_clip_id(-1);
         data.mutable_lighting()->set_enable_lighting(true);
         data.mutable_lighting()->set_cast_shadows(true);
@@ -7258,6 +7296,7 @@ bool is_working(ThreeDTilesLayerSystem* system)
 
 namespace
 {
+
 struct PickingInfo
 {
     uint64_t layer_id;
@@ -7299,6 +7338,7 @@ std::optional<PickingInfo> _get_picking_info(
 
     return {{global_layer_id, feature_id, tileset_handle, tile_index, batch_id}};
 }
+
 } // namespace
 
 void pick(
@@ -7469,5 +7509,6 @@ void draw(ThreeDTilesLayerSystem* system, Render* render, AttributionRegistry* a
 
     system->three_d_tiles.draw(render, attributions);
 }
+
 } // namespace three_d_tiles_layers
 } // namespace hrz

@@ -13,6 +13,7 @@
 
 namespace data
 {
+
 struct Range
 {
     size_t first_index;
@@ -46,7 +47,7 @@ struct SampleId
     size_t tree;  // the index of the sample's tree
     size_t local; // the index of the sample in its tree
 
-    bool operator==(const SampleId& other) const
+    bool operator ==(const SampleId& other) const
     {
         return thread == other.thread && tree == other.tree && local == other.local;
     }
@@ -258,12 +259,12 @@ struct Metric
     MetricUnit unit;
 };
 
-bool operator==(const Metric& lhs, const Metric& rhs);
-bool operator!=(const Metric& lhs, const Metric& rhs);
+bool operator ==(const Metric& lhs, const Metric& rhs);
+bool operator !=(const Metric& lhs, const Metric& rhs);
 
 struct MetricHash
 {
-    std::size_t operator()(const Metric& metric) const;
+    std::size_t operator ()(const Metric& metric) const;
 };
 
 class Histogram

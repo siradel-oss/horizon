@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 struct Actor;
 struct ActorRunner;
 struct AttributionRegistry;
@@ -15,6 +16,7 @@ struct VectorDataLoader;
 
 namespace actor_runner
 {
+
 ActorRunner* create(
     bool run_on_main_thread,
     AttributionRegistry*,
@@ -34,5 +36,6 @@ void work(
 void destroy(ActorRunner*, bool leak);
 void add_actor(ActorRunner*, std::unique_ptr<Actor>);
 bool is_working(ActorRunner*);
+
 } // namespace actor_runner
 } // namespace hrz

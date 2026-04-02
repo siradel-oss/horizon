@@ -112,6 +112,7 @@ void collect_present_shaders(hrz::GpuResourceContext* rc)
 
 namespace
 {
+
 void my_log_adapter(
     my::LogSeverity severity,
     const char* message,
@@ -247,7 +248,8 @@ public:
 #else
                     1
 #endif
-                    )};
+                    )
+            };
 
             render->set_framebuffer(my::ResourceHandle::null(), {vp, vp});
             render->clear({&clear, 1});
@@ -288,7 +290,8 @@ public:
         for (size_t i = 0; i < views.size(); ++i)
         {
             const my::UboBinding ubo_binding{
-                0, _ubo, (uint32_t)(_ubo_data_stride * i), sizeof(SceneViewportUniformData)};
+                0, _ubo, (uint32_t)(_ubo_data_stride * i), sizeof(SceneViewportUniformData)
+            };
 
             const my::TextureBinding texture_binding{
                 0,
@@ -313,8 +316,8 @@ public:
 
         _highlight_enabled = config.enable_highlight();
         _info_enabled = config.enable_info();
-        _highlight_rate_ms = (double)std::max(33.3f, config.highlight_rate_ms());
-        _info_rate_ms = (double)std::max(33.3f, config.info_rate_ms());
+        _highlight_rate_ms = (double)std::max(33.3F, config.highlight_rate_ms());
+        _info_rate_ms = (double)std::max(33.3F, config.info_rate_ms());
     }
 
     void work(
@@ -677,7 +680,8 @@ class DesktopClientIntegration
                     {
                         _mouse_press_pos = {
                             (int)single_finger_gesture.position.x,
-                            (int)single_finger_gesture.position.y};
+                            (int)single_finger_gesture.position.y
+                        };
                     }
                 }
                 break;
@@ -917,7 +921,8 @@ public:
                                 hrz::vector_data::FeatureIdHash feature_id[] = {
                                     hrz::vector_data::FeatureId::from_proto(
                                         result.vector().feature_id())
-                                        .hash()};
+                                        .hash()
+                                };
                                 hrz::scene::select(
                                     scene, result.layer().handle().opaque(),
                                     std::span<const hrz::vector_data::FeatureIdHash>(feature_id));
@@ -995,7 +1000,8 @@ public:
                                 hrz::vector_data::FeatureIdHash feature_id[] = {
                                     hrz::vector_data::FeatureId::from_proto(
                                         result.three_d_tile().feature_id())
-                                        .hash()};
+                                        .hash()
+                                };
                                 hrz::scene::select(
                                     scene, result.layer().handle().opaque(),
                                     std::span<const hrz::vector_data::FeatureIdHash>(feature_id));
@@ -1983,15 +1989,15 @@ public:
 
         // Ensure some boundaries for the overriden graphics settings
         _graphics_settings.set_flat_overlay_cascade_count(
-            std::max(1u, _graphics_settings.flat_overlay_cascade_count()));
+            std::max(1U, _graphics_settings.flat_overlay_cascade_count()));
         _graphics_settings.set_flat_overlay_resolution(
-            std::max(1u, _graphics_settings.flat_overlay_resolution()));
+            std::max(1U, _graphics_settings.flat_overlay_resolution()));
         _graphics_settings.set_shadows_cascade_count(
-            std::max(1u, _graphics_settings.shadows_cascade_count()));
+            std::max(1U, _graphics_settings.shadows_cascade_count()));
         _graphics_settings.set_imagery_merge_group_count(
-            std::max(1u, _graphics_settings.imagery_merge_group_count()));
+            std::max(1U, _graphics_settings.imagery_merge_group_count()));
         _graphics_settings.set_raster_atlas_size(
-            std::max(1u, _graphics_settings.raster_atlas_size()));
+            std::max(1U, _graphics_settings.raster_atlas_size()));
 
         HRZ_LOG_INFO("The graphics settings in effect are: ");
 
@@ -2089,8 +2095,8 @@ public:
         {
             auto background_color = _options.has_loading_screen_background_color()
                 ? hrz::srgb_to_linear(
-                    hrz::convert_proto_color_to_float(_options.loading_screen_background_color()))
-                : lm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+                      hrz::convert_proto_color_to_float(_options.loading_screen_background_color()))
+                : lm::vec4(0.0F, 0.0F, 0.0F, 1.0F);
 
             _loading_screen_technique.reset(new LoadingScreenTechnique());
             _loading_screen_technique->init(_my.get(), &_gpu_rc, background_color);
@@ -2492,7 +2498,8 @@ public:
             my::ResourceHandle::null(),
             my::ViewportState{
                 {0, 0, _viewport_width, _viewport_height},
-                {0, 0, _viewport_width, _viewport_height}});
+                {0, 0, _viewport_width, _viewport_height}
+            });
 
         hrz::debug_draw::draw_display(hrz::scene::get_debug_draw(_scene), _my.get());
         hrz::dev_ui::draw(_dev_ui, _my.get(), device_pixel_ratio);
@@ -2751,10 +2758,12 @@ hrz::PlatformContext* g_platform;
 std::unique_ptr<Core> core;
 hrz::ThreadProfiler* g_profiler;
 hrz::ThreadMetricsRegistry* g_metrics;
+
 } // namespace
 
 namespace
 {
+
 class ViewerServiceImpl : public hrz_proto::IViewerService
 {
 public:
@@ -3065,8 +3074,9 @@ public:
         const ::hrz_proto::LayerHandle& input,
         ::hrz_proto::ShapeInformation& output) override
     {
-        output.CopyFrom(hrz::editor::get_shape_information(
-            hrz::scene::get_shape_editor(core->scene()), input.opaque()));
+        output.CopyFrom(
+            hrz::editor::get_shape_information(
+                hrz::scene::get_shape_editor(core->scene()), input.opaque()));
     }
 
     void delete_selected_control_point(const ::hrz_proto::Void& input, ::hrz_proto::Void& output)
@@ -3298,7 +3308,7 @@ unsigned int hrz_core_init(
     hrz::set_epoch();
 
     hrz_proto::ViewerOptions options;
-    options.ParseFromArray(args_data, args_data_size);
+    (void)options.ParseFromArray(args_data, args_data_size);
 
     hrz::log::set_log_filter_level((hrz::log::Severity)options.log_filter_level());
     my::set_log_filter_level((my::LogSeverity)options.log_filter_level());

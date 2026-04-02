@@ -50,7 +50,8 @@ static const pl_Ellipsoid ELLIPSOIDS[] = {
     {"WGS66", 6378145.0, 298.25, "WGS 66"},
     {"WGS72", 6378135.0, 298.26, "WGS 72"},
     {"WGS84", WGS84_A, WGS84_IF, "WGS 84"},
-    {"sphere", 6370997.0, 0.0, "Normal Sphere (r=6370997)"}};
+    {"sphere", 6370997.0, 0.0, "Normal Sphere (r=6370997)"}
+};
 
 static const pl_PrimeMeridian PRIME_MERIDIANS[] = {
     {"greenwich", "Greenwich", 0},
@@ -65,7 +66,8 @@ static const pl_PrimeMeridian PRIME_MERIDIANS[] = {
     {"brussels", "Brussels", 0.076235545},
     {"stockholm", "Stockholm", 0.315176404},
     {"athens", "Athens", 0.413928176},
-    {"oslo", "Oslo", 0.187150201}};
+    {"oslo", "Oslo", 0.187150201}
+};
 
 static const pl_MeasurementUnit LENGTH_UNITS[] = {
     {"km", "Kilometer", 1000.0},
@@ -88,12 +90,14 @@ static const pl_MeasurementUnit LENGTH_UNITS[] = {
     {"us-mi", "U.S. Surveyor's Statute Mile", 6336000 / 3937.0},
     {"ind-yd", "Indian Yard", 0.91439523},
     {"ind-ft", "Indian Foot", 0.30479841},
-    {"ind-ch", "Indian Chain", 20.11669506}};
+    {"ind-ch", "Indian Chain", 20.11669506}
+};
 
 static const pl_MeasurementUnit ANGLE_UNITS[] = {
     {"rad", "Radian", 1.0},
     {"deg", "Degree", 0.017453292519943296},
-    {"grad", "Grad", 0.015707963267948967}};
+    {"grad", "Grad", 0.015707963267948967}
+};
 
 static const pl_Datum DATUMS[] = {
     {"WGS84", "WGS84", 3, {0, 0, 0, 0, 0, 0, 0}},

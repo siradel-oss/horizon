@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 void default_scene_view_settings(hrz_proto::SceneViewSettings* settings)
 {
     settings->CopyFrom(hrz_proto::SceneViewSettings::default_instance());
@@ -147,4 +148,5 @@ void default_camera_settings(hrz_proto::CameraSettings* settings)
     settings->set_min_height_above_terrain(2.0);
     settings->set_terrain_collision_inertia(0.06F);
 }
+
 } // namespace hrz

@@ -22,6 +22,7 @@
 
 namespace
 {
+
 enum
 {
     UboTileParams = hrz::vector_flat_overlay::UboVectorOverlayPass + 1,
@@ -139,7 +140,7 @@ struct TileId
     uint64_t channel_id;
     uint64_t tile_id;
 
-    constexpr bool operator==(const TileId& other) const = default;
+    constexpr bool operator ==(const TileId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TileId& request)
@@ -204,7 +205,7 @@ class HeatmapReprSystem : public hrz::vt::ReprSystem
         uint64_t channel_id;
         uint64_t config_id;
 
-        constexpr bool operator==(const ConfigId& other) const = default;
+        constexpr bool operator ==(const ConfigId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ConfigId& request)
@@ -322,8 +323,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         uint64_t layer_id,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         ConfigId style_id)
     {
         if (repr.type() != hrz_proto::VectorReprType::HEATMAP_VECTOR_REPR)
@@ -703,9 +704,11 @@ public:
                                 },
                                 ConfigId{channel_id, message.style_id});
 
-                            channel.send(hrz::vt::repr::messages::StyleRegistrationResult{
-                                message.style_id, handle.has_value(),
-                                std::move(registered_properties)});
+                            channel.send(
+                                hrz::vt::repr::messages::StyleRegistrationResult{
+                                    message.style_id, handle.has_value(),
+                                    std::move(registered_properties)
+                                });
                         },
                         [&](const hrz::vt::repr::messages::UnregisterStyle& message)
                         {
@@ -865,6 +868,7 @@ public:
 
 namespace hrz::vt
 {
+
 std::unique_ptr<ReprSystem> create_heatmap_repr_system()
 {
     return std::unique_ptr<ReprSystem>(new HeatmapReprSystem());
@@ -874,4 +878,5 @@ void collect_heatmap_shaders(hrz::GpuResourceContext* rc)
 {
     HeatmapReprSystem::collect_shaders(rc);
 }
+
 } // namespace hrz::vt

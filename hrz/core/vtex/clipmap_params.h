@@ -9,12 +9,13 @@
 
 namespace hrz::vtex
 {
+
 class ClipmapParams
 {
 public:
     enum
     {
-        NoLod = 0xffu,
+        NoLod = 0xffU,
     };
 
     ClipmapParams(uint32_t clip_size, uint32_t tile_size, uint32_t lod_count);

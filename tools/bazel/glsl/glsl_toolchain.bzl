@@ -5,7 +5,6 @@ def _glsl_toolchain_impl(ctx):
         glsl_info = GlslInfo(
             check_version = ctx.attr.check_version,
             profile = ctx.attr.profile,
-            validator = ctx.executable.validator,
         ),
     )
     return [toolchain_info]
@@ -30,11 +29,6 @@ glsl_toolchain = rule(
                 "es",
                 "core",
             ],
-        ),
-        "validator": attr.label(
-            mandatory = True,
-            executable = True,
-            cfg = "exec",
         ),
     },
 )

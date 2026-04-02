@@ -6,6 +6,7 @@ namespace hrz_jobs
 {
 namespace test_job_1
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::TestJob1Params& params,
     hrz_jobs::TestJob1Response& response,
@@ -26,6 +27,7 @@ hrz_jobs::JobResult run(
 
 namespace test_job_2
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::TestJob2Params& params,
     hrz_jobs::TestJob2Response& response,

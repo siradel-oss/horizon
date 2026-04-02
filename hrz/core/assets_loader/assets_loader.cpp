@@ -29,6 +29,7 @@ extern "C"
 
 namespace
 {
+
 using namespace hrz;
 
 struct InnerTicket
@@ -56,7 +57,7 @@ struct InnerTicket
 
     constexpr HttpTicket as_http_ticket() const { return std::bit_cast<HttpTicket>(*this); }
 
-    bool operator==(const InnerTicket& other) const { return as_ticket() == other.as_ticket(); }
+    bool operator ==(const InnerTicket& other) const { return as_ticket() == other.as_ticket(); }
 };
 
 static_assert(
@@ -69,7 +70,7 @@ struct ChannelRequestId
     uint64_t channel_id;
     uint64_t request_id;
 
-    constexpr bool operator==(const ChannelRequestId& other) const = default;
+    constexpr bool operator ==(const ChannelRequestId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const ChannelRequestId& request)
@@ -193,6 +194,7 @@ struct Request
 
 namespace
 {
+
 enum
 {
     FirstRegularQueue = hrz::assets_loader::Queue::Late + 1,
@@ -228,7 +230,8 @@ static inline void generate_slot_to_queue_lookup(
 {
     uint32_t available_slots_per_queue[assets_loader::Queue_Count] = {
         EarlySlots,         LateSlots,       DtmSlots,         ImageryTopSlots, ImageryMiddleSlots,
-        ImageryBottomSlots, VectorDataSlots, ThreeDTilesSlots, MeshModelslots,  DefaultSlots};
+        ImageryBottomSlots, VectorDataSlots, ThreeDTilesSlots, MeshModelslots,  DefaultSlots
+    };
 
     uint32_t queue = 0;
     for (unsigned int i = 0; i < QueueSlots_Count;)
@@ -242,10 +245,12 @@ static inline void generate_slot_to_queue_lookup(
         if (++queue == assets_loader::Queue_Count) queue = 0;
     }
 }
+
 } // anonymous namespace
 
 namespace hrz
 {
+
 struct AssetsLoader
 {
     using PoolTicket = uint32_t;
@@ -333,6 +338,7 @@ namespace assets_loader
 {
 namespace
 {
+
 void set_request_status(
     AssetsLoader* al,
     AssetsLoader::PoolTicket request_handle,
@@ -362,6 +368,7 @@ void set_request_data_size(
 
     al->history.data_size += size;
 }
+
 } // namespace
 
 void _initialize_common(AssetsLoader* l)
@@ -653,9 +660,8 @@ void work_message_queues(AssetsLoader* al)
                             end(al, it->second);
                         }
                     },
-                    [&](const messages::CreateChannel& message) {
-                        channel.send(messages::NewChannel{message.request_id, create_channel(al)});
-                    },
+                    [&](const messages::CreateChannel& message)
+                    { channel.send(messages::NewChannel{message.request_id, create_channel(al)}); },
                 },
                 generic_message);
         }
@@ -987,9 +993,11 @@ void work_blobs(AssetsLoader* al, BlobAllocator* ba)
                         if (it != al->channels.end())
                         {
                             auto& channel = it->second;
-                            channel.send(messages::LoadedData{
-                                request->channel_request_id->request_id, std::move(request->blob),
-                                ""});
+                            channel.send(
+                                messages::LoadedData{
+                                    request->channel_request_id->request_id,
+                                    std::move(request->blob), ""
+                                });
                         }
 
                         al->ended_requests.push_back(pt);
@@ -1046,9 +1054,11 @@ void work_load_into_memory(AssetsLoader* al)
                 if (it != al->channels.end())
                 {
                     auto& channel = it->second;
-                    channel.send(messages::LoadedData{
-                        request->channel_request_id->request_id, std::move(request->blob),
-                        request->is_http_request() ? std::move(request->content_type) : ""});
+                    channel.send(
+                        messages::LoadedData{
+                            request->channel_request_id->request_id, std::move(request->blob),
+                            request->is_http_request() ? std::move(request->content_type) : ""
+                        });
                 }
 
                 al->ended_requests.push_back(pt);
@@ -1111,6 +1121,7 @@ assets_loader::Channel create_channel(AssetsLoader* al)
 
 namespace
 {
+
 const char* queue_to_str(assets_loader::Queue queue)
 {
     switch (queue)
@@ -1157,6 +1168,7 @@ mu_Color status_to_text_color(assets_loader::RequestStatus status)
         default: assert(false && "Unhandled case"); return {255, 255, 255, 255};
     }
 }
+
 } // namespace
 
 void dev_ui(AssetsLoader* al, PlatformContext* platform, mu_Context* ctx, const char* window_name)

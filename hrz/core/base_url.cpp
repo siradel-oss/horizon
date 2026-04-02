@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 BaseUrl::BaseUrl(std::string_view base, bool default_base_query_parameter_inclusion)
 {
     base_url = url::without_query(base);
@@ -70,4 +71,5 @@ std::string BaseUrl::derive(std::string_view url) const
 {
     return derive(url, default_base_query_parameter_inclusion);
 }
+
 } // namespace hrz

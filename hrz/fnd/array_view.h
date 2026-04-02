@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 template<typename T>
 class ArrayView
 {
@@ -50,9 +51,9 @@ public:
 
     inline const T& at(size_t index) const { return *_at(index); }
 
-    inline T& operator[](size_t index) { return *_at(index); }
+    inline T& operator [](size_t index) { return *_at(index); }
 
-    inline const T& operator[](size_t index) const { return *_at(index); }
+    inline const T& operator [](size_t index) const { return *_at(index); }
 
     inline T* data() { return (T*)_data; }
 
@@ -75,4 +76,5 @@ private:
     size_t _length{};
     size_t _stride{};
 };
+
 } // namespace hrz

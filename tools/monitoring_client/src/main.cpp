@@ -57,10 +57,10 @@ void init(void)
     fontCfg.FontDataOwnedByAtlas = false;
     fontCfg.OversampleH = 2;
     fontCfg.OversampleV = 2;
-    fontCfg.RasterizerMultiply = 1.5f;
+    fontCfg.RasterizerMultiply = 1.5F;
 
     auto font_data = res::get_data(res::Resources::Font);
-    io.Fonts->AddFontFromMemoryTTF((void*)font_data.data(), font_data.size(), 14.0f, &fontCfg);
+    io.Fonts->AddFontFromMemoryTTF((void*)font_data.data(), font_data.size(), 14.0F, &fontCfg);
 
     unsigned char* font_pixels;
     int font_width, font_height;
@@ -79,7 +79,7 @@ void init(void)
     io.Fonts->TexID = (ImTextureID)(uintptr_t)sg_make_image(&img_desc).id;
 
     _pass_action.colors[0].action = SG_ACTION_CLEAR;
-    _pass_action.colors[0].value = {0.90f, 0.90f, 0.90f, 1.0f};
+    _pass_action.colors[0].value = {0.90F, 0.90F, 0.90F, 1.0F};
 
     auto parsing_error = _userdata.load_from_disk();
 

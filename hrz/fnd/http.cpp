@@ -13,6 +13,7 @@
 
 namespace
 {
+
 void normalize_header_name(const char* begin, const char* end, char* out)
 {
     for (const char* it = begin; it != end; ++it, ++out)
@@ -29,9 +30,10 @@ hrz::uint128 get_header_key(std::string_view name)
     normalize_header_name(name.data(), name.data() + name.size(), buffer);
     return hrz::murmur3_x64_128(std::span<const std::byte>((const std::byte*)buffer, name.size()));
 }
+
 } // namespace
 
-hrz::HttpHeaders& hrz::HttpHeaders::operator=(const HttpHeaders& other)
+hrz::HttpHeaders& hrz::HttpHeaders::operator =(const HttpHeaders& other)
 {
     if (&other == this) return *this;
 
@@ -41,7 +43,8 @@ hrz::HttpHeaders& hrz::HttpHeaders::operator=(const HttpHeaders& other)
     for (const auto& entry : other._headers)
     {
         _headers[entry.first] = {
-            _arena.zstr(entry.second.name), _arena.zstr_span(entry.second.value_str())};
+            _arena.zstr(entry.second.name), _arena.zstr_span(entry.second.value_str())
+        };
     }
 
     _hash_full = other._hash_full;
@@ -190,6 +193,7 @@ void hrz::HttpHeaders::swap(HttpHeaders& other)
 
 namespace
 {
+
 constexpr int parse_triple_character_id(const char* str)
 {
     return (hrz::ascii_to_lower((int)str[0]) * 128 + hrz::ascii_to_lower((int)str[1])) * 128
@@ -340,6 +344,7 @@ const char* hrz::HttpTime::get_imf_fixdate() const
 
 namespace
 {
+
 // This parser returns pieces of strings separated by a given separator.
 // It parses those pieces of strings to separate key/value pairs separated
 // by a '=' if it exists.
@@ -443,6 +448,7 @@ public:
         }
     }
 };
+
 } // namespace
 
 void hrz::parse_http_header_value(

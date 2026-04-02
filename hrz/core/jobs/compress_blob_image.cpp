@@ -13,6 +13,7 @@
 
 namespace hrz_jobs::compress_blob_image
 {
+
 hrz_jobs::JobResult run(
     const hrz::BlobImageCompressionParams& params,
     hrz::BlobImage& compressed_image,
@@ -80,12 +81,13 @@ hrz_jobs::JobResult run(
         auto uncompressed_image_data = params.image.blob().get_mutable_data();
         auto rgba_data = std::span<uint32_t>{
             (uint32_t*)uncompressed_image_data.data(),
-            uncompressed_image_data.size() / sizeof(uint32_t)};
+            uncompressed_image_data.size() / sizeof(uint32_t)
+        };
 
         auto compressed_image_data = compressed_image_blob->get_mutable_data();
         auto block_data = std::span<uint64_t>{
-            (uint64_t*)compressed_image_data.data(),
-            compressed_image_data.size() / sizeof(uint64_t)};
+            (uint64_t*)compressed_image_data.data(), compressed_image_data.size() / sizeof(uint64_t)
+        };
 
         auto block_count_width = layout.get_level_data_width(0) / 4;
         auto block_count_height = layout.get_level_data_height(0) / 4;
@@ -137,4 +139,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::compress_blob_image

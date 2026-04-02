@@ -11,11 +11,13 @@
 
 namespace hrz
 {
+
 template<typename TSend, typename TReceive>
 struct Channel;
 
 namespace channel
 {
+
 // Staging the messages when receiving them avoids a potential infinite
 // loop if one side produces messages faster than the other side can
 // receive them.
@@ -88,6 +90,7 @@ private:
     template<typename TSend, typename TReceive>
     friend struct ::hrz::Channel;
 };
+
 } // namespace channel
 
 /**
@@ -133,7 +136,7 @@ public:
 
     ~Channel() { close(); }
 
-    Channel& operator=(Channel&& other)
+    Channel& operator =(Channel&& other)
     {
         if (this != &other)
         {
@@ -252,6 +255,8 @@ std::pair<Channel<TAtoB, TBtoA>, Channel<TBtoA, TAtoB>> create_channel()
 
     return {
         Channel<TAtoB, TBtoA>(a_to_b_broker, b_to_a_broker, true),
-        Channel<TBtoA, TAtoB>(b_to_a_broker, a_to_b_broker, false)};
+        Channel<TBtoA, TAtoB>(b_to_a_broker, a_to_b_broker, false)
+    };
 }
+
 } // namespace hrz

@@ -28,6 +28,7 @@
 
 namespace
 {
+
 static constexpr size_t LOW_MEMORY = 50 * 1024 * 1024; // bytes
 
 static constexpr mu_Color blue{122, 128, 239, 255};
@@ -46,10 +47,12 @@ static constexpr mu_Color white{255, 255, 255, 255};
 static constexpr mu_Color yellow{229, 196, 26, 255};
 
 using PbArena = google::protobuf::Arena;
+
 } // namespace
 
 namespace hrz
 {
+
 Monitoring::Monitoring(const hrz_proto::ViewerOptions& viewer_options) :
     _max_video_ram_size(viewer_options.max_video_memory_size())
 {
@@ -272,19 +275,21 @@ void Monitoring::unregister_gpu_resource(my::ResourceHandle resource_handle)
 
 void Monitoring::draw_frametime_fps(mu_Context* ctx, float frametime)
 {
-    static const float fps_60 = 16.66667f;
-    static const float fps_30 = 33.33333f;
-    static const float fps_20 = 50.00000f;
+    static const float fps_60 = 16.66667F;
+    static const float fps_30 = 33.33333F;
+    static const float fps_20 = 50.00000F;
 
     mu_Rect rect = mu_layout_next(ctx);
 
     mu_Rect fps60_rect{rect.x, rect.y, (int)(rect.w * fps_60 / fps_20), rect.h};
 
     mu_Rect fps30_rect{
-        fps60_rect.x + fps60_rect.w, rect.y, (int)(rect.w * (fps_30 - fps_60) / fps_20), rect.h};
+        fps60_rect.x + fps60_rect.w, rect.y, (int)(rect.w * (fps_30 - fps_60) / fps_20), rect.h
+    };
 
     mu_Rect fps20_rect{
-        fps30_rect.x + fps30_rect.w, rect.y, rect.w - fps60_rect.w - fps30_rect.w, rect.h};
+        fps30_rect.x + fps30_rect.w, rect.y, rect.w - fps60_rect.w - fps30_rect.w, rect.h
+    };
 
     mu_draw_rect(ctx, fps60_rect, dark_green);
     mu_draw_rect(ctx, fps30_rect, dark_yellow);
@@ -332,7 +337,7 @@ void Monitoring::draw_frametime_categories(mu_Context* ctx, const CpuTime& t)
     mu_Rect rect = mu_layout_next(ctx);
     float total = t.total_ms();
 
-    if (total == 0.0f)
+    if (total == 0.0F)
     {
         // This happens on browsers because their clock are not precise
         // enough.
@@ -341,16 +346,20 @@ void Monitoring::draw_frametime_categories(mu_Context* ctx, const CpuTime& t)
 
     mu_Rect events_rect{rect.x, rect.y, (int)(rect.w * t.events_ms / total), rect.h};
     mu_Rect update_rect{
-        events_rect.x + events_rect.w, rect.y, (int)(rect.w * t.update_ms / total), rect.h};
+        events_rect.x + events_rect.w, rect.y, (int)(rect.w * t.update_ms / total), rect.h
+    };
     mu_Rect update_gpu_rect{
-        update_rect.x + update_rect.w, rect.y, (int)(rect.w * t.update_gpu_ms / total), rect.h};
+        update_rect.x + update_rect.w, rect.y, (int)(rect.w * t.update_gpu_ms / total), rect.h
+    };
     mu_Rect draw_rect{
-        update_gpu_rect.x + update_gpu_rect.w, rect.y, (int)(rect.w * t.draw_ms / total), rect.h};
+        update_gpu_rect.x + update_gpu_rect.w, rect.y, (int)(rect.w * t.draw_ms / total), rect.h
+    };
     mu_Rect swap_rect{draw_rect.x + draw_rect.w, rect.y, (int)(rect.w * t.swap_ms / total), rect.h};
     mu_Rect loop_rect{
         swap_rect.x + swap_rect.w, rect.y,
         rect.w - events_rect.w - update_rect.w - update_gpu_rect.w - draw_rect.w - swap_rect.w,
-        rect.h};
+        rect.h
+    };
 
     mu_draw_rect(ctx, events_rect, events_color);
     mu_draw_rect(ctx, update_rect, update_color);
@@ -420,7 +429,9 @@ void Monitoring::draw_frametime_categories(mu_Context* ctx, const CpuTime& t)
 
 namespace monitoring
 {
+
 void draw_remote_connection(RemoteMonitoring*, JobScheduler*, mu_Context* ctx);
+
 }
 
 void Monitoring::draw_gpu_performance(mu_Context* ctx)
@@ -578,7 +589,8 @@ void Monitoring::draw_frames(mu_Context* ctx)
                 if (types & (1 << i))
                 {
                     mu_Rect frame_rect{
-                        type_rects[i].x + col + 1, type_rects[i].y, 1, type_rects[i].h};
+                        type_rects[i].x + col + 1, type_rects[i].y, 1, type_rects[i].h
+                    };
                     mu_draw_rect(ctx, frame_rect, color);
                 }
             }
@@ -590,7 +602,8 @@ void Monitoring::draw_frames(mu_Context* ctx)
                 if (causes & (1 << i))
                 {
                     mu_Rect frame_rect{
-                        cause_rects[i].x + col + 1, cause_rects[i].y, 1, cause_rects[i].h};
+                        cause_rects[i].x + col + 1, cause_rects[i].y, 1, cause_rects[i].h
+                    };
                     mu_draw_rect(ctx, frame_rect, color);
                 }
             }
@@ -677,6 +690,7 @@ void Monitoring::draw_main_memory_usage(mu_Context* ctx)
 
 namespace
 {
+
 const char* to_string(my::Resource::Type type)
 {
     switch (type)
@@ -941,7 +955,7 @@ void Monitoring::draw_gpu_memory_usage(mu_Context* ctx, const LayersInfo* layers
                 fmt::format_to(
                     std::back_inserter(buffer), "{} ({:.2f}%)",
                     bytes_to_string(_total_video_ram_usage).data(),
-                    100.0f * (float)_total_video_ram_usage / _max_video_ram_size);
+                    100.0F * (float)_total_video_ram_usage / _max_video_ram_size);
                 buffer.push_back(0);
                 mu_text(ctx, buffer.data());
             }
@@ -987,7 +1001,7 @@ struct GpuResourceBucketKey
     my::Resource::Type type;
     monitoring::ResourceOwner owner;
 
-    bool operator==(const GpuResourceBucketKey& other) const
+    bool operator ==(const GpuResourceBucketKey& other) const
     {
         return type == other.type && owner.system == other.owner.system
             && owner.layer_id == other.owner.layer_id;
@@ -1206,7 +1220,8 @@ void Monitoring::draw_ui(
 
             static mu_Color colors[2] = {{255, 127, 127, 255}, {127, 255, 127, 255}};
 
-            auto draw_availability = [&](bool available) {
+            auto draw_availability = [&](bool available)
+            {
                 mu_text_color(
                     ctx, available ? "Available" : "Unavailable", colors[available ? 1 : 0]);
             };
@@ -1275,7 +1290,7 @@ void Monitoring::draw_ui(
             mu_text(
                 ctx,
                 hrz::format_to_buffer(
-                    buffer, "Total frametime: {:.3f} ms ({:.1f} fps)", total, 1000.0f / total));
+                    buffer, "Total frametime: {:.3f} ms ({:.1f} fps)", total, 1000.0F / total));
 
             draw_frametime_fps(ctx, total);
             draw_frametime_categories(ctx, t);

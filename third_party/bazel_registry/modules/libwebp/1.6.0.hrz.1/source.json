@@ -1,0 +1,12 @@
+{
+  "url": "https://github.com/webmproject/libwebp/archive/refs/tags/v1.6.0.tar.gz",
+  "strip_prefix": "libwebp-1.6.0",
+  "integrity": "sha256-k6hSwrPvr+43I+/UY23oVbRvn+Hv3dYH4fQvYPyPITY=",
+  "overlay": {
+    "BUILD.bazel": "sha256-k5H6NSCPA7Tpcp+2aP40c5tgu9JBajCUd+6u9Ulvg9M=",
+    "MODULE.bazel": "sha256-C2ysQ7VkKh3t7mgYW++q1pk1vjxYGtjGnpBDbpuP9o8="
+  },
+  "patches": {
+    "custom_malloc.patch": "sha256-Yhegou9mpjbBN2mEoFtOHDoVcG9l16IWrZ9v/poUjQE="
+  }
+}

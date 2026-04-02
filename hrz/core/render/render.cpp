@@ -14,6 +14,7 @@
 
 namespace hrz
 {
+
 my::ResourceHandle GpuResourceContext::alloc(const my::Resource* res)
 {
     auto handle = rc->alloc(res);
@@ -144,6 +145,7 @@ void GpuResourceContext::register_texture_metadata(
 
 namespace render
 {
+
 static GenIndexPool<uint64_t, 32, 32> texture_index_pool;
 
 uint64_t acquire_texture_download_id()
@@ -158,6 +160,7 @@ void release_texture_download_id(uint64_t id)
 
 namespace profiling
 {
+
 static GenIndexPool<uint64_t, 32, 32> query_index_pool;
 static bool _enabled = false;
 
@@ -298,6 +301,7 @@ void clear(my::Instance* my)
         time_queries.pop_front();
     }
 }
+
 } // namespace profiling
 
 void TimedRenderPass::execute(const my::RenderGraph::ExecutionContext& ctx)

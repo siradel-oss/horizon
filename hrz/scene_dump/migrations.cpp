@@ -12,6 +12,7 @@ namespace hrz::migration
 {
 namespace
 {
+
 bool walk_common_fields(
     const DynamicMessage& src_msg,
     DynamicMessage* dst_msg,
@@ -121,6 +122,7 @@ bool walk_fields_of_type(
             }
         });
 }
+
 } // namespace
 
 // Add support for multi-materials
@@ -132,7 +134,7 @@ bool migration_00000000_to_5d6d6cce(const DynamicMessage& src, DynamicMessage* d
 
         DynamicMessage material_properties = dst->get_message("material_properties");
         material_properties.set_string("base_material", active_material_name);
-        material_properties.set_float("overlay_opacity", 1.0f);
+        material_properties.set_float("overlay_opacity", 1.0F);
         material_properties.set_bool("enable_overlay", false);
 
         return true;
@@ -211,13 +213,13 @@ bool migration_22e6ae36_to_72f11ce6(const DynamicMessage& src, DynamicMessage* d
             {
                 auto sprite = repr.get_message("sprite");
                 sprite.set_enum("feature_color_blend_mode", "BLEND_MULTIPLY");
-                sprite.set_float("feature_color_blend_strength", 1.0f);
+                sprite.set_float("feature_color_blend_strength", 1.0F);
             }
             else if (repr.get_enum("type") == "MODEL")
             {
                 auto model = repr.get_message("model");
                 model.set_enum("feature_color_blend_mode", "BLEND_MULTIPLY");
-                model.set_float("feature_color_blend_strength", 1.0f);
+                model.set_float("feature_color_blend_strength", 1.0F);
             }
         }
 
@@ -1049,7 +1051,7 @@ bool migration_49a872a7_to_89f0ca38(const DynamicMessage& src, DynamicMessage* d
             if (source.get_enum("provider_type") == "CLIENT_VECTOR_DATA_PROVIDER")
             {
                 auto provider = source.get_message("client_data_provider");
-                provider.set_float("timeout", 5.0f);
+                provider.set_float("timeout", 5.0F);
             }
         }
 
@@ -1308,13 +1310,13 @@ bool migration_8fa146fa_to_cbbac550(const DynamicMessage& src, DynamicMessage* d
                 dst->set_float("sun_ambient_balance", 0.5 * sun_strength / ambient_strength);
             }
 
-            dst->set_float("wrap_lighting", 0.0f);
+            dst->set_float("wrap_lighting", 0.0F);
 
             auto dst_sun_color = dst_sun.get_message("static_color");
-            dst_sun_color.set_float("r", 1.0f);
-            dst_sun_color.set_float("g", 1.0f);
-            dst_sun_color.set_float("b", 1.0f);
-            dst_sun_color.set_float("a", 1.0f);
+            dst_sun_color.set_float("r", 1.0F);
+            dst_sun_color.set_float("g", 1.0F);
+            dst_sun_color.set_float("b", 1.0F);
+            dst_sun_color.set_float("a", 1.0F);
 
             auto dst_sun_direction = dst_sun.get_message("direction");
             dst_sun_direction.set_enum("mode", "SUN_DIRECTION_RELATIVE_TO_DATE");
@@ -1337,10 +1339,10 @@ bool migration_8fa146fa_to_cbbac550(const DynamicMessage& src, DynamicMessage* d
 
             auto primary_fog = dst->get_message("primary_fog");
             {
-                primary_fog.set_float("density", 1.0f);
-                primary_fog.set_float("start_distance", 1000.0f);
-                primary_fog.set_float("falloff_start", 0.0f);
-                primary_fog.set_float("falloff_end", 300.0f);
+                primary_fog.set_float("density", 1.0F);
+                primary_fog.set_float("start_distance", 1000.0F);
+                primary_fog.set_float("falloff_start", 0.0F);
+                primary_fog.set_float("falloff_end", 300.0F);
                 primary_fog.set_bool("apply_to_sky", true);
 
                 auto color = primary_fog.get_message("color");
@@ -1352,10 +1354,10 @@ bool migration_8fa146fa_to_cbbac550(const DynamicMessage& src, DynamicMessage* d
 
             auto secondary_fog = dst->get_message("secondary_fog");
             {
-                secondary_fog.set_float("density", 2.0f);
-                secondary_fog.set_float("start_distance", 300.0f);
-                secondary_fog.set_float("falloff_start", 0.0f);
-                secondary_fog.set_float("falloff_end", 300.0f);
+                secondary_fog.set_float("density", 2.0F);
+                secondary_fog.set_float("start_distance", 300.0F);
+                secondary_fog.set_float("falloff_start", 0.0F);
+                secondary_fog.set_float("falloff_end", 300.0F);
                 secondary_fog.set_bool("apply_to_sky", true);
 
                 auto color = secondary_fog.get_message("color");
@@ -1529,7 +1531,7 @@ bool migration_8f07359d_to_592a0391(const DynamicMessage& src, DynamicMessage* d
                             auto dst_text = dst_element->get_message("text");
 
                             float outline_width = src_text.get_float("outline_width");
-                            outline_width *= 2.0f;
+                            outline_width *= 2.0F;
                             auto outline_width_property =
                                 dst_text.create_message("HrzProtocol.FloatProperty");
                             outline_width_property.set_float("default_value", outline_width);
@@ -1572,10 +1574,10 @@ bool migration_592a0391_to_ee415b5e(const DynamicMessage& src, DynamicMessage* d
             if (dst_repr.get_enum("type") == "HEATMAP_VECTOR_REPR")
             {
                 auto dst_heatmap = dst_repr.get_message("heatmap");
-                dst_heatmap.set_float("blur_size", 1.2f);
+                dst_heatmap.set_float("blur_size", 1.2F);
 
                 auto radius = dst_heatmap.get_message("disc_radius");
-                radius.set_float("default_value", radius.get_float("default_value") * 0.5f);
+                radius.set_float("default_value", radius.get_float("default_value") * 0.5F);
             }
         }
         return true;
@@ -1783,13 +1785,13 @@ bool migration_e252ad08_to_2c75ee8f(const DynamicMessage& src, DynamicMessage* d
                     {
                         auto dst_nodata_color = palettized_image.get_message("nodata_color");
                         dst_nodata_color.set_float(
-                            "r", src_nodata_value.get_repeated_int32("value", 0) / 255.0f);
+                            "r", src_nodata_value.get_repeated_int32("value", 0) / 255.0F);
                         dst_nodata_color.set_float(
-                            "g", src_nodata_value.get_repeated_int32("value", 1) / 255.0f);
+                            "g", src_nodata_value.get_repeated_int32("value", 1) / 255.0F);
                         dst_nodata_color.set_float(
-                            "b", src_nodata_value.get_repeated_int32("value", 2) / 255.0f);
+                            "b", src_nodata_value.get_repeated_int32("value", 2) / 255.0F);
                         dst_nodata_color.set_float(
-                            "a", src_nodata_value.get_repeated_int32("value", 3) / 255.0f);
+                            "a", src_nodata_value.get_repeated_int32("value", 3) / 255.0F);
                     }
                 }
             }
@@ -1882,10 +1884,10 @@ bool migration_2c75ee8f_to_db6a65c4(const DynamicMessage& src, DynamicMessage* d
             }
 
             auto color = dst_nodata_value.create_message("HrzProtocol.Color");
-            color.set_float("r", rgba[0] / 255.0f);
-            color.set_float("g", rgba[1] / 255.0f);
-            color.set_float("b", rgba[2] / 255.0f);
-            color.set_float("a", rgba[3] / 255.0f);
+            color.set_float("r", rgba[0] / 255.0F);
+            color.set_float("g", rgba[1] / 255.0F);
+            color.set_float("b", rgba[2] / 255.0F);
+            color.set_float("a", rgba[3] / 255.0F);
             dst_nodata_value.set_message("color", color);
             dst_nodata_value.set_enum("type", "COLOR_NODATA");
         }

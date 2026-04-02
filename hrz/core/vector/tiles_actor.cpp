@@ -29,6 +29,7 @@
 
 namespace hrz::vt
 {
+
 // The delay between the first time a tile's content was needed and the time
 // it's actually loaded. This prevents loading tiles that are only requested for
 // a very short amount of time, like when the camera is travelling.
@@ -713,7 +714,7 @@ struct VectorTilesActor : public Actor
         DestroyRepr_All = DestroyRepr_Baking | DestroyRepr_Displayed,
     };
 
-    friend constexpr DestroyRepr operator|(DestroyRepr a, DestroyRepr b)
+    friend constexpr DestroyRepr operator |(DestroyRepr a, DestroyRepr b)
     {
         return (DestroyRepr)((int)a | (int)b);
     }
@@ -853,8 +854,10 @@ struct VectorTilesActor : public Actor
                             _reprs_configs.push_back(ref);
 
                             assert(_repr_channels.contains(type));
-                            _repr_channels[type].send(repr::messages::RegisterStyle{
-                                ref.config_id.value(), new_repr, _global_layer_id});
+                            _repr_channels[type].send(
+                                repr::messages::RegisterStyle{
+                                    ref.config_id.value(), new_repr, _global_layer_id
+                                });
                         }
 
                         assert(_reprs_configs.size() == new_reprs.size());
@@ -907,8 +910,10 @@ struct VectorTilesActor : public Actor
                         _reprs_configs.push_back(ref);
 
                         assert(_repr_channels.contains(type));
-                        _repr_channels[type].send(repr::messages::RegisterStyle{
-                            ref.config_id.value(), new_repr, _global_layer_id});
+                        _repr_channels[type].send(
+                            repr::messages::RegisterStyle{
+                                ref.config_id.value(), new_repr, _global_layer_id
+                            });
 
                         for (const auto& it : _tiles_by_coords)
                         {
@@ -946,7 +951,8 @@ struct VectorTilesActor : public Actor
                             {
                                 _repr_channels[repr_config.type].send(
                                     repr::messages::UnregisterStyle{
-                                        repr_config.config_id.value(), _global_layer_id});
+                                        repr_config.config_id.value(), _global_layer_id
+                                    });
                             }
 
                             auto type = repr.type();
@@ -963,8 +969,10 @@ struct VectorTilesActor : public Actor
                             repr_config.registered = false;
 
                             assert(_repr_channels.contains(type));
-                            _repr_channels[type].send(repr::messages::RegisterStyle{
-                                repr_config.config_id.value(), repr, _global_layer_id});
+                            _repr_channels[type].send(
+                                repr::messages::RegisterStyle{
+                                    repr_config.config_id.value(), repr, _global_layer_id
+                                });
 
                             _script_compilation_status = ScriptCompilationStatus::MustRecompile;
                         }
@@ -1007,7 +1015,8 @@ struct VectorTilesActor : public Actor
                             {
                                 _repr_channels[repr_config.type].send(
                                     repr::messages::UnregisterStyle{
-                                        repr_config.config_id.value(), _global_layer_id});
+                                        repr_config.config_id.value(), _global_layer_id
+                                    });
                             }
 
                             _reprs_configs.erase(_reprs_configs.begin() + index);
@@ -1121,7 +1130,8 @@ struct VectorTilesActor : public Actor
                         _include_debug_info_in_visibility_set = message.include_debug_info;
                     },
                     [&](const to_actor::SignalVisibilitySetDestroyed& message)
-                    { _last_destroyed_visibility_set_id = message.visibility_set_id; }},
+                    { _last_destroyed_visibility_set_id = message.visibility_set_id; }
+                },
                 generic_message);
         }
 
@@ -1207,7 +1217,8 @@ struct VectorTilesActor : public Actor
                                     {
                                         _vector_data_channel.send(
                                             vector_data::messages::ReleaseDataRequest{
-                                                message.request_id});
+                                                message.request_id
+                                            });
                                     }
 
                                     if (content->feature_ids.feature_ids.empty())
@@ -1218,7 +1229,8 @@ struct VectorTilesActor : public Actor
                                                 vector_data::messages::ReleaseDataRequest{
                                                     make_data_request_id(
                                                         tile_id_and_data_kind.tile_id,
-                                                        vector_data::DataKind::AttributeValues)});
+                                                        vector_data::DataKind::AttributeValues)
+                                                });
                                         }
 
                                         for (auto& repr : _reprs_configs)
@@ -1255,7 +1267,8 @@ struct VectorTilesActor : public Actor
                                     {
                                         _vector_data_channel.send(
                                             vector_data::messages::ReleaseDataRequest{
-                                                message.request_id});
+                                                message.request_id
+                                            });
                                     }
                                     else
                                     {
@@ -1283,7 +1296,8 @@ struct VectorTilesActor : public Actor
                                     {
                                         _vector_data_channel.send(
                                             vector_data::messages::ReleaseDataRequest{
-                                                message.request_id});
+                                                message.request_id
+                                            });
                                     }
                                     else
                                     {
@@ -1414,7 +1428,8 @@ struct VectorTilesActor : public Actor
                             {
                                 const Elevation elevation{
                                     message.min_elevation.value(), message.max_elevation.value(),
-                                    ElevationSource::GroundTruth};
+                                    ElevationSource::GroundTruth
+                                };
                                 if (update_tile_elevation(*node, elevation))
                                 {
                                     render_request.request_visual_render();
@@ -1474,7 +1489,8 @@ struct VectorTilesActor : public Actor
 
                                     repr_slot.displayed = TileContent::ReprSlot::DisplayedRepr{
                                         std::exchange(repr_slot.baking, std::nullopt).value(),
-                                        std::nullopt};
+                                        std::nullopt
+                                    };
 
                                     // We need to update the selection for tiles that are about
                                     // to be displayed because selected features may be present
@@ -1930,7 +1946,8 @@ struct VectorTilesActor : public Actor
                     hrz::planet::elevation_query::messages::QueryElevation{
                         tile_id,
                         std::move(point_view),
-                        {monitoring::systems::VectorTiles, _global_layer_id}});
+                        {monitoring::systems::VectorTiles, _global_layer_id}
+                    });
                 geometry.status = TileContent::Geometry::Status::Clamping;
             }
         }
@@ -1952,7 +1969,8 @@ struct VectorTilesActor : public Actor
                     hrz::planet::elevation_query::messages::QueryElevation{
                         tile_id,
                         std::move(point_view),
-                        {monitoring::systems::VectorTiles, _global_layer_id}});
+                        {monitoring::systems::VectorTiles, _global_layer_id}
+                    });
                 geometry.status = TileContent::Geometry::Status::Clamping;
             }
         }
@@ -1988,8 +2006,8 @@ struct VectorTilesActor : public Actor
                          &allocations_have_errors](
                             const hrz::StaticString& name,
                             std::optional<
-                                hrz::BlobArrayAllocation<hrz::vector_data::PackedAttributeValue>>&
-                                allocation,
+                                hrz::BlobArrayAllocation<hrz::vector_data::PackedAttributeValue>
+                            >& allocation,
                             hrz::BlobArray<hrz::vector_data::PackedAttributeValue>& array)
                     {
                         bool array_is_valid =
@@ -2343,8 +2361,9 @@ struct VectorTilesActor : public Actor
             if (content.geometry.repr.geometry.features.blob().is_valid())
             {
                 auto anchors_view = BlobArrayView<lm::dvec3>::make_blob_array_view(
-                    hrz::unsafe("Converting from a blob array of `Feature` to a blob array view of "
-                                "a property of these instances"),
+                    hrz::unsafe(
+                        "Converting from a blob array of `Feature` to a blob array view of "
+                        "a property of these instances"),
                     content.geometry.repr.geometry.features.blob(),
                     content.geometry.repr.geometry.features.size(),
                     offsetof(vector_data::VectorTileGeometry::Feature, anchor),
@@ -2360,8 +2379,8 @@ struct VectorTilesActor : public Actor
             if (content.geometry.status == TileContent::Geometry::Status::Clamping)
             {
                 _elevation_query_channel.send(
-                    hrz::planet::elevation_query::messages::CancelElevationQuery{
-                        (uint64_t)tile_id});
+                    hrz::planet::elevation_query::messages::CancelElevationQuery{(
+                        uint64_t)tile_id});
             }
 
             if (content.geometry.status == TileContent::Geometry::Status::Ready
@@ -2436,11 +2455,13 @@ struct VectorTilesActor : public Actor
                     repr.id = make_repr_id(tile_id, content.next_repr_id++);
                     content.reprs[i].baking = repr;
 
-                    _repr_channels[repr.type].send(repr::messages::AddTile{
-                        repr.id, cfg.config_id.value(), content.coords, _global_layer_id,
-                        tile_object_ref, feature_ref, content.feature_ids.feature_ids,
-                        content.geometry.repr, content.style_job.result_repr, node->elevation.min,
-                        node->elevation.max});
+                    _repr_channels[repr.type].send(
+                        repr::messages::AddTile{
+                            repr.id, cfg.config_id.value(), content.coords, _global_layer_id,
+                            tile_object_ref, feature_ref, content.feature_ids.feature_ids,
+                            content.geometry.repr, content.style_job.result_repr,
+                            node->elevation.min, node->elevation.max
+                        });
                 }
 
                 content.reset_style_job();
@@ -2540,14 +2561,17 @@ struct VectorTilesActor : public Actor
             {
                 if (repr.baking.has_value())
                 {
-                    _repr_channels[repr.baking->type].send(repr::messages::UpdateTileElevation{
-                        repr.baking->id, node.elevation.min, node.elevation.max});
+                    _repr_channels[repr.baking->type].send(
+                        repr::messages::UpdateTileElevation{
+                            repr.baking->id, node.elevation.min, node.elevation.max
+                        });
                 }
                 if (repr.displayed.has_value())
                 {
                     _repr_channels[repr.displayed->repr.type].send(
                         repr::messages::UpdateTileElevation{
-                            repr.displayed->repr.id, node.elevation.min, node.elevation.max});
+                            repr.displayed->repr.id, node.elevation.min, node.elevation.max
+                        });
                 }
             }
         }
@@ -2739,20 +2763,23 @@ struct VectorTilesActor : public Actor
         {
             TileContent& content = node.content.value();
 
-            _vector_data_channel.send(vector_data::messages::ReleaseDataRequest{
-                make_data_request_id(tile_id, vector_data::DataKind::FeatureIds)});
-            _vector_data_channel.send(vector_data::messages::ReleaseDataRequest{
-                make_data_request_id(tile_id, vector_data::DataKind::Geometry)});
+            _vector_data_channel.send(
+                vector_data::messages::ReleaseDataRequest{make_data_request_id(
+                    tile_id, vector_data::DataKind::FeatureIds)});
+            _vector_data_channel.send(
+                vector_data::messages::ReleaseDataRequest{make_data_request_id(
+                    tile_id, vector_data::DataKind::Geometry)});
 
             if (content.geometry.status == TileContent::Geometry::Status::Clamping)
             {
                 _elevation_query_channel.send(
-                    hrz::planet::elevation_query::messages::CancelElevationQuery{
-                        (uint64_t)tile_id});
+                    hrz::planet::elevation_query::messages::CancelElevationQuery{(
+                        uint64_t)tile_id});
             }
 
-            _vector_data_channel.send(vector_data::messages::ReleaseDataRequest{
-                make_data_request_id(tile_id, vector_data::DataKind::AttributeValues)});
+            _vector_data_channel.send(
+                vector_data::messages::ReleaseDataRequest{make_data_request_id(
+                    tile_id, vector_data::DataKind::AttributeValues)});
 
             if (content.attributes.anchor_z_attribute_allocation.has_value())
             {
@@ -2809,9 +2836,11 @@ struct VectorTilesActor : public Actor
         {
             TileContent& content = node.content.value();
 
-            _vector_data_channel.send(vector_data::messages::RequestData{
-                make_data_request_id(tile_id, vector_data::DataKind::AttributeValues), 0,
-                content.coords, vector_data::DataKind::AttributeValues});
+            _vector_data_channel.send(
+                vector_data::messages::RequestData{
+                    make_data_request_id(tile_id, vector_data::DataKind::AttributeValues), 0,
+                    content.coords, vector_data::DataKind::AttributeValues
+                });
 
             for (const auto& repr : _reprs_configs)
             {
@@ -2847,19 +2876,25 @@ struct VectorTilesActor : public Actor
         content.coords = node.coords;
 
         content.feature_ids.status = TileContent::FeatureIds::Status::Loading;
-        _vector_data_channel.send(vector_data::messages::RequestData{
-            make_data_request_id(tile_id, vector_data::DataKind::FeatureIds), 0, node.coords,
-            vector_data::DataKind::FeatureIds});
+        _vector_data_channel.send(
+            vector_data::messages::RequestData{
+                make_data_request_id(tile_id, vector_data::DataKind::FeatureIds), 0, node.coords,
+                vector_data::DataKind::FeatureIds
+            });
 
         content.geometry.status = TileContent::Geometry::Status::Loading;
-        _vector_data_channel.send(vector_data::messages::RequestData{
-            make_data_request_id(tile_id, vector_data::DataKind::Geometry), 0, node.coords,
-            vector_data::DataKind::Geometry});
+        _vector_data_channel.send(
+            vector_data::messages::RequestData{
+                make_data_request_id(tile_id, vector_data::DataKind::Geometry), 0, node.coords,
+                vector_data::DataKind::Geometry
+            });
 
         content.attributes.status = TileContent::Attributes::Status::Loading;
-        _vector_data_channel.send(vector_data::messages::RequestData{
-            make_data_request_id(tile_id, vector_data::DataKind::AttributeValues), 0, node.coords,
-            vector_data::DataKind::AttributeValues});
+        _vector_data_channel.send(
+            vector_data::messages::RequestData{
+                make_data_request_id(tile_id, vector_data::DataKind::AttributeValues), 0,
+                node.coords, vector_data::DataKind::AttributeValues
+            });
 
         content.load_status = TileContent::LoadStatus::Loading;
         content.display_status = TileContent::DisplayStatus::Loading;
@@ -2983,7 +3018,8 @@ struct VectorTilesActor : public Actor
             && _tile_node_count < MAX_TILE_NODE_COUNT)
         {
             const hrz::TileCoords next = {
-                2 * node.coords.x, 2 * node.coords.y, (uint8_t)(node.coords.lod + 1)};
+                2 * node.coords.x, 2 * node.coords.y, (uint8_t)(node.coords.lod + 1)
+            };
             node.children = {std::array<TileId, 4>{
                 _tile_node_pool.alloc(TileNode({next.x, next.y, next.lod}, node.elevation)),
                 _tile_node_pool.alloc(TileNode({next.x + 1, next.y, next.lod}, node.elevation)),
@@ -3199,4 +3235,5 @@ VectorTilesActorChannel spawn_vector_tiles_actor(
 
     return std::move(to_actor_channel);
 }
+
 } // namespace hrz::vt

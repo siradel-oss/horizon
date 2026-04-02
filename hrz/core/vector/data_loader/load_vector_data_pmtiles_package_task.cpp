@@ -3,6 +3,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_vector_data_pmtiles_package_task(
     const std::string_view& url,
     const hrz::HttpHeaders& headers,
@@ -174,7 +175,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataP
 
                 task_data.package = {
                     {std::move(parsed_mvt)},
-                    hrz_proto::VectorDataFormat::MVT_VECTOR_DATA};
+                    hrz_proto::VectorDataFormat::MVT_VECTOR_DATA
+                };
 
                 set_task_status(task_ref, task, TaskStatus::Loaded);
             }
@@ -232,20 +234,21 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadVectorDataP
 }
 
 template<>
-bool VectorDataLoader::unload_task_data_if_not_needed<
-    VectorDataLoader::Task::LoadVectorDataPmTilesPackage>()
+bool VectorDataLoader::
+    unload_task_data_if_not_needed<VectorDataLoader::Task::LoadVectorDataPmTilesPackage>()
 {
     return true;
 }
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::LoadVectorDataPmTilesPackage>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::LoadVectorDataPmTilesPackage& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::LoadVectorDataPmTilesPackage
+>(WeakTaskRef& task_ref,
+  Task& task,
+  Task::LoadVectorDataPmTilesPackage& task_data,
+  JobScheduler* js)
 {
     // No-op
 }
+
 } // namespace hrz

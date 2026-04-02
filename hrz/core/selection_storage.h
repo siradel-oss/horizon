@@ -16,11 +16,13 @@
 
 namespace hrz
 {
+
 struct GpuResourceContext;
 struct Render;
 
 namespace selection
 {
+
 /**
  * When implementing selection on a primitive, there arises the need to
  * identify which parts of the baked geometry are selected or not. This
@@ -143,7 +145,7 @@ public:
         std::initializer_list<std::pair<MetadataString, MetadataString>> metadata);
 
     SelectionStorageUint32Buffer(SelectionStorageUint32Buffer&&) = default;
-    SelectionStorageUint32Buffer& operator=(SelectionStorageUint32Buffer&&) = default;
+    SelectionStorageUint32Buffer& operator =(SelectionStorageUint32Buffer&&) = default;
 
     inline void free_gpu_resources(std::vector<my::ResourceHandle>& to_destroy)
     {
@@ -199,7 +201,7 @@ public:
         std::initializer_list<std::pair<MetadataString, MetadataString>> metadata);
 
     SelectionStorageUint32Texture(SelectionStorageUint32Texture&&) = default;
-    SelectionStorageUint32Texture& operator=(SelectionStorageUint32Texture&&) = default;
+    SelectionStorageUint32Texture& operator =(SelectionStorageUint32Texture&&) = default;
 
     inline void free_gpu_resources(std::vector<my::ResourceHandle>& to_destroy)
     {

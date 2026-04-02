@@ -11,17 +11,21 @@
 
 namespace HrzProtocol
 {
+
 class HttpHeaderList;
 class AssetRequestResponse;
+
 }; // namespace HrzProtocol
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct ClientMessageQueue;
 
 namespace assets_loader
 {
+
 HttpHeaders from_proto(const HrzProtocol::HttpHeaderList&);
 
 enum class RequestStatus
@@ -164,6 +168,7 @@ void provide_client_asset_data(
 
 namespace messages
 {
+
 struct LoadRequest
 {
     uint64_t request_id;
@@ -191,16 +196,19 @@ struct CreateChannel
 {
     uint64_t request_id;
 };
+
 } // namespace messages
 
 using ToLoaderMessages = std::variant<
     messages::LoadRequest,
     messages::ResetRequestPriority,
     messages::CancelRequest,
-    messages::CreateChannel>;
+    messages::CreateChannel
+>;
 
 namespace messages
 {
+
 struct LoadedData
 {
     uint64_t request_id;
@@ -214,6 +222,7 @@ struct LoadFailure
 };
 
 struct NewChannel;
+
 } // namespace messages
 
 using FromLoaderMessages =
@@ -223,13 +232,16 @@ using Channel = hrz::Channel<ToLoaderMessages, FromLoaderMessages>;
 
 namespace messages
 {
+
 struct NewChannel
 {
     uint64_t request_id;
     Channel channel;
 };
+
 } // namespace messages
 
 Channel create_channel(AssetsLoader*);
+
 } // namespace assets_loader
 } // namespace hrz

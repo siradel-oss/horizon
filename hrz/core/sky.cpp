@@ -19,6 +19,7 @@
 
 namespace
 {
+
 enum
 {
     UboSkyParams = hrz::UboCustomStart,
@@ -60,9 +61,9 @@ struct UboData
     lm::vec3 ground_normal_view{0, 0, 0};
     float fog_min_depth{0};
     HRZ_UBO_STRUCT_FIELD(FogParamsUboData) fog[2];
-    lm::vec4 atmosphere_color{lm::vec4(0.0f)};
-    lm::vec4 space_color{lm::vec4(0.0f)};
-    lm::vec4 underground_color{lm::vec4(0.0f)};
+    lm::vec4 atmosphere_color{lm::vec4(0.0F)};
+    lm::vec4 space_color{lm::vec4(0.0F)};
+    lm::vec4 underground_color{lm::vec4(0.0F)};
     float color_transition_start_horizon_angle{0};
     float color_transition_end_horizon_angle{0};
     hrz::bool32 oklab_gradient{false};
@@ -242,7 +243,8 @@ public:
                 ((hrz::GpuResourceContext*)rc)->alloc(&buf_res, hrz::monitoring::systems::Sky);
 
             my::VertexInputStream streams[] = {
-                {0, _quad_vb, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}};
+                {0, _quad_vb, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}
+            };
 
             my::VertexInputResource vi_res;
             vi_res.attribs = streams;
@@ -649,7 +651,8 @@ public:
                     _sky_view_fbo,
                     my::ViewportState{
                         {0, 0, SkyViewSize, SkyViewSize},
-                        {0, 0, SkyViewSize, SkyViewSize}});
+                        {0, 0, SkyViewSize, SkyViewSize}
+                    });
 
                 static const auto batch_info =
                     my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
@@ -673,7 +676,8 @@ public:
                     _sh_initial_copy_fbo,
                     my::ViewportState{
                         {0, 0, ShInitSize, ShInitSize},
-                        {0, 0, ShInitSize, ShInitSize}});
+                        {0, 0, ShInitSize, ShInitSize}
+                    });
 
                 static const auto batch_info =
                     my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
@@ -695,7 +699,8 @@ public:
                     _sh_first_subsample_fbo,
                     my::ViewportState{
                         {0, 0, ShInitSize / 4, ShInitSize / 4},
-                        {0, 0, ShInitSize / 4, ShInitSize / 4}});
+                        {0, 0, ShInitSize / 4, ShInitSize / 4}
+                    });
 
                 static const auto batch_info =
                     my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
@@ -712,7 +717,8 @@ public:
                     _sh_final_fbo,
                     my::ViewportState{
                         {0, 0, ShInitSize / 16, ShInitSize / 16},
-                        {0, 0, ShInitSize / 16, ShInitSize / 16}});
+                        {0, 0, ShInitSize / 16, ShInitSize / 16}
+                    });
 
                 static const auto batch_info =
                     my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
@@ -746,7 +752,8 @@ public:
                 _aerial_fbo,
                 my::ViewportState{
                     {0, 0, AerialWidth, AerialHeight},
-                    {0, 0, AerialWidth, AerialHeight}});
+                    {0, 0, AerialWidth, AerialHeight}
+                });
 
             static const auto batch_info = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 3);
 
@@ -797,7 +804,7 @@ public:
                     int tile_x = tile % 3;
                     int tile_y = tile / 3;
 
-                    lm::vec4 result(0.0f);
+                    lm::vec4 result(0.0F);
 
                     for (int y = 0; y < 4; ++y)
                     {
@@ -805,7 +812,7 @@ public:
                         result += ptr[0] + ptr[1] + ptr[2] + ptr[3];
                     }
 
-                    _sh_coeffs[tile] = result.rgb / 16.0f;
+                    _sh_coeffs[tile] = result.rgb / 16.0F;
                 }
 
                 _sh_readbacks_pool.release(download.second);
@@ -919,7 +926,8 @@ public:
                 ((hrz::GpuResourceContext*)rc)->alloc(&ind_res, hrz::monitoring::systems::Sky);
 
             my::VertexInputStream streams[] = {
-                {0, _sky_box_vb, my::VertexFormat::Float32_3, 0, 0, my::VertexRate::PerVertex}};
+                {0, _sky_box_vb, my::VertexFormat::Float32_3, 0, 0, my::VertexRate::PerVertex}
+            };
 
             my::VertexInputResource vi_res;
             vi_res.indices = _sky_box_ib;
@@ -1224,7 +1232,8 @@ public:
                 ((hrz::GpuResourceContext*)rc)->alloc(&ind_res, hrz::monitoring::systems::Sky);
 
             my::VertexInputStream streams[] = {
-                {0, _sky_box_vb, my::VertexFormat::Float32_3, 0, 0, my::VertexRate::PerVertex}};
+                {0, _sky_box_vb, my::VertexFormat::Float32_3, 0, 0, my::VertexRate::PerVertex}
+            };
 
             my::VertexInputResource vi_res;
             vi_res.indices = _sky_box_ib;
@@ -1449,6 +1458,7 @@ public:
 
 namespace hrz
 {
+
 struct SkySystem
 {
     render::DoubleBufferedUniformBuffer<UboData> ubo;
@@ -1461,27 +1471,27 @@ struct SkySystem
     bool enable_simulated_ambient_lighting = true;
     bool enable_simulated_sky = true;
 
-    float atmosphere_attenuation = 0.0f;
-    float cloudiness = 0.5f;
+    float atmosphere_attenuation = 0.0F;
+    float cloudiness = 0.5F;
     hrz_proto::SunDirectionMode sun_direction_mode =
         hrz_proto::SunDirectionMode::SUN_DIRECTION_RELATIVE_TO_DATE;
-    float solar_time = 0.0f;
-    float day = 0.0f;
-    float sun_azimuth = 0.0f;
+    float solar_time = 0.0F;
+    float day = 0.0F;
+    float sun_azimuth = 0.0F;
     float sun_altitude = 0.0;
-    float sun_ambient_balance = 0.5f;
-    float lighting_strength = 1.0f;
-    float wrap_lighting = 0.0f;
-    lm::vec3 sun_color_linear = lm::vec3(1.0f);
-    lm::vec3 ambient_color_linear = lm::vec3(0.42f);
-    lm::vec4 underground_color_linear = hrz::srgb_to_linear(lm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    lm::vec4 underground_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
-    lm::vec4 atmosphere_color_linear = hrz::srgb_to_linear(lm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
-    lm::vec4 atmosphere_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.9f, 0.9f, 0.9f, 1.0f));
-    lm::vec4 space_color_linear = hrz::srgb_to_linear(lm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    lm::vec4 space_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    float color_transition_start_distance = 0.0f;
-    float color_transition_end_distance = 0.0f;
+    float sun_ambient_balance = 0.5F;
+    float lighting_strength = 1.0F;
+    float wrap_lighting = 0.0F;
+    lm::vec3 sun_color_linear = lm::vec3(1.0F);
+    lm::vec3 ambient_color_linear = lm::vec3(0.42F);
+    lm::vec4 underground_color_linear = hrz::srgb_to_linear(lm::vec4(0.8F, 0.8F, 0.8F, 1.0F));
+    lm::vec4 underground_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.8F, 0.8F, 0.8F, 1.0F));
+    lm::vec4 atmosphere_color_linear = hrz::srgb_to_linear(lm::vec4(0.9F, 0.9F, 0.9F, 1.0F));
+    lm::vec4 atmosphere_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.9F, 0.9F, 0.9F, 1.0F));
+    lm::vec4 space_color_linear = hrz::srgb_to_linear(lm::vec4(0.0F, 0.0F, 0.0F, 1.0F));
+    lm::vec4 space_color_oklab = hrz::srgb_to_oklab(lm::vec4(0.0F, 0.0F, 0.0F, 1.0F));
+    float color_transition_start_distance = 0.0F;
+    float color_transition_end_distance = 0.0F;
     hrz_proto::StaticSkyColorTransitionUnit color_transition_distance_unit =
         hrz_proto::StaticSkyColorTransitionUnit::STATIC_SKY_COLOR_TRANSITION_UNIT_METERS;
 
@@ -1508,6 +1518,7 @@ struct SkySystem
 
 namespace sky
 {
+
 SkySystem* create()
 {
     SkySystem* sys = new SkySystem();
@@ -1528,9 +1539,9 @@ void init_render_precompute(SkySystem* sky, RenderView* render)
     ubo_data.fog[0] = {};
     ubo_data.fog[1] = {};
     ubo_data.fog_min_depth = 0;
-    ubo_data.underground_color = lm::vec4(0.0f);
-    ubo_data.atmosphere_color = lm::vec4(0.0f);
-    ubo_data.space_color = lm::vec4(0.0f);
+    ubo_data.underground_color = lm::vec4(0.0F);
+    ubo_data.atmosphere_color = lm::vec4(0.0F);
+    ubo_data.space_color = lm::vec4(0.0F);
     ubo_data.oklab_gradient = false;
     ubo_data.color_transition_start_horizon_angle = 0;
     ubo_data.color_transition_end_horizon_angle = 0;
@@ -1634,14 +1645,18 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
             hrz::srgb_to_linear(hrz::convert_proto_color_to_float(settings.underground_color())));
         sky->underground_color_oklab = hrz::premultiply_alpha(
             hrz::srgb_to_oklab(hrz::convert_proto_color_to_float(settings.underground_color())));
-        sky->atmosphere_color_linear = hrz::premultiply_alpha(hrz::srgb_to_linear(
-            hrz::convert_proto_color_to_float(settings.sky().static_atmosphere_color())));
-        sky->atmosphere_color_oklab = hrz::premultiply_alpha(hrz::srgb_to_oklab(
-            hrz::convert_proto_color_to_float(settings.sky().static_atmosphere_color())));
-        sky->space_color_linear = hrz::premultiply_alpha(hrz::srgb_to_linear(
-            hrz::convert_proto_color_to_float(settings.sky().static_space_color())));
-        sky->space_color_oklab = hrz::premultiply_alpha(hrz::srgb_to_oklab(
-            hrz::convert_proto_color_to_float(settings.sky().static_space_color())));
+        sky->atmosphere_color_linear = hrz::premultiply_alpha(
+            hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(settings.sky().static_atmosphere_color())));
+        sky->atmosphere_color_oklab = hrz::premultiply_alpha(
+            hrz::srgb_to_oklab(
+                hrz::convert_proto_color_to_float(settings.sky().static_atmosphere_color())));
+        sky->space_color_linear = hrz::premultiply_alpha(
+            hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(settings.sky().static_space_color())));
+        sky->space_color_oklab = hrz::premultiply_alpha(
+            hrz::srgb_to_oklab(
+                hrz::convert_proto_color_to_float(settings.sky().static_space_color())));
         sky->color_transition_start_distance =
             settings.sky().static_color_transition_start_distance();
         sky->color_transition_end_distance = std::max(
@@ -1649,7 +1664,7 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
             sky->color_transition_start_distance);
         sky->color_transition_distance_unit =
             settings.sky().static_color_transition_distance_unit();
-        sky->atmosphere_attenuation = hrz::clamp(settings.sky().attenuation(), 0.0f, 1.0f);
+        sky->atmosphere_attenuation = hrz::clamp(settings.sky().attenuation(), 0.0F, 1.0F);
 
         sky->fog[0].density = settings.primary_fog().density();
         sky->fog[0].start_distance = settings.primary_fog().start_distance();
@@ -1703,8 +1718,8 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
     if (update_sky_ubo)
     {
         ubo_data.oklab_gradient = !sky->enable_simulated_sky
-            && sky->underground_color_linear.a == 1.0f && sky->atmosphere_color_linear.a == 1.0f
-            && sky->space_color_linear.a == 1.0f;
+            && sky->underground_color_linear.a == 1.0F && sky->atmosphere_color_linear.a == 1.0F
+            && sky->space_color_linear.a == 1.0F;
     }
 
     if (sky->camera_position != geo || update_sky_ubo)
@@ -1826,8 +1841,11 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         // z1 = z0 * (a/b)²
         //
         // Then we just have to normalize this to get a correct normal vector.
-        lm::dvec3 normal = lm::normalize(lm::dvec3{
-            camera.cam.pos.x, camera.cam.pos.y, camera.cam.pos.z / hrz::WGS84_AXES_LENGTH_RATIO_2});
+        lm::dvec3 normal = lm::normalize(
+            lm::dvec3{
+                camera.cam.pos.x, camera.cam.pos.y,
+                camera.cam.pos.z / hrz::WGS84_AXES_LENGTH_RATIO_2
+            });
         ubo_data.ground_normal_view = (lm::vec3)(camera.cam.view_cc * lm::vec4(normal, 1.0)).xyz;
 
         sky->precompute_pass->schedule_refresh_sky_view();
@@ -1866,9 +1884,9 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
 
         static constexpr float FogValueAtFalloffEnd = 0.1;
         ubo_data.fog[0].falloff_factor = std::log(FogValueAtFalloffEnd)
-            / std::max(1.0f, ubo_data.fog[0].falloff_end - ubo_data.fog[0].falloff_start);
+            / std::max(1.0F, ubo_data.fog[0].falloff_end - ubo_data.fog[0].falloff_start);
         ubo_data.fog[1].falloff_factor = std::log(FogValueAtFalloffEnd)
-            / std::max(1.0f, ubo_data.fog[1].falloff_end - ubo_data.fog[1].falloff_start);
+            / std::max(1.0F, ubo_data.fog[1].falloff_end - ubo_data.fog[1].falloff_start);
 
         sky->world_pass->set_fog_enabled(ubo_data.fog[0].enabled || ubo_data.fog[1].enabled);
         render_request.request_visual_render();
@@ -1897,7 +1915,7 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
             // Also we pretend the summer solstice happens at noon, which is not always
             // the case but that's fine.
             static const double DAYS_PER_YEAR = 365.0;
-            static const double SUMMER_SOLSTICE = 171.5f;
+            static const double SUMMER_SOLSTICE = 171.5F;
             const double angle_around_sun = (day - SUMMER_SOLSTICE) / DAYS_PER_YEAR * 2.0 * lm::PI;
 
             static const double EARTH_AXIAL_TILT = 0.40910517666747085283;
@@ -2025,8 +2043,8 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
     lm::mat3 world_to_view(camera.cam.view.x.xyz, camera.cam.view.y.xyz, camera.cam.view.z.xyz);
     lm::mat3 view_to_sky = lm::transpose(world_to_view * sky_to_world);
     sky->sh_rotation = lm::mat4(
-        lm::vec4(view_to_sky.x, 0.0f), lm::vec4(view_to_sky.y, 0.0f), lm::vec4(view_to_sky.z, 0.0f),
-        lm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        lm::vec4(view_to_sky.x, 0.0F), lm::vec4(view_to_sky.y, 0.0F), lm::vec4(view_to_sky.z, 0.0F),
+        lm::vec4(0.0F, 0.0F, 0.0F, 1.0F));
 
     if (update_sky_ubo)
     {
@@ -2095,15 +2113,15 @@ void fill_frame_uniform_data(const SkySystem* sky, FrameUniformData* ubo)
         // We simulate a hemisphere of sky_color, and black everywhere else.
         // This is done by integrating the functions commented below on the hemisphere.
 
-        L[0] = 0.282095f * sky_color * 0.5f;  // 1
-        L[1] = 0.488608f * sky_color * 0.0f;  // y
-        L[2] = 0.488603f * sky_color * 0.25f; // z
-        L[3] = 0.488608f * sky_color * 0.0f;  // x
-        L[4] = 1.092548f * sky_color * 0.0f;  // x * y
-        L[5] = 1.092548f * sky_color * 0.0f;  // y * z
-        L[6] = 0.315392f * sky_color * 0.0f;  // 3 * z * z - 1
-        L[7] = 1.092548f * sky_color * 0.0f;  // x * z
-        L[8] = 0.546270f * sky_color * 0.0f;  // x * x - y * y
+        L[0] = 0.282095F * sky_color * 0.5F;  // 1
+        L[1] = 0.488608F * sky_color * 0.0F;  // y
+        L[2] = 0.488603F * sky_color * 0.25F; // z
+        L[3] = 0.488608F * sky_color * 0.0F;  // x
+        L[4] = 1.092548F * sky_color * 0.0F;  // x * y
+        L[5] = 1.092548F * sky_color * 0.0F;  // y * z
+        L[6] = 0.315392F * sky_color * 0.0F;  // 3 * z * z - 1
+        L[7] = 1.092548F * sky_color * 0.0F;  // x * z
+        L[8] = 0.546270F * sky_color * 0.0F;  // x * x - y * y
     }
     else
     {
@@ -2151,7 +2169,7 @@ void fill_frame_uniform_data(const SkySystem* sky, FrameUniformData* ubo)
 
     ubo->sun_strength = std::min(sky->sun_ambient_balance * 2.0, 1.0) * sky->lighting_strength;
     ubo->ambient_strength =
-        std::min(2.0f - sky->sun_ambient_balance * 2.0, 1.0) * sky->lighting_strength;
+        std::min(2.0F - sky->sun_ambient_balance * 2.0, 1.0) * sky->lighting_strength;
     ubo->sun_color = sky->sun_color_linear;
     ubo->wrap_lighting = sky->wrap_lighting;
 
@@ -2185,5 +2203,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     SkyPrecomputePass::collect_shaders(rc);
     WorldSkyRenderPass::collect_shaders(rc);
 }
+
 } // namespace sky
 } // namespace hrz

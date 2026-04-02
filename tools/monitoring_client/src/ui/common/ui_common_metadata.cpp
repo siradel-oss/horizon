@@ -15,6 +15,7 @@
 
 namespace
 {
+
 std::optional<double> _string_to_double(const std::string& string)
 {
     char* end;
@@ -48,12 +49,14 @@ static const Comparison METADATA_COMPARISONS[] = {
     {"starts with", std::nullopt,
      [](std::string_view a, std::string_view b) { return a.starts_with(b); }},
     {"ends with", std::nullopt,
-     [](std::string_view a, std::string_view b) { return a.ends_with(b); }}};
+     [](std::string_view a, std::string_view b) { return a.ends_with(b); }}
+};
 
 } // namespace
 
 namespace metadata
 {
+
 bool Filter::pass(const std::string& metadata_label, const std::string& metadata_value) const
 {
     if (metadata_label != label) return true;
@@ -221,7 +224,7 @@ bool draw_editable_filter_row(
 
     // Value input
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::SetNextItemWidth(-1.0F);
     if (filter.numeric)
     {
         static const double INPUT_STEP = 1.0;
@@ -256,7 +259,7 @@ void draw_metadata_table(std::span<const data::Metadata> metadata, const char* t
             ImGui::TableSetColumnIndex(1);
             // URL metadata is usually very long, so we enable wrapping the limit the size
             // of the popup.
-            ImGui::PushTextWrapPos(350.0f);
+            ImGui::PushTextWrapPos(350.0F);
             ImGui::Text("%s", entry.value.c_str());
             ImGui::PopTextWrapPos();
 

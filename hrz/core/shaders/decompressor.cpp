@@ -7,6 +7,7 @@
 
 namespace hrz::shaders_decompressor
 {
+
 std::pair<std::unique_ptr<char[]>, size_t> decompress(const char* input, size_t input_size)
 {
     const size_t limit_size = input_size * 10'000;

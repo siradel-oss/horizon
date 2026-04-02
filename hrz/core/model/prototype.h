@@ -11,6 +11,7 @@
 
 namespace hrz::model
 {
+
 struct ModelPrototype
 {
     enum Status
@@ -106,10 +107,11 @@ struct ModelPrototype
     void release_samplers(UsedResources<SamplerWithParams>&);
     void release_animations(UsedResources<int>&);
 
-    void iterate_primitives(const std::function<void(
-                                const ModelDescriptor::Mesh*,
-                                const ModelDescriptor::MeshInstance*,
-                                const ModelDescriptor::Primitive*)>& fn);
+    void iterate_primitives(
+        const std::function<void(
+            const ModelDescriptor::Mesh*,
+            const ModelDescriptor::MeshInstance*,
+            const ModelDescriptor::Primitive*)>& fn);
 
     GpuDracoMeshResource* get_draco_mesh(int id);
 };
@@ -119,4 +121,5 @@ std::optional<int> get_primitive_material(
     std::optional<int> variant_index);
 
 int get_material_uv_set(const ModelDescriptor& desc, std::optional<int> material_id);
+
 } // namespace hrz::model

@@ -6,12 +6,14 @@
 
 namespace hrz
 {
+
 struct JobScheduler;
 struct ImageDecoder;
 struct PlatformInfo;
 
 namespace image_decoder
 {
+
 enum class ConvertScalarsToFloat
 {
     DoNotConvert,

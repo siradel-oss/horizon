@@ -14,6 +14,7 @@
 
 namespace
 {
+
 enum
 {
     UboGrid = hrz::UboCustomStart,
@@ -35,12 +36,14 @@ struct GridUniformData
 };
 
 HRZ_CHECK_UBO_SIZE(GridUniformData);
+
 } // anonymous namespace
 
 namespace hrz
 {
 namespace grid
 {
+
 class GridRenderable : public my::Renderer::Renderable
 {
     static const uint32_t MaxInstanceCount = 32;
@@ -337,6 +340,7 @@ void collect_shaders(hrz::GpuResourceContext* rc)
 {
     GridRenderable::collect_shaders(rc);
 }
+
 } // namespace grid
 
 grid::GridParams from_proto(const hrz_proto::Grid& grid)
@@ -349,4 +353,5 @@ grid::GridParams from_proto(const hrz_proto::Grid& grid)
     grid_params.extent_unit = grid.extent_unit();
     return grid_params;
 }
+
 } // namespace hrz

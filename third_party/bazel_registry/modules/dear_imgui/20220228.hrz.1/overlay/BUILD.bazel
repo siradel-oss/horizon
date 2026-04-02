@@ -1,0 +1,27 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "dear_imgui",
+    srcs = glob([
+        "imgui.cpp",
+        "imgui_draw.cpp",
+        "imgui_tables.cpp",
+        "imgui_widgets.cpp",
+        "imgui_demo.cpp",
+        "misc/cpp/imgui_stdlib.cpp",
+    ]),
+    hdrs = glob([
+        "imgui.h",
+        "imgui_internal.h",
+        "imconfig.h",
+        "imstb_textedit.h",
+        "imstb_rectpack.h",
+        "imstb_truetype.h",
+        "misc/cpp/imgui_stdlib.h",
+    ]),
+    includes = ["."],
+)
+
+exports_files(["LICENSE.txt"])

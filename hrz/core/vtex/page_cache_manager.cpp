@@ -2,6 +2,7 @@
 
 namespace hrz::vtex
 {
+
 PageCacheManager::UploadResult PageCacheManager::upload_page(BlobImage&& img, TileCoords tile)
 {
     PageTable::UploadResult upload = _page_table->upload_page(std::move(img), tile);
@@ -41,4 +42,5 @@ void PageCacheManager::destroy(Render* render)
     _indirection_clipmap->destroy(render);
     _page_table->destroy(render);
 }
+
 } // namespace hrz::vtex

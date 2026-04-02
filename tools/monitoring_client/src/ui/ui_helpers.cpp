@@ -15,6 +15,7 @@
 
 namespace
 {
+
 using namespace ui::helpers;
 
 constexpr size_t BUFFER_SIZE = 512;
@@ -45,14 +46,14 @@ BaseSelectorResult _base_filtered_selector(
     BaseSelectorResult result = {};
 
     bool open_dummy = true;
-    ImGui::SetNextWindowSize(lm::vec2(600.0f, 450.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(lm::vec2(600.0F, 450.0F), ImGuiCond_FirstUseEver);
     if (ImGui::BeginPopupModal(modal_title, &open_dummy))
     {
         static ImGuiTextFilter filter;
         bool autoselect_filtered = false;
 
         if (open_now) ImGui::SetKeyboardFocusHere();
-        filter.Draw("Filter", available_rect().size().x - 70.0f);
+        filter.Draw("Filter", available_rect().size().x - 70.0F);
 
         ImGui::SameLine();
         help_marker("Exclude entries containing \"foo\" by filtering with \"-foo\".");
@@ -123,8 +124,8 @@ BaseSelectorResult _base_filtered_selector(
                 "Metrics table", 3, flags,
                 available_rect().trim(Direction::Down, footer_height).size()))
         {
-            ImGui::TableSetupColumn("Name", 0, 160.0f);
-            ImGui::TableSetupColumn("Labels", 0, 200.0f);
+            ImGui::TableSetupColumn("Name", 0, 160.0F);
+            ImGui::TableSetupColumn("Labels", 0, 200.0F);
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableHeadersRow();
 
@@ -198,7 +199,7 @@ BaseSelectorResult _base_filtered_selector(
                 if (show_tooltip)
                 {
                     ImGui::BeginTooltip();
-                    ImGui::PushTextWrapPos(300.0f);
+                    ImGui::PushTextWrapPos(300.0F);
 
                     ImGui::Text("%s", metric.name.c_str());
 
@@ -244,7 +245,7 @@ BaseSelectorResult _base_filtered_selector(
 
             if (selected_unit)
             {
-                ImGui::SameLine(250.0f);
+                ImGui::SameLine(250.0F);
                 ImGui::Text("(Unit: %s)", data::metric_unit_label(*selected_unit));
                 ImGui::SameLine();
                 help_marker("Only metrics with the same unit can be part of the same selection.");
@@ -261,6 +262,7 @@ BaseSelectorResult _base_filtered_selector(
 
 namespace ui::helpers
 {
+
 Rect Rect::fix() const
 {
     Rect fixed = *this;
@@ -334,23 +336,23 @@ void Rect::split_4(
 {
     if (topleft)
     {
-        *topleft = Rect(p0, position - lm::vec2(spacing, spacing) / 2.0f);
+        *topleft = Rect(p0, position - lm::vec2(spacing, spacing) / 2.0F);
     }
 
     if (topright)
     {
-        *topright = Rect({position.x + spacing / 2.0f, p0.y}, {p1.x, position.y - spacing / 2.0f});
+        *topright = Rect({position.x + spacing / 2.0F, p0.y}, {p1.x, position.y - spacing / 2.0F});
     }
 
     if (bottomleft)
     {
         *bottomleft =
-            Rect({p0.x, position.y + spacing / 2.0f}, {position.x - spacing / 2.0f, p1.y});
+            Rect({p0.x, position.y + spacing / 2.0F}, {position.x - spacing / 2.0F, p1.y});
     }
 
     if (bottomright)
     {
-        *bottomright = Rect(position + lm::vec2(spacing, spacing) / 2.0f, p1);
+        *bottomright = Rect(position + lm::vec2(spacing, spacing) / 2.0F, p1);
     }
 }
 
@@ -362,24 +364,24 @@ Rect Rect::project_into(const Rect& target_rect, const Rect& origin_rect) const
     return result;
 }
 
-Rect Rect::operator+(const lm::dvec2& a) const
+Rect Rect::operator +(const lm::dvec2& a) const
 {
     return Rect(p0 + a, p1 + a);
 }
 
-Rect Rect::operator-(const lm::dvec2& a) const
+Rect Rect::operator -(const lm::dvec2& a) const
 {
     return Rect(p0 - a, p1 - a);
 }
 
-Rect& Rect::operator+=(const lm::dvec2& a)
+Rect& Rect::operator +=(const lm::dvec2& a)
 {
     p0 += a;
     p1 += a;
     return *this;
 }
 
-Rect& Rect::operator-=(const lm::dvec2& a)
+Rect& Rect::operator -=(const lm::dvec2& a)
 {
     p0 -= a;
     p1 -= a;
@@ -458,7 +460,7 @@ void help_marker(const char* text)
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0F);
         ImGui::TextUnformatted(text);
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
@@ -507,7 +509,7 @@ void short_text_centered(
     va_end(args);
 
     lm::dvec2 text_size = ImGui::CalcTextSize(s_buffer, s_buffer + n);
-    draw_list->AddText(center - text_size / 2.0f, color, s_buffer, s_buffer + n);
+    draw_list->AddText(center - text_size / 2.0F, color, s_buffer, s_buffer + n);
 }
 
 void short_text_right_aligned(

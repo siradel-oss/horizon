@@ -20,6 +20,7 @@ struct mu_Context;
 
 namespace hrz
 {
+
 struct CameraViewInfo;
 struct VectorFlatOverlaySystem;
 struct CameraHeightSystem;
@@ -43,6 +44,7 @@ struct OverlayCamerasInfo
 
 namespace vector_flat_overlay
 {
+
 enum
 {
     SamplerOverlayStart = SamplerCustomStart,
@@ -115,6 +117,7 @@ bool is_working(const VectorFlatOverlaySystem* system);
 bool is_about_to_render(const VectorFlatOverlaySystem* system);
 
 void dev_ui(const VectorFlatOverlaySystem* system, mu_Context* ctx);
+
 }; // namespace vector_flat_overlay
 
 } // namespace hrz

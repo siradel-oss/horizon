@@ -12,6 +12,7 @@
 
 namespace userdata
 {
+
 using ParsingErrorFlags = int;
 
 enum ParsingError
@@ -88,4 +89,5 @@ private:
     std::string _to_json_string() const;
     ParsingErrorFlags _load_from_json_string(const std::string& json);
 };
+
 } // namespace userdata

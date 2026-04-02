@@ -17,6 +17,7 @@
 
 namespace
 {
+
 Display* display = nullptr;
 int screen;
 Window window = {};
@@ -40,6 +41,7 @@ std::span<unsigned long> create_icon_from_bytes(int width, int height, const uns
 
     return {data, data_size};
 }
+
 } // namespace
 
 static_assert(sizeof(Window) == sizeof(void*), "Wrong size for Window struct");

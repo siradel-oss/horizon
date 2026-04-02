@@ -150,12 +150,14 @@ hrz_jobs::JobResult cull(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // anonymous namespace
 
 namespace hrz_jobs
 {
 namespace cull_points_query
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::CullPointsQueryParams& params,
     hrz_jobs::CulledPointsQuery& resp,
@@ -173,10 +175,12 @@ hrz_jobs::JobResult run(
         return cull(params, point_view, resp, context.get_blob_allocator());
     }
 }
+
 } // namespace cull_points_query
 
 namespace
 {
+
 hrz_jobs::JobResult sample(
     const hrz_jobs::SamplePointsQueryParams& params,
     hrz::ArrayView<const lm::dvec2> points,
@@ -432,10 +436,12 @@ hrz_jobs::JobResult sample(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace
 
 namespace sample_points_query
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::SamplePointsQueryParams& params,
     hrz_jobs::SampledPointsQuery& resp,

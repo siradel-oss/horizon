@@ -8,6 +8,7 @@
 
 namespace hrz_jobs
 {
+
 struct DecompressedDracoMesh
 {
     enum class IndexType

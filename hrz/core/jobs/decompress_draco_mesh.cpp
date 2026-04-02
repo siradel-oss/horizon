@@ -19,6 +19,7 @@ using Mesh = hrz_jobs::DecompressedDracoMesh;
 
 namespace
 {
+
 // A constructor that is equivalent to this function is available in Draco 1.4.
 draco::BoundingBox make_empty_bounding_box()
 {
@@ -388,10 +389,12 @@ std::optional<hrz::blobs::BlobHandle> add_indices_to_response(
 
     return blob;
 }
+
 } // namespace
 
 namespace hrz_jobs::decompress_draco_mesh
 {
+
 hrz_jobs::JobResult run(
     const hrz::blobs::BlobHandle& compressed_mesh,
     Mesh& response,
@@ -579,4 +582,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::decompress_draco_mesh

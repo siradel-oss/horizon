@@ -5,13 +5,16 @@
 
 namespace
 {
+
 using PFNglXCreateContextAttribsARB =
     GLXContext (*)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
 PFNglXCreateContextAttribsARB glXCreateContextAttribsARB = nullptr;
+
 } // namespace
 
 namespace hrz::platform
 {
+
 struct GlContext
 {
     GLXContext glx_ctx;
@@ -21,7 +24,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
 {
     int fb_attribs[] = {
         GLX_RENDER_TYPE,  GLX_RGBA_BIT, GLX_RED_SIZE, 8, GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8,
-        GLX_DOUBLEBUFFER, True,         None};
+        GLX_DOUBLEBUFFER, True,         None
+    };
 
     int fb_config_count = 0;
     GLXFBConfig* fb_configs = glXChooseFBConfig(ctx->display, 0, fb_attribs, &fb_config_count);
@@ -94,4 +98,5 @@ void cleanup_gl(PlatformContext* ctx)
     delete ctx->gl_ctx;
     ctx->gl_ctx = nullptr;
 }
+
 } // namespace hrz::platform

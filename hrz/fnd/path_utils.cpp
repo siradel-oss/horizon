@@ -6,6 +6,7 @@
 
 namespace hrz::path
 {
+
 std::string_view parent_s(std::string_view path)
 {
     path = str::rtrim_s(path, '/');

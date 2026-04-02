@@ -9,10 +9,12 @@
 
 namespace hrz_jobs::build_aabb_tree
 {
+
 using Node = hrz_jobs::AabbTree::Node;
 
 namespace
 {
+
 void insert_node(const Node& node_to_insert, std::vector<Node>& nodes)
 {
     if (nodes.empty())
@@ -68,6 +70,7 @@ void insert_node(const Node& node_to_insert, std::vector<Node>& nodes)
         }
     }
 }
+
 } // namespace
 
 hrz_jobs::JobResult run(
@@ -135,4 +138,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::build_aabb_tree

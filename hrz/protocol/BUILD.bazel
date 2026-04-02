@@ -1,5 +1,5 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("//hrz/protocol:list_proto_files.bzl", "list_proto_files")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 filegroup(
     name = "protos",
@@ -7,18 +7,20 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-hrz_genrule(
+run_binary(
     name = "generate_descriptor_set",
-    srcs = [
-        ":protos",
-    ],
+    srcs = list_proto_files("", ".proto"),
     outs = [
         "descriptor_set.pbf",
     ],
-    cmd = "$(location //third_party:protoc) $(SRCS) --descriptor_set_out=$@",
-    tools = [
-        ":protos",
-        "//third_party:protoc",
+    args = [
+        # We manually list the files so that the order is consistent.
+        # This is important for computing the checksum of the descriptor.
+        "$(execpath %s)" % f
+        for f in list_proto_files("", ".proto")
+    ] + [
+        "--descriptor_set_out=$@",
     ],
+    tool = "//third_party:protoc",
     visibility = ["//visibility:public"],
 )

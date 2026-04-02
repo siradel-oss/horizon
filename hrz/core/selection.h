@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 /**
  * A selection system manages what parts of the scene are selected. Each "part"
  * of the scene is something that is identified by a layer id and a feature id.
@@ -15,6 +16,7 @@ struct SelectionSystem;
 
 namespace selection
 {
+
 SelectionSystem* create();
 void destroy(SelectionSystem*);
 

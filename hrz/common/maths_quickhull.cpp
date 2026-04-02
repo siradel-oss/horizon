@@ -7,6 +7,7 @@
 
 namespace
 {
+
 template<typename T>
 inline T _dist(
     const lm::Vector<T, 2> p,
@@ -74,6 +75,7 @@ void _quickhull_inner(
 
 namespace hrz
 {
+
 template<typename T>
 void compute_convex_hull(std::span<const lm::Vector<T, 2>> pts, std::vector<lm::Vector<T, 2>>& hull)
 {

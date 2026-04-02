@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 my::ResourceHandle to_gpu(
     const BlobImage& image,
     GpuResourceContext* rc,
@@ -44,4 +45,5 @@ my::ResourceHandle to_gpu(
 
     return rc->alloc(&res, resource_owner, std::move(metadata));
 }
+
 } // namespace hrz

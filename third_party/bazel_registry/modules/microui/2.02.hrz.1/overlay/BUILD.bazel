@@ -1,0 +1,17 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "microui",
+    srcs = [
+        "src/microui.c",
+    ],
+    hdrs = [
+        "src/microui.h",
+    ],
+    include_prefix = "microui",
+    strip_include_prefix = "src",
+)
+
+exports_files(["LICENSE"])

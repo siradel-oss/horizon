@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_library(
     name = "platform",
     srcs = [
@@ -64,7 +67,6 @@ cc_library(
     }),
     local_defines = select({
         "//:os_windows": [
-            "NOMINMAX",
             "WIN32",
         ],
         "//conditions:default": [],
@@ -86,7 +88,7 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":platform",
-        "//third_party:gtest",
-        "//third_party:gtest_main",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )

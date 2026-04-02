@@ -6,6 +6,7 @@
 
 namespace
 {
+
 template<typename T, typename Index>
 constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
 {
@@ -18,10 +19,12 @@ constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
         return nullptr;
     }
 }
+
 } // namespace
 
 namespace hrz::model
 {
+
 std::optional<GpuTextureResource> GpuTextureResource::acquire(
     TextureWithCfg id,
     BlobLibrary* bl,

@@ -1,4 +1,5 @@
 load("@protobuf//bazel/common:proto_info.bzl", "ProtoInfo")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 
 CMakeAspectInfo = provider(fields = ["cmake_commands", "source_files"])
 

@@ -12,21 +12,26 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct InMemoryVectorDataBase;
 
 namespace scene_model
 {
+
 class InMemoryVectorSourceLayerPath;
+
 }
 
 namespace vector_data
 {
+
 struct DecodedVectorTile;
 struct FeatureIds;
 
 namespace in_memory
 {
+
 /**
  * Create an in-memory vector database instance.
  */
@@ -63,6 +68,7 @@ void work(InMemoryVectorDataBase*, SceneModel*, BlobAllocator*, AttributionRegis
 
 namespace messages
 {
+
 /*
  * Request for the given in-memory vector source layer and tile coordinates.
  * All data that is subsequently obtained from this request, whether
@@ -100,6 +106,7 @@ struct ReleaseDataRequest
 {
     uint64_t request_id;
 };
+
 } // namespace messages
 
 using ToInMemoryMessages = std::
@@ -107,6 +114,7 @@ using ToInMemoryMessages = std::
 
 namespace messages
 {
+
 struct VectorData
 {
     uint64_t request_id;
@@ -118,6 +126,7 @@ struct Error
 {
     uint64_t request_id;
 };
+
 } // namespace messages
 
 using FromInMemoryMessages = std::variant<messages::VectorData, messages::Error>;
@@ -125,6 +134,7 @@ using FromInMemoryMessages = std::variant<messages::VectorData, messages::Error>
 using InMemoryChannel = Channel<ToInMemoryMessages, FromInMemoryMessages>;
 
 InMemoryChannel create_channel(InMemoryVectorDataBase*);
+
 } // namespace in_memory
 } // namespace vector_data
 } // namespace hrz

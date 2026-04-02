@@ -15,6 +15,7 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct JobScheduler;
 struct PlanetGeometry;
@@ -26,11 +27,14 @@ struct VectorFlatOverlaySystem;
 
 namespace vtex
 {
+
 class ClipmapParams;
+
 }
 
 namespace planet
 {
+
 struct GeometryResources
 {
     my::UboBinding planet_params;

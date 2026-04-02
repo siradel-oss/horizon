@@ -22,6 +22,7 @@ namespace hrz_jobs::bake_extruded_vector_geometry
 {
 namespace
 {
+
 static constexpr double kMaxSegmentAngularLength = lm::radians(4.0); // in radians
 
 static constexpr size_t kInitialVertexCapacity = 512;
@@ -766,7 +767,8 @@ void generate_wall_roof_bevel(
                 lm::dvec3(bi0.inset.xy, roof_z_0),
                 nroof,
                 hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.roof_color_srgb)),
-            }};
+            }
+        };
 
         if (info.invert_walls_winding)
         {
@@ -802,7 +804,8 @@ void generate_wall_roof_bevel(
                 lm::dvec3(bi0.inset.xy, roof_z_0),
                 nroof,
                 hrz::srgb_to_linear(hrz::convert_byte_color_to_rgba(info.roof_color_srgb)),
-            }};
+            }
+        };
 
         if (info.invert_walls_winding)
         {
@@ -867,7 +870,8 @@ hrz_jobs::JobResult run(
     const hrz::GeoPosition3 geo = hrz::ecef_to_geo3(tile_bsphere.center);
     const lm::dmat4 geo_location_xform = hrz::enu_to_ecef_transform_for_geo(geo);
     const lm::dmat3 normal_matrix{
-        geo_location_xform.x.xyz, geo_location_xform.y.xyz, geo_location_xform.z.xyz};
+        geo_location_xform.x.xyz, geo_location_xform.y.xyz, geo_location_xform.z.xyz
+    };
 
     bool has_transparent_geometry = false;
 

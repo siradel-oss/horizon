@@ -25,6 +25,7 @@ namespace hrz::planet
 {
 namespace
 {
+
 // @Todo Invert this so that the value in the config is the actual geometry
 // complexity instead of some weird divider.
 static const int REPROJ_GRID_SIZE = hrz::ATLAS_TILE_SIZE / 8;
@@ -127,6 +128,7 @@ std::optional<hrz_proto::RasterPickResult> get_tile_image_pixel(
     return has_raster_data ? std::optional<hrz_proto::RasterPickResult>{raster_result}
                            : std::nullopt;
 }
+
 } // namespace
 
 RasterMergeGroup::RasterMergeGroup(
@@ -377,7 +379,7 @@ void RasterMergeGroup::update_requested_tiles(
     // Reset use counts for all previously requested tiles.
     for (auto& tile : _tiles)
     {
-        constexpr float decay_factor = 0.75f;
+        constexpr float decay_factor = 0.75F;
         tile.second.past_uses =
             std::max((int)(tile.second.past_uses * decay_factor), tile.second.uses);
         tile.second.uses = 0;
@@ -860,9 +862,9 @@ void RasterMergeGroup::work(
                         continue;
                     }
                 }
-                else if (is_beyond(
-                             tile_raster.status,
-                             ComposedTile::TileRaster::Status::WaitingForProvider))
+                else if (
+                    is_beyond(
+                        tile_raster.status, ComposedTile::TileRaster::Status::WaitingForProvider))
                 {
                     // Provider is already ready
                     continue;
@@ -1156,7 +1158,7 @@ void RasterMergeGroup::work(
                             param_mesh.tile_image_coords = tile_image.coords;
 
                             auto& grid = param_mesh.grid;
-                            grid.resize(mesh.grid.size() * 2, 0.0f);
+                            grid.resize(mesh.grid.size() * 2, 0.0F);
                             for (unsigned int i = 0; i < mesh.grid.size(); ++i)
                             {
                                 grid[i * 2 + 0] = mesh.grid[i].x;
@@ -1184,8 +1186,9 @@ void RasterMergeGroup::work(
                         auto tile_bbox = hrz::mercator_tile_bbox_meters(tile.coords);
                         auto to_uv = [&](lm::dvec2 v)
                         {
-                            auto uv = lm::vec2(lm::clamp(
-                                (v - tile_bbox.min) / lm::size(tile_bbox), {0, 0}, {1, 1}));
+                            auto uv = lm::vec2(
+                                lm::clamp(
+                                    (v - tile_bbox.min) / lm::size(tile_bbox), {0, 0}, {1, 1}));
                             uv.y = 1.0 - uv.y;
                             return uv;
                         };
@@ -1754,7 +1757,8 @@ void RasterMergeGroup::schedule_raster_data_fetch(
         fetch->tile = {
             (uint32_t)std::floor(domain_coords_pixel.x / info.provider_tile_pixel_size),
             (uint32_t)std::floor(domain_coords_pixel.y / info.provider_tile_pixel_size),
-            info.max_lod};
+            info.max_lod
+        };
 
         fetch->proj_pos = proj_pos;
         fetch->pixel_pos = lm::ivec2(

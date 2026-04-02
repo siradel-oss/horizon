@@ -53,12 +53,15 @@
 
 namespace data
 {
+
 struct Metric;
 enum class MetricUnit;
+
 } // namespace data
 
 namespace ui::helpers
 {
+
 template<typename T>
 inline T clamp(T value, T min, T max)
 {
@@ -75,7 +78,7 @@ inline T map(T value, T src_min, T src_max, T dst_min, T dst_max)
 template<typename T>
 inline T lerp(T a, T b, float t)
 {
-    t = clamp(t, 0.0f, 1.0f);
+    t = clamp(t, 0.0F, 1.0F);
     return (1.0 - t) * a + t * b;
 }
 
@@ -130,16 +133,16 @@ struct Rect
         Rect* topright,
         Rect* bottomleft,
         Rect* bottomright,
-        double spacing = 0.0f) const;
+        double spacing = 0.0F) const;
 
     Rect project_into(const Rect& target_rect, const Rect& origin_rect) const;
 
     // Translation
-    Rect operator+(const lm::dvec2& a) const;
-    Rect operator-(const lm::dvec2& a) const;
+    Rect operator +(const lm::dvec2& a) const;
+    Rect operator -(const lm::dvec2& a) const;
 
-    Rect& operator+=(const lm::dvec2& a);
-    Rect& operator-=(const lm::dvec2& a);
+    Rect& operator +=(const lm::dvec2& a);
+    Rect& operator -=(const lm::dvec2& a);
 
     Rect offset(double x, double y) const { return *this + lm::dvec2(x, y); };
 
@@ -191,7 +194,7 @@ struct MetricValue
 
     MetricValue() : value(0), unit(data::MetricUnit::None) {}
 
-    MetricValue(double value, data::MetricUnit unit) : value(value), unit(unit){};
+    MetricValue(double value, data::MetricUnit unit) : value(value), unit(unit) {};
 };
 
 // Returns a fmt::memory_buffer that can be use to format strings at a lower cost.
@@ -228,7 +231,7 @@ void draw_text_centered(
     format_buffer(buffer, fmt, std::forward<Args>(args)...);
 
     lm::dvec2 text_size = ImGui::CalcTextSize(buffer.data());
-    draw_list->AddText(center - text_size / 2.0f, col, buffer.data());
+    draw_list->AddText(center - text_size / 2.0F, col, buffer.data());
 }
 
 template<typename... Args>

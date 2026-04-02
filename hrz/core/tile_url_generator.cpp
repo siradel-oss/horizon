@@ -10,6 +10,7 @@
 
 namespace hrz
 {
+
 PatternTileUrlGenerator::PatternTileUrlGenerator(
     const std::string& url,
     unsigned int level_zero_tile_count_y) :
@@ -150,4 +151,5 @@ std::string tile_coords_to_quadkey(uint32_t x, uint32_t y, uint32_t lod)
 
     return quadkey;
 }
+
 } // namespace hrz

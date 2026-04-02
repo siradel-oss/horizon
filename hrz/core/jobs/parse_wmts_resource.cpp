@@ -12,7 +12,7 @@
 #include <fmt/format.h>
 #include <lin_maths.h>
 #include <proj_lite.h>
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -27,6 +27,7 @@
 
 namespace
 {
+
 lm::dvec2 parse_dvec2(std::string_view text)
 {
     lm::dvec2 v;
@@ -429,10 +430,12 @@ int8_t compute_level_offset(const lm::uvec2& level_zero_tile_count, uint32_t til
     return std::ceil(
         std::log2(tile_size * std::max(level_zero_tile_count.x, level_zero_tile_count.y)));
 }
+
 } // namespace
 
 namespace hrz_jobs::parse_wmts_resource
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::WmtsResourceParams& params,
     hrz_jobs::WmtsResourceResponse& response,
@@ -638,7 +641,8 @@ hrz_jobs::JobResult run(
                 for (const auto& layer_url_template : url_templates)
                 {
                     static constexpr std::string_view kValidArgs[] = {
-                        "Style", "TileMatrixSet", "TileMatrix", "TileRow", "TileCol"};
+                        "Style", "TileMatrixSet", "TileMatrix", "TileRow", "TileCol"
+                    };
                     std::string url_template =
                         hrz::str::sanitize_named_fmt_arguments(layer_url_template, kValidArgs);
                     url_template = fmt::format(
@@ -790,4 +794,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::FAILURE;
 }
+
 } // namespace hrz_jobs::parse_wmts_resource

@@ -1,0 +1,37 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "libwebp",
+    srcs = glob([
+        "src/dsp/*.c",
+        "src/dsp/*.h",
+        "src/utils/*.c",
+        "src/utils/*.h",
+        "src/dec/*.c",
+        "src/dec/*.h",
+        "src/demux/*.c",
+        #"src/demux/*.h",
+        #"src/enc/*.c",
+        "src/enc/*.h",
+        "src/webp/*.h",
+    ]),
+    hdrs = [
+        "src/webp/decode.h",
+    ],
+    defines = [
+        "WEBP_EXTERN=",
+    ] + select({
+        "@platforms//cpu:x86_64": [
+            "WEBP_ENABLE_SIMD",
+            "WEBP_USE_THREAD",
+        ],
+        "//conditions:default": [],
+    }),
+    includes = [
+        "src",
+    ],
+)
+
+exports_files(["COPYING"])

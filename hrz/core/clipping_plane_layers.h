@@ -11,7 +11,9 @@ namespace hrz
 
 namespace scene_model
 {
+
 class ClippingPlaneLayerPath;
+
 } // namespace scene_model
 
 /**
@@ -31,6 +33,7 @@ struct ClippingPlaneInfo
 
 namespace clipping_plane_layers
 {
+
 /**
  * Create a clipping plane layer system.
  */
@@ -80,6 +83,7 @@ void draw(ClippingPlaneLayerSystem*, Render*, std::span<const hrz::RenderViewInf
 void get_clip_planes_info(
     ClippingPlaneLayerSystem*,
     ClippingPlaneInfo (&cpi)[HRZ_S_MAX_CLIP_PLANES]);
+
 } // namespace clipping_plane_layers
 
 } // namespace hrz

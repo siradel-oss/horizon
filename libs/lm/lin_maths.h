@@ -526,7 +526,7 @@ struct AddOp
 {
     using ResultType = decltype(std::declval<U>() + std::declval<V>());
 
-    constexpr ResultType operator()(U a, V b) const { return (ResultType)a + (ResultType)b; }
+    constexpr ResultType operator ()(U a, V b) const { return (ResultType)a + (ResultType)b; }
 };
 
 template<typename U, typename V = U>
@@ -534,7 +534,7 @@ struct SubOp
 {
     using ResultType = decltype(std::declval<U>() - std::declval<V>());
 
-    constexpr ResultType operator()(U a, V b) const { return (ResultType)a - (ResultType)b; }
+    constexpr ResultType operator ()(U a, V b) const { return (ResultType)a - (ResultType)b; }
 };
 
 template<typename U, typename V = U>
@@ -542,7 +542,7 @@ struct MulOp
 {
     using ResultType = decltype(std::declval<U>() * std::declval<V>());
 
-    constexpr ResultType operator()(U a, V b) const { return (ResultType)a * (ResultType)b; }
+    constexpr ResultType operator ()(U a, V b) const { return (ResultType)a * (ResultType)b; }
 };
 
 template<typename U, typename V = U>
@@ -550,7 +550,7 @@ struct DivOp
 {
     using ResultType = decltype(std::declval<U>() / std::declval<V>());
 
-    constexpr ResultType operator()(U a, V b) const { return (ResultType)a / (ResultType)b; }
+    constexpr ResultType operator ()(U a, V b) const { return (ResultType)a / (ResultType)b; }
 };
 
 template<typename T>
@@ -558,7 +558,7 @@ struct NegOp
 {
     using ResultType = T;
 
-    constexpr ResultType operator()(T x) const { return -x; }
+    constexpr ResultType operator ()(T x) const { return -x; }
 };
 
 template<typename U, typename V = U>
@@ -566,7 +566,7 @@ struct EqualOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a == b; }
+    constexpr ResultType operator ()(U a, V b) const { return a == b; }
 };
 
 template<typename U, typename V = U>
@@ -574,7 +574,7 @@ struct NotEqualOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a != b; }
+    constexpr ResultType operator ()(U a, V b) const { return a != b; }
 };
 
 template<typename U, typename V = U>
@@ -582,7 +582,7 @@ struct LEqualOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a <= b; }
+    constexpr ResultType operator ()(U a, V b) const { return a <= b; }
 };
 
 template<typename U, typename V = U>
@@ -590,7 +590,7 @@ struct GEqualOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a >= b; }
+    constexpr ResultType operator ()(U a, V b) const { return a >= b; }
 };
 
 template<typename U, typename V = U>
@@ -598,7 +598,7 @@ struct LessOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a < b; }
+    constexpr ResultType operator ()(U a, V b) const { return a < b; }
 };
 
 template<typename U, typename V = U>
@@ -606,7 +606,7 @@ struct GreaterOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a > b; }
+    constexpr ResultType operator ()(U a, V b) const { return a > b; }
 };
 
 template<typename U, typename V = U>
@@ -614,7 +614,7 @@ struct OrOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a || b; }
+    constexpr ResultType operator ()(U a, V b) const { return a || b; }
 };
 
 template<typename U, typename V = U>
@@ -622,7 +622,7 @@ struct AndOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(U a, V b) const { return a && b; }
+    constexpr ResultType operator ()(U a, V b) const { return a && b; }
 };
 
 template<typename T>
@@ -630,7 +630,7 @@ struct NotOp
 {
     using ResultType = bool;
 
-    constexpr ResultType operator()(T x) const { return !x; }
+    constexpr ResultType operator ()(T x) const { return !x; }
 };
 
 template<typename T>
@@ -638,18 +638,15 @@ struct SignOp
 {
     using ResultType = T;
 
-    constexpr ResultType operator()(T x) const { return lm::sign(x); }
+    constexpr ResultType operator ()(T x) const { return lm::sign(x); }
 };
 
-#define IMPL_UNARY_SIMPLE(NAME, FN)                \
-    template<typename T>                           \
-    struct NAME                                    \
-    {                                              \
-        using ResultType = T;                      \
-        constexpr ResultType operator()(T x) const \
-        {                                          \
-            return (T)std::FN(x);                  \
-        }                                          \
+#define IMPL_UNARY_SIMPLE(NAME, FN)                                           \
+    template<typename T>                                                      \
+    struct NAME                                                               \
+    {                                                                         \
+        using ResultType = T;                                                 \
+        constexpr ResultType operator ()(T x) const { return (T)std::FN(x); } \
     };
 IMPL_UNARY_SIMPLE(AbsOp, abs)
 IMPL_UNARY_SIMPLE(CeilOp, ceil)
@@ -667,15 +664,12 @@ IMPL_UNARY_SIMPLE(AcosOp, acos)
 IMPL_UNARY_SIMPLE(AtanOp, atan)
 #undef IMPL_UNARY_SIMPLE
 
-#define IMPL_BINARY_SIMPLE(NAME, FN)                    \
-    template<typename T>                                \
-    struct NAME                                         \
-    {                                                   \
-        using ResultType = T;                           \
-        constexpr ResultType operator()(T x, T y) const \
-        {                                               \
-            return (T)std::FN(x, y);                    \
-        }                                               \
+#define IMPL_BINARY_SIMPLE(NAME, FN)                                                  \
+    template<typename T>                                                              \
+    struct NAME                                                                       \
+    {                                                                                 \
+        using ResultType = T;                                                         \
+        constexpr ResultType operator ()(T x, T y) const { return (T)std::FN(x, y); } \
     };
 IMPL_BINARY_SIMPLE(FmodOp, fmod)
 IMPL_BINARY_SIMPLE(PowOp, pow)
@@ -687,7 +681,7 @@ struct MinOp
 {
     using ResultType = T;
 
-    constexpr ResultType operator()(T x, T y) const { return (x > y) ? y : x; }
+    constexpr ResultType operator ()(T x, T y) const { return (x > y) ? y : x; }
 };
 
 template<typename T>
@@ -695,7 +689,7 @@ struct MaxOp
 {
     using ResultType = T;
 
-    constexpr ResultType operator()(T x, T y) const { return (x < y) ? y : x; }
+    constexpr ResultType operator ()(T x, T y) const { return (x < y) ? y : x; }
 };
 
 template<typename T>
@@ -703,7 +697,7 @@ struct ClampOp
 {
     using ResultType = T;
 
-    constexpr ResultType operator()(T x, T min_v, T max_v) const
+    constexpr ResultType operator ()(T x, T min_v, T max_v) const
     {
         return (x < min_v) ? min_v : ((x > max_v) ? max_v : x);
     }
@@ -835,95 +829,95 @@ constexpr auto fold(
     {                                                                         \
         return apply(std::make_integer_sequence<int, N>{}, OP<U, V>{}, a, b); \
     }
-IMPL_VEC_BINARY_OP_WITH_SCALAR(AddOp, operator+)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(SubOp, operator-)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(MulOp, operator*)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(DivOp, operator/)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(AddOp, operator +)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(SubOp, operator -)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(MulOp, operator *)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(DivOp, operator /)
 IMPL_VEC_BINARY_OP_WITH_SCALAR(EqualOp, eq)
 IMPL_VEC_BINARY_OP_WITH_SCALAR(NotEqualOp, neq)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(LessOp, operator<)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(GreaterOp, operator>)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(LEqualOp, operator<=)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(GEqualOp, operator>=)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(AndOp, operator&&)
-IMPL_VEC_BINARY_OP_WITH_SCALAR(OrOp, operator||)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(LessOp, operator <)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(GreaterOp, operator >)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(LEqualOp, operator <=)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(GEqualOp, operator >=)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(AndOp, operator &&)
+IMPL_VEC_BINARY_OP_WITH_SCALAR(OrOp, operator ||)
 #undef IMPL_VEC_BINARY_OP_WITH_SCALAR
 
 template<typename T, int N>
-constexpr Vector<T, N>& operator+=(Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Vector<T, N>& operator +=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(std::make_integer_sequence<int, N>{}, AddOp<T>{}, a, b);
     return a;
 }
 
 template<typename T, int N>
-constexpr Vector<T, N>& operator-=(Vector<T, N>& a, const Vector<T, N>& b)
+constexpr Vector<T, N>& operator -=(Vector<T, N>& a, const Vector<T, N>& b)
 {
     a = apply(std::make_integer_sequence<int, N>{}, SubOp<T>{}, a, b);
     return a;
 }
 
 template<typename T, int N>
-constexpr Vector<T, N>& operator*=(Vector<T, N>& a, const Vector<T, N>& v)
+constexpr Vector<T, N>& operator *=(Vector<T, N>& a, const Vector<T, N>& v)
 {
     a = apply(std::make_integer_sequence<int, N>{}, MulOp<T>{}, a, v);
     return a;
 }
 
 template<typename T, int N>
-constexpr Vector<T, N>& operator*=(Vector<T, N>& a, T v)
+constexpr Vector<T, N>& operator *=(Vector<T, N>& a, T v)
 {
     a = apply(std::make_integer_sequence<int, N>{}, MulOp<T>{}, a, v);
     return a;
 }
 
 template<typename T, int N>
-constexpr Vector<T, N>& operator/=(Vector<T, N>& a, const Vector<T, N>& v)
+constexpr Vector<T, N>& operator /=(Vector<T, N>& a, const Vector<T, N>& v)
 {
     a = apply(std::make_integer_sequence<int, N>{}, DivOp<T>{}, a, v);
     return a;
 }
 
 template<typename T, int N>
-constexpr Vector<T, N>& operator/=(Vector<T, N>& a, T v)
+constexpr Vector<T, N>& operator /=(Vector<T, N>& a, T v)
 {
     a = apply(std::make_integer_sequence<int, N>{}, DivOp<T>{}, a, v);
     return a;
 }
 
 template<typename U, Arithmetic V, int N>
-constexpr auto operator*(const Matrix<U, N>& a, V b)
+constexpr auto operator *(const Matrix<U, N>& a, V b)
 {
     return apply(std::make_integer_sequence<int, N * N>{}, MulOp<U, V>{}, a, b);
 }
 
 template<Arithmetic U, typename V, int N>
-constexpr auto operator*(U a, const Matrix<V, N>& b)
+constexpr auto operator *(U a, const Matrix<V, N>& b)
 {
     return apply(std::make_integer_sequence<int, N * N>{}, MulOp<U, V>{}, a, b);
 }
 
 template<typename T, int N>
-constexpr Matrix<T, N>& operator*=(Matrix<T, N>& a, T b)
+constexpr Matrix<T, N>& operator *=(Matrix<T, N>& a, T b)
 {
     a = apply(std::make_integer_sequence<int, N * N>{}, MulOp<T>{}, a, b);
     return a;
 }
 
 template<typename U, Arithmetic V, int N>
-constexpr auto operator/(const Matrix<U, N>& a, V b)
+constexpr auto operator /(const Matrix<U, N>& a, V b)
 {
     return apply(std::make_integer_sequence<int, N * N>{}, DivOp<U, V>{}, a, b);
 }
 
 template<Arithmetic U, typename V, int N>
-constexpr auto operator/(U a, const Matrix<V, N>& b)
+constexpr auto operator /(U a, const Matrix<V, N>& b)
 {
     return apply(std::make_integer_sequence<int, N * N>{}, DivOp<U, V>{}, a, b);
 }
 
 template<typename T, int N>
-constexpr Matrix<T, N>& operator/=(Matrix<T, N>& a, T b)
+constexpr Matrix<T, N>& operator /=(Matrix<T, N>& a, T b)
 {
     a = apply(std::make_integer_sequence<int, N * N>{}, DivOp<T>{}, a, b);
     return a;
@@ -935,8 +929,8 @@ constexpr Matrix<T, N>& operator/=(Matrix<T, N>& a, T b)
     {                                                                   \
         return apply(std::make_integer_sequence<int, N>{}, OP<T>{}, v); \
     }
-IMPL_VEC_UNARY_OP(NegOp, operator-)
-IMPL_VEC_UNARY_OP(NotOp, operator!)
+IMPL_VEC_UNARY_OP(NegOp, operator -)
+IMPL_VEC_UNARY_OP(NotOp, operator !)
 IMPL_VEC_UNARY_OP(SignOp, sign)
 IMPL_VEC_UNARY_OP(AbsOp, abs)
 IMPL_VEC_UNARY_OP(CeilOp, ceil)
@@ -1001,17 +995,19 @@ constexpr Vector<T, N> mix(const Vector<T, N>& x, const Vector<T, N>& y, T a)
 // @@VECTOR_ARITHMETIC
 
 template<typename U, typename V, int N>
-constexpr auto operator*(const Matrix<U, N>& a, const Vector<V, N>& b)
+constexpr auto operator *(const Matrix<U, N>& a, const Vector<V, N>& b)
 {
-    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>) {
+    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>)
+    {
         return Vector<typename MulOp<U, V>::ResultType, N>{((a.col[Ns] * b.m[Ns]) + ...)};
     }(std::make_integer_sequence<int, N>{});
 }
 
 template<typename U, typename V, int N>
-constexpr auto operator*(const Matrix<U, N>& a, const Matrix<V, N>& b)
+constexpr auto operator *(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
-    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>) {
+    return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>)
+    {
         return Matrix<typename MulOp<U, V>::ResultType, N>{a * b.col[Ns]...};
     }(std::make_integer_sequence<int, N>{});
 }
@@ -1051,7 +1047,7 @@ constexpr T sum(const Vector<T, N>& v)
 // @@VECTOR_OPERATORS
 
 template<typename U, typename V, int N>
-constexpr bool operator==(const Vector<U, N>& a, const Vector<V, N>& b)
+constexpr bool operator ==(const Vector<U, N>& a, const Vector<V, N>& b)
 {
     return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>)
     { return ((a.m[Ns] == b.m[Ns]) && ...); }(std::make_integer_sequence<int, N>{});
@@ -1086,7 +1082,8 @@ template<typename U, typename V>
 auto cross(const Vector<U, 3>& a, const Vector<V, 3>& b)
 {
     return Vector<typename MulOp<U, V>::ResultType, 3>{
-        a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+        a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x
+    };
 }
 
 template<typename T, int N>
@@ -1183,13 +1180,16 @@ constexpr Matrix<T, 3> adjugate(const Matrix<T, 3>& m)
     return Matrix<T, 3>(
         Vector<T, 3>{
             m.y.y * m.z.z - m.y.z * m.z.y, m.x.z * m.z.y - m.x.y * m.z.z,
-            m.x.y * m.y.z - m.x.z * m.y.y},
+            m.x.y * m.y.z - m.x.z * m.y.y
+        },
         Vector<T, 3>{
             m.y.z * m.z.x - m.y.x * m.z.z, m.x.x * m.z.z - m.x.z * m.z.x,
-            m.x.z * m.y.x - m.x.x * m.y.z},
+            m.x.z * m.y.x - m.x.x * m.y.z
+        },
         Vector<T, 3>{
             m.y.x * m.z.y - m.y.y * m.z.x, m.x.y * m.z.x - m.x.x * m.z.y,
-            m.x.x * m.y.y - m.x.y * m.y.x});
+            m.x.x * m.y.y - m.x.y * m.y.x
+        });
 }
 
 template<typename T>
@@ -1204,7 +1204,8 @@ constexpr Matrix<T, 4> adjugate(const Matrix<T, 4>& m)
             m.x.y * (m.y.z * m.w.w - m.y.w * m.w.z) - m.y.y * (m.x.z * m.w.w - m.x.w * m.w.z)
                 + m.w.y * (m.x.z * m.y.w - m.x.w * m.y.z),
             -(m.x.y * (m.y.z * m.z.w - m.y.w * m.z.z) - m.y.y * (m.x.z * m.z.w - m.x.w * m.z.z)
-              + m.z.y * (m.x.z * m.y.w - m.x.w * m.y.z))},
+              + m.z.y * (m.x.z * m.y.w - m.x.w * m.y.z))
+        },
         Vector<T, 4>{
             -(m.y.x * (m.z.z * m.w.w - m.z.w * m.w.z) - m.z.x * (m.y.z * m.w.w - m.y.w * m.w.z)
               + m.w.x * (m.y.z * m.z.w - m.y.w * m.z.z)),
@@ -1213,7 +1214,8 @@ constexpr Matrix<T, 4> adjugate(const Matrix<T, 4>& m)
             -(m.x.x * (m.y.z * m.w.w - m.y.w * m.w.z) - m.y.x * (m.x.z * m.w.w - m.x.w * m.w.z)
               + m.w.x * (m.x.z * m.y.w - m.x.w * m.y.z)),
             m.x.x * (m.y.z * m.z.w - m.y.w * m.z.z) - m.y.x * (m.x.z * m.z.w - m.x.w * m.z.z)
-                + m.z.x * (m.x.z * m.y.w - m.x.w * m.y.z)},
+                + m.z.x * (m.x.z * m.y.w - m.x.w * m.y.z)
+        },
         Vector<T, 4>{
             m.y.x * (m.z.y * m.w.w - m.z.w * m.w.y) - m.z.x * (m.y.y * m.w.w - m.y.w * m.w.y)
                 + m.w.x * (m.y.y * m.z.w - m.y.w * m.z.y),
@@ -1222,7 +1224,8 @@ constexpr Matrix<T, 4> adjugate(const Matrix<T, 4>& m)
             m.x.x * (m.y.y * m.w.w - m.y.w * m.w.y) - m.y.x * (m.x.y * m.w.w - m.x.w * m.w.y)
                 + m.w.x * (m.x.y * m.y.w - m.x.w * m.y.y),
             -(m.x.x * (m.y.y * m.z.w - m.y.w * m.z.y) - m.y.x * (m.x.y * m.z.w - m.x.w * m.z.y)
-              + m.z.x * (m.x.y * m.y.w - m.x.w * m.y.y))},
+              + m.z.x * (m.x.y * m.y.w - m.x.w * m.y.y))
+        },
         Vector<T, 4>{
             -(m.y.x * (m.z.y * m.w.z - m.z.z * m.w.y) - m.z.x * (m.y.y * m.w.z - m.y.z * m.w.y)
               + m.w.x * (m.y.y * m.z.z - m.y.z * m.z.y)),
@@ -1231,7 +1234,8 @@ constexpr Matrix<T, 4> adjugate(const Matrix<T, 4>& m)
             -(m.x.x * (m.y.y * m.w.z - m.y.z * m.w.y) - m.y.x * (m.x.y * m.w.z - m.x.z * m.w.y)
               + m.w.x * (m.x.y * m.y.z - m.x.z * m.y.y)),
             m.x.x * (m.y.y * m.z.z - m.y.z * m.z.y) - m.y.x * (m.x.y * m.z.z - m.x.z * m.z.y)
-                + m.z.x * (m.x.y * m.y.z - m.x.z * m.y.y)});
+                + m.z.x * (m.x.y * m.y.z - m.x.z * m.y.y)
+        });
 }
 
 template<typename T, int N>
@@ -1242,7 +1246,7 @@ Matrix<T, N> inverse(const Matrix<T, N>& m)
 }
 
 template<typename U, typename V, int N>
-constexpr bool operator==(const Matrix<U, N>& a, const Matrix<V, N>& b)
+constexpr bool operator ==(const Matrix<U, N>& a, const Matrix<V, N>& b)
 {
     return [&a, &b]<int... Ns>(std::integer_sequence<int, Ns...>)
     { return ((a.e[Ns] == b.e[Ns]) && ...); }(std::make_integer_sequence<int, N * N>{});
@@ -1251,10 +1255,10 @@ constexpr bool operator==(const Matrix<U, N>& a, const Matrix<V, N>& b)
 // @@MATRIX_CONSTRUCT
 
 static constexpr double PI = 3.14159265358979323846;
-static constexpr float PIf = 3.14159265358979323846f;
-static constexpr float TWO_PIf = 6.2831853071795864769252867666f;
+static constexpr float PIf = 3.14159265358979323846F;
+static constexpr float TWO_PIf = 6.2831853071795864769252867666F;
 static constexpr double SQRT2 = 1.4142135623730950488;
-static constexpr float SQRT2f = 1.4142135623730950488f;
+static constexpr float SQRT2f = 1.4142135623730950488F;
 
 template<typename T>
 constexpr T degrees(T radians)
@@ -1276,11 +1280,11 @@ Matrix<T, 4> rotation(const Vector<T, 3>& a, T angle)
 
     return Matrix<T, 4>(
         Vector<T, 4>{
-            c + a.x * a.x * (1 - c), a.y * a.x * (1 - c) + a.z * s, a.z * a.x * (1 - c) - a.y * s,
-            0},
+            c + a.x * a.x * (1 - c), a.y * a.x * (1 - c) + a.z * s, a.z * a.x * (1 - c) - a.y * s, 0
+        },
         Vector<T, 4>{
-            a.x * a.y * (1 - c) - a.z * s, c + a.y * a.y * (1 - c), a.z * a.y * (1 - c) + a.x * s,
-            0},
+            a.x * a.y * (1 - c) - a.z * s, c + a.y * a.y * (1 - c), a.z * a.y * (1 - c) + a.x * s, 0
+        },
         Vector<T, 4>{
             a.x * a.z * (1 - c) + a.y * s,
             a.y * a.z * (1 - c) - a.x * s,
@@ -1427,13 +1431,13 @@ using quat = Quaternion<float>;
 using dquat = Quaternion<double>;
 
 template<typename T>
-constexpr Quaternion<T> operator-(const Quaternion<T>& q)
+constexpr Quaternion<T> operator -(const Quaternion<T>& q)
 {
     return Quaternion<T>(-q.x, -q.y, -q.z, -q.w);
 }
 
 template<typename T>
-constexpr bool operator==(const Quaternion<T>& a, const Quaternion<T>& b)
+constexpr bool operator ==(const Quaternion<T>& a, const Quaternion<T>& b)
 {
     return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
 }
@@ -1445,7 +1449,7 @@ constexpr Quaternion<T> conjugate(const Quaternion<T>& q)
 }
 
 template<typename U, typename V, typename R = typename MulOp<U, V>::ResultType>
-constexpr Quaternion<R> operator*(const Quaternion<U>& a, const Quaternion<V>& b)
+constexpr Quaternion<R> operator *(const Quaternion<U>& a, const Quaternion<V>& b)
 {
     return Quaternion<R>(
         (R)(a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x),
@@ -1455,20 +1459,20 @@ constexpr Quaternion<R> operator*(const Quaternion<U>& a, const Quaternion<V>& b
 }
 
 template<typename U, typename V, typename R = typename AddOp<U, V>::ResultType>
-constexpr Quaternion<R> operator+(const Quaternion<U>& a, const Quaternion<V>& b)
+constexpr Quaternion<R> operator +(const Quaternion<U>& a, const Quaternion<V>& b)
 {
     return Quaternion<R>(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
 }
 
 template<typename T>
-constexpr Quaternion<T>& operator*=(Quaternion<T>& a, const Quaternion<T>& b)
+constexpr Quaternion<T>& operator *=(Quaternion<T>& a, const Quaternion<T>& b)
 {
     a = a * b;
     return a;
 }
 
 template<typename U, typename V, typename R = typename MulOp<U, V>::ResultType>
-constexpr Vector<R, 3> operator*(const Quaternion<U>& q, const Vector<V, 3>& v)
+constexpr Vector<R, 3> operator *(const Quaternion<U>& q, const Vector<V, 3>& v)
 {
     return v * (q.w * q.w - lm::length2(q.xyz)) + 2 * q.w * lm::cross(q.xyz, v)
         + 2 * q.xyz * lm::dot(q.xyz, v);
@@ -1695,13 +1699,13 @@ using dual_quat = DualQuaternion<float>;
 using ddual_quat = DualQuaternion<double>;
 
 template<typename T>
-constexpr DualQuaternion<T> operator*(const DualQuaternion<T>& a, const DualQuaternion<T>& b)
+constexpr DualQuaternion<T> operator *(const DualQuaternion<T>& a, const DualQuaternion<T>& b)
 {
     return DualQuaternion<T>(a.r * b.r, a.r * b.d + a.d * b.r);
 }
 
 template<typename T>
-constexpr bool operator==(const DualQuaternion<T>& a, const DualQuaternion<T>& b)
+constexpr bool operator ==(const DualQuaternion<T>& a, const DualQuaternion<T>& b)
 {
     return a.r == b.r && a.d == b.d;
 }
@@ -1802,7 +1806,7 @@ using dbbox2 = Bbox<double, 2>;
 using dbbox3 = Bbox<double, 3>;
 
 template<typename U, typename V, int N>
-constexpr bool operator==(const Bbox<U, N>& a, const Bbox<V, N>& b)
+constexpr bool operator ==(const Bbox<U, N>& a, const Bbox<V, N>& b)
 {
     return a.min == b.min && a.max == b.max;
 }

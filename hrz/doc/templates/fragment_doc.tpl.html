@@ -1,0 +1,12 @@
+{% extends "fragment_common.tpl.html" %}
+{% block title %}{{ this.title }}{% endblock %}
+
+{% block content %}
+<h1>{{ this.title }}</h1>
+
+{{ this.contents }}
+{% endblock %}
+
+{% block toc %}
+{{ this.toc }}
+{% endblock %}

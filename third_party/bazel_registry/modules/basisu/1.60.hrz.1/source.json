@@ -1,0 +1,12 @@
+{
+  "url": "https://github.com/BinomialLLC/basis_universal/archive/refs/tags/v1_60.tar.gz",
+  "strip_prefix": "basis_universal-1_60",
+  "integrity": "sha256-ZKyTY2Vtw+tBxZ7lKvfpOavldKkshf0LonAIxKfsn0A=",
+  "overlay": {
+    "MODULE.bazel": "sha256-teGuRmxEpFoIa5c4+rkVAPV7FkIy7pfHxA/UajGffJA=",
+    "BUILD.bazel": "sha256-OvY3XfRsJWA374HN7u6UWWoWv4NrfI4qtieURVNrgcQ="
+  },
+  "patches": {
+    "build_fix.patch": "sha256-qZzo+VA8drQ4lTRlAG8YuZKyJg8IGT5BtaoRkwsYhk8="
+  }
+}

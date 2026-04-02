@@ -1,0 +1,38 @@
+diff --git a/src/draco/compression/attributes/kd_tree_attributes_decoder.cc b/src/draco/compression/attributes/kd_tree_attributes_decoder.cc
+index 51c41cf..69dbb7d 100644
+--- src/draco/compression/attributes/kd_tree_attributes_decoder.cc
++++ src/draco/compression/attributes/kd_tree_attributes_decoder.cc
+@@ -543,7 +543,9 @@ bool KdTreeAttributesDecoder::TransformAttributesToOriginalFormat() {
+         // TODO(ostava): We can potentially avoid this copy by introducing a new
+         // mechanism that would allow to use the final attributes as portable
+         // attributes for predictors that may need them.
++        uint32_t unique_id = att->unique_id();
+         att->CopyFrom(*src_att);
++        att->set_unique_id(unique_id);
+         continue;
+       }
+
+diff --git a/src/draco/compression/attributes/sequential_attribute_decoders_controller.cc b/src/draco/compression/attributes/sequential_attribute_decoders_controller.cc
+index 0e5e26b..6a7d101 100644
+--- src/draco/compression/attributes/sequential_attribute_decoders_controller.cc
++++ src/draco/compression/attributes/sequential_attribute_decoders_controller.cc
+@@ -97,7 +97,7 @@ bool SequentialAttributeDecodersController::
+   for (int i = 0; i < num_attributes; ++i) {
+     // Check whether the attribute transform should be skipped.
+     if (GetDecoder()->options()) {
+-      const PointAttribute *const attribute =
++      PointAttribute *const attribute =
+           sequential_decoders_[i]->attribute();
+       const PointAttribute *const portable_attribute =
+           sequential_decoders_[i]->GetPortableAttribute();
+@@ -109,7 +109,9 @@ bool SequentialAttributeDecodersController::
+         // TODO(ostava): We can potentially avoid this copy by introducing a new
+         // mechanism that would allow to use the final attributes as portable
+         // attributes for predictors that may need them.
+-        sequential_decoders_[i]->attribute()->CopyFrom(*portable_attribute);
++        uint32_t unique_id = attribute->unique_id();
++        attribute->CopyFrom(*portable_attribute);
++        attribute->set_unique_id(unique_id);
+         continue;
+       }
+     }

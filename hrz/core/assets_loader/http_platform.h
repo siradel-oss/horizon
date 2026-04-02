@@ -4,6 +4,7 @@
 
 namespace hrz::assets_loader
 {
+
 // @Todo(HRZ-336): When no limit is set on the number of authorized parallel requests both on wasm
 // and desktop we notice stalls in the rendering. The cause may be that too many data arrive in a
 // single frame, and as every system tries to do as much work as possible it is slowing things down.

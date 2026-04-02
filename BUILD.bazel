@@ -1,12 +1,12 @@
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel/glsl:glsl_toolchain.bzl", "glsl_toolchain")
 load("//tools/ide_integration:cmake.bzl", "cmakelists")
 load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_database")
@@ -224,11 +224,6 @@ config_setting(
 # GLSL toolchains
 #
 
-GLSL_EXEC_OS = [
-    "windows",
-    "linux",
-]
-
 GLSL_TARGETS = {
     "core": {
         "check_version": "330",
@@ -236,7 +231,7 @@ GLSL_TARGETS = {
         "cpu": "x86_64",
     },
     "es": {
-        "check_version": "310",  # glslangValidator only wants version >= 310 for validation
+        "check_version": "310",  # glslang only wants version >= 310 for validation
         "profile": "es",
         "cpu": "wasm32",
     },
@@ -244,29 +239,22 @@ GLSL_TARGETS = {
 
 [
     glsl_toolchain(
-        name = "glslc_{}_{}".format(target, os),
+        name = "glsl_{}".format(target),
         check_version = GLSL_TARGETS[target]["check_version"],
         profile = GLSL_TARGETS[target]["profile"],
-        validator = "@glslang_{}//:glslangValidator".format(os),
     )
-    for os in GLSL_EXEC_OS
     for target in GLSL_TARGETS
 ]
 
 [
     toolchain(
-        name = "glslc_{}_{}_toolchain".format(target, os),
-        exec_compatible_with = [
-            "@platforms//os:{}".format(os),
-            "@platforms//cpu:x86_64",
-        ],
+        name = "glsl_{}_toolchain".format(target),
         target_compatible_with = [
             "@platforms//cpu:{}".format(GLSL_TARGETS[target]["cpu"]),
         ],
-        toolchain = ":glslc_{}_{}".format(target, os),
+        toolchain = ":glsl_{}".format(target),
         toolchain_type = "//tools/bazel/glsl:toolchain_type",
     )
-    for os in GLSL_EXEC_OS
     for target in GLSL_TARGETS
 ]
 
@@ -274,13 +262,13 @@ GLSL_TARGETS = {
 # CI
 #
 
-hrz_genrule(
+run_binary(
     name = "build_date",
     srcs = [],
     outs = ["build_date.txt"],
-    cmd = "$(location //tools/build_info:get_date) $@",
+    args = ["$@"],
     tags = ["no-cache"],
-    tools = ["//tools/build_info:get_date"],
+    tool = "//tools/build_info:get_date",
 )
 
 #
@@ -312,6 +300,7 @@ _ALL_BINS = [
     "//apps/web_client:generate_scenes_list",
     "//tools/visual_testing:viewer",
     "//tools/visual_testing:comparator",
+    "//libs/proj_lite:check_crs_support",
 ] + _TESTS + select({
     "//:os_windows": [
         "//hrz/core:hrz_core.dll",

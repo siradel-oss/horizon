@@ -65,7 +65,9 @@ static const pl_Projection PROJECTIONS[_pl_ProjectionType_Count] = {
         {"Transverse Mercator", NULL, PL_BAKE_FWD_PROJ(tmerc), PL_BAKE_INV_PROJ(tmerc)},
     [pl_ProjectionType_Utm] = {
         "Universal Transverse Mercator (UTM)", PL_REG_PROJ_PARAM(utm), PL_BAKE_FWD_PROJ(utm),
-        PL_BAKE_INV_PROJ(utm)}};
+        PL_BAKE_INV_PROJ(utm)
+    }
+};
 
 typedef struct pl_ProjectionMap
 {

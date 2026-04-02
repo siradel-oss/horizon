@@ -14,6 +14,7 @@
 
 namespace
 {
+
 static constexpr double CullDelayS = 0.6;
 
 static constexpr uint32_t BITSET_TEXTURE_WIDTH =
@@ -38,7 +39,7 @@ struct BitsetTexture
         std::initializer_list<std::pair<hrz::MetadataString, hrz::MetadataString>> metadata_) :
         count{count_}, resource_owner{resource_owner_}
     {
-        uint32_t pixel_count = (count + 31u) / 32u;
+        uint32_t pixel_count = (count + 31U) / 32U;
         uint32_t width = std::min(pixel_count, BITSET_TEXTURE_WIDTH);
         uint32_t height = (pixel_count + BITSET_TEXTURE_WIDTH - 1) / BITSET_TEXTURE_WIDTH;
         assert(width * height >= pixel_count);
@@ -145,6 +146,7 @@ struct BitsetTexture
 
 namespace hrz
 {
+
 struct SymbolCullingSystem
 {
     struct Group
@@ -169,7 +171,8 @@ struct SymbolCullingSystem
             anchors{std::move(anchors_)},
             bitset_textures{
                 BitsetTexture(anchors.size(), resource_owner, metadata),
-                BitsetTexture(anchors.size(), resource_owner, metadata)}
+                BitsetTexture(anchors.size(), resource_owner, metadata)
+            }
         {
             requires_culling = false;
             for (const auto& info : group_info.anchors)
@@ -245,6 +248,7 @@ struct SymbolCullingSystem
 
 namespace symbol_culling
 {
+
 SymbolCullingSystem* create()
 {
     return new SymbolCullingSystem();
@@ -287,8 +291,9 @@ RenderRequest work(
             out_view_info.perceived_distance = (float)view_info.perceived_distance;
             params.views.push_back(out_view_info);
 
-            cullers.push_back(my::FrustumCuller::from_view(
-                view_info.cam_view_info.proj, view_info.cam_view_info.cam.view));
+            cullers.push_back(
+                my::FrustumCuller::from_view(
+                    view_info.cam_view_info.proj, view_info.cam_view_info.cam.view));
         }
 
         for (const auto& entry : sys->saved_groups_drawn)

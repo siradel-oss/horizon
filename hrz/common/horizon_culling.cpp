@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 HorizonCuller::HorizonCuller(const lm::dvec3& eye_pos) : _eye_pos(eye_pos)
 {
     // We work in the spherical Earth model.
@@ -40,6 +41,7 @@ bool HorizonCuller::is_occluded(lm::dvec3 p) const
 
 namespace
 {
+
 // Compute the intersection point between `axis` and the plane tangent to the surface of the Earth
 // passing through `position` (which we will call "horizon plane"), and if it exists, return the
 // distance from that point to the center of the Earth.
@@ -77,10 +79,12 @@ std::optional<double> compute_occlusion_point_distance(lm::dvec3 position, const
 
     return hrz::EARTH_RADIUS / cos_a_plus_b;
 }
+
 } // namespace
 
 namespace horizon_culling
 {
+
 std::optional<lm::dvec3> compute_occlusion_point(const hrz::GeoVolumeBounds& bounds)
 {
     lm::dvec3 bounds_center = hrz::geo_to_ecef(bounds.center());
@@ -213,5 +217,6 @@ std::optional<lm::dvec3> compute_occlusion_point(const hrz::BSphere<double>& sph
 
     return compute_occlusion_point(box);
 }
+
 } // namespace horizon_culling
 } // namespace hrz

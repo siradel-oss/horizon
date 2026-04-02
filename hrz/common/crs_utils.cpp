@@ -6,6 +6,7 @@
 
 namespace
 {
+
 constexpr bool is_digit(const char c)
 {
     return c >= '0' && c <= '9';
@@ -54,10 +55,12 @@ std::optional<hrz::crs::Srid> parse_single_comma_srid(
 
     return {{authority, (unsigned int)code}};
 }
+
 } // namespace
 
 namespace hrz::crs
 {
+
 std::optional<Srid> parse_srid(std::string_view str)
 {
     if (str.starts_with("urn:ogc:def:crs:"))
@@ -86,4 +89,5 @@ std::optional<Srid> parse_srid(std::string_view str)
 
     return std::nullopt;
 }
+
 } // namespace hrz::crs

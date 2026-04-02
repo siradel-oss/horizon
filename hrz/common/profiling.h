@@ -10,15 +10,19 @@
 
 namespace hrz_monitoring
 {
+
 struct MessageBuffer;
+
 }
 
 namespace hrz
 {
+
 struct ThreadProfiler;
 
 namespace profiling
 {
+
 ThreadProfiler* create_thread_profiler(const char* thread_name);
 void destroy_thread_profiler(ThreadProfiler*);
 

@@ -9,6 +9,7 @@
 
 namespace
 {
+
 bool _table_name_column(const char* name, bool is_leaf, bool default_open)
 {
     ImGui::TableNextColumn();
@@ -80,6 +81,7 @@ void _table_group_comparison_column(
 
 namespace ui::widget
 {
+
 using namespace helpers;
 using namespace gpu_helpers;
 
@@ -363,10 +365,10 @@ void GpuSnapshotComparator::_draw_header(
     std::string display = gpu_snapshot_to_string(snapshot);
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Selected: %s", display.c_str());
-    ImGui::SameLine(300.0f);
+    ImGui::SameLine(300.0F);
     bool select_snapshot = ImGui::Button("Set snapshot...");
 
-    ImGui::SameLine(510.0f);
+    ImGui::SameLine(510.0F);
     ImGui::Checkbox("Darken nested rows", &_darken_rows);
 
     ImGui::AlignTextToFramePadding();
@@ -382,12 +384,12 @@ void GpuSnapshotComparator::_draw_header(
         ImGui::SameLine();
         help_marker("Select another snapshot as a reference to use for the comparison.");
     }
-    ImGui::SameLine(300.0f);
+    ImGui::SameLine(300.0F);
     bool select_reference = ImGui::Button("Set reference...");
 
     if (_reference_index)
     {
-        ImGui::SameLine(400.0f);
+        ImGui::SameLine(400.0F);
         if (ImGui::Button("Swap"))
         {
             auto tmp = *_reference_index;
@@ -397,7 +399,7 @@ void GpuSnapshotComparator::_draw_header(
             _reset_cells = true;
         }
 
-        ImGui::SameLine(510.0f);
+        ImGui::SameLine(510.0F);
         ImGui::Checkbox("Hide rows corresponding to identical resources", &_hide_identical);
     }
 
@@ -405,9 +407,8 @@ void GpuSnapshotComparator::_draw_header(
     if (_reference_index) disabled_snapshots.insert(*_reference_index);
 
     auto new_left_snapshot = array_selector::array_selector_modal<data::GpuResourceSnapshot>(
-        "Select a snapshot to examine", select_snapshot, snapshots,
-        [](const auto& snapshot) { return gpu_snapshot_to_string(snapshot); }, _snapshot_index,
-        disabled_snapshots);
+        "Select a snapshot to examine", select_snapshot, snapshots, [](const auto& snapshot)
+        { return gpu_snapshot_to_string(snapshot); }, _snapshot_index, disabled_snapshots);
 
     disabled_snapshots.clear();
     disabled_snapshots.insert(_snapshot_index);
@@ -446,13 +447,13 @@ bool GpuSnapshotComparator::_setup_table() const
         }
 
         ImGui::TableSetupColumn(
-            "Resources", ImGuiTableColumnFlags_WidthStretch, 0.0f, (ImGuiID)ColumnId::Name);
+            "Resources", ImGuiTableColumnFlags_WidthStretch, 0.0F, (ImGuiID)ColumnId::Name);
         ImGui::TableSetupColumn(
-            size_display.c_str(), ImGuiTableColumnFlags_DefaultSort, 160.0f,
+            size_display.c_str(), ImGuiTableColumnFlags_DefaultSort, 160.0F,
             (ImGuiID)ColumnId::Size);
-        ImGui::TableSetupColumn("Comparison", 0, 110.0f, (ImGuiID)ColumnId::Comparison);
+        ImGui::TableSetupColumn("Comparison", 0, 110.0F, (ImGuiID)ColumnId::Comparison);
         ImGui::TableSetupColumn(
-            reference_display.c_str(), 0, 160.0f, (ImGuiID)ColumnId::ReferenceSize);
+            reference_display.c_str(), 0, 160.0F, (ImGuiID)ColumnId::ReferenceSize);
 
         ImGui::TableSetupScrollFreeze(0, 2);
         ImGui::TableHeadersRow();
@@ -472,14 +473,14 @@ void GpuSnapshotComparator::_recursive_cell_tree(size_t id)
         if (cell.group->total_size == cell.reference_group->total_size) return;
     }
 
-    static constexpr float ROW_HUE_BIGGER = 0.f;
-    static constexpr float ROW_HUE_SMALLER = 108.f / 360.f;
-    static constexpr float ROW_HUE_NEW = 31.f / 360.f;
-    static constexpr float ROW_HUE_REMOVED = 198.f / 360.f;
+    static constexpr float ROW_HUE_BIGGER = 0.F;
+    static constexpr float ROW_HUE_SMALLER = 108.F / 360.F;
+    static constexpr float ROW_HUE_NEW = 31.F / 360.F;
+    static constexpr float ROW_HUE_REMOVED = 198.F / 360.F;
 
-    static constexpr float saturation = 0.5f;
-    static constexpr float value = 0.7f;
-    static constexpr float alpha = 0.5f;
+    static constexpr float saturation = 0.5F;
+    static constexpr float value = 0.7F;
+    static constexpr float alpha = 0.5F;
 
     uint32_t row_color = ImGui::GetColorU32(ImGuiCol_WindowBg);
 

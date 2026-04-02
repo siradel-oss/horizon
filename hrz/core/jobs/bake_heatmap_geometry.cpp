@@ -11,13 +11,16 @@
 
 namespace
 {
+
 static constexpr size_t InitialVertexCapacity = 4096;
+
 } // namespace
 
 namespace hrz_jobs::bake_heatmap_geometry
 {
 namespace
 {
+
 void generate_points_geometry(
     std::span<const lm::dvec3> feature_span,
     hrz::BlobVector<lm::dvec3>& positions,

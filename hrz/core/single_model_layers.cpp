@@ -25,6 +25,7 @@
 
 namespace
 {
+
 struct ArraySyncTraits
 {
     enum ElementUpdateType
@@ -115,10 +116,12 @@ struct SingleModelLayer
             && (displayable_in_scene_views & visibility_constraints_result.satisfied_in) != 0;
     }
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct SingleModelLayerSystem
 {
     using IndexPool = GenIndexPool<uint64_t, 32, 32>;
@@ -144,6 +147,7 @@ namespace single_model_layers
 {
 namespace
 {
+
 void _delete_model_prototype(
     SingleModelLayerSystem* system,
     SingleModelLayer* layer,
@@ -435,6 +439,7 @@ RenderRequest _update_layer(
 
     return render_request;
 }
+
 } // namespace
 
 SingleModelLayerSystem* create_system(PickingIdAllocator* picking_id_allocator)
@@ -754,7 +759,8 @@ RenderRequest _work_models(
                 auto ticket = planet::query_elevation(
                     planet, layer->anchor.xy,
                     monitoring::ResourceOwner{
-                        monitoring::systems::SingleModelLayers, layer->global_layer_id});
+                        monitoring::systems::SingleModelLayers, layer->global_layer_id
+                    });
                 layer->elevation_query_ticket = ticket;
                 layer->needs_clamping = false;
             }

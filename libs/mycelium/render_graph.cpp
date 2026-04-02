@@ -15,6 +15,7 @@
 
 namespace my
 {
+
 static const RenderPassId NO_RENDER_PASS = ~(RenderPassId)0;
 static const uint32_t NO_LOGICAL_RESOURCE = ~(uint32_t)0;
 static const uint32_t NO_PHYSICAL_RESOURCE = ~(uint32_t)0;
@@ -477,7 +478,7 @@ public:
         // Build passes order
         uint32_t next_order = 0;
         std::vector<uint32_t> order;
-        order.resize(_passes.size(), ~0u);
+        order.resize(_passes.size(), ~0U);
 
         // This contains all preceding nodes that we're visiting.
         // It's essentially a stack but we don't care about the order, we only
@@ -500,7 +501,7 @@ public:
 
                 visiting_stack.insert(visiting);
 
-                if (order[visiting] == ~0u)
+                if (order[visiting] == ~0U)
                 {
                     bool has_unresolved = false;
 
@@ -514,7 +515,7 @@ public:
                             if (it != _resources.end())
                             {
                                 RenderPassId producer = it->second.producer;
-                                if (order[producer] == ~0u)
+                                if (order[producer] == ~0U)
                                 {
                                     to_visit.push_back(producer);
                                     has_unresolved = true;
@@ -537,7 +538,7 @@ public:
                     }
                 }
 
-                if (order[visiting] != ~0u)
+                if (order[visiting] != ~0U)
                 {
                     size_t erased = visiting_stack.erase(visiting);
                     assert(erased);
@@ -645,8 +646,7 @@ public:
         }
 
         std::ranges::sort(
-            logical_resources_sorted,
-            [&](uint32_t a, uint32_t b)
+            logical_resources_sorted, [&](uint32_t a, uint32_t b)
             { return _logical_resources[a].first_use < _logical_resources[b].first_use; });
 
         for (const uint32_t id : logical_resources_sorted)

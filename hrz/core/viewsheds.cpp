@@ -15,6 +15,7 @@
 
 namespace
 {
+
 enum
 {
     ViewshedCount = HRZ_S_VIEWSHED_CNT,
@@ -144,7 +145,8 @@ struct Cube : public my::Renderer::Renderable
             index_buffer = render->rc->alloc(&ib_res, hrz::monitoring::systems::Viewsheds);
 
             my::VertexInputStream streams[] = {
-                {0, vertex_buffer, my::VertexFormat::Float32_4, 0, 0, my::VertexRate::PerVertex}};
+                {0, vertex_buffer, my::VertexFormat::Float32_4, 0, 0, my::VertexRate::PerVertex}
+            };
 
             my::VertexInputResource vi_res;
             vi_res.indices = index_buffer;
@@ -191,10 +193,12 @@ struct Cube : public my::Renderer::Renderable
         rc->dealloc(data.vertex_input);
     }
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct ViewshedsSystem
 {
     lm::dvec3 viewshed_position[ViewshedCount];
@@ -218,6 +222,7 @@ struct ViewshedsSystem
 
 namespace viewsheds
 {
+
 bool is_viewshed_enabled(const ViewshedsSystem* sys)
 {
     return sys->viewshed_enabled;
@@ -399,5 +404,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
 {
     Cube::collect_shaders(rc);
 }
+
 } // namespace viewsheds
 } // namespace hrz

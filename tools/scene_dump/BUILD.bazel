@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
 cc_binary(
     name = "get_dump_version",
     srcs = [
@@ -42,6 +44,6 @@ cc_binary(
         "//hrz/cpp_protocol",
         "//hrz/scene_dump:migration",
         "//hrz/scene_dump:utils",
-        "//third_party:fmtlib",
+        "@fmt",
     ],
 )

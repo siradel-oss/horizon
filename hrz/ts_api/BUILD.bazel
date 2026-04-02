@@ -1,48 +1,55 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//:version.bzl", "HRZ_VERSION")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
-load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
 load("//tools/bazel:utils.bzl", "merge_dicts")
 
 package(default_visibility = ["//visibility:public"])
 
 npm_link_all_packages(name = "node_modules")
 
-hrz_genrule(
-    name = "generate_templates",
+py_binary(
+    name = "generator",
     srcs = [
+        "generate.py",
+    ],
+    data = [
+        "templates/api.tpl.ts",
         "//hrz:hrz_protocol.xml",
-        "//hrz/generators:ts_api_tpl",
     ],
-    outs = [
-        "dist/hrz_api.ts",
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
     ],
-    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) ts_api $(@D) " + HRZ_VERSION,
-    tools = ["//hrz/generators:generator"],
 )
 
-structured_files_copy(
-    name = "src_copies",
-    files = {
-        "": ["src/index.ts"],
-    },
-    output_dir = "dist",
+run_binary(
+    name = "generate_templates",
+    outs = [
+        "src/hrz_api.ts",
+    ],
+    args = [
+        "$(RULEDIR)/src",
+        HRZ_VERSION,
+    ],
+    tool = ":generator",
 )
 
 ts_project(
     name = "ts_lib",
     srcs = [
-        "dist/hrz_api.ts",
-        ":src_copies",
+        "src/hrz_api.ts",
+        "src/index.ts",
     ],
     declaration = True,
     out_dir = "dist",
-    root_dir = "dist",
+    root_dir = "src",
     tsconfig = merge_dicts(
         TSCONFIG,
         {
@@ -65,27 +72,28 @@ package_json(
     version = PACKAGE_JSON_HRZ_VERSION,
 )
 
-copy_file(
-    name = "license",
-    src = "//:LICENSE",
-    out = "dist-root/LICENSE",
+structured_files_copy(
+    name = "pkg_copy",
+    files = {
+        "dist": [
+            ":ts_lib",
+            ":ts_lib_types",
+        ],
+        "": [
+            "//:LICENSE",
+            ":package_json",
+        ],
+    },
+    output_dir = "dist_pkg",
 )
 
 npm_package(
     name = "npm_pkg",
     srcs = [
-        ":license",
-        ":package_json",
-        ":ts_lib",
-    ],
-    include_srcs_patterns = [
-        "**/LICENSE",
-        "**/*.json",
-        "**/*.js",
-        "**/*.d.ts",
+        ":pkg_copy",
     ],
     replace_prefixes = {
-        "dist-root/": "",
+        "dist_pkg/": "",
     },
 )
 

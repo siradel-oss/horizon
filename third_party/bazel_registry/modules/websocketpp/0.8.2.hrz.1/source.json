@@ -1,0 +1,13 @@
+{
+  "url": "https://github.com/zaphoyd/websocketpp/archive/refs/tags/0.8.2.tar.gz",
+  "integrity": "sha256-bOiJ2F7Nwtj6B0CNZ4fnNSUQdQ2qZrWtRKrLR76nZ1U=",
+  "strip_prefix": "websocketpp-0.8.2",
+  "overlay": {
+    "BUILD.bazel": "sha256-2NdqNHyWFuB653vmS6hv8JlG5csmi5DMA4451oLzhzc=",
+    "MODULE.bazel": "sha256-le3qucdyHQ9qSKt/Xem3dPfPE7ij8XTdgpa2XKY4ngk="
+  },
+  "patches": {
+    "build_fix.patch": "sha256-BrptIvsoFuRErG5m5an8Fjdgg68NTq8XSpW1dvWYHj0="
+  },
+  "patch_strip": 0
+}

@@ -14,10 +14,12 @@ struct mu_Context;
 
 namespace hrz
 {
+
 struct PickingSystem;
 
 namespace camera
 {
+
 // For zoom, +1 step = halve the distance, -1 step = double the distance, 0 = do nothing.
 static constexpr double kPinchZoomSensitivity = 1.0 / 100.0;     // steps/pixel
 static constexpr double kMouseDragZoomSensitivity = 1.0 / 100.0; // steps/pixel

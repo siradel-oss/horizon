@@ -28,7 +28,8 @@ struct StyledFeatures
     inline vector_data::PackedAttributeValuesReader get_values_reader() const
     {
         return vector_data::PackedAttributeValuesReader{
-            values.get_cdata(), out_of_line_data.get_cdata()};
+            values.get_cdata(), out_of_line_data.get_cdata()
+        };
     }
 };
 

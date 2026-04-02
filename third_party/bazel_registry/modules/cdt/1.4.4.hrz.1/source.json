@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/artem-ogre/CDT/archive/refs/tags/1.4.4.tar.gz",
+  "strip_prefix": "CDT-1.4.4",
+  "integrity": "sha256-l+V73Rz4IZ3MgWNCNqUCOQog3aNZndNBSnQ0O38DQn8=",
+  "overlay": {
+    "MODULE.bazel": "sha256-wo/GW8c0L/Exj3BAJ9rRA4WUL74OZjG9J2a/wTAfzcI=",
+    "BUILD.bazel": "sha256-PNW7ZvBXRBzLmx06EvyO8kSQNxNp58Mdivh6YEGKHvI="
+  }
+}

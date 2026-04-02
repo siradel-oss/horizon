@@ -9,12 +9,14 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 class BlobImage;
 struct Render;
 
 namespace vtex
 {
+
 class PageCacheManager
 {
 public:

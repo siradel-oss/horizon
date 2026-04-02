@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 struct SkySystem;
 struct Render;
 struct RenderView;
@@ -17,6 +18,7 @@ struct FrameUniformData;
 
 namespace sky
 {
+
 static const char* const SUN_COLOR_SAMPLER_NAME = "hrz_sun_color_lut";
 
 SkySystem* create();

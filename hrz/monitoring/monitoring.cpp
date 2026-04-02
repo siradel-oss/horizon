@@ -7,11 +7,14 @@
 
 namespace
 {
+
 static constexpr uint32_t MESSAGE_ENCODING_VERSION = 1;
+
 }
 
 namespace hrz_monitoring
 {
+
 struct MessageBuffer
 {
     std::string string;

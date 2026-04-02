@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 class Monitoring;
 struct RemoteMonitoring;
 struct BlobAllocator;
@@ -14,6 +15,7 @@ struct LayersInfo;
 
 namespace monitoring
 {
+
 RemoteMonitoring* create_remote_monitoring();
 void destroy(RemoteMonitoring*);
 

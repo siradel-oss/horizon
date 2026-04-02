@@ -9,6 +9,7 @@
 
 namespace hrz::model
 {
+
 struct ModelPrototype;
 
 class ModelMaterial
@@ -37,7 +38,7 @@ public:
         lm::vec4 color = lm::vec4(1, 1, 1, 1);
         bool double_sided = false;
         ModelDescriptor::AlphaMode alpha_mode = ModelDescriptor::AlphaMode::Opaque;
-        float alpha_cutoff = 0.5f;
+        float alpha_cutoff = 0.5F;
         bool unlit = false;
 
         my::ResourceHandle texture;

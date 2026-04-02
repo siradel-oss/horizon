@@ -10,33 +10,36 @@
 
 namespace
 {
-static constexpr float MAX_DISTANCE_FOR_TAP = 15.0f; // pixels
+
+static constexpr float MAX_DISTANCE_FOR_TAP = 15.0F; // pixels
 static constexpr double MAX_DURATION_FOR_TAP = 400;  // ms
 #ifndef HRZ_EMSCRIPTEN
-static constexpr float MAX_DISTANCE_FOR_DOUBLE_TAP = 40.0f; // pixels
+static constexpr float MAX_DISTANCE_FOR_DOUBLE_TAP = 40.0F; // pixels
 static constexpr double MAX_DURATION_FOR_DOUBLE_TAP = 800;  // ms
 #endif
 
-static constexpr float DISTANCE_FOR_SINGLE_FINGER_DRAG = 15.0f; // pixels
-static constexpr float DISTANCE_FOR_TWO_FINGER_DRAG = 40.0f;    // pixels
+static constexpr float DISTANCE_FOR_SINGLE_FINGER_DRAG = 15.0F; // pixels
+static constexpr float DISTANCE_FOR_TWO_FINGER_DRAG = 40.0F;    // pixels
 static constexpr float ANGLE_FOR_ROTATION = 0.2;                // radians
-static constexpr float SPREAD_GROW_RATIO_FOR_PINCH = 1.1f;
-static constexpr float SPREAD_SHRINK_RATIO_FOR_PINCH = 0.9f;
+static constexpr float SPREAD_GROW_RATIO_FOR_PINCH = 1.1F;
+static constexpr float SPREAD_SHRINK_RATIO_FOR_PINCH = 0.9F;
 static constexpr double ENDED_GESTURE_TTL = 500; // ms
 
 float angular_difference(float a, float b)
 {
     float diff = a - b;
-    while (diff > lm::PIf * 0.5f)
+    while (diff > lm::PIf * 0.5F)
         diff -= lm::PIf;
-    while (diff < -lm::PIf * 0.5f)
+    while (diff < -lm::PIf * 0.5F)
         diff += lm::PIf;
     return diff;
 }
+
 } // namespace
 
 namespace
 {
+
 struct Gesture
 {
     hrz::gestures::FingerCount finger_count;
@@ -45,10 +48,12 @@ struct Gesture
     double start_time_ms;
     double end_time_ms;
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct GestureSystem
 {
     using IndexPool = GenIndexPool<gestures::GestureId, 16, 16>;
@@ -62,6 +67,7 @@ struct GestureSystem
 
 namespace gestures
 {
+
 GestureSystem* create_system()
 {
     return new GestureSystem();
@@ -76,6 +82,7 @@ void destroy_system(GestureSystem* system)
 
 namespace
 {
+
 GestureStatus get_status(const Gesture* gesture)
 {
     if (gesture->finger_count == FingerCount::One)
@@ -374,6 +381,7 @@ void on_touch_move(GestureSystem* system, const platform::Event& event)
         }
     }
 }
+
 } // namespace
 
 bool handle_platform_event(GestureSystem* system, const platform::Event& event)
@@ -465,5 +473,6 @@ bool dequeue_event(GestureSystem* system, Event& event)
         return false;
     }
 }
+
 } // namespace gestures
 } // namespace hrz

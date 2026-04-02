@@ -7,6 +7,7 @@
 
 namespace ui::widget
 {
+
 class MetricsPie
 {
 public:

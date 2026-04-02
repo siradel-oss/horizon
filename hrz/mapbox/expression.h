@@ -11,6 +11,7 @@
 
 namespace hrz_mapbox
 {
+
 struct ExpressionContext
 {
     // For logging

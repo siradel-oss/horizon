@@ -3,6 +3,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_pmtiles_task(
     const std::string_view& url,
     const hrz::HttpHeaders& headers,
@@ -138,8 +139,10 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadPmTiles>(
     {
         task_data.asset_loader_channel_request_id = next_download_request_id;
         next_download_request_id += 1;
-        asset_loader_channel.send(assets_loader::messages::CreateChannel{
-            task_data.asset_loader_channel_request_id.value()});
+        asset_loader_channel.send(
+            assets_loader::messages::CreateChannel{
+                task_data.asset_loader_channel_request_id.value()
+            });
         tasks_waiting_for_asset_loader_message.insert(
             {task_data.asset_loader_channel_request_id.value(), task_ref});
 
@@ -175,4 +178,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<VectorDataLoader::Tas
 {
     // No-op
 }
+
 } // namespace hrz

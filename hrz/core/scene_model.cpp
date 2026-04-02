@@ -29,11 +29,14 @@ static constexpr double DEFRAG_DELAY_MS = 5000;
 
 namespace pb
 {
+
 using google::protobuf::Arena;
+
 }
 
 namespace
 {
+
 template<typename T>
 struct ArenaMessage
 {
@@ -341,6 +344,7 @@ public:
 
 namespace hrz
 {
+
 struct SceneModel
 {
     hrz::flat_hash_map<hrz_proto::PathRoot::KindCase, std::unique_ptr<SceneModelRootType>> models;
@@ -349,77 +353,98 @@ struct SceneModel
 
 namespace scene_model
 {
+
 SceneModel* create()
 {
     SceneModel* model = new SceneModel();
     model->last_defrag_ms = hrz::clock::CurrentFrameRealTime.ms;
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kSingleModelLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::SingleModelLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.single_model_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kSingleModelLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::SingleModelLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.single_model_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kDtmRasterLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::DtmRasterLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.dtm_raster_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kDtmRasterLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::DtmRasterLayer>>(
+                [](const hrz_proto::PathRoot& root) { return root.dtm_raster_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kImageryRasterLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::ImageryRasterLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.imagery_raster_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kImageryRasterLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::ImageryRasterLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.imagery_raster_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kVectorDataLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::VectorDataLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.vector_data_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kVectorDataLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::VectorDataLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.vector_data_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kVectorTilesLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::VectorTilesLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.vector_tiles_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kVectorTilesLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::VectorTilesLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.vector_tiles_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kThreeDTilesLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::ThreeDTilesLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.three_d_tiles_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kThreeDTilesLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::ThreeDTilesLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.three_d_tiles_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kClippingPlaneLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::ClippingPlaneLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.clipping_plane_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kClippingPlaneLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::ClippingPlaneLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.clipping_plane_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kInMemoryVectorSourceLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::InMemoryVectorSourceLayer>>(
-            [](const hrz_proto::PathRoot& root)
-            { return root.in_memory_vector_source_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kInMemoryVectorSourceLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::InMemoryVectorSourceLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.in_memory_vector_source_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kGizmoLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::GizmoLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.gizmo_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kGizmoLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::GizmoLayer>>(
+                [](const hrz_proto::PathRoot& root) { return root.gizmo_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kEditableShapeLayer,
-        std::make_unique<LayerSceneModelRootType<hrz_proto::EditableShapeLayer>>(
-            [](const hrz_proto::PathRoot& root) { return root.editable_shape_layer().opaque(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kEditableShapeLayer,
+            std::make_unique<LayerSceneModelRootType<hrz_proto::EditableShapeLayer>>(
+                [](const hrz_proto::PathRoot& root)
+                { return root.editable_shape_layer().opaque(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kSceneViewSettings,
-        std::make_unique<
-            MultiSceneModelRootType<hrz_proto::SceneViewIndex, hrz_proto::SceneViewSettings>>(
-            [](const hrz_proto::PathRoot& root) { return root.scene_view_settings(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kSceneViewSettings,
+            std::make_unique<
+                MultiSceneModelRootType<hrz_proto::SceneViewIndex, hrz_proto::SceneViewSettings>
+            >([](const hrz_proto::PathRoot& root) { return root.scene_view_settings(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kCameraSettings,
-        std::make_unique<
-            MultiSceneModelRootType<hrz_proto::CameraIndex, hrz_proto::CameraSettings>>(
-            [](const hrz_proto::PathRoot& root) { return root.camera_settings(); })));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kCameraSettings,
+            std::make_unique<
+                MultiSceneModelRootType<hrz_proto::CameraIndex, hrz_proto::CameraSettings>
+            >([](const hrz_proto::PathRoot& root) { return root.camera_settings(); })));
 
-    model->models.insert(std::make_pair(
-        hrz_proto::PathRoot::kSceneSettings,
-        std::make_unique<SingleSceneModelRootType<hrz_proto::SceneSettings>>()));
+    model->models.insert(
+        std::make_pair(
+            hrz_proto::PathRoot::kSceneSettings,
+            std::make_unique<SingleSceneModelRootType<hrz_proto::SceneSettings>>()));
 
     return model;
 }

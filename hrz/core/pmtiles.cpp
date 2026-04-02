@@ -155,7 +155,7 @@ struct DirectoryIdentity
         return H::combine(std::move(h), id.offset, id.length);
     }
 
-    constexpr bool operator==(const DirectoryIdentity& other) const = default;
+    constexpr bool operator ==(const DirectoryIdentity& other) const = default;
 };
 
 struct DirectoryEntry
@@ -649,7 +649,8 @@ public:
         _lod_max = header.max_zoom;
 
         _bounds = hrz::GeoBounds{
-            decode_position(header.min_position_raw), decode_position(header.max_position_raw)};
+            decode_position(header.min_position_raw), decode_position(header.max_position_raw)
+        };
 
         if (header.root_dir_offset + header.root_dir_length > raw_data.size_bytes())
         {
@@ -680,15 +681,17 @@ public:
         }
         else
         {
-            _asset_loader_channel.send(assets_loader::messages::LoadRequest{
-                kHeaderAssetRequestId,
-                _url,
-                header.metadata_offset,
-                header.metadata_length,
-                _headers,
-                _queue,
-                0,
-                {}});
+            _asset_loader_channel.send(
+                assets_loader::messages::LoadRequest{
+                    kHeaderAssetRequestId,
+                    _url,
+                    header.metadata_offset,
+                    header.metadata_length,
+                    _headers,
+                    _queue,
+                    0,
+                    {}
+                });
             _status = kLoadingMetadata;
         }
     }
@@ -791,9 +794,11 @@ public:
 
             if (entry.run_length > 0)
             {
-                _asset_loader_channel.send(assets_loader::messages::LoadRequest{
-                    query->asset_request_id, _url, _tile_data_offset + entry.offset, entry.length,
-                    _headers, query->queue, query->priority, query->owner});
+                _asset_loader_channel.send(
+                    assets_loader::messages::LoadRequest{
+                        query->asset_request_id, _url, _tile_data_offset + entry.offset,
+                        entry.length, _headers, query->queue, query->priority, query->owner
+                    });
                 _asset_request_ids_to_loading_objects.insert({query->asset_request_id, {handle}});
 
                 _directories_manager.unref(query->directory);
@@ -811,15 +816,17 @@ public:
                 if (!query->directory)
                 {
                     uint64_t directory_request_id = _next_asset_request_id++;
-                    _asset_loader_channel.send(assets_loader::messages::LoadRequest{
-                        directory_request_id,
-                        _url,
-                        id.offset,
-                        id.length,
-                        _headers,
-                        _queue,
-                        0,
-                        {}});
+                    _asset_loader_channel.send(
+                        assets_loader::messages::LoadRequest{
+                            directory_request_id,
+                            _url,
+                            id.offset,
+                            id.length,
+                            _headers,
+                            _queue,
+                            0,
+                            {}
+                        });
                     query->directory = _directories_manager.acquire_ref(id, directory_request_id);
                     _asset_request_ids_to_loading_objects.insert(
                         {directory_request_id, {query->directory}});
@@ -971,21 +978,24 @@ public:
                     [](const assets_loader::messages::NewChannel&)
                     {
                         // No-op
-                    }},
+                    }
+                },
                 generic_message);
         }
 
         if (_status == kInitial)
         {
-            _asset_loader_channel.send(assets_loader::messages::LoadRequest{
-                kHeaderAssetRequestId,
-                _url,
-                0,
-                kInitialDownloadSize,
-                _headers,
-                _queue,
-                0,
-                {}});
+            _asset_loader_channel.send(
+                assets_loader::messages::LoadRequest{
+                    kHeaderAssetRequestId,
+                    _url,
+                    0,
+                    kInitialDownloadSize,
+                    _headers,
+                    _queue,
+                    0,
+                    {}
+                });
             _status = kLoadingInitial;
         }
 
@@ -1120,7 +1130,8 @@ public:
 
         auto web_mercator_bounds = lm::dbbox2{
             hrz::geo_to_web_mercator(GeoPosition2{_bounds.south, _bounds.west}),
-            hrz::geo_to_web_mercator(GeoPosition2{_bounds.north, _bounds.east})};
+            hrz::geo_to_web_mercator(GeoPosition2{_bounds.north, _bounds.east})
+        };
 
         web_mercator_bounds.min.y =
             std::max(web_mercator_bounds.min.y, -hrz::MERCATOR_MAX_LAT_METERS);

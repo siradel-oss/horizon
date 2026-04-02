@@ -11,6 +11,7 @@
 
 namespace hrz_jobs::generate_mipmaps
 {
+
 unsigned int half_size(unsigned int size)
 {
     return (size + (size % 2)) / 2;
@@ -46,7 +47,7 @@ void interpolate<uint8_t, 4, hrz_proto::ImageFormat::SRGBA_8>(
     std::memcpy(&a_rgba, a, sizeof(lm::ubvec4));
     lm::ubvec4 b_rgba;
     std::memcpy(&b_rgba, b, sizeof(lm::ubvec4));
-    lm::ubvec4 res_rgba = hrz::mix_srgb_colors_in_linear(a_rgba, b_rgba, 0.5f);
+    lm::ubvec4 res_rgba = hrz::mix_srgb_colors_in_linear(a_rgba, b_rgba, 0.5F);
     std::memcpy(res, &res_rgba, sizeof(lm::ubvec4));
 }
 
@@ -58,7 +59,7 @@ void interpolate<uint32_t, 1, hrz_proto::ImageFormat::SIRADEL_LEGACY_F32>(
 {
     float a_f = hrz::decode_siradel_legacy_f32_value_to_float(*a);
     float b_f = hrz::decode_siradel_legacy_f32_value_to_float(*b);
-    float res_f = (a_f + b_f) / 2.0f;
+    float res_f = (a_f + b_f) / 2.0F;
     *res = hrz::encode_float_to_siradel_legacy_f32(res_f);
 }
 
@@ -70,7 +71,7 @@ void interpolate<uint32_t, 1, hrz_proto::ImageFormat::TERRARIUM>(
 {
     float a_f = hrz::decode_terrarium_value_to_float(*a);
     float b_f = hrz::decode_terrarium_value_to_float(*b);
-    float res_f = (a_f + b_f) / 2.0f;
+    float res_f = (a_f + b_f) / 2.0F;
     *res = hrz::encode_float_to_terrarium(res_f);
 }
 
@@ -82,7 +83,7 @@ void interpolate<uint32_t, 1, hrz_proto::ImageFormat::TERRAIN_RGB>(
 {
     float a_f = hrz::decode_terrain_rgb_value_to_float(*a);
     float b_f = hrz::decode_terrain_rgb_value_to_float(*b);
-    float res_f = (a_f + b_f) / 2.0f;
+    float res_f = (a_f + b_f) / 2.0F;
     *res = hrz::encode_float_to_terrain_rgb(res_f);
 }
 
@@ -318,8 +319,6 @@ hrz_jobs::JobResult run(
         params.nodata.has_nodata() ? hrz_proto::NodataHandling::DISCARD_NODATA_PIXELS
                                    : hrz_proto::NodataHandling::IGNORE_NODATA,
         format);
-
-    google::protobuf::Arena arena;
 
     auto generate_pixel_func = get_generate_pixel_func(format);
 

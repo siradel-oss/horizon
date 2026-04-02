@@ -2,6 +2,7 @@
 
 namespace hrz_proj
 {
+
 pl_Transform wmerc_to_ecef;
 pl_Transform wmerc_to_lonlat_deg;
 pl_Transform wmerc_to_lonlat_rad;

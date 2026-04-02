@@ -181,7 +181,8 @@ TEST(Color, parse_color_strings_html)
         "WHITe",
         "WHITEsmoKE",
         "YEllOW",
-        "yelLoWgrEEn"};
+        "yelLoWgrEEn"
+    };
 
     static const uint32_t expected_values[] = {
         0xfffff8f0U, 0xffd7ebfaU, 0xffffff00U, 0xffd4ff7fU, 0xfffffff0U, 0xffdcf5f5U, 0xffc4e4ffU,
@@ -204,7 +205,8 @@ TEST(Color, parse_color_strings_html)
         0xff0000ffU, 0xff8f8fbcU, 0xffe16941U, 0xff13458bU, 0xff7280faU, 0xff60a4f4U, 0xff578b2eU,
         0xffeef5ffU, 0xff2d52a0U, 0xffc0c0c0U, 0xffebce87U, 0xffcd5a6aU, 0xff908070U, 0xff908070U,
         0xfffafaffU, 0xff7fff00U, 0xffb48246U, 0xff8cb4d2U, 0xff808000U, 0xffd8bfd8U, 0xff4763ffU,
-        0xffd0e040U, 0xffee82eeU, 0xffb3def5U, 0xffffffffU, 0xfff5f5f5U, 0xff00ffffU, 0xff32cd9aU};
+        0xffd0e040U, 0xffee82eeU, 0xffb3def5U, 0xffffffffU, 0xfff5f5f5U, 0xff00ffffU, 0xff32cd9aU
+    };
 
     size_t names_size = sizeof(color_names) / sizeof(color_names[0]);
     size_t values_size = sizeof(expected_values) / sizeof(expected_values[0]);

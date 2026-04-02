@@ -17,6 +17,7 @@
 
 namespace ui::widget
 {
+
 using namespace helpers;
 using namespace gpu_helpers;
 using namespace preset_menu;
@@ -433,7 +434,8 @@ void Treemap::_color_cell_by_group(size_t cell_id)
     const bool systems_first = _group_tab_bar.is_grouped_by_systems();
     uint32_t colors[3] = {
         (systems_first) ? SYSTEM_COLOR : LAYER_COLOR, (systems_first) ? LAYER_COLOR : SYSTEM_COLOR,
-        TYPE_COLOR};
+        TYPE_COLOR
+    };
 
     // Ignore depth 0 which is root cell (ungrouped)
     size_t color_id = (cell.depth - 1) % IM_ARRAYSIZE(colors);
@@ -449,7 +451,7 @@ void Treemap::_color_cell_by_label(size_t cell_id)
     }
     else
     {
-        cell.color = color::from_string(cell.label, 0.25f, 0.9f, 0.8f);
+        cell.color = color::from_string(cell.label, 0.25F, 0.9F, 0.8F);
         _resource_colors[cell.label] = cell.color;
     }
 }
@@ -622,7 +624,7 @@ void Treemap::_recursive_draw(size_t cell_id, const Rect& rect)
     // Special highlight
     if (_highlighted_cell_id && *_highlighted_cell_id == cell_id)
     {
-        draw_list->AddRect(px_rect.p0, px_rect.p1, color_set::RED.active, 0.0f, 0, 4.0f);
+        draw_list->AddRect(px_rect.p0, px_rect.p1, color_set::RED.active, 0.0F, 0, 4.0F);
     }
 
     // Text and stuff

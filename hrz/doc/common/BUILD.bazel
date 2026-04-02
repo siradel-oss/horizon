@@ -47,11 +47,6 @@ npm_package(
         ":package_json",
         ":ts_lib",
     ],
-    include_srcs_patterns = [
-        "**/*.json",
-        "**/*.js",
-        "**/*.d.ts",
-    ],
     replace_prefixes = {
         "dist-root/": "",
     },

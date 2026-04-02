@@ -8,56 +8,77 @@ namespace hrz
 {
 namespace camera_height
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace camera_height
 
 namespace editor
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace editor
 
 namespace gizmo_layers
 {
+
 void collect_shaders(hrz::GpuResourceContext* rc);
+
 } // namespace gizmo_layers
 
 namespace grid
 {
+
 void collect_shaders(hrz::GpuResourceContext* rc);
+
 } // namespace grid
 
 namespace model
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace model
 
 namespace planet
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace planet
 
 namespace scene
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace scene
 
 namespace sky
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace sky
 
 namespace viewsheds
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 } // namespace viewsheds
 
 namespace heatmaps
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 }
 
 namespace vt
 {
+
 void collect_cylinder_shaders(hrz::GpuResourceContext*);
 void collect_extruded_shaders(hrz::GpuResourceContext*);
 void collect_flat_overlay_point_shaders(hrz::GpuResourceContext*);
@@ -76,11 +97,14 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     collect_heatmap_shaders(rc);
     collect_symbol_shaders(rc);
 }
+
 } // namespace vt
 
 namespace point_cloud
 {
+
 void collect_shaders(hrz::GpuResourceContext*);
+
 }
 } // namespace hrz
 
@@ -88,6 +112,7 @@ namespace hrz
 {
 namespace shaders
 {
+
 void collect_all_shaders(hrz::GpuResourceContext* rc)
 {
     assert(rc);
@@ -108,5 +133,6 @@ void collect_all_shaders(hrz::GpuResourceContext* rc)
     heatmaps::collect_shaders(rc);
     point_cloud::collect_shaders(rc);
 }
+
 } // namespace shaders
 } // namespace hrz

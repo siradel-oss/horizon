@@ -3,6 +3,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 static constexpr size_t InitialComponentCapacity = 256;
 
 hrz_jobs::JobResult SymbolBaker::LeaderLineVisitor::init_element_instances(
@@ -93,6 +94,8 @@ std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBak
 
     return {{hrz_jobs::BakedSymbols::ElementInstances{
         hrz_proto::SymbolElementType::LEADER_LINE_SYMBOL_ELEMENT,
-        std::move(instance_array_opt.value())}}};
+        std::move(instance_array_opt.value())
+    }}};
 }
+
 } // namespace hrz_jobs::symbol

@@ -8,6 +8,7 @@ namespace hrz::model
 {
 namespace
 {
+
 ModelMaterial::Status _combine_model_material_statuses(
     ModelMaterial::Status global_status,
     ModelMaterial::Status material_status)
@@ -63,6 +64,7 @@ BakedModel* _get_baked_model(ModelPrototype* proto, BakedModelH handle)
     assert(ptr);
     return ptr ? ptr->get() : nullptr;
 }
+
 } // namespace
 
 BakedModel::BakedModel(
@@ -369,19 +371,21 @@ void BakedModel::build_pre_bake_nodes(ModelPrototype* proto)
 
     for (const auto& node : descriptor.nodes)
     {
-        _baked_nodes.push_back(BakedNode{
-            .default_transform = node.transform,
-            .local_transform = node.transform,
-        });
+        _baked_nodes.push_back(
+            BakedNode{
+                .default_transform = node.transform,
+                .local_transform = node.transform,
+            });
     }
 
     for (const auto& node_instance : descriptor.node_instances)
     {
-        _baked_nodes_instances.push_back(BakedNodeInstance{
-            .node_id = node_instance.node_id,
-            .parent = node_instance.parent_node_instance_id,
-            .transform = lm::dmat4{},
-        });
+        _baked_nodes_instances.push_back(
+            BakedNodeInstance{
+                .node_id = node_instance.node_id,
+                .parent = node_instance.parent_node_instance_id,
+                .transform = lm::dmat4{},
+            });
     }
 }
 
@@ -425,7 +429,8 @@ BSphere<double> BakedModel::compute_bsphere(ModelPrototype* proto, const lm::dma
     BSphere<double> result = {{0, 0, 0}, 0};
 
     hrz::InlinedVector<BakedNodeInstance, 32> baked_nodes_instances{
-        _baked_nodes_instances.begin(), _baked_nodes_instances.end()};
+        _baked_nodes_instances.begin(), _baked_nodes_instances.end()
+    };
     bake_nodes(_baked_nodes, baked_nodes_instances, transform * _root_transform);
 
     for (size_t i = 0; i < _primitives.size(); ++i)
@@ -782,10 +787,11 @@ void BakedModel::work(ModelPrototype* proto)
             for (const int animation_id : _used_animations.in_use)
             {
                 const auto* animation = &proto->resources.animations.get(animation_id)->animation;
-                _playing_animations.push_back(PlayingAnimation{
-                    .animation = animation,
-                    .player = AnimationPlayer(*animation),
-                });
+                _playing_animations.push_back(
+                    PlayingAnimation{
+                        .animation = animation,
+                        .player = AnimationPlayer(*animation),
+                    });
             }
             update_animation_times();
         }
@@ -1048,7 +1054,8 @@ void ImpostorBakingBakedModel::inner_draw(
     render->rb->push_state();
 
     my::UboBinding ubo_binding = {
-        UboImpostorBaking, _impostor_ubo, 0, sizeof(ImpostorBakingUniformData)};
+        UboImpostorBaking, _impostor_ubo, 0, sizeof(ImpostorBakingUniformData)
+    };
     render->rb->bind({&ubo_binding, 1});
 
     for (const auto& prim : _primitives)

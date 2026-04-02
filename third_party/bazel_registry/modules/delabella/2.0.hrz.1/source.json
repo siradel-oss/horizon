@@ -1,0 +1,13 @@
+{
+  "url": "https://github.com/msokalski/delabella/archive/refs/tags/V2.0.tar.gz",
+  "strip_prefix": "delabella-2.0",
+  "integrity": "sha256-LzorNKeh4svkPLa3wb3vQs7J1QjD4xKYeOMEoI+rcqo=",
+  "overlay": {
+    "MODULE.bazel": "sha256-IBsVae3jo21v7NK7CxMzxcyJ3np/XXsqUJZ6ih4YZfs=",
+    "BUILD.bazel": "sha256-+TNGiyv4NS8JYq18RStcttNvhZqahj61WeytisoT62Y="
+  },
+  "patches": {
+    "includes.patch": "sha256-ov7uw6bRcKMmC7A+RHAg1psXKHHSHRLr4BhcaXxXoHI=",
+    "no_exceptions.patch": "sha256-qGm64j1UbuUOPRE7jgxY72G6I0dLbMRhw7moOCf3RhI="
+  }
+}

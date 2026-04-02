@@ -11,7 +11,7 @@ struct LightingSettings
     bool cast_shadows{};
     bool receive_shadows{};
 
-    constexpr bool operator==(const LightingSettings& other) const = default;
+    constexpr bool operator ==(const LightingSettings& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const LightingSettings& settings)

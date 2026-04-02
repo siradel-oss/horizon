@@ -24,6 +24,7 @@ struct Event
 
 namespace ws
 {
+
 struct Client
 {
     EMSCRIPTEN_WEBSOCKET_T ws;

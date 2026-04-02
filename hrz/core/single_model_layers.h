@@ -15,6 +15,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct ImageDecoder;
@@ -34,6 +35,7 @@ struct SingleModelLayerSystem;
 
 namespace single_model_layers
 {
+
 /**
  * Create a single model layer system.
  */
@@ -116,6 +118,7 @@ RenderRequest work_gpu(SingleModelLayerSystem*, Render*, BlobAllocator*);
 void draw(SingleModelLayerSystem*, Render*, AttributionRegistry*);
 
 bool is_working(SingleModelLayerSystem*);
+
 } // namespace single_model_layers
 
 } // namespace hrz

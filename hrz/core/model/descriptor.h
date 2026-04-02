@@ -14,6 +14,7 @@
 
 namespace hrz::model
 {
+
 /**
  * The model descriptor is the full description of a 3D model.
  * It's the in-memory representation of a model prototype.

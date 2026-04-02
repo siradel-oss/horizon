@@ -18,6 +18,7 @@
 
 namespace
 {
+
 using namespace userdata;
 
 std::string _userdata_dir()
@@ -425,6 +426,7 @@ ParsingErrorFlags _json_read_recent_elements_member(
 
 namespace userdata
 {
+
 std::string Userdata::_to_json_string() const
 {
     rapidjson::Document document;
@@ -553,4 +555,5 @@ void RecentElementSystem::_update_view_vector()
         i++;
     }
 }
+
 } // namespace userdata

@@ -1,0 +1,15 @@
+{
+  "url": "https://github.com/emscripten-core/emsdk/archive/refs/tags/5.0.2.tar.gz",
+  "strip_prefix": "emsdk-5.0.2/bazel",
+  "integrity": "sha256-cgfS+TlBaxncLhoe+dASV5xuDWKNpIXbzVB1xfLJApI=",
+  "overlay": {
+    "pnpm-lock.yaml": "sha256-9NZLtp8d7HyN2zmY8uzoR2TUhG8A0uDuUAGhC1Eq5HE=",
+    "pnpm-workspace.yaml": "sha256-rz5I6UTbL2I7lv9qljq6zgcjw8TgG9LGK2FgEtJV/yY="
+  },
+  "patches": {
+    "pnpm_lock.patch": "sha256-EHpHaY0CtWw5g12Eswh7Gn+tEF7Nuorr+4nXIoFRY18=",
+    "hermetic_python.patch": "sha256-vnxS8NaU2o56hzJdjghKtx9/VMfiacR8P9C0hiKS3zM=",
+    "rules_cc_fixes.patch": "sha256-f7SJ5et80GmBTI8Pm7LsSOdVmlRGUoxAt1baLRsC1AQ="
+  },
+  "patch_strip": 0
+}

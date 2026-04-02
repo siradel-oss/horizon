@@ -7,6 +7,7 @@
 
 namespace
 {
+
 using namespace hrz;
 
 void build_test_proto(hrz_proto::SingleModelLayer& layer)

@@ -36,7 +36,7 @@ def get_file_id(f):
 def process_include(l):
     m = find_include_re.search(l)
     if m == None:
-        error("Couldn't parse include for line " + l)
+        raise RuntimeError("Couldn't parse include for line " + l)
     return process_file(Path(m.group(1)))
 
 
@@ -75,7 +75,7 @@ def process_file(file):
                     output_lines.append(l)
                 line += 1
             return "\n".join([l.rstrip() for l in output_lines])
-    error("Couldn't find file " + str(file))
+    raise RuntimeError("Couldn't find file " + str(file))
 
 
 content = process_file(input_path)

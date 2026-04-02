@@ -1,0 +1,19 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "sokol",
+    hdrs = glob([
+        "sokol_app.h",
+        "sokol_gfx.h",
+        "sokol_glue.h",
+        "util/sokol_imgui.h",
+    ]),
+    includes = [
+        ".",
+        "util",
+    ],
+)
+
+exports_files(["LICENSE"])

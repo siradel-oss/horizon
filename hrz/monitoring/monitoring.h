@@ -7,6 +7,7 @@
 
 namespace hrz_monitoring
 {
+
 using namespace hrz_monitoring_proto;
 
 using MessageCallback = std::function<void(const hrz_monitoring_proto::MonitoringMessage*)>;

@@ -2,6 +2,7 @@
 
 namespace hrz
 {
+
 struct CameraViewInfo;
 struct CameraHeightSystem;
 struct Render;
@@ -9,11 +10,14 @@ struct RenderView;
 
 namespace planet
 {
+
 struct GeometryResources;
+
 }
 
 namespace camera_height
 {
+
 /**
  * Create a new camera height system.
  * This system allow populating a 1×1 texture on the GPU,

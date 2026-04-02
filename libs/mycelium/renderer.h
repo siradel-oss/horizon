@@ -4,13 +4,14 @@
 
 namespace my
 {
+
 enum
 {
-    MaxRenderGraphPasses = 64u,
-    MaxBin = 32u,
-    MaxAuxiliaryView = 31u,
-    MainView = 0u,
-    AllBins = 0xffffffffu,
+    MaxRenderGraphPasses = 64U,
+    MaxBin = 32U,
+    MaxAuxiliaryView = 31U,
+    MainView = 0U,
+    AllBins = 0xffffffffU,
 };
 
 enum class DepthSortMode
@@ -54,7 +55,7 @@ struct FrustumCuller
 
     bool intersects(const OrientedBoundingBox& bbox) const;
 
-    constexpr bool operator==(const FrustumCuller& other) const = default;
+    constexpr bool operator ==(const FrustumCuller& other) const = default;
 
     static FrustumCuller from_view(const lm::dmat4& proj, const lm::dmat4& view);
 };
@@ -199,9 +200,9 @@ public:
     public:
         UserDataRenderable() = default;
         UserDataRenderable(const UserDataRenderable&) = default;
-        UserDataRenderable& operator=(const UserDataRenderable&) = default;
+        UserDataRenderable& operator =(const UserDataRenderable&) = default;
         UserDataRenderable(UserDataRenderable&&) = default;
-        UserDataRenderable& operator=(UserDataRenderable&&) = default;
+        UserDataRenderable& operator =(UserDataRenderable&&) = default;
 
         virtual ~UserDataRenderable() = default;
 

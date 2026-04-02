@@ -17,15 +17,18 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 
 namespace planet
 {
+
 struct Raster;
 class IRasterCollection;
 
 namespace elevation_query::messages
 {
+
 struct QueryElevation
 {
     uint64_t query_id;
@@ -37,19 +40,23 @@ struct CancelElevationQuery
 {
     uint64_t query_id;
 };
+
 } // namespace elevation_query::messages
 
 using ToElevationQueryMessage = std::variant<
     elevation_query::messages::QueryElevation,
-    elevation_query::messages::CancelElevationQuery>;
+    elevation_query::messages::CancelElevationQuery
+>;
 
 namespace elevation_query::messages
 {
+
 struct ElevationQueryResult
 {
     uint64_t query_id;
     std::optional<hrz::BlobArray<float>> elevations;
 };
+
 }; // namespace elevation_query::messages
 
 using FromElevationQueryMessage = std::variant<elevation_query::messages::ElevationQueryResult>;
@@ -65,7 +72,7 @@ private:
         uint64_t channel_id;
         uint64_t query_id;
 
-        constexpr bool operator==(const ElevationQueryId& other) const = default;
+        constexpr bool operator ==(const ElevationQueryId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ElevationQueryId& id)
@@ -115,7 +122,7 @@ private:
     // indicating no ticket.
     using BatchPool = GenObjectPool<Batch, GenIndexPool<Ticket, 31, 32>, 32>;
 
-    static const Ticket NoTicket = ~0ull;
+    static const Ticket NoTicket = ~0ULL;
 
     enum
     {
@@ -123,7 +130,7 @@ private:
         MaxSampling = 64,
     };
 
-    uint64_t _raster_group_revision = ~0ull;
+    uint64_t _raster_group_revision = ~0ULL;
     BatchPool _batchs;
     std::deque<Ticket> _queued;
     std::vector<Ticket> _culling; // There can be MaxCulling jobs at once at this step.
@@ -233,5 +240,6 @@ public:
 
     Channel create_channel();
 };
+
 } // namespace planet
 } // namespace hrz

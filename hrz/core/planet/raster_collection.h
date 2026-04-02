@@ -24,6 +24,7 @@ namespace hrz::planet
 {
 namespace details
 {
+
 assets_loader::Queue get_priority_queue(
     hrz_proto::LayerType layer_type,
     hrz_proto::RasterGroup group,
@@ -49,6 +50,7 @@ static inline uint32_t compute_slot(hrz_proto::RasterGroup group, uint32_t slot)
 {
     return ((uint32_t)group << 24) + (slot & 0xffffff);
 }
+
 } // namespace details
 
 // Wish we could use concepts here...
@@ -65,7 +67,8 @@ struct ImageryRasterCollectionTraits
     static constexpr const char* NAME = "Imagery";
     static constexpr hrz_proto::LayerType LAYER_TYPE = hrz_proto::LayerType::IMAGERY_RASTER;
     static constexpr std::array<hrz_proto::ImageFormat, 1> SOURCE_TILE_IMAGE_FORMATS = {
-        hrz_proto::ImageFormat::SRGBA_8};
+        hrz_proto::ImageFormat::SRGBA_8
+    };
     static constexpr hrz_proto::ImageFormat COMPOSED_TILE_IMAGE_FORMAT =
         hrz_proto::ImageFormat::SRGBA_8;
     static constexpr planet::TileRequestOrigin TILE_REQUEST_ORIGINS =
@@ -139,7 +142,7 @@ struct ImageryRasterCollectionTraits
         sampling->set_nodata_handling(hrz_proto::NodataHandling::DISCARD_NODATA_PIXELS);
         sampling->set_alpha_channel_usage(hrz_proto::AlphaChannelUsage::IGNORE_ALPHA_CHANNEL);
 
-        blending->set_opacity(1.0f);
+        blending->set_opacity(1.0F);
 
         imagery_data.set_group(hrz_proto::RasterGroup::MIDDLE_RASTER_GROUP);
         imagery_data.set_slot(0); // @Todo Get lowest free slot from the model
@@ -169,7 +172,8 @@ struct DtmRasterCollectionTraits
     static constexpr std::array<hrz_proto::ImageFormat, 5> SOURCE_TILE_IMAGE_FORMATS = {
         hrz_proto::ImageFormat::R_F32, hrz_proto::ImageFormat::SIRADEL_LEGACY_F32,
         hrz_proto::ImageFormat::SIGNED_FIXED_24_8, hrz_proto::ImageFormat::TERRARIUM,
-        hrz_proto::ImageFormat::TERRAIN_RGB};
+        hrz_proto::ImageFormat::TERRAIN_RGB
+    };
     static constexpr hrz_proto::ImageFormat COMPOSED_TILE_IMAGE_FORMAT =
         hrz_proto::ImageFormat::R_F32;
     static constexpr planet::TileRequestOrigin TILE_REQUEST_ORIGINS =
@@ -701,8 +705,9 @@ public:
                             auto raster = get_raster_by_id(raster_id);
                             raster->loading_priority =
                                 clamp_cast<int32_t, int8_t>(raster_model.loading_priority());
-                            raster->provider->set_load_queue(details::get_priority_queue(
-                                Traits::LAYER_TYPE, group, raster->loading_priority));
+                            raster->provider->set_load_queue(
+                                details::get_priority_queue(
+                                    Traits::LAYER_TYPE, group, raster->loading_priority));
                         }
                     }
                     else if (path.is_slot())
@@ -908,7 +913,8 @@ public:
         assert(Traits::TRACK_TILE_BOUNDS);
 
         std::pair<double, double> min_max = {
-            std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()};
+            std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()
+        };
 
         for (const auto& group : _groups)
         {
@@ -1014,8 +1020,7 @@ private:
         // (In the case of slot collisions.)
 
         std::ranges::stable_sort(
-            _rasters,
-            [](const std::unique_ptr<Raster>& a, const std::unique_ptr<Raster>& b)
+            _rasters, [](const std::unique_ptr<Raster>& a, const std::unique_ptr<Raster>& b)
             { return a->slot < b->slot; });
 
         rebuild_raster_indices_by_id_map();
@@ -1061,7 +1066,7 @@ private:
             {
                 if ((scene_views_bitset & (1 << i)))
                 {
-                    _merge_groups_bitset_per_view[i] |= 1u << merge_group_index;
+                    _merge_groups_bitset_per_view[i] |= 1U << merge_group_index;
                 }
             }
         }

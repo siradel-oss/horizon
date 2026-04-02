@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/BinomialLLC/basis_universal/archive/refs/tags/v1_60.tar.gz",
+  "strip_prefix": "basis_universal-1_60/zstd",
+  "integrity": "sha256-ZKyTY2Vtw+tBxZ7lKvfpOavldKkshf0LonAIxKfsn0A=",
+  "overlay": {
+    "MODULE.bazel": "sha256-aTXjK77Dpd8lnUQW3UHZah9w+aMI3UIHHIG2itiCPCw=",
+    "BUILD.bazel": "sha256-V4+4ZLj+do5AZYaG703aZZF9H5EpsXOtoF9eDRY5yxY="
+  }
+}

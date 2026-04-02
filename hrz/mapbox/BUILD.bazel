@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_library(
     name = "mapbox",
     srcs = [
@@ -11,14 +14,16 @@ cc_library(
         "expression.h",
         "translate.h",
     ],
+    implementation_deps = [
+        "//hrz/cpp_protocol",
+        "//hrz/protocol/history:scene_model_version",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//hrz/common",
-        "//hrz/cpp_protocol",
         "//hrz/fnd",
-        "//hrz/protocol/history:scene_model_version",
         "//libs/lm",
-        "//third_party:rapidjson",
+        "@rapidjson",
     ],
 )
 
@@ -36,8 +41,8 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":mapbox",
-        "//third_party:gtest",
-        "//third_party:gtest_main",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
         "@rules_cc//cc/runfiles",
     ],
 )

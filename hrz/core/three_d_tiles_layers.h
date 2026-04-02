@@ -14,6 +14,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct CameraViewInfo;
@@ -33,6 +34,7 @@ struct ThreeDTilesLayerSystem;
 
 namespace three_d_tiles_layers
 {
+
 /**
  * Create a 3D Tiles layer system.
  */
@@ -119,5 +121,6 @@ RenderRequest work_gpu(ThreeDTilesLayerSystem*, Render*, BlobAllocator*);
 void draw(ThreeDTilesLayerSystem*, Render*, AttributionRegistry*);
 
 bool is_working(ThreeDTilesLayerSystem*);
+
 } // namespace three_d_tiles_layers
 } // namespace hrz

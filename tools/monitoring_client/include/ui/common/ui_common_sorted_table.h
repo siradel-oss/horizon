@@ -8,6 +8,7 @@
 
 namespace sorted_table
 {
+
 template<typename Entry>
 using TableColumnContentFunction = std::function<void(const Entry&)>;
 
@@ -226,4 +227,5 @@ private:
             });
     }
 };
+
 } // namespace sorted_table

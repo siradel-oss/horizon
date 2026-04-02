@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 cc_library(
     name = "ws_common",
     hdrs = [
@@ -16,12 +19,13 @@ cc_library(
     hdrs = [
         "ws_server.h",
     ],
+    implementation_deps = select({
+        "//:os_native": ["@websocketpp"],
+        "//conditions:default": [],
+    }),
     includes = ["."],
     visibility = ["//visibility:public"],
-    deps = select({
-        "//:os_native": ["//third_party:websocketpp"],
-        "//conditions:default": [],
-    }) + [
+    deps = [
         ":ws_common",
     ],
 )
@@ -36,12 +40,13 @@ cc_library(
     hdrs = [
         "ws_client.h",
     ],
+    implementation_deps = select({
+        "//:os_native": ["@websocketpp"],
+        "//conditions:default": [],
+    }),
     includes = ["."],
     visibility = ["//visibility:public"],
-    deps = select({
-        "//:os_native": ["//third_party:websocketpp"],
-        "//conditions:default": [],
-    }) + [
+    deps = [
         ":ws_common",
     ],
 )

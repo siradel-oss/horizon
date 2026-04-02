@@ -16,9 +16,11 @@ namespace hrz_jobs::bake_cylinder_vector_geometry
 {
 namespace
 {
+
 static constexpr size_t InitialPointCapacity = 512;
 static constexpr size_t InitialInstanceCapacity = 1024;
 static constexpr size_t InitialBSpherePointCapacity = 2048;
+
 } // namespace
 
 hrz_jobs::JobResult run(
@@ -188,7 +190,7 @@ hrz_jobs::JobResult run(
         const uint32_t linestring_first_instance = instances.size().value_or(0);
 
         uint32_t linestring_first_point = 0;
-        float progress = 0.0f;
+        float progress = 0.0F;
 
         for (uint32_t i = 0; i < feature.linestring_count; ++i)
         {
@@ -230,7 +232,7 @@ hrz_jobs::JobResult run(
                      n1_oct,
                      fill_color_oklab_uint8,
                      {radius, radius},
-                     0.0f,
+                     0.0F,
                      progress0,
                      progress,
                      dash_period,
@@ -252,8 +254,8 @@ hrz_jobs::JobResult run(
                          c0,
                          minus_n_oct,
                          fill_color_oklab_uint8,
-                         {radius, 0.0f},
-                         0.0f,
+                         {radius, 0.0F},
+                         0.0F,
                          progress0,
                          progress0,
                          dash_period,
@@ -274,8 +276,8 @@ hrz_jobs::JobResult run(
                          c1,
                          n_oct,
                          fill_color_oklab_uint8,
-                         {radius, 0.0f},
-                         0.0f,
+                         {radius, 0.0F},
+                         0.0F,
                          progress,
                          progress,
                          dash_period,

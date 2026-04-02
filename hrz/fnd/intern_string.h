@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 class InternString
 {
     Arena _arena;
@@ -60,4 +61,5 @@ public:
         _index.clear();
     }
 };
+
 } // namespace hrz

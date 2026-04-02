@@ -306,16 +306,6 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
                 attribute);
         }
 
-        if (parse_attribute_string(value_doc, "params_type", &attribute))
-        {
-            printer.Print("            <params_type>$name$</params_type>\n", "name", attribute);
-        }
-
-        if (parse_attribute_string(value_doc, "response_type", &attribute))
-        {
-            printer.Print("            <response_type>$name$</response_type>\n", "name", attribute);
-        }
-
         printer.Print(
             "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", value_doc);
         printer.Print("        </value>\n");

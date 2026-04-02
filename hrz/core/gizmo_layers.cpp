@@ -33,6 +33,7 @@
 
 namespace
 {
+
 enum
 {
     UboGizmo = hrz::UboCustomStart,
@@ -46,38 +47,38 @@ enum
 
 // Configuration of the translation arrows.
 static constexpr size_t ARROW_RESOLUTION = 8;
-static constexpr float ARROW_BODY_LENGTH = 0.7f;
-static constexpr float ARROW_BODY_RADIUS = 0.02f;
-static constexpr float ARROW_CONE_LENGTH = 0.3f;
-static constexpr float ARROW_CONE_RADIUS = 0.1f;
+static constexpr float ARROW_BODY_LENGTH = 0.7F;
+static constexpr float ARROW_BODY_RADIUS = 0.02F;
+static constexpr float ARROW_CONE_LENGTH = 0.3F;
+static constexpr float ARROW_CONE_RADIUS = 0.1F;
 
 // Configuration of the translation square.
 static constexpr lm::dvec3 TRANSLATION_SQUARE_OFFSET = lm::dvec3(0.5, 0.5, 0);
-static constexpr float TRANSLATION_SQUARE_SIZE = 0.2f;
-static constexpr float TRANSLATION_SQUARE_FADEOUT_THRESHOLD = 0.6f;
+static constexpr float TRANSLATION_SQUARE_SIZE = 0.2F;
+static constexpr float TRANSLATION_SQUARE_FADEOUT_THRESHOLD = 0.6F;
 
 // Configuration of the camera plane circles.
-static constexpr float RING_OUTLINE_SIZE = 0.1f;
+static constexpr float RING_OUTLINE_SIZE = 0.1F;
 
 // Configuration of the camera plane translation circle.
-static constexpr float TRANSLATION_CAM_PLANE_RADIUS = 0.28f;
+static constexpr float TRANSLATION_CAM_PLANE_RADIUS = 0.28F;
 static constexpr float TRANSLATION_CAM_PLANE_OUTER_RADIUS =
-    TRANSLATION_CAM_PLANE_RADIUS + RING_OUTLINE_SIZE * 0.5f;
+    TRANSLATION_CAM_PLANE_RADIUS + RING_OUTLINE_SIZE * 0.5F;
 
 // Configuration of the camera plane rotation circle.
-static constexpr float ROTATION_CAM_PLANE_RADIUS = 1.5f;
+static constexpr float ROTATION_CAM_PLANE_RADIUS = 1.5F;
 
 // Configuration of rotation torus.
 static constexpr size_t TORUS_RESOLUTION = 32;
 static constexpr size_t TORUS_CIRCLE_RESOLUTION = 8;
-static constexpr float ROTATION_TORUS_MAJOR_RADIUS = 1.0f + TRANSLATION_CAM_PLANE_OUTER_RADIUS;
-static constexpr float ROTATION_TORUS_MINOR_RADIUS = ROTATION_TORUS_MAJOR_RADIUS * 0.025f;
+static constexpr float ROTATION_TORUS_MAJOR_RADIUS = 1.0F + TRANSLATION_CAM_PLANE_OUTER_RADIUS;
+static constexpr float ROTATION_TORUS_MINOR_RADIUS = ROTATION_TORUS_MAJOR_RADIUS * 0.025F;
 
 // Configuration of the dot at the gizmo origin.
-static constexpr float ORIGIN_RADIUS = 0.05f;
-static constexpr float ORIGIN_OUTLINE_SIZE = 0.025f;
+static constexpr float ORIGIN_RADIUS = 0.05F;
+static constexpr float ORIGIN_OUTLINE_SIZE = 0.025F;
 
-static constexpr float DEFAULT_FADEOUT_THRESHOLD = 0.9f;
+static constexpr float DEFAULT_FADEOUT_THRESHOLD = 0.9F;
 
 // Linear colours
 static constexpr lm::vec4 RED(0.787, 0.030, 0.073, 1);
@@ -494,8 +495,8 @@ public:
         // Init uniform buffer
         {
             _uniform_data.color = lm::vec4(1, 1, 1, 1);
-            _uniform_data.width_px = 3.0f;
-            _uniform_data.extent = 40'000.0f;
+            _uniform_data.width_px = 3.0F;
+            _uniform_data.extent = 40'000.0F;
 
             my::BufferResource ub_res(my::BufferResource::BufferType::Uniform);
             ub_res.size = sizeof(_uniform_data);
@@ -568,7 +569,7 @@ static float compute_alpha_fadeout(
     float threshold,
     bool fade_when_colinear)
 {
-    static const float cutoff = 0.1f;
+    static const float cutoff = 0.1F;
 
     float dot = std::abs(lm::dot(axis, view_dir));
     float alpha = 1;
@@ -873,7 +874,7 @@ struct Part
 
     explicit Part(GizmoPartKind id) : id(id), axis(part_to_axis(id)), action(part_to_action(id)) {}
 
-    constexpr bool operator==(const Part& other) const { return id == other.id; }
+    constexpr bool operator ==(const Part& other) const { return id == other.id; }
 };
 
 struct State
@@ -1313,7 +1314,7 @@ struct CircleTrait
         const lm::dmat4& rotation_transform,
         const lm::dmat4& display_transform)
     {
-        return 1.0f;
+        return 1.0F;
     }
 };
 
@@ -1381,7 +1382,8 @@ class Gizmo
         GizmoComponentTemplate<ArrowTrait>,
         GizmoComponentTemplate<PlaneTrait>,
         GizmoComponentTemplate<TorusTrait>,
-        GizmoComponentTemplate<CircleTrait>>;
+        GizmoComponentTemplate<CircleTrait>
+    >;
 
     std::array<GizmoComponent, GIZMO_PART_COUNT> _components;
 
@@ -1833,7 +1835,8 @@ public:
 
         hrz::Ray ray = pixel_to_ray(lm::dvec2(pixel), view_info);
         hrz::BSphere<double> bsphere = {
-            _position_ecef, scale_factor * ROTATION_TORUS_MAJOR_RADIUS + bbox_padding_meters};
+            _position_ecef, scale_factor * ROTATION_TORUS_MAJOR_RADIUS + bbox_padding_meters
+        };
 
         lm::dvec3 hit;
         HitState hit_state;
@@ -2089,7 +2092,7 @@ public:
 
         for (const auto& view : views_info)
         {
-            uint32_t scene_view_bitset = (1u << (int)view.view);
+            uint32_t scene_view_bitset = (1U << (int)view.view);
             if ((_scene_views_bitset & scene_view_bitset) == 0) return;
 
             const hrz::CameraViewInfo& view_info = view.cam_view_info;
@@ -2243,10 +2246,12 @@ struct Layer
     uint64_t global_layer_id;
     Gizmo gizmo;
 };
+
 } // anonymous namespace
 
 namespace hrz
 {
+
 struct GizmoLayerSystem
 {
     using IndexPool = GenIndexPool<uint64_t, 32, 32>;
@@ -2273,6 +2278,7 @@ namespace gizmo_layers
 {
 namespace
 {
+
 RenderRequest _unregister_layers(GizmoLayerSystem* system, SceneModel* scene_model)
 {
     RenderRequest render_request;
@@ -2297,6 +2303,7 @@ RenderRequest _unregister_layers(GizmoLayerSystem* system, SceneModel* scene_mod
 
     return render_request;
 }
+
 } // anonymous namespace
 
 GizmoLayerSystem* create_system()
@@ -2466,7 +2473,8 @@ void initialize_rendering(GizmoLayerSystem* system, Render* render)
 
         my::VertexInputStream streams[] = {
             {InputStreamVertex, vertex_buffer, my::VertexFormat::Float32_3, 0, 12,
-             my::VertexRate::PerVertex}};
+             my::VertexRate::PerVertex}
+        };
 
         my::VertexInputResource vi_res;
         vi_res.indices = index_buffer;
@@ -2493,7 +2501,7 @@ hrz_proto::GizmoLayer default_layer_data()
     layer_data.set_size(0.2);
     layer_data.set_size_unit(hrz_proto::UiSizeUnit::UI_SIZE_RELATIVE_TO_SCREEN);
     layer_data.set_bbox_padding(0);
-    layer_data.mutable_rotation()->set_w(1.f);
+    layer_data.mutable_rotation()->set_w(1.F);
     layer_data.set_visible(true);
     layer_data.mutable_scene_views()->set_bits(scene_views_bitset);
 
@@ -2745,5 +2753,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
 
     LineRenderable::collect_shaders(rc);
 }
+
 } // namespace gizmo_layers
 } // namespace hrz

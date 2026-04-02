@@ -6,6 +6,7 @@
 
 namespace hrz::model
 {
+
 constexpr uint32_t CompressedStreamOffset = 1;
 constexpr uint32_t UvStreamOffset = 2;
 

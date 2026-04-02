@@ -39,20 +39,21 @@ if __name__ == "__main__":
 
     descriptor_path = Path(f"hrz/protocol/history/{version}.pbf").absolute()
 
-    ret = subprocess.run(
-        [
-            "bazel",
-            "run",
-            "//third_party:protoc",
-            BZL_CONFIG,
-            "--",
-            "--descriptor_set_in=" + str(descriptor_path),
-            "--decode=HrzProtocol.SceneDump",
-        ],
-        stdin=args.dump_bin_file,
-        stdout=args.output_text_file,
-        stderr=subprocess.PIPE,
-    )
+    with args.output_text_file as out_fp:
+        ret = subprocess.run(
+            [
+                "bazel",
+                "run",
+                "//third_party:protoc",
+                BZL_CONFIG,
+                "--",
+                "--descriptor_set_in=" + str(descriptor_path),
+                "--decode=HrzProtocol.SceneDump",
+            ],
+            stdin=args.dump_bin_file,
+            stdout=out_fp,
+            stderr=subprocess.PIPE,
+        )
 
     if ret.returncode == 0:
         print("OK")

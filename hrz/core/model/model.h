@@ -42,18 +42,22 @@
 
 namespace HrzProtocol
 {
+
 class NumericPalette;
 class Material;
+
 } // namespace HrzProtocol
 
 namespace hrz
 {
+
 struct ImageDecoder;
 struct JobScheduler;
 struct Render;
 
 namespace model
 {
+
 struct SharedResources;
 struct ModelPrototype;
 

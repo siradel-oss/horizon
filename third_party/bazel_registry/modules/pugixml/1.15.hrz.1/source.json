@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/zeux/pugixml/releases/download/v1.15/pugixml-1.15.tar.gz",
+  "integrity": "sha256-ZVreV/pwP7QhwuuaARO1BkvdsUXUFd0fiMeTU9kNURo=",
+  "strip_prefix": "pugixml-1.15",
+  "overlay": {
+    "BUILD.bazel": "sha256-FDAYUjU8CDq7DCD0dak0EhKA637KCFPshoZYRosK51U=",
+    "MODULE.bazel": "sha256-RX7OCszNG22KdFcLmNX43KK2Vi7piuM/4nXlqMwgDA4="
+  }
+}

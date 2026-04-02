@@ -6,6 +6,7 @@
 
 namespace ui::widget::gpu_helpers
 {
+
 std::string gpu_snapshot_to_string(const data::GpuResourceSnapshot&);
 
 class GpuBucketGroupOrderTabBar
@@ -26,4 +27,5 @@ private:
     bool _group_by_system;
     std::vector<data::GpuResourceBucketGroupingFunction> _grouping_functions;
 };
+
 } // namespace ui::widget::gpu_helpers

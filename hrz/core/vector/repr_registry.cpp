@@ -7,6 +7,7 @@
 
 namespace
 {
+
 class NullReprSystem : public hrz::vt::ReprSystem
 {
 public:
@@ -36,6 +37,7 @@ public:
 
 namespace hrz::vt
 {
+
 std::unique_ptr<ReprSystem> create_null_repr_system()
 {
     return std::unique_ptr<ReprSystem>(new NullReprSystem());
@@ -254,4 +256,5 @@ uint64_t ReprSystem::next_displayable_frame() const
 {
     return hrz::clock::CurrentFrameNumber;
 }
+
 } // namespace hrz::vt

@@ -2,6 +2,7 @@
 
 namespace hrz::platform
 {
+
 struct Event
 {
     // All keys except letters are layout independent.

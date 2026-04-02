@@ -5,6 +5,7 @@
 
 namespace hrz::vt::symbol
 {
+
 // Specialisation of ElementSystem for layout-only elements,
 // i.e. those that don't have graphical representations.
 template<typename PrototypeT, hrz_proto::SymbolElementType ELEMENT_TYPE>
@@ -109,8 +110,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -122,7 +123,8 @@ private:
 struct StackExpandElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::StackExpand,
-        hrz_proto::STACK_EXPAND_SYMBOL_ELEMENT>
+        hrz_proto::STACK_EXPAND_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -130,8 +132,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -143,7 +145,8 @@ private:
 struct PaddingElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::Padding,
-        hrz_proto::PADDING_SYMBOL_ELEMENT>
+        hrz_proto::PADDING_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -151,8 +154,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -164,7 +167,8 @@ private:
 struct SizedBoxElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::SizedBox,
-        hrz_proto::SIZED_BOX_SYMBOL_ELEMENT>
+        hrz_proto::SIZED_BOX_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -172,8 +176,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -191,8 +195,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -204,7 +208,8 @@ private:
 struct FlexibleElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::Flexible,
-        hrz_proto::FLEXIBLE_SYMBOL_ELEMENT>
+        hrz_proto::FLEXIBLE_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -212,8 +217,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -225,7 +230,8 @@ private:
 struct AlignElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::FittedBox,
-        hrz_proto::ALIGN_SYMBOL_ELEMENT>
+        hrz_proto::ALIGN_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -233,8 +239,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -246,7 +252,8 @@ private:
 struct ConstrainedBoxElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::ConstrainedBox,
-        hrz_proto::CONSTRAINED_BOX_SYMBOL_ELEMENT>
+        hrz_proto::CONSTRAINED_BOX_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -254,8 +261,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -267,7 +274,8 @@ private:
 struct RotatedBoxElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::RotatedBox,
-        hrz_proto::ROTATED_BOX_SYMBOL_ELEMENT>
+        hrz_proto::ROTATED_BOX_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -275,8 +283,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -288,7 +296,8 @@ private:
 struct AspectRatioElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::AspectRatio,
-        hrz_proto::ASPECT_RATIO_SYMBOL_ELEMENT>
+        hrz_proto::ASPECT_RATIO_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -296,8 +305,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -309,7 +318,8 @@ private:
 struct FittedBoxElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::FittedBox,
-        hrz_proto::FITTED_BOX_SYMBOL_ELEMENT>
+        hrz_proto::FITTED_BOX_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -317,8 +327,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -330,7 +340,8 @@ private:
 struct TransformElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::Transform,
-        hrz_proto::TRANSFORM_SYMBOL_ELEMENT>
+        hrz_proto::TRANSFORM_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -338,8 +349,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -351,7 +362,8 @@ private:
 struct OptionalElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::Optional,
-        hrz_proto::OPTIONAL_SYMBOL_ELEMENT>
+        hrz_proto::OPTIONAL_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -359,8 +371,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -372,7 +384,8 @@ private:
 struct VariantElementSystem :
     public LayoutElementSystem<
         hrz_jobs::SymbolBakingData::Variant,
-        hrz_proto::VARIANT_SYMBOL_ELEMENT>
+        hrz_proto::VARIANT_SYMBOL_ELEMENT
+    >
 {
 private:
     PrototypeH make_prototype(
@@ -380,8 +393,8 @@ private:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 

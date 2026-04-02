@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/mapbox/earcut.hpp/archive/refs/tags/v2.2.4.tar.gz",
+  "strip_prefix": "earcut.hpp-2.2.4",
+  "integrity": "sha256-/PpqR6UtTJTclgvbdH8X4HdgkjVRewu1zoCX1rdHaVo=",
+  "overlay": {
+    "BUILD.bazel": "sha256-p8WX6m2H+Xqe3LjotQjyqlnB2Qnlj9I/xLY1Jb4GdcQ=",
+    "MODULE.bazel": "sha256-U+AZaMbS1WWyfSNWQHbnSrBlcprSnwmMZyV6yzUoo/o="
+  }
+}

@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 // This is an arena-backed object pool.
 // Unlike the generational object pool, there is no lifetime or ownership tests
 // in release builds. So use this carefully. Although those checks exist in

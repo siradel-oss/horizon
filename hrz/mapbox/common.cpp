@@ -10,6 +10,7 @@ namespace hrz_mapbox
 {
 namespace
 {
+
 class Script
 {
     std::string* _script = nullptr;
@@ -569,6 +570,7 @@ void generate_property_script(std::span<const Node> nodes, const Property& prp, 
         default: assert(false && "Unhandled"); return;
     }
 }
+
 } // namespace
 
 std::string to_string(Value value)
@@ -654,8 +656,7 @@ void generate_representations_script(
             [&](std::span<const Node> nodes, NodeIndex node, Script& script)
             {
                 generate_script_branch(
-                    nodes, node, 0, "if", script,
-                    [&](std::span<const Node>, NodeIndex, Script&)
+                    nodes, node, 0, "if", script, [&](std::span<const Node>, NodeIndex, Script&)
                     { generate_properties_script(); });
             });
     }
@@ -787,7 +788,7 @@ void assign_default_value(const Property::Vec2& vec2, hrz_proto::Vec3fProperty* 
         && vec2.y.default_value.type == Value::Type::Double);
     proto->mutable_default_value()->set_x(vec2.x.default_value.f64);
     proto->mutable_default_value()->set_y(vec2.y.default_value.f64);
-    proto->mutable_default_value()->set_z(0.0f);
+    proto->mutable_default_value()->set_z(0.0F);
 }
 
 void assign_default_value(const Property::Vec3& vec3, hrz_proto::Vec3fProperty* proto)
@@ -855,4 +856,5 @@ void assign_default_value(
 
     proto->set_default_value(aligment_proto);
 }
+
 } // namespace hrz_mapbox

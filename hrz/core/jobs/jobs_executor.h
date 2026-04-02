@@ -9,12 +9,15 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct FontRasterizer;
+
 } // namespace hrz
 
 namespace hrz_jobs
 {
+
 struct ExecutorContext : public JobContext
 {
     ExecutorContext() : worker_id(-1) {}
@@ -37,12 +40,14 @@ struct ExecutorContext : public JobContext
 
 namespace executor
 {
+
 hrz_jobs::JobResult run_job(
     uint32_t job_id,
     hrz_jobs::JobType job_type,
     const std::any& params,
     std::any& response,
     const JobContext& context);
+
 }
 
 } // namespace hrz_jobs

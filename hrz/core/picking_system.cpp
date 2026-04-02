@@ -23,6 +23,7 @@
 
 namespace
 {
+
 struct PositionPickingRequest
 {
     uint32_t layer_id;
@@ -120,14 +121,14 @@ public:
         my::RenderGraph::ResourceInfo depth_stencil;
         depth_stencil.format = my::TextureFormat::Depth32FStencil8;
         depth_stencil.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
-        depth_stencil.width = 1.0f;
-        depth_stencil.height = 1.0f;
+        depth_stencil.width = 1.0F;
+        depth_stencil.height = 1.0F;
 
         my::RenderGraph::ResourceInfo depth_read_value;
         depth_read_value.format = my::TextureFormat::RG32F;
         depth_read_value.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
-        depth_read_value.width = 1.0f;
-        depth_read_value.height = 1.0f;
+        depth_read_value.width = 1.0F;
+        depth_read_value.height = 1.0F;
 
         my::RenderGraph::ResourceInfo color;
 #if HRZ_DESKTOP
@@ -137,8 +138,8 @@ public:
         color.format = my::TextureFormat::RG32UI;
 #endif
         color.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
-        color.width = 1.0f;
-        color.height = 1.0f;
+        color.width = 1.0F;
+        color.height = 1.0F;
 
         ctx.create(_color_name, my::RenderGraph::Target, color);
         ctx.create(_depth_stencil_name, my::RenderGraph::Target, depth_stencil);
@@ -190,7 +191,8 @@ public:
             my::FramebufferAttachment attachments[] = {
                 {my::Attachment::DepthStencil, _depth_stencil_target},
                 {my::Attachment::Color0, _color_target},
-                {my::Attachment::Color1, _depth_read_value_target}};
+                {my::Attachment::Color1, _depth_read_value_target}
+            };
 
             my::FramebufferResource res;
             res.attachments = attachments;
@@ -226,7 +228,8 @@ public:
         {
             bindings[i + 1] = {
                 hrz::vector_flat_overlay::SamplerOverlayStart + i, _overlay_textures[i],
-                _overlay_texture_sampler};
+                _overlay_texture_sampler
+            };
         }
 
         ctx.binder->bind(bindings);
@@ -253,14 +256,15 @@ public:
                 my::Attachment::Color1,
                 my::ClearValue::make_color_float(0.0, 0.0, 0.0, 0.0),
             },
-            depth_clear_target};
+            depth_clear_target
+        };
 
         ctx.render->clear(all_clear_targets);
 
         {
             my::Renderer::BinMask pass_masks[] = {
-                hrz::RenderWorldOpaqueBin | hrz::RenderWorldTransparentBin
-                | hrz::RenderSymbolicBin};
+                hrz::RenderWorldOpaqueBin | hrz::RenderWorldTransparentBin | hrz::RenderSymbolicBin
+            };
 
             ctx.renderer->draw(
                 hrz::RenderPicking, user_data->main_view, pass_masks, ctx.render, ctx.binder,
@@ -362,6 +366,7 @@ public:
 
 namespace hrz
 {
+
 struct Frame
 {
     std::vector<picking::PositionTicket> pos_queued;
@@ -421,6 +426,7 @@ struct PickingSystem
 
 namespace
 {
+
 void _read_depth_and_id_pixels(
     hrz::PickingSystem* system,
     const hrz::Frame& frame,
@@ -470,8 +476,8 @@ void _read_depth_and_id_pixels(
         }
         else
         {
-            double ndc_x = (2 * ((double)pixel.x + 0.5f)) / (double)frame.viewport.w - 1;
-            double ndc_y = (2 * ((double)pixel.y + 0.5f)) / (double)frame.viewport.h - 1;
+            double ndc_x = (2 * ((double)pixel.x + 0.5F)) / (double)frame.viewport.w - 1;
+            double ndc_y = (2 * ((double)pixel.y + 0.5F)) / (double)frame.viewport.h - 1;
 
             lm::dvec3 ndc_coords(
                 (ndc_x + frame.proj.m[2][0]) * depth / frame.proj.m[0][0],
@@ -558,6 +564,7 @@ void _read_heatmap_pixels(
 
 namespace hrz::picking
 {
+
 void _prepare_next_frame_if_needed(PickingSystem* system)
 {
     if (!system->next_frame.has_value())

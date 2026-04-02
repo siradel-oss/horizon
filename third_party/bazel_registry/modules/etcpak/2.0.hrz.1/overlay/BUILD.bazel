@@ -1,0 +1,46 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "etcpak",
+    srcs = [
+        "Dither.cpp",
+        "Dither.hpp",
+        "ForceInline.hpp",
+        "Math.hpp",
+        "ProcessCommon.hpp",
+        "ProcessDxtc.cpp",
+        "ProcessRGB.cpp",
+        "Tables.cpp",
+        "Tables.hpp",
+        "Vector.hpp",
+        "bc7enc.cpp",
+    ],
+    hdrs = [
+        "ProcessDxtc.hpp",
+        "ProcessRGB.hpp",
+        "bc7enc.h",
+    ],
+    copts = select({
+        "@platforms//os:linux": ["-msse4.1"],
+        "//conditions:default": [],
+    }),
+    include_prefix = "etcpak",
+    includes = [
+        ".",
+    ],
+    local_defines = select({
+        "@platforms//cpu:x86_64": [
+            "__SSE4_1__",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "@platforms//os:windows": [
+            "NOMINMAX",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+exports_files(["LICENSE.txt"])

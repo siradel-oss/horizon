@@ -38,6 +38,7 @@
 
 namespace
 {
+
 using namespace hrz;
 using namespace hrz::vector_data;
 using namespace hrz::style;
@@ -234,9 +235,10 @@ struct State
         hrz::BlobAllocator* blob_allocator,
         hrz::monitoring::ResourceOwner owner) :
         data(&data_),
-        resp_instances(hrz::BlobVector<StyledFeatures::Instance>(
-            blob_allocator,
-            data->feature_count * data->representations.size())),
+        resp_instances(
+            hrz::BlobVector<StyledFeatures::Instance>(
+                blob_allocator,
+                data->feature_count * data->representations.size())),
         resp_prps(
             hrz::BlobVector<uint64_t>(blob_allocator, data->feature_count * InitialPrpsPerFeature)),
         resp_values(data->feature_count * InitialPrpsPerFeature, blob_allocator, owner),
@@ -821,8 +823,9 @@ struct State
             {
                 resp_prps.push_back(p.first);
                 resp_values.push_encoded(
-                    unsafe("properties values are interned using the resp_values encoder "
-                           "(execute_set)"),
+                    unsafe(
+                        "properties values are interned using the resp_values encoder "
+                        "(execute_set)"),
                     p.second);
             }
         }
@@ -985,7 +988,7 @@ struct State
         for (; count > 0; --count)
         {
             int bit = bits_span[0];
-            if (mask & (1ull << bit)) // This is a true
+            if (mask & (1ULL << bit)) // This is a true
             {
                 // Include it in the true span, and remove it from the instances span
                 true_span->end += 1;
@@ -1212,10 +1215,12 @@ struct State
         return true;
     }
 };
+
 } // anonymous namespace
 
 namespace hrz_jobs::style_features
 {
+
 hrz_jobs::JobResult run(
     const FeaturesStylingData& params,
     StylingResult& response,
@@ -1338,4 +1343,5 @@ hrz_jobs::JobResult run(
         return hrz_jobs::JobResult::FAILURE;
     }
 }
+
 } // namespace hrz_jobs::style_features

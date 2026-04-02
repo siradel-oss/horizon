@@ -8,6 +8,7 @@
 
 namespace ui::view
 {
+
 struct ViewEvents
 {
     bool empty() const { return !scroll && !zoom && !horizontal_focus && !vertical_focus; }

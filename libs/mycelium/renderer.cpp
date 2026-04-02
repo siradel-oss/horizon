@@ -15,6 +15,7 @@
 
 namespace
 {
+
 struct SortHeader
 {
     uint64_t key;
@@ -25,6 +26,7 @@ struct SortHeader
 
 namespace my
 {
+
 using BinMask = Renderer::BinMask;
 
 // There is some magic going here. Since we want to do frustum-sphere tests

@@ -2,6 +2,7 @@
 
 namespace hrz
 {
+
 bool ray_sphere_intersection(const Ray& ray, const lm::dvec3& center, double radius, lm::dvec3* hit)
 {
     // 'o' denotes the ray origin.
@@ -144,7 +145,8 @@ bool ray_cylinder_intersection(
 
     double candidates[4] = {
         std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
-        std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
+        std::numeric_limits<double>::max(), std::numeric_limits<double>::max()
+    };
 
     // Check intersections with cylinder lateral surface.
 
@@ -248,4 +250,5 @@ std::pair<double, double> find_lines_closest_points(
 
     return {s, t};
 }
+
 } // namespace hrz

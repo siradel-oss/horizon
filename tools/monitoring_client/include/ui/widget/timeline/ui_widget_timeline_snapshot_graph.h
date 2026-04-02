@@ -5,6 +5,7 @@
 
 namespace ui::widget
 {
+
 class SnapshotGraph : public TimelineWidget
 {
 public:

@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 struct Ray
 {
     lm::dvec3 o;
@@ -23,7 +24,7 @@ struct PerspectiveFrustum
     double far{};
     lm::bbox2 subfrustum;
 
-    constexpr bool operator==(const PerspectiveFrustum& f) const = default;
+    constexpr bool operator ==(const PerspectiveFrustum& f) const = default;
 };
 
 template<typename T>
@@ -164,7 +165,7 @@ struct alignas(16) GlslStd140Mat3
         cols[2] = lm::vec4(mat.col[2], 0);
     }
 
-    constexpr bool operator==(const GlslStd140Mat3& other) const = default;
+    constexpr bool operator ==(const GlslStd140Mat3& other) const = default;
 };
 
 static_assert(sizeof(GlslStd140Mat3) == 12 * sizeof(float), "Size of GlslStd140Mat3");

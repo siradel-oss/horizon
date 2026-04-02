@@ -5,6 +5,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 ElementGeometry SymbolBaker::AnchorVisitor::visit_element(
     const hrz_jobs::SymbolBakingData::Element& element,
     const SizeConstraints& constraints)
@@ -66,4 +67,5 @@ ElementGeometry SymbolBaker::AnchorVisitor::visit_element(
         return geometry;
     }
 }
+
 } // namespace hrz_jobs::symbol

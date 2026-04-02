@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/samhocevar/portable-file-dialogs/archive/67e7b0945aac80efa2ec5c72de98b47f7552735c.tar.gz",
+  "strip_prefix": "portable-file-dialogs-67e7b0945aac80efa2ec5c72de98b47f7552735c",
+  "integrity": "sha256-kbe36qetPq6AxycfUfXnzTVsNH7FuSxFs2O/Qe/45UY=",
+  "overlay": {
+    "MODULE.bazel": "sha256-8Ij65KF+xtsj5fq9A+hBg/0zb1Ze0l7nWgxsrEVF1Vw=",
+    "BUILD.bazel": "sha256-YqGU74VweNuEK/WB5UGeHA8csglFWeCO8eXOSXsWAcg="
+  }
+}

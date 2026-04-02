@@ -7,6 +7,7 @@
 
 namespace
 {
+
 constexpr lm::vec4 encode_from_srgb(hrz_proto::ColorInterpolationMode mode, const lm::vec4& color)
 {
     switch (mode)
@@ -51,6 +52,7 @@ constexpr lm::vec4 mix(
 
 namespace hrz::palette
 {
+
 std::optional<lm::vec4> label_palettization(const Palette& palette, std::string_view label)
 {
     if (palette.type != hrz_proto::PaletteType::LABEL)
@@ -124,7 +126,7 @@ std::optional<lm::vec4> numeric_palettization(const Palette& palette, float valu
     }
     else
     {
-        const float delta = 1.0f - (value - lower->value) / (upper->value - lower->value);
+        const float delta = 1.0F - (value - lower->value) / (upper->value - lower->value);
         return decode_to_linear(
             palette.numeric.mode,
             mix(palette.numeric.mode, upper->color_point.first_encoded,

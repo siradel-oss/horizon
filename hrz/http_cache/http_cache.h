@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 std::unique_ptr<IHttpLoader> create_http_cache_loader(
     IHttpClock*,
     std::unique_ptr<IHttpLoader> inner,

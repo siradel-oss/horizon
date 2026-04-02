@@ -7,6 +7,7 @@
 
 namespace
 {
+
 TEST(Url, parse_tile_url_all)
 {
     hrz::PatternTileUrlGenerator url("{l-p}.{x}.{y}.{z}.{-y}.{quadkey}", 1);

@@ -19,12 +19,14 @@
 
 namespace hrz_jobs::decode_three_d_tiles_batch_table
 {
+
 using AttributeComponentType = hrz::three_d_tiles::AttributeComponentType;
 using AttributeValue = hrz::vector_data::PackedAttributeValue;
 using AttributeValues = hrz::vector_data::AttributeValues;
 
 namespace
 {
+
 static constexpr uint32_t DummyAttributeId = -1;
 
 std::optional<uint8_t> component_count_from_string(std::string_view str)
@@ -664,6 +666,7 @@ bool _decode_batch_table_hierarchy(
 
     return true;
 }
+
 } // namespace
 
 hrz_jobs::JobResult finalize_attributes(
@@ -758,7 +761,8 @@ hrz_jobs::JobResult finalize_attributes(
             response.attribute_values[i] = {
                 attribute.is_feature_id_attribute() ? attribute.attribute_id : DummyAttributeId,
                 std::move(null_values_opt.value()),
-                {}};
+                {}
+            };
         }
     }
 
@@ -874,4 +878,5 @@ hrz_jobs::JobResult run(
 
     return finalize_attributes(params, response, context);
 }
+
 } // namespace hrz_jobs::decode_three_d_tiles_batch_table

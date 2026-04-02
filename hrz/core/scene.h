@@ -24,6 +24,7 @@
 
 namespace hrz
 {
+
 /**
  * This structure contains the definition of a scene, namely
  * what layers it comprises and how these layers are parametrised.
@@ -54,6 +55,7 @@ struct ActorRunner;
 
 namespace scene
 {
+
 struct PositionPickingTicket
 {
     uint64_t ticket;
@@ -339,5 +341,6 @@ void enqueue_attribution_message(
 
 void provide_client_vector_data(Scene*, const hrz_proto::VectorDataRequestResponse&);
 void invalidate_client_vector_data(Scene*, const hrz_proto::VectorDataInvalidation&);
+
 } // namespace scene
 } // namespace hrz

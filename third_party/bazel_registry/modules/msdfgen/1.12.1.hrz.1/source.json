@@ -1,0 +1,10 @@
+{
+  "url": "https://github.com/Chlumsky/msdfgen/archive/refs/tags/v1.12.1.tar.gz",
+  "strip_prefix": "msdfgen-1.12.1",
+  "integrity": "sha256-JFQcn7tFnoxires+siyyH6B6S1CR4q4fBB0USkuvCM0=",
+  "overlay": {
+    "MODULE.bazel": "sha256-PkN+bd5gKi7+Eitz4ci6F+Gd6G+7BytbzFACFI5rMy4=",
+    "BUILD.bazel": "sha256-jF2wHb3EiPMMG1Qu7XVBx7gjh4ESSpAj4KhDuJXdwnw=",
+    "msdfgen-config.h": "sha256-oCIWtsJJZ7Uok0Z5Etbtg1JLR7gCVFSZQLkLfvlTkTI="
+  }
+}

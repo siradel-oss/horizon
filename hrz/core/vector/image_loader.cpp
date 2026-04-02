@@ -25,12 +25,13 @@ namespace hrz::vt
 {
 namespace image_loader
 {
+
 struct ImageReference
 {
     std::string url;
     hrz::HttpHeaders headers;
 
-    bool operator==(const ImageReference& other) const
+    bool operator ==(const ImageReference& other) const
     {
         return url == other.url && headers.hash_content() == other.headers.hash_content();
     }
@@ -66,6 +67,7 @@ struct Image
     my::ResourceHandle texture;
     monitoring::ResourceOwner resource_owner;
 };
+
 } // namespace image_loader
 
 using namespace image_loader;
@@ -85,6 +87,7 @@ struct ImageLoader
 
 namespace image_loader
 {
+
 ImageLoader* create_loader()
 {
     return new ImageLoader();

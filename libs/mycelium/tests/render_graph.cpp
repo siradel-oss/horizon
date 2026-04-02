@@ -13,7 +13,7 @@ class DummyInstance : public my::Instance
     uint64_t _resource_id = 1;
 
 public:
-    void configure_shaders_linking(const ShadersLinkingConfig&) override{};
+    void configure_shaders_linking(const ShadersLinkingConfig&) override {};
 
     void advance_shaders_link(bool idle = false) override {}
 
@@ -36,9 +36,9 @@ public:
         return {};
     }
 
-    void delete_query(uint64_t id) override{};
-    void activate_resource_allocation_reports() override{};
-    void deactivate_resource_allocation_reports() override{};
+    void delete_query(uint64_t id) override {};
+    void activate_resource_allocation_reports() override {};
+    void deactivate_resource_allocation_reports() override {};
 
     size_t get_resource_allocation_report_count() const override { return 0; };
 
@@ -47,8 +47,8 @@ public:
         return nullptr;
     };
 
-    void clear_resource_allocation_reports() override{};
-    void set_memory_limit(uint64_t size_bytes) override{};
+    void clear_resource_allocation_reports() override {};
+    void set_memory_limit(uint64_t size_bytes) override {};
 
     GpuMemoryInfo get_memory_info() override { return {}; }
 
@@ -170,8 +170,8 @@ public:
             my::RenderGraph::ResourceInfo{
                 my::TextureFormat::RGB8,
                 my::RenderGraph::ResourceInfo::BackbufferRelative,
-                1.0f,
-                1.0f,
+                1.0F,
+                1.0F,
             });
     }
 
@@ -209,8 +209,8 @@ public:
                 my::RenderGraph::ResourceInfo{
                     my::TextureFormat::RGB8,
                     my::RenderGraph::ResourceInfo::BackbufferRelative,
-                    1.0f,
-                    1.0f,
+                    1.0F,
+                    1.0F,
                 });
         }
     }
@@ -248,8 +248,8 @@ public:
             my::RenderGraph::ResourceInfo{
                 my::TextureFormat::RGB8,
                 my::RenderGraph::ResourceInfo::BackbufferRelative,
-                1.0f,
-                1.0f,
+                1.0F,
+                1.0F,
             });
     }
 

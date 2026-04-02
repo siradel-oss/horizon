@@ -1,10 +1,10 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//hrz/doc/gallery:vite/package_json.bzl", vite_bin = "bin")
 load("@npm//hrz/doc/gallery:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
-load("//tools/bazel:untar.bzl", "untar")
+load("//tools/bazel:pkg_copy.bzl", "pkg_copy")
 load("//tools/http_server:http_server.bzl", "http_server")
 
 exports_files(["package.json"])
@@ -59,7 +59,7 @@ ALL_SCENES = [
 ]
 
 [
-    hrz_genrule(
+    run_binary(
         name = "migrate_scene_{}".format(index),
         srcs = [
             "scene/{}.hrz_scene.pbf".format(scene),
@@ -67,10 +67,11 @@ ALL_SCENES = [
         outs = [
             "{}/scene/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene),
         ],
-        cmd = "$(location //tools/scene_dump:migrate_dump) $< $@",
-        tools = [
-            "//tools/scene_dump:migrate_dump",
+        args = [
+            "$<",
+            "$@",
         ],
+        tool = "//tools/scene_dump:migrate_dump",
     )
     for index, scene in enumerate(ALL_SCENES)
 ]
@@ -146,14 +147,14 @@ pkg_files(
     name = "pkg_demo_assets",
     srcs = glob(["demo_assets/**/*"]),
     prefix = "assets/demo",
-    # Adding this preserves the directory structure
-    strip_prefix = "demo_assets",
+    strip_prefix = strip_prefix.from_pkg("demo_assets/"),
 )
 
 pkg_files(
     name = "pkg_thumbnails",
     srcs = glob(["thumbnails/**/*"]),
     prefix = "assets/thumbnails",
+    strip_prefix = strip_prefix.from_pkg("thumbnails/"),
 )
 
 pkg_files(
@@ -166,7 +167,7 @@ pkg_files(
     srcs = [
         ":scenes",
     ],
-    prefix = "scene",
+    strip_prefix = strip_prefix.from_pkg(DIST_SCENES_PREFIX),
 )
 
 pkg_files(
@@ -174,7 +175,7 @@ pkg_files(
     srcs = [
         ":templates",
     ],
-    prefix = "scene/template",
+    strip_prefix = strip_prefix.from_pkg(DIST_SCENES_PREFIX),
 )
 
 pkg_filegroup(
@@ -196,10 +197,10 @@ pkg_tar(
     extension = "tar.gz",
 )
 
-untar(
+pkg_copy(
     name = "copy_pkg_to_www",
-    output_dir = "www",
-    tar = ":pkg",
+    srcs = [":pkg_all"],
+    out_dir = "www",
 )
 
 http_server(

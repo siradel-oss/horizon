@@ -22,7 +22,7 @@ struct LAB
     float l, a, b;
 };
 
-float clampf(float f, float a = 0.0f, float b = 1.0f)
+float clampf(float f, float a = 0.0F, float b = 1.0F)
 {
     return std::min(std::max(f, a), b);
 }
@@ -30,36 +30,36 @@ float clampf(float f, float a = 0.0f, float b = 1.0f)
 RGBf srgb_to_linear(RGBA8 from)
 {
     return RGBf{
-        ::powf((float)from.r / 255.0f, 2.2f),
-        ::powf((float)from.g / 255.0f, 2.2f),
-        ::powf((float)from.b / 255.0f, 2.2f),
+        ::powf((float)from.r / 255.0F, 2.2F),
+        ::powf((float)from.g / 255.0F, 2.2F),
+        ::powf((float)from.b / 255.0F, 2.2F),
     };
 }
 
 RGBA8 linear_to_srgb(RGBf from)
 {
     return RGBA8{
-        (uint8_t)(clampf(::powf(from.r, 0.45f)) * 255.0f),
-        (uint8_t)(clampf(::powf(from.g, 0.45f)) * 255.0f),
-        (uint8_t)(clampf(::powf(from.b, 0.45f)) * 255.0f),
+        (uint8_t)(clampf(::powf(from.r, 0.45F)) * 255.0F),
+        (uint8_t)(clampf(::powf(from.g, 0.45F)) * 255.0F),
+        (uint8_t)(clampf(::powf(from.b, 0.45F)) * 255.0F),
         255,
     };
 }
 
 LAB linear_srgb_to_oklab(RGBf c)
 {
-    float l = 0.4122214708f * c.r + 0.5363325363f * c.g + 0.0514459929f * c.b;
-    float m = 0.2119034982f * c.r + 0.6806995451f * c.g + 0.1073969566f * c.b;
-    float s = 0.0883024619f * c.r + 0.2817188376f * c.g + 0.6299787005f * c.b;
+    float l = 0.4122214708F * c.r + 0.5363325363F * c.g + 0.0514459929F * c.b;
+    float m = 0.2119034982F * c.r + 0.6806995451F * c.g + 0.1073969566F * c.b;
+    float s = 0.0883024619F * c.r + 0.2817188376F * c.g + 0.6299787005F * c.b;
 
     float l_ = ::cbrtf(l);
     float m_ = ::cbrtf(m);
     float s_ = ::cbrtf(s);
 
     return {
-        0.2104542553f * l_ + 0.7936177850f * m_ - 0.0040720468f * s_,
-        1.9779984951f * l_ - 2.4285922050f * m_ + 0.4505937099f * s_,
-        0.0259040371f * l_ + 0.7827717662f * m_ - 0.8086757660f * s_,
+        0.2104542553F * l_ + 0.7936177850F * m_ - 0.0040720468F * s_,
+        1.9779984951F * l_ - 2.4285922050F * m_ + 0.4505937099F * s_,
+        0.0259040371F * l_ + 0.7827717662F * m_ - 0.8086757660F * s_,
     };
 }
 
@@ -81,9 +81,9 @@ float diff_oklab(LAB a, LAB b)
 float diff_srgb(RGBA8 a, RGBA8 b)
 {
     RGBf d = {
-        (float)a.r / 255.0f - (float)b.r / 255.0f,
-        (float)a.g / 255.0f - (float)b.g / 255.0f,
-        (float)a.b / 255.0f - (float)b.b / 255.0f,
+        (float)a.r / 255.0F - (float)b.r / 255.0F,
+        (float)a.g / 255.0F - (float)b.g / 255.0F,
+        (float)a.b / 255.0F - (float)b.b / 255.0F,
     };
     return ::sqrtf(d.r * d.r + d.g * d.g + d.b * d.b);
 }
@@ -91,9 +91,9 @@ float diff_srgb(RGBA8 a, RGBA8 b)
 RGBA8 scalar_to_srgb(float a)
 {
     return RGBA8{
-        (uint8_t)(clampf(a) * 255.0f),
-        (uint8_t)(clampf(a) * 255.0f),
-        (uint8_t)(clampf(a) * 255.0f),
+        (uint8_t)(clampf(a) * 255.0F),
+        (uint8_t)(clampf(a) * 255.0F),
+        (uint8_t)(clampf(a) * 255.0F),
         255,
     };
 }
@@ -256,14 +256,14 @@ void erode_one(Image<float>& img)
 float threshold(float in, float t)
 {
     if (in >= t)
-        return 1.0f;
+        return 1.0F;
     else
-        return 0.0f;
+        return 0.0F;
 }
 
 float count_ones(float in, int* count)
 {
-    if (in == 1.0f) *count += 1;
+    if (in == 1.0F) *count += 1;
     return in;
 }
 
@@ -301,7 +301,7 @@ int main(int argc, char* argv[])
     }
 
     bool erode = true;
-    float threshold_value = 0.05f;
+    float threshold_value = 0.05F;
 
     const char* expected_path = argv[1];
     const char* captured_path = argv[2];

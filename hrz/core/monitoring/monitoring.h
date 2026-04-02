@@ -26,11 +26,14 @@ extern "C"
 
 namespace hrz_monitoring
 {
+
 struct MessageBuffer;
+
 }
 
 namespace hrz
 {
+
 struct RemoteMonitoring;
 struct JobScheduler;
 

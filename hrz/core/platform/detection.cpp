@@ -10,6 +10,7 @@
 
 namespace hrz
 {
+
 constexpr const char* PlatformInfo::OsName[PlatformInfo::_OsCount];
 constexpr const char* PlatformInfo::RuntimeName[PlatformInfo::_RuntimeCount];
 constexpr const char* PlatformInfo::GpuVendorName[PlatformInfo::_GpuVendorCount];

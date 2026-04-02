@@ -17,6 +17,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 using PlaceholderInstance = hrz_jobs::BakedSymbols::PlaceholderInstance;
 using AnchorGpu = hrz_jobs::BakedSymbols::AnchorGpu;
 using AnchorCulling = hrz::vt::AnchorCullingInfo;
@@ -49,7 +50,7 @@ struct SizeConstraints
     Size max;
 };
 
-Size constrain_size_preserve_aspect_ratio(const SizeConstraints&, Size, float aspect_ratio = 0.0f);
+Size constrain_size_preserve_aspect_ratio(const SizeConstraints&, Size, float aspect_ratio = 0.0F);
 Size constrain_box_fit(
     Size container_size,
     Size content_size,
@@ -220,7 +221,8 @@ private:
         void register_element_instance_index(uint32_t instance_index)
         {
             baker->element_instance_info.at(baker->current_element_index).element_instance_index = {
-                instance_index};
+                instance_index
+            };
         }
 
         // Every parent must set the local transform of its children.
@@ -728,4 +730,5 @@ private:
         }
     }
 };
+
 } // namespace hrz_jobs::symbol

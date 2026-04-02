@@ -23,6 +23,7 @@ namespace hrz
 {
 namespace
 {
+
 struct Translation
 {
     mapbox::TranslationTicket ticket;
@@ -41,6 +42,7 @@ struct MapboxTranslationSystem
 
 namespace mapbox
 {
+
 MapboxTranslationSystem* create_translation_system()
 {
     return new MapboxTranslationSystem();

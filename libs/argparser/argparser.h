@@ -6,6 +6,7 @@
 
 namespace argparser
 {
+
 struct ArgParser;
 
 enum class ArgType

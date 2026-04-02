@@ -39,6 +39,7 @@
 
 namespace
 {
+
 constexpr uint32_t SubdivisionCount = 5;
 constexpr uint32_t VerticesPerSide = (1 << SubdivisionCount) + 1;
 constexpr uint32_t RootPatchCount = 20;
@@ -726,7 +727,7 @@ struct PatchTree
 {
     enum
     {
-        None = 0xffffu,
+        None = 0xffffU,
     };
 
     struct PatchVertex
@@ -1035,7 +1036,8 @@ struct PatchTree
             hrz::GeoPosition2(-LAT, LON_DELTA * 5), hrz::GeoPosition2(-LAT, LON_DELTA * 7),
             hrz::GeoPosition2(-LAT, LON_DELTA * 9),
 
-            hrz::GeoPosition2(-lm::PI / 2, 0)};
+            hrz::GeoPosition2(-lm::PI / 2, 0)
+        };
 
         PatchVertex vertices[12];
 
@@ -1486,23 +1488,33 @@ struct PatchTree
         {
             to_render_reserved_count += 3; // +4 children - 1 current
 
-            to_visit.push_back(PatchWithNeighbors{
-                patch.child_a, get_child_from_neighbor(neighbor_ab, 1, patch.b.geo, patch.a.geo),
-                patch.child_middle,
-                get_child_from_neighbor(neighbor_ca, 0, patch.a.geo, patch.c.geo)});
+            to_visit.push_back(
+                PatchWithNeighbors{
+                    patch.child_a,
+                    get_child_from_neighbor(neighbor_ab, 1, patch.b.geo, patch.a.geo),
+                    patch.child_middle,
+                    get_child_from_neighbor(neighbor_ca, 0, patch.a.geo, patch.c.geo)
+                });
 
-            to_visit.push_back(PatchWithNeighbors{
-                patch.child_b, get_child_from_neighbor(neighbor_ab, 0, patch.b.geo, patch.a.geo),
-                get_child_from_neighbor(neighbor_bc, 1, patch.c.geo, patch.b.geo),
-                patch.child_middle});
+            to_visit.push_back(
+                PatchWithNeighbors{
+                    patch.child_b,
+                    get_child_from_neighbor(neighbor_ab, 0, patch.b.geo, patch.a.geo),
+                    get_child_from_neighbor(neighbor_bc, 1, patch.c.geo, patch.b.geo),
+                    patch.child_middle
+                });
 
-            to_visit.push_back(PatchWithNeighbors{
-                patch.child_c, patch.child_middle,
-                get_child_from_neighbor(neighbor_bc, 0, patch.c.geo, patch.b.geo),
-                get_child_from_neighbor(neighbor_ca, 1, patch.a.geo, patch.c.geo)});
+            to_visit.push_back(
+                PatchWithNeighbors{
+                    patch.child_c, patch.child_middle,
+                    get_child_from_neighbor(neighbor_bc, 0, patch.c.geo, patch.b.geo),
+                    get_child_from_neighbor(neighbor_ca, 1, patch.a.geo, patch.c.geo)
+                });
 
-            to_visit.push_back(PatchWithNeighbors{
-                patch.child_middle, patch.child_c, patch.child_a, patch.child_b});
+            to_visit.push_back(
+                PatchWithNeighbors{
+                    patch.child_middle, patch.child_c, patch.child_a, patch.child_b
+                });
 
             if (patch.geometry_slot != None)
             {
@@ -1592,8 +1604,10 @@ struct PatchTree
 
         for (uint16_t i = 0; i < RootPatchCount; ++i)
         {
-            to_visit.push_back(PatchWithNeighbors{
-                i, root_neighbors[i][0], root_neighbors[i][1], root_neighbors[i][2]});
+            to_visit.push_back(
+                PatchWithNeighbors{
+                    i, root_neighbors[i][0], root_neighbors[i][1], root_neighbors[i][2]
+                });
         }
 
         // Same thing but now for rendering
@@ -1843,14 +1857,14 @@ public:
         my::RenderGraph::ResourceInfo depth{};
         depth.format = my::TextureFormat::Depth32F;
         depth.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
-        depth.width = 1.0f / (float)FeedbackSubsample;
-        depth.height = 1.0f / (float)FeedbackSubsample;
+        depth.width = 1.0F / (float)FeedbackSubsample;
+        depth.height = 1.0F / (float)FeedbackSubsample;
 
         my::RenderGraph::ResourceInfo color{};
         color.format = my::TextureFormat::RGBA32UI;
         color.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
-        color.width = 1.0f / (float)FeedbackSubsample;
-        color.height = 1.0f / (float)FeedbackSubsample;
+        color.width = 1.0F / (float)FeedbackSubsample;
+        color.height = 1.0F / (float)FeedbackSubsample;
 
         ctx.create(_color_name, my::RenderGraph::Target, color);
         ctx.create(_depth_name, my::RenderGraph::Target, depth);
@@ -1866,7 +1880,8 @@ public:
 
         my::FramebufferAttachment attachments[] = {
             {my::Attachment::Depth, _depth_target},
-            {my::Attachment::Color0, _color_target}};
+            {my::Attachment::Color0, _color_target}
+        };
 
         my::FramebufferResource res;
         res.attachments = attachments;
@@ -1931,7 +1946,8 @@ public:
             {
                 my::Attachment::Depth,
                 my::ClearValue::make_depth(1.0),
-            }};
+            }
+        };
 
         ctx.render->clear(clear_targets);
 
@@ -2083,7 +2099,8 @@ struct HeightPrecomputation
                 {{"contents"_ss, "full-screen quad vertices"_ss}});
 
             my::VertexInputStream streams[] = {
-                {0, _quad_vb, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}};
+                {0, _quad_vb, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}
+            };
 
             my::VertexInputResource vi_res;
             vi_res.attribs = streams;
@@ -2135,9 +2152,11 @@ struct HeightPrecomputation
         uint32_t first_patch = 0;
         for (const auto& bin : bins)
         {
-            render->my->set_viewport(my::ViewportState{
-                {0, first_patch, _height_lut_width, bin.patch_count},
-                {0, first_patch, _height_lut_width, bin.patch_count}});
+            render->my->set_viewport(
+                my::ViewportState{
+                    {0, first_patch, _height_lut_width, bin.patch_count},
+                    {0, first_patch, _height_lut_width, bin.patch_count}
+                });
 
             my::UboBinding ubo_bindings[] = {
                 {UboPlanetParams, planet_params.buffer, planet_params.offset, planet_params.size},
@@ -2168,11 +2187,12 @@ namespace hrz
 {
 namespace planet
 {
+
 struct PlanetRenderable : public my::Renderer::Renderable
 {
     double _terrain_res = 1.0;
     PatchTree _tree;
-    uint32_t _last_update_frame = ~0u;
+    uint32_t _last_update_frame = ~0U;
     std::vector<std::pair<uint16_t, uint16_t>> _subdivision;
     std::array<PatchGeometryInfo, 8> _patch_geometry_info{};
 
@@ -2224,7 +2244,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
         hrz::StaticVector<
             my::IndexName,
             HRZ_S_MAX_OVERLAY_CASCADES + MAX_IMAGERY_GROUP_COUNT * 2 + HRZ_S_MAX_SUN_CASCADES
-                + HRZ_S_VIEWSHED_CNT + 4>
+                + HRZ_S_VIEWSHED_CNT + 4
+        >
             samplers;
 
         samplers.push_back({SamplerHeightLut, "hrz_height_lut"});
@@ -2311,7 +2332,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
 
         static const my::IndexName samplers[] = {
             {SamplerHeightLut, "hrz_height_lut"},
-            {SamplerTessellation, "hrz_planet_tessellation"}};
+            {SamplerTessellation, "hrz_planet_tessellation"}
+        };
 
         static const char* outputs[] = {"o_feedback"};
 
@@ -2341,7 +2363,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
             {UboFrame, "Frame"},
             {hrz::vector_flat_overlay::UboVectorOverlayCameras, "OverlayCamerasUniform"},
             {UboPlanetParams, "PlanetParams"},
-            {UboRenderBinData, "BinData"}};
+            {UboRenderBinData, "BinData"}
+        };
 
         hrz::StaticVector<my::IndexName, HRZ_S_MAX_OVERLAY_CASCADES + 2> samplers;
 
@@ -2383,11 +2406,13 @@ struct PlanetRenderable : public my::Renderer::Renderable
             {UboFrame, "Frame"},
             {UboView, "View"},
             {UboPlanetParams, "PlanetParams"},
-            {UboRenderBinData, "BinData"}};
+            {UboRenderBinData, "BinData"}
+        };
 
         static const my::IndexName samplers[] = {
             {SamplerHeightLut, "hrz_height_lut"},
-            {SamplerTessellation, "hrz_planet_tessellation"}};
+            {SamplerTessellation, "hrz_planet_tessellation"}
+        };
 
         my::ShaderResource res{};
         res.name = hrz_shaders::Planet_depth_name;
@@ -2401,8 +2426,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
         res.attribs = {};
         res.samplers = samplers;
         res.initial_state.rasterization.cull_mode = my::RasterizationState::None;
-        res.initial_state.rasterization.depth_bias_factor = 1.0f;
-        res.initial_state.rasterization.depth_bias_units = 1.0f;
+        res.initial_state.rasterization.depth_bias_factor = 1.0F;
+        res.initial_state.rasterization.depth_bias_units = 1.0F;
 
         rc->alloc(&res, monitoring::systems::PlanetGeometry);
     }
@@ -2418,7 +2443,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
             {UboFrame, "Frame"},
             {hrz::vector_flat_overlay::UboVectorOverlayCameras, "OverlayCamerasUniform"},
             {UboPlanetParams, "PlanetParams"},
-            {UboRenderBinData, "BinData"}};
+            {UboRenderBinData, "BinData"}
+        };
 
         hrz::StaticVector<my::IndexName, HRZ_S_MAX_OVERLAY_CASCADES + 2> samplers;
 
@@ -2560,7 +2586,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
 
             my::UboBinding ubo_binding{
                 UboRenderBinData, data->render_bins_ubo, bin.render_bin_ubo_offset,
-                sizeof(PatchTree::RenderBinData)};
+                sizeof(PatchTree::RenderBinData)
+            };
             rb->bind({&ubo_binding, 1});
 
             auto state = rb->get_current_state();
@@ -2713,7 +2740,8 @@ struct PlanetRenderable : public my::Renderer::Renderable
             render->rd->collect_renderable(*this);
 
             my::TextureBinding tessellation_binding = {
-                0, _tree.geometry_texture.get_for_gpu(), _nearest_sampler};
+                0, _tree.geometry_texture.get_for_gpu(), _nearest_sampler
+            };
 
             _height_precomputation.draw(
                 render, resources.dtm_atlas, resources.dtm_indirection, tessellation_binding, {},
@@ -2733,6 +2761,7 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     PlanetRenderable::collect_selection_shaders(rc);
     HeightPrecomputation::collect_shaders(rc);
 }
+
 } // namespace planet
 
 struct PlanetGeometry
@@ -2884,8 +2913,6 @@ struct PlanetGeometry
 
         if (disabled) return;
 
-        google::protobuf::Arena arena;
-
         if (model_updated)
         {
             auto settings = hrz_proto::SceneViewSettingsPathBuilder<SceneModelAccessor>(
@@ -2893,7 +2920,7 @@ struct PlanetGeometry
                                 .terrain()
                                 .get();
 
-            is_opaque = settings.terrain_opacity() >= 1.0f;
+            is_opaque = settings.terrain_opacity() >= 1.0F;
             use_adaptive_resolution = settings.experimental_adaptive_resolution();
             model_updated = false;
         }
@@ -2992,9 +3019,11 @@ struct PlanetGeometry
 
                 if (camera_tile_coords.has_value())
                 {
-                    requested_tiles.push_back(planet::RequestedTileCoords{
-                        camera_tile_coords.value(), std::numeric_limits<uint32_t>::max(),
-                        planet::TileRequestOrigin::CameraVerticalProjectionOrigin});
+                    requested_tiles.push_back(
+                        planet::RequestedTileCoords{
+                            camera_tile_coords.value(), std::numeric_limits<uint32_t>::max(),
+                            planet::TileRequestOrigin::CameraVerticalProjectionOrigin
+                        });
                     requested_tiles_hash = hrz::hash_mix(
                         requested_tiles_hash, hrz::hash_value(camera_tile_coords.value()));
                 }
@@ -3033,7 +3062,8 @@ struct PlanetGeometry
         // we discretise it to reduce the number of recomputations.
         std::pair<double, double> new_discrete_dtm_min_max = {
             discretize_to_step(dtm_min_max.first, DTM_STEP),
-            discretize_to_step(dtm_min_max.second, DTM_STEP)};
+            discretize_to_step(dtm_min_max.second, DTM_STEP)
+        };
         new_discrete_dtm_min_max.first = std::min(new_discrete_dtm_min_max.first, 0.0);
         new_discrete_dtm_min_max.second = std::max(new_discrete_dtm_min_max.second, DTM_STEP);
         if (new_discrete_dtm_min_max != discrete_dtm_min_max)
@@ -3053,6 +3083,7 @@ struct PlanetGeometry
 
 namespace planet
 {
+
 PlanetGeometry* create_geometry()
 {
     return new PlanetGeometry();
@@ -3143,5 +3174,6 @@ void request_feedback_render(PlanetGeometry* planet)
     assert(planet);
     planet->request_feedback_render();
 }
+
 } // namespace planet
 } // namespace hrz

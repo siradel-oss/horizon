@@ -1,0 +1,19 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "generator",
+    srcs = [
+        "api_model.py",
+        "api_parser.py",
+        "common.py",
+        "filters.py",
+        "proto_types.py",
+        "protocol_model.py",
+        "protocol_parser.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)

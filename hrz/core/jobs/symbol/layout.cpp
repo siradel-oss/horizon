@@ -4,6 +4,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 Size constrain_size_preserve_aspect_ratio(
     const SizeConstraints& constraints,
     Size size,
@@ -71,7 +72,7 @@ Size constrain_box_fit(
             case hrz_proto::BOX_FIT_CONTAIN: ratio = lm::vec2(std::min(ratio.x, ratio.y)); break;
             case hrz_proto::BOX_FIT_COVER: ratio = lm::vec2(std::max(ratio.x, ratio.y)); break;
             case hrz_proto::BOX_FIT_SCALE_DOWN:
-                ratio = lm::vec2(std::min(std::min(ratio.x, ratio.y), 1.0f));
+                ratio = lm::vec2(std::min(std::min(ratio.x, ratio.y), 1.0F));
                 break;
             default: break;
         }
@@ -91,7 +92,7 @@ ElementGeometry SymbolBaker::StackVisitor::visit_element(
 
     auto alignment = params.default_alignment;
     load_vec2f_property(params.alignment_prp, &alignment);
-    alignment = alignment * 0.5f + lm::vec2(0.5f);
+    alignment = alignment * 0.5F + lm::vec2(0.5F);
 
     Size max_child_size = {0, 0};
 
@@ -128,7 +129,7 @@ ElementGeometry SymbolBaker::StackVisitor::visit_element(
         auto child_size = get_child_size(child_index);
         auto child_rect = get_child_visual_rect(child_index);
         auto offset = (max_child_size - child_size) * alignment;
-        set_child_local_transform(child_index, lm::translation(lm::vec3(offset, 0.0f)));
+        set_child_local_transform(child_index, lm::translation(lm::vec3(offset, 0.0F)));
         visual_rect = lm::merge(visual_rect, transform_rect_2d_offset(child_rect, offset));
     }
 
@@ -264,21 +265,22 @@ ElementGeometry SymbolBaker::PaddingVisitor::visit_element(
     float v_padding = std::min(top_padding + bottom_padding, constraints.max.y);
 
     SizeConstraints padding_constraints = constraints;
-    padding_constraints.min.x = std::max(0.0f, constraints.min.x - h_padding);
+    padding_constraints.min.x = std::max(0.0F, constraints.min.x - h_padding);
     padding_constraints.max.x = constraints.max.x - h_padding;
-    padding_constraints.min.y = std::max(0.0f, constraints.min.y - v_padding);
+    padding_constraints.min.y = std::max(0.0F, constraints.min.y - v_padding);
     padding_constraints.max.y = constraints.max.y - v_padding;
 
     ElementGeometry child_geometry = visit_child(params.child_index, padding_constraints);
     set_child_local_transform(
-        params.child_index, lm::translation(lm::vec3(left_padding, top_padding, 0.0f)));
+        params.child_index, lm::translation(lm::vec3(left_padding, top_padding, 0.0F)));
 
     lm::bbox2 visual_rect = child_geometry.visual_rect;
     // Translate by left/top then expand by -left/-top -> do nothing to min point
     visual_rect.max += lm::vec2(h_padding, v_padding);
 
     return ElementGeometry{
-        child_geometry.layout_size + lm::vec2(h_padding, v_padding), visual_rect};
+        child_geometry.layout_size + lm::vec2(h_padding, v_padding), visual_rect
+    };
 }
 
 ElementGeometry SymbolBaker::SizedBoxVisitor::visit_element(
@@ -309,9 +311,8 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
     // We will do all the math with main axis as x and cross as y.
     // These functions do the necessary conversions.
 
-    auto size_to_flex_space = [&](const Size& v) -> Size {
-        return params.main_axis == hrz_proto::FLEX_AXIS_HORIZONTAL ? v : lm::vec2{v.y, v.x};
-    };
+    auto size_to_flex_space = [&](const Size& v) -> Size
+    { return params.main_axis == hrz_proto::FLEX_AXIS_HORIZONTAL ? v : lm::vec2{v.y, v.x}; };
 
     auto constraints_to_flex_space = [&](const SizeConstraints& c) -> SizeConstraints
     {
@@ -330,7 +331,7 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
 
     // This is the template for the constraints of the children. Only the max x size will be
     // modified.
-    SizeConstraints child_constraints_tpl = {{0.0f, 0.0f}, {flex_constraints.max}};
+    SizeConstraints child_constraints_tpl = {{0.0F, 0.0F}, {flex_constraints.max}};
     if (params.cross_axis_alignment == hrz_proto::FLEX_CROSS_AXIS_STRETCH)
     {
         child_constraints_tpl.min.y = flex_constraints.max.y;
@@ -338,7 +339,7 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
 
     // We accumulate the size of the children on the main axis, and max on the cross axis, as well
     // as the flex factor of flexible children
-    Size children_size{0.0f, flex_constraints.min.y};
+    Size children_size{0.0F, flex_constraints.min.y};
     float flexible_total = 0;
 
     auto is_flexible = [&](uint32_t index) -> bool
@@ -366,14 +367,14 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
         else
         {
             SizeConstraints child_constraints = child_constraints_tpl;
-            child_constraints.max.x = std::max(0.0f, flex_constraints.max.x - children_size.x);
+            child_constraints.max.x = std::max(0.0F, flex_constraints.max.x - children_size.x);
             layout_child(child_index, child_constraints);
         }
     }
 
     // Then visit the flexible children, giving them some proportion of remaining space.
     float free_space_for_flexible_elements =
-        std::max(flex_constraints.max.x - children_size.x, 0.0f);
+        std::max(flex_constraints.max.x - children_size.x, 0.0F);
     for (auto child_index : params.child_indices)
     {
         if (is_flexible(child_index))
@@ -394,11 +395,11 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
 
     // If we don't fill the minimum size on the main axis, we have some space to redistribute around
     // the elements based on the main axis alignment.
-    float space_to_distribute = std::max(flex_constraints.min.x - children_size.x, 0.0f);
+    float space_to_distribute = std::max(flex_constraints.min.x - children_size.x, 0.0F);
 
     // Position on the main axis that we'll accumulate
-    float main_position = 0.0f;
-    float main_space_between_children = 0.0f;
+    float main_position = 0.0F;
+    float main_space_between_children = 0.0F;
     const size_t children_count = params.child_indices.size();
 
     switch (params.main_axis_alignment)
@@ -426,13 +427,13 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
         default: assert(!"Unhandled case");
     }
 
-    float cross_alignment = 0.0f;
+    float cross_alignment = 0.0F;
     switch (params.cross_axis_alignment)
     {
         case hrz_proto::FLEX_CROSS_AXIS_START:
         case hrz_proto::FLEX_CROSS_AXIS_STRETCH: break;
-        case hrz_proto::FLEX_CROSS_AXIS_END: cross_alignment = 1.0f; break;
-        case hrz_proto::FLEX_CROSS_AXIS_CENTER: cross_alignment = 0.5f; break;
+        case hrz_proto::FLEX_CROSS_AXIS_END: cross_alignment = 1.0F; break;
+        case hrz_proto::FLEX_CROSS_AXIS_CENTER: cross_alignment = 0.5F; break;
         default: assert(!"Unhandled case");
     }
 
@@ -444,7 +445,7 @@ ElementGeometry SymbolBaker::FlexVisitor::visit_element(
         float cross_position = (children_size.y - child_size.y) * cross_alignment;
 
         lm::vec2 offset = position_to_symbol_space({main_position, cross_position});
-        set_child_local_transform(child_index, lm::translation(lm::vec3(offset, 0.0f)));
+        set_child_local_transform(child_index, lm::translation(lm::vec3(offset, 0.0F)));
         visual_rect = lm::merge(
             visual_rect, transform_rect_2d_offset(get_child_visual_rect(child_index), offset));
 
@@ -478,7 +479,7 @@ ElementGeometry SymbolBaker::AspectRatioVisitor::visit_element(
     float aspect_ratio = params.default_aspect_ratio;
     load_float_property(params.aspect_ratio_prp, &aspect_ratio);
 
-    if (aspect_ratio <= 0.0f) aspect_ratio = 1.0f;
+    if (aspect_ratio <= 0.0F) aspect_ratio = 1.0F;
 
     float width, height;
     if (!std::isinf(constraints.max.x))
@@ -511,7 +512,7 @@ ElementGeometry SymbolBaker::FittedBoxVisitor::visit_element(
 
     auto alignment = params.default_alignment;
     load_vec2f_property(params.alignment_prp, &alignment);
-    alignment = alignment * 0.5f + lm::vec2(0.5f);
+    alignment = alignment * 0.5F + lm::vec2(0.5F);
 
     ElementGeometry child_geometry = visit_child(params.child_index, {{0, 0}, constraints.max});
     Size this_size = lm::clamp(child_geometry.layout_size, constraints.min, constraints.max);
@@ -543,13 +544,13 @@ ElementGeometry SymbolBaker::TransformVisitor::visit_element(
 
     auto alignment = params.default_alignment;
     load_vec2f_property(params.alignment_prp, &alignment);
-    alignment = alignment * 0.5f + lm::vec2(0.5f);
+    alignment = alignment * 0.5F + lm::vec2(0.5F);
 
     ElementGeometry child_geometry = visit_child(params.child_index, constraints);
 
     origin += alignment * child_geometry.layout_size;
 
-    lm::mat4 transform = lm::translation(lm::vec3(-origin, 0.0f));
+    lm::mat4 transform = lm::translation(lm::vec3(-origin, 0.0F));
 
     for (const auto& component : params.components)
     {
@@ -573,11 +574,12 @@ ElementGeometry SymbolBaker::TransformVisitor::visit_element(
                     load_vec3f_property(comp.rotation_prp, &r);
                     return hrz::euler_rotation(r, comp.order) * transform;
                 },
-                [&transform](const Transform::Generic& comp) { return comp.matrix * transform; }},
+                [&transform](const Transform::Generic& comp) { return comp.matrix * transform; }
+            },
             component);
     }
 
-    transform = lm::translation(lm::vec3(origin, 0.0f)) * transform;
+    transform = lm::translation(lm::vec3(origin, 0.0F)) * transform;
 
     set_child_local_transform(params.child_index, transform);
     lm::bbox2 visual_rect = transform_rect_3d(child_geometry.visual_rect, transform);

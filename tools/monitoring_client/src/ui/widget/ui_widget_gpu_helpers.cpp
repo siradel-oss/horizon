@@ -6,6 +6,7 @@
 
 namespace ui::widget::gpu_helpers
 {
+
 using namespace helpers;
 
 std::string gpu_snapshot_to_string(const data::GpuResourceSnapshot& snapshot)

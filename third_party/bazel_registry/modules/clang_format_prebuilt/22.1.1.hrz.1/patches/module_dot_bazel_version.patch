@@ -1,0 +1,13 @@
+--- MODULE.bazel
++++ MODULE.bazel
+@@ -1,9 +1,7 @@
+ # SPDX-FileCopyrightText: 2026 Siradel
+ # SPDX-License-Identifier: MIT
+ 
+-module(
+-    name = "clang_format_prebuilt",
+-    version = "0.0.0",
++module(name = "clang_format_prebuilt", version = "22.1.1.hrz.1",
+ )
+ 
+ bazel_dep(name = "platforms", version = "1.0.0")

@@ -2,7 +2,6 @@ GlslInfo = provider(
     fields = [
         "check_version",
         "profile",
-        "validator",
     ],
 )
 

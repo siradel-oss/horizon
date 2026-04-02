@@ -13,6 +13,7 @@
 
 namespace
 {
+
 size_t hash_impostor_identity(
     const hrz::model::ModelPrototype* model,
     const hrz_proto::Material& material,
@@ -22,10 +23,12 @@ size_t hash_impostor_identity(
         (uintptr_t)model, params.atlas_size().x(), params.atlas_size().y(),
         hrz::murmur3_x64_64(material.name().c_str()));
 }
+
 } // anonymous namespace
 
 namespace
 {
+
 struct ImpostorBakingTechnique
 {
     my::ResourceHandle color_texture = my::ResourceHandle::null();
@@ -156,10 +159,12 @@ struct ImpostorBakingTechnique
 
     void set_viewport(const lm::uvec4& new_viewport) { viewport = new_viewport; }
 };
+
 } // anonymous namespace
 
 namespace hrz
 {
+
 struct BakingProcess
 {
     // Determines impostors equality (see `hash_impostor_identity()`).
@@ -210,6 +215,7 @@ struct ImpostorBaker
 
 namespace impostor
 {
+
 void _work_cleanup(ImpostorBaker* ib, Render* render)
 {
     for (BakingTicket ticket : ib->baking_cleanup)
@@ -403,13 +409,14 @@ void advance_baking(
         lm::vec2 atlas_size =
             lm::vec2(process->params.atlas_size().x(), process->params.atlas_size().y());
         lm::vec2 atlas_size_minus_one = {
-            std::max(1.0f, atlas_size.x - 1), std::max(1.0f, atlas_size.y - 1)};
-        lm::vec2 atlas_uv_frame_size = lm::vec2(1.0f) / atlas_size_minus_one;
+            std::max(1.0F, atlas_size.x - 1), std::max(1.0F, atlas_size.y - 1)
+        };
+        lm::vec2 atlas_uv_frame_size = lm::vec2(1.0F) / atlas_size_minus_one;
         lm::vec2 uv =
-            lm::vec2(process->next_atlas_position) * atlas_uv_frame_size * 2.0f - lm::vec2(1.0f);
+            lm::vec2(process->next_atlas_position) * atlas_uv_frame_size * 2.0F - lm::vec2(1.0F);
 
         // Convert UV coordinates to the hemi-octahedron pyramid `|x| + |y| + |z| = 1`
-        lm::vec3 pos = {(uv.x + uv.y) * 0.5f, (-uv.x + uv.y) * 0.5f, 0};
+        lm::vec3 pos = {(uv.x + uv.y) * 0.5F, (-uv.x + uv.y) * 0.5F, 0};
         pos.z = 1 - std::abs(pos.x) - std::abs(pos.y);
 
         // Puff-out 3D coordinates to a unit sphere and scale.
@@ -525,5 +532,6 @@ std::optional<BakedResources> get_baked_resources(ImpostorBaker* ib, BakingTicke
         ? std::optional<BakedResources>(process->baked_resources)
         : std::nullopt;
 }
+
 } // namespace impostor
 } // namespace hrz

@@ -6,6 +6,7 @@
 
 namespace hrz_jobs::parse_mvt
 {
+
 hrz_jobs::JobResult run(
     const hrz::blobs::BlobHandle& raw_data_blob,
     hrz_jobs::ParsedMvt& parsed_mvt,
@@ -27,4 +28,5 @@ hrz_jobs::JobResult run(
         return hrz_jobs::JobResult::FAILURE;
     }
 }
+
 } // namespace hrz_jobs::parse_mvt

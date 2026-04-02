@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 struct CameraViewInfo;
 struct ClientMessageQueue;
 struct PickingIdAllocator;
@@ -23,6 +24,7 @@ struct GizmoLayerSystem;
 
 namespace gizmo_layers
 {
+
 /**
  * Create the gizmo layer system.
  */

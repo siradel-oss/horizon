@@ -9,6 +9,7 @@
 
 namespace hrz::migration
 {
+
 struct MessageFactory
 {
     google::protobuf::FileDescriptorSet descriptor_set;
@@ -244,7 +245,7 @@ struct DynamicMessage
 
     void add_copy_repeated_message(std::string_view field_name, const DynamicMessage& value)
     {
-        msg->GetReflection()
+        (void)msg->GetReflection()
             ->AddMessage(msg, _get_field_descriptor(field_name), &factory->factory)
             ->MergeFromString(value.msg->SerializeAsString());
     }
@@ -254,7 +255,7 @@ struct DynamicMessage
     // when the protocol has changed and the message is not at the same location.
     void copy_message(std::string_view field_name, const DynamicMessage& value)
     {
-        msg->GetReflection()
+        (void)msg->GetReflection()
             ->MutableMessage(msg, _get_field_descriptor(field_name), &factory->factory)
             ->MergeFromString(value.msg->SerializeAsString());
     }

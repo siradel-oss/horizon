@@ -7,6 +7,7 @@
 
 namespace
 {
+
 using namespace hrz;
 using namespace hrz_jobs;
 

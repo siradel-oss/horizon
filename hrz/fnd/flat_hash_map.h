@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 // Hash map that is good when the keys are small and copyable. For example
 // integer, strings, etc. The values must be movable. If the value is large,
 // prefer std::unique_ptr<Value>, or even a node_hash_map.

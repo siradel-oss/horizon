@@ -986,7 +986,7 @@ TEST_F(MapboxTranslation, parse_vector_fill_extrusion_layer)
             EXPECT_EQ(hrz::convert_proto_color_to_uint(style.lower_color().default_value()), color);
             EXPECT_EQ(hrz::convert_proto_color_to_uint(style.upper_color().default_value()), color);
 
-            EXPECT_EQ(style.extrusion().default_value(), 2.0f);
+            EXPECT_EQ(style.extrusion().default_value(), 2.0F);
         }
         else if (layer.has_vector_data())
         {
@@ -2011,10 +2011,10 @@ TEST_F(MapboxTranslation, parse_vector_symbol_icon_text_fit)
                 else if (stack_child.type() == hrz_proto::SymbolElementType::PADDING_SYMBOL_ELEMENT)
                 {
                     const auto& fit_padding = stack_child.padding();
-                    EXPECT_FLOAT_EQ(fit_padding.top_padding().default_value(), 10.0f);
-                    EXPECT_FLOAT_EQ(fit_padding.right_padding().default_value(), 20.0f);
-                    EXPECT_FLOAT_EQ(fit_padding.bottom_padding().default_value(), 11.0f);
-                    EXPECT_FLOAT_EQ(fit_padding.left_padding().default_value(), 21.0f);
+                    EXPECT_FLOAT_EQ(fit_padding.top_padding().default_value(), 10.0F);
+                    EXPECT_FLOAT_EQ(fit_padding.right_padding().default_value(), 20.0F);
+                    EXPECT_FLOAT_EQ(fit_padding.bottom_padding().default_value(), 11.0F);
+                    EXPECT_FLOAT_EQ(fit_padding.left_padding().default_value(), 21.0F);
 
                     EXPECT_EQ(
                         fit_padding.child().type(),
@@ -2328,7 +2328,7 @@ TEST_F(MapboxTranslation, parse_vector_heatmap_interpolate)
                 heatmap.disc_radius_size_unit(),
                 hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
             EXPECT_TRUE(heatmap.disc_radius().name().empty());
-            EXPECT_FLOAT_EQ(heatmap.disc_radius().default_value(), 4.4f);
+            EXPECT_FLOAT_EQ(heatmap.disc_radius().default_value(), 4.4F);
 
             const auto& palette = heatmap.numeric_palette();
 
@@ -2337,73 +2337,73 @@ TEST_F(MapboxTranslation, parse_vector_heatmap_interpolate)
             EXPECT_EQ(palette.color_points_size(), 5);
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(0).value(), 0.0f);
+                EXPECT_FLOAT_EQ(palette.color_points(0).value(), 0.0F);
                 const auto& first_color = palette.color_points(0).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.0f);
+                EXPECT_FLOAT_EQ(first_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.0F);
                 const auto& second_color = palette.color_points(0).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.0f);
+                EXPECT_FLOAT_EQ(second_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.0F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(1).value(), 0.25f);
+                EXPECT_FLOAT_EQ(palette.color_points(1).value(), 0.25F);
                 const auto& first_color = palette.color_points(1).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(1).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(2).value(), 0.5f);
+                EXPECT_FLOAT_EQ(palette.color_points(2).value(), 0.5F);
                 const auto& first_color = palette.color_points(2).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(2).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(3).value(), 0.75f);
+                EXPECT_FLOAT_EQ(palette.color_points(3).value(), 0.75F);
                 const auto& first_color = palette.color_points(3).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(3).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(4).value(), 1.0f);
+                EXPECT_FLOAT_EQ(palette.color_points(4).value(), 1.0F);
                 const auto& first_color = palette.color_points(4).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(4).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
         }
         else if (layer.has_vector_data())
@@ -2469,7 +2469,7 @@ TEST_F(MapboxTranslation, parse_vector_heatmap_step)
                 heatmap.disc_radius_size_unit(),
                 hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
             EXPECT_TRUE(heatmap.disc_radius().name().empty());
-            EXPECT_FLOAT_EQ(heatmap.disc_radius().default_value(), 4.4f);
+            EXPECT_FLOAT_EQ(heatmap.disc_radius().default_value(), 4.4F);
 
             const auto& palette = heatmap.numeric_palette();
 
@@ -2478,59 +2478,59 @@ TEST_F(MapboxTranslation, parse_vector_heatmap_step)
             EXPECT_EQ(palette.color_points_size(), 4);
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(0).value(), 0.25f);
+                EXPECT_FLOAT_EQ(palette.color_points(0).value(), 0.25F);
                 const auto& first_color = palette.color_points(0).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.0f);
+                EXPECT_FLOAT_EQ(first_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.0F);
                 const auto& second_color = palette.color_points(0).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(1).value(), 0.5f);
+                EXPECT_FLOAT_EQ(palette.color_points(1).value(), 0.5F);
                 const auto& first_color = palette.color_points(1).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(1).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(2).value(), 0.75f);
+                EXPECT_FLOAT_EQ(palette.color_points(2).value(), 0.75F);
                 const auto& first_color = palette.color_points(2).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(2).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
 
             {
-                EXPECT_FLOAT_EQ(palette.color_points(3).value(), 1.0f);
+                EXPECT_FLOAT_EQ(palette.color_points(3).value(), 1.0F);
                 const auto& first_color = palette.color_points(3).first_color();
-                EXPECT_FLOAT_EQ(first_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(first_color.g(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(first_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(first_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(first_color.g(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(first_color.a(), 0.5F);
                 const auto& second_color = palette.color_points(3).second_color();
-                EXPECT_FLOAT_EQ(second_color.r(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.g(), 0.0f);
-                EXPECT_FLOAT_EQ(second_color.b(), 1.0f);
-                EXPECT_FLOAT_EQ(second_color.a(), 0.5f);
+                EXPECT_FLOAT_EQ(second_color.r(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.g(), 0.0F);
+                EXPECT_FLOAT_EQ(second_color.b(), 1.0F);
+                EXPECT_FLOAT_EQ(second_color.a(), 0.5F);
             }
         }
         else if (layer.has_vector_data())

@@ -34,7 +34,8 @@ def _declare_tmp_file(ctx, f, name):
 def _assemble_shader(ctx, input, stage):
     output = _declare_glsl_file(ctx, input)
     config = ctx.attr.config[GlslConfigInfo]
-    toolchain = ctx.toolchains["//tools/bazel/glsl:toolchain_type"].glsl_info
+    glsl_info = ctx.toolchains["//tools/bazel/glsl:toolchain_type"].glsl_info
+    glslang = ctx.toolchains["@glslang_prebuilt//glslang:toolchain_type"].tool
 
     include_dirs = [f.path for i in config.includes for f in i.files.to_list()]
     common_files = [f for c in config.common for f in c.files.to_list()]
@@ -44,8 +45,8 @@ def _assemble_shader(ctx, input, stage):
     args = ctx.actions.args()
     args.add(input)
     args.add(input_check)
-    args.add(toolchain.check_version)
-    args.add(toolchain.profile)
+    args.add(glsl_info.check_version)
+    args.add(glsl_info.profile)
 
     for d in include_dirs:
         args.add("-I" + d)
@@ -66,8 +67,8 @@ def _assemble_shader(ctx, input, stage):
     args.add(input_check)
     args.add(output)
     args.add(stage)
-    args.add(toolchain.check_version)
-    args.add(toolchain.validator)
+    args.add(glsl_info.check_version)
+    args.add(glslang)
     args.add(ctx.executable._compressor)
 
     ctx.actions.run(
@@ -76,7 +77,7 @@ def _assemble_shader(ctx, input, stage):
         executable = ctx.executable._shader_validator,
         arguments = [args],
         tools = [
-            toolchain.validator,
+            glslang,
             ctx.executable._compressor,
         ],
     )
@@ -135,5 +136,8 @@ glsl_program = rule(
             cfg = "exec",
         ),
     },
-    toolchains = ["//tools/bazel/glsl:toolchain_type"],
+    toolchains = [
+        "//tools/bazel/glsl:toolchain_type",
+        "@glslang_prebuilt//glslang:toolchain_type",
+    ],
 )

@@ -5,6 +5,7 @@
 
 namespace ui::widget
 {
+
 struct SampleColors
 {
     uint32_t fill;

@@ -11,6 +11,7 @@
 
 namespace hrz
 {
+
 // An analogue to `ArrayView` for data stored in a blob.
 //
 // Presently only non-mutating views are available.
@@ -112,7 +113,7 @@ public:
 
         inline const T& at(size_t index) & { return *_at(index); }
 
-        inline const T& operator[](size_t index) & { return *_at(index); }
+        inline const T& operator [](size_t index) & { return *_at(index); }
 
     private:
         inline const T* _at(size_t index) const
@@ -147,4 +148,5 @@ private:
     size_t _offset;
     size_t _stride;
 };
+
 } // namespace hrz

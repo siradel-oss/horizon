@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 struct TileUrlGenerator
 {
     virtual std::string make_url(uint32_t x, uint32_t y, uint32_t z) = 0;
@@ -69,4 +70,5 @@ struct MultiPatternTileUrlGenerator : public TileUrlGenerator
 
     std::string make_url(uint32_t x, uint32_t y, uint32_t z) const;
 };
+
 } // namespace hrz

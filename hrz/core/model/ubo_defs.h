@@ -10,6 +10,7 @@
 
 namespace hrz::model
 {
+
 enum
 {
     MaterialCount = 2,

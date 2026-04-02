@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 struct RenderRequest
 {
     using TypeBitset = uint8_t;
@@ -103,7 +104,7 @@ public:
         _visual_causes = 0;
     }
 
-    constexpr RenderRequest& operator|=(const RenderRequest& request)
+    constexpr RenderRequest& operator |=(const RenderRequest& request)
     {
         _flags |= request._flags;
         _visual_causes |= request._visual_causes;

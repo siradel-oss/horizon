@@ -2,15 +2,19 @@
 
 namespace HrzProtocol
 {
+
 class TypedMessage;
+
 } // namespace HrzProtocol
 
 namespace hrz
 {
+
 struct ClientMessageQueue;
 
 namespace client_message_queue
 {
+
 /**
  * Instantiates a new message queue.
  */
@@ -39,6 +43,7 @@ bool dequeue_message(ClientMessageQueue*, HrzProtocol::TypedMessage*);
  * obtainable by dequeueing them.
  */
 unsigned int get_queue_size(const ClientMessageQueue*);
+
 } // namespace client_message_queue
 
 } // namespace hrz

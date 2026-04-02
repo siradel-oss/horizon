@@ -5,6 +5,7 @@
 
 namespace hrz::model
 {
+
 InstanceGroup::InstanceGroup(
     uint32_t object_id_offset,
     const picking::ObjectReference& obj_ref,
@@ -445,4 +446,5 @@ InstanceGroupStatus get_instance_group_status(ModelPrototype* proto, InstanceGro
         return InstanceGroupStatus::Error;
     }
 }
+
 } // namespace hrz::model

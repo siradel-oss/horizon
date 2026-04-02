@@ -14,6 +14,7 @@
 
 namespace hrz
 {
+
 struct ClippingPlane
 {
     int32_t clip_id;
@@ -55,6 +56,7 @@ namespace clipping_plane_layers
 {
 namespace
 {
+
 inline bool _is_clip_id_valid(int32_t clip_id)
 {
     return clip_id >= 0 && clip_id < HRZ_S_MAX_CLIP_PLANES;
@@ -174,13 +176,13 @@ hrz_proto::ClippingPlaneLayer _default_layer_data(int32_t clip_id)
 
     // Clipping plane
     layer_data.set_clip_id(clip_id);
-    layer_data.mutable_normal()->set_x(0.0f);
-    layer_data.mutable_normal()->set_y(0.0f);
-    layer_data.mutable_normal()->set_z(1.0f);
-    layer_data.mutable_outline_color()->set_r(1.0f);
-    layer_data.mutable_outline_color()->set_g(0.8f);
-    layer_data.mutable_outline_color()->set_b(0.8f);
-    layer_data.mutable_outline_color()->set_a(1.0f);
+    layer_data.mutable_normal()->set_x(0.0F);
+    layer_data.mutable_normal()->set_y(0.0F);
+    layer_data.mutable_normal()->set_z(1.0F);
+    layer_data.mutable_outline_color()->set_r(1.0F);
+    layer_data.mutable_outline_color()->set_g(0.8F);
+    layer_data.mutable_outline_color()->set_b(0.8F);
+    layer_data.mutable_outline_color()->set_a(1.0F);
     layer_data.set_outline_distance(1.0);
     layer_data.set_show_plane(false);
 

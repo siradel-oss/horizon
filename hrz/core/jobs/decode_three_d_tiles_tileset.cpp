@@ -15,6 +15,7 @@ static constexpr const char* SIRADEL_range_request = "SIRADEL_range_request";
 
 namespace
 {
+
 using hrz::three_d_tiles::BoundingVolume;
 
 bool check_json_document(const rapidjson::Document& document)
@@ -255,7 +256,8 @@ unsigned int parse_tile(
     {
         lm::dvec3 scales{
             lm::length(world_transform.x.xyz), lm::length(world_transform.y.xyz),
-            lm::length(world_transform.z.xyz)};
+            lm::length(world_transform.z.xyz)
+        };
         tile.geometric_error *= lm::maxelem(scales);
     }
 
@@ -327,10 +329,12 @@ unsigned int parse_tile(
 
     return tile_index;
 }
+
 } // namespace
 
 namespace hrz_jobs::decode_three_d_tiles_tileset
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::EncodedThreeDTilesTileset& params,
     hrz::three_d_tiles::ThreeDTilesTilesetDescriptor& response,
@@ -398,4 +402,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::decode_three_d_tiles_tileset

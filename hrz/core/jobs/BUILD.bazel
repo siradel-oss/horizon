@@ -1,11 +1,32 @@
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_python//python:defs.bzl", "py_binary")
 
-hrz_genrule(
-    name = "generate_templates",
+py_binary(
+    name = "generator",
     srcs = [
-        ":manifest.json",
-        "//hrz/generators:job_declarations_tpl",
+        "generate.py",
     ],
+    data = [
+        "manifest.json",
+        "templates/all_params_responses.tpl.h",
+        "templates/declarations.tpl.cpp",
+        "templates/declarations.tpl.h",
+        "templates/enum_names.tpl.h",
+        "templates/tickets.tpl.cpp",
+        "templates/tickets.tpl.h",
+        "templates/type.tpl.h",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_templates",
     outs = [
         "all_params_responses.h",
         "jobs_declarations.cpp",
@@ -15,8 +36,10 @@ hrz_genrule(
         "jobs_tickets.h",
         "jobs_type.h",
     ],
-    cmd = "$(location //hrz/generators:generator) $(location :manifest.json) job_declarations $(@D)",
-    tools = ["//hrz/generators:generator"],
+    args = [
+        "$(RULEDIR)",
+    ],
+    tool = ":generator",
 )
 
 cc_library(
@@ -108,10 +131,30 @@ cc_library(
             "-pthread",
         ],
     }),
+    implementation_deps = [
+        "//libs/proj_lite",
+        "//third_party/geobuf",
+        "//third_party/stb_image",
+        "//third_party/vector_tile",
+        "@basisu",
+        "@cdt",
+        "@delabella",
+        "@draco",
+        "@earcut",
+        "@etcpak",
+        "@libwebp",
+        "@pugixml",
+        "@rapidjson",
+    ] + select({
+        "//:os_web": ["@harfbuzz//:harfbuzz_tiny"],
+        "//conditions:default": ["@harfbuzz"],
+    }),
     includes = [
         "include",
     ],
-    local_defines = select({
+    local_defines = [
+        "CDT_DISABLE_EXCEPTIONS",
+    ] + select({
         "//:os_windows": [
             "WIN32",
         ],
@@ -123,19 +166,6 @@ cc_library(
         "//hrz/cpp_protocol",
         "//hrz/fnd",
         "//libs/lm",
-        "//libs/proj_lite",
-        "//third_party:basisu",
-        "//third_party:cdt",
-        "//third_party:delabella",
-        "//third_party:draco",
-        "//third_party:earcut",
-        "//third_party:etcpak",
-        "//third_party:libwebp",
-        "//third_party:pugixml",
-        "//third_party:rapidjson",
-        "//third_party/geobuf",
-        "//third_party/stb_image",
-        "//third_party/vector_tile",
     ],
 )
 
@@ -165,7 +195,8 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":jobs",
-        "//third_party:gtest",
-        "//third_party:gtest_main",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@pugixml",
     ],
 )

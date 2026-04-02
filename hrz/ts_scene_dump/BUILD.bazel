@@ -1,10 +1,9 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
-load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
 load("//tools/bazel:utils.bzl", "merge_dicts")
 
 package(default_visibility = ["//visibility:public"])
@@ -13,22 +12,14 @@ exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
 
-structured_files_copy(
-    name = "src_copies",
-    files = {
-        "": ["src/index.ts"],
-    },
-    output_dir = "dist",
-)
-
 ts_project(
     name = "ts_lib",
     srcs = [
-        ":src_copies",
+        "src/index.ts",
     ],
     declaration = True,
     out_dir = "dist",
-    root_dir = "dist",
+    root_dir = "src",
     tsconfig = merge_dicts(
         TSCONFIG,
         {
@@ -51,27 +42,28 @@ package_json(
     version = PACKAGE_JSON_HRZ_VERSION,
 )
 
-copy_file(
-    name = "license",
-    src = "//:LICENSE",
-    out = "dist-root/LICENSE",
+structured_files_copy(
+    name = "pkg_copy",
+    files = {
+        "dist": [
+            ":ts_lib",
+            ":ts_lib_types",
+        ],
+        "": [
+            "//:LICENSE",
+            ":package_json",
+        ],
+    },
+    output_dir = "dist_pkg",
 )
 
 npm_package(
     name = "npm_pkg",
     srcs = [
-        ":license",
-        ":package_json",
-        ":ts_lib",
-    ],
-    include_srcs_patterns = [
-        "**/LICENSE",
-        "**/*.json",
-        "**/*.js",
-        "**/*.d.ts",
+        ":pkg_copy",
     ],
     replace_prefixes = {
-        "dist-root/": "",
+        "dist_pkg/": "",
     },
 )
 

@@ -22,6 +22,7 @@ extern "C"
 
 namespace
 {
+
 int64_t parse_int(std::string_view str)
 {
     str = hrz::str::trim_s(str);
@@ -856,7 +857,7 @@ public:
                 buffer.clear();
                 fmt::format_to(
                     std::back_inserter(buffer), "{} cache hits ({:.2}%)", _cache_hit,
-                    (float)_cache_hit / (_cache_hit + _cache_miss) * 100.0f);
+                    (float)_cache_hit / (_cache_hit + _cache_miss) * 100.0F);
                 buffer.push_back(0);
                 mu_text(ctx, buffer.data());
             }

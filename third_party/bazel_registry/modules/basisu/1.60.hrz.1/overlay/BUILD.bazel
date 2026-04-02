@@ -1,0 +1,53 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "basisu",
+    srcs = [
+        "transcoder/basisu.h",
+        "transcoder/basisu_astc_hdr_core.h",
+        "transcoder/basisu_astc_helpers.h",
+        "transcoder/basisu_containers.h",
+        "transcoder/basisu_containers_impl.h",
+        "transcoder/basisu_file_headers.h",
+        "transcoder/basisu_transcoder.cpp",
+        "transcoder/basisu_transcoder_internal.h",
+        "transcoder/basisu_transcoder_tables_astc.inc",
+        "transcoder/basisu_transcoder_tables_astc_0_255.inc",
+        "transcoder/basisu_transcoder_tables_atc_55.inc",
+        "transcoder/basisu_transcoder_tables_atc_56.inc",
+        "transcoder/basisu_transcoder_tables_bc7_m5_alpha.inc",
+        "transcoder/basisu_transcoder_tables_bc7_m5_color.inc",
+        "transcoder/basisu_transcoder_tables_dxt1_5.inc",
+        "transcoder/basisu_transcoder_tables_dxt1_6.inc",
+        "transcoder/basisu_transcoder_tables_pvrtc2_45.inc",
+        "transcoder/basisu_transcoder_tables_pvrtc2_alpha_33.inc",
+        "transcoder/basisu_transcoder_uastc.h",
+    ],
+    hdrs = [
+        "transcoder/basisu_transcoder.h",
+    ],
+    copts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-fno-strict-aliasing",
+            "-Wno-unused-value",
+        ],
+    }),
+    defines = [
+        "BASISD_SUPPORT_KTX2=1",
+        "BASISD_SUPPORT_KTX2_ZSTD=1",
+        "BASISU_FORCE_DEVEL_MESSAGES=0",
+    ],
+    includes = [
+        "transcoder",
+    ],
+    deps = [
+        "@zstd",
+    ],
+)
+
+exports_files([
+    "LICENSE",
+])

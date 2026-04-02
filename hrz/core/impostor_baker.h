@@ -8,11 +8,13 @@
 
 namespace hrz
 {
+
 struct ImpostorBaker;
 struct Render;
 
 namespace impostor
 {
+
 using BakingTicket = uint64_t;
 
 enum class BakingStatus

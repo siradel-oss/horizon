@@ -107,7 +107,8 @@ lm::dmat4 hrz::enu_to_ecef_rotation_matrix_for_geo(double lat, double lon)
         {-sin_lon, cos_lon, 0, 0},
         {-sin_lat * cos_lon, -sin_lat * sin_lon, cos_lat, 0},
         {cos_lat * cos_lon, cos_lat * sin_lon, sin_lat, 0},
-        {0, 0, 0, 1}};
+        {0, 0, 0, 1}
+    };
 }
 
 lm::dmat4 hrz::ecef_to_enu_rotation_matrix_for_geo(double lat, double lon)
@@ -122,7 +123,8 @@ lm::dmat4 hrz::ecef_to_enu_rotation_matrix_for_geo(double lat, double lon)
         {-sin_lon, -sin_lat * cos_lon, cos_lat * cos_lon, 0},
         {cos_lon, -sin_lat * sin_lon, cos_lat * sin_lon, 0},
         {0, cos_lat, sin_lat, 0},
-        {0, 0, 0, 1}};
+        {0, 0, 0, 1}
+    };
 }
 
 lm::dquat hrz::enu_to_ecef_quat_for_geo(double lat, double lon)
@@ -520,7 +522,8 @@ hrz::GeoBounds hrz::geodetic_tile_bounds(TileCoords tile, bool tms_coords)
 
     return GeoBounds{
         tile.x * tile_size - lm::PI, (tile.x + 1) * tile_size - lm::PI,
-        tile_y * tile_size - lm::PI / 2.0, (tile_y + 1) * tile_size - lm::PI / 2.0};
+        tile_y * tile_size - lm::PI / 2.0, (tile_y + 1) * tile_size - lm::PI / 2.0
+    };
 }
 
 lm::dvec2 hrz::mercator_tile_center_meters(TileCoords tile)
@@ -679,9 +682,11 @@ hrz::GeoBounds hrz::intersection(const GeoBounds& left, const GeoBounds& right)
     if (l.west > l.east) l.west -= lm::PI * 2.0;
     if (r.west > r.east) r.west -= lm::PI * 2.0;
 
-    return normalize(GeoBounds{
-        std::max(l.west, r.west), std::min(l.east, r.east), std::max(l.south, r.south),
-        std::min(l.north, r.north)});
+    return normalize(
+        GeoBounds{
+            std::max(l.west, r.west), std::min(l.east, r.east), std::max(l.south, r.south),
+            std::min(l.north, r.north)
+        });
 }
 
 hrz::GeoBounds hrz::merge(const GeoBounds& left, const GeoBounds& right)
@@ -695,9 +700,11 @@ hrz::GeoBounds hrz::merge(const GeoBounds& left, const GeoBounds& right)
     if (l.west > l.east) l.west -= lm::PI * 2.0;
     if (r.west > r.east) r.west -= lm::PI * 2.0;
 
-    return normalize(GeoBounds{
-        std::min(l.west, r.west), std::max(l.east, r.east), std::min(l.south, r.south),
-        std::max(l.north, r.north)});
+    return normalize(
+        GeoBounds{
+            std::min(l.west, r.west), std::max(l.east, r.east), std::min(l.south, r.south),
+            std::max(l.north, r.north)
+        });
 }
 
 hrz::GeoBounds hrz::mercator_tile_bounds(TileCoords tile, bool tms_coords)
@@ -790,7 +797,8 @@ hrz::ScreenToEllipsoidTransform::ScreenToEllipsoidTransform(
         {2.0 / subview_size.x, 0, 0, 0},
         {0, -2.0 / subview_size.y, 0, 0},
         {0, 0, 1, 0},
-        {-1, 1, 0, 1}};
+        {-1, 1, 0, 1}
+    };
 
     _screen_to_ecef_direction = inv_pv_cc * screen_to_ndc;
     _origin = position;

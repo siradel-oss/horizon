@@ -22,6 +22,7 @@
 
 namespace
 {
+
 constexpr float inch_to_cm = 2.54;
 constexpr float default_dpi = 96;
 constexpr float pixel_size = (inch_to_cm / default_dpi) * 0.01; // meter per pixel
@@ -91,7 +92,8 @@ struct ExportMapUrlGenerator : public hrz::TileUrlGenerator
             auto bounds = hrz::geodetic_tile_bounds({x, y, (uint8_t)z});
             tile_bbox = lm::dbbox2{
                 {lm::degrees(bounds.west), lm::degrees(bounds.south)},
-                {lm::degrees(bounds.east), lm::degrees(bounds.north)}};
+                {lm::degrees(bounds.east), lm::degrees(bounds.north)}
+            };
         }
 
         std::string layer_query = "";
@@ -100,10 +102,12 @@ struct ExportMapUrlGenerator : public hrz::TileUrlGenerator
             layer_query = "&layers=show:" + fmt::to_string(fmt::join(layers, ","));
         }
 
-        return base_url.derive(fmt::format(
-            "export?F=image&FORMAT={}{}&SIZE={},{}&BBOX={},{},{},{}&BBOXSR={}&IMAGESR={}{}", format,
-            layer_query, tile_size, tile_size, tile_bbox.min.x, tile_bbox.min.y, tile_bbox.max.x,
-            tile_bbox.max.y, srid, srid, use_transparency ? "&transparent=true" : ""));
+        return base_url.derive(
+            fmt::format(
+                "export?F=image&FORMAT={}{}&SIZE={},{}&BBOX={},{},{},{}&BBOXSR={}&IMAGESR={}{}",
+                format, layer_query, tile_size, tile_size, tile_bbox.min.x, tile_bbox.min.y,
+                tile_bbox.max.x, tile_bbox.max.y, srid, srid,
+                use_transparency ? "&transparent=true" : ""));
     }
 };
 
@@ -141,7 +145,8 @@ struct ExportImageUrlGenerator : public hrz::TileUrlGenerator
             auto bounds = hrz::geodetic_tile_bounds({x, y, (uint8_t)z});
             tile_bbox = lm::dbbox2{
                 {lm::degrees(bounds.west), lm::degrees(bounds.south)},
-                {lm::degrees(bounds.east), lm::degrees(bounds.north)}};
+                {lm::degrees(bounds.east), lm::degrees(bounds.north)}
+            };
         }
 
         return fmt::format(
@@ -176,8 +181,10 @@ std::optional<Extent> get_extent(const rapidjson::Value& extent_node)
     }
 
     const auto& spatial_reference = extent_node["spatialReference"];
-    int srid = canonicalize_srid(hrz::json::get_int_or(
-        spatial_reference, spatial_reference.HasMember("latestWkid") ? "latestWkid" : "wkid", -1));
+    int srid = canonicalize_srid(
+        hrz::json::get_int_or(
+            spatial_reference, spatial_reference.HasMember("latestWkid") ? "latestWkid" : "wkid",
+            -1));
 
     if (srid < 0)
     {
@@ -277,10 +284,12 @@ bool format_supports_transparency(std::string_view format)
 {
     return format.starts_with("png") || format.ends_with("png");
 }
+
 } // namespace
 
 namespace hrz::planet
 {
+
 bool is_provider_model_complete(const hrz_proto::ArcGisRasterProviderParams& params)
 {
     return !params.url().empty();
@@ -456,9 +465,10 @@ private:
             return false;
         }
 
-        int srid = canonicalize_srid(hrz::json::get_int_or(
-            spatial_reference_json,
-            spatial_reference_json.HasMember("latestWkid") ? "latestWkid" : "wkid", -1));
+        int srid = canonicalize_srid(
+            hrz::json::get_int_or(
+                spatial_reference_json,
+                spatial_reference_json.HasMember("latestWkid") ? "latestWkid" : "wkid", -1));
         auto srid_descriptor = fmt::format("EPSG:{}", srid);
 
         if (srid != 3857 && srid != 4326)
@@ -728,7 +738,8 @@ private:
         AttributionHandle attribution_handles[] = {
             attribution::register_attribution(attributions, {additional_attribution, ""}),
             attribution::register_attribution(
-                attributions, {hrz::json::get_str_or(doc, "copyrightText", ""), ""})};
+                attributions, {hrz::json::get_str_or(doc, "copyrightText", ""), ""})
+        };
         auto attribution =
             attribution::register_attribution_group(attributions, attribution_handles);
 
@@ -888,9 +899,10 @@ private:
         if (doc.HasMember("spatialReference"))
         {
             auto& spatial_reference_json = doc["spatialReference"];
-            srid = canonicalize_srid(hrz::json::get_int_or(
-                spatial_reference_json,
-                spatial_reference_json.HasMember("latestWkid") ? "latestWkid" : "wkid", -1));
+            srid = canonicalize_srid(
+                hrz::json::get_int_or(
+                    spatial_reference_json,
+                    spatial_reference_json.HasMember("latestWkid") ? "latestWkid" : "wkid", -1));
         }
         if (srid != 3857 && srid != 4326)
         {
@@ -1064,7 +1076,8 @@ private:
                 TileFetcher::MetricInfo{
                     provider_request_tally_metric_name(
                         hrz_proto::RasterProviderType::ARCGIS_RASTER_PROVIDER),
-                    url.c_str()});
+                    url.c_str()
+                });
             return true;
         }
         else if (has_image_operation)

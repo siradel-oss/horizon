@@ -31,6 +31,7 @@ extern "C"
 
 namespace
 {
+
 enum
 {
     ATLAS_WHITE = MU_ICON_MAX,
@@ -233,36 +234,47 @@ namespace hrz
 {
 namespace assets_loader
 {
+
 void dev_ui(AssetsLoader* al, PlatformContext* platform, mu_Context* ctx, const char* window_name);
+
 }
 
 namespace blobs
 {
+
 void dev_ui(
     BlobAllocator* ba,
     const LayersInfo* layers_info,
     mu_Context* ctx,
     const char* window_name);
+
 }
 
 namespace job_scheduler
 {
+
 void dev_ui(JobScheduler* scheduler, mu_Context* ctx, const char* window_name);
+
 }
 
 namespace vector_data
 {
+
 void dev_ui(VectorDataLoader* loader, mu_Context* ctx, const char* window_name);
+
 }
 
 namespace planet
 {
+
 void raster_group_dev_ui(PlanetSurface* planet, mu_Context* ctx, const char* window_name);
 void elevation_query_dev_ui(PlanetSurface* planet, mu_Context* ctx, const char* window_name);
+
 } // namespace planet
 
 namespace scene
 {
+
 void scene_model_dev_ui(
     Scene* scene,
     PlatformContext* platform,
@@ -271,25 +283,32 @@ void scene_model_dev_ui(
 void viewport_dev_ui(Scene*, mu_Context*);
 void camera_dev_ui(Scene*, mu_Context*, const char* window_name);
 void flat_overlay_dev_ui(Scene*, mu_Context*, const char* window_name);
+
 } // namespace scene
 
 namespace vector_tiles_layers
 {
+
 void dev_ui(
     VectorTilesLayerSystem* system,
     const LayersInfo* layers_info,
     mu_Context* ctx,
     const char* window_name);
+
 }
 
 namespace debug_draw
 {
+
 void dev_ui(DebugDrawSystem* dd, mu_Context* ctx, const char* window_name);
+
 }
 
 namespace platform
 {
+
 void viewport_dev_ui(PlatformContext* platform, mu_Context* ctx);
+
 }
 
 void monitoring_dev_ui(
@@ -300,10 +319,12 @@ void monitoring_dev_ui(
     my::Instance* my,
     mu_Context* ctx,
     const char* window_name);
+
 } // namespace hrz
 
 namespace hrz
 {
+
 struct InstanceData
 {
     float x;
@@ -380,6 +401,7 @@ struct DevUi
 
 namespace dev_ui
 {
+
 void _toggle_ui(DevUi* ui)
 {
     assert(ui);
@@ -543,7 +565,8 @@ void initialize_rendering(DevUi* ui, GpuResourceContext* rc)
              my::VertexRate::PerInstance},
             // Instance UV
             {3, ui->rect.instances_buffer, my::VertexFormat::UInt8_4, 20, 24,
-             my::VertexRate::PerInstance}};
+             my::VertexRate::PerInstance}
+        };
 
         my::VertexInputResource res;
         res.attribs = streams;
@@ -663,7 +686,7 @@ bool _handle_platform_event(DevUi* ui, const platform::Event& e, float device_pi
             mouse_y = e.mouse_button.y / device_pixel_ratio;
             break;
         case hrz::platform::Event::Kind::MouseWheel:
-            mu_input_scroll(&ui->ui_ctx, 0, -e.mouse_wheel.wheel * 15.0f);
+            mu_input_scroll(&ui->ui_ctx, 0, -e.mouse_wheel.wheel * 15.0F);
             is_capturable_mouse_event = true;
             mouse_x = e.mouse_wheel.x / device_pixel_ratio;
             mouse_y = e.mouse_wheel.y / device_pixel_ratio;
@@ -838,12 +861,14 @@ void _add_textured_quad(DevUi* ui, mu_Rect rect, mu_Rect uv, mu_Color color)
     float clip_w = ((float)x1 - x0) / rect.w;
     float clip_h = ((float)y1 - y0) / rect.h;
 
-    ui->instances.push_back(InstanceData{
-        (float)x0, (float)y0, (float)(x1 - x0), (float)(y1 - y0), color.r, color.g, color.b,
-        color.a,
-        // UV coordinates fit in a uint8_t because it's 128x128.
-        (uint8_t)((clip_x0 * uv.w) + uv.x), (uint8_t)((clip_y0 * uv.h) + uv.y),
-        (uint8_t)(clip_w * uv.w), (uint8_t)(clip_h * uv.h)});
+    ui->instances.push_back(
+        InstanceData{
+            (float)x0, (float)y0, (float)(x1 - x0), (float)(y1 - y0), color.r, color.g, color.b,
+            color.a,
+            // UV coordinates fit in a uint8_t because it's 128x128.
+            (uint8_t)((clip_x0 * uv.w) + uv.x), (uint8_t)((clip_y0 * uv.h) + uv.y),
+            (uint8_t)(clip_w * uv.w), (uint8_t)(clip_h * uv.h)
+        });
 }
 
 void _update_geometry(DevUi* ui)
@@ -1165,8 +1190,8 @@ void draw(DevUi* ui, my::RenderContext* rc, float device_pixel_ratio)
     {
         UniformsData uniforms;
         uniforms.projection = lm::orthographic_opengl(
-            0.0f, (float)ui->window_width / device_pixel_ratio,
-            (float)ui->window_height / device_pixel_ratio, 0.0f, 0.0f, 1.0f);
+            0.0F, (float)ui->window_width / device_pixel_ratio,
+            (float)ui->window_height / device_pixel_ratio, 0.0F, 0.0F, 1.0F);
 
         static const size_t size_to_update = sizeof(UniformsData);
         rc->update_buffer(ui->uniforms, 0, size_to_update, &uniforms);
@@ -1199,5 +1224,6 @@ void move_to_cursor(DevUi* ui)
         _move_all_windows_to_cursor(ui);
     }
 }
+
 } // namespace dev_ui
 } // namespace hrz

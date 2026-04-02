@@ -18,6 +18,7 @@ static constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
 
 namespace hrz::model
 {
+
 static ModelMaterial* _get_model_material(
     ModelPrototype* proto,
     std::optional<ModelMaterialH> handle)
@@ -168,8 +169,8 @@ void ModelMaterial::initialize(ModelPrototype* proto)
                             }
                         }
                     }
-                    else if (std::holds_alternative<ModelDescriptor::DataMaterial>(
-                                 material->material))
+                    else if (
+                        std::holds_alternative<ModelDescriptor::DataMaterial>(material->material))
                     {
                         const auto& data_mat =
                             std::get<ModelDescriptor::DataMaterial>(material->material);

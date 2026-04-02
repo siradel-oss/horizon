@@ -7,6 +7,7 @@
 
 namespace hrz::camera
 {
+
 // Driver model a type of movement. They are input independent and handle things like limits,
 // inertia, etc.
 // Each type of driver exposes an interfaces that correspond to the possible actions on the degrees

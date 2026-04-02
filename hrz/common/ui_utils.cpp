@@ -126,7 +126,8 @@ void draw_tooltips(mu_Context* ctx, TooltipContext* tooltip_ctx)
         }
 
         const mu_Rect bg{
-            rect.x - padding_x, rect.y - padding, rect.w + padding_x * 2, rect.h + padding * 2};
+            rect.x - padding_x, rect.y - padding, rect.w + padding_x * 2, rect.h + padding * 2
+        };
 
         mu_draw_rect(ctx, bg, mu_Color{0, 0, 0, 220});
 

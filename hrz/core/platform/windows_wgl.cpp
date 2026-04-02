@@ -9,6 +9,7 @@
 // we'll need to create a core OpenGL context.
 namespace
 {
+
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
 #define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
@@ -65,7 +66,8 @@ hrz_proto::ViewerInitStatus initialize_gl_ctx(PlatformContext* ctx)
         0,
         0,
         0,
-        0};
+        0
+    };
 
     HDC hdc = GetDC(ctx->hwnd);
     if (!hdc)

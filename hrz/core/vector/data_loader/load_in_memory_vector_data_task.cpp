@@ -3,6 +3,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_in_memory_vector_data_task(
     const LayerModelRef& layer_model,
     uint32_t data_source,
@@ -64,8 +65,10 @@ void VectorDataLoader::clear_task<VectorDataLoader::Task::LoadInMemoryVectorData
 {
     if (task_data.in_memory_vector_data_request_id.has_value())
     {
-        in_memory_vector_data_channel.send(in_memory::messages::ReleaseDataRequest{
-            task_data.in_memory_vector_data_request_id.value()});
+        in_memory_vector_data_channel.send(
+            in_memory::messages::ReleaseDataRequest{
+                task_data.in_memory_vector_data_request_id.value()
+            });
         tasks_waiting_for_in_memory_vector_data_message.erase(
             task_data.in_memory_vector_data_request_id.value());
     }
@@ -150,8 +153,10 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadInMemoryVec
     {
         // Recreate the in-memory vector data request if the data is requested
         // by feature IDs and the task that provides them has been updated.
-        in_memory_vector_data_channel.send(in_memory::messages::ReleaseDataRequest{
-            task_data.in_memory_vector_data_request_id.value()});
+        in_memory_vector_data_channel.send(
+            in_memory::messages::ReleaseDataRequest{
+                task_data.in_memory_vector_data_request_id.value()
+            });
         tasks_waiting_for_in_memory_vector_data_message.erase(
             task_data.in_memory_vector_data_request_id.value());
         task_data.in_memory_vector_data_request_id = std::nullopt;
@@ -174,8 +179,10 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadInMemoryVec
                 const auto& feature_ids =
                     load_feature_ids_task.load_feature_ids().feature_ids.value();
                 task_data.load_feature_ids_task_version = {load_feature_ids_task.version};
-                in_memory_vector_data_channel.send(in_memory::messages::FeatureDataRequest{
-                    set_request_id(), provider.in_memory_layer_id, feature_ids, true});
+                in_memory_vector_data_channel.send(
+                    in_memory::messages::FeatureDataRequest{
+                        set_request_id(), provider.in_memory_layer_id, feature_ids, true
+                    });
                 tasks_waiting_for_in_memory_vector_data_message.insert(
                     {task_data.in_memory_vector_data_request_id.value(), task_ref});
                 set_task_status(task_ref, task, TaskStatus::Blocked);
@@ -194,9 +201,11 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadInMemoryVec
         {
             if (task_data.feature_selection.has_tile_coords())
             {
-                in_memory_vector_data_channel.send(in_memory::messages::TileDataRequest{
-                    set_request_id(), provider.in_memory_layer_id,
-                    task_data.feature_selection.tile_coords(), true});
+                in_memory_vector_data_channel.send(
+                    in_memory::messages::TileDataRequest{
+                        set_request_id(), provider.in_memory_layer_id,
+                        task_data.feature_selection.tile_coords(), true
+                    });
                 tasks_waiting_for_in_memory_vector_data_message.insert(
                     {task_data.in_memory_vector_data_request_id.value(), task_ref});
                 set_task_status(task_ref, task, TaskStatus::Blocked);
@@ -204,8 +213,10 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadInMemoryVec
             else if (task_data.feature_selection.has_feature_ids())
             {
                 const auto& feature_ids = task_data.feature_selection.feature_ids().value();
-                in_memory_vector_data_channel.send(in_memory::messages::FeatureDataRequest{
-                    set_request_id(), provider.in_memory_layer_id, feature_ids, true});
+                in_memory_vector_data_channel.send(
+                    in_memory::messages::FeatureDataRequest{
+                        set_request_id(), provider.in_memory_layer_id, feature_ids, true
+                    });
                 tasks_waiting_for_in_memory_vector_data_message.insert(
                     {task_data.in_memory_vector_data_request_id.value(), task_ref});
                 set_task_status(task_ref, task, TaskStatus::Blocked);
@@ -219,8 +230,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadInMemoryVec
 }
 
 template<>
-bool VectorDataLoader::unload_task_data_if_not_needed<
-    VectorDataLoader::Task::LoadInMemoryVectorData>()
+bool VectorDataLoader::
+    unload_task_data_if_not_needed<VectorDataLoader::Task::LoadInMemoryVectorData>()
 {
     // Do not release in-memory vector data, otherwise we would have to request
     // the data from the in-memory vector data system explicitly after an update
@@ -231,11 +242,8 @@ bool VectorDataLoader::unload_task_data_if_not_needed<
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::LoadInMemoryVectorData>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::LoadInMemoryVectorData& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::LoadInMemoryVectorData
+>(WeakTaskRef& task_ref, Task& task, Task::LoadInMemoryVectorData& task_data, JobScheduler* js)
 {
     const auto& layer_model = task_data.layer_model.value();
 
@@ -255,4 +263,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<
         }
     }
 }
+
 } // namespace hrz

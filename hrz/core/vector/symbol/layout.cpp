@@ -4,13 +4,14 @@
 
 namespace hrz::vt::symbol
 {
+
 ElementSystem::PrototypeH StackElementSystem::make_prototype(
     const hrz_proto::SymbolElement& element_descriptor,
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -53,8 +54,8 @@ ElementSystem::PrototypeH StackExpandElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -78,8 +79,8 @@ ElementSystem::PrototypeH PaddingElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -127,8 +128,8 @@ ElementSystem::PrototypeH SizedBoxElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -169,8 +170,8 @@ ElementSystem::PrototypeH FlexElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -201,8 +202,8 @@ ElementSystem::PrototypeH FlexibleElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -228,8 +229,8 @@ ElementSystem::PrototypeH AlignElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -270,8 +271,8 @@ ElementSystem::PrototypeH ConstrainedBoxElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -318,8 +319,8 @@ ElementSystem::PrototypeH RotatedBoxElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -354,8 +355,8 @@ ElementSystem::PrototypeH AspectRatioElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -390,8 +391,8 @@ ElementSystem::PrototypeH FittedBoxElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -432,8 +433,8 @@ ElementSystem::PrototypeH TransformElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -593,8 +594,8 @@ ElementSystem::PrototypeH OptionalElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);
@@ -629,8 +630,8 @@ ElementSystem::PrototypeH VariantElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
 {
     assert(element_descriptor.type() == ElementType);

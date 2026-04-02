@@ -11,6 +11,7 @@
 
 namespace hrz
 {
+
 template<typename T>
 class BlobArrayAllocation;
 
@@ -179,9 +180,9 @@ public:
             return _data_view[index];
         }
 
-        const T& operator[](size_t index) && = delete;
+        const T& operator [](size_t index) && = delete;
 
-        const T& operator[](size_t index) const& { return at(index); }
+        const T& operator [](size_t index) const& { return at(index); }
 
     private:
         std::optional<blobs::BlobData> _blob_data;
@@ -271,7 +272,7 @@ public:
             return _data_view[index];
         }
 
-        T& operator[](size_t index) & { return at(index); }
+        T& operator [](size_t index) & { return at(index); }
 
     private:
         std::optional<blobs::MutableBlobData> _blob_data;
@@ -384,4 +385,5 @@ private:
     blobs::AllocationTicket _ticket;
     size_t _requested_size;
 };
+
 } // namespace hrz

@@ -14,6 +14,7 @@ namespace hrz::vt::symbol
 {
 namespace
 {
+
 enum
 {
     ImageParamsUbo = ElementCustomUboStart,
@@ -39,6 +40,7 @@ struct ImageUniformData
 };
 
 HRZ_CHECK_UBO_SIZE(ImageUniformData);
+
 } // namespace
 
 void ImageRenderable::render_callback(
@@ -338,8 +340,8 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>&)
 {
     assert(element_descriptor.type() == ElementType);
@@ -456,8 +458,9 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
                                 // shader. This simulates using a single texture with clamp to edges
                                 // mode.
                                 lm::vec2 uv = {
-                                    ((float)x1 - 0.5f) / (float)(sprite.size().x() - 1),
-                                    ((float)y1 - 0.5f) / (float)(sprite.size().y() - 1)};
+                                    ((float)x1 - 0.5F) / (float)(sprite.size().x() - 1),
+                                    ((float)y1 - 0.5F) / (float)(sprite.size().y() - 1)
+                                };
 
                                 prototype.vertex_buffer_data.push_back({pos_fixed_stretchy, uv});
                             });
@@ -562,8 +565,9 @@ ElementSystem::PrototypeH ImageElementSystem::make_prototype(
 
             if (!sprite.name().empty())
             {
-                prototype.baking_params.sprite_name_to_index.insert(std::make_pair(
-                    sprite.name(), (int)(prototype.baking_params.sprites.size() - 1)));
+                prototype.baking_params.sprite_name_to_index.insert(
+                    std::make_pair(
+                        sprite.name(), (int)(prototype.baking_params.sprites.size() - 1)));
             }
         }
     }
@@ -766,7 +770,8 @@ std::optional<ElementSystem::RenderableH> ImageElementSystem::make_renderable(
              my::VertexRate::PerInstance},
             {UvSizeInputStream, instance_data_buffer, my::VertexFormat::Float32_2,
              instance_byte_offset + offsetof(ImageInstance, uv_size), sizeof(ImageInstance),
-             my::VertexRate::PerInstance}};
+             my::VertexRate::PerInstance}
+        };
 
         my::VertexInputResource vi_res;
         vi_res.attribs = streams;
@@ -924,7 +929,8 @@ void ImageElementSystem::work(ReprSystem::WorkCtx& ctx)
                     auto image = image_loader::get_image_texture(ctx.il, prototype->image);
                     prototype->image_texture = image.texture;
                     prototype->baking_params.image_size = {
-                        (int32_t)image.size.x, (int32_t)image.size.y};
+                        (int32_t)image.size.x, (int32_t)image.size.y
+                    };
 
                     for (auto& sprite : prototype->baking_params.sprites)
                     {
@@ -1054,4 +1060,5 @@ void ImageElementSystem::work_gpu(Render* render)
         }
     }
 }
+
 } // namespace hrz::vt::symbol

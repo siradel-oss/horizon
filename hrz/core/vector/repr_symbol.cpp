@@ -37,6 +37,7 @@ namespace symbol
 {
 namespace
 {
+
 using ConfigH = uint64_t;
 using TileH = uint64_t;
 
@@ -123,7 +124,7 @@ struct TileId
     uint64_t channel_id;
     uint64_t tile_id;
 
-    constexpr bool operator==(const TileId& other) const = default;
+    constexpr bool operator ==(const TileId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TileId& request)
@@ -197,7 +198,7 @@ private:
         uint64_t channel_id;
         uint64_t config_id;
 
-        constexpr bool operator==(const ConfigId& other) const = default;
+        constexpr bool operator ==(const ConfigId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ConfigId& request)
@@ -382,8 +383,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         uint64_t layer_id,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         ConfigId style_id)
     {
         if (repr.type() != hrz_proto::VectorReprType::SYMBOL_VECTOR_REPR)
@@ -578,8 +579,8 @@ public:
     uint32_t make_element_prototype(
         Config* config,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         MakeElementPrototypeContext* ctx,
         const hrz_proto::SymbolElement& descriptor)
     {
@@ -655,8 +656,8 @@ public:
         Config* config,
         const hrz_proto::SymbolElement& root_element_descriptor,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp)
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp)
     {
         MakeElementPrototypeContext ctx{};
         make_element_prototype(config, register_prp, &ctx, root_element_descriptor);
@@ -937,9 +938,11 @@ public:
                                 },
                                 ConfigId{channel_id, message.style_id});
 
-                            channel.send(hrz::vt::repr::messages::StyleRegistrationResult{
-                                message.style_id, handle.has_value(),
-                                std::move(registered_properties)});
+                            channel.send(
+                                hrz::vt::repr::messages::StyleRegistrationResult{
+                                    message.style_id, handle.has_value(),
+                                    std::move(registered_properties)
+                                });
                         },
                         [&](const hrz::vt::repr::messages::UnregisterStyle& message)
                         {
@@ -1303,6 +1306,7 @@ public:
 
     std::pair<uint64_t, Channel> create_channel() override { return _channels.create_channel(); }
 };
+
 } // namespace
 } // namespace symbol
 
@@ -1315,4 +1319,5 @@ void collect_symbol_shaders(hrz::GpuResourceContext* rc)
 {
     symbol::SymbolReprSystem::collect_shaders(rc);
 }
+
 } // namespace hrz::vt

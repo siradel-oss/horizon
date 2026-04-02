@@ -6,6 +6,7 @@ using namespace hrz;
 
 namespace
 {
+
 struct NonTrivialDestructor
 {
     ~NonTrivialDestructor() {}
@@ -35,8 +36,9 @@ struct IntNode
 
     IntNode(int n_ = 0) : n(n_) {}
 
-    bool operator==(int o) const { return n == o; }
+    bool operator ==(int o) const { return n == o; }
 };
+
 } // namespace
 
 TEST(LruList, DestroyAllAtDestruction)

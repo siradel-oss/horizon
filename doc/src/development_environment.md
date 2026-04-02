@@ -9,19 +9,16 @@
     - (Optional) Install *only* the English language pack when installing the build tools. This reduces spam during building.
       If you do this, please also set the `VSLANG` environment variable to 1033.
 - Bazel via [Bazelisk](https://docs.bazel.build/versions/master/install-bazelisk.html)
-- Python >= 3.11, <= 3.12
-    - Run the installer as administrator
-    - Select "Add python.exe to PATH"
-    - Select "Customize installation"
-    - In "Advanced options", select "Install Python 3.x for all users"
-- pnpm 8.x (not 9 or above!) (optional, necessary for managing npm dependencies)
-- fd-find (use `cargo install fd-find` or download at https://github.com/sharkdp/fd/releases)
-- CMake >= 3.1 (optional, for external dependencies)
-- LLVM >= 12 (optional, for `compile_commands.json` generation)
+
+Optionally:
+
+- Python >= 3.11, <= 3.12 (for non-build-related scripts)
+- pnpm 10.x (necessary for managing npm dependencies)
+- LLVM >= 12 (for `compile_commands.json` generation)
     - The 2022 Visual Studio build tools only support clang >= 16.0.0.
-- emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
-- JDK >= 17 (optional, for external dependencies and OSS publication)
-- The `cryptography` Python package (optional, for OSS publication)
+- JDK >= 17 (for OSS publication)
+
+Also consider running Python in a virtual environment. See below.
 
 #### Certificate issues
 
@@ -39,24 +36,6 @@ If the issue still occurs, install a recent version of the JDK and add to your `
 startup --server_javabase=<path to you Java install> # For example C:\Program Files\Java\jre1.8.0_271
 ```
 
-#### Issues when building WASM on Windows
-
-There are currently (Bazel 8) issues with Bazel and symlinks on Windows which means that symlinks created by the Node/npm rules might be broken. This appears as packages that are not found at build time. See [this issue](https://github.com/aspect-build/rules_js/issues/2261).
-
-Meanwhile, you can either build Horizon only on Linux or WSL, or do the following, very annoying, thing:
-
-When you encounter an error, delete all symlinks from `node_modules` in the current `bin` directory (with transition). For example (`C:\Users\WK5714\_bazel_WK5714\g2xpdmbf\execroot\_main\bazel-out\x64_windows-opt-exec-ST-d57f47055a04\bin`). Look at the build logs to find this path. So `cd` to this path and run the following command if you have `fd-find` installed:
-
-```
-fd -pIH -t l "node_modules" -x cmd /c rmdir "{}" && fd -pIH -t l "node_modules" -x cmd /c del "{}"
-```
-
-Then delete the runfiles folder for TSC. For example `C:\Users\WK5714\_bazel_WK5714\g2xpdmbf\execroot\_main\bazel-out\x64_windows-opt-exec-ST-d57f47055a04\bin\external\aspect_rules_ts++ext+npm_typescript\tsc_\tsc.bat.runfiles`.
-
-Then re-run the build. It should go a bit further but might still fail before the end. In which case, restart this process until you manage to build Horizon fully.
-
-Unless you nuke your workspace or change npm dependencies, you should not need to re-do this whole process once the build was successful once.
-
 ### Linux
 
 - A C++ compiler that supports C++20
@@ -64,14 +43,15 @@ Unless you nuke your workspace or change npm dependencies, you should not need t
 - OpenGL headers (package `libgl1-mesa-dev` on Ubuntu)
 - The X11 Input extension library, libXi (package `libxi-dev` on Ubuntu)
 - The X cursor management library (package `libxcursor-dev` on Ubuntu)
-- pnpm 8.x (not 9 or above!) (optional, necessary for managing npm dependencies)
-- Python >= 3.11, <= 3.12
-- fd-find (package `fd-find` on Ubuntu)
-- CMake >= 3.1 (optional, for external dependencies)
-- emsdk (version from `hrz-packages.json`) (optional, for external dependencies)
-- JDK >= 17 (optional, for external dependencies and OSS publication)
-- Cryptography primitives for Python (package `python3-cryptography` on Ubuntu) (optional, for OSS publication)
-- TK bindings for Python (package `python3-tk` on Ubuntu) (optional, for visual tests GUI)
+
+Optionally:
+
+- pnpm 10.x (necessary for managing npm dependencies)
+- Python >= 3.11, <= 3.12 (for non-build-related scripts)
+- JDK >= 17 (for OSS publication)
+- TK bindings for Python (package `python3-tk` on Ubuntu) (for visual tests GUI)
+
+Also consider running Python in a virtual environment. See below.
 
 ### More certificate issues!
 
@@ -133,12 +113,6 @@ The same concept of seeding can be applied to your local development environment
     - `git@github.com:siradel-oss/Horizon.git`
 - Run `tools/git/setup.(sh, bat)`
     - On Linux you may also need to `chmod +x` this file and the ones in `tools/git/hooks` before executing this script.
-- Fetch or build prebuilt dependencies
-    - `python3 tools/dependencies/fetch_or_build_prebuilt_deps.py`
-    - You may need to do this in an `emsdk` environment to build WASM dependencies.
-        - You can optionally specify which dependencies to build if not all, and the target platform.
-    - See the [external dependencies documentation](external_dependencies.md) for more information.
-    - This script might need to be re-run periodically, when dependencies are updated. The build process will error out with an appropriate message when this is necessary.
 
 Additionally, on Windows:
 

@@ -11,6 +11,7 @@
 
 namespace hrz::tilejson
 {
+
 struct TileJsonInfo
 {
     GeoBounds bounds;
@@ -23,4 +24,5 @@ struct TileJsonInfo
 std::optional<TileJsonInfo> parse_tilejson(
     std::span<const std::byte> raw_data,
     const BaseUrl& base_url);
+
 } // namespace hrz::tilejson

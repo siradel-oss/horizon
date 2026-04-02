@@ -23,7 +23,8 @@ using namespace hrz::model;
 static constexpr const char* s_supported_extensions[] = {
     "KHR_draco_mesh_compression", "EXT_texture_webp",    "KHR_texture_basisu",
     "KHR_materials_variants",     "KHR_materials_unlit", "SIRADEL_templated_image_url",
-    "SIRADEL_data_texture",       "CESIUM_RTC"};
+    "SIRADEL_data_texture",       "CESIUM_RTC"
+};
 static constexpr size_t MAX_MATERIAL_VARIANTS = 64;
 
 enum GltfExtension
@@ -132,10 +133,11 @@ void _parse_gltf_node_hierarchy(
 
     if (const int mesh_id = json::get_int_or(node_json, "mesh", -1); mesh_id >= 0)
     {
-        descriptor->mesh_instances.push_back(ModelDescriptor::MeshInstance{
-            .node_instance_id = node_instance_id,
-            .mesh_id = mesh_id,
-        });
+        descriptor->mesh_instances.push_back(
+            ModelDescriptor::MeshInstance{
+                .node_instance_id = node_instance_id,
+                .mesh_id = mesh_id,
+            });
     }
 }
 
@@ -695,9 +697,9 @@ void _parse_gltf_material(const rapidjson::Value& material_json, ModelDescriptor
 
         material.material = diffuse_material;
     }
-    else if (const auto& data_texture_json =
-                 _get_gltf_extension(material_json, SIRADEL_data_texture);
-             data_texture_json.IsObject())
+    else if (
+        const auto& data_texture_json = _get_gltf_extension(material_json, SIRADEL_data_texture);
+        data_texture_json.IsObject())
     {
         ModelDescriptor::DataMaterial data_material;
 
@@ -895,8 +897,7 @@ bool _parse_gltf_json(
             const auto& ext_str = ext_json.GetString();
 
             auto found = std::ranges::find_if(
-                s_supported_extensions,
-                [&](const char* extension_str) -> bool
+                s_supported_extensions, [&](const char* extension_str) -> bool
                 { return std::strcmp(ext_str, extension_str) == 0; });
 
             if (found == std::end(s_supported_extensions))
@@ -1220,4 +1221,5 @@ bool parse_gltf_descriptor(
             textures_priority, descriptor);
     }
 }
+
 } // namespace hrz::model

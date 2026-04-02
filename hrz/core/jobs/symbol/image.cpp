@@ -2,6 +2,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 static constexpr size_t InitialComponentCapacity = 256;
 
 hrz_jobs::JobResult SymbolBaker::ImageVisitor::init_element_instances(
@@ -13,7 +14,8 @@ hrz_jobs::JobResult SymbolBaker::ImageVisitor::init_element_instances(
             element.image().sprite_geometries,
             {},
             hrz::BlobVector<ImageInstance>(
-                get_context().get_blob_allocator(), InitialComponentCapacity)};
+                get_context().get_blob_allocator(), InitialComponentCapacity)
+        };
 
         instances_by_z_index.insert({element.z_index.value(), std::move(baking_data)});
     }
@@ -36,7 +38,7 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
 
     auto alignment = params.default_alignment;
     load_vec2f_property(params.alignment_prp, &alignment);
-    alignment = alignment * 0.5f + lm::vec2(0.5f);
+    alignment = alignment * 0.5F + lm::vec2(0.5F);
 
     std::optional<int64_t> sprite_index = std::nullopt;
     std::string_view sprite_name = params.default_sprite_name;
@@ -77,9 +79,9 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
     lm::vec2 clamped_content_size = lm::clamp(content_size, constraints.min, constraints.max);
     lm::vec2 alignment_offset = (clamped_content_size - content_size) * alignment;
 
-    lm::mat4 transform = lm::translation(lm::vec3(alignment_offset, 0.0f))
-        * lm::scaling(lm::vec3(lm::vec2(scale), 1.0f))
-        * lm::translation(lm::vec3(-content_offset, 0.0f));
+    lm::mat4 transform = lm::translation(lm::vec3(alignment_offset, 0.0F))
+        * lm::scaling(lm::vec3(lm::vec2(scale), 1.0F))
+        * lm::translation(lm::vec3(-content_offset, 0.0F));
 
     lm::vec2 full_size_no_scale =
         (sprite.full_size_stretch * stretch_factor + sprite.full_size_fixed);
@@ -96,9 +98,9 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
         instance.color = color_srgb;
         // Offset the sprite in the atlas so that (0,0) and (1,1) sample at the center of texels.
         instance.uv_offset =
-            (lm::vec2(sprite.atlas_offset) + lm::vec2(0.5f)) / lm::vec2(params.image_size);
+            (lm::vec2(sprite.atlas_offset) + lm::vec2(0.5F)) / lm::vec2(params.image_size);
         instance.uv_size =
-            (lm::vec2(sprite.atlas_size) - lm::vec2(1.0f)) / lm::vec2(params.image_size);
+            (lm::vec2(sprite.atlas_size) - lm::vec2(1.0F)) / lm::vec2(params.image_size);
 
         auto& instances = instances_by_z_index.at(element.z_index.value());
         auto instance_index = (uint32_t)instances.gpu_instances.size().value_or(0);
@@ -207,6 +209,8 @@ std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBak
 
     return {{hrz_jobs::BakedSymbols::ElementInstances{
         hrz_proto::IMAGE_SYMBOL_ELEMENT,
-        {std::move(baked_instances)}}}};
+        {std::move(baked_instances)}
+    }}};
 }
+
 } // namespace hrz_jobs::symbol

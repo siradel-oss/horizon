@@ -5,12 +5,13 @@
 
 namespace
 {
+
 struct FullObjectId
 {
     uint64_t layer_id;
     uint64_t object_id;
 
-    constexpr bool operator==(const FullObjectId& id) const = default;
+    constexpr bool operator ==(const FullObjectId& id) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const FullObjectId& id)
@@ -18,10 +19,12 @@ struct FullObjectId
         return H::combine(std::move(h), id.layer_id, id.object_id);
     }
 };
+
 } // namespace
 
 namespace hrz
 {
+
 struct SelectionSystem
 {
     bool has_changed_global = false;
@@ -33,6 +36,7 @@ struct SelectionSystem
 
 namespace selection
 {
+
 SelectionSystem* create()
 {
     return new SelectionSystem();

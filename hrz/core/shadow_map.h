@@ -7,6 +7,7 @@
 
 namespace hrz::shadow_map
 {
+
 class ShadowMapPass : public hrz::render::TimedRenderPass
 {
     struct Cascade

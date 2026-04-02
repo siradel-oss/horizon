@@ -7,6 +7,7 @@
 
 namespace hrz_jobs::executor
 {
+
 hrz_jobs::JobResult run_job(
     uint32_t job_id,
     hrz_jobs::JobType job_type,

@@ -9,17 +9,21 @@
 
 namespace hrz_monitoring
 {
+
 struct MessageBuffer;
+
 }
 
 namespace hrz
 {
+
 struct JobScheduler;
 struct BlobAllocator;
 struct FontRasterizer;
 
 namespace job_scheduler
 {
+
 enum class JobStatus
 {
     Queued,

@@ -21,7 +21,7 @@ struct OperatorEvaluator
     };
 
     // @Todo(C++23) Use static operator()
-    bool operator()(
+    bool operator ()(
         Context& ctx,
         Operator op,
         std::span<const std::span<const RawValue>> arg_buffers,

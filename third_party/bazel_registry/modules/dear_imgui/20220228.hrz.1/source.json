@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/ocornut/imgui/archive/f3373780668fba1f9bd64c208d05c20b781c9a39.tar.gz",
+  "strip_prefix": "imgui-f3373780668fba1f9bd64c208d05c20b781c9a39",
+  "integrity": "sha256-dmfN90TkFLnYLzC82wzkqZbN6PphmhFQC1tm41KjI5k=",
+  "overlay": {
+    "MODULE.bazel": "sha256-BbvcfuJ9tzqqIBmKmWmpLU7wI23EEHZi/ZljpI7TDvQ=",
+    "BUILD.bazel": "sha256-7yBolxHLeSYff6TTbQ6SNTRlacrb8UyaigV0hReVdMk="
+  }
+}

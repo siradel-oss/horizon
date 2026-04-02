@@ -30,7 +30,8 @@ def gen_cpp_migrations_list(args):
     params = {
         "migration_ids": [row.id for row in MANIFEST.entries],
     }
-    render_tpl(tpl_env, "migrations_list.tpl.h", params, args.header_output_file)
+    with args.header_output_file as fp:
+        render_tpl(tpl_env, "migrations_list.tpl.h", params, fp)
 
 
 if __name__ == "__main__":

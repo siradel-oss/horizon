@@ -24,6 +24,7 @@ extern "C"
 
 namespace hrz
 {
+
 constexpr uint32_t VISUAL_RENDER_RATE_MS = 150;
 constexpr uint32_t ANIMATION_RENDER_RATE_MS = 16;
 
@@ -119,13 +120,15 @@ public:
         _texture_size = (is_dummy)
             ? 1
             : std::max(
-                texture_size / (_render_type == hrz::RenderType::RenderVisual ? 1 : 2), (size_t)1);
+                  texture_size / (_render_type == hrz::RenderType::RenderVisual ? 1 : 2),
+                  (size_t)1);
 
         _clear_values[0] = {
             my::Attachment::Color0,
             _render_type == hrz::RenderType::RenderPicking
                 ? my::ClearValue::make_color_uint(0, 0, 0, 0)
-                : my::ClearValue::make_color_float(0, 0, 0, 0)};
+                : my::ClearValue::make_color_float(0, 0, 0, 0)
+        };
     }
 
     inline const char* output_target_name(size_t cascade)
@@ -164,8 +167,8 @@ public:
         res.height = (float)_texture_size;
 
         auto dummy_res = res;
-        dummy_res.width = 1.0f;
-        dummy_res.height = 1.0f;
+        dummy_res.width = 1.0F;
+        dummy_res.height = 1.0F;
 
         for (size_t i = 0; i < HRZ_S_MAX_OVERLAY_CASCADES; ++i)
         {
@@ -261,11 +264,13 @@ public:
 
         my::UboBinding binding = {
             hrz::vector_flat_overlay::UboVectorOverlayPass, _pass_ubos.get_for_gpu(),
-            (uint32_t)_pass_ubos.offset(pass_index), sizeof(OverlayPassUniform)};
+            (uint32_t)_pass_ubos.offset(pass_index), sizeof(OverlayPassUniform)
+        };
         ctx.binder->bind({&binding, 1});
 
         my::TextureBinding texture_bindings[] = {
-            {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler}};
+            {hrz::SamplerCameraHeight, _camera_height_texture, _camera_height_sampler}
+        };
         ctx.binder->bind(texture_bindings);
 
         const my::ViewportState viewport_state = {
@@ -402,15 +407,19 @@ struct VectorFlatOverlaySystem
 
 namespace vector_flat_overlay
 {
+
 const char* const sampler_names[HRZ_S_MAX_OVERLAY_CASCADES] = {
     "hrz_flat_overlay_image[0]", "hrz_flat_overlay_image[1]", "hrz_flat_overlay_image[2]",
-    "hrz_flat_overlay_image[3]"};
+    "hrz_flat_overlay_image[3]"
+};
 const char* const picking_sampler_names[HRZ_S_MAX_OVERLAY_CASCADES] = {
     "hrz_flat_overlay_picking_image[0]", "hrz_flat_overlay_picking_image[1]",
-    "hrz_flat_overlay_picking_image[2]", "hrz_flat_overlay_picking_image[3]"};
+    "hrz_flat_overlay_picking_image[2]", "hrz_flat_overlay_picking_image[3]"
+};
 const char* const selection_sampler_names[HRZ_S_MAX_OVERLAY_CASCADES] = {
     "hrz_flat_overlay_selection_image[0]", "hrz_flat_overlay_selection_image[1]",
-    "hrz_flat_overlay_selection_image[2]", "hrz_flat_overlay_selection_image[3]"};
+    "hrz_flat_overlay_selection_image[2]", "hrz_flat_overlay_selection_image[3]"
+};
 
 RenderRequest work(
     VectorFlatOverlaySystem* system,
@@ -721,7 +730,8 @@ void draw(VectorFlatOverlaySystem* system, Render* render)
 
     my::UboBinding binding = {
         hrz::vector_flat_overlay::UboVectorOverlayCameras,
-        system->_overlay_cameras_ubo.get_for_gpu(), 0, sizeof(OverlayCamerasUniform)};
+        system->_overlay_cameras_ubo.get_for_gpu(), 0, sizeof(OverlayCamerasUniform)
+    };
 
     render->rb->bind({&binding, 1});
 }
@@ -920,6 +930,7 @@ void dev_ui(const VectorFlatOverlaySystem* system, mu_Context* ctx)
         mu_end_treenode(ctx);
     }
 }
+
 } // namespace vector_flat_overlay
 
 } // namespace hrz

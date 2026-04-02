@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 #define HRZ_FLAGS                                     \
     HRZ_DEFINE_FLAG(EnableRasterAtlasCompression)     \
     HRZ_DEFINE_FLAG(EnableShadows)                    \

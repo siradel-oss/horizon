@@ -7,6 +7,7 @@
 
 namespace
 {
+
 TEST(StyleScript, lex_real_script)
 {
     static const char* str =
@@ -1232,4 +1233,5 @@ TEST(StyleScript, parse_instructions_after_emit_and_discard)
         ast.reset();
     }
 }
+
 } // namespace

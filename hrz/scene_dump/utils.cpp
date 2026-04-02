@@ -84,7 +84,7 @@ uint32_t hrz::scene_dump::get_scene_dump_version(std::span<const std::byte> data
     google::protobuf::DynamicMessageFactory factory(&pool);
 
     auto* msg = factory.GetPrototype(pool.FindMessageTypeByName("SceneDump"))->New();
-    msg->ParseFromArray(data.data(), data.size());
+    (void)msg->ParseFromArray(data.data(), data.size());
 
     return msg->GetReflection()->GetUInt32(*msg, msg->GetDescriptor()->FindFieldByName("version"));
 }
@@ -100,10 +100,10 @@ std::vector<std::byte> hrz::scene_dump::set_scene_dump_version(
     google::protobuf::DynamicMessageFactory factory(&pool);
 
     auto* msg = factory.GetPrototype(pool.FindMessageTypeByName("SceneDump"))->New();
-    msg->ParseFromArray(data.data(), data.size());
+    (void)msg->ParseFromArray(data.data(), data.size());
     msg->GetReflection()->SetUInt32(msg, msg->GetDescriptor()->FindFieldByName("version"), version);
 
     std::vector<std::byte> buffer(msg->ByteSizeLong());
-    msg->SerializeToArray(buffer.data(), buffer.size());
+    (void)msg->SerializeToArray(buffer.data(), buffer.size());
     return buffer;
 }

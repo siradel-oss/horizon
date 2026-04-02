@@ -10,12 +10,15 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct Render;
+
 } // namespace hrz
 
 namespace hrz::vtex
 {
+
 class PageTable
 {
     struct ImageToUpload
@@ -31,7 +34,7 @@ public:
         uint16_t tx;
         uint16_t ty;
 
-        constexpr bool operator==(const Address& a) const = default;
+        constexpr bool operator ==(const Address& a) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const Address& a)

@@ -8,6 +8,7 @@
 
 namespace
 {
+
 struct UrlGenerator : public hrz::TileUrlGenerator
 {
     UrlGenerator(
@@ -54,10 +55,12 @@ private:
 
     size_t next_pattern_index;
 };
+
 } // namespace
 
 namespace hrz::planet
 {
+
 bool is_provider_model_complete(const hrz_proto::WmtsRasterProviderParams& params)
 {
     if (params.url().empty()) return false;

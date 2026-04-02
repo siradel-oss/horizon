@@ -34,8 +34,10 @@ namespace vector_data::in_memory
 {
 namespace
 {
+
 static constexpr TileCoords ROOT_TILE_COORDS = {
-    std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), 0xff};
+    std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), 0xff
+};
 
 lm::dbbox2 flatten_bbox(const lm::dbbox3& bbox)
 {
@@ -159,7 +161,7 @@ struct RequestId
     uint64_t channel_id;
     uint64_t request_id;
 
-    constexpr bool operator==(const RequestId& other) const = default;
+    constexpr bool operator ==(const RequestId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const RequestId& request)
@@ -227,6 +229,7 @@ struct DataTracker
         return std::get<hrz::TileCoords>(feature_selection);
     }
 };
+
 } // namespace
 } // namespace vector_data::in_memory
 
@@ -257,7 +260,8 @@ struct InMemoryVectorDataBase
     // is no need to retain and release feature ID lists for tiles.
     hrz::node_hash_map<
         vector_data::in_memory::FeatureIdList::Hash,
-        vector_data::in_memory::FeatureIdList>
+        vector_data::in_memory::FeatureIdList
+    >
         feature_id_lists;
 
     FeaturePool feature_pool;
@@ -268,7 +272,8 @@ struct InMemoryVectorDataBase
 
     hrz::ChannelGroup<
         vector_data::in_memory::FromInMemoryMessages,
-        vector_data::in_memory::ToInMemoryMessages>
+        vector_data::in_memory::ToInMemoryMessages
+    >
         channels;
 };
 
@@ -276,6 +281,7 @@ namespace vector_data::in_memory
 {
 namespace
 {
+
 Layer* _get_layer(InMemoryVectorDataBase* system, uint64_t layer_model_handle)
 {
     auto it = system->layer_model_to_pool.find(layer_model_handle);
@@ -446,7 +452,8 @@ void _generate_root_tile(
         {
             lm::dvec3 point = {
                 feature_geometry.coords(j + 0), feature_geometry.coords(j + 1),
-                feature_geometry.coords(j + 2)};
+                feature_geometry.coords(j + 2)
+            };
 
             tile->positions.push_back(point);
         }
@@ -509,7 +516,7 @@ void _generate_root_tile(
             uint32_t first_point = feature.first_point;
             feature.anchor = vector_data::compute_ring_average(
                 std::span<const lm::dvec3>(tile->positions).subspan(first_point, count));
-            feature.anchor_angle = 0.0f;
+            feature.anchor_angle = 0.0F;
         }
         else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
         {
@@ -524,7 +531,7 @@ void _generate_root_tile(
         else if (feature.type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
         {
             feature.anchor = tile->positions[feature.first_point];
-            feature.anchor_angle = 0.0f;
+            feature.anchor_angle = 0.0F;
         }
         else
         {
@@ -906,6 +913,7 @@ void _unregister_layers(InMemoryVectorDataBase* system, SceneModel* model)
 
     system->unregistered_layers.clear();
 }
+
 } // namespace
 
 InMemoryVectorDataBase* create_system()
@@ -1296,7 +1304,8 @@ void work(
                             HRZ_LOG_WARNING(
                                 "No request with ID {}-{}", channel_id, message.request_id);
                         }
-                    }},
+                    }
+                },
                 generic_message);
         }
     }
@@ -1423,8 +1432,9 @@ void work(
                      attr_i < attribute_value_count && attr_i < layer->attributes.size(); ++attr_i)
                 {
                     auto attr = attr_as_ref(feature_proto.attribute_values((int)attr_i));
-                    feature->attribute_values.push_back(attr_transform<OwnedAttributeValue>(
-                        layer->attributes[attr_i].transform, attr));
+                    feature->attribute_values.push_back(
+                        attr_transform<OwnedAttributeValue>(
+                            layer->attributes[attr_i].transform, attr));
                     feature->out_of_line_data_size += get_packed_out_of_line_size(attr);
                 }
                 feature->attribute_values.resize(
@@ -1443,7 +1453,8 @@ void work(
                     lm::dvec3 point = {
                         feature_proto.geometry().coords(pt_i + 0),
                         feature_proto.geometry().coords(pt_i + 1),
-                        feature_proto.geometry().coords(pt_i + 2)};
+                        feature_proto.geometry().coords(pt_i + 2)
+                    };
 
                     _project_positions(layer, {&point, 1});
 
@@ -1498,7 +1509,8 @@ void work(
                         lm::dvec3 point = {
                             feature_proto.geometry().coords(i + 0),
                             feature_proto.geometry().coords(i + 1),
-                            feature_proto.geometry().coords(i + 2)};
+                            feature_proto.geometry().coords(i + 2)
+                        };
 
                         _project_positions(layer, {&point, 1});
 
@@ -1705,8 +1717,8 @@ void work(
 
         if (tracker.status == DataTracker::Status::GatheringData)
         {
-            tracker.feature_id_hash_blob = {
-                BlobArrayAllocation<FeatureIdHash>::allocate(ba, tile->features.size())};
+            tracker.feature_id_hash_blob = {BlobArrayAllocation<FeatureIdHash>::allocate(
+                ba, tile->features.size())};
             tracker.geometry_blobs = {{
                 BlobArrayAllocation<VectorTileGeometry::Feature>::allocate(
                     ba, tile->features.size()),
@@ -1823,7 +1835,8 @@ void work(
                 // There are no actual tile coords in this case.
                 tracker.tile_data.coords = {
                     std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(),
-                    std::numeric_limits<uint8_t>::max()};
+                    std::numeric_limits<uint8_t>::max()
+                };
             }
             else
             {
@@ -1910,10 +1923,8 @@ void work(
                                     system->feature_pool.get_object(tile_feature.handle);
 
                                 auto value = attr_from<
-                                    PackedAttributeValue,
-                                    PackedAttributeValueTraits<CharSpanWriter>>(
-                                    attr_as_ref(feature->attribute_values.at(i)),
-                                    out_of_line_writer);
+                                    PackedAttributeValue, PackedAttributeValueTraits<CharSpanWriter>
+                                >(attr_as_ref(feature->attribute_values.at(i)), out_of_line_writer);
 
                                 values_data.at(value_count++) = value;
                             }
@@ -1975,8 +1986,10 @@ void work(
                 if (channel_it != system->channels.end())
                 {
                     auto& channel = channel_it->second;
-                    channel.send(messages::VectorData{
-                        tracker.request_id.request_id, tracker.tile_data, tracker.attribution});
+                    channel.send(
+                        messages::VectorData{
+                            tracker.request_id.request_id, tracker.tile_data, tracker.attribution
+                        });
                 }
 
                 if (tracker.one_shot)
@@ -2009,5 +2022,6 @@ InMemoryChannel create_channel(InMemoryVectorDataBase* system)
 
     return system->channels.create_channel().second;
 }
+
 } // namespace vector_data::in_memory
 } // namespace hrz

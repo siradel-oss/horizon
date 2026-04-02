@@ -5,6 +5,7 @@
 
 namespace hrz::camera
 {
+
 lm::ddual_quat push_camera_position_above_terrain(
     const lm::ddual_quat& pose,
     double height_above_terrain,
@@ -58,4 +59,5 @@ PushedCameraPositionForTarget push_camera_position_above_terrain_with_target(
 
     return {to_dual_quat(adjusted_pose), tilt_for_viewpoint};
 }
+
 } // namespace hrz::camera

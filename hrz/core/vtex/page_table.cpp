@@ -7,6 +7,7 @@
 
 namespace hrz::vtex
 {
+
 PageTable::PageTable(
     Render* render,
     uint32_t page_size,
@@ -113,8 +114,7 @@ PageTable::Address PageTable::get_address_for_tile(TileCoords tile) const
 void PageTable::sort_pages()
 {
     std::ranges::sort(
-        _page_order,
-        [&](const Address& a, const Address& b)
+        _page_order, [&](const Address& a, const Address& b)
         { return _pages[page_id(a)].last_touch_time > _pages[page_id(b)].last_touch_time; });
 }
 
@@ -148,9 +148,11 @@ PageTable::UploadResult PageTable::upload_page(BlobImage&& img, TileCoords tile)
             Page& page = _pages[pid];
             page.last_touch_time = hrz::clock::CurrentFrameRealTime.ms;
 
-            _to_upload.push_back(ImageToUpload{
-                std::move(img), (int)(page_address.tx * _page_size),
-                (int)(page_address.ty * _page_size)});
+            _to_upload.push_back(
+                ImageToUpload{
+                    std::move(img), (int)(page_address.tx * _page_size),
+                    (int)(page_address.ty * _page_size)
+                });
 
             result.new_address = page_address;
 
@@ -177,8 +179,10 @@ PageTable::UploadResult PageTable::upload_page(BlobImage&& img, TileCoords tile)
 
     _page_order.push_back(page_address);
 
-    _to_upload.push_back(ImageToUpload{
-        std::move(img), (int)(page_address.tx * _page_size), (int)(page_address.ty * _page_size)});
+    _to_upload.push_back(
+        ImageToUpload{
+            std::move(img), (int)(page_address.tx * _page_size), (int)(page_address.ty * _page_size)
+        });
 
     result.new_address = page_address;
 

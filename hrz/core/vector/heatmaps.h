@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 struct HeatmapSystem;
 struct HeatmapReprRegistry;
 struct OverlayCamerasInfo;
@@ -16,6 +17,7 @@ struct SceneViewRenderGraphUserData;
 
 namespace heatmaps
 {
+
 enum
 {
     UboHeatmapPoints = hrz::vector_flat_overlay::UboVectorOverlayPass

@@ -1,38 +1,46 @@
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
-load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//tools/bazel:utils.bzl", "make_dbg")
 
-filegroup(
-    name = "generated_hdrs",
-    srcs = ["api.h"],
-)
-
-filegroup(
-    name = "generated_srcs",
-    srcs = ["api.cpp"],
-)
-
-hrz_genrule(
-    name = "generate_templates",
+py_binary(
+    name = "generator",
     srcs = [
-        "//hrz:hrz_protocol.xml",
-        "//hrz/generators:cpp_api_tpl",
+        "generate.py",
     ],
+    data = [
+        "templates/api.tpl.cpp",
+        "templates/api.tpl.h",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_templates",
     outs = [
         "api.cpp",
         "api.h",
     ],
-    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_api $(@D)",
-    tools = ["//hrz/generators:generator"],
+    args = [
+        "$(RULEDIR)",
+    ],
+    tool = ":generator",
 )
 
 cc_library(
     name = "hrz_api",
     srcs = [
-        ":generated_srcs",
+        "api.cpp",
     ],
     hdrs = [
-        ":generated_hdrs",
+        "api.h",
     ],
     include_prefix = "hrz/api",
     linkstatic = True,
@@ -54,15 +62,32 @@ make_dbg(
     cc_target = ":hrz_api",
 )
 
-pkg_tar_aggregate(
+pkg_files(
+    name = "pkg_headers",
+    srcs = [":api.h"],
+    prefix = "include/hrz/api",
+)
+
+pkg_files(
+    name = "pkg_lib_release",
+    srcs = [":hrz_api"],
+    prefix = "lib_release",
+)
+
+pkg_files(
+    name = "pkg_lib_debug",
+    srcs = [":hrz_api_dbg"],
+    prefix = "lib_debug",
+)
+
+pkg_tar(
     name = "pkg",
-    dirs = {
-        "include/hrz/api": [":generated_hdrs"],
-        "lib_release": [":hrz_api"],
-        "lib_debug": [":hrz_api_dbg"],
-        "": [
-            "//:LICENSE",
-        ],
-    },
+    srcs = [
+        ":pkg_headers",
+        ":pkg_lib_debug",
+        ":pkg_lib_release",
+        "//:LICENSE",
+    ],
     extension = "tar.gz",
+    visibility = ["//visibility:public"],
 )

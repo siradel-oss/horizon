@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 // platform is the platform name (Windows, Linux, Emscripten).
 // user_agent is non-empty only in web contexts.
 // gl_vendor and gl_renderer and given by Mycelium.

@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 struct Palette;
 
 struct PaletteUniformData
@@ -21,6 +22,8 @@ HRZ_CHECK_UBO_SIZE(PaletteUniformData);
 
 namespace palette
 {
+
 void fill_ubo_data(PaletteUniformData*, const Palette&);
+
 }
 } // namespace hrz

@@ -1,6 +1,10 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//hrz/protocol:list_proto_files.bzl", "list_proto_files")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
-load("//tools/bazel:pkg.bzl", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg")
 load(":core_shared_build.bzl", "hrz_cc_shared")
 
@@ -19,25 +23,38 @@ GENERATED_TEMPLATES_HDRS = [
     "client_messages.h",
 ] + list_proto_files("scene_path/", "_paths.h")
 
-hrz_genrule(
-    name = "generate_templates",
+py_binary(
+    name = "generator",
     srcs = [
-        "//hrz:hrz_protocol.xml",
-        "//hrz/generators:cpp_core_tpl",
+        "generate.py",
     ],
+    data = [
+        "templates/client_messages.tpl.cpp",
+        "templates/client_messages.tpl.h",
+        "templates/dispatcher.tpl.cpp",
+        "templates/dispatcher.tpl.h",
+        "templates/scene_model_accessor.tpl.cpp",
+        "templates/scene_model_accessor.tpl.h",
+        "templates/scene_path.tpl.cpp",
+        "templates/scene_path.tpl.h",
+        "templates/scene_path_common.tpl.h",
+        "templates/style_enums.tpl.cpp",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_templates",
     outs = GENERATED_TEMPLATES_HDRS + GENERATED_TEMPLATES_SRCS,
-    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_core $(@D)",
-    tools = ["//hrz/generators:generator"],
-)
-
-filegroup(
-    name = "generated_templates_srcs",
-    srcs = GENERATED_TEMPLATES_SRCS,
-)
-
-filegroup(
-    name = "generated_templates_hdrs",
-    srcs = GENERATED_TEMPLATES_HDRS,
+    args = [
+        "$(RULEDIR)",
+    ],
+    tool = ":generator",
 )
 
 cc_library(
@@ -180,7 +197,6 @@ cc_library(
         "vtex/indirection_table_clipmap.cpp",
         "vtex/page_cache_manager.cpp",
         "vtex/page_table.cpp",
-        ":generated_templates_srcs",
         "//hrz/core/jobs:tickets_srcs",
     ] + select({
         "//:os_web": [
@@ -190,7 +206,7 @@ cc_library(
         "//conditions:default": [
             "assets_loader/http_platform_desktop.cpp",
         ],
-    }),
+    }) + GENERATED_TEMPLATES_SRCS,
     hdrs = [
         "actor.h",
         "actor_runner.h",
@@ -324,14 +340,34 @@ cc_library(
         "vtex/indirection_table_clipmap.h",
         "vtex/page_cache_manager.h",
         "vtex/page_table.h",
-        ":generated_templates_hdrs",
         "//hrz/core/jobs:tickets_hdrs",
-    ],
+    ] + GENERATED_TEMPLATES_HDRS,
+    implementation_deps = [
+        "//hrz/core/resources",
+        "//hrz/core/shaders",
+        "//hrz/mapbox",
+        "//hrz/monitoring",
+        "//hrz/protocol/history:scene_model_version",
+        "//hrz/version",
+        "//libs/proj_lite",
+        "//libs/ws:ws_client",
+        "@basisu",
+        "@earcut",
+        "@etcpak",
+        "@pugixml",
+    ] + select({
+        "//:os_native": [
+            "//hrz/http_cache",
+            "@curl",
+        ],
+        "//:os_web": [
+            "//hrz/core/js",
+        ],
+    }),
     local_defines = [
         "HRZ_API_EXPORT",
     ] + select({
         "//:os_windows": [
-            "NOMINMAX",
             "WIN32",
         ],
         "//conditions:default": [],
@@ -340,33 +376,13 @@ cc_library(
         "//hrz/common",
         "//hrz/core/jobs",
         "//hrz/core/platform",
-        "//hrz/core/resources",
-        "//hrz/core/shaders",
-        "//hrz/cpp_api",
         "//hrz/cpp_protocol",
         "//hrz/fnd",
-        "//hrz/mapbox",
-        "//hrz/monitoring",
-        "//hrz/protocol/history:scene_model_version",
-        "//hrz/version",
         "//libs/lm",
         "//libs/mycelium",
-        "//libs/proj_lite",
-        "//libs/ws:ws_client",
-        "//third_party:basisu",
-        "//third_party:earcut",
-        "//third_party:microui",
-        "//third_party:pugixml",
-        "//third_party:rapidjson",
-    ] + select({
-        "//:os_native": [
-            "//hrz/http_cache",
-            "//third_party:curl",
-        ],
-        "//:os_web": [
-            "//hrz/core/js",
-        ],
-    }),
+        "@microui",
+        "@rapidjson",
+    ],
 )
 
 hrz_cc_shared(
@@ -408,6 +424,7 @@ hrz_cc_shared(
     visibility = ["//visibility:public"],
     deps = [
         ":hrz_core_lib",
+        "//hrz/cpp_api",
     ],
 )
 
@@ -434,7 +451,7 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":hrz_core_lib",
-        "//third_party:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -448,24 +465,52 @@ make_dbg(
     cc_target = ":hrz_core_shared_lib",
 )
 
-pkg_tar_aggregate(
+pkg_files(
+    name = "pkg_lib_release",
+    srcs = [":hrz_core_import_lib"],
+    prefix = "lib_release",
+)
+
+pkg_files(
+    name = "pkg_lib_debug",
+    srcs = [":hrz_core_import_lib_dbg"],
+    prefix = "lib_debug",
+)
+
+pkg_files(
+    name = "pkg_bin_release",
+    srcs = [":hrz_core_shared_lib"],
+    prefix = "bin_release",
+)
+
+pkg_files(
+    name = "pkg_bin_debug",
+    srcs = [":hrz_core_shared_lib_dbg"],
+    prefix = "bin_debug",
+)
+
+pkg_files(
+    name = "pkg_public_hdrs",
+    srcs = [
+        "backend.h",
+        "core.h",
+        "//hrz/fnd:public_hdrs",
+    ],
+    prefix = "include/",
+    strip_prefix = strip_prefix.from_root(),  # Keep whole path
+)
+
+pkg_tar(
     name = "pkg_native",
-    dirs = {
-        "include/hrz/core": [
-            "core.h",
-            "backend.h",
-        ],
-        "include/hrz/fnd": [
-            "//hrz/fnd:public_hdrs",
-        ],
-        "lib_release": [":hrz_core_import_lib"],
-        "lib_debug": [":hrz_core_import_lib_dbg"],
-        "bin_release": [":hrz_core_shared_lib"],
-        "bin_debug": [":hrz_core_shared_lib_dbg"],
-        "": [
-            "//:LICENSE",
-            "//third_party:LICENSE-THIRD-PARTY.txt",
-        ],
-    },
+    srcs = [
+        ":pkg_bin_debug",
+        ":pkg_bin_release",
+        ":pkg_lib_debug",
+        ":pkg_lib_release",
+        ":pkg_public_hdrs",
+        "//:LICENSE",
+        "//third_party:LICENSE-THIRD-PARTY.txt",
+    ],
     extension = "tar.gz",
+    visibility = ["//visibility:public"],
 )

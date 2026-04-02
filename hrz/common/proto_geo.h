@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 inline GeoPosition3 from_proto(const hrz_proto::GeographicPosition& model)
 {
     GeoPosition3 p;
@@ -60,4 +61,5 @@ inline GeoVolumeBounds from_proto(const hrz_proto::GeographicVolumeBounds& bound
 
     return normalize(b);
 }
+
 } // namespace hrz

@@ -1,192 +1,14 @@
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
-load("//tools/bazel:utils.bzl", "target_alias")
 load("//tools/licenses:licenses.bzl", "merge_third_party_licenses_md", "merge_third_party_licenses_txt")
 
 package(default_visibility = ["//visibility:public"])
 
-# This can be used to disable a library on a given target.
-cc_library(
-    name = "empty",
-    srcs = [],
-    visibility = ["//visibility:public"],
-)
-
 alias(
     name = "protoc",
-    actual = "@protobuf//:protoc",
-)
-
-alias(
-    name = "libprotoc",
-    actual = "@protobuf//:protoc_lib",
-)
-
-alias(
-    name = "libprotobuf-lite",
-    actual = "@protobuf//:protobuf_lite",
-)
-
-alias(
-    name = "libprotobuf",
-    actual = "@protobuf//:protobuf",
-)
-
-target_alias(
-    name = "curl",
-    has_wasm = False,
-    workspace = "curl_boringssl",
-)
-
-target_alias(
-    name = "cacert.pem",
-    has_wasm = False,
-    workspace = "curl_boringssl",
-)
-
-target_alias(
-    name = "draco",
-    workspace = "draco",
-)
-
-alias(
-    name = "harfbuzz",
     actual = select({
-        "//:os_web": "@harfbuzz//:harfbuzz_tiny",
-        "//conditions:default": "@harfbuzz//:harfbuzz",
+        "@platforms//os:windows": "@@protobuf++protoc+prebuilt_protoc.win64//:bin/protoc.exe",
+        "@platforms//os:linux": "@@protobuf++protoc+prebuilt_protoc.linux_x86_64//:bin/protoc",
     }),
-)
-
-alias(
-    name = "libwebp",
-    actual = "@libwebp//:libwebp",
-)
-
-alias(
-    name = "basisu",
-    actual = "@basisu//:basisu",
-)
-
-alias(
-    name = "zstd",
-    actual = "@basisu//:zstd",
-)
-
-alias(
-    name = "earcut",
-    actual = "@earcut//:earcut",
-)
-
-alias(
-    name = "cdt",
-    actual = "@cdt//:cdt",
-)
-
-alias(
-    name = "delabella",
-    actual = "@delabella//:delabella",
-)
-
-alias(
-    name = "pugixml",
-    actual = "@pugixml//:pugixml",
-)
-
-alias(
-    name = "microui",
-    actual = "@microui//:microui",
-)
-
-alias(
-    name = "rapidjson",
-    actual = "@rapidjson//:rapidjson",
-)
-
-alias(
-    name = "lz4",
-    actual = "@lz4//:lz4",
-)
-
-alias(
-    name = "lz4hc",
-    actual = "@lz4//:lz4hc",
-)
-
-alias(
-    name = "zlib",
-    actual = "@zlib//:zlib",
-)
-
-alias(
-    name = "gtest_main",
-    actual = select({
-        "//:os_windows": "@googletest//:gtest_main",
-        "//:os_linux": "@googletest//:gtest_main",
-        "//:os_web": ":empty",
-    }),
-)
-
-alias(
-    name = "gtest",
-    actual = select({
-        "//:os_windows": "@googletest//:gtest",
-        "//:os_linux": "@googletest//:gtest",
-        "//:os_web": ":empty",
-    }),
-)
-
-alias(
-    name = "fmtlib",
-    actual = "@fmtlib//:fmtlib",
-)
-
-alias(
-    name = "asio",
-    actual = "@asio//:asio",
-)
-
-alias(
-    name = "websocketpp",
-    actual = "@websocketpp//:websocketpp",
-)
-
-alias(
-    name = "sokol",
-    actual = "@sokol//:sokol",
-)
-
-alias(
-    name = "dear_imgui",
-    actual = "@dear_imgui//:dear_imgui",
-)
-
-alias(
-    name = "portable_file_dialogs",
-    actual = "@portable_file_dialogs//:portable_file_dialogs",
-)
-
-alias(
-    name = "pcg_basic",
-    actual = "@pcg_basic//:pcg_basic",
-)
-
-alias(
-    name = "brotlidec",
-    actual = "@brotli//:brotlidec",
-)
-
-alias(
-    name = "woff2_dec",
-    actual = "@woff2//:dec",
-)
-
-alias(
-    name = "etcpak",
-    actual = "@etcpak//:etcpak",
-)
-
-alias(
-    name = "msdfgen",
-    actual = "@msdfgen//:msdfgen",
 )
 
 alias(
@@ -194,7 +16,6 @@ alias(
     actual = select({
         "//:os_windows": "@buildifier_windows//file:downloaded",
         "//:os_linux": "@buildifier_linux//file:downloaded",
-        "//:os_web": ":empty",
     }),
 )
 
@@ -217,14 +38,14 @@ LICENSES_DICT = {
     "@cdt//:LICENSE": "CDT",
     "@dear_imgui//:LICENSE.txt": "Dear ImGui",
     "@delabella//:LICENSE": "DelaBella",
-    "licenses/draco.txt": "Draco",
+    "@draco//:LICENSE": "Draco",
     "@earcut//:LICENSE": "Earcut",
     "licenses/emscripten.txt": "Emscripten",
     "@etcpak//:LICENSE.txt": "etcpak",
-    "@fmtlib//:LICENSE": "{fmt}",
+    "@fmt//:LICENSE": "{fmt}",
     "//third_party/glad:LICENSE.txt": "Glad",
     "@harfbuzz//:COPYING": "HarfBuzz",
-    "licenses/libcurl.txt": "libcurl",
+    "@curl//:COPYING": "libcurl",
     "@lz4//:LICENSE": "LZ4",
     "@microui//:LICENSE": "microui",
     "@msdfgen//:LICENSE.txt": "msdfgen",
@@ -240,7 +61,7 @@ LICENSES_DICT = {
     "@websocketpp//:COPYING": "websocketpp",
     "@woff2//:LICENSE": "woff2",
     "@zlib//:LICENSE": "zlib",
-    "@basisu//:zstd/LICENSE": "Zstandard",
+    "@zstd//:LICENSE": "Zstandard",
 }
 
 merge_third_party_licenses_txt(

@@ -5,6 +5,7 @@
 
 namespace hrz::camera
 {
+
 AngularViewpoint positional_to_angular_viewpoint(
     const PositionalViewpoint& vp,
     std::optional<lm::ddual_quat> pose)

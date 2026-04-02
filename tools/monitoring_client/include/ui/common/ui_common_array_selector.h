@@ -11,6 +11,7 @@
 
 namespace array_selector
 {
+
 template<typename T>
 using NamingFunction = std::function<std::string(const T&)>;
 
@@ -36,7 +37,7 @@ std::optional<size_t> array_selector_modal(
     bool open = true;
     if (ImGui::BeginPopupModal(title, &open, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::PushItemWidth(450.0f);
+        ImGui::PushItemWidth(450.0F);
 
         for (size_t i = 0; i < elements.size(); ++i)
         {
@@ -65,4 +66,5 @@ std::optional<size_t> array_selector_modal(
 
     return result;
 }
+
 } // namespace array_selector

@@ -8,11 +8,13 @@
 
 namespace hrz_jobs::symbol
 {
+
 using TextInstances = hrz_jobs::BakedSymbols::TextInstances;
 using GlyphPositionUv = hrz_jobs::BakedSymbols::TextInstances::GlyphPositionUv;
 
 namespace
 {
+
 static constexpr size_t InitialTextCapacity = 256;
 static constexpr size_t InitialGlyphCapacity = 2048;
 
@@ -120,7 +122,7 @@ TextRunBakingResult bake_text_run(
 {
     HRZ_SCOPED_SAMPLE("bake text run");
 
-    TextRunBakingResult error_result = {(unsigned int)text.size(), 0.0f, 0};
+    TextRunBakingResult error_result = {(unsigned int)text.size(), 0.0F, 0};
 
     hb_buffer_clear_contents(hb_buffer);
     hb_buffer_add_utf8(hb_buffer, text.data(), text.size(), 0, text.size());
@@ -259,7 +261,8 @@ TextRunBakingResult bake_text_run(
         {
             return {
                 {glyph_count - first_glyph, glyph_run_width_em,
-                 (unsigned int)text.size() - first_char}};
+                 (unsigned int)text.size() - first_char}
+            };
         }
         else
         {
@@ -282,7 +285,8 @@ TextRunBakingResult bake_text_run(
                 return {
                     {breakable_glyph->glyph_index + 1 - first_glyph,
                      breakable_glyph->glyph_run_width_em,
-                     breakable_glyph->char_index + breakable_glyph->char_byte_size - first_char}};
+                     breakable_glyph->char_index + breakable_glyph->char_byte_size - first_char}
+                };
             }
         }
 
@@ -394,10 +398,10 @@ std::optional<lm::vec2> bake_text(
     HRZ_SCOPED_SAMPLE("bake text");
 
     if (text.empty()) return {{0, 0}};
-    if (em_size <= 0.0f) return {{0, 0}};
+    if (em_size <= 0.0F) return {{0, 0}};
 
-    outline_em = std::max(outline_em, 0.0f);
-    line_spacing = std::max(line_spacing, 0.0f);
+    outline_em = std::max(outline_em, 0.0F);
+    line_spacing = std::max(line_spacing, 0.0F);
 
     float available_width_em = available_width / em_size - outline_em * 2;
     float available_height_em = available_height / em_size - outline_em * 2;
@@ -411,7 +415,7 @@ std::optional<lm::vec2> bake_text(
     if (first_line_height_em > available_height_em) return {{0, available_height}};
 
     float new_line_height_em = font.info.new_line_height() * line_spacing;
-    uint32_t max_line_count = std::isinf(available_height_em) || new_line_height_em == 0.0f
+    uint32_t max_line_count = std::isinf(available_height_em) || new_line_height_em == 0.0F
         ? std::numeric_limits<uint32_t>::max()
         : (uint32_t)(std::floor((available_height_em - first_line_height_em) / new_line_height_em)
                      + 1);
@@ -506,7 +510,7 @@ std::optional<lm::vec2> bake_text(
     // shifted according to the alignment.
     // (The potential missing height is always below the text.)
     float missing_width =
-        std::max(0.0f, minimum_width - (text_width_em + outline_em * 2) * em_size);
+        std::max(0.0F, minimum_width - (text_width_em + outline_em * 2) * em_size);
 
     // Shift the text according to the alignment, so that the left side of the
     // longest line is at x = 0.
@@ -516,7 +520,7 @@ std::optional<lm::vec2> bake_text(
     switch (alignment)
     {
         case hrz_proto::TextAlignment::CENTERED:
-            shift.x += text_width_em * 0.5f * em_size + missing_width * 0.5f;
+            shift.x += text_width_em * 0.5F * em_size + missing_width * 0.5F;
             break;
         case hrz_proto::TextAlignment::LEFT_ALIGNED: break;
         case hrz_proto::TextAlignment::RIGHT_ALIGNED:
@@ -566,6 +570,7 @@ void pad_vector_for_data_texture(hrz::BlobVector<T>& vector)
 
     vector.resize(size);
 }
+
 } // namespace
 
 hrz_jobs::JobResult SymbolBaker::TextVisitor::init()
@@ -682,13 +687,13 @@ ElementGeometry SymbolBaker::TextVisitor::visit_element(
             / (hrz::font_rasterizer::GLYPH_SIZE * font.info.internal_units_to_em);
         float outline_size =
             (outline_em_size / font.info.internal_units_to_em) / padding_in_font_units;
-        outline_size *= 0.5f;
+        outline_size *= 0.5F;
 
         // Extenting the outline right next to the edge of the SDF makes the edges of
         // the rendered outline jaggy. So we leave a small gap.
         // (The value has been determined empirically, as a balance between edge
         // smoothness and loss of maximum width.)
-        outline_size = hrz::clamp(outline_size, 0.0f, 0.5f - (6.0f / 255.0f));
+        outline_size = hrz::clamp(outline_size, 0.0F, 0.5F - (6.0F / 255.0F));
 
         auto text_size_opt = bake_text(
             text_index, text, font, font_size, outline_em_size, alignment, line_spacing,
@@ -706,7 +711,7 @@ ElementGeometry SymbolBaker::TextVisitor::visit_element(
         instances.fill_colors.push_back(fill_color_srgb);
         instances.outline_colors.push_back(outline_color_srgb);
 
-        instances.has_non_zero_outline_width |= outline_em_size > 0.0f;
+        instances.has_non_zero_outline_width |= outline_em_size > 0.0F;
 
         register_element_instance_index(text_index);
     }
@@ -798,6 +803,9 @@ std::optional<std::optional<hrz_jobs::BakedSymbols::ElementInstances>> SymbolBak
             transforms_array_opt.value(), anchor_indices_array_opt.value(),
             outline_widths_array_opt.value(), fill_colors_array_opt.value(),
             outline_colors_array_opt.value(), glyph_positions_uvs_array_opt.value(),
-            text_indices_array_opt.value(), instances.has_non_zero_outline_width}}}};
+            text_indices_array_opt.value(), instances.has_non_zero_outline_width
+        }
+    }}};
 }
+
 } // namespace hrz_jobs::symbol

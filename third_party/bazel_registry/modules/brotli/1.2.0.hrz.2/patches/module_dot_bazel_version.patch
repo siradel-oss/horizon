@@ -1,0 +1,13 @@
+--- MODULE.bazel
++++ MODULE.bazel
+@@ -5,9 +5,7 @@
+ 
+ """Brotli reference implementation"""
+ 
+-module(
+-    name = "brotli",
+-    version = "1.2.0",
++module(name = "brotli", version = "1.2.0.hrz.2",
+     repo_name = "org_brotli",
+ )
+ 

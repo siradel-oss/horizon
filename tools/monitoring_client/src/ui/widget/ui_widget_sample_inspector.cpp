@@ -6,6 +6,7 @@
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 void SampleInspector::focus_on_sample(uint64_t record_hash, data::SampleId sample_id)
@@ -60,7 +61,7 @@ void SampleInspector::draw(
 
     // Layout
     const float min_width = ImGui::GetStyle().WindowPadding.x + SEPARATOR_INTERACT_WIDTH;
-    const float max_width = ImGui::GetWindowContentRegionWidth() - 1.0f;
+    const float max_width = ImGui::GetWindowContentRegionWidth() - 1.0F;
 
     // We need to prevent the separator line from being pushed out of the window, and prevent
     // the table rect from having a 0-width (which means automatic width for ImGui)
@@ -70,7 +71,7 @@ void SampleInspector::draw(
     ImGui::BeginChild("Left", table_rect.size(), false);
     {
         static ImGuiTextFilter filter;
-        filter.Draw("Filter by name", 300.0f);
+        filter.Draw("Filter by name", 300.0F);
 
         ImGui::SameLine();
         ImGui::BeginDisabled(!filter.IsActive());
@@ -94,7 +95,8 @@ void SampleInspector::draw(
                 // The table sort specs have been edited
                 std::stable_sort(
                     _sorted_records.begin(), _sorted_records.end(),
-                    [&](uint64_t a, uint64_t b) {
+                    [&](uint64_t a, uint64_t b)
+                    {
                         return _compare_records(
                             sample_system.records.at(a), sample_system.records.at(b), sort_specs);
                     });
@@ -381,7 +383,8 @@ void SampleInspector::_draw_inspector(
             // The table sort specs have been edited
             std::stable_sort(
                 _sorted_samples.begin(), _sorted_samples.end(),
-                [&](data::SampleId a, data::SampleId b) {
+                [&](data::SampleId a, data::SampleId b)
+                {
                     return _compare_samples(
                         system.get_sample(a), system.get_sample(b), system, sort_specs);
                 });
@@ -413,9 +416,9 @@ void SampleInspector::_draw_separator_line()
     if (ImGui::IsItemActive())
     {
         const auto mouse_pos_x = ImGui::GetIO().MousePos.x;
-        const auto offset = SEPARATOR_INTERACT_WIDTH / 2.0f + ImGui::GetStyle().WindowPadding.x;
+        const auto offset = SEPARATOR_INTERACT_WIDTH / 2.0F + ImGui::GetStyle().WindowPadding.x;
 
-        _inspector_width = std::max(0.0f, ImGui::GetWindowWidth() - mouse_pos_x + offset);
+        _inspector_width = std::max(0.0F, ImGui::GetWindowWidth() - mouse_pos_x + offset);
 
         line_color = ImGui::GetColorU32(ImGuiCol_SeparatorActive);
     }

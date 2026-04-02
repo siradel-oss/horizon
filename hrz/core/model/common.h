@@ -8,6 +8,7 @@
 
 namespace hrz::model
 {
+
 inline hrz::BSphere<double> compute_bsphere_from_bbox(
     const lm::dbbox3& prim_bbox,
     const lm::dmat4& transform)

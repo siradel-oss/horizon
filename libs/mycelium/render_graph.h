@@ -4,6 +4,7 @@
 
 namespace my
 {
+
 class ResourceBinder;
 class Renderer;
 class RenderPass;

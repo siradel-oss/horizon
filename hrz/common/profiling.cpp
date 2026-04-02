@@ -20,6 +20,7 @@ namespace hrz
 {
 namespace profiling
 {
+
 struct Sample;
 using SamplePtr = Arena::Ptr<Sample>;
 
@@ -53,6 +54,7 @@ struct Sample
             pb_sample->aggregation_time_total() + (time_us - last_begin_time_us));
     }
 };
+
 } // namespace profiling
 
 struct SharedData
@@ -296,6 +298,7 @@ struct ThreadProfiler
         reset();
     }
 };
+
 } // namespace hrz
 
 static hrz::SharedData g_shared_data;

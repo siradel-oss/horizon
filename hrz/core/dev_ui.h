@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct JobScheduler;
 struct PlanetSurface;
@@ -23,6 +24,7 @@ struct VectorTilesLayerSystem;
 
 namespace dev_ui
 {
+
 /**
  * This is the data that needs to be displayed in the dev UI. It needs to be
  * passed at every frame.

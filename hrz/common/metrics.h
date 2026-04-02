@@ -9,15 +9,19 @@
 
 namespace hrz_monitoring
 {
+
 struct MessageBuffer;
+
 }
 
 namespace hrz
 {
+
 struct ThreadMetricsRegistry;
 
 namespace metrics
 {
+
 ThreadMetricsRegistry* create_thread_registry(bool enabled);
 void destroy_thread_registry(ThreadMetricsRegistry*);
 

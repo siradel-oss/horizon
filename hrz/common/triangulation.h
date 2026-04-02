@@ -7,6 +7,7 @@
 
 namespace mapbox::util
 {
+
 template<>
 struct nth<0, lm::dvec2>
 {
@@ -42,4 +43,5 @@ struct nth<1, hrz::GeoPosition2>
 {
     inline static double get(const hrz::GeoPosition2& v) { return v.lon; }
 };
+
 } // namespace mapbox::util

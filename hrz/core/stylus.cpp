@@ -7,11 +7,14 @@
 
 namespace
 {
+
 static constexpr float DISTANCE_FOR_DRAG = 10; // pixels
+
 } // anonymous namespace
 
 namespace hrz
 {
+
 struct StylusSystem
 {
     struct Stylus
@@ -36,6 +39,7 @@ struct StylusSystem
 
 namespace
 {
+
 void on_stylus_move(StylusSystem* ss, const platform::Event& event)
 {
     auto& stylus = ss->stylus;
@@ -65,8 +69,9 @@ void on_stylus_down(StylusSystem* ss, const platform::Event& event)
 
     stylus.initial_position = {event.stylus.x, event.stylus.y};
     stylus.is_down = true;
-    ss->events.push_back(platform::Event::make_mouse_button_down(
-        platform::Event::MouseButton::Left, event.stylus.x, event.stylus.y));
+    ss->events.push_back(
+        platform::Event::make_mouse_button_down(
+            platform::Event::MouseButton::Left, event.stylus.x, event.stylus.y));
 }
 
 void on_stylus_up(StylusSystem* ss, const platform::Event& event)
@@ -76,18 +81,21 @@ void on_stylus_up(StylusSystem* ss, const platform::Event& event)
     stylus.is_down = false;
     stylus.qualified_as_drag = false;
 
-    ss->events.push_back(platform::Event::make_mouse_button_up(
-        platform::Event::MouseButton::Left, event.stylus.x, event.stylus.y));
+    ss->events.push_back(
+        platform::Event::make_mouse_button_up(
+            platform::Event::MouseButton::Left, event.stylus.x, event.stylus.y));
 }
 
 void on_stylus_leave(StylusSystem* ss, const platform::Event& event)
 {
     ss->events.push_back(platform::Event{platform::Event::Kind::MouseLeave});
 }
+
 } // anonymous namespace
 
 namespace stylus
 {
+
 StylusSystem* create_system()
 {
     return new StylusSystem();
@@ -126,5 +134,6 @@ bool dequeue_event(StylusSystem* ss, platform::Event& event)
     }
     return false;
 }
+
 } // namespace stylus
 } // namespace hrz

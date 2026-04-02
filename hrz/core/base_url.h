@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 // This class reproduces part of the functionality in
 // https://github.com/CesiumGS/cesium/blob/451426bb5ea13797453e652c611024d5e547352f/Source/Core/Resource.js
 //
@@ -39,4 +40,5 @@ private:
 
     bool default_base_query_parameter_inclusion;
 };
+
 } // namespace hrz

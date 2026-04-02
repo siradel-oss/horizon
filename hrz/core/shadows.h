@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 struct ShadowsSystem;
 struct CameraViewInfo;
 struct Render;
@@ -16,6 +17,7 @@ struct RenderView;
 
 namespace shadows
 {
+
 static_assert(HRZ_S_MAX_SUN_CASCADES <= 4, "Too many sun cascades");
 
 static const char* const SUN_SHADOW_MAP_SAMPLER_NAMES[] = {

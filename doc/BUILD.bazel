@@ -1,8 +1,7 @@
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@rules_python//python:defs.bzl", "py_binary")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 py_binary(
     name = "run_mkdocs",
@@ -20,12 +19,15 @@ py_binary(
     ],
 )
 
-hrz_genrule(
+run_binary(
     name = "make_opensource_mkdocs",
     srcs = ["mkdocs_common.yml"],
     outs = ["mkdocs_opensource.yml"],
-    cmd = "$(location //tools:redact) $< $@",
-    tools = ["//tools:redact"],
+    args = [
+        "$<",
+        "$@",
+    ],
+    tool = "//tools:redact",
 )
 
 copy_file(

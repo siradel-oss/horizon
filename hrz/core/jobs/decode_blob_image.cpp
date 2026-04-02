@@ -21,6 +21,7 @@
 
 namespace
 {
+
 static thread_local std::optional<hrz::blobs::MallocAdapter> blob_malloc_adapter;
 
 void* adapter_malloc(size_t size)
@@ -70,6 +71,7 @@ void adapter_free(void* ptr)
         free(ptr);
     }
 }
+
 } // namespace
 
 extern "C"
@@ -107,6 +109,7 @@ void stbi_free(void* ptr)
 
 namespace
 {
+
 bool is_data_ktx2(std::span<const std::byte> data)
 {
     // See https://registry.khronos.org/KTX/specs/2.0/ktxspec.v2.html
@@ -157,8 +160,7 @@ std::optional<hrz::BlobImage> finalize_image(
             auto decoded_image_data = decoded_image_blob.get_mutable_data();
 
             transform_32bit_image_data(
-                decoded_image_data.data(), width * height,
-                [decode_func = decode_func](uint32_t v)
+                decoded_image_data.data(), width * height, [decode_func = decode_func](uint32_t v)
                 { return std::bit_cast<uint32_t>(decode_func(v)); });
 
             encoded_image_format = hrz_proto::ImageFormat::R_F32;
@@ -357,8 +359,8 @@ hrz_jobs::JobResult decode_ktx2(
     bool is_srgb = transcoder.get_dfd_transfer_func() == basist::KTX2_KHR_DF_TRANSFER_SRGB;
     auto target_texture_format = allow_decoding_to_compressed_image
         ? select_target_compressed_texture_format(
-            transcoder.get_basis_tex_format(), transcoder.get_has_alpha(), is_srgb, platform_info,
-            my_instance_info)
+              transcoder.get_basis_tex_format(), transcoder.get_has_alpha(), is_srgb, platform_info,
+              my_instance_info)
         : basist::transcoder_texture_format::cTFRGBA32;
     auto texture_format = convert_basisu_texture_format(target_texture_format, is_srgb);
 
@@ -759,6 +761,7 @@ std::optional<hrz::blobs::BlobHandle> decode_raw(
 
 namespace hrz_jobs::decode_blob_image
 {
+
 hrz_jobs::JobResult run(
     const hrz::BlobImageDecodingParams& params,
     hrz::BlobImage& decoded_image,

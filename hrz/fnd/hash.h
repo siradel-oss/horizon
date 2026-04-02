@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 uint128 murmur3_x64_128(std::span<const std::byte> s);
 
 inline uint128 murmur3_x64_128(std::string_view s)

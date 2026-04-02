@@ -15,6 +15,7 @@
 
 namespace hrz
 {
+
 struct ShapeEditor;
 struct ClientMessageQueue;
 struct PickingIdAllocator;
@@ -24,11 +25,14 @@ struct ViewportEvent;
 
 namespace planet
 {
+
 struct GeometryResources;
+
 }
 
 namespace editor
 {
+
 /**
  * Instantiate a new shape editor.
  */
@@ -122,5 +126,6 @@ void set_mode(ShapeEditor*, hrz_proto::ShapeEditorMode);
 hrz_proto::ShapeInformation get_shape_information(ShapeEditor*, uint64_t layer_id);
 
 void delete_selected_control_point(ShapeEditor*);
+
 } // namespace editor
 } // namespace hrz

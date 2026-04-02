@@ -15,13 +15,16 @@ struct mu_Context;
 
 namespace hrz
 {
+
 struct PlanetSurface;
 struct PickingSystem;
 struct ViewportEvent;
+
 } // namespace hrz
 
 namespace hrz::camera
 {
+
 class Camera
 {
 public:

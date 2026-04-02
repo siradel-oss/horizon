@@ -1,47 +1,66 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//hrz/protocol:list_proto_files.bzl", "list_proto_files")
 load("//tools/bazel:genrule.bzl", "hrz_genrule")
-load("//tools/bazel:pkg.bzl", "make_dirs_structure", "pkg_tar_aggregate")
 load("//tools/bazel:utils.bzl", "make_dbg")
+
+PROTO_SOURCES = list_proto_files("gen/hrz/protocol/", ".pb.cc")
+
+PROTO_HEADERS = list_proto_files("gen/hrz/protocol/", ".pb.h")
 
 hrz_genrule(
     name = "generate_proto",
     srcs = [
         "//hrz/protocol:protos",
     ],
-    outs =
-        list_proto_files("gen/hrz/protocol/", ".pb.cc") +
-        list_proto_files("gen/hrz/protocol/", ".pb.h"),
-    cmd = "$(location //third_party:protoc) $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(@D)/gen --hrz_out=$(@D)/gen",
+    outs = PROTO_SOURCES + PROTO_HEADERS,
+    cmd = "$(execpath //third_party:protoc) $(SRCS) --plugin=protoc-gen-hrz=$(execpath //hrz/cpp_protocol/protoc_plugin) --cpp_out=$(RULEDIR)/gen --hrz_out=$(RULEDIR)/gen",
     tools = [
         "//hrz/cpp_protocol/protoc_plugin",
         "//third_party:protoc",
     ],
 )
 
-hrz_genrule(
-    name = "generate_templates",
+py_binary(
+    name = "generator",
     srcs = [
-        "//hrz:hrz_protocol.xml",
-        "//hrz/generators:cpp_protocol_tpl",
+        "generate.py",
     ],
-    outs = [
-        "gen/hrz/protocol/path_builder_common.h",
-        "gen/hrz/protocol/services.h",
-    ] + list_proto_files("gen/hrz/protocol/path_builder/", ".h"),
-    cmd = "$(location //hrz/generators:generator) $(location //hrz:hrz_protocol.xml) cpp_protocol $(@D)",
-    tools = [
-        "//hrz/generators:generator",
+    data = [
+        "templates/path_builder.tpl.h",
+        "templates/path_builder_common.tpl.h",
+        "templates/services.tpl.h",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
     ],
 )
 
-PUBLIC_HEADERS = [
+ADDITIONAL_GENERATED_HEADERS = [
     "gen/hrz/protocol/path_builder_common.h",
     "gen/hrz/protocol/services.h",
-] + list_proto_files("gen/hrz/protocol/", ".pb.h") + list_proto_files("gen/hrz/protocol/path_builder/", ".h")
+] + list_proto_files("gen/hrz/protocol/path_builder/", ".h")
+
+run_binary(
+    name = "generate_templates",
+    outs = ADDITIONAL_GENERATED_HEADERS,
+    args = [
+        "$(RULEDIR)/gen/hrz/protocol",
+    ],
+    tool = ":generator",
+)
+
+PUBLIC_HEADERS = ADDITIONAL_GENERATED_HEADERS + PROTO_HEADERS
 
 cc_library(
     name = "hrz_protocol",
-    srcs = list_proto_files("gen/hrz/protocol/", ".pb.cc"),
+    srcs = PROTO_SOURCES,
     hdrs = PUBLIC_HEADERS,
     includes = [
         "gen",
@@ -49,7 +68,7 @@ cc_library(
     linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party:libprotobuf-lite",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -64,18 +83,38 @@ make_dbg(
     cc_target = ":hrz_protocol",
 )
 
-pkg_tar_aggregate(
+pkg_files(
+    name = "pkg_lib_release",
+    srcs = [":hrz_protocol"],
+    prefix = "lib_release",
+)
+
+pkg_files(
+    name = "pkg_lib_debug",
+    srcs = [":hrz_protocol_dbg"],
+    prefix = "lib_debug",
+)
+
+pkg_files(
+    name = "pkg_headers",
+    srcs = PUBLIC_HEADERS,
+    prefix = "include",
+    strip_prefix = strip_prefix.from_pkg("gen/"),
+)
+
+pkg_files(
+    name = "pkg_license",
+    srcs = ["//:LICENSE"],
+)
+
+pkg_tar(
     name = "pkg",
-    dirs = {
-        "lib_release": [":hrz_protocol"],
-        "lib_debug": [":hrz_protocol_dbg"],
-        "": [
-            "//:LICENSE",
-        ],
-    } | make_dirs_structure(
-        PUBLIC_HEADERS,
-        "gen/",
-        "include/",
-    ),
+    srcs = [
+        ":pkg_headers",
+        ":pkg_lib_debug",
+        ":pkg_lib_release",
+        "//:LICENSE",
+    ],
     extension = "tar.gz",
+    visibility = ["//visibility:public"],
 )

@@ -27,6 +27,7 @@ static constexpr double kNorthLatitudeEpsilon = lm::radians(75.0);
 
 namespace hrz::camera
 {
+
 template<int ATTEMPTS = 1>
 class OneTimePicking
 {
@@ -68,7 +69,8 @@ public:
                 {
                     _picking_tickets[i] = {
                         picking::schedule_pick(ps, _initial_positions[i], {}), _view_index,
-                        (uintptr_t)ps};
+                        (uintptr_t)ps
+                    };
                 }
             }
             _has_issued_picks = true;
@@ -286,6 +288,7 @@ public:
 // https://stackoverflow.com/questions/53408962/try-to-understand-compiler-error-message-default-member-initializer-required-be
 namespace
 {
+
 struct Config
 {
     EnergyHalfTime energy_half_time;
@@ -296,6 +299,7 @@ struct Config
     double terrain_collision_inertia{};
     hrz_proto::CameraAnimationOptions correction;
 };
+
 } // namespace
 
 class OrbitManipulator : public CameraManipulator
@@ -455,23 +459,23 @@ class OrbitManipulator : public CameraManipulator
             else if (type == MovementEventType::BeginContinuous && movement.has_rotation())
             {
                 return std::make_unique<
-                    ContinuousMovementInterruptionController<InitializedState, BaseController>>(
-                    std::make_unique<ContinuousMovementRotationController>(state),
-                    movement.continuous_movement_interruption());
+                    ContinuousMovementInterruptionController<InitializedState, BaseController>
+                >(std::make_unique<ContinuousMovementRotationController>(state),
+                  movement.continuous_movement_interruption());
             }
             else if (type == MovementEventType::BeginContinuous && movement.has_zoom())
             {
                 return std::make_unique<
-                    ContinuousMovementInterruptionController<InitializedState, BaseController>>(
-                    std::make_unique<ContinuousMovementZoomController>(state, view_index),
-                    movement.continuous_movement_interruption());
+                    ContinuousMovementInterruptionController<InitializedState, BaseController>
+                >(std::make_unique<ContinuousMovementZoomController>(state, view_index),
+                  movement.continuous_movement_interruption());
             }
             else if (type == MovementEventType::BeginContinuous && movement.has_translation())
             {
                 return std::make_unique<
-                    ContinuousMovementInterruptionController<InitializedState, BaseController>>(
-                    std::make_unique<ContinuousMovementTranslationController>(state),
-                    movement.continuous_movement_interruption());
+                    ContinuousMovementInterruptionController<InitializedState, BaseController>
+                >(std::make_unique<ContinuousMovementTranslationController>(state),
+                  movement.continuous_movement_interruption());
             }
 
             return nullptr;
@@ -567,7 +571,6 @@ class OrbitManipulator : public CameraManipulator
 
         void on_start(CameraManipulatorContext* ctx) override
         {
-            hrz_proto::CameraNotification notification;
             ctx->add_notification()->mutable_animation_started();
         }
 
@@ -2017,8 +2020,9 @@ class OrbitManipulator : public CameraManipulator
         assert(std::holds_alternative<UninitializedState>(_state));
         auto config = std::get<UninitializedState>(_state).config;
         _state = InitializedState{config, pose, false};
-        replace_controller(std::make_unique<IdleController>(
-            pose, config.min_height_above_terrain, config.terrain_collision_inertia));
+        replace_controller(
+            std::make_unique<IdleController>(
+                pose, config.min_height_above_terrain, config.terrain_collision_inertia));
     }
 
 public:
@@ -2038,7 +2042,8 @@ public:
                 ? hrz::GeoBounds{bounds_limits.west, bounds_limits.east, -lm::PI, lm::PI}
                 : bounds_limits,
             max_altitude, min_tilt, max_tilt, min_height_above_terrain, terrain_collision_inertia,
-            correction}}
+            correction
+        }}
     {
         if (bounds_limits.is_empty())
         {
@@ -2186,10 +2191,11 @@ public:
                 Pose pose = pose_from_dual_quat(state.pose);
                 if (correct_position(&pose.position))
                 {
-                    replace_controller(std::make_unique<AnimationController>(
-                        state.pose, to_dual_quat(pose), state.config.correction,
-                        state.config.min_height_above_terrain,
-                        state.config.terrain_collision_inertia));
+                    replace_controller(
+                        std::make_unique<AnimationController>(
+                            state.pose, to_dual_quat(pose), state.config.correction,
+                            state.config.min_height_above_terrain,
+                            state.config.terrain_collision_inertia));
                 }
                 // So that we don't check too often
                 _last_non_idle_time = hrz::clock::CurrentFrameRealTime.s;
@@ -2227,16 +2233,18 @@ public:
 
         if (params.animation_options().duration() > 0)
         {
-            replace_controller(std::make_unique<AnimationController>(
-                state.pose, to_dual_quat(new_pose), params.animation_options(),
-                state.config.min_height_above_terrain, state.config.terrain_collision_inertia));
+            replace_controller(
+                std::make_unique<AnimationController>(
+                    state.pose, to_dual_quat(new_pose), params.animation_options(),
+                    state.config.min_height_above_terrain, state.config.terrain_collision_inertia));
         }
         else
         {
             state.pose = to_dual_quat(new_pose);
-            replace_controller(std::make_unique<IdleController>(
-                state.pose, state.config.min_height_above_terrain,
-                state.config.terrain_collision_inertia));
+            replace_controller(
+                std::make_unique<IdleController>(
+                    state.pose, state.config.min_height_above_terrain,
+                    state.config.terrain_collision_inertia));
         }
 
         state.should_keep_bearing = true;

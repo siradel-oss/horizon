@@ -44,7 +44,8 @@ FeatureId FeatureId::Builder::build()
     for (const auto& value : _values)
     {
         uint64_t values_to_hash[] = {
-            feature_id._hash, value.attribute_id, attr_hashed(value.value)};
+            feature_id._hash, value.attribute_id, attr_hashed(value.value)
+        };
         feature_id._hash = hrz::hash_mix<uint64_t>(values_to_hash);
     }
 
@@ -167,8 +168,7 @@ std::optional<FeatureIds> FeatureIds::make(
     }
 
     std::ranges::sort(
-        feature_ids._values,
-        [](const AttributeValues& a, const AttributeValues& b)
+        feature_ids._values, [](const AttributeValues& a, const AttributeValues& b)
         { return a.attribute_id < b.attribute_id; });
 
     hrz::InlinedVector<PackedAttributeValuesReader, 2> attribute_values_readers;
@@ -188,7 +188,8 @@ std::optional<FeatureIds> FeatureIds::make(
             {
                 const uint64_t value_hash = attr_hashed(attribute_values_readers[attr].as_ref(row));
                 uint64_t data_to_hash[] = {
-                    feature_hash, feature_ids._values[attr].attribute_id, value_hash};
+                    feature_hash, feature_ids._values[attr].attribute_id, value_hash
+                };
                 feature_hash = hrz::hash_mix<uint64_t>(data_to_hash);
             }
 

@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 template<typename T>
 struct TicketGenerator
 {
@@ -26,4 +27,5 @@ struct TicketGenerator
 private:
     std::atomic<T> generator;
 };
+
 } // namespace hrz

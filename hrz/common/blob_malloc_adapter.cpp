@@ -2,6 +2,7 @@
 
 namespace
 {
+
 static constexpr size_t HEADER_SIZE = alignof(std::max_align_t);
 
 hrz::blobs::RawBlobHandle get_blob_handle(const void* ptr)
@@ -12,10 +13,12 @@ hrz::blobs::RawBlobHandle get_blob_handle(const void* ptr)
     std::memcpy(&blob_handle, header_ptr, sizeof(hrz::blobs::RawBlobHandle));
     return blob_handle;
 }
+
 } // namespace
 
 namespace hrz::blobs
 {
+
 MallocAdapter::MallocAdapter(hrz::BlobAllocator* allocator) : allocator(allocator)
 {
     static_assert(
@@ -107,4 +110,5 @@ void MallocAdapter::free(void* ptr)
     auto blob_handle = get_blob_handle(ptr);
     hrz::blobs::dealloc_raw_blob(allocator, blob_handle);
 }
+
 } // namespace hrz::blobs

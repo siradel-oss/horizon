@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 template<int N = 32>
 class Bitset32
 {
@@ -39,30 +40,30 @@ public:
 
     constexpr bool all_of(const Bitset32& v) const { return (_bits & v._bits) == v._bits; }
 
-    constexpr Bitset32 operator~() const { return {(~_bits) & MASK}; }
+    constexpr Bitset32 operator ~() const { return {(~_bits) & MASK}; }
 
-    constexpr Bitset32 operator!() const { return {(~_bits) & MASK}; }
+    constexpr Bitset32 operator !() const { return {(~_bits) & MASK}; }
 
-    constexpr friend bool operator==(const Bitset32<N>& a, const Bitset32<N>& b) = default;
+    constexpr friend bool operator ==(const Bitset32<N>& a, const Bitset32<N>& b) = default;
 
-    constexpr Bitset32& operator|=(const Bitset32& v)
+    constexpr Bitset32& operator |=(const Bitset32& v)
     {
         _bits |= v._bits;
         return *this;
     }
 
-    constexpr Bitset32& operator&=(const Bitset32& v)
+    constexpr Bitset32& operator &=(const Bitset32& v)
     {
         _bits &= v._bits;
         return *this;
     }
 
-    friend constexpr Bitset32 operator&(const Bitset32& a, const Bitset32& b)
+    friend constexpr Bitset32 operator &(const Bitset32& a, const Bitset32& b)
     {
         return {a._bits & b._bits};
     }
 
-    friend constexpr Bitset32 operator|(const Bitset32& a, const Bitset32& b)
+    friend constexpr Bitset32 operator |(const Bitset32& a, const Bitset32& b)
     {
         return {a._bits | b._bits};
     }

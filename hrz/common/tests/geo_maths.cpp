@@ -83,8 +83,9 @@ TEST(CommonGeoMaths, geo_to_web_mercator)
         EXPECT_EQ(out.max.y, std::numeric_limits<double>::infinity());
     }
     {
-        auto out = hrz::geo_to_web_mercator(hrz::GeoBounds(
-            lm::radians(-178.4), lm::radians(24.7), lm::radians(-86.6), lm::radians(-35.9)));
+        auto out = hrz::geo_to_web_mercator(
+            hrz::GeoBounds(
+                lm::radians(-178.4), lm::radians(24.7), lm::radians(-86.6), lm::radians(-35.9)));
 
         EXPECT_NEAR(out.min.x, -19859397.16, eps);
         EXPECT_NEAR(out.min.y, -22433854.47, eps);
@@ -298,142 +299,173 @@ TEST(CommonGeoMaths, wgs_84_bounds_intersect)
 {
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-20.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-20.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-120.0), lm::radians(-100.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-120.0), lm::radians(-100.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(100.0), lm::radians(120.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(100.0), lm::radians(120.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-20.0), lm::radians(20.0), lm::radians(-60.0), lm::radians(-50.0)};
+            lm::radians(-20.0), lm::radians(20.0), lm::radians(-60.0), lm::radians(-50.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-20.0), lm::radians(20.0), lm::radians(50.0), lm::radians(60.0)};
+            lm::radians(-20.0), lm::radians(20.0), lm::radians(50.0), lm::radians(60.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(10.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(10.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-60.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-60.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-20.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-20.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(20.0), lm::radians(-20.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(20.0), lm::radians(-20.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(100.0), lm::radians(120.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(100.0), lm::radians(120.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-120.0), lm::radians(-100.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-120.0), lm::radians(-100.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-100.0), lm::radians(-120.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-100.0), lm::radians(-120.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(45.0), lm::radians(-45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(45.0), lm::radians(-45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-20.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-20.0), lm::radians(20.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(-90.0), lm::radians(90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-20.0), lm::radians(20.0), lm::radians(10.0), lm::radians(-10.0)};
+            lm::radians(-20.0), lm::radians(20.0), lm::radians(10.0), lm::radians(-10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(45.0), lm::radians(-45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(45.0), lm::radians(-45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-100.0), lm::radians(-120.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-100.0), lm::radians(-120.0), lm::radians(-10.0), lm::radians(10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)};
+            lm::radians(90.0), lm::radians(-90.0), lm::radians(-45.0), lm::radians(45.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-100.0), lm::radians(-120.0), lm::radians(10.0), lm::radians(-10.0)};
+            lm::radians(-100.0), lm::radians(-120.0), lm::radians(10.0), lm::radians(-10.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), false);
         EXPECT_EQ(hrz::intersect(b, a), false);
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(-10.0), lm::radians(10.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(-10.0), lm::radians(10.0), lm::radians(-10.0), lm::radians(10.0)
+        };
         hrz::GeoBounds b = {lm::radians(0.0), lm::radians(0.0), lm::radians(0.0), lm::radians(0.0)};
 
         EXPECT_EQ(hrz::intersect(a, b), true);
@@ -441,9 +473,11 @@ TEST(CommonGeoMaths, wgs_84_bounds_intersect)
     }
     {
         hrz::GeoBounds a = {
-            lm::radians(10.0), lm::radians(-10.0), lm::radians(-10.0), lm::radians(10.0)};
+            lm::radians(10.0), lm::radians(-10.0), lm::radians(-10.0), lm::radians(10.0)
+        };
         hrz::GeoBounds b = {
-            lm::radians(-120.0), lm::radians(-120.0), lm::radians(0.0), lm::radians(0.0)};
+            lm::radians(-120.0), lm::radians(-120.0), lm::radians(0.0), lm::radians(0.0)
+        };
 
         EXPECT_EQ(hrz::intersect(a, b), true);
         EXPECT_EQ(hrz::intersect(b, a), true);

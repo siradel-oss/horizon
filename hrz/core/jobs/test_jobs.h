@@ -5,6 +5,7 @@
 
 namespace hrz_jobs
 {
+
 struct TestJob1Params
 {
     int32_t a;
@@ -26,4 +27,5 @@ struct TestJob2Response
 {
     std::string res;
 };
+
 } // namespace hrz_jobs

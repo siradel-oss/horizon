@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/jcelerier/rapidjson/archive/refs/tags/v1.2.1.tar.gz",
+  "strip_prefix": "rapidjson-1.2.1",
+  "integrity": "sha256-//QuB+lQbpJd++cl2pX0nzJ7KkBCDM89lSryZgCtdl4=",
+  "overlay": {
+    "MODULE.bazel": "sha256-uJqcPgCgrnhDnIBhsRFGDzLlBilCTard7knBRabn6d8=",
+    "BUILD.bazel": "sha256-gkb0v2j4GEy4UOO2zKQUqq6axC6d3Ds4I6otAS9iv8Q="
+  }
+}

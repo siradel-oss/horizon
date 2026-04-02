@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 struct MapboxTranslationSystem;
 struct ActorRunner;
 struct AssetsLoader;
@@ -14,6 +15,7 @@ struct SceneModel;
 
 namespace mapbox
 {
+
 using TranslationTicket = uint64_t;
 
 MapboxTranslationSystem* create_translation_system();

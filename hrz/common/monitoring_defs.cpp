@@ -4,6 +4,7 @@ namespace hrz::monitoring
 {
 namespace systems
 {
+
 const char* to_string(Name name)
 {
     switch (name)
@@ -48,5 +49,6 @@ const char* to_string(Name name)
         default: assert(false && "Unhandled case"); return "";
     }
 }
+
 } // namespace systems
 } // namespace hrz::monitoring

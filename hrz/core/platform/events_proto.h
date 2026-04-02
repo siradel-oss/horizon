@@ -5,6 +5,7 @@
 
 namespace hrz::platform
 {
+
 static inline Event::Key from_proto(const hrz_proto::Key& key)
 {
     return (Event::Key)key;

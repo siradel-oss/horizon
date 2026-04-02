@@ -17,6 +17,7 @@ extern "C"
 
 namespace hrz
 {
+
 class HttpHeaders
 {
 public:
@@ -53,7 +54,7 @@ public:
 
     HttpHeaders(const HttpHeaders& other) : HttpHeaders() { *this = other; }
 
-    HttpHeaders& operator=(const HttpHeaders&);
+    HttpHeaders& operator =(const HttpHeaders&);
 
     HRZ_DEFAULT_MOVE(HttpHeaders);
 
@@ -153,7 +154,7 @@ struct HttpTicket
 {
     uint64_t o;
 
-    constexpr bool operator==(HttpTicket other) const { return o == other.o; }
+    constexpr bool operator ==(HttpTicket other) const { return o == other.o; }
 
     template<typename H>
     friend H AbslHashValue(H h, HttpTicket t)

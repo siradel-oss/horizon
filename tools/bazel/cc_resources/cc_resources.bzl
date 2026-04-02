@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 def _cc_resources_gen_impl(ctx):
     generated_srcs_files = []
     generated_hdrs_files = []
@@ -74,8 +76,7 @@ def cc_resources(name, namespace, header_name, files, **kwargs):
         srcs = [":" + name + "_gen"],
         output_group = "hdrs",
     )
-
-    native.cc_library(
+    cc_library(
         name = name,
         srcs = [":" + name + "_gen_srcs"],
         hdrs = [":" + name + "_gen_hdrs"],

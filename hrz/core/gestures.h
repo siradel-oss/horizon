@@ -12,10 +12,12 @@
 
 namespace hrz
 {
+
 struct GestureSystem;
 
 namespace gestures
 {
+
 using GestureId = uint32_t;
 
 enum class FingerCount
@@ -92,12 +94,12 @@ struct TwoFingerGesture
     /**
      * Return the mid-point between the fingers.
      */
-    lm::vec2 center() const { return (positions[0] + positions[1]) * 0.5f; }
+    lm::vec2 center() const { return (positions[0] + positions[1]) * 0.5F; }
 
     /**
      * Return the mid-point between the fingers, when the gesture began.
      */
-    lm::vec2 initial_center() const { return (initial_positions[0] + initial_positions[1]) * 0.5f; }
+    lm::vec2 initial_center() const { return (initial_positions[0] + initial_positions[1]) * 0.5F; }
 
     /**
      * Return the distance (in pixels) between the first and the
@@ -282,5 +284,6 @@ void remove_ended_gestures(GestureSystem*);
  * Remove the oldest gesture event from the queue and return it.
  */
 bool dequeue_event(GestureSystem*, Event&);
+
 } // namespace gestures
 } // namespace hrz

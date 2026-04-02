@@ -18,7 +18,7 @@ struct LerpVec3Interpolator
 
     constexpr LerpVec3Interpolator(const lm::vec3& v0, const lm::vec3& v1) : v0(v0), v1(v1) {}
 
-    constexpr lm::vec3 operator()(float t) const { return lm::mix(v0, v1, t); }
+    constexpr lm::vec3 operator ()(float t) const { return lm::mix(v0, v1, t); }
 };
 
 struct SlerpQuatInterpolator
@@ -27,7 +27,7 @@ struct SlerpQuatInterpolator
 
     SlerpQuatInterpolator(const lm::quat& q0, const lm::quat& q1) : slerp(q0, q1) {}
 
-    inline lm::quat operator()(float t) const { return slerp.slerp(t); }
+    inline lm::quat operator ()(float t) const { return slerp.slerp(t); }
 };
 
 template<typename T>
@@ -37,7 +37,7 @@ struct StepInterpolation
 
     explicit constexpr StepInterpolation(const T& value_) : value(value_) {}
 
-    constexpr T operator()(float /*t*/) const { return value; }
+    constexpr T operator ()(float /*t*/) const { return value; }
 };
 
 template<typename T>
@@ -52,7 +52,7 @@ struct CubicSplineInterpolator
     {
     }
 
-    T operator()(float t) const
+    T operator ()(float t) const
     {
         const float t2 = t * t;
         const float t3 = t2 * t;
@@ -110,7 +110,8 @@ class AnimationPlayer
             StepInterpolation<lm::quat>,
             StepInterpolation<lm::vec3>,
             CubicSplineInterpolator<lm::vec3>,
-            CubicSplineInterpolator<lm::quat>>;
+            CubicSplineInterpolator<lm::quat>
+        >;
 
         Interpolator interpolator;
 

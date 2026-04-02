@@ -9,6 +9,7 @@
 
 namespace hrz::vt::symbol
 {
+
 // A simple visual element that occupies some area and renders
 // it with a simpler colour. Ideal for scaffolding a new symbol
 // representation.
@@ -123,8 +124,8 @@ public:
         uint64_t layer_id,
         uint32_t z_index,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         const std::function<uint32_t(const hrz_proto::SymbolElement&)>& make_child_prototype)
         override;
 
@@ -168,4 +169,5 @@ public:
 
     void work_gpu(Render* render) override;
 };
+
 } // namespace hrz::vt::symbol

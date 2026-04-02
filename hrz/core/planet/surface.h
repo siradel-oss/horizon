@@ -18,6 +18,7 @@
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct JobScheduler;
@@ -31,13 +32,16 @@ struct AttributionRegistry;
 
 namespace scene_model
 {
+
 class DtmRasterLayerPath;
 class ImageryRasterLayerPath;
 class SceneSettingsPath;
+
 } // namespace scene_model
 
 namespace planet
 {
+
 struct GeometryResources;
 class ElevationQuery;
 using ElevationQueryTicket = uint64_t;
@@ -166,6 +170,7 @@ bool is_working(const PlanetSurface*, std::span<const PlanetGeometry*> geometrie
 
 namespace surface::messages
 {
+
 struct SubscribeToTerrainVersionUpdates
 {
     uint64_t subscription_id;
@@ -181,15 +186,18 @@ struct RequestTileElevationBounds
     uint64_t request_id;
     hrz::TileCoords coords;
 };
+
 } // namespace surface::messages
 
 using ToPlanetSurfaceMessage = std::variant<
     surface::messages::SubscribeToTerrainVersionUpdates,
     surface::messages::CancelTerrainVersionUpdatesSubscription,
-    surface::messages::RequestTileElevationBounds>;
+    surface::messages::RequestTileElevationBounds
+>;
 
 namespace surface::messages
 {
+
 struct TerrainVersionUpdate
 {
     uint64_t subscription_id;
@@ -202,6 +210,7 @@ struct TileElevationBounds
     std::optional<double> min_elevation;
     std::optional<double> max_elevation;
 };
+
 } // namespace surface::messages
 
 using FromPlanetSurfaceMessage =
@@ -210,5 +219,6 @@ using FromPlanetSurfaceMessage =
 using SurfaceChannel = Channel<ToPlanetSurfaceMessage, FromPlanetSurfaceMessage>;
 
 SurfaceChannel create_surface_channel(PlanetSurface*);
+
 } // namespace planet
 } // namespace hrz

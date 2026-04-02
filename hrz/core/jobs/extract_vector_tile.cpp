@@ -12,6 +12,7 @@ namespace hrz_jobs::extract_vector_tile
 {
 namespace
 {
+
 static constexpr size_t InitialFeatureCapacity = 1024;
 static constexpr size_t InitialPointCapacity = 4096;
 static constexpr size_t InitialLinestringSizeCapacity = 1024;
@@ -270,6 +271,7 @@ void clip_feature(
         linestring_first_point += linestring_size;
     }
 }
+
 } // namespace
 
 hrz_jobs::JobResult run(
@@ -593,4 +595,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::extract_vector_tile

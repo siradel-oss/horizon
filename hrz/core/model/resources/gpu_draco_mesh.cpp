@@ -4,6 +4,7 @@
 
 namespace hrz::model
 {
+
 static constexpr BlobLibrary::ConfigH NullCfg = {0};
 
 std::optional<GpuDracoMeshResource> GpuDracoMeshResource::acquire(

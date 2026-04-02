@@ -11,11 +11,13 @@ namespace hrz::planet
 {
 namespace
 {
+
 TileFetcher::LockTicket generate_lock_ticket()
 {
     static std::atomic<uint64_t> lock_ticket_generator;
     return (TileFetcher::LockTicket)++lock_ticket_generator;
 }
+
 } // namespace
 
 ImageTileDecoder::Ticket ImageTileDecoder::decode_tile(
@@ -152,7 +154,8 @@ RasterProvider::TileImage TileFetcher::get_tile_image(LockTicket lock_ticket)
                 return {
                     tile->coords,
                     std::get<BlobImage>(tile->payload),
-                    {attributions.begin(), attributions.end()}};
+                    {attributions.begin(), attributions.end()}
+                };
             }
             case Tile::Status::UseLowerRes:
                 return get_tile_image(std::get<Tile::ParentTicket>(tile->payload).ticket);
@@ -198,7 +201,8 @@ TileFetcher::LockTicket TileFetcher::request_and_lock_tile(
         tile.payload = Tile::LoadingTicket{
             _tile_requester->request_tile(
                 tile_coords, al, queue, priority, {monitoring::systems::PlanetSurface, _raster_id}),
-            queue, priority};
+            queue, priority
+        };
         tile.last_touch_time_ms = hrz::clock::CurrentFrameRealTime.ms;
         tile.lock_count = 1;
 

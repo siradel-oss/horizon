@@ -20,7 +20,7 @@ std::optional<google::protobuf::FileDescriptorSet> find_descriptor_set(uint32_t 
             std::vector<std::byte> data =
                 hrz::scene_dump::decompress(DescriptorSets[i].descriptor_set);
             google::protobuf::FileDescriptorSet desc;
-            desc.ParseFromArray(data.data(), data.size());
+            (void)desc.ParseFromArray(data.data(), data.size());
             return desc;
         }
     }
@@ -39,7 +39,7 @@ std::unique_ptr<google::protobuf::Message> create_scene_dump(
 
     if (!data.empty())
     {
-        msg->ParseFromArray(data.data(), data.size());
+        (void)msg->ParseFromArray(data.data(), data.size());
     }
 
     return std::unique_ptr<google::protobuf::Message>(msg);
@@ -48,7 +48,7 @@ std::unique_ptr<google::protobuf::Message> create_scene_dump(
 std::vector<std::byte> serialize(const google::protobuf::Message& msg)
 {
     std::vector<std::byte> buffer(msg.ByteSizeLong());
-    msg.SerializeToArray(buffer.data(), buffer.size());
+    (void)msg.SerializeToArray(buffer.data(), buffer.size());
     return buffer;
 }
 

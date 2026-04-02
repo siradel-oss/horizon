@@ -1,0 +1,24 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "zstd",
+    srcs = [
+        "zstddeclib.c",
+    ],
+    hdrs = [
+        "zstd.h",
+    ],
+    includes = ["."],
+    copts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-Wno-unused-variable",
+            "-Wno-bitwise-instead-of-logical",
+        ],
+    }),
+)
+
+exports_files(["LICENSE"])
+

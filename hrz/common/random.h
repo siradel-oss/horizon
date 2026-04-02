@@ -3,17 +3,19 @@
 #include "hrz/fnd/maths.h"
 
 #include <lin_maths.h>
-#include <pcg/pcg_basic.h>
+#include <pcg_basic.h>
 
 #include <cmath>
 #include <limits>
 
 namespace hrz
 {
+
 using RngState = pcg32_random_t;
 
 namespace random
 {
+
 // Initializes pseudo-random generator.
 static inline void srand(RngState& state, uint64_t init_state, uint64_t init_seq)
 {
@@ -22,7 +24,7 @@ static inline void srand(RngState& state, uint64_t init_state, uint64_t init_seq
 
 // Generates a float number in the provided bounds following a uniform distribution.
 // Upper bound is exclusive.
-static inline float rand_f32(RngState& state, float low = 0.0f, float up = 1.0f)
+static inline float rand_f32(RngState& state, float low = 0.0F, float up = 1.0F)
 {
     const auto r = (float)std::ldexp(pcg32_random_r(&state), -32);
     return hrz::lerp(low, up, r);
@@ -57,7 +59,7 @@ static inline int32_t rand_i32(
 
 // Generates a float number following a normal distribution of the given parameters.
 // https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
-static inline float rand_norm_f32(RngState& state, float mean = 0.0f, float std_ = 1.0f)
+static inline float rand_norm_f32(RngState& state, float mean = 0.0F, float std_ = 1.0F)
 {
     float u1 = rand_f32(state);
     float u2 = rand_f32(state);
@@ -66,14 +68,15 @@ static inline float rand_norm_f32(RngState& state, float mean = 0.0f, float std_
 }
 
 // Generates an unsigned integer following a normal distribution of the given parameters.
-static inline uint32_t rand_norm_u32(RngState& state, float mean = 0.0f, float std_ = 1.0f)
+static inline uint32_t rand_norm_u32(RngState& state, float mean = 0.0F, float std_ = 1.0F)
 {
     return std::floor(rand_norm_f32(state, mean, std_));
 }
 
-static inline int32_t rand_norm_i32(RngState& state, float mean = 0.0f, float std_ = 1.0f)
+static inline int32_t rand_norm_i32(RngState& state, float mean = 0.0F, float std_ = 1.0F)
 {
     return std::floor(rand_norm_f32(state, mean, std_));
 }
+
 } // namespace random
 } // namespace hrz

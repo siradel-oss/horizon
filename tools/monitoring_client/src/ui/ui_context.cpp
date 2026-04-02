@@ -27,6 +27,7 @@
 
 namespace
 {
+
 using namespace ui;
 using namespace context;
 using namespace helpers;
@@ -311,7 +312,7 @@ private:
         {
             case server::State::ClientConnected:
                 ImGui::Text("Client connected - ");
-                ImGui::SameLine(0.0f, 0.0f);
+                ImGui::SameLine(0.0F, 0.0F);
                 if (database.get_horizon_version().empty())
                 {
                     ImGui::TextDisabled("version was not communicated.");
@@ -333,7 +334,7 @@ private:
 
             case server::State::WaitingForConnection:
                 ImGui::Text("Listening on port %d - ", server::port());
-                ImGui::SameLine(0.0f, 0.0f);
+                ImGui::SameLine(0.0F, 0.0F);
                 if (server::has_session_id() && !server::is_database_clear_allowed())
                 {
                     ImGui::TextColored(
@@ -365,7 +366,7 @@ private:
 
         if (show_stop_server_button)
         {
-            if (show_database_clear_checkbox) ImGui::SameLine(0.0f, 20.0f);
+            if (show_database_clear_checkbox) ImGui::SameLine(0.0F, 20.0F);
             if (ImGui::Button("Stop server")) server::close();
         }
     }
@@ -432,7 +433,7 @@ struct StartServerModal
     void process()
     {
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
 
         if (open)
         {
@@ -483,7 +484,7 @@ struct ClearDatabaseWarningModal
     void process()
     {
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
 
         if (open)
         {
@@ -522,7 +523,7 @@ struct QuitUnsavedModal
     void process()
     {
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
 
         if (open)
         {
@@ -552,7 +553,7 @@ struct UserdataWarningModal
     void process()
     {
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
 
         if (open)
         {
@@ -651,7 +652,7 @@ void _process_windows(const data::Database& database, userdata::Userdata& userda
     }
     if (s_context->show_imgui_metrics_window)
     {
-        ImGui::SetNextWindowSize(lm::dvec2(450.0f, 500.0f), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(lm::dvec2(450.0F, 500.0F), ImGuiCond_Once);
         ImGui::ShowMetricsWindow(&s_context->show_imgui_metrics_window);
     }
 
@@ -850,13 +851,13 @@ void _apply_default_layout_now()
     ImGui::DockBuilderRemoveNodeChildNodes(dockspace_id);
 
     ImGuiID side_dock_id =
-        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.25f, nullptr, &dockspace_id);
+        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.25F, nullptr, &dockspace_id);
     ImGuiID sidesub_dock_id =
-        ImGui::DockBuilderSplitNode(side_dock_id, ImGuiDir_Down, 0.50f, nullptr, &side_dock_id);
+        ImGui::DockBuilderSplitNode(side_dock_id, ImGuiDir_Down, 0.50F, nullptr, &side_dock_id);
     ImGuiID sub_dock_id =
-        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Down, 0.4f, nullptr, &dockspace_id);
+        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Down, 0.4F, nullptr, &dockspace_id);
     ImGuiID footer_dock_id =
-        ImGui::DockBuilderSplitNode(sub_dock_id, ImGuiDir_Down, 0.27f, nullptr, &sub_dock_id);
+        ImGui::DockBuilderSplitNode(sub_dock_id, ImGuiDir_Down, 0.27F, nullptr, &sub_dock_id);
 
     auto create_window = [&](const WindowDescriptor& descriptor, size_t key, ImGuiID dock_id)
     {
@@ -1106,6 +1107,7 @@ void _foreach_window(
 
 namespace ui::context
 {
+
 void initialize(const userdata::Userdata& userdata)
 {
     s_context = std::make_unique<Context>();
@@ -1258,8 +1260,7 @@ struct InspectGpuSnapshot : public Action
     void execute() override
     {
         _foreach_window(
-            WindowType::GpuTreemapWindow,
-            [&](Window* window)
+            WindowType::GpuTreemapWindow, [&](Window* window)
             { ((GpuTreemapWindow*)window)->treemap.set_gpu_snapshot_index(index); });
     }
 };
@@ -1273,8 +1274,7 @@ struct InspectBlobSnapshot : public Action
     void execute() override
     {
         _foreach_window(
-            WindowType::BlobInspectorWindow,
-            [&](Window* window)
+            WindowType::BlobInspectorWindow, [&](Window* window)
             { ((BlobInspectorWindow*)window)->blob_inspector.set_blob_snapshot_index(index); });
     }
 };
@@ -1308,8 +1308,7 @@ struct FocusOnSampleInTimeline : public Action
     void execute() override
     {
         _foreach_window(
-            WindowType::TimelineWindow,
-            [&](Window* window)
+            WindowType::TimelineWindow, [&](Window* window)
             { ((TimelineWindow*)window)->timeline.set_focus(sample_id, entry, exit); });
     }
 };
@@ -1325,7 +1324,8 @@ struct InspectSample : public Action
     {
         _foreach_window(
             WindowType::SampleInspectorWindow,
-            [&](Window* window) {
+            [&](Window* window)
+            {
                 ((SampleInspectorWindow*)window)
                     ->sample_inspector.focus_on_sample(record_hash, sample_id);
             });
@@ -1355,15 +1355,13 @@ struct HighlightFrameInTimeline : public Action
 {
     size_t frame_index;
 
-    HighlightFrameInTimeline(size_t index) : frame_index(index){};
+    HighlightFrameInTimeline(size_t index) : frame_index(index) {};
 
     void execute() override
     {
         _foreach_window(
-            WindowType::TimelineWindow,
-            [&](Window* window)
-            { ((TimelineWindow*)window)->timeline.set_highlighted_frame(frame_index); },
-            false);
+            WindowType::TimelineWindow, [&](Window* window)
+            { ((TimelineWindow*)window)->timeline.set_highlighted_frame(frame_index); }, false);
     }
 };
 
@@ -1371,13 +1369,12 @@ struct HighlightFrameInFrameGraph : public Action
 {
     size_t frame_index;
 
-    HighlightFrameInFrameGraph(size_t index) : frame_index(index){};
+    HighlightFrameInFrameGraph(size_t index) : frame_index(index) {};
 
     void execute() override
     {
         _foreach_window(
-            WindowType::FrameGraphWindow,
-            [&](Window* window)
+            WindowType::FrameGraphWindow, [&](Window* window)
             { ((FrameGraphWindow*)window)->frame_graph.set_highlighted_frame(frame_index); },
             false);
     }

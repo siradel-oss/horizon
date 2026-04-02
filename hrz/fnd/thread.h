@@ -17,6 +17,7 @@
 
 namespace hrz
 {
+
 void pin_thread_to_cpu_core(std::thread& thread, size_t core_id);
 void pin_current_thread_to_cpu_core(size_t core_id);
 
@@ -28,4 +29,5 @@ enum class ThreadPriority
 
 void set_thread_priority(std::thread& thread, ThreadPriority priority);
 void set_current_thread_priority(ThreadPriority priority);
+
 } // namespace hrz

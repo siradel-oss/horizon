@@ -80,6 +80,7 @@ bool has_known_authority(std::string_view descriptor)
 
 namespace hrz
 {
+
 bool convert_crs(
     std::string_view descriptor,
     hrz_proto::SrsDescriptorType descriptor_type,
@@ -158,4 +159,5 @@ std::string srid_descriptor_to_proj4(std::string_view srid_string)
 
     return proj_string;
 }
+
 } // namespace hrz

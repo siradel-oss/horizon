@@ -92,4 +92,5 @@ double compute_vector_tile_tolerance(uint32_t lod)
 
     return meters_per_pixel * meters_per_pixel;
 }
+
 } // namespace hrz::vector_data

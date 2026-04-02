@@ -29,6 +29,7 @@ namespace dd = hrz::debug_draw;
 
 namespace
 {
+
 constexpr lm::dvec3 BsCenter = {0.0, 0.0, 0.0};
 constexpr double BsRadius = hrz::EARTH_RADIUS * 2.0;
 constexpr size_t GroupCount = (size_t)dd::Group_Count;
@@ -241,7 +242,7 @@ TextVertexData generate_text_vertex_data(
         switch (align)
         {
             case dd::TextAlign::Center:
-                offset_vertices(first_glyph_index * 4, text.size() * 4, -text_length / 2.0f);
+                offset_vertices(first_glyph_index * 4, text.size() * 4, -text_length / 2.0F);
                 break;
             case dd::TextAlign::Right:
                 offset_vertices(first_glyph_index * 4, text.size() * 4, -text_length);
@@ -483,7 +484,8 @@ struct Display
 
             my::VertexInputStream streams[] = {
                 {0, pixel_grid_renderable.data.vertex_buffer, my::VertexFormat::Float32_2, 0, 0,
-                 my::VertexRate::PerVertex}};
+                 my::VertexRate::PerVertex}
+            };
 
             my::VertexInputResource vi_res;
             vi_res.attribs = streams;
@@ -573,7 +575,8 @@ struct TextureRenderable : public my::Renderer::Renderable
         data.vertex_buffer = render->rc->alloc(&buf_res, hrz::monitoring::systems::DevTools);
 
         my::VertexInputStream streams[] = {
-            {0, data.vertex_buffer, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}};
+            {0, data.vertex_buffer, my::VertexFormat::Float32_2, 0, 0, my::VertexRate::PerVertex}
+        };
 
         my::VertexInputResource vi_res;
         vi_res.attribs = streams;
@@ -636,7 +639,8 @@ struct TextureRenderable : public my::Renderer::Renderable
         const auto batch = my::DrawBatchInfo(my::PrimitiveType::TriangleList, 6);
 
         my::TextureBinding texture_bindings[] = {
-            {SamplerTextureTexture, data->texture, data->sampler}};
+            {SamplerTextureTexture, data->texture, data->sampler}
+        };
         rb->bind(texture_bindings);
 
         const auto state = rb->get_current_state();
@@ -667,6 +671,7 @@ std::bitset<GroupCount> g_visibility_mask = ~0;
 
 namespace hrz
 {
+
 struct DebugDrawSystem
 {
     my::ResourceHandle primitive_shader;
@@ -689,6 +694,7 @@ namespace debug_draw
 {
 namespace
 {
+
 void init_text_renderable(
     std::span<TextCommand> consumable_commands,
     TextRenderable& renderable,
@@ -714,7 +720,8 @@ void init_text_renderable(
         {1, vertex_buffer, my::VertexFormat::Float32_2, sizeof(lm::vec2), sizeof(TextVertex),
          my::VertexRate::PerVertex},
         {2, vertex_buffer, my::VertexFormat::UInt32, 2 * sizeof(lm::vec2), sizeof(TextVertex),
-         my::VertexRate::PerVertex}};
+         my::VertexRate::PerVertex}
+    };
 
     my::BufferResource ib_res(my::BufferResource::BufferType::Index);
     ib_res.size = data.indices.size() * sizeof(uint32_t);
@@ -961,7 +968,8 @@ void init_render(DebugDrawSystem* dd, Render* render)
             {0, "i_position_low"},
             {1, "i_position_high"},
             {2, "i_color"},
-            {3, "i_coordinate_space"}};
+            {3, "i_coordinate_space"}
+        };
 
         static const my::IndexName ubos[] = {{hrz::UboFrame, "Frame"}};
 
@@ -991,16 +999,15 @@ void init_render(DebugDrawSystem* dd, Render* render)
 
     // Text shader
     {
-        static const my::IndexName attribs[] = {
-            {0, "i_pixel_position"},
-            {1, "i_uv"},
-            {2, "i_instance_index"}};
+        static const my::IndexName attribs[] =
+            {{0, "i_pixel_position"}, {1, "i_uv"}, {2, "i_instance_index"}};
 
         static const my::IndexName ubos[] = {{hrz::UboFrame, "Frame"}};
 
         static const my::IndexName samplers[] = {
             {SamplerTextInstanceData, "u_instance_data"},
-            {SamplerTextFontAtlas, "u_font_atlas"}};
+            {SamplerTextFontAtlas, "u_font_atlas"}
+        };
 
         static const char* outputs[] = {"o_color"};
 
@@ -1054,7 +1061,7 @@ void init_render(DebugDrawSystem* dd, Render* render)
         dd->font_data.char_count = char_count;
 
         stbtt_BakeFontBitmap(
-            (const unsigned char*)blob.data(), 0, 24.0f, (unsigned char*)pixels, texture_size,
+            (const unsigned char*)blob.data(), 0, 24.0F, (unsigned char*)pixels, texture_size,
             texture_size, dd->font_data.min_char, char_count, cdata);
 
         dd->font_data.char_data.resize(char_count);
@@ -1103,6 +1110,7 @@ void deinit_render(DebugDrawSystem* dd, Render* render)
     dd->display.deinit_render(render);
     dd->texture_renderable.deinit_render(render);
 }
+
 } // namespace
 
 DebugDrawSystem* create_system()
@@ -1199,7 +1207,7 @@ void polyline(std::span<const double> coords, const lm::vec4& color, Space space
     auto& command = g_line_commands.back();
 
     auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
-    command.color = (lm::ubvec4)(premultiplied_color * 255.0f);
+    command.color = (lm::ubvec4)(premultiplied_color * 255.0F);
     command.coordinate_space = space;
 
     command.points.reserve(((coords.size() / 3) - 1) * 2);
@@ -1218,7 +1226,7 @@ void points(std::span<const double> coords, const lm::vec4& color, Space space, 
     auto& command = g_point_commands.back();
 
     auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
-    command.color = (lm::ubvec4)(premultiplied_color * 255.0f);
+    command.color = (lm::ubvec4)(premultiplied_color * 255.0F);
     command.coordinate_space = space;
 
     command.points.reserve(coords.size() / 3);
@@ -1236,7 +1244,7 @@ void triangles(std::span<const double> coords, const lm::vec4& color, Space spac
     auto& command = g_triangle_commands.back();
 
     auto premultiplied_color = lm::vec4(color.rgb * color.a, color.a);
-    command.color = (lm::ubvec4)(premultiplied_color * 255.0f);
+    command.color = (lm::ubvec4)(premultiplied_color * 255.0F);
     command.coordinate_space = space;
 
     command.points.reserve(((coords.size() / 3) / 3) * 3);
@@ -1448,7 +1456,7 @@ void DebugDraw::wgs84_box(const hrz::GeoVolumeBounds& bounds) const
         lm::length(hrz::geo_to_ecef(bounds.corner(0)) - hrz::geo_to_ecef(bounds.corner(1))) / 2.0;
     double z_he = (bounds.max_height - bounds.min_height) / 2.0;
 
-#define CORNER(x, y, z) center_ecef + x* east* x_he + y* north* y_he + z* up* z_he
+#define CORNER(x, y, z) center_ecef + x * east * x_he + y * north * y_he + z * up * z_he
 
     polyline({CORNER(-1, -1, -1), CORNER(1, -1, -1)});
     polyline({CORNER(-1, -1, -1), CORNER(-1, 1, -1)});

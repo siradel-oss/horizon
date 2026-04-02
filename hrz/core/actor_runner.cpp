@@ -17,6 +17,7 @@
 
 namespace hrz
 {
+
 static constexpr std::chrono::milliseconds RUN_INTERVAL = std::chrono::milliseconds(16);
 
 struct ActorRunner
@@ -44,6 +45,7 @@ namespace actor_runner
 {
 namespace
 {
+
 // Returns true if is working.
 bool run_actors(
     ActorRunner* runner,
@@ -144,6 +146,7 @@ void run_func(
     hrz::profiling::destroy_thread_profiler(runner->profiler);
     hrz::metrics::destroy_thread_registry(runner->metrics);
 }
+
 } // namespace
 
 ActorRunner* create(
@@ -243,5 +246,6 @@ bool is_working(ActorRunner* runner)
 
     return runner->is_working.load();
 }
+
 } // namespace actor_runner
 } // namespace hrz

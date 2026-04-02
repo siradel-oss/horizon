@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/google/brotli/archive/965c18ebe774802be286d7fc541fcc64f129340c.tar.gz",
+  "strip_prefix": "brotli-965c18ebe774802be286d7fc541fcc64f129340c//",
+  "integrity": "sha256-8iD1CqZxaMvC9TaLWPA122ikQJ+cngMKNslskdRmO3c=",
+  "patches": {
+    "module_dot_bazel_version.patch": "sha256-EtoCQT1Q/Ya6XG6Q7POpgBrC2H/cxRUD8vcAEv/Zs7I="
+  }
+}

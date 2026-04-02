@@ -4,6 +4,7 @@
 
 namespace
 {
+
 using namespace ui::helpers;
 
 static constexpr double MARKER_RADIUS = 2.0;
@@ -23,7 +24,8 @@ bool _process_marker(
 {
     Rect button_rect = {
         {marker.position.x - MARKER_RADIUS, main_area.p0.y},
-        {marker.position.x + MARKER_RADIUS, main_area.p1.y}};
+        {marker.position.x + MARKER_RADIUS, main_area.p1.y}
+    };
 
     ImGui::SetCursorScreenPos(button_rect.p0);
     ImGui::InvisibleButton("##Marker button", button_rect.size());
@@ -71,10 +73,12 @@ void _draw_marker(const Marker& marker, const Rect& main_area, bool hovered, dou
         draw_list->AddCircleFilled(marker.position, marker_radius, marker_color);
     }
 }
+
 } // namespace
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 MetricGraph::MetricGraph(const std::optional<data::Metric>& metric) :

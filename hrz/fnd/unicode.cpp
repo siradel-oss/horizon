@@ -2,6 +2,7 @@
 
 namespace hrz::unicode
 {
+
 // See https://en.wikipedia.org/wiki/UTF-8#Encoding
 std::optional<CodePoint> get_first_code_point(std::string_view str)
 {
@@ -42,7 +43,8 @@ std::optional<CodePoint> get_first_code_point(std::string_view str)
             return {
                 {((byte(0) & 0x7) << 18) + ((byte(1) & 0x3f) << 12) + ((byte(2) & 0x3f) << 6)
                      + (byte(3) & 0x3f),
-                 4}};
+                 4}
+            };
         }
         return std::nullopt;
     }
@@ -118,4 +120,5 @@ bool is_cjk_character(uint32_t code_point)
         || (code_point >= 0xfe30 && code_point <= 0xfe4f)
         || (code_point >= 0x20000 && code_point <= 0x323af);
 }
+
 } // namespace hrz::unicode

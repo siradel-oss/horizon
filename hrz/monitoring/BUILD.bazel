@@ -1,4 +1,6 @@
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 filegroup(
     name = "proto",
@@ -6,7 +8,7 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-hrz_genrule(
+run_binary(
     name = "generate_proto",
     srcs = [
         "interface.proto",
@@ -15,10 +17,11 @@ hrz_genrule(
         "interface.pb.cc",
         "interface.pb.h",
     ],
-    cmd = "$(location //third_party:protoc) $(location interface.proto) --cpp_out=$(BINDIR)",
-    tools = [
-        "//third_party:protoc",
+    args = [
+        "$(location interface.proto)",
+        "--cpp_out=$(BINDIR)",
     ],
+    tool = "//third_party:protoc",
 )
 
 cc_library(
@@ -38,7 +41,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//hrz/fnd",
-        "//third_party:libprotobuf-lite",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -52,7 +55,7 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":monitoring",
-        "//third_party:gtest",
-        "//third_party:gtest_main",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )

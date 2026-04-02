@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 template<typename T>
 class Buffer
 {
@@ -29,8 +30,8 @@ public:
     Buffer(const Buffer&) = default;
     Buffer(Buffer&&) = default;
 
-    Buffer& operator=(const Buffer&) = default;
-    Buffer& operator=(Buffer&&) = default;
+    Buffer& operator =(const Buffer&) = default;
+    Buffer& operator =(Buffer&&) = default;
 
     Buffer(int w, int h, int d = 1) : _width(w), _height(h), _depth(d), _data(new T[w * h * d]) {}
 
@@ -64,8 +65,9 @@ public:
         return {data(x, y, z), (size_t)(_width * _height * _depth - offset(x, y, z))};
     }
 
-    const T& operator()(int x, int y, int z = 0) const { return _data[offset(x, y, z)]; }
+    const T& operator ()(int x, int y, int z = 0) const { return _data[offset(x, y, z)]; }
 
-    T& operator()(int x, int y, int z = 0) { return _data[offset(x, y, z)]; }
+    T& operator ()(int x, int y, int z = 0) { return _data[offset(x, y, z)]; }
 };
+
 } // namespace hrz

@@ -44,10 +44,12 @@
 
 namespace hrz_mapbox
 {
+
 using namespace hrz;
 
 namespace
 {
+
 static constexpr uint8_t MapboxMinSupportedVersion = 8;
 static constexpr uint8_t MapboxMaxSupportedVersion = 8;
 
@@ -120,12 +122,14 @@ hrz_proto::GeographicBounds parse_bounds(const rapidjson::Value& object)
     hrz_proto::GeographicBounds bounds;
     bounds.set_west(
         json::as_double(json::get_nth_member_or_null(object, "bounds", 0)).value_or(-180.0));
-    bounds.set_south(json::as_double(json::get_nth_member_or_null(object, "bounds", 1))
-                         .value_or(-MERCATOR_MAX_LAT_DEG));
+    bounds.set_south(
+        json::as_double(json::get_nth_member_or_null(object, "bounds", 1))
+            .value_or(-MERCATOR_MAX_LAT_DEG));
     bounds.set_east(
         json::as_double(json::get_nth_member_or_null(object, "bounds", 2)).value_or(180.0));
-    bounds.set_north(json::as_double(json::get_nth_member_or_null(object, "bounds", 3))
-                         .value_or(MERCATOR_MAX_LAT_DEG));
+    bounds.set_north(
+        json::as_double(json::get_nth_member_or_null(object, "bounds", 3))
+            .value_or(MERCATOR_MAX_LAT_DEG));
     return bounds;
 }
 
@@ -505,7 +509,8 @@ bool parse_raster_layer(ParseContext* ctx, const char* layer_id, const rapidjson
     {
         static const json::EnumVariant<hrz_proto::TextureFiltering> filtering_variants[] = {
             {"nearest", hrz_proto::NEAREST},
-            {"linear", hrz_proto::BILINEAR}};
+            {"linear", hrz_proto::BILINEAR}
+        };
 
         const auto& paint = json::get_member_or_null(json_layer, "paint");
         auto filtering = json::get_str_enum_or<hrz_proto::TextureFiltering>(
@@ -526,7 +531,8 @@ bool parse_raster_layer(ParseContext* ctx, const char* layer_id, const rapidjson
     {
         static const json::EnumVariant<bool> visibility_variants[] = {
             {"visible", true},
-            {"none", false}};
+            {"none", false}
+        };
 
         const auto& layout = json::get_member_or_null(json_layer, "layout");
         auto visibility =
@@ -1525,7 +1531,7 @@ bool create_heatmap_repr(
                 if (node.type == Node::Type::Literal && node.literal.type == Value::Type::Double)
                 {
                     // We have a constant opacity value, that can be applied to the palette.
-                    opacity = hrz::clamp((float)node.literal.f64, 0.0f, 1.0f);
+                    opacity = hrz::clamp((float)node.literal.f64, 0.0F, 1.0F);
                 }
             }
         }
@@ -1583,7 +1589,7 @@ bool create_heatmap_repr(
         }
 
         parse_numeric_property<double>(
-            "heatmap-radius", MapboxPropertyType::Number, {0.4f}, {1.0}, std::nullopt, paint_node,
+            "heatmap-radius", MapboxPropertyType::Number, {0.4F}, {1.0}, std::nullopt, paint_node,
             &heatmap_radius, expr);
     }
     else
@@ -1596,7 +1602,7 @@ bool create_heatmap_repr(
 
     heatmap->set_disc_radius_size_unit(hrz_proto::InWorldSizeUnit::IN_WORLD_SIZE_IN_PIXELS);
     heatmap->set_z_index((*next_flat_overlay_z_index)++);
-    heatmap->set_blur_size(1.2f);
+    heatmap->set_blur_size(1.2F);
 
     return true;
 }
@@ -2622,10 +2628,10 @@ bool parse_background_layer(
     }
 
     hrz_proto::Color color;
-    color.set_r(0.0f);
-    color.set_g(0.0f);
-    color.set_b(0.0f);
-    color.set_a(1.0f);
+    color.set_r(0.0F);
+    color.set_g(0.0F);
+    color.set_b(0.0F);
+    color.set_a(1.0F);
 
     const auto& paint_node = hrz::json::get_member_or_null(json_layer, "paint");
     auto background_color_opt = hrz::json::get_str(paint_node, "background-color");
@@ -2722,6 +2728,7 @@ bool parse_layer(
 
     return true;
 }
+
 } // namespace
 
 TranslationResult translate_scene(
@@ -3034,4 +3041,5 @@ TranslationResult translate_scene(
 
     return result;
 }
+
 } // namespace hrz_mapbox

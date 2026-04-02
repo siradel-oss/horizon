@@ -6,6 +6,7 @@
 
 namespace hrz::text
 {
+
 // Size in pixels of the side of the square region
 // allocated to each glyph in the font texture.
 constexpr unsigned int GLYPH_SLOT_SIZE = 40;
@@ -37,4 +38,5 @@ struct Glyph
     float pixel_scale;
     uint32_t in_texture_index;
 };
+
 } // namespace hrz::text

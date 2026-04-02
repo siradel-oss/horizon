@@ -1,10 +1,9 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@tsconfig_util//:defs.bzl", "TSCONFIG")
 load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
-load("//tools/bazel:pkg.bzl", "structured_files_copy")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
 load("//tools/bazel:utils.bzl", "merge_dicts")
 
 # I was forced to separate the Core web package into the ts_core folder because pnpm workspace rules expect
@@ -14,26 +13,16 @@ package(default_visibility = ["//visibility:public"])
 
 npm_link_all_packages(name = "node_modules")
 
-structured_files_copy(
-    name = "ts_src_copies",
-    files = {
-        "": [
-            "src/index.ts",
-            "src/backend.ts",
-            "src/hrz_core.d.ts",
-        ],
-    },
-    output_dir = "dist",
-)
-
 ts_project(
     name = "ts_lib",
     srcs = [
-        ":ts_src_copies",
+        "src/backend.ts",
+        "src/hrz_core.d.ts",
+        "src/index.ts",
     ],
     declaration = True,
     out_dir = "dist",
-    root_dir = "dist",
+    root_dir = "src",
     tsconfig = merge_dicts(
         TSCONFIG,
         {
@@ -53,29 +42,6 @@ ts_project(
     ],
 )
 
-structured_files_copy(
-    name = "js_artifacts_copy",
-    files = {
-        "": [
-            "//hrz/core:hrz_core.js",
-            "//hrz/core:hrz_core.wasm",
-        ],
-    },
-    output_dir = "dist",
-)
-
-copy_file(
-    name = "third_party_licenses",
-    src = "//third_party:LICENSE-THIRD-PARTY.txt",
-    out = "dist-root/LICENSE-THIRD-PARTY.txt",
-)
-
-copy_file(
-    name = "license",
-    src = "//:LICENSE",
-    out = "dist-root/LICENSE",
-)
-
 package_json(
     name = "package_json",
     out = "dist-root/package.json",
@@ -84,25 +50,32 @@ package_json(
     version = PACKAGE_JSON_HRZ_VERSION,
 )
 
+structured_files_copy(
+    name = "pkg_copy",
+    files = {
+        "dist": [
+            ":ts_lib",
+            ":ts_lib_types",
+            "//hrz/core:hrz_core.js",
+            "//hrz/core:hrz_core.wasm",
+            "src/hrz_core.d.ts",
+        ],
+        "": [
+            "//:LICENSE",
+            "//third_party:LICENSE-THIRD-PARTY.txt",
+            ":package_json",
+        ],
+    },
+    output_dir = "dist_pkg",
+)
+
 npm_package(
     name = "npm_pkg",
     srcs = [
-        ":js_artifacts_copy",
-        ":license",
-        ":package_json",
-        ":third_party_licenses",
-        ":ts_lib",
-    ],
-    include_srcs_patterns = [
-        "**/LICENSE",
-        "**/*.txt",
-        "**/*.wasm",
-        "**/*.json",
-        "**/*.js",
-        "**/*.d.ts",
+        ":pkg_copy",
     ],
     replace_prefixes = {
-        "dist-root/": "",
+        "dist_pkg/": "",
     },
 )
 

@@ -1,6 +1,7 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@model_versions_list//:list.bzl", "MODEL_VERSIONS_LIST")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
-load("//tools/bazel:genrule.bzl", "hrz_genrule")
 
 py_library(
     name = "manifest",
@@ -29,7 +30,7 @@ exports_files(
 )
 
 [
-    hrz_genrule(
+    run_binary(
         name = "compress_descriptor_set_" + id,
         srcs = [
             "%s.pbf" % id,
@@ -37,10 +38,11 @@ exports_files(
         outs = [
             "%s.pbf.lz4" % id,
         ],
-        cmd = "$(location //tools/compress_file_lz4) $(SRCS) $@",
-        tools = [
-            "//tools/compress_file_lz4",
+        args = [
+            "$(execpath %s.pbf)" % id,
+            "$@",
         ],
+        tool = "//tools/compress_file_lz4",
     )
     for id in MODEL_VERSIONS_LIST
 ]
@@ -50,7 +52,7 @@ filegroup(
     srcs = ["%s.pbf.lz4" % id for id in MODEL_VERSIONS_LIST],
 )
 
-hrz_genrule(
+run_binary(
     name = "generate_model_version",
     srcs = [
         "versions_manifest.csv",
@@ -58,8 +60,13 @@ hrz_genrule(
     outs = [
         "scene_model_version.h",
     ],
-    cmd = "$(location :gen) -m $(location :versions_manifest.csv) gen-cpp-model-version $@",
-    tools = [":gen"],
+    args = [
+        "-m",
+        "$(location :versions_manifest.csv)",
+        "gen-cpp-model-version",
+        "$@",
+    ],
+    tool = ":gen",
 )
 
 cc_library(
@@ -69,7 +76,7 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-hrz_genrule(
+run_binary(
     name = "generate_descriptor_sets_list",
     srcs = [
         "versions_manifest.csv",
@@ -79,8 +86,15 @@ hrz_genrule(
         "descriptor_sets_list.cpp",
         "descriptor_sets_list.h",
     ],
-    cmd = "$(location :gen) -m $(location :versions_manifest.csv) gen-cpp-descriptor-sets-list $(location descriptor_sets_list.h) $(location descriptor_sets_list.cpp) $(locations :all_compressed_descriptor_sets)",
-    tools = [":gen"],
+    args = [
+        "-m",
+        "$(location :versions_manifest.csv)",
+        "gen-cpp-descriptor-sets-list",
+        "$(location descriptor_sets_list.h)",
+        "$(location descriptor_sets_list.cpp)",
+        "$(locations :all_compressed_descriptor_sets)",
+    ],
+    tool = ":gen",
 )
 
 cc_library(

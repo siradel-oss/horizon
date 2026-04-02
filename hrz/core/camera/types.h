@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 struct CameraInfo
 {
     float fovy{}; // In radians

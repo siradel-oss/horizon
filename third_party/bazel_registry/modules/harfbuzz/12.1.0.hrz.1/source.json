@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/12.1.0.tar.gz",
+  "strip_prefix": "harfbuzz-12.1.0",
+  "integrity": "sha256-Aji/etprH7kphPafi5zWZRivg88k99sc/mDHcsQjEtM=",
+  "overlay": {
+    "MODULE.bazel": "sha256-nJTl1cTQTtGRla/hLAyL/tkaR/bTDC5T3Sx9cBS1M10=",
+    "BUILD.bazel": "sha256-y929ZF7xcwccXE7VsFjVfUa6mdQD9p189uSJsNZFPYw="
+  }
+}

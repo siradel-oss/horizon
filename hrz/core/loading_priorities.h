@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 inline assets_loader::Queue get_request_queue(
     int8_t layer_loading_priority,
     assets_loader::Queue layer_default_queue)
@@ -28,4 +29,5 @@ inline uint32_t combine_loading_priorities(
             << 16)
         + asset_loading_priority;
 }
+
 } // namespace hrz

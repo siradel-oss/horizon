@@ -40,6 +40,7 @@
 
 namespace
 {
+
 static constexpr my::RenderGraph::ResourceUsage Target = my::RenderGraph::ResourceUsage::Target;
 static constexpr my::RenderGraph::ResourceUsage Sampled = my::RenderGraph::ResourceUsage::Sampled;
 static constexpr my::RenderGraph::ResourceUsage TargetSampled =
@@ -114,7 +115,8 @@ public:
             _fbo,
             my::ViewportState{
                 {0, 0, ctx.backbuffer_width, ctx.backbuffer_height},
-                {0, 0, ctx.backbuffer_width, ctx.backbuffer_height}});
+                {0, 0, ctx.backbuffer_width, ctx.backbuffer_height}
+            });
 
         static const my::ClearTarget clear_targets[] = {{
             my::Attachment::Depth,
@@ -374,7 +376,8 @@ public:
 
         hrz::StaticVector<
             my::TextureBinding,
-            HRZ_S_MAX_OVERLAY_CASCADES + HRZ_S_MAX_SUN_CASCADES + HRZ_S_VIEWSHED_CNT + 2>
+            HRZ_S_MAX_OVERLAY_CASCADES + HRZ_S_MAX_SUN_CASCADES + HRZ_S_VIEWSHED_CNT + 2
+        >
             bindings;
 
         bindings.push_back(
@@ -623,7 +626,7 @@ public:
         }
 
         {
-            static const float data[] = {1.0f};
+            static const float data[] = {1.0F};
             std::span<const std::byte> data_span = {(const std::byte*)data, sizeof(float)};
 
             my::TextureResource res;
@@ -995,7 +998,8 @@ public:
                 {
                     my::Attachment::Depth,
                     my::ClearValue::make_depth(1.0),
-                }};
+                }
+            };
 
             my::Renderer::BinMask pass_masks[] = {
                 hrz::RenderUiBin,
@@ -1187,7 +1191,8 @@ public:
         if (ctx.invocation == 1)
         {
             static const my::ClearTarget clear_target = {
-                my::Attachment::Depth, my::ClearValue::make_depth(1.0)};
+                my::Attachment::Depth, my::ClearValue::make_depth(1.0)
+            };
 
             ctx.render->clear({&clear_target, 1});
         }
@@ -1880,8 +1885,8 @@ public:
         }
 
         my::RenderGraph::ResourceInfo res;
-        res.width = 1.0f;
-        res.height = 1.0f;
+        res.width = 1.0F;
+        res.height = 1.0F;
         res.size_class = my::RenderGraph::ResourceInfo::BackbufferRelative;
         res.format = my::TextureFormat::R8;
 
@@ -1996,7 +2001,8 @@ public:
 
         my::ClearTarget clears[] = {
             {my::Attachment::Color0, my::ClearValue::make_color_float(0, 0, 0, 0)},
-            {my::Attachment::Depth, my::ClearValue::make_depth(1.0)}};
+            {my::Attachment::Depth, my::ClearValue::make_depth(1.0)}
+        };
         ctx.render->clear(clears);
 
         my::Renderer::BinMask pass_masks[] = {
@@ -2189,10 +2195,8 @@ public:
             {HighlightUboLocation, "Highlight"},
         };
 
-        my::IndexName samplers[] = {
-            {0, "u_selection"},
-            {1, "u_scene_depth"},
-            {2, "u_selection_depth"}};
+        my::IndexName samplers[] =
+            {{0, "u_selection"}, {1, "u_scene_depth"}, {2, "u_selection_depth"}};
 
         const char* outputs[] = {"o_color"};
 
@@ -2258,7 +2262,8 @@ public:
         my::TextureBinding binding[] = {
             {0, _highlight_texture, _highlight_sampler},
             {1, _scene_depth_target, _depth_sampler},
-            {2, _highlight_depth_target, _depth_sampler}};
+            {2, _highlight_depth_target, _depth_sampler}
+        };
         ctx.binder->bind(binding);
 
         my::UboBinding ubo_binding = {HighlightUboLocation, _ubo, 0, sizeof(UboData)};
@@ -2278,6 +2283,7 @@ public:
 
 namespace hrz
 {
+
 struct SceneView
 {
     VectorFlatOverlaySystem* flat_overlay;
@@ -2341,6 +2347,7 @@ struct SceneView
 
 namespace scene
 {
+
 template<typename T>
 lm::Bbox<T, 2> invert_y_axis(lm::Bbox<T, 2> bbox, const lm::Vector<T, 2>& size)
 {
@@ -2361,8 +2368,8 @@ ViewportInfo compute_viewport_info(
 
     auto viewport_settings = builder.clone().viewport().get();
 
-    lm::bbox2 viewport = invert_y_axis(to_lm(viewport_settings.viewport()), {1.0f, 1.0f});
-    lm::bbox2 subfrustum = invert_y_axis(to_lm(viewport_settings.scissor()), {1.0f, 1.0f});
+    lm::bbox2 viewport = invert_y_axis(to_lm(viewport_settings.viewport()), {1.0F, 1.0F});
+    lm::bbox2 subfrustum = invert_y_axis(to_lm(viewport_settings.scissor()), {1.0F, 1.0F});
 
     ViewportInfo viewport_info{};
     viewport_info.device_pixel_ratio = device_pixel_ratio;
@@ -2385,14 +2392,15 @@ void update_viewport(
 
     auto viewport_settings = builder.clone().viewport().get();
 
-    lm::bbox2 viewport = invert_y_axis(to_lm(viewport_settings.viewport()), {1.0f, 1.0f});
-    lm::bbox2 subfrustum = invert_y_axis(to_lm(viewport_settings.scissor()), {1.0f, 1.0f});
+    lm::bbox2 viewport = invert_y_axis(to_lm(viewport_settings.viewport()), {1.0F, 1.0F});
+    lm::bbox2 subfrustum = invert_y_axis(to_lm(viewport_settings.scissor()), {1.0F, 1.0F});
 
     lm::vec2 viewport_size = lm::size(viewport);
 
     view->viewport_on_canvas = lm::ibbox2{
         lm::ivec2{lm::round((viewport.min + viewport_size * subfrustum.min) * canvas_size)},
-        lm::ivec2{lm::round((viewport.min + viewport_size * subfrustum.max) * canvas_size)}};
+        lm::ivec2{lm::round((viewport.min + viewport_size * subfrustum.max) * canvas_size)}
+    };
 
     view->events_viewport_on_canvas =
         invert_y_axis(view->viewport_on_canvas, lm::ivec2(canvas_size));
@@ -2698,8 +2706,10 @@ RenderRequest work(
         auto highlight_settings = builder.clone().highlight().get();
         view->highlight_apply_pass->set_settings(highlight_settings);
         view->highlight_settings_updated = false;
-        view->quick_highlight_color = hrz::premultiply_alpha(hrz::srgb_to_linear(
-            hrz::convert_proto_color_to_float(highlight_settings.mouse_hover_highlight_color())));
+        view->quick_highlight_color = hrz::premultiply_alpha(
+            hrz::srgb_to_linear(
+                hrz::convert_proto_color_to_float(
+                    highlight_settings.mouse_hover_highlight_color())));
         render_request.request_visual_render();
     }
 
@@ -2707,8 +2717,9 @@ RenderRequest work(
     {
         auto terrain_settings = builder.clone().terrain().get();
         view->terrain_color_opacity.rgb =
-            hrz::premultiply_alpha(hrz::srgb_to_linear(hrz::convert_proto_color_to_float(
-                                       terrain_settings.terrain_color())))
+            hrz::premultiply_alpha(
+                hrz::srgb_to_linear(
+                    hrz::convert_proto_color_to_float(terrain_settings.terrain_color())))
                 .rgb;
         view->terrain_color_opacity.a = terrain_settings.terrain_opacity();
         view->terrain_clip_id = terrain_settings.clip_id();
@@ -2719,14 +2730,12 @@ RenderRequest work(
 
     if (view->ambient_settings_updated)
     {
-        auto ambient_settings = builder.clone().ambient().get();
         view->ambient_settings_updated = false;
         render_request.request_visual_render();
     }
 
     if (view->lighting_settings_updated)
     {
-        auto ambient_settings = builder.clone().ambient().get();
         view->global_lighting = render::from_proto(builder.clone().ambient().lighting().get());
         view->lighting_settings_updated = false;
         render_request.request_visual_render();
@@ -2978,8 +2987,8 @@ void draw(
 
         {
             my::UboBinding binding = {
-                hrz::UboFrame, view->frame_uniforms.get_for_gpu(), 0,
-                sizeof(hrz::FrameUniformData)};
+                hrz::UboFrame, view->frame_uniforms.get_for_gpu(), 0, sizeof(hrz::FrameUniformData)
+            };
 
             render.rb->bind({&binding, 1});
         }
@@ -3165,5 +3174,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
     }
     MergeDepthsPass::collect_shaders(rc);
 }
+
 } // namespace scene
 } // namespace hrz

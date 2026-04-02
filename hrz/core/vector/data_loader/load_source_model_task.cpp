@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_source_model_task(
     const LayerModelRef& layer_model,
     uint32_t data_source)
@@ -215,7 +216,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadSourceModel
             data_source.bounds = {load_tilejson_task_data.bounds};
 
             std::array<AttributionHandle, 2> attribution_group = {
-                provider.attribution, load_tilejson_task_data.attribution};
+                provider.attribution, load_tilejson_task_data.attribution
+            };
             provider.attribution =
                 attribution::register_attribution_group(attributions, attribution_group);
 
@@ -267,7 +269,8 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadSourceModel
             auto new_attribution = attribution::register_attribution(
                 attributions, {load_pmtiles_task_data.pmtiles->get_attribution(), ""});
             std::array<AttributionHandle, 2> attribution_group = {
-                provider.attribution, new_attribution};
+                provider.attribution, new_attribution
+            };
             provider.attribution =
                 attribution::register_attribution_group(attributions, attribution_group);
 
@@ -361,4 +364,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<VectorDataLoader::Tas
 {
     // No-op
 }
+
 } // namespace hrz

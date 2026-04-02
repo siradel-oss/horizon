@@ -8,6 +8,7 @@ namespace hrz
 
 namespace internal
 {
+
 template<typename>
 struct tag
 {

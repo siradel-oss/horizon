@@ -12,6 +12,7 @@
 
 namespace hrz::vtex
 {
+
 class IndirectionClipmap
 {
     struct TileSlot

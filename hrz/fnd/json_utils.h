@@ -7,6 +7,7 @@
 
 namespace hrz::json
 {
+
 const rapidjson::Value NullValue;
 
 inline const rapidjson::Value& get_member_or_null(const rapidjson::Value& node, const char* name)
@@ -312,4 +313,5 @@ const rapidjson::Value& get_nth_member_or_null(
     int index);
 
 const rapidjson::Value& get_nth_or_null(const rapidjson::Value& array, int index);
+
 } // namespace hrz::json

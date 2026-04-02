@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_layer_model_task(uint32_t layer_id)
 {
     uint64_t hash =
@@ -105,8 +106,9 @@ void VectorDataLoader::work_new_task<VectorDataLoader::Task::LoadLayerModel>(
 
         for (uint32_t s = 0; s < layer_model.data_sources.size(); ++s)
         {
-            task_data.load_source_model_tasks.push_back(TaskDependency::between_tasks(
-                get_or_create_load_source_model_task(task_data.layer_model, s), task_ref));
+            task_data.load_source_model_tasks.push_back(
+                TaskDependency::between_tasks(
+                    get_or_create_load_source_model_task(task_data.layer_model, s), task_ref));
         }
 
         set_task_status(task_ref, task, TaskStatus::Unloaded);
@@ -202,4 +204,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<VectorDataLoader::Tas
 {
     // No-op
 }
+
 } // namespace hrz

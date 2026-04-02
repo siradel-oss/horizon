@@ -12,6 +12,7 @@
 
 namespace hrz
 {
+
 struct CameraHeightSystem;
 struct VectorFlatOverlaySystem;
 struct OverlayCamerasInfo;
@@ -28,6 +29,7 @@ struct PickingSystem;
 
 namespace picking
 {
+
 /**
  * Create a picking system.
  */

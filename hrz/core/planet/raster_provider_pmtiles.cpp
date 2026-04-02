@@ -5,6 +5,7 @@
 
 namespace hrz::planet
 {
+
 class PmTilesRequester : public TileRequester
 {
     std::string _url;
@@ -261,7 +262,8 @@ public:
                         TileFetcher::MetricInfo{
                             provider_request_tally_metric_name(
                                 hrz_proto::RasterProviderType::PMTILES_RASTER_PROVIDER),
-                            _url.c_str()});
+                            _url.c_str()
+                        });
                     _status = kReady;
                     break;
                 }

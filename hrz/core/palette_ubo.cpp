@@ -5,6 +5,7 @@
 
 namespace hrz::palette
 {
+
 void fill_ubo_data(PaletteUniformData* ubo_data, const Palette& palette)
 {
     assert(palette.type == hrz_proto::PaletteType::NUMERIC);
@@ -30,4 +31,5 @@ void fill_ubo_data(PaletteUniformData* ubo_data, const Palette& palette)
         ubo_data->color_points_encoded[2 * i + 1] = it->color_point.second_encoded;
     }
 }
+
 } // namespace hrz::palette

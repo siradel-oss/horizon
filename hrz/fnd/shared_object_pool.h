@@ -13,11 +13,13 @@
 
 namespace hrz
 {
+
 // @Todo Free empty chunks.
 
 template<
     typename T,
-    uint32_t ChunkSize = 128> // Number of objects per allocated chunk
+    uint32_t ChunkSize = 128
+> // Number of objects per allocated chunk
 class HandleObjectPool
 {
 private:
@@ -32,7 +34,7 @@ public:
 
         uint32_t to_int() const { return handle; }
 
-        constexpr bool operator==(const Handle& other) const = default;
+        constexpr bool operator ==(const Handle& other) const = default;
 
         bool is_null() const { return handle == std::numeric_limits<PrivateHandle>::max(); }
 
@@ -233,25 +235,25 @@ public:
             }
         }
 
-        iterator& operator++()
+        iterator& operator ++()
         {
             advance();
             return *this;
         }
 
-        iterator operator++(int)
+        iterator operator ++(int)
         {
             iterator it = *this;
             advance();
             return it;
         }
 
-        std::pair<Handle, T&> operator*()
+        std::pair<Handle, T&> operator *()
         {
             return std::pair<Handle, T&>{{handle}, *(pool->get_object({handle}))};
         }
 
-        constexpr bool operator==(const iterator& it) const = default;
+        constexpr bool operator ==(const iterator& it) const = default;
 
     private:
         void advance()
@@ -279,25 +281,25 @@ public:
             }
         }
 
-        const_iterator& operator++()
+        const_iterator& operator ++()
         {
             advance();
             return *this;
         }
 
-        const_iterator operator++(int)
+        const_iterator operator ++(int)
         {
             const_iterator it = *this;
             advance();
             return it;
         }
 
-        std::pair<Handle, const T&> operator*()
+        std::pair<Handle, const T&> operator *()
         {
             return std::pair<Handle, const T&>{{handle}, *(pool->get_object({handle}))};
         }
 
-        constexpr bool operator==(const const_iterator& it) const = default;
+        constexpr bool operator ==(const const_iterator& it) const = default;
 
     private:
         void advance()
@@ -434,26 +436,26 @@ public:
 
         explicit iterator(ObjectPoolIterator pool_it) : pool_it(pool_it) {}
 
-        iterator& operator++()
+        iterator& operator ++()
         {
             ++pool_it;
             return *this;
         }
 
-        iterator operator++(int)
+        iterator operator ++(int)
         {
             iterator it = *this;
             pool_it++;
             return it;
         }
 
-        std::pair<Handle, T&> operator*()
+        std::pair<Handle, T&> operator *()
         {
             auto it = *pool_it;
             return std::pair<Handle, T&>{it.first, it.second.object};
         }
 
-        constexpr bool operator==(const iterator& it) const = default;
+        constexpr bool operator ==(const iterator& it) const = default;
 
     private:
         ObjectPoolIterator pool_it;
@@ -469,25 +471,25 @@ public:
 
         explicit const_iterator(ObjectPoolIterator pool_it) : pool_it(pool_it) {}
 
-        const_iterator& operator++()
+        const_iterator& operator ++()
         {
             ++pool_it;
             return *this;
         }
 
-        const_iterator operator++(int)
+        const_iterator operator ++(int)
         {
             const_iterator it = *this;
             pool_it++;
             return it;
         }
 
-        std::pair<Handle, const T&> operator*()
+        std::pair<Handle, const T&> operator *()
         {
             return std::make_pair(pool_it->first, pool_it->second.object);
         }
 
-        constexpr bool operator==(const const_iterator& it) const = default;
+        constexpr bool operator ==(const const_iterator& it) const = default;
 
     private:
         ObjectPoolIterator pool_it;
@@ -518,17 +520,17 @@ private:
     class RefBase
     {
     public:
-        T& operator*() { return value(); }
+        T& operator *() { return value(); }
 
-        const T& operator*() const { return value(); }
+        const T& operator *() const { return value(); }
 
-        T* operator->()
+        T* operator ->()
         {
             assert(has_value());
             return pool->pool.get_object(handle);
         }
 
-        const T* operator->() const
+        const T* operator ->() const
         {
             assert(has_value());
             return pool->pool.get_object(handle);
@@ -550,7 +552,7 @@ private:
             return pool->pool.at(handle);
         }
 
-        constexpr bool operator==(const RefBase& ref) const = default;
+        constexpr bool operator ==(const RefBase& ref) const = default;
 
         Handle get_handle() const { return handle; }
 
@@ -609,7 +611,7 @@ public:
 
         ~Ref() { this->release_value(); }
 
-        Ref& operator=(const Ref& ref)
+        Ref& operator =(const Ref& ref)
         {
             if (this != &ref)
             {
@@ -621,7 +623,7 @@ public:
             return *this;
         }
 
-        Ref& operator=(Ref&& ref) noexcept
+        Ref& operator =(Ref&& ref) noexcept
         {
             if (this != &ref)
             {
@@ -632,7 +634,7 @@ public:
             return *this;
         }
 
-        Ref& operator=(WeakRef&& ref) noexcept
+        Ref& operator =(WeakRef&& ref) noexcept
         {
             this->release_value();
             this->pool = ref.pool;
@@ -724,22 +726,22 @@ public:
         {
         }
 
-        iterator& operator++()
+        iterator& operator ++()
         {
             ++pool_it;
             return *this;
         }
 
-        iterator operator++(int)
+        iterator operator ++(int)
         {
             iterator it = *this;
             pool_it++;
             return it;
         }
 
-        WeakRef operator*() { return WeakRef{shared_object_pool, (*pool_it).first}; }
+        WeakRef operator *() { return WeakRef{shared_object_pool, (*pool_it).first}; }
 
-        bool operator==(const iterator& it) const { return it.pool_it == pool_it; }
+        bool operator ==(const iterator& it) const { return it.pool_it == pool_it; }
 
     private:
         SharedObjectPool<T, ChunkSize>* shared_object_pool;
@@ -761,22 +763,22 @@ public:
         {
         }
 
-        const_iterator& operator++() const
+        const_iterator& operator ++() const
         {
             ++pool_it;
             return *this;
         }
 
-        const_iterator operator++(int) const
+        const_iterator operator ++(int) const
         {
             const_iterator it = *this;
             pool_it++;
             return it;
         }
 
-        const WeakRef operator*() const { WeakRef{shared_object_pool, (*pool_it).first}; }
+        const WeakRef operator *() const { WeakRef{shared_object_pool, (*pool_it).first}; }
 
-        bool operator==(const const_iterator& it) const { return it.pool_it == pool_it; }
+        bool operator ==(const const_iterator& it) const { return it.pool_it == pool_it; }
 
     private:
         SharedObjectPool<T, ChunkSize>* shared_object_pool;
@@ -791,4 +793,5 @@ public:
 
     const_iterator end() const { return const_iterator(pool.end()); }
 };
+
 } // namespace hrz

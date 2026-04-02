@@ -17,6 +17,7 @@ namespace color
 {
 namespace detail
 {
+
 alignas(hrz::L1CacheLineSize) extern float srgb_to_linear_lut[256];
 alignas(hrz::L1CacheLineSize) extern uint8_t linear_to_srgb_lut[4096];
 
@@ -28,7 +29,7 @@ static inline float srgb_u8_to_linear_f32(uint8_t c)
 static inline uint8_t linear_f32_to_srgb_u8(float c)
 {
     // Clamp and convert to 12-bit index
-    int idx = static_cast<int>(hrz::clamp(c, 0.0f, 1.0f) * 4095.0f + 0.5f);
+    int idx = static_cast<int>(hrz::clamp(c, 0.0F, 1.0F) * 4095.0F + 0.5F);
     return linear_to_srgb_lut[idx];
 }
 
@@ -49,9 +50,11 @@ static inline T linear_to_srgb(T c)
     else
         return T(1.055) * std::pow(c, T(1.0) / T(2.4)) - T(0.055);
 }
+
 } // namespace detail
 
 void initialize_srgb_luts();
+
 } // namespace color
 
 static inline lm::vec3 srgb_to_linear_lut(const lm::ubvec3& color)
@@ -65,7 +68,7 @@ static inline lm::vec3 srgb_to_linear_lut(const lm::ubvec3& color)
 
 static inline lm::vec4 srgb_to_linear_lut(const lm::ubvec4& color)
 {
-    return lm::vec4(srgb_to_linear_lut(color.rgb), color.a * (1.0f / 255.0f));
+    return lm::vec4(srgb_to_linear_lut(color.rgb), color.a * (1.0F / 255.0F));
 }
 
 static inline lm::ubvec3 linear_to_srgb_lut(const lm::vec3& color)
@@ -80,7 +83,7 @@ static inline lm::ubvec3 linear_to_srgb_lut(const lm::vec3& color)
 static inline lm::ubvec4 linear_to_srgb_lut(const lm::vec4& color)
 {
     return lm::ubvec4(
-        linear_to_srgb_lut(color.rgb), (uint8_t)(hrz::clamp(color.a, 0.0f, 1.0f) * 255.0f + 0.5f));
+        linear_to_srgb_lut(color.rgb), (uint8_t)(hrz::clamp(color.a, 0.0F, 1.0F) * 255.0F + 0.5F));
 }
 
 template<typename T>
@@ -162,7 +165,7 @@ std::string make_color_string(
 // @Note: color channels are expected to be in the [0, 1] range.
 static inline lm::ubvec4 convert_rgba_color_to_bytes(const lm::vec4& color)
 {
-    auto to_byte = [](float f) { return (uint8_t)std::round(hrz::clamp(f, 0.0f, 1.0f) * 255.0f); };
+    auto to_byte = [](float f) { return (uint8_t)std::round(hrz::clamp(f, 0.0F, 1.0F) * 255.0F); };
     return {to_byte(color.r), to_byte(color.g), to_byte(color.b), to_byte(color.a)};
 }
 
@@ -184,7 +187,7 @@ static inline uint32_t convert_rgba_color_to_uint(const lm::vec4& color)
 
 static constexpr lm::vec4 convert_byte_color_to_rgba(const lm::ubvec4& color)
 {
-    return lm::vec4{(float)color.r, (float)color.g, (float)color.b, (float)color.a} / 255.0f;
+    return lm::vec4{(float)color.r, (float)color.g, (float)color.b, (float)color.a} / 255.0F;
 }
 
 static constexpr lm::vec4 convert_uint_color_to_rgba(uint32_t c)
@@ -195,7 +198,7 @@ static constexpr lm::vec4 convert_uint_color_to_rgba(uint32_t c)
                (float)((c >> 16) & 0xff),
                (float)(c >> 24),
            }
-    / 255.0f;
+    / 255.0F;
 }
 
 static inline lm::vec4 convert_proto_color_to_float(const hrz_proto::Color& c)
@@ -223,4 +226,5 @@ static inline hrz_proto::Color convert_uint_to_proto_color(uint32_t color_uint)
     color.set_a(channels.a);
     return color;
 }
+
 } // namespace hrz

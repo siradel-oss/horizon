@@ -14,10 +14,10 @@ MANIFEST: Manifest = None
 
 def make_tpl_env():
     r = Runfiles.Create()
-    template_dir = Path(
-        r.Rlocation("horizon/hrz/protocol/history/templates/model_version.tpl.h")
-    ).parent
-    loader = jinja2.FileSystemLoader(str(template_dir))
+    template_dir = r.Rlocation("horizon/hrz/protocol/history/templates")
+    if template_dir is None:
+        raise Exception("Could not find templates")
+    loader = jinja2.FileSystemLoader(template_dir)
     return jinja2.Environment(loader=loader)
 
 
@@ -46,8 +46,11 @@ def gen_cpp_descriptor_sets_list(args):
             "data_str": data,
         }
 
-    render_tpl(tpl_env, "descriptor_sets_list.tpl.h", params, args.header_output_file)
-    render_tpl(tpl_env, "descriptor_sets_list.tpl.cpp", params, args.impl_output_file)
+    with args.header_output_file as fp:
+        render_tpl(tpl_env, "descriptor_sets_list.tpl.h", params, fp)
+
+    with args.impl_output_file as fp:
+        render_tpl(tpl_env, "descriptor_sets_list.tpl.cpp", params, fp)
 
 
 def gen_cpp_model_version(args):
@@ -56,7 +59,8 @@ def gen_cpp_model_version(args):
     params = {}
     params["version"] = MANIFEST.last_entry().id
 
-    render_tpl(tpl_env, "model_version.tpl.h", params, args.header_output_file)
+    with args.header_output_file as fp:
+        render_tpl(tpl_env, "model_version.tpl.h", params, fp)
 
 
 if __name__ == "__main__":

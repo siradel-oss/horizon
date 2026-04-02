@@ -36,6 +36,8 @@ load(
     "C_COMPILE_ACTION_NAME",
 )
 load("@rules_cc//cc:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 
 CompilationAspectInfo = provider(fields = ["compilation_db"])
 

@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
             fclose(fp);
 
             hrz_proto::SceneLoadRequest req;
-            req.mutable_dump()->ParseFromArray(raw_dump.data(), raw_dump.size());
+            (void)req.mutable_dump()->ParseFromArray(raw_dump.data(), raw_dump.size());
             req.set_clear_layers(true);
 
             if (req.dump().version() != hrz::scene_dump::SceneModelVersion)
@@ -497,7 +497,7 @@ int main(int argc, char* argv[])
                 raw_dump = hrz::migration::migrate(raw_dump);
                 if (!raw_dump.empty())
                 {
-                    req.mutable_dump()->ParseFromArray(raw_dump.data(), raw_dump.size());
+                    (void)req.mutable_dump()->ParseFromArray(raw_dump.data(), raw_dump.size());
                 }
                 else
                 {

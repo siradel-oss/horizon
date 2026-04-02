@@ -8,6 +8,7 @@
 
 namespace ui::widget
 {
+
 using TimelineWidgetStorage = std::vector<std::unique_ptr<TimelineWidget>>;
 
 class Timeline
@@ -46,4 +47,5 @@ private:
 
     void _scale_indicator(const lm::dvec2& position, double width, const data::Database&);
 };
+
 } // namespace ui::widget

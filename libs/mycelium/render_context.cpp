@@ -23,6 +23,7 @@
 
 namespace my
 {
+
 struct ColorTextureDownloadStartCommand
 {
     uint64_t id;

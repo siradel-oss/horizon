@@ -29,6 +29,7 @@ extern "C"
 
 namespace
 {
+
 using namespace hrz;
 using namespace assets_loader;
 
@@ -91,10 +92,12 @@ size_t _write_callback(char* ptr, size_t size, size_t nmemb, void* userdata)
 
     return size * nmemb;
 }
+
 } // namespace
 
 namespace hrz::assets_loader
 {
+
 class DesktopHttpLoader : public IHttpLoader
 {
     struct AddRequestMsg
@@ -530,7 +533,8 @@ public:
                                     curl_multi_remove_handle(_multi_handle, req->handle);
                                     finish_request_in_slot_thread(slot_index, req->status, false);
                                 }
-                            }},
+                            }
+                        },
                         generic_message);
                 }
             }
@@ -650,8 +654,11 @@ public:
             else
             {
                 _finished_requests_data_size += request.data.size();
-                _finished_requests_data.insert(std::move(std::make_pair(
-                    request.metadata.ticket, RequestData{std::move(request.data), std::nullopt})));
+                _finished_requests_data.insert(
+                    std::move(
+                        std::make_pair(
+                            request.metadata.ticket,
+                            RequestData{std::move(request.data), std::nullopt})));
             }
 
             _finished_count.fetch_sub(1);

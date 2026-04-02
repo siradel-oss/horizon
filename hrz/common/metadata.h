@@ -8,6 +8,7 @@
 
 namespace hrz
 {
+
 // This structure is used to avoid copying metadata strings
 // when not necessary.
 // `std::string`, `std::string_view`, and `const char*` are
@@ -47,9 +48,10 @@ public:
 
     bool empty() const { return to_string().empty(); }
 
-    bool operator==(const MetadataString& other) const { return other.to_string() == to_string(); }
+    bool operator ==(const MetadataString& other) const { return other.to_string() == to_string(); }
 
 private:
     std::variant<StaticString, std::string> str;
 };
+
 } // namespace hrz

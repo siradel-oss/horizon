@@ -24,7 +24,7 @@ with open("version.bzl", "r") as version_file:
         print("Error: Inconsistent version strings")
         sys.exit(2)
 
-    if re.match("^v\d+.*$", ref_name):
+    if re.match("^v\\d+.*$", ref_name):
         # This is a release build.
 
         if "SNAPSHOT" in version:

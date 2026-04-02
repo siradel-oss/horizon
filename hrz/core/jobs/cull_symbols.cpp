@@ -13,12 +13,14 @@ namespace hrz_jobs::cull_symbols
 {
 namespace
 {
+
 struct TransformedAnchor
 {
     lm::bbox2 screen_bbox;
     float depth;
     lm::dvec3 horizon_occlusion_point;
 };
+
 } // namespace
 
 TransformedAnchor transform_anchor(
@@ -33,7 +35,7 @@ TransformedAnchor transform_anchor(
 
     lm::vec4 anchor_pos_view = view_cc * lm::vec4(anchor_pos_cc, 1);
 
-    float distance_to_anchor = std::max(0.0f, -anchor_pos_view.z);
+    float distance_to_anchor = std::max(0.0F, -anchor_pos_view.z);
     float relative_scale = hrz::clamp(
         anchor_proto.reference_distance / distance_to_anchor, anchor_proto.min_relative_scale,
         anchor_proto.max_relative_scale);
@@ -197,7 +199,7 @@ bool cull_one_view(
     std::vector<Instance> instances;
 
     uint32_t total_bitset_bucket_count = 0;
-    const uint32_t view_bit = 1u << view_info.view_index;
+    const uint32_t view_bit = 1U << view_info.view_index;
 
     // All bitsets for all groups are grouped in a single big uint32 BlobArray.
     // Groups are aligned by 32 instances so that later they can be memcpy-ed directly
@@ -304,7 +306,8 @@ bool cull_one_view(
                         out_group_index,
                         index,
                         span_index,
-                        flags};
+                        flags
+                    };
                     instances.push_back(instance);
 
                     instance_count += 1;
@@ -326,11 +329,11 @@ bool cull_one_view(
         shown += 1;
         auto& out_group = response.groups_to_update[instance.out_group_index];
 
-        uint32_t pixel = instance.index_in_group / 32u;
-        uint32_t bit = instance.index_in_group % 32u;
+        uint32_t pixel = instance.index_in_group / 32U;
+        uint32_t bit = instance.index_in_group % 32U;
 
         assert(pixel < out_group.bitset_bucket_count);
-        all_bitsets[out_group.first_bitset_bucket + pixel] |= 1u << bit;
+        all_bitsets[out_group.first_bitset_bucket + pixel] |= 1U << bit;
 
         static constexpr uint32_t BITSET_TEXTURE_WIDTH =
             hrz_jobs::SymbolCullingResponse::BITSET_TEXTURE_WIDTH;
@@ -480,4 +483,5 @@ hrz_jobs::JobResult run(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::cull_symbols

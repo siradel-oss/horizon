@@ -25,3 +25,5 @@ bw-out
 imgui.ini
 __pycache__
 build/
+third_party/bazel_registry/modules/**/MODULE.bazel.lock
+.claude/settings.local.json

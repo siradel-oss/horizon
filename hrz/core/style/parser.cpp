@@ -38,6 +38,7 @@
 
 namespace
 {
+
 using namespace hrz;
 using namespace style;
 
@@ -1020,12 +1021,15 @@ struct ParserImpl : public Parser
         return Result{Result::Ok, 0};
     }
 };
+
 } // anonymous namespace
 
 namespace hrz::style
 {
+
 std::unique_ptr<Parser> Parser::create()
 {
     return std::make_unique<ParserImpl>();
 }
+
 } // namespace hrz::style

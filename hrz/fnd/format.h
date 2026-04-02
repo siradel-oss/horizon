@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 template<typename... T>
 const char* format_to_buffer(fmt::memory_buffer& buffer, fmt::format_string<T...> fmt, T&&... args)
 {
@@ -22,4 +23,5 @@ const char* bytes_to_string(
     fmt::memory_buffer&,
     bool clear_buffer = true,
     bool append_null_byte = true);
+
 } // namespace hrz

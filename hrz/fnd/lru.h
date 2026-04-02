@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 // This is a doubly-linked list with LRU semantics.
 // This means that we can "touch" elements to place them at the front of the list.
 // We can also pop elements from the back.

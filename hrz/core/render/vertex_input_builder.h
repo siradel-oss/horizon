@@ -14,7 +14,9 @@
 
 namespace hrz
 {
+
 struct Render;
+
 } // namespace hrz
 
 namespace hrz::render
@@ -94,7 +96,8 @@ struct VertexInputBuilder
                 [this, index, format, rate](const BlobArray<T>& arg)
                 { add_input_stream(index, arg, format, rate); },
                 [this, index, format, rate](const T& arg)
-                { add_input_stream(index, std::span<const T>(&arg, 1), format, rate); }},
+                { add_input_stream(index, std::span<const T>(&arg, 1), format, rate); }
+            },
             data);
     }
 
@@ -110,7 +113,8 @@ struct VertexInputBuilder
                 [this, index, format, rate](const blobs::BlobHandle& arg)
                 { add_input_stream(index, arg, format, rate); },
                 [this, index, format, rate](const T& arg)
-                { add_input_stream(index, std::span<const T>(&arg, 1), format, rate); }},
+                { add_input_stream(index, std::span<const T>(&arg, 1), format, rate); }
+            },
             data);
     }
 

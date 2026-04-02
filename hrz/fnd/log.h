@@ -9,6 +9,7 @@
 
 namespace hrz::log
 {
+
 // Keep this enum in line with Mycelium's LogSeverity
 enum class Severity : uint8_t
 {

@@ -6,6 +6,7 @@
 
 namespace my
 {
+
 class ResourceBinderImpl : public ResourceBinder
 {
     template<typename T, int N>
@@ -90,7 +91,8 @@ public:
             std::span<const UboBinding>(
                 _ubo_stack.back().states, (size_t)_ubo_stack.back().assigned_count),
             std::span<const TextureBinding>(
-                _texture_stack.back().states, (size_t)_texture_stack.back().assigned_count)};
+                _texture_stack.back().states, (size_t)_texture_stack.back().assigned_count)
+        };
     }
 };
 

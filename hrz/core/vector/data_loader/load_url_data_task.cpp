@@ -3,6 +3,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_load_url_data_task(
     const std::string_view& url,
     const hrz::HttpHeaders& headers,
@@ -146,9 +147,11 @@ void VectorDataLoader::work_loading_task<VectorDataLoader::Task::LoadUrlData>(
         task_data.download_request_id = next_download_request_id;
         next_download_request_id += 1;
 
-        asset_loader_channel.send(assets_loader::messages::LoadRequest{
-            task_data.download_request_id.value(), task_data.url, 0, 0, task_data.headers,
-            task_data.queue, task_data.priority, task_data.resource_owner});
+        asset_loader_channel.send(
+            assets_loader::messages::LoadRequest{
+                task_data.download_request_id.value(), task_data.url, 0, 0, task_data.headers,
+                task_data.queue, task_data.priority, task_data.resource_owner
+            });
         tasks_waiting_for_asset_loader_message.insert(
             {task_data.download_request_id.value(), task_ref});
 
@@ -173,4 +176,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<VectorDataLoader::Tas
 {
     // No-op
 }
+
 } // namespace hrz

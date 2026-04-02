@@ -5,6 +5,7 @@
 
 namespace
 {
+
 using namespace hrz;
 
 TEST(FeatureClamping, no_clamping_no_z)

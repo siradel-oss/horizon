@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
 cc_binary(
     name = "compress_file_lz4",
     srcs = [
@@ -5,6 +7,6 @@ cc_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "//third_party:lz4hc",
+        "@lz4//:lz4_hc",
     ],
 )

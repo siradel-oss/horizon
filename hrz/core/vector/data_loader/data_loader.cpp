@@ -14,6 +14,7 @@ namespace hrz
 
 namespace vector_data
 {
+
 VectorDataLoader* create_loader(AssetsLoader* al, InMemoryVectorDataBase* in_memory_database)
 {
     assert(al && in_memory_database);
@@ -76,5 +77,6 @@ void dev_ui(VectorDataLoader* loader, mu_Context* ctx, const char* window_name)
         mu_end_window(ctx);
     }
 }
+
 } // namespace vector_data
 } // namespace hrz

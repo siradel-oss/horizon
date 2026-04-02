@@ -197,24 +197,28 @@ public:
             if (blob.has_value())
             {
                 size_t length = blob->data_size();
-                uint64_t handle = _blobs.alloc(StreamableBlob{
-                    Status::Loaded, 0, load_priority, std::move(full_url), offset, length, 0,
-                    blob.value()});
+                uint64_t handle = _blobs.alloc(
+                    StreamableBlob{
+                        Status::Loaded, 0, load_priority, std::move(full_url), offset, length, 0,
+                        blob.value()
+                    });
                 _all_blobs.insert(handle);
                 _can_be_streamed_out(handle);
                 return Handle{handle};
             }
             else
             {
-                uint64_t handle = _blobs.alloc(StreamableBlob{
-                    Status::Unloaded,
-                    0,
-                    load_priority,
-                    std::move(full_url),
-                    0,
-                    0,
-                    0,
-                    {}});
+                uint64_t handle = _blobs.alloc(
+                    StreamableBlob{
+                        Status::Unloaded,
+                        0,
+                        load_priority,
+                        std::move(full_url),
+                        0,
+                        0,
+                        0,
+                        {}
+                    });
                 _all_blobs.insert(handle);
                 return Handle{handle};
             }
@@ -303,7 +307,8 @@ public:
                     {
                         return "";
                     }
-                }},
+                }
+            },
             *blob);
     }
 
@@ -332,7 +337,8 @@ public:
                     {
                         return Status::Error;
                     }
-                }},
+                }
+            },
             *blob);
     }
 
@@ -374,7 +380,8 @@ public:
                     return std::make_pair(_empty_blob, "");
                 },
                 [this](const BlobToEmbed&) -> std::pair<blobs::BlobHandle, std::string_view>
-                { return std::make_pair(_empty_blob, ""); }},
+                { return std::make_pair(_empty_blob, ""); }
+            },
             *blob);
     }
 
@@ -546,7 +553,8 @@ public:
                 {
                     // Nothing to do for TemplatedBlob. Their child blobs are destroyed anyway
                     // because they are in `_all_blobs`.
-                }},
+                }
+            },
             *blob);
     }
 

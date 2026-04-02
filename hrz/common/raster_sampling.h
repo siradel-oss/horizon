@@ -17,6 +17,7 @@
 
 namespace hrz::sampling
 {
+
 template<typename>
 struct subpixel_coord_type;
 
@@ -492,7 +493,7 @@ struct SamplingFunctionImpl : public SamplingFunction
 
         lm::vec4 a = std::bit_cast<lm::vec4>(data0.value);
         lm::vec4 b = std::bit_cast<lm::vec4>(data1.value);
-        lm::vec4 res = a * (1.0f - f) + b * f;
+        lm::vec4 res = a * (1.0F - f) + b * f;
 
         PixelValue<float, 4> output;
         std::memcpy(output.value.data(), &res, sizeof(float) * 4);
@@ -581,7 +582,7 @@ struct SamplingFunctionImpl : public SamplingFunction
         {
             switch (alpha_channel_usage)
             {
-                case hrz_proto::AlphaChannelUsage::IGNORE_ALPHA_CHANNEL: color_lin.a = 1.0f; break;
+                case hrz_proto::AlphaChannelUsage::IGNORE_ALPHA_CHANNEL: color_lin.a = 1.0F; break;
                 case hrz_proto::AlphaChannelUsage::USE_ALPHA_CHANNEL:
                     color_lin = hrz::premultiply_alpha(color_lin);
                     break;
@@ -601,7 +602,8 @@ struct SamplingFunctionImpl : public SamplingFunction
         return PixelValue<uint8_t, 4>{
             std::bit_cast<std::array<uint8_t, 4>>(
                 hrz::linear_to_srgb_lut(std::bit_cast<lm::vec4>(input.value))),
-            input.is_nodata};
+            input.is_nodata
+        };
     }
 
     // Returns true if the pixel should be discarded, false otherwise.

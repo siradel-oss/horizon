@@ -22,6 +22,7 @@ namespace hrz_jobs::rasterize_cesium_terrain_tile
 {
 namespace
 {
+
 static_assert(
     std::endian::native == std::endian::little,
     "Cesium terrain tile format is little-endian");
@@ -134,9 +135,9 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
         return hrz_jobs::JobResult::FAILURE;
     }
 
-    float minimum_height = 0.0f;
+    float minimum_height = 0.0F;
     std::memcpy(&minimum_height, raw_data.data() + sizeof(double) * 3, sizeof(float));
-    float maximum_height = 0.0f;
+    float maximum_height = 0.0F;
     std::memcpy(
         &maximum_height, raw_data.data() + sizeof(double) * 3 + sizeof(float), sizeof(float));
 
@@ -176,9 +177,9 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
         v += zigzag_decode(zigzag_v);
         height += zigzag_decode(zigzag_height);
 
-        float x = (float)u / 32767.0f;
-        float y = 1.0f - (float)v / 32767.0f;
-        float elevation = hrz::lerp(minimum_height, maximum_height, (float)height / 32767.0f);
+        float x = (float)u / 32767.0F;
+        float y = 1.0F - (float)v / 32767.0F;
+        float elevation = hrz::lerp(minimum_height, maximum_height, (float)height / 32767.0F);
 
         vertices[i] = {{x, y}, elevation};
     }
@@ -261,6 +262,7 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace
 
 hrz_jobs::JobResult run(
@@ -286,4 +288,5 @@ hrz_jobs::JobResult run(
 
     return result;
 }
+
 } // namespace hrz_jobs::rasterize_cesium_terrain_tile

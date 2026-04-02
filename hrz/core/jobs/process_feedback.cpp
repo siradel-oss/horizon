@@ -10,6 +10,7 @@ using namespace hrz;
 
 namespace hrz_jobs::process_feedback_texture
 {
+
 constexpr uint32_t MIN_PIXEL_COUNT = 10;
 
 inline bool is_valid(const TileCoords& coords)
@@ -132,8 +133,10 @@ hrz_jobs::JobResult run(
         {
             if (it.second >= MIN_PIXEL_COUNT)
             {
-                response.tile_usage.emplace_back(hrz::planet::RequestedTileCoords{
-                    it.first, it.second, hrz::planet::TileRequestOrigin::FeedbackOrigin});
+                response.tile_usage.emplace_back(
+                    hrz::planet::RequestedTileCoords{
+                        it.first, it.second, hrz::planet::TileRequestOrigin::FeedbackOrigin
+                    });
             }
         }
     }
@@ -142,8 +145,7 @@ hrz_jobs::JobResult run(
         HRZ_SCOPED_SAMPLE("sort vector");
 
         std::ranges::sort(
-            response.tile_usage,
-            [](const auto& t1, const auto& t2)
+            response.tile_usage, [](const auto& t1, const auto& t2)
             { return tile_usage_comp(t1.coords, t1.uses, 0, t2.coords, t2.uses, 0); });
     }
 

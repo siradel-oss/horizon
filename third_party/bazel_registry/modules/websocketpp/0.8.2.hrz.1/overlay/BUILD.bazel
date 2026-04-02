@@ -1,0 +1,13 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "websocketpp",
+    hdrs = glob(["websocketpp/**/*.hpp"]),
+    defines = ["_WEBSOCKETPP_CPP11_STL_"],
+    includes = ["."],
+    deps = ["@asio//:asio"],
+)
+
+exports_files(["COPYING"])

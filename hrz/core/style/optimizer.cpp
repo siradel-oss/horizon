@@ -17,6 +17,7 @@
 
 namespace
 {
+
 using namespace hrz;
 using namespace style;
 
@@ -362,12 +363,15 @@ struct OptimizerImpl : public Optimizer
         return true;
     }
 };
+
 } // anonymous namespace
 
 namespace hrz::style
 {
+
 std::unique_ptr<Optimizer> Optimizer::create(std::span<const hrz::Palette> palettes)
 {
     return std::make_unique<OptimizerImpl>(palettes);
 }
+
 } // namespace hrz::style

@@ -8,6 +8,7 @@
 
 namespace my
 {
+
 /**
  * Memory arena for POD data types.
  */
@@ -68,10 +69,10 @@ public:
     explicit Arena(size_t block_size) : _block_size(block_size) {}
 
     Arena(const Arena&) = delete;
-    Arena& operator=(const Arena&) = delete;
+    Arena& operator =(const Arena&) = delete;
 
     Arena(Arena&&) = delete;
-    Arena& operator=(Arena&&) = delete;
+    Arena& operator =(Arena&&) = delete;
 
     ~Arena() { free(); }
 
@@ -115,7 +116,7 @@ public:
         if (size == 0) return nullptr;
 
         // Align size up to 16 bytes
-        size = (size + 15) & (~0xfull);
+        size = (size + 15) & (~0xfULL);
 
         _allocated += size;
 

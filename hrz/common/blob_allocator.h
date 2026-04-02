@@ -12,11 +12,13 @@
 
 namespace hrz
 {
+
 struct BlobAllocator;
 struct LayersInfo;
 
 namespace blobs
 {
+
 using BlobId = uint64_t;
 
 static constexpr BlobId NO_BLOB = 0;
@@ -55,10 +57,10 @@ public:
     ~MutableBlobData();
 
     MutableBlobData(const MutableBlobData&) = delete;
-    MutableBlobData& operator=(const MutableBlobData&) = delete;
+    MutableBlobData& operator =(const MutableBlobData&) = delete;
 
     MutableBlobData(MutableBlobData&& other) noexcept;
-    MutableBlobData& operator=(MutableBlobData&& other) noexcept;
+    MutableBlobData& operator =(MutableBlobData&& other) noexcept;
 
     /**
      * Release this instance before it goes out of scope.
@@ -135,10 +137,10 @@ public:
     ~BlobData();
 
     BlobData(const BlobData&) = delete;
-    BlobData& operator=(const BlobData&) = delete;
+    BlobData& operator =(const BlobData&) = delete;
 
     BlobData(BlobData&& other) noexcept;
-    BlobData& operator=(BlobData&& other) noexcept;
+    BlobData& operator =(BlobData&& other) noexcept;
 
     /**
      * Release this instance before it goes out of scope.
@@ -224,10 +226,10 @@ public:
     ~BlobHandle();
 
     BlobHandle(const BlobHandle&);
-    BlobHandle& operator=(const BlobHandle&);
+    BlobHandle& operator =(const BlobHandle&);
 
     BlobHandle(BlobHandle&& other) noexcept;
-    BlobHandle& operator=(BlobHandle&& other) noexcept;
+    BlobHandle& operator =(BlobHandle&& other) noexcept;
 
     /**
      * Decrement the use count of the blob before this instance is
@@ -334,10 +336,10 @@ public:
     void cancel();
 
     AllocationTicket(const AllocationTicket&) = delete;
-    AllocationTicket& operator=(const AllocationTicket&) = delete;
+    AllocationTicket& operator =(const AllocationTicket&) = delete;
 
     AllocationTicket(AllocationTicket&& other) noexcept;
-    AllocationTicket& operator=(AllocationTicket&& other) noexcept;
+    AllocationTicket& operator =(AllocationTicket&& other) noexcept;
 
     bool is_valid() const { return blob_id != NO_BLOB; }
 
@@ -541,5 +543,6 @@ inline std::optional<BlobHandle> BlobHandle::make_sub_blob(size_t offset, size_t
     if (!allocator) return std::nullopt;
     return ::hrz::blobs::make_sub_blob(allocator, *this, offset, size);
 }
+
 } // namespace blobs
 } // namespace hrz

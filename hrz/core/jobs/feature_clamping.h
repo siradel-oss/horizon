@@ -6,6 +6,7 @@
 
 namespace hrz
 {
+
 class PointClampingGenerator
 {
     std::span<const float> _clamps;
@@ -68,12 +69,12 @@ public:
         switch (_mode)
         {
             case hrz_proto::VectorClampMode::NO_CLAMPING:
-                return PointClampingGenerator({}, 0.0f, false, _use_z);
+                return PointClampingGenerator({}, 0.0F, false, _use_z);
             case hrz_proto::VectorClampMode::ANCHOR:
                 return PointClampingGenerator({}, _clamps[feature_index], false, _use_z);
             case hrz_proto::VectorClampMode::PER_VERTEX:
-                return PointClampingGenerator(_clamps.subspan(first_point), 0.0f, true, _use_z);
-            default: return PointClampingGenerator({}, 0.0f, false, false);
+                return PointClampingGenerator(_clamps.subspan(first_point), 0.0F, true, _use_z);
+            default: return PointClampingGenerator({}, 0.0F, false, false);
         }
     }
 };

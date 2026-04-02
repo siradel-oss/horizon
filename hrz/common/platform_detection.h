@@ -2,6 +2,7 @@
 
 namespace hrz
 {
+
 struct PlatformInfo
 {
     enum Os
@@ -79,4 +80,5 @@ struct PlatformInfo
 
     bool is_mobile() const { return os == Os::Android || os == Os::IOs; }
 };
+
 } // namespace hrz

@@ -3,7 +3,12 @@
 #include "hrz/common/blob_allocator.h"
 #include "hrz/common/shader_defines.h"
 
-#include <hb.h>
+// Forward declaration to avoid including <hb.h> in the public header.
+extern "C"
+{
+    typedef struct hb_font_t hb_font_t;
+}
+
 #include <lin_maths.h>
 #include <stb_truetype.h>
 
@@ -15,10 +20,12 @@
 
 namespace hrz
 {
+
 struct FontRasterizer;
 
 namespace font_rasterizer
 {
+
 // Size in pixels of the side of the square region
 // allocated to each glyph in the font texture.
 constexpr unsigned int GLYPH_SLOT_SIZE = 44;
@@ -98,18 +105,12 @@ struct Font
     }
 
     Font(const Font&) = delete;
-    Font& operator=(const Font&) = delete;
+    Font& operator =(const Font&) = delete;
 
     Font(Font&& other) noexcept;
-    Font& operator=(Font&& other) noexcept;
+    Font& operator =(Font&& other) noexcept;
 
-    ~Font()
-    {
-        if (hb_font != nullptr)
-        {
-            hb_font_destroy(hb_font);
-        }
-    }
+    ~Font();
 };
 
 struct Glyph
@@ -174,5 +175,6 @@ Font get_font(FontRasterizer*, FontHandle);
 Glyph get_glyph_info(FontRasterizer*, const Font&, unsigned int in_font_index);
 
 std::optional<std::vector<RasterizedGlyph>> get_new_glyphs(FontRasterizer*, FontHandle);
+
 } // namespace font_rasterizer
 } // namespace hrz

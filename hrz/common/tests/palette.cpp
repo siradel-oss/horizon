@@ -11,9 +11,10 @@
 
 namespace
 {
+
 bool test_color_eq(lm::vec4 a, lm::vec4 b)
 {
-    if (lm::round(a * 255.0f) != lm::round(b * 255.0f))
+    if (lm::round(a * 255.0F) != lm::round(b * 255.0F))
     {
         HRZ_LOG_ERROR(
             "[{}, {}, {}, {}] vs [{}, {}, {}, {}]", a.x, a.y, a.z, a.w, b.x, b.y, b.z, b.w);
@@ -91,6 +92,7 @@ struct GlobalColors
 };
 
 static const GlobalColors global_colors;
+
 } // anonymous namespace.
 
 TEST(CommonPalette, label_palette)
@@ -406,7 +408,7 @@ TEST(CommonPalette, numeric_color_interpolation_modes)
         // Value obtained on https://observablehq.com/@aras-p/oklab-interpolation-test
         // to guarantee implementation independence.
         EXPECT_TRUE(test_color_eq(
-            c2.value(), hrz::srgb_to_linear(lm::vec4(0.81630f, 0.66036f, 0.00177f, 1.0f))));
+            c2.value(), hrz::srgb_to_linear(lm::vec4(0.81630F, 0.66036F, 0.00177F, 1.0F))));
         EXPECT_TRUE(test_color_eq(c3.value(), global_colors.lm_green));
     }
 
@@ -421,7 +423,7 @@ TEST(CommonPalette, numeric_color_interpolation_modes)
         EXPECT_TRUE(c3.has_value());
 
         EXPECT_TRUE(test_color_eq(c1.value(), global_colors.lm_red));
-        EXPECT_TRUE(test_color_eq(c2.value(), lm::vec4(0.5f, 0.5f, 0.0f, 1.0f)));
+        EXPECT_TRUE(test_color_eq(c2.value(), lm::vec4(0.5F, 0.5F, 0.0F, 1.0F)));
         EXPECT_TRUE(test_color_eq(c3.value(), global_colors.lm_green));
     }
 }
@@ -437,6 +439,7 @@ TEST(CommonPalette, invalid_palette_type)
     ASSERT_FALSE(
         hrz::palette::label_palettization(hrz::palette::from_proto(numeric_palette), "Test")
             .has_value());
-    ASSERT_FALSE(hrz::palette::numeric_palettization(hrz::palette::from_proto(label_palette), 10.0)
-                     .has_value());
+    ASSERT_FALSE(
+        hrz::palette::numeric_palettization(hrz::palette::from_proto(label_palette), 10.0)
+            .has_value());
 }

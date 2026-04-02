@@ -28,6 +28,7 @@
 
 namespace
 {
+
 enum
 {
     UboFeatureParams = hrz::UboCustomStart,
@@ -256,7 +257,7 @@ struct TileId
     uint64_t channel_id;
     uint64_t tile_id;
 
-    constexpr bool operator==(const TileId& other) const = default;
+    constexpr bool operator ==(const TileId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TileId& request)
@@ -343,10 +344,12 @@ struct ImpostorGpuResources
 
                 my::IndexName atlas_sampler = {SamplerImpostorTexture, "hrz_impostor_texture"};
                 my::IndexName shadow_sampler = {
-                    SamplerImpostorShadowTexture, "hrz_impostor_normal_texture"};
+                    SamplerImpostorShadowTexture, "hrz_impostor_normal_texture"
+                };
                 my::IndexName scale_sampler = {
                     SamplerImpostorScaleCoefficientsTexture,
-                    "hrz_impostor_scale_coefficients_texture"};
+                    "hrz_impostor_scale_coefficients_texture"
+                };
 
                 hrz::StaticVector<my::IndexName, 16> visual_samplers;
                 visual_samplers.push_back(atlas_sampler);
@@ -478,7 +481,7 @@ class ModelVectorReprSystem : public hrz::vt::ReprSystem
         uint64_t channel_id;
         uint64_t config_id;
 
-        constexpr bool operator==(const ConfigId& other) const = default;
+        constexpr bool operator ==(const ConfigId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ConfigId& request)
@@ -549,8 +552,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         uint64_t layer_id,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         ConfigId style_id)
     {
         if (repr.type() != hrz_proto::VectorReprType::MODEL_VECTOR_REPR)
@@ -749,7 +752,7 @@ public:
         tile.draw_prps.lighting = cfg.lighting_settings;
         tile.draw_prps.clip_id = -1;
         tile.draw_prps.transform = lm::dmat4::identity();
-        tile.draw_prps.color = lm::vec4(1.0f);
+        tile.draw_prps.color = lm::vec4(1.0F);
         tile.draw_prps.apply_feature_color_to_overlay = false;
         tile.draw_prps.overlay_material_enabled = false;
         tile.draw_prps.overlay_material_opacity = 0.0;
@@ -832,9 +835,11 @@ public:
                                 },
                                 ConfigId{channel_id, message.style_id});
 
-                            channel.send(hrz::vt::repr::messages::StyleRegistrationResult{
-                                message.style_id, handle.has_value(),
-                                std::move(registered_properties)});
+                            channel.send(
+                                hrz::vt::repr::messages::StyleRegistrationResult{
+                                    message.style_id, handle.has_value(),
+                                    std::move(registered_properties)
+                                });
                         },
                         [&](const hrz::vt::repr::messages::UnregisterStyle& message)
                         {
@@ -921,7 +926,8 @@ public:
                             {
                                 HRZ_LOG_ERROR("Cannot update selection: tile not found");
                             }
-                        }},
+                        }
+                    },
                     generic_message);
             }
         }
@@ -1327,14 +1333,15 @@ private:
             group_data.cull_modifier = cull_modifier;
             group_data.positions = {(lm::vec3*)&geometry.positions[0], geometry.positions.size()};
             group_data.compressed_normals = {
-                (lm::usvec4*)&geometry.normals[0], geometry.normals.size()};
+                (lm::usvec4*)&geometry.normals[0], geometry.normals.size()
+            };
             group_data.scales = {(lm::vec3*)&geometry.scales[0], geometry.scales.size()};
             group_data.colors = {(lm::ubvec4*)&geometry.colors[0], color_count};
             group_data.feature_id_per_instance = {&geometry.feature_ids[0], feature_id_count};
             group_data.object_ids = {&geometry.object_ids[0], feature_id_count};
             group_data.position_compression.type = hrz::model::DracoCompressionType::None;
             group_data.normal_compression.type = hrz::model::DracoCompressionType::OctEncoded;
-            group_data.normal_compression.quantization_scale = lm::vec3(2.0f / 65535.0f);
+            group_data.normal_compression.quantization_scale = lm::vec3(2.0F / 65535.0F);
 
             tile->instance_group = hrz::model::create_instance_group(
                 cfg->model_prototype, tile->object_ref, tile->feature_ref, 0, group_data);
@@ -1482,8 +1489,9 @@ private:
                                         sizeof(lm::vec3),
                                         my::VertexRate::Constant}
                 : my::VertexInputStream{
-                    InputStreamScale, renderable.scale_buffer,    my::VertexFormat::Float32_3, 0,
-                    sizeof(lm::vec3), my::VertexRate::PerInstance};
+                      InputStreamScale, renderable.scale_buffer,    my::VertexFormat::Float32_3, 0,
+                      sizeof(lm::vec3), my::VertexRate::PerInstance
+                  };
 
             my::VertexInputStream streams[] = {
                 {InputStreamPosition, _impostor_gpu_resources.vertex_buffer,
@@ -1642,7 +1650,7 @@ private:
                     hrz::model::DrawProperties draw_prps;
                     draw_prps.transform = cfg->frame;
                     draw_prps.lighting = cfg->lighting_settings;
-                    draw_prps.color = lm::vec4(1.0f);
+                    draw_prps.color = lm::vec4(1.0F);
                     draw_prps.clip_id = -1;
                     draw_prps.apply_feature_color_to_overlay = false;
                     draw_prps.overlay_material_enabled = false;
@@ -1773,9 +1781,11 @@ private:
         hrz::StaticVector<hrz::render::ScreenSpaceError, hrz::SCENE_VIEW_COUNT> sses;
         for (const auto& view_info : ctx.views_info)
         {
-            sses.push_back(hrz::render::ScreenSpaceError(
-                view_info.cam_view_info.cam.fovy, (double)view_info.cam_view_info.viewport.size.y,
-                view_info.cam_view_info.viewport.device_pixel_ratio));
+            sses.push_back(
+                hrz::render::ScreenSpaceError(
+                    view_info.cam_view_info.cam.fovy,
+                    (double)view_info.cam_view_info.viewport.size.y,
+                    view_info.cam_view_info.viewport.device_pixel_ratio));
         }
 
         for (auto handle : _tiles_ready)
@@ -1814,12 +1824,15 @@ private:
 
     std::pair<uint64_t, Channel> create_channel() override { return _channels.create_channel(); }
 };
+
 } // namespace
 
 namespace hrz::vt
 {
+
 std::unique_ptr<ReprSystem> create_model_repr_system()
 {
     return std::unique_ptr<ReprSystem>(new ModelVectorReprSystem());
 }
+
 } // namespace hrz::vt

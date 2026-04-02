@@ -9,6 +9,7 @@ struct mu_Context;
 
 namespace hrz
 {
+
 /**
  * The scene model contains the entier scene description.
  * It can be accessed through the methods below.
@@ -16,10 +17,12 @@ namespace hrz
  * No interaction is thread-safe.
  */
 struct SceneModel;
+
 } // namespace hrz
 
 namespace hrz::scene_model
 {
+
 enum class UpdateType
 {
     Set,

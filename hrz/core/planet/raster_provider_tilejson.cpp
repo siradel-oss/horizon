@@ -14,6 +14,7 @@
 
 namespace hrz::planet
 {
+
 bool is_provider_model_complete(const hrz_proto::TileJsonRasterProviderParams& params)
 {
     if (params.url().empty()) return false;
@@ -180,7 +181,8 @@ private:
 
         AttributionHandle attribution_handles[] = {
             attribution::register_attribution(attributions, {additional_attribution, ""}),
-            attribution::register_attribution(attributions, {tilejson.attribution, ""})};
+            attribution::register_attribution(attributions, {tilejson.attribution, ""})
+        };
         auto attribution =
             attribution::register_attribution_group(attributions, attribution_handles);
 
@@ -196,7 +198,8 @@ private:
             TileFetcher::MetricInfo{
                 provider_request_tally_metric_name(
                     hrz_proto::RasterProviderType::TILEJSON_RASTER_PROVIDER),
-                url.c_str()});
+                url.c_str()
+            });
 
         return true;
     }
@@ -353,4 +356,5 @@ std::unique_ptr<RasterProvider> create_tilejson_provider(
     return std::unique_ptr<RasterProvider>(
         new TileJsonProvider(params, queue, default_tile_cache_size, raster_id));
 }
+
 } // namespace hrz::planet

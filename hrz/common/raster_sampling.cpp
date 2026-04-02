@@ -5,6 +5,7 @@
 
 namespace hrz::sampling
 {
+
 NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
     const hrz_proto::NodataValue& nodata_value,
     hrz_proto::NodataHandling nodata_handling,
@@ -92,7 +93,8 @@ NodataFunction::NodataParams NodataFunction::make_nodata_pattern_and_mask(
                             (uint8_t)std::round(color.r() * 255),
                             (uint8_t)std::round(color.g() * 255),
                             (uint8_t)std::round(color.b() * 255),
-                            (uint8_t)std::round(color.a() * 255)};
+                            (uint8_t)std::round(color.a() * 255)
+                        };
                         nodata_pattern = std::bit_cast<uint32_t>(rgba);
                         break;
                     }
@@ -309,9 +311,9 @@ void ImageryBlendingFunction::blend(const void* src, void* dst) const
     lm::vec4 src_lin = hrz::srgb_to_linear_lut(src_ubvec4);
     lm::vec4 dst_lin = hrz::srgb_to_linear_lut(dst_ubvec4);
 
-    src_lin *= ((float)opacity / 255.0f);
+    src_lin *= ((float)opacity / 255.0F);
 
-    dst_lin = src_lin + dst_lin * (1.0f - src_lin.a);
+    dst_lin = src_lin + dst_lin * (1.0F - src_lin.a);
 
     dst_ubvec4 = hrz::linear_to_srgb_lut(dst_lin);
 
@@ -350,7 +352,8 @@ PixelValue<float, 1> fetch_siradel_legacy_f32_pixel(
     std::memcpy(&value, input.pixel_data<uint32_t, 1>(x, y), sizeof(uint32_t));
     return {
         {hrz::decode_siradel_legacy_f32_value_to_float(value)},
-        nodata.is_nodata<uint32_t, 1>(&value)};
+        nodata.is_nodata<uint32_t, 1>(&value)
+    };
 }
 
 PixelValue<float, 1> fetch_signed_fixed_24_8_pixel(
@@ -432,4 +435,5 @@ std::unique_ptr<SamplingFunction> make_sampling_function(
         return nullptr;
     }
 }
+
 } // namespace hrz::sampling

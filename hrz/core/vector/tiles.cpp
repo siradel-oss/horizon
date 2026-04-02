@@ -40,6 +40,7 @@ namespace hrz::vt
 {
 namespace
 {
+
 const char* elevation_source_str(ElevationSource source)
 {
     switch (source)
@@ -58,6 +59,7 @@ struct TileData
     hrz::InlinedVector<hrz::vector_data::AttributeValues, 16> attributes;
     hrz::BlobArrayView<lm::dvec3> anchors;
 };
+
 } // namespace
 
 struct VectorTiles
@@ -447,10 +449,12 @@ struct VectorTiles
         {
             auto id_and_channel = repr_reg->get(type).create_channel();
             _repr_channel_ids.insert({type, id_and_channel.first});
-            _actor_channel.send(to_actor::ReprChannel{
-                type, std::move(id_and_channel.second),
-                repr_reg->get(type).always_schedule_instantly(),
-                repr_reg->get(type).uses_z_coordinates()});
+            _actor_channel.send(
+                to_actor::ReprChannel{
+                    type, std::move(id_and_channel.second),
+                    repr_reg->get(type).always_schedule_instantly(),
+                    repr_reg->get(type).uses_z_coordinates()
+                });
         }
     }
 
@@ -505,10 +509,12 @@ struct VectorTiles
         std::string_view anchor_angle_attribute_name,
         std::string_view feature_type_attribute_name)
     {
-        _actor_channel.send(to_actor::SetSpecialAttributes{
-            std::string(anchor_z_attribute_name.begin(), anchor_z_attribute_name.end()),
-            std::string(anchor_angle_attribute_name.begin(), anchor_angle_attribute_name.end()),
-            std::string(feature_type_attribute_name.begin(), feature_type_attribute_name.end())});
+        _actor_channel.send(
+            to_actor::SetSpecialAttributes{
+                std::string(anchor_z_attribute_name.begin(), anchor_z_attribute_name.end()),
+                std::string(anchor_angle_attribute_name.begin(), anchor_angle_attribute_name.end()),
+                std::string(feature_type_attribute_name.begin(), feature_type_attribute_name.end())
+            });
     }
 
     void set_clip_id(int32_t clip_id) { _actor_channel.send(to_actor::SetClipId{clip_id}); }
@@ -550,9 +556,11 @@ struct VectorTiles
         {
             _cullers = {std::move(cullers)};
 
-            _actor_channel.send(to_actor::GenerateNewVisibilitySet{
-                _cullers.value(),
-                _request_debug_info_for_debug_draw || _request_debug_info_for_dev_ui});
+            _actor_channel.send(
+                to_actor::GenerateNewVisibilitySet{
+                    _cullers.value(),
+                    _request_debug_info_for_debug_draw || _request_debug_info_for_dev_ui
+                });
         }
     }
 

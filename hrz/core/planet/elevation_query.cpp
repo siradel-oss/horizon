@@ -332,8 +332,10 @@ void hrz::planet::ElevationQuery::_handle_finished_batch(Ticket ticket, Batch* b
         if (it != _channels.end())
         {
             auto& channel = it->second;
-            channel.send(elevation_query::messages::ElevationQueryResult{
-                batch->query_id->query_id, std::move(batch->elevations)});
+            channel.send(
+                elevation_query::messages::ElevationQueryResult{
+                    batch->query_id->query_id, std::move(batch->elevations)
+                });
 
             if (batch->query_id.has_value())
             {

@@ -7,6 +7,7 @@
 
 namespace hrz
 {
+
 struct AttributionRegistry;
 struct JobScheduler;
 

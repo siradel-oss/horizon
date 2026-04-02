@@ -1,0 +1,28 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(glob([
+    "*.h",
+    "*.c",
+]))
+
+cc_library(
+    name = "image",
+    hdrs = ["stb_image.h"],
+    includes = ["."],
+)
+
+cc_library(
+    name = "image_write",
+    hdrs = ["stb_image_write.h"],
+    includes = ["."],
+)
+
+cc_library(
+    name = "truetype",
+    hdrs = ["stb_truetype.h"],
+    includes = ["."],
+)
+
+exports_files(["LICENSE"])

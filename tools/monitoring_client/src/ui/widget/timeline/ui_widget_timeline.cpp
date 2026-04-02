@@ -9,6 +9,7 @@
 
 namespace
 {
+
 using namespace ui::helpers;
 
 constexpr double WIDGET_MIN_HEIGHT = 45.0;
@@ -145,7 +146,7 @@ WidgetDrawResult _draw_widget(
     {
         lm::dvec2 p0 = {ctx.hovered_pixel_x.value(), view_area.p0.y};
         lm::dvec2 p1 = {ctx.hovered_pixel_x.value(), view_area.p1.y};
-        ImGui::GetWindowDrawList()->AddLine(p0, p1, 0xff593af2, 2.0f);
+        ImGui::GetWindowDrawList()->AddLine(p0, p1, 0xff593af2, 2.0F);
     }
 
     return result;
@@ -170,10 +171,12 @@ void _format_timeline_ruler_value(fmt::memory_buffer& buffer, MetricValue value,
         format_buffer(buffer, "{:0.2Lf} s", value.value / 1'000'000.0);
     }
 }
+
 } // namespace
 
 namespace ui::widget
 {
+
 using namespace helpers;
 
 Timeline::Timeline() : _shared_view({{0.0, 0.0}, {30'000.0, 1.0}})
@@ -275,7 +278,7 @@ double Timeline::_draw_widgets(
     if (events.scroll.has_value())
     {
         const float target_scroll = ImGui::GetScrollY() - ImGui::GetIO().MouseDelta.y;
-        ImGui::SetScrollY(clamp(target_scroll, 0.0f, ImGui::GetScrollMaxY()));
+        ImGui::SetScrollY(clamp(target_scroll, 0.0F, ImGui::GetScrollMaxY()));
     }
 
     std::optional<double> hovered_pixel_x;

@@ -1,4 +1,5 @@
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("//tools/bazel/glsl:glsl_rules.bzl", "glsl_config", "glsl_program")
 load(":cc_shaders.bzl", "cc_shaders_collection")
@@ -1221,10 +1222,10 @@ cc_library(
     hdrs = [
         ":shaders_hdrs",
     ],
-    visibility = ["//hrz/core:__subpackages__"],
-    deps = [
-        "//third_party:lz4",
+    implementation_deps = [
+        "@lz4",
     ],
+    visibility = ["//hrz/core:__subpackages__"],
 )
 
 py_binary(

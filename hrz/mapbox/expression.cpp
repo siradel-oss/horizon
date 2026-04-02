@@ -28,10 +28,12 @@
 
 namespace hrz_mapbox
 {
+
 using namespace hrz;
 
 namespace
 {
+
 // List of Mapbox operators supported or partially supported.
 // https://docs.mapbox.com/style-spec/reference/expressions/
 enum class MapboxOp : uint8_t
@@ -394,10 +396,11 @@ NodeIndex parse_interpolate_operator(
                     convert_uint_color_to_bytes(ctx.nodes[stop_output_2_index].literal.u64);
                 auto mixed_color = interpolation_operator == InterpolationOperator::InterpolateHcl
                         || interpolation_operator == InterpolationOperator::InterpolateLab
-                    ? mix_srgb_colors_in_oklab(first_color, second_color, 0.5f)
-                    : convert_rgba_color_to_bytes(lm::mix(
-                        convert_byte_color_to_rgba(first_color),
-                        convert_byte_color_to_rgba(second_color), 0.5f));
+                    ? mix_srgb_colors_in_oklab(first_color, second_color, 0.5F)
+                    : convert_rgba_color_to_bytes(
+                          lm::mix(
+                              convert_byte_color_to_rgba(first_color),
+                              convert_byte_color_to_rgba(second_color), 0.5F));
                 literal.u64 = convert_byte_color_to_uint(mixed_color);
             }
             break;
@@ -1225,7 +1228,8 @@ NodeIndex parse_in_operator(
     }
 
     hrz::InlinedVector<NodeIndex, 4> comparison_indices;
-    auto add_comparison = [&](NodeIndex input_index) {
+    auto add_comparison = [&](NodeIndex input_index)
+    {
         comparison_indices.push_back(ctx.add_node(Node::Type::Equal, {keyword_index, input_index}));
     };
 
@@ -1659,6 +1663,7 @@ NodeIndex parse_expression(
 
 namespace
 {
+
 void finalize_case(NodeIndex index, NodeIndex parent_index, ExpressionContext& ctx)
 {
     assert(ctx.nodes.at(index).type == Node::Type::Case);
@@ -1737,6 +1742,7 @@ void visit_nodes(
     visit_children(root, ctx, callback);
     callback(root, NO_NODE);
 }
+
 } // namespace
 
 void finalize_expression(NodeIndex root, ExpressionContext& ctx)

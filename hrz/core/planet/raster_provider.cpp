@@ -167,4 +167,5 @@ hrz_proto::ImageFormat get_image_format(const hrz_proto::RasterProvider& provide
         default: assert(false && "Unhandled case"); return hrz_proto::ImageFormat::SRGBA_8;
     }
 }
+
 } // namespace hrz::planet

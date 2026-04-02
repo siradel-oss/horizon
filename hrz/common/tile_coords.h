@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 struct TileCoords
 {
     uint32_t x = 0;
@@ -19,7 +20,7 @@ struct TileCoords
 
     constexpr TileCoords(uint32_t x, uint32_t y, uint8_t lod) : x(x), y(y), lod(lod) {}
 
-    friend constexpr bool operator==(const TileCoords&, const TileCoords&) = default;
+    friend constexpr bool operator ==(const TileCoords&, const TileCoords&) = default;
 
     inline TileCoords parent() const
     {
@@ -79,13 +80,14 @@ struct TileToTileUvTransform
         offset.y = (T)from.y * scale - (T)to.y;
     }
 
-    constexpr lm::Vector<T, 2> operator()(lm::Vector<T, 2> v) { return v * scale + offset; }
+    constexpr lm::Vector<T, 2> operator ()(lm::Vector<T, 2> v) { return v * scale + offset; }
 };
 
 } // namespace hrz
 
 namespace hrz
 {
+
 inline bool tile_usage_comp(
     const TileCoords& t1,
     int t1_uses,
@@ -118,4 +120,5 @@ inline bool tile_usage_comp(
     }
     return t1.x < t2.x;
 };
+
 } // namespace hrz

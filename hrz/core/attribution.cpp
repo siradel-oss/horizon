@@ -110,7 +110,7 @@ H AbslHashValue(H h, const AttributionGroup* a)
 
 struct AttributionGroupHash
 {
-    inline size_t operator()(const AttributionGroup* a) const
+    inline size_t operator ()(const AttributionGroup* a) const
     {
         return absl::Hash<const AttributionGroup*>{}(a);
     }
@@ -118,7 +118,7 @@ struct AttributionGroupHash
 
 struct AttributionGroupEq
 {
-    constexpr bool operator()(const AttributionGroup* a, const AttributionGroup* b) const
+    constexpr bool operator ()(const AttributionGroup* a, const AttributionGroup* b) const
     {
         if (a->size == 0 && b->size == 0)
         {

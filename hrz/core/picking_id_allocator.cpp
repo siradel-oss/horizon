@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 struct PickingIdAllocator
 {
     // This means we can only have 64 different system.
@@ -15,6 +16,7 @@ struct PickingIdAllocator
 
 namespace picking
 {
+
 PickingIdAllocator* create_id_allocator()
 {
     return new PickingIdAllocator();

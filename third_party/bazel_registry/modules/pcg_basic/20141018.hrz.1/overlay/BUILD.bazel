@@ -1,0 +1,16 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "pcg_basic",
+    srcs = [
+        "pcg_basic.c",
+    ],
+    includes = ["."],
+    hdrs = [
+        "pcg_basic.h",
+    ],
+)
+
+exports_files(["LICENSE.txt"])

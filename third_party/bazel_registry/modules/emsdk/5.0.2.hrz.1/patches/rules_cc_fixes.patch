@@ -1,0 +1,49 @@
+diff --git emscripten_toolchain/toolchain.bzl emscripten_toolchain/toolchain.bzl
+index 80fd8037ab..3f5ca12edd 100644
+--- emscripten_toolchain/toolchain.bzl
++++ emscripten_toolchain/toolchain.bzl
+@@ -1,8 +1,8 @@
+ """This module encapsulates logic to create emscripten_cc_toolchain_config rule."""
+ 
+-load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
++load("@rules_cc//cc:action_names.bzl", "ACTION_NAMES")
+ load(
+-    "@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl",
++    "@rules_cc//cc:cc_toolchain_config_lib.bzl",
+     "action_config",
+     "env_entry",
+     "env_set",
+diff --git remote_emscripten_repository.bzl remote_emscripten_repository.bzl
+index ccd08423c9..57de51ee39 100644
+--- remote_emscripten_repository.bzl
++++ remote_emscripten_repository.bzl
+@@ -55,6 +55,8 @@
+     repo_linker_files_target = remote_repo + ":linker_files"
+     repo_ar_files_target = remote_repo + ":ar_files"
+ 
++    script_extension = "bat" if "@platforms//os:windows" in exec_compatible_with else "sh"
++
+     emscripten_python_interpreter_files(
+         name = python_interpreter_name,
+     )
+@@ -116,10 +118,7 @@
+         em_config = "@emscripten_cache//:emscripten_config",
+         emscripten_binaries = repo_compiler_files_target,
+         nodejs_bin = "@nodejs//:node",
+-        script_extension = select({
+-            "@bazel_tools//src/conditions:host_windows": "bat",
+-            "//conditions:default": "sh",
+-        }),
++        script_extension = script_extension,
+     )
+ 
+     cc_toolchain(
+@@ -141,7 +140,7 @@
+         target_compatible_with = ["@platforms//cpu:wasm32"],
+         exec_compatible_with = exec_compatible_with,
+         toolchain = cc_wasm_target,
+-        toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
++        toolchain_type = "@rules_cc//cc:toolchain_type",
+     )
+ 
+     cc_toolchain_suite(

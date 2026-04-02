@@ -59,15 +59,16 @@ extern "C"
 
 namespace hrz
 {
+
 using namespace hrz::blobs;
 
 static constexpr double MAX_WAIT_DURATION = 0.2; // seconds
 
-static constexpr size_t MAX_CAPACITY = 2ull * 1024 * 1024 * 1024;
-static constexpr size_t MIN_CAPACITY = 64ull * 1024 * 1024;
-static constexpr size_t BLOCK_SIZE = 4ull * 1024 * 1024;
+static constexpr size_t MAX_CAPACITY = 2ULL * 1024 * 1024 * 1024;
+static constexpr size_t MIN_CAPACITY = 64ULL * 1024 * 1024;
+static constexpr size_t BLOCK_SIZE = 4ULL * 1024 * 1024;
 
-static constexpr float FRAGMENTATION_THRESHOLD = 0.25f;
+static constexpr float FRAGMENTATION_THRESHOLD = 0.25F;
 
 static constexpr mu_Color PURPLE{172, 117, 239, 255};
 static constexpr mu_Color RED{229, 26, 26, 255};
@@ -77,6 +78,7 @@ static_assert(BLOB_ALIGNMENT <= sizeof(max_align_t), "Insuficient platform max a
 
 namespace
 {
+
 struct Blob
 {
     BlobState state = BlobState::NotAllocated;
@@ -107,7 +109,8 @@ using Terminator = std::array<std::byte, 4>;
 std::optional<Terminator> check_terminator_in_root_allocation(const Blob* blob);
 
 static constexpr Terminator BLOB_ALLOCATION_TERMINATOR = {
-    std::byte{0xb1}, std::byte{0x0b}, std::byte{0xb1}, std::byte{0x0b}};
+    std::byte{0xb1}, std::byte{0x0b}, std::byte{0xb1}, std::byte{0x0b}
+};
 #endif
 
 constexpr size_t get_allocation_size(const Blob* blob)
@@ -558,10 +561,10 @@ struct AwesomeAllocator
             block_removed = false;
             auto frag_begin = blocks_by_fragmentation.lower_bound(
                 stats.fragmentation
-                + stats.fragmentation * std::numeric_limits<float>::epsilon() * 10.0f);
+                + stats.fragmentation * std::numeric_limits<float>::epsilon() * 10.0F);
             auto frag_end = blocks_by_fragmentation.upper_bound(
                 stats.fragmentation
-                - stats.fragmentation * std::numeric_limits<float>::epsilon() * 10.0f);
+                - stats.fragmentation * std::numeric_limits<float>::epsilon() * 10.0F);
             for (auto it = frag_begin; it != frag_end; ++it)
             {
                 if (it->second == block)
@@ -993,10 +996,8 @@ struct AwesomeAllocator
                 if (block)
                 {
                     defragment_block(
-                        block, false, get_blob_fn,
-                        [this](size_t capacity)
-                        { return new_block_arena_for_arena_capacity(capacity); },
-                        std::nullopt);
+                        block, false, get_blob_fn, [this](size_t capacity)
+                        { return new_block_arena_for_arena_capacity(capacity); }, std::nullopt);
                 }
                 break;
             }
@@ -1007,7 +1008,8 @@ struct AwesomeAllocator
                 {
                     defragment_block(
                         block, false, get_blob_fn,
-                        [this, block](size_t capacity) {
+                        [this, block](size_t capacity)
+                        {
                             return new_block_arena_for_arena_capacity_below_offset(
                                 capacity, block->block().offset());
                         },
@@ -1057,6 +1059,7 @@ struct BlobAllocator
 
 namespace
 {
+
 #if WRITE_TERMINATORS
 constexpr std::byte* get_terminator_ptr(const Blob* blob)
 {
@@ -1376,10 +1379,12 @@ void do_cancel_all_pending_allocations(BlobAllocator* allocator)
     allocator->unallocated_root_blobs.clear();
     allocator->unallocated_blob_count = 0;
 }
+
 } // namespace
 
 namespace blobs
 {
+
 BlobAllocator* create_allocator(size_t capacity, bool is_malloc_passthrough)
 {
     capacity = std::min<size_t>(capacity, 0x8000'0000);
@@ -1543,6 +1548,7 @@ size_t get_size(BlobAllocator* allocator, RawBlobHandle raw_blob_handle)
 
 namespace
 {
+
 void shrink_root_blob(
     BlobAllocator* allocator,
     BlobId blob_id,
@@ -1604,6 +1610,7 @@ void shrink_root_blob(
         try_allocate_next_unallocated_root_blobs(allocator);
     }
 }
+
 } // namespace
 
 void shrink_raw_blob(BlobAllocator* allocator, RawBlobHandle raw_blob_handle, size_t new_size)
@@ -1722,6 +1729,7 @@ BlobHandle to_blob(BlobAllocator* allocator, AllocationTicket& ticket)
 
 namespace
 {
+
 BlobId make_sub_blob(
     BlobAllocator* allocator,
     BlobId parent_blob_id,
@@ -1761,6 +1769,7 @@ BlobId make_sub_blob(
 
     return blob_id;
 }
+
 } // namespace
 
 BlobHandle make_sub_blob(
@@ -1862,6 +1871,7 @@ void shrink_blob(BlobAllocator* allocator, const BlobHandle& handle, size_t new_
 
 namespace
 {
+
 void register_metadata(
     BlobAllocator* allocator,
     BlobId blob_id,
@@ -1918,6 +1928,7 @@ void register_owner(
         allocator->ui.allocated_blob_sorter.schedule_sort();
     }
 }
+
 } // namespace
 
 void register_metadata(
@@ -2380,9 +2391,9 @@ public:
                 "Block size: {}\nFree: {} ({:.4}%)\nLargest available: {}\nFragmentation: {:.4}%",
                 hrz::bytes_to_string(arena->block().size()).data(),
                 hrz::bytes_to_string(free_space).data(),
-                (float)free_space * 100.0f / arena->block().size(),
+                (float)free_space * 100.0F / arena->block().size(),
                 hrz::bytes_to_string(stats.largest_allocation_available).data(),
-                stats.fragmentation * 100.0f);
+                stats.fragmentation * 100.0F);
             hrz::ui::add_tooltip(_ctx, &_tooltip_ctx, str);
             hover = true;
             _has_tooltip = true;
@@ -2429,7 +2440,7 @@ void dev_ui(
             hrz::format_to_buffer(
                 buffer, "{} non-0-sized blobs allocated ({:.2f}%)",
                 allocator->allocated_blob_count - allocator->zero_size_allocated_blob_count,
-                100.0f
+                100.0F
                     * (float)(allocator->allocated_blob_count
                               - allocator->zero_size_allocated_blob_count)
                     / allocator->allocated_blob_count));
@@ -2439,7 +2450,7 @@ void dev_ui(
             hrz::format_to_buffer(
                 buffer, "{} 0-sized blobs allocated ({:.2f}%)",
                 allocator->zero_size_allocated_blob_count,
-                100.0f * (float)allocator->zero_size_allocated_blob_count
+                100.0F * (float)allocator->zero_size_allocated_blob_count
                     / allocator->allocated_blob_count));
 
         mu_text(
@@ -2447,14 +2458,14 @@ void dev_ui(
             hrz::format_to_buffer(
                 buffer, "{} occupied ({:.2f}%)",
                 bytes_to_string(allocator->allocated_memory_size).data(),
-                100.0f * (float)allocator->allocated_memory_size / allocator->capacity));
+                100.0F * (float)allocator->allocated_memory_size / allocator->capacity));
 
         mu_text(
             ctx,
             hrz::format_to_buffer(
                 buffer, "{} free ({:.2f}%)",
                 bytes_to_string(allocator->capacity - allocator->allocated_memory_size).data(),
-                100.0f * (1.0f - (float)allocator->allocated_memory_size / allocator->capacity)));
+                100.0F * (1.0F - (float)allocator->allocated_memory_size / allocator->capacity)));
 
         mu_text(
             ctx,
@@ -2542,13 +2553,11 @@ void dev_ui(
         HRZ_SCOPED_EXCLUSIVE_LOCK(allocator->mutex);
 
         allocator->ui.allocated_blob_sorter.work(
-            get_blob,
-            [](const Blob& blob) -> const monitoring::ResourceOwner& { return blob.owner; },
-            [](const Blob& a, const Blob& b) { return a.size > b.size; });
+            get_blob, [](const Blob& blob) -> const monitoring::ResourceOwner&
+            { return blob.owner; }, [](const Blob& a, const Blob& b) { return a.size > b.size; });
         allocator->ui.unallocated_blob_sorter.work(
-            get_blob,
-            [](const Blob& blob) -> const monitoring::ResourceOwner& { return blob.owner; },
-            [](const Blob& a, const Blob& b) { return a.size > b.size; });
+            get_blob, [](const Blob& blob) -> const monitoring::ResourceOwner&
+            { return blob.owner; }, [](const Blob& a, const Blob& b) { return a.size > b.size; });
 
         auto draw_resource_tree =
             [&](uint64_t tree_id, std::span<const BlobId> ids,
@@ -2622,7 +2631,8 @@ void dev_ui(
                         next_second_start = j;
 
                         TreenodeId layer_row_id = {
-                            (tree_id << 1) + 1, current_first, current_second};
+                            (tree_id << 1) + 1, current_first, current_second
+                        };
                         bool second_expanded = hrz::ui::begin_layout_treenode(
                             ctx, &layer_row_id, sizeof(layer_row_id), allocator->ui.expanded_nodes);
                         static int second_layout[] = {100, 60, 64, -1};
@@ -2745,7 +2755,7 @@ AllocationTicket::AllocationTicket(AllocationTicket&& other) noexcept :
 {
 }
 
-AllocationTicket& AllocationTicket::operator=(AllocationTicket&& other) noexcept
+AllocationTicket& AllocationTicket::operator =(AllocationTicket&& other) noexcept
 {
     if (&other != this)
     {
@@ -2777,7 +2787,7 @@ MutableBlobData::MutableBlobData(MutableBlobData&& other) noexcept :
 {
 }
 
-MutableBlobData& MutableBlobData::operator=(MutableBlobData&& other) noexcept
+MutableBlobData& MutableBlobData::operator =(MutableBlobData&& other) noexcept
 {
     if (&other != this)
     {
@@ -2839,7 +2849,7 @@ BlobHandle::BlobHandle(const BlobHandle& other) : allocator{other.allocator}, bl
     acquire();
 }
 
-BlobHandle& BlobHandle::operator=(const BlobHandle& other)
+BlobHandle& BlobHandle::operator =(const BlobHandle& other)
 {
     if (&other != this)
     {
@@ -2860,7 +2870,7 @@ BlobHandle::BlobHandle(BlobHandle&& other) noexcept :
 {
 }
 
-BlobHandle& BlobHandle::operator=(BlobHandle&& other) noexcept
+BlobHandle& BlobHandle::operator =(BlobHandle&& other) noexcept
 {
     if (&other != this)
     {
@@ -2999,6 +3009,7 @@ size_t BlobHandle::data_size() const
 
 namespace
 {
+
 // Take the shared mutex before calling this function.
 size_t get_blob_data_alignment(BlobAllocator* allocator, BlobId blob_id)
 {
@@ -3014,6 +3025,7 @@ size_t get_blob_data_alignment(BlobAllocator* allocator, BlobId blob_id)
         return std::gcd(parent_data_alignment, blob->offset_in_parent);
     }
 }
+
 } // namespace
 
 size_t BlobHandle::data_alignment() const
@@ -3067,7 +3079,7 @@ BlobData::BlobData(BlobData&& other) noexcept :
 {
 }
 
-BlobData& BlobData::operator=(BlobData&& other) noexcept
+BlobData& BlobData::operator =(BlobData&& other) noexcept
 {
     if (&other != this)
     {
@@ -3119,5 +3131,6 @@ void BlobData::release()
         blob_id = NO_BLOB;
     }
 }
+
 } // namespace blobs
 } // namespace hrz

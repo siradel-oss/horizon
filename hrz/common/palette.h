@@ -10,6 +10,7 @@
 
 namespace hrz
 {
+
 // All colours are linear, except where noted otherwise.
 struct Palette
 {
@@ -54,6 +55,7 @@ struct Palette
 
 namespace palette
 {
+
 Palette from_proto(const hrz_proto::Palette& proto);
 Palette from_proto(const hrz_proto::NumericPalette& proto);
 Palette from_proto(const hrz_proto::LabelPalette& proto);
@@ -63,5 +65,6 @@ std::optional<lm::vec4> label_palettization(const Palette& palette, std::string_
 
 // Returns a linear colour
 std::optional<lm::vec4> numeric_palettization(const Palette& palette, float value);
+
 } // namespace palette
 } // namespace hrz

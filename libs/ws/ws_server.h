@@ -8,6 +8,7 @@
 
 namespace ws
 {
+
 struct ServerHandler
 {
     virtual void on_client_connect() = 0;

@@ -148,8 +148,9 @@ int main(int argc, char* argv[])
     bool has_unsaved_changes = migrations_applied > 0;
     while (!quit)
     {
-        Menu main_menu(fmt::format(
-            "Edit scene dump \"{}\"{}", dump.name(), has_unsaved_changes ? " (UNSAVED)" : ""));
+        Menu main_menu(
+            fmt::format(
+                "Edit scene dump \"{}\"{}", dump.name(), has_unsaved_changes ? " (UNSAVED)" : ""));
 
         main_menu.add_action(
             "Quit",

@@ -24,6 +24,7 @@
 
 namespace
 {
+
 enum
 {
     UboTileParams = hrz::UboCustomStart,
@@ -120,19 +121,22 @@ struct RenderableFeatures : public my::Renderer::Renderable
         rb->push_state();
 
         my::UboBinding ubo_bindings[] = {
-            {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}};
+            {UboTileParams, data->ubo_buffer, 0, sizeof(TileUniformData)}
+        };
         rb->bind(ubo_bindings);
 
         if (render_type == hrz::RenderVisual)
         {
             my::TextureBinding texture_bindings[] = {
-                {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}};
+                {SamplerFeatureIds, data->feature_id_texture, data->metadata_sampler}
+            };
             rb->bind(texture_bindings);
         }
         else if (render_type == hrz::RenderSelection)
         {
             my::TextureBinding texture_bindings[] = {
-                {SamplerSelection, data->selection_texture, data->metadata_sampler}};
+                {SamplerSelection, data->selection_texture, data->metadata_sampler}
+            };
             rb->bind(texture_bindings);
         }
 
@@ -193,7 +197,7 @@ struct TileId
     uint64_t channel_id;
     uint64_t tile_id;
 
-    constexpr bool operator==(const TileId& other) const = default;
+    constexpr bool operator ==(const TileId& other) const = default;
 
     template<typename H>
     friend H AbslHashValue(H h, const TileId& request)
@@ -256,7 +260,7 @@ class ExtrudedReprSystem : public hrz::vt::ReprSystem
         uint64_t channel_id;
         uint64_t config_id;
 
-        constexpr bool operator==(const ConfigId& other) const = default;
+        constexpr bool operator ==(const ConfigId& other) const = default;
 
         template<typename H>
         friend H AbslHashValue(H h, const ConfigId& request)
@@ -394,8 +398,8 @@ public:
             res.uniform_blocks = ubos_depth;
             res.samplers = {};
             res.initial_state.color_blend.enable = false;
-            res.initial_state.rasterization.depth_bias_factor = 1.0f;
-            res.initial_state.rasterization.depth_bias_units = 1.0f;
+            res.initial_state.rasterization.depth_bias_factor = 1.0F;
+            res.initial_state.rasterization.depth_bias_units = 1.0F;
             rc->alloc(&res, hrz::monitoring::systems::ExtrudedVectors);
         }
     }
@@ -433,8 +437,8 @@ public:
         const hrz_proto::VectorRepr& repr,
         uint64_t,
         const std::function<
-            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-            register_prp,
+            uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+        >& register_prp,
         ConfigId style_id)
     {
         if (repr.type() != hrz_proto::VectorReprType::EXTRUDED_GEOMETRY_VECTOR_REPR)
@@ -913,9 +917,11 @@ public:
                                 },
                                 ConfigId{channel_id, message.style_id});
 
-                            channel.send(hrz::vt::repr::messages::StyleRegistrationResult{
-                                message.style_id, handle.has_value(),
-                                std::move(registered_properties)});
+                            channel.send(
+                                hrz::vt::repr::messages::StyleRegistrationResult{
+                                    message.style_id, handle.has_value(),
+                                    std::move(registered_properties)
+                                });
                         },
                         [&](const hrz::vt::repr::messages::UnregisterStyle& message)
                         {
@@ -1143,6 +1149,7 @@ public:
 
 namespace hrz::vt
 {
+
 std::unique_ptr<ReprSystem> create_extruded_repr_system()
 {
     return std::unique_ptr<ReprSystem>(new ExtrudedReprSystem());
@@ -1152,4 +1159,5 @@ void collect_extruded_shaders(hrz::GpuResourceContext* rc)
 {
     ExtrudedReprSystem::collect_shaders(rc);
 }
+
 } // namespace hrz::vt

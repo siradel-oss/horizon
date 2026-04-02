@@ -1,0 +1,10 @@
+{
+  "integrity": "sha256-KD+hzarxcjN4mHSc9Lmx716iadpZVAlU5R+6DnuPJ3o=",
+  "strip_prefix": "rules_cc-0.2.17",
+  "url": "https://github.com/bazelbuild/rules_cc/releases/download/0.2.17/rules_cc-0.2.17.tar.gz",
+  "patches": {
+    "module_dot_bazel_version.patch": "sha256-gh/5mMxyDmKgj1HlR+er1sOd0rkOy1UMwXwtKYZRkHw=",
+    "clang_cl_dumpbin.patch": "sha256-X/cqlVfJCs5LuhUNdQ1tLFmpQGYHd5b6LGKHVyg5YqQ="
+  },
+  "patch_strip": 1
+}

@@ -8,6 +8,7 @@
 
 namespace ui::widget
 {
+
 class SampleInspector
 {
 public:
@@ -27,11 +28,11 @@ private:
     bool _different_record_selected = false;
     bool _set_scroll_to_selected = false;
 
-    float _inspector_width = 440.0f;
+    float _inspector_width = 440.0F;
 
     std::vector<int64_t> _thread_total_durations;
 
-    static constexpr float SEPARATOR_INTERACT_WIDTH = 6.0f;
+    static constexpr float SEPARATOR_INTERACT_WIDTH = 6.0F;
 
     enum class RecordColumnId
     {

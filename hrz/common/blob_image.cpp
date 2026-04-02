@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 void BlobImage::register_layout_blob_metadata(BlobAllocator* ba)
 {
     assert(ba);
@@ -98,4 +99,5 @@ BlobImage BlobImage::make(
     image.register_layout_blob_metadata(ba);
     return image;
 }
+
 } // namespace hrz

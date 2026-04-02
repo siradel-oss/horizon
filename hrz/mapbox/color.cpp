@@ -14,6 +14,7 @@
 
 namespace
 {
+
 inline bool is_digit(uint8_t c)
 {
     return c >= '0' && c <= '9';
@@ -61,11 +62,12 @@ inline float glsl_mod(float x, float y)
 void hsl_to_rgb(const float hsl[3], float rgb[3])
 {
     float temp[3] = {
-        clamp(std::abs(glsl_mod(hsl[0] * 6 + 0, 6) - 3) - 1.5f, -0.5f, 0.5f),
-        clamp(std::abs(glsl_mod(hsl[0] * 6 + 4, 6) - 3) - 1.5f, -0.5f, 0.5f),
-        clamp(std::abs(glsl_mod(hsl[0] * 6 + 2, 6) - 3) - 1.5f, -0.5f, 0.5f)};
+        clamp(std::abs(glsl_mod(hsl[0] * 6 + 0, 6) - 3) - 1.5F, -0.5F, 0.5F),
+        clamp(std::abs(glsl_mod(hsl[0] * 6 + 4, 6) - 3) - 1.5F, -0.5F, 0.5F),
+        clamp(std::abs(glsl_mod(hsl[0] * 6 + 2, 6) - 3) - 1.5F, -0.5F, 0.5F)
+    };
 
-    float factor = (1.0f - std::abs(2.0f * hsl[2] - 1.0f));
+    float factor = (1.0F - std::abs(2.0F * hsl[2] - 1.0F));
 
     rgb[0] = hsl[2] + hsl[1] * temp[0] * factor;
     rgb[1] = hsl[2] + hsl[1] * temp[1] * factor;
@@ -243,24 +245,27 @@ uint32_t parse_hsla_function_color_string(
     CHECK_ERR(input.size() > 0 && input[0] == ')');
 
     // Sanitize the input and put everything in the [0, 1] range before HSL to RGB conversion.
-    hsla[0] = clamp(hsla[0], 0, 360) / 360.0f;
-    hsla[1] = clamp(hsla[1], 0, 100) / 100.0f;
-    hsla[2] = clamp(hsla[2], 0, 100) / 100.0f;
+    hsla[0] = clamp(hsla[0], 0, 360) / 360.0F;
+    hsla[1] = clamp(hsla[1], 0, 100) / 100.0F;
+    hsla[2] = clamp(hsla[2], 0, 100) / 100.0F;
     hsla[3] = clamp(hsla[3], 0, 1);
 
     float rgb[3];
     hsl_to_rgb(hsla, rgb);
     uint8_t rgba[4] = {
-        (uint8_t)std::round(rgb[0] * 255.0f), (uint8_t)std::round(rgb[1] * 255.0f),
-        (uint8_t)std::round(rgb[2] * 255.0f), (uint8_t)std::round(hsla[3] * 255.0f)};
+        (uint8_t)std::round(rgb[0] * 255.0F), (uint8_t)std::round(rgb[1] * 255.0F),
+        (uint8_t)std::round(rgb[2] * 255.0F), (uint8_t)std::round(hsla[3] * 255.0F)
+    };
 
     *color = color_bytes_to_uint(rgba);
     return true;
 }
+
 } // anonymous namespace
 
 namespace hrz_mapbox
 {
+
 // Parse a Mapbox style color string. The color string can be one of the following format:
 // - "#rgb"
 // - "#rrggbb"
@@ -304,4 +309,5 @@ bool parse_mapbox_color_string(std::string_view input, uint32_t* color)
 
     return true;
 }
+
 } // namespace hrz_mapbox

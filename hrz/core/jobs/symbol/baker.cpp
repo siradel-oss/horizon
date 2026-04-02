@@ -9,6 +9,7 @@
 
 namespace hrz_jobs::symbol
 {
+
 static constexpr size_t InitialAnchorCapacity = 256;
 
 lm::bbox2 transform_rect_2d_no_rotation(lm::bbox2 rect, const lm::mat4& transform)
@@ -243,7 +244,7 @@ hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
                 lm::vec2 alignment = params.default_element_alignment;
                 load_vec2f_property(params.element_alignment_prp, &alignment);
 
-                alignment = alignment * 0.5f + lm::vec2(0.5f);
+                alignment = alignment * 0.5F + lm::vec2(0.5F);
 
                 // Compute anchor alignment based on only its subtree or the whole symbol, based on
                 // whether we reset the layout at the anchor or not. We also transform the visual
@@ -261,7 +262,7 @@ hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
                         transform_rect_2d_offset(child_geometry.visual_rect, offset);
 
                     element_instance_info[params.child_index].transform =
-                        lm::translation(lm::vec3(offset, 0.0f));
+                        lm::translation(lm::vec3(offset, 0.0F));
 
                     apply_parent_transform = false;
                 }
@@ -273,7 +274,7 @@ hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
                         transform_rect_2d_offset(instance_info.geometry.visual_rect, offset);
 
                     element_instance_info[params.child_index].transform =
-                        lm::translation(lm::vec3(offset, 0.0f));
+                        lm::translation(lm::vec3(offset, 0.0F));
                 }
             }
 
@@ -406,4 +407,5 @@ hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
 
     return hrz_jobs::JobResult::SUCCESS;
 }
+
 } // namespace hrz_jobs::symbol

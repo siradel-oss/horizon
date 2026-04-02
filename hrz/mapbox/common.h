@@ -14,6 +14,7 @@
 
 namespace hrz_mapbox
 {
+
 enum class MapboxVectorReprType
 {
     Fill,
@@ -173,7 +174,7 @@ constexpr Value::Type get_value_type<double>()
 
 std::string to_string(Value value);
 
-constexpr bool operator==(const Value& lhs, const Value& rhs)
+constexpr bool operator ==(const Value& lhs, const Value& rhs)
 {
     if (lhs.type != rhs.type)
     {

@@ -2,6 +2,7 @@
 
 namespace
 {
+
 template<typename T, typename Index>
 constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
 {
@@ -14,10 +15,12 @@ constexpr const T* _get_ptr(const std::vector<T>& v, Index id)
         return nullptr;
     }
 }
+
 } // namespace
 
 namespace hrz::model
 {
+
 ModelPrototype* _create_common(
     std::string_view descriptor_uri,
     BaseUrl base_url,
@@ -403,10 +406,11 @@ GpuDracoMeshResource* ModelPrototype::get_draco_mesh(int id)
     }
 }
 
-void ModelPrototype::iterate_primitives(const std::function<void(
-                                            const ModelDescriptor::Mesh*,
-                                            const ModelDescriptor::MeshInstance*,
-                                            const ModelDescriptor::Primitive*)>& fn)
+void ModelPrototype::iterate_primitives(
+    const std::function<void(
+        const ModelDescriptor::Mesh*,
+        const ModelDescriptor::MeshInstance*,
+        const ModelDescriptor::Primitive*)>& fn)
 {
     for (const auto& mesh_instance : descriptor.mesh_instances)
     {

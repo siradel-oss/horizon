@@ -8,6 +8,7 @@
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/thread.h"
 
+#include <hb.h>
 #include <msdfgen/msdfgen.h>
 
 #include <array>
@@ -21,6 +22,7 @@ namespace font_rasterizer
 {
 namespace
 {
+
 struct ParsedFont
 {
     std::variant<std::span<const std::byte>, blobs::BlobData> raw_data;
@@ -42,6 +44,7 @@ struct RasterizedFont
 
     std::shared_mutex mutex;
 };
+
 } // namespace
 } // namespace font_rasterizer
 
@@ -55,6 +58,7 @@ struct FontRasterizer
 
 namespace font_rasterizer
 {
+
 Font::Font(Font&& other) noexcept
 {
     font_handle = other.font_handle;
@@ -67,7 +71,7 @@ Font::Font(Font&& other) noexcept
     other.hb_font = nullptr;
 }
 
-Font& Font::operator=(Font&& other) noexcept
+Font& Font::operator =(Font&& other) noexcept
 {
     if (&other != this)
     {
@@ -83,8 +87,17 @@ Font& Font::operator=(Font&& other) noexcept
     return *this;
 }
 
+Font::~Font()
+{
+    if (hb_font != nullptr)
+    {
+        hb_font_destroy(hb_font);
+    }
+}
+
 namespace
 {
+
 std::optional<ParsedFont> parse_font(
     BlobAllocator* ba,
     std::variant<std::span<const std::byte>, blobs::BlobHandle>& raw_data)
@@ -232,28 +245,31 @@ msdfgen::Shape stbtt_glyph_to_msdfgen_shape(const stbtt_fontinfo& font, int glyp
             case STBTT_vline:
                 if (current_contour.has_value())
                 {
-                    current_contour->addEdge(msdfgen::EdgeHolder(
-                        msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
-                        msdfgen::Point2(v.x, v.y)));
+                    current_contour->addEdge(
+                        msdfgen::EdgeHolder(
+                            msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
+                            msdfgen::Point2(v.x, v.y)));
                 }
                 break;
 
             case STBTT_vcurve:
                 if (current_contour.has_value())
                 {
-                    current_contour->addEdge(msdfgen::EdgeHolder(
-                        msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
-                        msdfgen::Point2(v.cx, v.cy), msdfgen::Point2(v.x, v.y)));
+                    current_contour->addEdge(
+                        msdfgen::EdgeHolder(
+                            msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
+                            msdfgen::Point2(v.cx, v.cy), msdfgen::Point2(v.x, v.y)));
                 }
                 break;
 
             case STBTT_vcubic:
                 if (current_contour.has_value())
                 {
-                    current_contour->addEdge(msdfgen::EdgeHolder(
-                        msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
-                        msdfgen::Point2(v.cx, v.cy), msdfgen::Point2(v.cx1, v.cy1),
-                        msdfgen::Point2(v.x, v.y)));
+                    current_contour->addEdge(
+                        msdfgen::EdgeHolder(
+                            msdfgen::Point2(vertices[i - 1].x, vertices[i - 1].y),
+                            msdfgen::Point2(v.cx, v.cy), msdfgen::Point2(v.cx1, v.cy1),
+                            msdfgen::Point2(v.x, v.y)));
                 }
                 break;
         }
@@ -396,9 +412,9 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
     // the glyph according to its origin. The offset allows translating from
     // the top-left corner of the SDF to the origin.
     float offset_x_px =
-        (SDF_SIZE * 0.5f - (right - left) * internal_units_to_sdf_pixels * 0.5f - left_bearing);
+        (SDF_SIZE * 0.5F - (right - left) * internal_units_to_sdf_pixels * 0.5F - left_bearing);
     float offset_y_px =
-        ((SDF_SIZE * 0.5f) + (top - bottom) * internal_units_to_sdf_pixels * 0.5f
+        ((SDF_SIZE * 0.5F) + (top - bottom) * internal_units_to_sdf_pixels * 0.5F
          + bottom * internal_units_to_sdf_pixels);
 
     // Convert the offset to em and negate it, so that it can be simply added
@@ -422,7 +438,7 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
     { return std::max(std::min(c.r, c.g), std::min(std::max(c.r, c.g), c.b)); };
 
     float first_value = median(msdf[0]);
-    bool sdf_is_inverted = first_value > 0.5f;
+    bool sdf_is_inverted = first_value > 0.5F;
 
     for (unsigned int y = 0; y < GLYPH_SLOT_SIZE; ++y)
     {
@@ -430,8 +446,8 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
         {
             auto to_byte = [&](float f)
             {
-                f = sdf_is_inverted ? 1.0f - f : f;
-                return (uint8_t)std::round(hrz::clamp(f * 255.0f, 0.0f, 255.0f));
+                f = sdf_is_inverted ? 1.0F - f : f;
+                return (uint8_t)std::round(hrz::clamp(f * 255.0F, 0.0F, 255.0F));
             };
 
             lm::vec3 f = msdf[(GLYPH_SLOT_SIZE - 1 - y) * GLYPH_SLOT_SIZE + x]; // Flip Y axis
@@ -443,6 +459,7 @@ RasterizedGlyph rasterize_glyph(const Font& font, unsigned int in_font_index)
 
     return glyph;
 }
+
 } // namespace
 
 FontRasterizer* create()
@@ -553,7 +570,8 @@ Font get_font(FontRasterizer* rasterizer, FontHandle handle)
 
     return {
         handle, std::move(parsed_font->raw_data), parsed_font->stbtt_font, parsed_font->hb_font,
-        font->info};
+        font->info
+    };
 }
 
 Glyph get_glyph_info(
@@ -652,5 +670,6 @@ std::optional<std::vector<RasterizedGlyph>> get_new_glyphs(
 
     return {std::move(new_glyphs)};
 }
+
 } // namespace font_rasterizer
 } // namespace hrz

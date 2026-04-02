@@ -13,6 +13,7 @@
 
 namespace hrz::planet
 {
+
 struct RasterProvider;
 
 struct Raster

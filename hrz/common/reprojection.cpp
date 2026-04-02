@@ -5,6 +5,7 @@
 
 namespace hrz
 {
+
 int32_t compute_level_offset(const hrz_proto::TilingSchemeParams& tiling_scheme)
 {
     // The level 0 of rasters with local tiling schemes declared through the API
@@ -29,11 +30,12 @@ int32_t compute_level_offset(const hrz_proto::TilingSchemeParams& tiling_scheme)
     switch (tiling_scheme.type())
     {
         case hrz_proto::TilingSchemeType::GLOBAL:
-            return -std::ceil(std::log2(
-                tiling_scheme.global_tiling().tile_size()
-                * std::max(
-                    tiling_scheme.global_tiling().level_zero_tile_count_x(),
-                    tiling_scheme.global_tiling().level_zero_tile_count_y())));
+            return -std::ceil(
+                std::log2(
+                    tiling_scheme.global_tiling().tile_size()
+                    * std::max(
+                        tiling_scheme.global_tiling().level_zero_tile_count_x(),
+                        tiling_scheme.global_tiling().level_zero_tile_count_y())));
         case hrz_proto::TilingSchemeType::LOCAL:
             if (tiling_scheme.local_tiling().override_level_offset())
             {
@@ -92,7 +94,8 @@ ImageTilingInfo compute_image_tiling_info(
             info.level_zero_tile_count_x * ((uint64_t)1 << info.max_lod)
                 * info.provider_tile_pixel_size,
             info.level_zero_tile_count_y * ((uint64_t)1 << info.max_lod)
-                * info.provider_tile_pixel_size};
+                * info.provider_tile_pixel_size
+        };
 
         info.max_mipmap_level = std::ceil(std::log2(lm::maxelem(info.domain_pixel_size)));
 
@@ -171,4 +174,5 @@ ImageTilingInfo compute_image_tiling_info(
 
     return info;
 }
+
 } // namespace hrz

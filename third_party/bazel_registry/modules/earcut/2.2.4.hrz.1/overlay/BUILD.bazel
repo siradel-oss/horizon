@@ -1,0 +1,13 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "earcut",
+    hdrs = [
+        "include/mapbox/earcut.hpp",
+    ],
+    includes = ["include/mapbox"],
+)
+
+exports_files(["LICENSE"])

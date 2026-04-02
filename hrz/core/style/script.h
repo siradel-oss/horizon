@@ -11,6 +11,7 @@
 
 namespace hrz::style
 {
+
 struct Token
 {
     enum Kind
@@ -228,4 +229,5 @@ struct Optimizer
 
     virtual bool optimize(Ast&&, FlatAst*) = 0;
 };
+
 } // namespace hrz::style

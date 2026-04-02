@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 const char* bytes_to_string(
     uint64_t byte_count,
     fmt::memory_buffer& buffer,
@@ -46,4 +47,5 @@ fmt::memory_buffer bytes_to_string(uint64_t byte_count)
     bytes_to_string(byte_count, buffer, false, true);
     return buffer;
 }
+
 } // namespace hrz

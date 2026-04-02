@@ -233,8 +233,7 @@ struct SharedData
         }
 
         std::ranges::sort(
-            order, order + desc->label_count,
-            [&](size_t a, size_t b) -> bool
+            order, order + desc->label_count, [&](size_t a, size_t b) -> bool
             { return strcmp(desc->label_names[a], desc->label_names[b]); });
 
         uint64_t hash = hrz::murmur3_x64_64(desc->name);
@@ -318,8 +317,7 @@ struct SharedData
             }
 
             std::ranges::sort(
-                order,
-                [&](size_t a, size_t b)
+                order, [&](size_t a, size_t b)
                 { return operations[a].timestamp_us < operations[b].timestamp_us; });
 
             auto* msg = msgs->add_messages();
@@ -401,6 +399,7 @@ struct MainThreadData
 
 namespace hrz
 {
+
 struct ThreadMetricsRegistry
 {
     struct OperationStorage

@@ -1,0 +1,13 @@
+{
+  "url": "https://github.com/google/draco/archive/refs/tags/1.5.7.tar.gz",
+  "strip_prefix": "draco-1.5.7",
+  "integrity": "sha256-v2sQW3kiPqsrhnlTY9/l5TVgUABqllIUd5c6uo8Db+E=",
+  "overlay": {
+    "MODULE.bazel": "sha256-CkS36H0EVUfs/N77kR40eHzSgWAHhk8chUrpxYwTkas=",
+    "BUILD.bazel": "sha256-KN8clPKOIVY5PHbPNpvz533ZOVv39qb6GyuBHEA+fAQ=",
+    "src/draco/draco_features.h": "sha256-3vD//6OIonJBiYZiqgNts+6K5h1XD+uMWP7zsK67W2Y="
+  },
+  "patches": {
+    "attribute_unique_id.patch": "sha256-3rD5d2rfnt4ph6M0Qw3y7UyHmmEnN/ULxvq+FV6dEY4="
+  }
+}

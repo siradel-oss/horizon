@@ -17,11 +17,13 @@
 
 namespace ui
 {
+
 using namespace helpers;
 using namespace context;
 
 namespace widget
 {
+
 BlobInspector::BlobInspector()
 {
     ImGuiTableFlags flags = ImGuiTableFlags_Hideable | ImGuiTableFlags_SizingFixedFit
@@ -688,7 +690,8 @@ void BlobInspector::draw(
 
                 case preset_menu::PresetAction::Save:
                     userdata.blob_filter_presets[preset_result.preset_name] = {
-                        _save_filter_to_json_string()};
+                        _save_filter_to_json_string()
+                    };
                     break;
 
                 case preset_menu::PresetAction::Erase:
@@ -896,5 +899,6 @@ bool BlobInspector::_load_filter_from_json_string(std::string_view json)
 
     return true;
 }
+
 } // namespace widget
 } // namespace ui

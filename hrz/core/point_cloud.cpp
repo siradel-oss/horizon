@@ -182,7 +182,8 @@ class PointCloudImpl : public PointCloud
         my::TextureFormat::RG32UI,
         uint64_t,
         uint64_t,
-        false>
+        false
+    >
         _feature_ids_texture;
 
     hrz::DataTexture<
@@ -190,7 +191,8 @@ class PointCloudImpl : public PointCloud
         my::TextureFormat::RGBA8,
         lm::ubvec4,
         lm::ubvec4,
-        false>
+        false
+    >
         _feature_colors_texture;
 
     hrz::selection::SelectionStorageUint32TextureMultiIndex _selection_texture;
@@ -216,14 +218,16 @@ public:
             auto positions = std::visit(
                 hrz::overload{
                     [](const hrz::BlobArray<lm::vec3>& a) { return a.blob(); },
-                    [](const hrz::BlobArray<lm::usvec3>& a) { return a.blob(); }},
+                    [](const hrz::BlobArray<lm::usvec3>& a) { return a.blob(); }
+                },
                 geometry.positions);
 
             auto colors = std::visit<std::variant<blobs::BlobHandle, lm::ubvec4>>(
                 hrz::overload{
                     [](const hrz::BlobArray<lm::ubvec4>& a) { return a.blob(); },
                     [](const hrz::BlobArray<lm::ubvec3>& a) { return a.blob(); },
-                    [](lm::ubvec4 c) { return c; }},
+                    [](lm::ubvec4 c) { return c; }
+                },
                 geometry.colors);
 
             auto batch_ids = std::visit<std::variant<blobs::BlobHandle, uint32_t>>(
@@ -231,7 +235,8 @@ public:
                     [](const hrz::BlobArray<uint8_t>& a) { return a.blob(); },
                     [](const hrz::BlobArray<uint16_t>& a) { return a.blob(); },
                     [](const hrz::BlobArray<uint32_t>& a) { return a.blob(); },
-                    [](uint32_t c) { return c; }},
+                    [](uint32_t c) { return c; }
+                },
                 geometry.batch_ids);
 
             hrz::render::VertexInputBuilder builder;
@@ -352,6 +357,7 @@ public:
 
 namespace hrz
 {
+
 std::unique_ptr<PointCloud> PointCloud::create(
     hrz::Render* render,
     const hrz::monitoring::ResourceOwner& owner,
@@ -360,10 +366,12 @@ std::unique_ptr<PointCloud> PointCloud::create(
 {
     return std::make_unique<PointCloudImpl>(render, owner, geometry, uniform_data);
 }
+
 } // namespace hrz
 
 namespace hrz::point_cloud
 {
+
 void collect_shaders(hrz::GpuResourceContext* rc)
 {
     my::IndexName attribs[] = {
@@ -471,4 +479,5 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         rc->alloc(&res, hrz::monitoring::systems::PointCloud);
     }
 }
+
 } // namespace hrz::point_cloud

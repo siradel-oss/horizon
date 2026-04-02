@@ -19,6 +19,7 @@
 
 namespace hrz
 {
+
 struct HeatmapPointsUniform
 {
     lm::mat4 proj;
@@ -69,6 +70,7 @@ struct HeatmapReprRegistry
 
 namespace heatmaps
 {
+
 HeatmapReprRegistry* create_repr_registry()
 {
     return new HeatmapReprRegistry();
@@ -115,6 +117,7 @@ void make_layer_visible(HeatmapReprRegistry* reg, uint64_t layer_id)
 {
     reg->vector_tiles_layers_to_render.insert(layer_id);
 }
+
 } // namespace heatmaps
 
 // Note that the renderable doesn't own any of its ResourceHandles.
@@ -162,7 +165,8 @@ struct HeatmapOverlayRenderable : public my::Renderer::Renderable
         rb->bind(ubo_bindings);
 
         my::TextureBinding texture_bindings[] = {
-            {SamplerHeatmap, data->heatmap_texture, data->heatmap_sampler}};
+            {SamplerHeatmap, data->heatmap_texture, data->heatmap_sampler}
+        };
         rb->bind(texture_bindings);
 
         auto state = rb->get_current_state();
@@ -342,7 +346,8 @@ public:
         _points_ubo.update(ctx.render);
 
         my::UboBinding binding = {
-            heatmaps::UboHeatmapPoints, _points_ubo.get_for_gpu(), 0, sizeof(HeatmapPointsUniform)};
+            heatmaps::UboHeatmapPoints, _points_ubo.get_for_gpu(), 0, sizeof(HeatmapPointsUniform)
+        };
         ctx.binder->bind({&binding, 1});
 
         const my::TextureBinding texture_bindings[] = {
@@ -356,7 +361,8 @@ public:
         };
 
         const my::ClearTarget clear_values[] = {
-            {my::Attachment::Color0, my::ClearValue::make_color_float(0, 0, 0, 0)}};
+            {my::Attachment::Color0, my::ClearValue::make_color_float(0, 0, 0, 0)}
+        };
 
         my::Renderer::BinMask to_render = RenderHeatmapBin;
 
@@ -406,6 +412,7 @@ struct HeatmapSystem
 
 namespace heatmaps
 {
+
 // This factor is be used to scale the contents of the texture storing the heatmap values
 // on the X axis according to their vertical position, so that the points of the heatmap
 // that are closer to the camera are larger than the ones that are further away,
@@ -457,11 +464,11 @@ lm::vec2 warp_heatmap_texture_coordinates(
 
     if (info.cascade_count <= 1) return in_uv;
 
-    out_uv.y = 1.0f - (1.0f - in_uv.y) * (1.0f - in_uv.y);
+    out_uv.y = 1.0F - (1.0F - in_uv.y) * (1.0F - in_uv.y);
 
     const double max_scale_factor = compute_heatmaps_max_scale_factor(info);
     const float x_origin = (info.heatmap_proj.w.x + 1.0) / 2.0;
-    const float x_scaling = max_scale_factor + out_uv.y * (1.0f - max_scale_factor);
+    const float x_scaling = max_scale_factor + out_uv.y * (1.0F - max_scale_factor);
     out_uv.x = (in_uv.x - x_origin) * x_scaling + x_origin;
 
     return out_uv;
@@ -517,7 +524,8 @@ void initialize_rendering(
     {
         my::VertexInputStream streams[] = {
             {InputStreamUv, system->quad_vertex_buffer, my::VertexFormat::Float32_2, 0, 0,
-             my::VertexRate::PerVertex}};
+             my::VertexRate::PerVertex}
+        };
 
         my::VertexInputResource vi_res;
         vi_res.attribs = streams;
@@ -829,5 +837,6 @@ void collect_shaders(hrz::GpuResourceContext* rc)
         rc->alloc(&res, hrz::monitoring::systems::Heatmaps);
     }
 }
+
 } // namespace heatmaps
 } // namespace hrz

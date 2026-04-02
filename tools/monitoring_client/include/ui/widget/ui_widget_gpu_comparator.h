@@ -8,6 +8,7 @@
 
 namespace ui::widget
 {
+
 class GpuSnapshotComparator
 {
 public:

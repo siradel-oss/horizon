@@ -9,6 +9,7 @@
 
 namespace hrz
 {
+
 VectorDataLoader::TaskRef VectorDataLoader::get_or_create_request_client_data_task(
     const LayerModelRef& layer_model,
     uint32_t data_source,
@@ -420,11 +421,8 @@ bool VectorDataLoader::unload_task_data_if_not_needed<VectorDataLoader::Task::Re
 
 template<>
 void VectorDataLoader::check_for_invalidated_data_for_task<
-    VectorDataLoader::Task::RequestClientData>(
-    WeakTaskRef& task_ref,
-    Task& task,
-    Task::RequestClientData& task_data,
-    JobScheduler* js)
+    VectorDataLoader::Task::RequestClientData
+>(WeakTaskRef& task_ref, Task& task, Task::RequestClientData& task_data, JobScheduler* js)
 {
     const auto& layer_model = task_data.layer_model.value();
     const auto& data_source = layer_model.data_sources.at(task_data.data_source);
@@ -463,4 +461,5 @@ void VectorDataLoader::check_for_invalidated_data_for_task<
         }
     }
 }
+
 } // namespace hrz

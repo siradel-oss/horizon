@@ -13,6 +13,7 @@ extern "C"
 
 namespace hrz::ui
 {
+
 struct StickyPanelState
 {
     mu_Container* panel{};

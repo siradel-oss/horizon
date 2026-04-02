@@ -10,6 +10,7 @@
 
 namespace hrz::url
 {
+
 bool is_absolute(std::string_view url);
 bool is_relative(std::string_view url);
 bool is_protocol_relative(std::string_view url);
@@ -69,4 +70,5 @@ struct EncodedData
 };
 
 bool parse_data_url_s(std::string_view url, EncodedData* result);
+
 } // namespace hrz::url

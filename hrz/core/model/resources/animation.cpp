@@ -87,7 +87,7 @@ struct AccessorDecoder
     {
         using ResultType = float;
 
-        constexpr float operator()(T v) const
+        constexpr float operator ()(T v) const
         {
             if constexpr (kNormalized && std::integral<T>)
             {
@@ -245,25 +245,28 @@ std::optional<AnimationResource> AnimationResource::acquire(
             return std::nullopt;
         }
 
-        resource.samplers_defs.push_back(Sampler{
-            .timestamp_accessor = sampler.timestamp_accessor,
-            .value_accessor = sampler.value_accessor,
-        });
+        resource.samplers_defs.push_back(
+            Sampler{
+                .timestamp_accessor = sampler.timestamp_accessor,
+                .value_accessor = sampler.value_accessor,
+            });
 
-        resource.animation.samplers.push_back(Animation::Sampler{
-            .interpolation = sampler.interpolation,
-            .timestamps = {},
-            .values = {},
-        });
+        resource.animation.samplers.push_back(
+            Animation::Sampler{
+                .interpolation = sampler.interpolation,
+                .timestamps = {},
+                .values = {},
+            });
     }
 
     for (const auto& channel : desc_anim.channels)
     {
-        resource.animation.channels.push_back(Animation::Channel{
-            .sampler = channel.sampler,
-            .target_id = channel.target_node,
-            .target_property = channel.target_property,
-        });
+        resource.animation.channels.push_back(
+            Animation::Channel{
+                .sampler = channel.sampler,
+                .target_id = channel.target_node,
+                .target_property = channel.target_property,
+            });
     }
 
     resource.used_buffers.iterate_waiting_on(

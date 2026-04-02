@@ -6,6 +6,7 @@
 
 namespace my
 {
+
 /**
  * Generational object pool for POD data types.
  */
@@ -14,10 +15,10 @@ struct GenPool
 {
     static_assert(GEN_BITS + INDEX_BITS <= 64, "Pool handle size");
 
-    static const uint64_t MAX_INDEX = (1ull << INDEX_BITS) - 1;
-    static const uint64_t MAX_GEN = (1ull << GEN_BITS) - 1;
-    static const uint64_t INDEX_MASK = (1ull << INDEX_BITS) - 1;
-    static const uint64_t GEN_MASK = ((1ull << GEN_BITS) - 1) << INDEX_BITS;
+    static const uint64_t MAX_INDEX = (1ULL << INDEX_BITS) - 1;
+    static const uint64_t MAX_GEN = (1ULL << GEN_BITS) - 1;
+    static const uint64_t INDEX_MASK = (1ULL << INDEX_BITS) - 1;
+    static const uint64_t GEN_MASK = ((1ULL << GEN_BITS) - 1) << INDEX_BITS;
 
     GenPool() = default;
 
@@ -26,7 +27,7 @@ struct GenPool
     using Handle = uint64_t;
 
     GenPool(const GenPool&) = delete;
-    GenPool& operator=(const GenPool&) = delete;
+    GenPool& operator =(const GenPool&) = delete;
 
     void free()
     {
@@ -79,13 +80,13 @@ struct GenPool
         _free.push_back(index);
     }
 
-    T* operator[](Handle handle)
+    T* operator [](Handle handle)
     {
         if (!is_valid(handle)) return nullptr;
         return &_obj[_get_index(handle)];
     }
 
-    const T* operator[](Handle handle) const
+    const T* operator [](Handle handle) const
     {
         if (!is_valid(handle)) return nullptr;
         return &_obj[_get_index(handle)];

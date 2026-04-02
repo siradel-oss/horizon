@@ -7,6 +7,7 @@
 
 namespace hrz::model
 {
+
 struct ModelPrototype;
 
 class InstanceGroup

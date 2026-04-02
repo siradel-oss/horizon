@@ -8,29 +8,30 @@ using RawClient = websocketpp::client<websocketpp::config::asio_client>;
 struct OpenHandlerClient
 {
     ws::Client* client;
-    void operator()(websocketpp::connection_hdl con);
+    void operator ()(websocketpp::connection_hdl con);
 };
 
 struct CloseHandlerClient
 {
     ws::Client* client;
-    void operator()(websocketpp::connection_hdl con);
+    void operator ()(websocketpp::connection_hdl con);
 };
 
 struct FailHandlerClient
 {
     ws::Client* client;
-    void operator()(websocketpp::connection_hdl con);
+    void operator ()(websocketpp::connection_hdl con);
 };
 
 struct MessageHandlerClient
 {
     ws::Client* client;
-    void operator()(websocketpp::connection_hdl, RawClient::message_ptr msg);
+    void operator ()(websocketpp::connection_hdl, RawClient::message_ptr msg);
 };
 
 namespace ws
 {
+
 struct Client
 {
     std::unique_ptr<RawClient> raw;
@@ -55,7 +56,7 @@ struct Client
 
 } // namespace ws
 
-void OpenHandlerClient::operator()(websocketpp::connection_hdl con)
+void OpenHandlerClient::operator ()(websocketpp::connection_hdl con)
 {
     client->connected = true;
     if (client->current_handler)
@@ -64,7 +65,7 @@ void OpenHandlerClient::operator()(websocketpp::connection_hdl con)
     }
 }
 
-void CloseHandlerClient::operator()(websocketpp::connection_hdl con)
+void CloseHandlerClient::operator ()(websocketpp::connection_hdl con)
 {
     client->connected = false;
     if (client->current_handler)
@@ -73,7 +74,7 @@ void CloseHandlerClient::operator()(websocketpp::connection_hdl con)
     }
 }
 
-void FailHandlerClient::operator()(websocketpp::connection_hdl con)
+void FailHandlerClient::operator ()(websocketpp::connection_hdl con)
 {
     if (client->current_handler)
     {
@@ -81,7 +82,7 @@ void FailHandlerClient::operator()(websocketpp::connection_hdl con)
     }
 }
 
-void MessageHandlerClient::operator()(websocketpp::connection_hdl, RawClient::message_ptr msg)
+void MessageHandlerClient::operator ()(websocketpp::connection_hdl, RawClient::message_ptr msg)
 {
     if (client->current_handler
         && (msg->get_opcode() == websocketpp::frame::opcode::text

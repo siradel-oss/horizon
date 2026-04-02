@@ -1,25 +1,18 @@
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
 load("@emsdk//emscripten_toolchain:wasm_rules.bzl", "wasm_cc_binary")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_import.bzl", "cc_import")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
-def _set_wasm_name_in_js_impl(ctx):
-    ctx.actions.expand_template(
-        template = ctx.file.src,
-        output = ctx.outputs.out,
+def _set_wasm_name_in_js(from_name, to_name, **kwargs):
+    expand_template(
         substitutions = {
-            ctx.attr.from_name + ".wasm": ctx.attr.to_name + ".wasm",
-            "new URL(\"" + ctx.attr.from_name + "\"": "new URL(\"" + ctx.attr.to_name + "\"",
+            from_name + ".wasm": to_name + ".wasm",
+            "new URL(\"" + from_name + "\"": "new URL(\"" + to_name + "\"",
         },
+        **kwargs
     )
-
-_set_wasm_name_in_js = rule(
-    implementation = _set_wasm_name_in_js_impl,
-    attrs = {
-        "src": attr.label(allow_single_file = [".js"], mandatory = True),
-        "out": attr.output(mandatory = True),
-        "from_name": attr.string(mandatory = True),
-        "to_name": attr.string(mandatory = True),
-    },
-)
 
 def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkopts = [], module_name = "", js_libs = [], data = [], link_websocket = False, **kwargs):
     additional_linkopts = []
@@ -61,7 +54,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
     for data_file in data:
         additional_linkopts += ["--embed-file", "$(location " + data_file + ")@$(location " + data_file + ")"]
 
-    native.cc_binary(
+    cc_binary(
         name = name + "_cc",
         visibility = visibility,
         copts = copts + ["-mbulk-memory"],
@@ -90,7 +83,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
     for suffix in ["", ".worker"]:
         _set_wasm_name_in_js(
             name = name + suffix + "_rename_js_file",
-            src = name + "_wasm_cc/" + name + "_cc" + suffix + ".js",
+            template = name + "_wasm_cc/" + name + "_cc" + suffix + ".js",
             out = name + suffix + ".js",
             from_name = name + "_cc",
             to_name = name,
@@ -106,7 +99,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
     )
 
 def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:private"], **kwargs):
-    native.cc_binary(
+    cc_binary(
         name = name + ".dll",
         linkshared = True,
         srcs = srcs + hdrs,
@@ -119,14 +112,12 @@ def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:privat
         srcs = [":" + name + ".dll"],
         output_group = "interface_library",
     )
-
-    native.cc_import(
+    cc_import(
         name = name + "_lib_win",
         interface_library = ":" + name + "_import_lib_win",
         shared_library = ":" + name + ".dll",
     )
-
-    native.cc_library(
+    cc_library(
         name = name + "_win",
         hdrs = hdrs,
         deps = [":" + name + "_lib_win"],
@@ -135,7 +126,7 @@ def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:privat
     )
 
 def _cc_shared_linux(name, srcs, visibility, hdrs = [], linkopts = [], **kwargs):
-    native.cc_binary(
+    cc_binary(
         name = name + ".so",
         srcs = srcs + hdrs,
         linkstatic = True,
@@ -146,13 +137,11 @@ def _cc_shared_linux(name, srcs, visibility, hdrs = [], linkopts = [], **kwargs)
         visibility = visibility,
         **kwargs
     )
-
-    native.cc_import(
+    cc_import(
         name = name + "_lib_linux",
         shared_library = ":" + name + ".so",
     )
-
-    native.cc_library(
+    cc_library(
         name = name + "_linux",
         hdrs = hdrs,
         visibility = visibility,

@@ -18,6 +18,7 @@ struct mu_Context;
 
 namespace hrz
 {
+
 struct ActorRunner;
 struct BlobAllocator;
 struct CameraViewInfo;
@@ -32,6 +33,7 @@ struct Render;
 
 namespace vt
 {
+
 /**
  * Contains a tiled dataset of vector features.
  */

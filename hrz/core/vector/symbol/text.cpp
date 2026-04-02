@@ -15,6 +15,7 @@ namespace hrz::vt::symbol
 {
 namespace
 {
+
 enum
 {
     TextParamsUbo = ElementCustomUboStart,
@@ -40,6 +41,7 @@ struct TextUniformData
 };
 
 HRZ_CHECK_UBO_SIZE(TextUniformData);
+
 } // namespace
 
 void TextRenderable::render_callback(
@@ -356,8 +358,8 @@ ElementSystem::PrototypeH TextElementSystem::make_prototype(
     uint64_t layer_id,
     uint32_t z_index,
     const std::function<
-        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)>&
-        register_prp,
+        uint64_t(std::string_view name, const hrz::vector_data::OwnedAttributeValue&)
+    >& register_prp,
     const std::function<uint32_t(const hrz_proto::SymbolElement&)>&)
 {
     assert(element_descriptor.type() == ElementType);
@@ -382,7 +384,7 @@ ElementSystem::PrototypeH TextElementSystem::make_prototype(
         hrz::vector_data::attr_from_color<hrz::vector_data::OwnedAttributeValue>(
             prototype.baking_params.default_fill_color_srgb));
     prototype.baking_params.default_outline_size =
-        std::max(descriptor.outline_width().default_value(), 0.0f);
+        std::max(descriptor.outline_width().default_value(), 0.0F);
     prototype.baking_params.outline_size_prp = register_prp(
         descriptor.outline_width().name(), prototype.baking_params.default_outline_size);
     prototype.baking_params.outline_size_unit = descriptor.outline_width_unit();
@@ -396,7 +398,7 @@ ElementSystem::PrototypeH TextElementSystem::make_prototype(
     prototype.baking_params.alignment_prp = register_prp(
         descriptor.alignment().name(), (int64_t)prototype.baking_params.default_alignment);
     prototype.baking_params.default_line_spacing =
-        std::max(descriptor.line_spacing().default_value(), 0.0f);
+        std::max(descriptor.line_spacing().default_value(), 0.0F);
     prototype.baking_params.line_spacing_prp = register_prp(
         descriptor.line_spacing().name(), prototype.baking_params.default_line_spacing);
 
@@ -598,7 +600,8 @@ std::optional<ElementSystem::RenderableH> TextElementSystem::make_renderable(
         my::VertexInputStream streams[] = {
             make_pos_uv_stream(Uv0InputStream), make_pos_uv_stream(Uv1InputStream),
             make_pos_uv_stream(Uv2InputStream), make_pos_uv_stream(Uv3InputStream),
-            text_index_stream};
+            text_index_stream
+        };
 
         my::VertexInputResource vi_res;
         vi_res.attribs = streams;
@@ -1057,4 +1060,5 @@ void TextElementSystem::work_gpu(Render* render)
         }
     }
 }
+
 } // namespace hrz::vt::symbol

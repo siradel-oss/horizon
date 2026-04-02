@@ -4,6 +4,7 @@
 
 namespace hrz
 {
+
 template<typename T>
 struct DoubleBuffered
 {
@@ -31,4 +32,5 @@ public:
 
     void swap() { std::swap(front_ptr, back_ptr); }
 };
+
 } // namespace hrz

@@ -29,12 +29,14 @@ extern "C"
 
 namespace hrz
 {
+
 struct AssetsLoader;
 struct BlobAllocator;
 struct JobScheduler;
 
 namespace planet
 {
+
 struct Raster;
 class IRasterCollection;
 

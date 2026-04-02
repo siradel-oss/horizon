@@ -10,6 +10,7 @@
 
 namespace hrz_jobs::bake_3d_model_geometry
 {
+
 hrz_jobs::JobResult run(
     const hrz_jobs::ModelData& input,
     hrz_jobs::ModelGeometry& geometry,

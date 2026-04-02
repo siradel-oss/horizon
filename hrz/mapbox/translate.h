@@ -8,11 +8,14 @@
 
 namespace HrzProtocol
 {
+
 class SceneDump;
+
 } // namespace HrzProtocol
 
 namespace hrz_mapbox
 {
+
 struct TranslationSettings
 {
     lm::dvec2 viewport_size;
@@ -39,4 +42,5 @@ TranslationResult translate_scene(
     std::string_view sprite_index_json,
     const TranslationSettings&,
     HrzProtocol::SceneDump* scene_dump);
+
 } // namespace hrz_mapbox

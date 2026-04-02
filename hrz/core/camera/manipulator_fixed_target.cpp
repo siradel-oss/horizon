@@ -13,6 +13,7 @@ namespace hrz::camera
 // https://stackoverflow.com/questions/53408962/try-to-understand-compiler-error-message-default-member-initializer-required-be
 namespace
 {
+
 struct Config
 {
     EnergyHalfTime energy_half_time{};
@@ -23,6 +24,7 @@ struct Config
     double min_height_above_terrain{};
     double terrain_collision_inertia{};
 };
+
 } // namespace
 
 class FixedTargetManipulator : public CameraManipulator
@@ -131,16 +133,16 @@ class FixedTargetManipulator : public CameraManipulator
             else if (type == MovementEventType::BeginContinuous && movement.has_rotation())
             {
                 return std::make_unique<
-                    ContinuousMovementInterruptionController<InitializedState, BaseController>>(
-                    std::make_unique<ContinuousMovementRotationController>(state),
-                    movement.continuous_movement_interruption());
+                    ContinuousMovementInterruptionController<InitializedState, BaseController>
+                >(std::make_unique<ContinuousMovementRotationController>(state),
+                  movement.continuous_movement_interruption());
             }
             else if (type == MovementEventType::BeginContinuous && movement.has_zoom())
             {
                 return std::make_unique<
-                    ContinuousMovementInterruptionController<InitializedState, BaseController>>(
-                    std::make_unique<ContinuousMovementZoomController>(state),
-                    movement.continuous_movement_interruption());
+                    ContinuousMovementInterruptionController<InitializedState, BaseController>
+                >(std::make_unique<ContinuousMovementZoomController>(state),
+                  movement.continuous_movement_interruption());
             }
             return nullptr;
         }
@@ -964,7 +966,6 @@ class FixedTargetManipulator : public CameraManipulator
 
         void on_start(CameraManipulatorContext* ctx) override
         {
-            hrz_proto::CameraNotification notification;
             ctx->add_notification()->mutable_animation_started();
         }
 
@@ -1005,8 +1006,10 @@ public:
         _state{UninitializedState{
             Config{
                 energy_half_time, min_tilt, max_tilt, min_distance, max_distance,
-                min_height_above_terrain, terrain_collision_inertia},
-            initial_viewpoint}}
+                min_height_above_terrain, terrain_collision_inertia
+            },
+            initial_viewpoint
+        }}
     {
         if (pose) initialize_with_pose(*pose);
     }
@@ -1083,7 +1086,8 @@ public:
 
         AngularViewpoint new_vp = positional_to_angular_viewpoint(
             PositionalViewpoint{
-                ecef_to_geo3(lm::extract_translation(state.pose)), ecef_to_geo3(state.target)},
+                ecef_to_geo3(lm::extract_translation(state.pose)), ecef_to_geo3(state.target)
+            },
             std::nullopt);
         AngularViewpoint old_vp = new_vp;
 
@@ -1099,9 +1103,10 @@ public:
         {
             Animation animation =
                 make_animation_around_target(old_vp, new_vp.bearing, new_vp.tilt, new_vp.distance);
-            replace_controller(std::make_unique<AnimationController>(
-                animation, params.animation_options(), state.config.min_height_above_terrain,
-                state.config.terrain_collision_inertia));
+            replace_controller(
+                std::make_unique<AnimationController>(
+                    animation, params.animation_options(), state.config.min_height_above_terrain,
+                    state.config.terrain_collision_inertia));
         }
         else
         {
