@@ -333,6 +333,22 @@
         "recordedRepoMappingEntries": []
       }
     },
+    "//tools/bazel/toolchain/sniper:sniper_includes_repo.bzl%sniper_includes_ext": {
+      "general": {
+        "bzlTransitiveDigest": "QUqMUE+qLvydIfC6CKltgDUtNyIXZ60/CSLtz7cS2QY=",
+        "usagesDigest": "jBby9woRfhAbj6LQnfFVUfQioljiwcNdMiqQpULdMxs=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "sniper_includes": {
+            "repoRuleId": "@@//tools/bazel/toolchain/sniper:sniper_includes_repo.bzl%sniper_includes_repo",
+            "attributes": {}
+          }
+        },
+        "recordedRepoMappingEntries": []
+      }
+    },
     "@@aspect_rules_ts+//ts:extensions.bzl%ext": {
       "general": {
         "bzlTransitiveDigest": "6NyLUdrb79stFKm8oWIBK2q65cT5Upbr8IR2Qwsywu8=",

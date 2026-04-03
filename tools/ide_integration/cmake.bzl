@@ -22,6 +22,10 @@ _cpp_extensions = [
 
 _c_or_cpp_extensions = ["h", "c"] + _cpp_extensions
 
+_asm_extensions = ["S", "s", "asm"]
+
+_all_src_extensions = _c_or_cpp_extensions + _asm_extensions
+
 _cc_rules = [
     "cc_binary",
     "cc_library",
@@ -54,6 +58,7 @@ def _bazel_label_to_cmake_target_name(target):
 # However the same syntax in CMake preserves the quotes and passes them to the compiler.
 # To pass values with spaces, escaping these characters (like this: `\ `) is necessary.
 # This function converts between the two syntaxes.
+# It also escapes parentheses, which are not special in Bazel but are in CMake.
 def _remove_define_quotes_and_escape(str):
     if "=" in str:
         parts = str.split("=", 1)
@@ -61,8 +66,12 @@ def _remove_define_quotes_and_escape(str):
             return str
         if len(parts[1]) < 2:
             return str
-        if parts[1][0] == '"' and parts[1][-1] == '"':
-            return parts[0] + "=" + parts[1][1:-1].replace(" ", "\\ ")
+        key = parts[0]
+        value = parts[1]
+        if value[0] == '"' and value[-1] == '"':
+            value = value[1:-1].replace(" ", "\\ ")
+        value = value.replace("(", "\\(").replace(")", "\\)")
+        return key + "=" + value
     return str
 
 def _cmakelists_txt(cmake_commands):
@@ -146,7 +155,7 @@ def _cmakelists_aspect_impl(target, ctx):
         if src.path.startswith(ctx.genfiles_dir.path):
             uses_generated_files = True
 
-        if src.extension in _c_or_cpp_extensions:
+        if src.extension in _all_src_extensions:
             files.append("__EXEC_ROOT__/" + src.path)
 
     header_only = True
@@ -154,7 +163,7 @@ def _cmakelists_aspect_impl(target, ctx):
     for src in srcs:
         if src.extension in _c_or_cpp_header_extensions:
             has_headers = True
-        elif src.extension in _c_or_cpp_extensions:
+        elif src.extension in _all_src_extensions:
             header_only = False
 
     cmake_commands = []
@@ -404,27 +413,32 @@ def _cmakelists_aspect_impl(target, ctx):
             ),
         )
 
-    compile_opts = ctx.fragments.cpp.copts
-    if is_cpp:
-        compile_opts += ctx.fragments.cpp.cxxopts
-
+    compile_opts = [struct(str = o, is_cxx = False) for o in ctx.fragments.cpp.copts]
     if hasattr(ctx.rule.attr, "copts") and ctx.rule.attr.copts:
-        compile_opts += ctx.rule.attr.copts
+        compile_opts += [struct(str = o, is_cxx = False) for o in ctx.rule.attr.copts]
 
-    if is_cpp and hasattr(ctx.rule.attr, "cxxopts") and ctx.rule.attr.cxxopts:
-        compile_opts += ctx.rule.attr.cxxopts
+    if is_cpp:
+        compile_opts += [struct(str = o, is_cxx = True) for o in ctx.fragments.cpp.cxxopts]
+        if hasattr(ctx.rule.attr, "cxxopts") and ctx.rule.attr.cxxopts:
+            compile_opts += [struct(str = o, is_cxx = True) for o in ctx.rule.attr.cxxopts]
 
-    if len(compile_opts) > 0:
+    if compile_opts:
         prps = ["INTERFACE" if header_only else "PRIVATE"]
 
         compile_definitions = []
         compile_options = []
 
-        for copt in compile_opts:
-            if copt.startswith("-D"):
-                compile_definitions.append(_remove_define_quotes_and_escape(copt[2:]))
+        for opt in compile_opts:
+            if opt.str.startswith("-D"):
+                value = _remove_define_quotes_and_escape(opt.str[2:])
+                if opt.is_cxx:
+                    compile_definitions.append("$<$<COMPILE_LANGUAGE:CXX>:" + value + ">")
+                else:
+                    compile_definitions.append(value)
+            elif opt.is_cxx:
+                compile_options.append("$<$<COMPILE_LANGUAGE:CXX>:" + _remove_define_quotes_and_escape(opt.str) + ">")
             else:
-                compile_options.append(copt)
+                compile_options.append(_remove_define_quotes_and_escape(opt.str))
 
         if compile_definitions:
             cmake_commands.append(
@@ -450,7 +464,7 @@ def _cmakelists_aspect_impl(target, ctx):
     if hasattr(ctx.rule.attr, "linkopts") and ctx.rule.attr.linkopts:
         linkopts += ctx.rule.attr.linkopts
 
-    if len(linkopts) > 0:
+    if linkopts:
         prps = ["INTERFACE" if header_only else "PRIVATE" if shared_library else "PUBLIC"]
 
         libs = []
@@ -525,8 +539,10 @@ def _cmakelists_impl(ctx):
     source_files = depset(transitive = source_files)
 
     content = "cmake_minimum_required(VERSION 3.10)\n" + \
-              "project(__PROJ_NAME__)\n" + \
-              "set(CMAKE_CXX_STANDARD 17)\n\n" + \
+              "project(__PROJ_NAME__\n" + \
+              "    LANGUAGES CXX C ASM\n" + \
+              ")\n" + \
+              "set(CMAKE_CXX_STANDARD 20)\n\n" + \
               "#__GLOBAL_OPTIONS__\n\n"
     content += _cmakelists_txt(cmake_commands.to_list())
     content = content.replace("__EXEC_ROOT__", ctx.attr.exec_root)

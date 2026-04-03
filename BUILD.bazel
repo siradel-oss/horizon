@@ -207,6 +207,22 @@ selects.config_setting_group(
     ],
 )
 
+constraint_setting(name = "toolchain_kind")
+
+constraint_value(
+    name = "sniper_constraint",
+    constraint_setting = ":toolchain_kind",
+)
+
+platform(
+    name = "sniper_platform",
+    constraint_values = [
+        "//:sniper_constraint",
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
 bool_flag(
     name = "opensource",
     build_setting_default = False,

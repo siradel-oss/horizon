@@ -84,6 +84,15 @@ use_repo(
 )
 
 #--------------------------------------------------------
+# C++ toolchains
+#--------------------------------------------------------
+
+sniper_includes = use_extension("//tools/bazel/toolchain/sniper:sniper_includes_repo.bzl", "sniper_includes_ext")
+use_repo(sniper_includes, "sniper_includes")
+
+register_toolchains("//tools/bazel/toolchain/sniper:sniper_toolchain")
+
+#--------------------------------------------------------
 # Python setup
 #--------------------------------------------------------
 
