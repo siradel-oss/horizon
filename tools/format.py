@@ -260,12 +260,6 @@ elif mode == "jj":
 
 print("Excluding bazel registry module files...")
 
-# Remove files that are in third_party/bazel_registry/modules/
-bazel_registry_modules_path = Path("third_party/bazel_registry/modules")
-all_files = [
-    f for f in all_files if not Path(f).is_relative_to(bazel_registry_modules_path)
-]
-
 print("Filtering C++ files...")
 for f in all_files:
     ext = os.path.splitext(f)[1][1:]

@@ -1,3 +1,0 @@
-module(name = "rapidjson", version = "1.2.1.hrz.1")
-
-bazel_dep(name = "rules_cc", version = "0.2.16")

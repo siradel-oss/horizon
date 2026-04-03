@@ -37,7 +37,6 @@
     * `ws`: WebSockets library.
     * `wsi`: Windowing library for Windows & Linux.
 * `third_party`: Third-party libraries & build files.
-    * `bazel_registry`: Bazel registry for third-party dependencies.
 * `tools`: Development or build tooling.
     * `bazel`: Horizon-specific Bazel build infrastructure.
     * `build_info`: Tools to provide or set build information (date, version, ...).

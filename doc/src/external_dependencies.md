@@ -10,7 +10,7 @@ Very rarely, a dependency, or third party snippet, might be included directly in
 
 Bazel rules, some tools, and most C++ dependencies are imported through Bazel's modules system (bzlmod). Each dependency corresponds to a `bazel_dep` directive inside `MODULE.bazel`.
 
-Some modules come directory the the Bazel Central Registry (BCR), but many don't. For the ones that don't, we create our own module in the `third_party/bazel_registry/` directory. Those modules have their version suffixed by `.hrz.n`. The procedures to add modules are described in the accompanying `README` file.
+Some modules come directly from the Bazel Central Registry (BCR), but many don't. For the ones that don't, we create our own modules in [Siradel's Bazel registry](https://github.com/siradel-oss/bazel-registry). The procedures to add modules are described in that repository.
 
 Again, remember to update the licenses mapping in `//third_party:BUILD.bazel` when applicable.
 

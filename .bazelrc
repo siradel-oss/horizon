@@ -11,7 +11,7 @@ startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
 # to filter only C++ source files. Not ideal...
 
 common --registry="https://bcr.bazel.build/"
-common --registry="file:///%workspace%/third_party/bazel_registry/"
+common --registry="https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/"
 common --downloader_config=bazel_downloader_config.cfg
 
 build --features=-default_cpp_std
