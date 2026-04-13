@@ -1,4 +1,7 @@
 onlyBuiltDependencies: []
+
+minimumReleaseAge: 10080 # 7d
+
 # This must match the data field of npm_translate_lock in MODULE.bazel
 packages:
   - "apps/web_example"
@@ -10,6 +13,3 @@ packages:
   - "hrz/doc"
   - "hrz/doc/common"
   - "hrz/doc/gallery"
-overrides:
-  minimatch: "^5.1.9"
-  underscore: "^1.13.8"

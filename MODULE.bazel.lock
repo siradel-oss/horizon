@@ -86,7 +86,8 @@
     "https://bcr.bazel.build/modules/delabella/2.0.hrz.1/MODULE.bazel": "not found",
     "https://bcr.bazel.build/modules/draco/1.5.7.hrz.1/MODULE.bazel": "not found",
     "https://bcr.bazel.build/modules/earcut/2.2.4.hrz.1/MODULE.bazel": "not found",
-    "https://bcr.bazel.build/modules/emsdk/5.0.4.hrz.3/MODULE.bazel": "not found",
+    "https://bcr.bazel.build/modules/emsdk/5.0.5/MODULE.bazel": "e6e39362121985e07fbac67c6c07d992ac1c6711935f7a71c79dbed15e85a951",
+    "https://bcr.bazel.build/modules/emsdk/5.0.5/source.json": "4184bc26525788724b7a5301f7cb330b1c62d43f82f927b251d1c93a7e7a3c8d",
     "https://bcr.bazel.build/modules/etcpak/2.0.hrz.1/MODULE.bazel": "not found",
     "https://bcr.bazel.build/modules/fmt/12.1.0/MODULE.bazel": "c6b460c936f408b371bf12ccee5ecbd5aed8f6abfb6e8b63fad0c622715fd458",
     "https://bcr.bazel.build/modules/fmt/12.1.0/source.json": "d7b35221043d8d7c69e2a64d6a0783c97aa49c5ce198ee0a5ccd18c99f070b1a",
@@ -296,8 +297,6 @@
     "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/draco/1.5.7.hrz.1/source.json": "2f2d1c3a33855ca44eb6e48e0f138b80b43aba17e649be22ad2dea9484d990b9",
     "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/earcut/2.2.4.hrz.1/MODULE.bazel": "53e01968c6d2d565b27d23564076e74ab065729ad29f098c67257acb3528a3fa",
     "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/earcut/2.2.4.hrz.1/source.json": "66fe0e60844af9e94a2df81891e42cbbf1e17409b245b1dd5c7c41a82ec4afea",
-    "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/emsdk/5.0.4.hrz.3/MODULE.bazel": "9b1612105a0d8a4e065583260a096e4c0493f2b6d215d1f03a81d9609dda3f18",
-    "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/emsdk/5.0.4.hrz.3/source.json": "3d3421261cb83cef4332c8fbf439a717240de037f867c93c2c18f58e692f23d6",
     "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/etcpak/2.0.hrz.1/MODULE.bazel": "eaf247b5ad4550e6cc4c8de5b279c9e41abe08372434334d1d33551972b8ce7a",
     "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/etcpak/2.0.hrz.1/source.json": "443578ae3b139c9474c3048c54be1f56491a496d251d9e2b37da5fca00ef1b36",
     "https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/modules/glslang_prebuilt/16.2.0.hrz.1/MODULE.bazel": "3d8419577b1823db78d0344872bbc7e2350ef58697a1015a13e904e0befb9a9c",
@@ -699,7 +698,7 @@
     "@@rules_nodejs+//nodejs:extensions.bzl%node": {
       "general": {
         "bzlTransitiveDigest": "4pUxCNc22K4I+6+4Nxu52Hur12tFRfa1JMsN5mdDv60=",
-        "usagesDigest": "ERNKORvXevyYkVqhF2lKPoMl+FUdPvSh47YGUvHRS6I=",
+        "usagesDigest": "+S2Wgrq7qrsr870cwr+VBEqpk5GhWa0V9mWY7W34Gkg=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},

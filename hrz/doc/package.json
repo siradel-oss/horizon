@@ -5,7 +5,7 @@
         "@siradel/horizon-doc-common": "workspace:*",
         "@siradel/horizon-monitoring-protocol": "workspace:*",
         "@siradel/horizon-protocol": "workspace:*",
-        "alpinejs": "^3.15.8",
+        "alpinejs": "^3.15.10",
         "fuse.js": "^7.1.0",
         "lit": "^3.3.2",
         "protobufjs": "^8.0.0",
