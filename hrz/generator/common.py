@@ -7,17 +7,19 @@ from python.runfiles import Runfiles
 from hrz.generator.filters import FILTERS
 
 
-def prepare_env(templates_path: str | None = None) -> jinja2.Environment:
-    if templates_path is None:
-        r = Runfiles.Create()
-        if r is None:
-            raise Exception("Failed to create Runfiles instance")
+def prepare_env(templates_path: str) -> jinja2.Environment:
+    r = Runfiles.Create()
+    if r is None:
+        raise Exception("Failed to create Runfiles instance")
 
-        templates_path = r.Rlocation("horizon/hrz/generators/templates")
-        if templates_path is None:
-            raise Exception("Failed to locate templates directory")
+    def rlocation_load_function(template_name: str) -> str | None:
+        template_path = templates_path.rstrip("/") + "/" + template_name
+        template_path = r.Rlocation(template_path)
+        if template_path is None or not Path(template_path).exists():
+            return None
+        return Path(template_path).read_text(encoding="utf-8")
 
-    loader = jinja2.FileSystemLoader(templates_path)
+    loader = jinja2.FunctionLoader(rlocation_load_function)
     tpl_env = jinja2.Environment(loader=loader)
     tpl_env.filters.update(FILTERS)
     tpl_env.trim_blocks = True

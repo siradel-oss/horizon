@@ -183,10 +183,6 @@ def main():
     if r is None:
         raise Exception("Failed to create Runfiles instance")
 
-    templates_path = r.Rlocation("horizon/hrz/doc/templates")
-    if templates_path is None:
-        raise Exception("Failed to locate templates directory")
-
     build_date_path = r.Rlocation("horizon/build_date.txt")
     if build_date_path is None:
         raise Exception("Failed to locate build date file")
@@ -202,7 +198,7 @@ def main():
         raise Exception("Failed to locate CRS database file")
     crs = read_crs_database(db_path)
 
-    tpl_env = prepare_env(templates_path)
+    tpl_env = prepare_env("horizon/hrz/doc/templates")
     output_dir = Path(sys.argv[1])
 
     version = sys.argv[2]

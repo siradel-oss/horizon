@@ -414,16 +414,12 @@ def generate_reference_pages(
 def main():
     r = RUNFILES
 
-    templates_path = r.Rlocation("horizon/hrz/doc/templates")
-    if templates_path is None:
-        raise Exception("Failed to locate templates directory")
-
     protocol_path = r.Rlocation("horizon/hrz/hrz_protocol.xml")
     if protocol_path is None:
         raise Exception("Failed to locate protocol XML file")
     protocol = protocol_parser.parse(protocol_path)
 
-    tpl_env = prepare_env(templates_path)
+    tpl_env = prepare_env("horizon/hrz/doc/templates")
     output_dir = Path(sys.argv[1])
     version = sys.argv[2]
     pages_list_file = Path(sys.argv[3])

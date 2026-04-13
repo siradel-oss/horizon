@@ -48,16 +48,12 @@ if __name__ == "__main__":
     if r is None:
         raise Exception("Failed to create Runfiles instance")
 
-    templates_path = r.Rlocation("horizon/hrz/core/jobs/templates")
-    if templates_path is None:
-        raise Exception("Failed to locate templates directory")
-
     manifest_path = r.Rlocation("horizon/hrz/core/jobs/manifest.json")
     if manifest_path is None:
         raise Exception("Failed to locate jobs manifest file")
 
     jobs_manifest = parse_jobs_manifest(Path(manifest_path))
-    tpl_env = prepare_env(templates_path)
+    tpl_env = prepare_env("horizon/hrz/core/jobs/templates")
     output_dir = Path(sys.argv[1])
 
     tpl_data = jobs_manifest

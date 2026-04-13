@@ -14,10 +14,17 @@ MANIFEST: Manifest = None
 
 def make_tpl_env():
     r = Runfiles.Create()
-    template_dir = r.Rlocation("horizon/hrz/protocol/history/templates")
-    if template_dir is None:
-        raise Exception("Could not find templates")
-    loader = jinja2.FileSystemLoader(template_dir)
+
+    def rlocation_load_function(template_name: str) -> str | None:
+        template_path = (
+            "horizon/hrz/protocol/history/templates".rstrip("/") + "/" + template_name
+        )
+        template_path = r.Rlocation(template_path)
+        if template_path is None or not Path(template_path).exists():
+            return None
+        return Path(template_path).read_text(encoding="utf-8")
+
+    loader = jinja2.FunctionLoader(rlocation_load_function)
     return jinja2.Environment(loader=loader)
 
 

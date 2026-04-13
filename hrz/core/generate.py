@@ -16,17 +16,13 @@ if __name__ == "__main__":
     if r is None:
         raise Exception("Failed to create Runfiles instance")
 
-    templates_path = r.Rlocation("horizon/hrz/core/templates")
-    if templates_path is None:
-        raise Exception("Failed to locate templates directory")
-
     protocol_path = r.Rlocation("horizon/hrz/hrz_protocol.xml")
     if protocol_path is None:
         raise Exception("Failed to locate protocol XML file")
 
     protocol = protocol_parser.parse(protocol_path)
     api_model = api_parser.parse(protocol)
-    tpl_env = prepare_env(templates_path)
+    tpl_env = prepare_env("horizon/hrz/core/templates")
     output_dir = Path(sys.argv[1])
 
     tpl_data = asdict(protocol)
