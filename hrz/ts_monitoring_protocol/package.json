@@ -3,7 +3,7 @@
     "type": "module",
     "dependencies": {
         "long": "^5.3.2",
-        "protobufjs": "^8.0.0"
+        "protobufjs": "^8.0.1"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
