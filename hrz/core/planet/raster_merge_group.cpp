@@ -45,22 +45,24 @@ uint32_t compute_tile_loading_priority(int8_t raster_loading_priority, uint32_t 
 std::optional<hrz_proto::RasterPickResult> get_tile_image_pixel(
     const Raster* raster,
     RasterProvider::SourceLockTicket lock,
-    TileCoords coords,
-    lm::ivec2 pixel_pos,
-    const ImageTilingInfo& info)
+    const lm::dvec2& proj_pos,
+    const ImageTilingInfo& tiling_info)
 {
     hrz_proto::RasterPickResult raster_result;
     bool has_raster_data = false;
 
     if (lock != RasterProvider::SourceLockTicket::Invalid)
     {
-        lm::vec2 uv = pixel_pos / (float)info.provider_tile_pixel_size;
-
         RasterProvider::TileImage image = raster->provider->get_source_tile_image(lock);
-        TileToTileUvTransform<float> uv_xform(coords, image.coords);
-        uv = uv_xform(uv);
 
-        pixel_pos = lm::ivec2(uv * (float)info.provider_tile_pixel_size);
+        auto tile_uv = proj_pos_to_tile_uv(proj_pos, image.coords.lod, tiling_info);
+        if (!tile_uv.has_value())
+        {
+            return std::nullopt;
+        }
+
+        auto uv = lm::vec2(tile_uv->uv);
+        lm::ivec2 pixel_pos = lm::ivec2(uv * lm::vec2(image.image.width(), image.image.height()));
 
         if (!image.image.proto_format().has_value())
         {
@@ -1429,10 +1431,10 @@ void RasterMergeGroup::work(
                         continue;
                     }
 
-                    ImageTilingInfo info = compute_image_tiling_info(geometry, &crs);
+                    ImageTilingInfo tiling_info = compute_image_tiling_info(geometry, &crs);
 
                     auto raster_result_opt = get_tile_image_pixel(
-                        raster, request->lock, request->tile, request->pixel_pos, info);
+                        raster, request->lock, request->proj_pos.xy, tiling_info);
 
                     if (raster_result_opt.has_value())
                     {
@@ -1440,7 +1442,7 @@ void RasterMergeGroup::work(
                         // the tile size. To match the data returned in picking messages, we want
                         // to return the original pixel position instead.
                         const lm::dvec2 pixel_pos_raster =
-                            pixel_pos_from_proj_pos(info, request->proj_pos.xy);
+                            pixel_pos_from_proj_pos(tiling_info, request->proj_pos.xy);
 
                         request->result.mutable_layer()->mutable_handle()->set_opaque(raster->id);
                         request->result.mutable_layer()->set_type(raster->type);
@@ -1546,28 +1548,23 @@ bool RasterMergeGroup::upload_composed_tiles_and_bake_clipmap()
 std::pair<TileCoords, RasterProvider::SourceLockTicket> find_most_detailed_tile_available(
     const Raster* raster,
     const hrz::ImageTilingInfo& tiling_info,
-    const lm::dvec3& projected_coords,
-    lm::ivec2* out_pixel)
+    const lm::dvec2& proj_pos)
 {
-    // Get picked tile at the most detailed level and search from here.
-    lm::dvec2 domain_coords = {
-        (projected_coords.x - tiling_info.domain_bounds.min.x) / tiling_info.domain_bounds_size.x,
-        (tiling_info.domain_bounds.max.y - projected_coords.y) / tiling_info.domain_bounds_size.y,
-    };
-
-    lm::dvec2 domain_coords_pixel(lm::floor(domain_coords * tiling_info.domain_pixel_size));
-    hrz::TileCoords tile{
-        (uint32_t)std::floor(domain_coords_pixel.x / tiling_info.provider_tile_pixel_size),
-        (uint32_t)std::floor(domain_coords_pixel.y / tiling_info.provider_tile_pixel_size),
-        tiling_info.max_lod,
-    };
+    uint8_t lod = tiling_info.max_lod;
 
     // Search the tile hierarchy bottom-up until something is found or the root is reached.
 
     auto& provider = raster->provider;
     do
     {
-        auto lock = provider->lock_source_tile_if_ready(tile);
+        auto tile_uv = proj_pos_to_tile_uv(proj_pos, lod, tiling_info);
+
+        if (!tile_uv.has_value())
+        {
+            return std::make_pair(TileCoords{}, RasterProvider::SourceLockTicket::Invalid);
+        }
+
+        auto lock = provider->lock_source_tile_if_ready(tile_uv->tile_coords);
 
         if (lock != RasterProvider::SourceLockTicket::Invalid)
         {
@@ -1577,10 +1574,7 @@ std::pair<TileCoords, RasterProvider::SourceLockTicket> find_most_detailed_tile_
 
                 if (source_image.image.valid())
                 {
-                    *out_pixel = lm::ivec2(
-                        (int32_t)domain_coords_pixel.x % tiling_info.provider_tile_pixel_size,
-                        (int32_t)domain_coords_pixel.y % tiling_info.provider_tile_pixel_size);
-                    return std::make_pair(tile, lock);
+                    return std::make_pair(tile_uv->tile_coords, lock);
                 }
             }
             else
@@ -1589,14 +1583,13 @@ std::pair<TileCoords, RasterProvider::SourceLockTicket> find_most_detailed_tile_
             }
         }
 
-        if (tile.lod == 0)
+        if (lod == 0)
         {
             break;
         }
 
-        tile = tile.parent();
-        domain_coords_pixel *= 0.5;
-    } while (tile.lod >= tiling_info.min_lod);
+        lod -= 1;
+    } while (lod >= tiling_info.min_lod);
 
     return std::make_pair(TileCoords{}, RasterProvider::SourceLockTicket::Invalid);
 }
@@ -1648,7 +1641,7 @@ void RasterMergeGroup::pick(
             continue;
         }
 
-        ImageTilingInfo info = compute_image_tiling_info(geometry, &crs);
+        ImageTilingInfo tiling_info = compute_image_tiling_info(geometry, &crs);
 
         // Compute the picked position in the projection of the dataset.
         pl_Transform transform;
@@ -1658,16 +1651,15 @@ void RasterMergeGroup::pick(
         pl_transform_in_place_canonical(&transform, 1, &proj_pos.x);
 
         // Compare picked location against raster bounds.
-        if (!lm::contains(info.raster_bounds, proj_pos.xy))
+        if (!lm::contains(tiling_info.raster_bounds, proj_pos.xy))
         {
             continue;
         }
 
-        lm::ivec2 pixel_pos;
-        auto lock = find_most_detailed_tile_available(raster, info, proj_pos, &pixel_pos);
+        auto lock = find_most_detailed_tile_available(raster, tiling_info, proj_pos.xy);
 
         auto raster_result_opt =
-            get_tile_image_pixel(raster, lock.second, lock.first, pixel_pos, info);
+            get_tile_image_pixel(raster, lock.second, proj_pos.xy, tiling_info);
 
         if (lock.second != RasterProvider::SourceLockTicket::Invalid)
         {
@@ -1682,7 +1674,7 @@ void RasterMergeGroup::pick(
 
         auto raster_result = std::move(raster_result_opt.value());
 
-        const lm::dvec2 pixel_pos_raster = pixel_pos_from_proj_pos(info, proj_pos.xy);
+        const lm::dvec2 pixel_pos_raster = pixel_pos_from_proj_pos(tiling_info, proj_pos.xy);
 
         // Populate picking results for that raster.
         hrz_proto::PickLayerResult pr;
@@ -1737,7 +1729,7 @@ void RasterMergeGroup::schedule_raster_data_fetch(
             continue;
         }
 
-        ImageTilingInfo info = compute_image_tiling_info(geometry, &crs);
+        ImageTilingInfo tiling_info = compute_image_tiling_info(geometry, &crs);
 
         // Compute the queried position in the projection of the dataset
         pl_Transform transform;
@@ -1747,23 +1739,20 @@ void RasterMergeGroup::schedule_raster_data_fetch(
         pl_transform_in_place_canonical(&transform, 1, &proj_pos.x);
 
         // Compare picked location against raster bounds.
-        if (!lm::contains(info.raster_bounds, proj_pos.xy))
+        if (!lm::contains(tiling_info.raster_bounds, proj_pos.xy))
         {
             continue;
         }
 
-        lm::dvec2 domain_coords_pixel = lm::floor(pixel_pos_from_proj_pos(info, proj_pos.xy));
+        auto tile_uv = proj_pos_to_tile_uv(proj_pos.xy, tiling_info.max_lod, tiling_info);
+        if (!tile_uv.has_value())
+        {
+            continue;
+        }
 
-        fetch->tile = {
-            (uint32_t)std::floor(domain_coords_pixel.x / info.provider_tile_pixel_size),
-            (uint32_t)std::floor(domain_coords_pixel.y / info.provider_tile_pixel_size),
-            info.max_lod
-        };
+        fetch->tile = tile_uv->tile_coords;
 
         fetch->proj_pos = proj_pos;
-        fetch->pixel_pos = lm::ivec2(
-            (int32_t)domain_coords_pixel.x % info.provider_tile_pixel_size,
-            (int32_t)domain_coords_pixel.y % info.provider_tile_pixel_size);
 
         fetch->lock = RasterProvider::SourceLockTicket::Invalid;
         fetch->raster_id = raster->id;

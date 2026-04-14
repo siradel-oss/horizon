@@ -195,7 +195,6 @@ class RasterMergeGroup
     {
         RasterProvider::SourceLockTicket lock;
         TileCoords tile;
-        lm::ivec2 pixel_pos;
         lm::dvec3 proj_pos;
         uint64_t raster_id;
 

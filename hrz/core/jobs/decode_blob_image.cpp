@@ -521,7 +521,15 @@ std::optional<hrz::blobs::BlobHandle> decode_stbi(
 
     if (!output_data)
     {
-        HRZ_LOG_ERROR("Error when decoding image: {}", stbi_failure_reason());
+        const char* reason = stbi_failure_reason();
+        if (reason != nullptr)
+        {
+            HRZ_LOG_ERROR("Error when decoding image: {}", reason);
+        }
+        else
+        {
+            HRZ_LOG_ERROR("Unknown error when decoding image");
+        }
         return std::nullopt;
     }
 

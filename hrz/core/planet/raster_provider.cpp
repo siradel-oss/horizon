@@ -9,7 +9,7 @@ uint32_t get_min_lod(const hrz_proto::TilingSchemeParams& tiling_scheme)
 {
     switch (tiling_scheme.type())
     {
-        case hrz_proto::TilingSchemeType::UNTILED: return 0;
+        case hrz_proto::TilingSchemeType::UNKNOWN: return 0;
         case hrz_proto::TilingSchemeType::GLOBAL: return tiling_scheme.global_tiling().min_level();
         case hrz_proto::TilingSchemeType::LOCAL:
             return tiling_scheme.local_tiling().has_min_level()
@@ -131,7 +131,7 @@ bool is_tiling_scheme_model_complete(const hrz_proto::TilingSchemeParams& tiling
     auto type = tiling_scheme.type();
     switch (type)
     {
-        case hrz_proto::TilingSchemeType::UNTILED: return true;
+        case hrz_proto::TilingSchemeType::UNKNOWN: return false;
         case hrz_proto::TilingSchemeType::LOCAL: return tiling_scheme.has_local_tiling();
         case hrz_proto::TilingSchemeType::GLOBAL: return tiling_scheme.has_global_tiling();
         default: assert(false && "Unhandled case"); return false;

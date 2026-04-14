@@ -6,6 +6,7 @@
 #include "hrz/core/image_decoder.h"
 #include "hrz/core/job_scheduler.h"
 #include "hrz/fnd/format.h"
+#include "hrz/fnd/inlined_vector.h"
 
 namespace hrz::planet
 {
@@ -373,6 +374,8 @@ void TileFetcher::work(
         }
     }
 
+    hrz::InlinedVector<Tile*, 8> fallbacks_to_parent;
+
     // Download tiles.
     for (auto it = std::begin(_loading_tiles); it != std::end(_loading_tiles);)
     {
@@ -411,19 +414,9 @@ void TileFetcher::work(
             {
                 if (_try_lower_resolution && tile->coords.lod > _lod_min)
                 {
-                    auto parent_lock_ticket = request_and_lock_tile(
-                        tile->coords.parent(), al, load_ticket.queue, load_ticket.priority);
-
-                    if (parent_lock_ticket != TileFetcher::LockTicket::Invalid)
-                    {
-                        tile->status = Tile::Status::UseLowerRes;
-                        tile->payload = Tile::ParentTicket{parent_lock_ticket};
-                    }
-                    else
-                    {
-                        tile->status = Tile::Status::Missing;
-                        tile->payload = Tile::Empty{};
-                    }
+                    // Fallbacks are handled after the current loop is over
+                    // to avoid concurrent modifications to _loading_tiles.
+                    fallbacks_to_parent.emplace_back(tile);
                 }
                 else
                 {
@@ -437,6 +430,24 @@ void TileFetcher::work(
         else
         {
             it++;
+        }
+    }
+
+    for (auto& tile : fallbacks_to_parent)
+    {
+        auto load_ticket = std::get<Tile::LoadingTicket>(tile->payload);
+        auto parent_lock_ticket = request_and_lock_tile(
+            tile->coords.parent(), al, load_ticket.queue, load_ticket.priority);
+
+        if (parent_lock_ticket != TileFetcher::LockTicket::Invalid)
+        {
+            tile->status = Tile::Status::UseLowerRes;
+            tile->payload = Tile::ParentTicket{parent_lock_ticket};
+        }
+        else
+        {
+            tile->status = Tile::Status::Missing;
+            tile->payload = Tile::Empty{};
         }
     }
 

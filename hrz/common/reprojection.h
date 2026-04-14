@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hrz/common/tile_coords.h"
 #include "hrz/protocol/raster/tiling_scheme.pb.h"
 
 #include <lin_maths.h>
@@ -59,5 +60,22 @@ inline lm::dvec2 pixel_pos_from_proj_pos(const ImageTilingInfo& info, const lm::
             * info.domain_pixel_size.y),
     };
 }
+
+struct TileCoordsAndUv
+{
+    TileCoords tile_coords;
+    lm::dvec2 uv;
+    lm::uvec2 tile_size;
+};
+
+std::optional<TileCoordsAndUv> proj_pos_to_tile_uv(
+    const lm::dvec2& proj_pos,
+    uint8_t lod,
+    const ImageTilingInfo& tiling_info);
+
+lm::dvec2 tile_uv_to_proj_pos(
+    const TileCoords& tile_coords,
+    const lm::dvec2& uv,
+    const ImageTilingInfo& tiling_info);
 
 } // namespace hrz

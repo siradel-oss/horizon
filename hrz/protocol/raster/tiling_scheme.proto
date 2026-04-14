@@ -4,8 +4,8 @@ option  cc_enable_arenas = true;
 option  optimize_for     = LITE_RUNTIME;
 
 enum TilingSchemeType {
-    // No tiling (e.g. single images).
-    UNTILED = 0;
+    // Deprecated value, do not use.
+    UNKNOWN = 0;
 
     // Tiling is relative to the given bounds.
     LOCAL   = 1;
@@ -43,8 +43,19 @@ message GlobalTilingSchemeParams {
 }
 
 message LocalTilingSchemeParams {
+    // Width of the domain of the raster, in pixels.
+    // This is not necessarily the same as the width of the image,
+    // as the tiling scheme may be defined on a larger domain
+    // than the image.
     int64            full_image_width      = 1;
+    // Height of the domain of the raster, in pixels.
+    // This is not necessarily the same as the height of the image,
+    // as the tiling scheme may be defined on a larger domain
+    // than the image.
     int64            full_image_height     = 2;
+    // Size of the tiles, in pixels.
+    // Some tiles can be smaller than this size, depending on the
+    // `border_tile_aspect` and the dimensions of the raster.
     int32            tile_size             = 3;
     bool             has_min_level         = 4;
     int32            min_level             = 5;

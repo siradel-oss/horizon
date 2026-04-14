@@ -243,29 +243,29 @@ lm::dbbox2 bounds_from_points(std::span<const lm::dvec2> points)
     return bounds;
 }
 
-lm::ilbbox2 compute_tile_pixel_bounds(SignedTileCoords coords, const ImageTilingInfo& info)
+lm::ilbbox2 compute_tile_pixel_bounds(SignedTileCoords coords, const ImageTilingInfo& tiling_info)
 {
     lm::ilbbox2 tile_bounds;
 
-    auto mipmap_level = info.max_mipmap_level - coords.lod;
-    auto tile_pixel_size = info.provider_tile_pixel_size * ((uint64_t)1 << mipmap_level);
+    auto mipmap_level = tiling_info.max_mipmap_level - coords.lod;
+    auto tile_pixel_size = tiling_info.provider_tile_pixel_size * ((uint64_t)1 << mipmap_level);
 
     tile_bounds.min.x = coords.x * tile_pixel_size;
     tile_bounds.max.x = (coords.x + 1) * tile_pixel_size;
 
-    if (info.tiling_origin == hrz_proto::TilingOrigin::TOP_ORIGIN)
+    tile_bounds.min.y = coords.y * tile_pixel_size;
+    tile_bounds.max.y = (coords.y + 1) * tile_pixel_size;
+
+    if (tiling_info.tiling_origin == hrz_proto::TilingOrigin::BOTTOM_ORIGIN)
     {
-        tile_bounds.min.y = coords.y * tile_pixel_size;
-        tile_bounds.max.y = (coords.y + 1) * tile_pixel_size;
-    }
-    else if (info.tiling_origin == hrz_proto::TilingOrigin::BOTTOM_ORIGIN)
-    {
-        tile_bounds.min.y = info.domain_pixel_size.y - (coords.y + 1) * tile_pixel_size;
-        tile_bounds.max.y = info.domain_pixel_size.y - coords.y * tile_pixel_size;
+        uint64_t tile_row_0_pixel_height = tiling_info.domain_pixel_size.y % tile_pixel_size;
+        tile_bounds.min.y -= tile_pixel_size - tile_row_0_pixel_height;
+        tile_bounds.max.y -= tile_pixel_size - tile_row_0_pixel_height;
     }
     else
     {
-        assert(false && "Unhandled case");
+        assert(
+            tiling_info.tiling_origin == hrz_proto::TilingOrigin::TOP_ORIGIN && "Unhandled case");
     }
 
     return tile_bounds;
@@ -274,7 +274,7 @@ lm::ilbbox2 compute_tile_pixel_bounds(SignedTileCoords coords, const ImageTiling
 void select_tiled_image_tiles(
     const hrz_jobs::RasterTileReprojParams& params,
     const pl_Crs* image_projection_crs,
-    const ImageTilingInfo& info,
+    const ImageTilingInfo& tiling_info,
     hrz::flat_hash_set<SignedTileCoords>& selected_tiles)
 {
     HRZ_SCOPED_SAMPLE("select tiled image tiles");
@@ -396,15 +396,16 @@ void select_tiled_image_tiles(
     for (unsigned int i = 0; i < (unsigned int)grid_point_count; i++)
     {
         lm::dvec2 domain_coords(
-            (grid_coords[i].x - info.domain_bounds.min.x) / info.domain_bounds_size.x,
-            (info.domain_bounds.max.y - grid_coords[i].y) / info.domain_bounds_size.y);
+            (grid_coords[i].x - tiling_info.domain_bounds.min.x) / tiling_info.domain_bounds_size.x,
+            (tiling_info.domain_bounds.max.y - grid_coords[i].y)
+                / tiling_info.domain_bounds_size.y);
 
-        lm::dvec2 domain_coords_pixel(domain_coords * info.domain_pixel_size);
+        lm::dvec2 domain_coords_pixel(domain_coords * tiling_info.domain_pixel_size);
 
         grid_bbox_pixel = lm::expand(grid_bbox_pixel, domain_coords_pixel);
         grid_bbox_units = lm::expand(grid_bbox_units, grid_coords[i].xy);
 
-        if (lm::contains(info.image_pixel_bounds, domain_coords_pixel))
+        if (lm::contains(tiling_info.image_pixel_bounds, domain_coords_pixel))
         {
             point_in_bounds[i] = true;
             point_in_bounds_count += 1;
@@ -418,15 +419,15 @@ void select_tiled_image_tiles(
     }
 
     // Stop here if the tiled image and the reprojected tile have an empty intersection.
-    if (grid_bbox_pixel.min.x >= (double)info.domain_pixel_size.x
-        || grid_bbox_pixel.min.y >= (double)info.domain_pixel_size.y || grid_bbox_pixel.max.x <= 0
-        || grid_bbox_pixel.max.y <= 0)
+    if (grid_bbox_pixel.min.x >= (double)tiling_info.domain_pixel_size.x
+        || grid_bbox_pixel.min.y >= (double)tiling_info.domain_pixel_size.y
+        || grid_bbox_pixel.max.x <= 0 || grid_bbox_pixel.max.y <= 0)
     {
         return;
     }
 
     // Stop here if the tile is not in the raster bounds
-    if (!lm::intersect(grid_bbox_units, info.raster_bounds))
+    if (!lm::intersect(grid_bbox_units, tiling_info.raster_bounds))
     {
         return;
     }
@@ -487,15 +488,16 @@ void select_tiled_image_tiles(
                 if (max_dist > 0)
                 {
                     int mipmap_level = (int)std::floor(std::log2(max_dist) + 0.5);
-                    mipmap_level = std::max(0, std::min(mipmap_level, info.max_mipmap_level));
+                    mipmap_level =
+                        std::max(0, std::min(mipmap_level, tiling_info.max_mipmap_level));
 
                     // Don't set the mipmap level when it would select too many raster tiles.
-                    if (mipmap_level
-                        <= info.max_available_mipmap_level + (int)MaxLevelDifferenceForDownsampling)
+                    if (mipmap_level <= tiling_info.max_available_mipmap_level
+                            + (int)MaxLevelDifferenceForDownsampling)
                     {
                         mipmap_levels[point_index] = std::max(
-                            std::min(mipmap_level, info.max_available_mipmap_level),
-                            info.min_available_mipmap_level);
+                            std::min(mipmap_level, tiling_info.max_available_mipmap_level),
+                            tiling_info.min_available_mipmap_level);
 
                         points_with_mipmap_level += 1;
                     }
@@ -530,11 +532,13 @@ void select_tiled_image_tiles(
         const double tile_size_log2 = std::log2(MERCATOR_TILE_SIZE);
         int level = (int)std::floor(0.5 * std::log2(tile_area) - tile_size_log2 + 0.5);
         level = std::min(
-            std::max(level, info.min_available_mipmap_level), info.max_available_mipmap_level);
+            std::max(level, tiling_info.min_available_mipmap_level),
+            tiling_info.max_available_mipmap_level);
         level = std::max(0, level);
 
         approximate_mipmap_level = std::max(
-            std::min(level, info.max_available_mipmap_level), info.min_available_mipmap_level);
+            std::min(level, tiling_info.max_available_mipmap_level),
+            tiling_info.min_available_mipmap_level);
     };
 
     if (points_with_mipmap_level == 0)
@@ -560,7 +564,7 @@ void select_tiled_image_tiles(
         // a new grid of points there.
         // This will force the following step to select tiles at the LOD selected above.
         lm::dbbox2 tile_bounds = bounds_from_points(pixel_grid_coords);
-        lm::dbbox2 image_bounds({0, 0}, lm::dvec2(info.image_pixel_size));
+        lm::dbbox2 image_bounds({0, 0}, lm::dvec2(tiling_info.image_pixel_size));
         lm::dbbox2 bounds = lm::intersection(tile_bounds, image_bounds);
 
         if (lm::is_valid(bounds))
@@ -644,7 +648,7 @@ void select_tiled_image_tiles(
         }
     }
 
-    // For each in-bounds point whose mipmap level has been determinated,
+    // For each in-bounds point whose mipmap level has been determined,
     // convert from mipmap level to LOD and compute the tiled image tile
     // in which the point lies.
     for (int i = 0; i < grid_point_count; i++)
@@ -652,19 +656,21 @@ void select_tiled_image_tiles(
         if (!point_in_bounds[i] || mipmap_levels[i] == -1) continue;
 
         auto mipmap_level = mipmap_levels[i];
-        auto lod = info.max_mipmap_level - mipmap_level;
-        auto tile_pixel_size = info.provider_tile_pixel_size * ((uint64_t)1 << mipmap_level);
+        auto lod = tiling_info.max_mipmap_level - mipmap_level;
+        auto tile_pixel_size = tiling_info.provider_tile_pixel_size * ((uint64_t)1 << mipmap_level);
 
         lm::dvec2 pos;
         pos.x = pixel_grid_coords[i].x / (float)tile_pixel_size;
-        if (info.tiling_origin == hrz_proto::TilingOrigin::TOP_ORIGIN)
+        if (tiling_info.tiling_origin == hrz_proto::TilingOrigin::TOP_ORIGIN)
         {
             pos.y = pixel_grid_coords[i].y / (double)tile_pixel_size;
         }
-        else if (info.tiling_origin == hrz_proto::TilingOrigin::BOTTOM_ORIGIN)
+        else if (tiling_info.tiling_origin == hrz_proto::TilingOrigin::BOTTOM_ORIGIN)
         {
-            pos.y = ((double)info.domain_pixel_size.y - pixel_grid_coords[i].y)
-                / (double)tile_pixel_size;
+            double tile_row_0_pixel_height =
+                (double)(tiling_info.domain_pixel_size.y % tile_pixel_size);
+            double y_pixel_offset = tile_pixel_size - tile_row_0_pixel_height;
+            pos.y = (pixel_grid_coords[i].y + y_pixel_offset) / (double)tile_pixel_size;
         }
         else
         {
@@ -710,17 +716,17 @@ void select_tiled_image_tiles(
         }
 
         int mipmap_level = approximate_mipmap_level.value();
-        int lod = info.max_mipmap_level - mipmap_level;
-        int real_lod = lod + info.lod_offset;
+        int lod = tiling_info.max_mipmap_level - mipmap_level;
+        int real_lod = lod + tiling_info.lod_offset;
 
-        for (int y = 0; y < (int)info.level_zero_tile_count_y * (1 << real_lod); ++y)
+        for (int y = 0; y < (int)tiling_info.level_zero_tile_count_y * (1 << real_lod); ++y)
         {
-            for (int x = 0; x < (int)info.level_zero_tile_count_x * (1 << real_lod); ++x)
+            for (int x = 0; x < (int)tiling_info.level_zero_tile_count_x * (1 << real_lod); ++x)
             {
                 SignedTileCoords coords{x, y, (uint8_t)lod};
-                auto tile_bounds_pixel = compute_tile_pixel_bounds(coords, info);
+                auto tile_bounds_pixel = compute_tile_pixel_bounds(coords, tiling_info);
 
-                if (lm::intersect_open(tile_bounds_pixel, info.image_pixel_bounds))
+                if (lm::intersect_open(tile_bounds_pixel, tiling_info.image_pixel_bounds))
                 {
                     selected_tiles.insert(coords);
                 }
@@ -830,7 +836,7 @@ void remove_overlaps(
 void project_tiled_image_tiles(
     const hrz_jobs::RasterTileReprojParams& params,
     const pl_Crs* image_projection_crs,
-    const ImageTilingInfo& info,
+    const ImageTilingInfo& tiling_info,
     const hrz::flat_hash_map<SignedTileCoords, TileSelectionStatus>& status_by_tile,
     hrz_jobs::ReprojectedTiles& response)
 {
@@ -857,11 +863,12 @@ void project_tiled_image_tiles(
 
         auto coords = pair.first;
 
-        int mipmap_level = info.max_mipmap_level - coords.lod;
-        uint64_t tile_pixel_size = info.provider_tile_pixel_size * ((uint64_t)1 << mipmap_level);
-        lm::ilbbox2 tile_bounds_pixel = compute_tile_pixel_bounds(coords, info);
+        int mipmap_level = tiling_info.max_mipmap_level - coords.lod;
+        uint64_t tile_pixel_size =
+            tiling_info.provider_tile_pixel_size * ((uint64_t)1 << mipmap_level);
+        lm::ilbbox2 tile_bounds_pixel = compute_tile_pixel_bounds(coords, tiling_info);
 
-        if (!lm::intersect_open(tile_bounds_pixel, info.image_pixel_bounds))
+        if (!lm::intersect_open(tile_bounds_pixel, tiling_info.image_pixel_bounds))
         {
             // The tile does not exist, abort.
             continue;
@@ -870,37 +877,32 @@ void project_tiled_image_tiles(
         // Some rasters only have full tiles (images of tile_pixel_size^2 pixels).
         // Others have smaller tiles on the edges, so that there is no data for outside
         // the bounds.
-        if (!info.tiles_always_full_size)
+        if (!tiling_info.tiles_always_full_size)
         {
-            tile_bounds_pixel.min.x =
-                std::max(tile_bounds_pixel.min.x, info.image_pixel_bounds.min.x);
-            tile_bounds_pixel.min.y =
-                std::max(tile_bounds_pixel.min.y, info.image_pixel_bounds.min.y);
-            tile_bounds_pixel.max.x =
-                std::min(tile_bounds_pixel.max.x, info.image_pixel_bounds.max.x);
-            tile_bounds_pixel.max.y =
-                std::min(tile_bounds_pixel.max.y, info.image_pixel_bounds.max.y);
+            tile_bounds_pixel = lm::intersection(tile_bounds_pixel, tiling_info.image_pixel_bounds);
         }
 
         double tile_bounds_x_min_domain =
-            (double)tile_bounds_pixel.min.x / (double)info.domain_pixel_size.x;
+            (double)tile_bounds_pixel.min.x / (double)tiling_info.domain_pixel_size.x;
         double tile_bounds_y_min_domain =
-            (double)tile_bounds_pixel.min.y / (double)info.domain_pixel_size.y;
+            (double)tile_bounds_pixel.min.y / (double)tiling_info.domain_pixel_size.y;
         double tile_bounds_x_max_domain =
-            (double)tile_bounds_pixel.max.x / (double)info.domain_pixel_size.x;
+            (double)tile_bounds_pixel.max.x / (double)tiling_info.domain_pixel_size.x;
         double tile_bounds_y_max_domain =
-            (double)tile_bounds_pixel.max.y / (double)info.domain_pixel_size.y;
+            (double)tile_bounds_pixel.max.y / (double)tiling_info.domain_pixel_size.y;
 
         // Invert y min and max, because the projected coordinates go in the other direction
         // than the pixels and the tile coords.
-        double tile_bounds_x_min_units =
-            tile_bounds_x_min_domain * info.domain_bounds_size.x + info.domain_bounds.min.x;
+        double tile_bounds_x_min_units = tile_bounds_x_min_domain * tiling_info.domain_bounds_size.x
+            + tiling_info.domain_bounds.min.x;
         double tile_bounds_y_min_units =
-            (1.0 - tile_bounds_y_max_domain) * info.domain_bounds_size.y + info.domain_bounds.min.y;
-        double tile_bounds_x_max_units =
-            tile_bounds_x_max_domain * info.domain_bounds_size.x + info.domain_bounds.min.x;
+            (1.0 - tile_bounds_y_max_domain) * tiling_info.domain_bounds_size.y
+            + tiling_info.domain_bounds.min.y;
+        double tile_bounds_x_max_units = tile_bounds_x_max_domain * tiling_info.domain_bounds_size.x
+            + tiling_info.domain_bounds.min.x;
         double tile_bounds_y_max_units =
-            (1.0 - tile_bounds_y_min_domain) * info.domain_bounds_size.y + info.domain_bounds.min.y;
+            (1.0 - tile_bounds_y_min_domain) * tiling_info.domain_bounds_size.y
+            + tiling_info.domain_bounds.min.y;
 
         double tile_bounds_width_units = tile_bounds_x_max_units - tile_bounds_x_min_units;
         double tile_bounds_height_units = tile_bounds_y_max_units - tile_bounds_y_min_units;
@@ -908,26 +910,29 @@ void project_tiled_image_tiles(
         // Compute how much of the tiled image tile, if it was `image_tile_size` by
         // `image_tile_size` pixels^2, would be covered by the tiled image.
         // This is not always 1.0 because the tiles on the last row or
-        // line can ben smaller, depending on the size of the whole tiled image.
+        // line can be smaller, depending on the size of the whole tiled image
+        // or tiled domain, or the placement of the image in its domain.
         // This is computed in order to use a reasonable number of quad for the
         // projection.
 
         float image_tile_coverage_x = 1.0F;
         float image_tile_coverage_y = 1.0F;
-        if (!info.tiles_always_full_size)
+        if (!tiling_info.tiles_always_full_size)
         {
             int64_t covered_pixels_x = tile_pixel_size;
             covered_pixels_x -= std::max(
-                info.image_pixel_bounds.min.x - coords.x * (int64_t)tile_pixel_size, (int64_t)0);
+                tiling_info.image_pixel_bounds.min.x - coords.x * (int64_t)tile_pixel_size,
+                (int64_t)0);
             covered_pixels_x -=
-                std::max((coords.x + 1) - info.image_pixel_bounds.max.x, (int64_t)0);
+                std::max((coords.x + 1) - tiling_info.image_pixel_bounds.max.x, (int64_t)0);
             image_tile_coverage_x = (float)covered_pixels_x / (float)tile_pixel_size;
 
             int64_t covered_pixels_y = tile_pixel_size;
             covered_pixels_y -= std::max(
-                info.image_pixel_bounds.min.y - coords.y * (int64_t)tile_pixel_size, (int64_t)0);
+                tiling_info.image_pixel_bounds.min.y - coords.y * (int64_t)tile_pixel_size,
+                (int64_t)0);
             covered_pixels_y -=
-                std::max((coords.y + 1) - info.image_pixel_bounds.max.y, (int64_t)0);
+                std::max((coords.y + 1) - tiling_info.image_pixel_bounds.max.y, (int64_t)0);
             image_tile_coverage_y = (float)covered_pixels_y / (float)tile_pixel_size;
         }
 
@@ -983,7 +988,7 @@ void project_tiled_image_tiles(
                 lm::dvec2(tile_bounds_x_min_units, tile_bounds_y_min_units),
                 lm::dvec2(tile_bounds_x_max_units, tile_bounds_y_max_units));
 
-            lm::dbbox2 clipped = lm::intersection(tile_bounds, info.raster_bounds);
+            lm::dbbox2 clipped = lm::intersection(tile_bounds, tiling_info.raster_bounds);
             lm::dvec2 tile_bounds_size_units(tile_bounds_width_units, tile_bounds_height_units);
 
             uv_clipping.min = lm::vec2((clipped.min - tile_bounds.min) / tile_bounds_size_units);
@@ -1088,7 +1093,7 @@ void project_tiled_image_tiles(
             auto& tile = response.tiles.back();
             tile.coords.x = coords.x;
             tile.coords.y = coords.y;
-            tile.coords.lod = (uint8_t)(coords.lod + info.lod_offset);
+            tile.coords.lod = (uint8_t)(coords.lod + tiling_info.lod_offset);
             tile.grid_size.x = point_count_x;
             tile.grid_size.y = point_count_y;
             tile.grid_coords.reserve(total_point_count);
@@ -1152,6 +1157,10 @@ void compute_tiled_image_reprojection(
         assert(raster_geometry.tiling_scheme.local_tiling().full_image_width() > 0);
         assert(raster_geometry.tiling_scheme.local_tiling().full_image_height() > 0);
         assert(raster_geometry.tiling_scheme.local_tiling().tile_size() > 0);
+    }
+    else if (raster_geometry.tiling_scheme.type() == hrz_proto::UNKNOWN)
+    {
+        // Deprecated, no-op
     }
     else
     {

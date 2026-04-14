@@ -154,6 +154,7 @@ cc_test(
         "tests/palette.cpp",
         "tests/polygon_winding.cpp",
         "tests/quickhull.cpp",
+        "tests/reprojection.cpp",
         "tests/tile_coords.cpp",
         "tests/vector_data.cpp",
     ],
