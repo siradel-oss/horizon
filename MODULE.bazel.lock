@@ -410,7 +410,7 @@
         "bzlTransitiveDigest": "6NyLUdrb79stFKm8oWIBK2q65cT5Upbr8IR2Qwsywu8=",
         "usagesDigest": "/do4KiaiZ+onosyr3iukERFv6TeAVRYINjN354FP/Ug=",
         "recordedFileInputs": {
-          "@@//package.json": "9ce9dfff3a0b7f15ae6521f164d35bbd6323f108e1dfc2efdb883b7140c7f7a6"
+          "@@//package.json": "3f372730933b46f0bd874f808b4280855a6092df90e7e201549688bd012f83e3"
         },
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -477,7 +477,7 @@
     "@@emsdk+//:emscripten_cache.bzl%emscripten_cache": {
       "general": {
         "bzlTransitiveDigest": "uqDvXmpTNqW4+ie/Fk+xC3TrFrKvL+9hNtoP51Kt2oo=",
-        "usagesDigest": "km294dM8YwKtbL98Ja1atMC4ukOe2nCIAZ9MilywfGU=",
+        "usagesDigest": "KonFOmuuvKGhp2Qgjfk9YT6BRQz9sJds/n7+wpZieYc=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -495,8 +495,8 @@
     },
     "@@emsdk+//:emscripten_deps.bzl%emscripten_deps": {
       "general": {
-        "bzlTransitiveDigest": "ky2GUenWke/8E7Gru4Yu3n3EqHz7TRsMaQQMurB0Hwc=",
-        "usagesDigest": "Xmo2DHWR/6798nePQeFr/MCmx6Lpt5r0fG1iI+c8owU=",
+        "bzlTransitiveDigest": "LU/U3CepV0WpR19AJTBJhMIRVQxR4Hu2+EwjxN9lWmA=",
+        "usagesDigest": "eua9x+do51LPD3/7MX+e68eJjMym6ff4WnZFlypd17Y=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
