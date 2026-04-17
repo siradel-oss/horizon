@@ -20,22 +20,6 @@ Optionally:
 
 Also consider running Python in a virtual environment. See below.
 
-#### Certificate issues
-
-Self-signed certificates in your certificate chain, typically added by corporate proxies, might cause issues with Bazel. Though this issue should not happen currently, here are the steps to fix it in case it ever reappears.
-
-Add the following line to your `.bazelrc` file (`%USERPROFILE%\.bazelrc`):
-
-```
-startup --host_jvm_args="-Djavax.net.ssl.trustStoreType=Windows-ROOT"
-```
-
-If the issue still occurs, install a recent version of the JDK and add to your `.bazelrc` file the following:
-
-```
-startup --server_javabase=<path to you Java install> # For example C:\Program Files\Java\jre1.8.0_271
-```
-
 ### Linux
 
 - A C++ compiler that supports C++20
@@ -52,51 +36,6 @@ Optionally:
 - TK bindings for Python (package `python3-tk` on Ubuntu) (for visual tests GUI)
 
 Also consider running Python in a virtual environment. See below.
-
-### More certificate issues!
-
-Using Bazel inside a Linux VM on a Windows host leads to similar certificate issues. The VM probably doesn't have the needed certificate to download content from the web, so the first step is to export that certificate from Windows and give it to the Linux VM:
-
-* Open a command prompt and run the command: `certmgr.msc`; a window should open.
-* In the left menu, unfold "Trusted Root Certification Authorities" and click on the "Certificates" folder.
-* On the right part of the window look for the line with your problematic certificate (for example "ISINFRA ROOT CA") and right-click on it.
-* Hover the "All tasks" entry and click "Export..." in the list that opens.
-* Click "Next", on the second page select the "Base-64 encoded X.509 (.CER)" option, and click "Next" again.
-* Select a directory to export the certificate to and name it `isinfra_root_ca.cer`. Click "Next" then "Finish" to export the certificate.
-
-Now that the certificate has been retrieved it needs to be passed to the Linux VM. When using a Docker container, the following command can copy the certificate to a running container:
-
-* `docker cp isinfra_root_ca.cer container_id:/home/isinfra_root_ca.crt`
-
-You can find your running container's ID with `docker ps`.
-Note that we give the certificate a `.crt` extension on Linux, which is required for the certificate to be recognized.
-
-Now the Linux VM should add this certificate to its list of known certificates.
-
-* Navigate to the directory containing your copied certificate.
-* Copy it here: `cp isinfra_root_ca.crt /usr/local/share/ca-certificates/isinfra_root_ca.crt`. **Make sure its extension is `.crt`!**
-* Update the certificates storage with `update-ca-certificates`.
-
-The output should look something like this:
-
-```
-Updating certificates in /etc/ssl/certs...
-1 added, 0 removed; done.
-```
-
-Now your certificate should be properly set up, you can try it with `ping google.com` or by downloading something with `curl`.
-Chances are that Bazel will still not be able to download anything though, because it manages its own certificates using a Java VM. One way to fix it is to do the following:
-
-* Install the tools needed to manage Java certificates with `apt install ca-certificates-java`.
-* Using the newly installed `keytool`, import the certificate to the Java certificates store: `keytool -importcert -v -noprompt -file isinfra_root_ca.crt -keystore /etc/ssl/certs/java/cacerts -storepass changeit`.
-* Add the following content to your `.bazelrc` file in your `$HOME` directory:
-
-```
-startup --host_jvm_args="-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts"
-startup --host_jvm_args="-Djavax.net.ssl.trustStorePassword=changeit"
-```
-
-Now Bazel should have access to the certificate and be able to download glorious things from the Internet.
 
 ## Updating the development environment
 
@@ -118,7 +57,7 @@ Additionally, on Windows:
 
 - Set the `BAZEL_SH` environment variable to point to "Git for Windows" `sh.exe`.
     - An alternative option is to use MSYS2, install `pacman -S zip unzip patch diffutils git`, then set `BAZEL_SH` to `usr\bin\bash.exe` inside of the MSYS2 installation directory.
-- Set the `BAZEL_VC` environment variable to point to your MSVC build tools (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC`).
+- (Optional) Set the `BAZEL_VC` environment variable to point to your MSVC build tools (`C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC`).
 - (Optional) Set the `BAZEL_LLVM` environment variable to point to your LLVM installation (`C:\Program Files\LLVM`).
 
 ## Running Python scripts
@@ -193,7 +132,7 @@ This should directly generate a `compile_commands.json` file at the root of the 
 Additional arguments can be given to Bazel by putting them after `--`:
 
 ```
-python tools\ide_integration\generate_compilation_database.py windows -- --//:gl_api=gles
+python tools\ide_integration\generate_compilation_database.py -- --//:gl_api=gles
 ```
 
 There are issues when using `clangd` >= 17.0.0, as some macros defined in the compilation commands seem to be ignored.
