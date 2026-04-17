@@ -3,11 +3,10 @@ load("@bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
 load("@bazel_skylib//lib:selects.bzl", "selects")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
-load("//tools/bazel/glsl:glsl_toolchain.bzl", "glsl_toolchain")
 load("//tools/ide_integration:cmake.bzl", "cmakelists")
 load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_database")
 
@@ -56,7 +55,6 @@ npm_link_package(
 copy_to_bin(
     name = "tsconfig",
     srcs = ["tsconfig.json"],
-    visibility = [":__subpackages__"],
 )
 
 #
@@ -84,127 +82,124 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "os_windows",
-    constraint_values = [
-        "@platforms//os:windows",
-        "@platforms//cpu:x86_64",
-    ],
-    visibility = ["//visibility:public"],
+bool_flag(
+    name = "gles",
+    build_setting_default = False,
 )
 
 config_setting(
-    name = "os_linux",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-selects.config_setting_group(
-    name = "os_native",
-    match_any = [
-        ":os_windows",
-        ":os_linux",
-    ],
-)
-
-config_setting(
-    name = "os_web",
-    constraint_values = [
-        "@platforms//cpu:wasm32",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-string_flag(
-    name = "linux_wsi",
-    build_setting_default = "x11",
-    values = [
-        "x11",
-        "headless_egl",
-    ],
-)
-
-string_flag(
-    name = "gl_api",
-    build_setting_default = "gl",
-    values = [
-        "gl",
-        "gles",
-    ],
-)
-
-config_setting(
-    name = "linux_wsi_x11_gl",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
+    name = "use_gles",
     flag_values = {
-        "//:linux_wsi": "x11",
-        "//:gl_api": "gl",
+        "//:gles": "True",
     },
-    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "headless",
+    build_setting_default = False,
 )
 
 config_setting(
-    name = "linux_wsi_x11_gles",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
+    name = "is_headless",
     flag_values = {
-        "//:linux_wsi": "x11",
-        "//:gl_api": "gles",
+        "//:headless": "True",
     },
-    visibility = ["//visibility:public"],
 )
 
 config_setting(
-    name = "linux_wsi_headless_egl",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
+    name = "is_windowed",
     flag_values = {
-        "//:linux_wsi": "headless_egl",
+        "//:headless": "False",
     },
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "windows_wgl_gl",
-    constraint_values = [
-        "@platforms//os:windows",
-        "@platforms//cpu:x86_64",
-    ],
-    flag_values = {
-        "//:gl_api": "gl",
-    },
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "windows_egl_gles",
-    constraint_values = [
-        "@platforms//os:windows",
-        "@platforms//cpu:x86_64",
-    ],
-    flag_values = {
-        "//:gl_api": "gles",
-    },
-    visibility = ["//visibility:public"],
 )
 
 selects.config_setting_group(
     name = "use_egl",
     match_any = [
-        ":windows_egl_gles",
-        ":linux_wsi_headless_egl",
-        ":linux_wsi_x11_gles",
+        ":use_gles",
+        ":is_headless",
     ],
+)
+
+selects.config_setting_group(
+    name = "os_native",
+    match_any = [
+        "@platforms//os:linux",
+        "@platforms//os:windows",
+    ],
+)
+
+config_setting(
+    name = "linux_windowed",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "False",
+    },
+)
+
+config_setting(
+    name = "linux_headless",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "True",
+    },
+)
+
+config_setting(
+    name = "windows_gl",
+    constraint_values = [
+        "@platforms//os:windows",
+    ],
+    flag_values = {
+        ":gles": "False",
+    },
+)
+
+config_setting(
+    name = "windows_gles",
+    constraint_values = [
+        "@platforms//os:windows",
+    ],
+    flag_values = {
+        ":gles": "True",
+    },
+)
+
+config_setting(
+    name = "linux_gl",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "False",
+        ":gles": "False",
+    },
+)
+
+config_setting(
+    name = "linux_headless_gl",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "True",
+        ":gles": "False",
+    },
+)
+
+config_setting(
+    name = "linux_gles",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "False",
+        ":gles": "True",
+    },
 )
 
 constraint_setting(name = "toolchain_kind")
@@ -233,46 +228,7 @@ config_setting(
     flag_values = {
         "//:opensource": "True",
     },
-    visibility = ["//visibility:public"],
 )
-
-#
-# GLSL toolchains
-#
-
-GLSL_TARGETS = {
-    "core": {
-        "check_version": "330",
-        "profile": "core",
-        "cpu": "x86_64",
-    },
-    "es": {
-        "check_version": "310",  # glslang only wants version >= 310 for validation
-        "profile": "es",
-        "cpu": "wasm32",
-    },
-}
-
-[
-    glsl_toolchain(
-        name = "glsl_{}".format(target),
-        check_version = GLSL_TARGETS[target]["check_version"],
-        profile = GLSL_TARGETS[target]["profile"],
-    )
-    for target in GLSL_TARGETS
-]
-
-[
-    toolchain(
-        name = "glsl_{}_toolchain".format(target),
-        target_compatible_with = [
-            "@platforms//cpu:{}".format(GLSL_TARGETS[target]["cpu"]),
-        ],
-        toolchain = ":glsl_{}".format(target),
-        toolchain_type = "//tools/bazel/glsl:toolchain_type",
-    )
-    for target in GLSL_TARGETS
-]
 
 #
 # CI
@@ -318,10 +274,10 @@ _ALL_BINS = [
     "//tools/visual_testing:comparator",
     "//libs/proj_lite:check_crs_support",
 ] + _TESTS + select({
-    "//:os_windows": [
+    "@platforms//os:windows": [
         "//hrz/core:hrz_core.dll",
     ],
-    "//:os_linux": [
+    "@platforms//os:linux": [
         "//hrz/core:hrz_core.so",
     ],
     "//conditions:default": [],

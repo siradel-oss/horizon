@@ -1,9 +1,9 @@
 #include "hrz/fnd/defines.h"
 
 #if HRZ_LINUX
-#    include "hrz/core/platform/linux_x11.h"
+#    include "hrz/core/platform/linux_x11_context.h"
 #elif HRZ_WINDOWS
-#    include "hrz/core/platform/windows.h"
+#    include "hrz/core/platform/windows_context.h"
 
 #    include <windows.h>
 #endif

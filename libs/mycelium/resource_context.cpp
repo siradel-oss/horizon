@@ -7,6 +7,7 @@
 #include "internal/conv.h"
 #include "internal/instance.h"
 #include "internal/log.h"
+#include "libs/mycelium/internal/glsl_version_info.h"
 #include "mycelium/properties.h"
 
 #include <string.h>

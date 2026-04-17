@@ -5,61 +5,9 @@ load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_import.bzl", "cc_import")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
-def _set_wasm_name_in_js(from_name, to_name, **kwargs):
-    expand_template(
-        substitutions = {
-            from_name + ".wasm": to_name + ".wasm",
-            "new URL(\"" + from_name + "\"": "new URL(\"" + to_name + "\"",
-        },
-        **kwargs
-    )
-
-def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkopts = [], module_name = "", js_libs = [], data = [], link_websocket = False, **kwargs):
-    additional_linkopts = []
-
-    if module_name != "":
-        # @Todo @Robustness Some of these arguments should be taken from copts and linkopts.
-        # But I don't see any way of making this work given that selects don't
-        # work in macros (for good reasons).
-        additional_linkopts += [
-            "-lembind",
-            "-sALLOW_MEMORY_GROWTH=1",
-            "-sINITIAL_MEMORY=134217728",  # 128 MiB
-            "-sMAXIMUM_MEMORY=4294967296",  # 4096 MiB
-            "-sPTHREAD_POOL_SIZE=Module.workerCount",
-            "-sPTHREAD_POOL_SIZE_STRICT=0",
-            "-sEXIT_RUNTIME=1",
-            "-sERROR_ON_UNDEFINED_SYMBOLS=1",
-            "-sLLD_REPORT_UNDEFINED=1",
-            "-sENVIRONMENT=web,worker",
-            "-sSTACK_SIZE=4MB",
-            "-sDEFAULT_PTHREAD_STACK_SIZE=2MB",
-        ]
-
-    additional_linkopts += [
-        "-sMODULARIZE=1",
-        "-sEXPORT_NAME=" + module_name,
-        "-sEXPORTED_RUNTIME_METHODS=HEAPU8",
-        "-sUSE_WEBGL2=1",
-        "-sEXPORT_ES6=1",
-        "-mbulk-memory",
-    ]
-
-    if link_websocket:
-        additional_linkopts.append("-lwebsocket.js")
-
-    for js_lib in js_libs:
-        additional_linkopts += ["--js-library", "$(location " + js_lib + ")"]
-
-    for data_file in data:
-        additional_linkopts += ["--embed-file", "$(location " + data_file + ")@$(location " + data_file + ")"]
-
+def _em_cc_binary(name, visibility = ["//visibility:public"], **kwargs):
     cc_binary(
         name = name + "_cc",
-        visibility = visibility,
-        copts = copts + ["-mbulk-memory"],
-        linkopts = linkopts + additional_linkopts,
-        additional_linker_inputs = js_libs,
         features = ["-wasm_warnings_as_errors"],
         # This target won't build successfully on its own because of missing emscripten
         # headers etc. Therefore, we hide it from wildcards.
@@ -71,24 +19,30 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
         name = name + "_wasm_cc",
         cc_target = ":" + name + "_cc",
         threads = "emscripten",
+        exit_runtime = True,
+        outputs = [
+            name + "_cc.wasm",
+            name + "_cc.js",
+        ],
     )
 
     copy_file(
         name = name + "_rename_wasm_file",
-        src = name + "_wasm_cc/" + name + "_cc.wasm",
+        src = name + "_cc.wasm",
         out = name + ".wasm",
         visibility = visibility,
     )
 
-    for suffix in ["", ".worker"]:
-        _set_wasm_name_in_js(
-            name = name + suffix + "_rename_js_file",
-            template = name + "_wasm_cc/" + name + "_cc" + suffix + ".js",
-            out = name + suffix + ".js",
-            from_name = name + "_cc",
-            to_name = name,
-            visibility = visibility,
-        )
+    expand_template(
+        name = name + "_rename_js_file",
+        template = name + "_cc.js",
+        out = name + ".js",
+        substitutions = {
+            name + "_cc.wasm": name + ".wasm",
+            "new URL(\"" + name + "_cc\"": "new URL(\"" + name + "\"",
+        },
+        visibility = visibility,
+    )
 
     native.filegroup(
         name = name + "_wasm",
@@ -96,6 +50,7 @@ def _em_cc_binary(name, visibility = ["//visibility:public"], copts = [], linkop
             name + ".wasm",
             name + ".js",
         ],
+        visibility = visibility,
     )
 
 def _cc_shared_windows(name, srcs, hdrs = [], visibility = ["//visibility:private"], **kwargs):
@@ -149,7 +104,7 @@ def _cc_shared_linux(name, srcs, visibility, hdrs = [], linkopts = [], **kwargs)
         includes = kwargs.get("includes", []),
     )
 
-def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = False, js_libs = [], alwayslink = True, visibility = ["//visibility:private"], **kwargs):
+def hrz_cc_shared(name, srcs, hdrs = [], alwayslink = True, visibility = ["//visibility:private"], **kwargs):
     _cc_shared_windows(name = name, srcs = srcs, hdrs = hdrs, visibility = visibility, **kwargs)
     _cc_shared_linux(name = name, srcs = srcs, hdrs = hdrs, visibility = visibility, **kwargs)
 
@@ -157,18 +112,15 @@ def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = F
         name = name,
         srcs = srcs + hdrs,
         visibility = visibility,
-        module_name = em_module_name,
-        js_libs = js_libs,
-        link_websocket = link_websocket,
         **kwargs
     )
 
     native.alias(
         name = name,
         actual = select({
-            "//:os_windows": name + "_win",
-            "//:os_linux": name + "_linux",
-            "//:os_web": name + "_wasm",
+            "@platforms//os:windows": name + "_win",
+            "@platforms//os:linux": name + "_linux",
+            "@platforms//os:emscripten": name + "_wasm",
         }),
         visibility = visibility,
     )
@@ -176,9 +128,9 @@ def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = F
     native.alias(
         name = name + "_import_lib",
         actual = select({
-            "//:os_windows": name + "_import_lib_win",
-            "//:os_linux": name + "_linux",
-            "//:os_web": name + "_wasm",
+            "@platforms//os:windows": name + "_import_lib_win",
+            "@platforms//os:linux": name + "_linux",
+            "@platforms//os:emscripten": name + "_wasm",
         }),
         visibility = visibility,
     )
@@ -186,9 +138,9 @@ def hrz_cc_shared(name, srcs, hdrs = [], em_module_name = "", link_websocket = F
     native.alias(
         name = name + "_shared_lib",
         actual = select({
-            "//:os_windows": name + ".dll",
-            "//:os_linux": name + ".so",
-            "//:os_web": name + "_wasm",
+            "@platforms//os:windows": name + ".dll",
+            "@platforms//os:linux": name + ".so",
+            "@platforms//os:emscripten": name + "_wasm",
         }),
         visibility = visibility,
     )

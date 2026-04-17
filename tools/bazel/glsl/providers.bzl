@@ -1,6 +1,7 @@
 GlslInfo = provider(
     fields = [
         "check_version",
+        "version",
         "profile",
     ],
 )

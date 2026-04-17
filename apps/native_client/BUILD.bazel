@@ -6,16 +6,15 @@ cc_binary(
         "main.cpp",
     ],
     linkopts = select({
-        "//:os_linux": [
+        "@platforms//os:linux": [
             "-pthread",
             "-Wl,-rpath,'$$ORIGIN'",
         ],
         "//conditions:default": [],
     }) + select({
-        "//:linux_wsi_x11_gl": [
+        "//:linux_windowed": [
             "-lX11",
         ],
-        "//:linux_wsi_headless_egl": [],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],

@@ -126,7 +126,7 @@ cc_library(
         "vector_tiles_jobs_params.h",
     ],
     copts = select({
-        "//:os_windows": [],
+        "@platforms//os:windows": [],
         "//conditions:default": [
             "-pthread",
         ],
@@ -146,7 +146,7 @@ cc_library(
         "@pugixml",
         "@rapidjson",
     ] + select({
-        "//:os_web": ["@harfbuzz//:harfbuzz_tiny"],
+        "@platforms//os:emscripten": ["@harfbuzz//:harfbuzz_tiny"],
         "//conditions:default": ["@harfbuzz"],
     }),
     includes = [
@@ -155,7 +155,7 @@ cc_library(
     local_defines = [
         "CDT_DISABLE_EXCEPTIONS",
     ] + select({
-        "//:os_windows": [
+        "@platforms//os:windows": [
             "WIN32",
         ],
         "//conditions:default": [],

@@ -199,7 +199,7 @@ cc_library(
         "vtex/page_table.cpp",
         "//hrz/core/jobs:tickets_srcs",
     ] + select({
-        "//:os_web": [
+        "@platforms//os:emscripten": [
             "assets_loader/http_platform_emscripten.cpp",
             "emscripten_entry_point.cpp",
         ],
@@ -356,18 +356,18 @@ cc_library(
         "@etcpak",
         "@pugixml",
     ] + select({
-        "//:os_native": [
+        "@platforms//os:emscripten": [
+            "//hrz/core/js",
+        ],
+        "//conditions:default": [
             "//hrz/http_cache",
             "@curl",
-        ],
-        "//:os_web": [
-            "//hrz/core/js",
         ],
     }),
     local_defines = [
         "HRZ_API_EXPORT",
     ] + select({
-        "//:os_windows": [
+        "@platforms//os:windows": [
             "WIN32",
         ],
         "//conditions:default": [],
@@ -393,27 +393,51 @@ hrz_cc_shared(
     hdrs = [
         "backend.h",
     ],
+    additional_linker_inputs = select({
+        "@platforms//os:emscripten": [
+            "//hrz/core/js:js_files",
+            "//libs/mycelium/js:js_files",
+        ],
+        "//conditions:default": [],
+    }),
     copts = select({
-        "//:os_windows": [],
-        "//:os_linux": [
+        "@platforms//os:windows": [],
+        "@platforms//os:linux": [
             "-pthread",
         ],
-        "//conditions:default": [
+        "@platforms//os:emscripten": [
             "-pthread",
+            "-mbulk-memory",
         ],
     }),
-    em_module_name = "HrzCore",
-    js_libs = [
-        "//hrz/core/js:js_files",
-        "//libs/mycelium/js:js_files",
-    ],
-    link_websocket = True,
     linkopts = select({
-        "//:os_web": [
+        "@platforms//os:emscripten": [
+            "-sUSE_WEBGL2=1",
+            "-lwebsocket.js",
+            "-lembind",
+            "--js-library",
+            "$(location //hrz/core/js:js_files)",
+            "--js-library",
+            "$(location //libs/mycelium/js:js_files)",
+            "-mbulk-memory",
+            "-sALLOW_MEMORY_GROWTH=1",
+            "-sINITIAL_MEMORY=134217728",  # 128 MiB
+            "-sMAXIMUM_MEMORY=4294967296",  # 4096 MiB
+            "-sDEFAULT_PTHREAD_STACK_SIZE=2MB",
+            "-sPTHREAD_POOL_SIZE=Module.workerCount",
+            "-sPTHREAD_POOL_SIZE_STRICT=0",
+            "-sERROR_ON_UNDEFINED_SYMBOLS=1",
+            "-sLLD_REPORT_UNDEFINED=1",
+            "-sENVIRONMENT=web,worker",
+            "-sSTACK_SIZE=4MB",
+            "-sMODULARIZE=1",
+            "-sEXPORT_NAME=HrzCore",
+            "-sEXPORTED_RUNTIME_METHODS=HEAPU8",
             # https://github.com/emscripten-core/emscripten/blob/main/ChangeLog.md#3131---012623
             "-sEXPORTED_FUNCTIONS=\"['_malloc','_free','_main','UTF8ToString','stringToUTF8','lengthBytesUTF8']\"",
+            "-sEXPORT_ES6=1",
         ],
-        "//:os_linux": [
+        "@platforms//os:linux": [
             "-lGL",
         ],
         "//conditions:default": [],

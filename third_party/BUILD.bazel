@@ -14,8 +14,8 @@ alias(
 alias(
     name = "buildifier",
     actual = select({
-        "//:os_windows": "@buildifier_windows//file:downloaded",
-        "//:os_linux": "@buildifier_linux//file:downloaded",
+        "@platforms//os:windows": "@buildifier_windows//file:downloaded",
+        "@platforms//os:linux": "@buildifier_linux//file:downloaded",
     }),
 )
 

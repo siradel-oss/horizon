@@ -1,4 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load(":glsl_toolchain.bzl", "glsl_toolchain")
 
 toolchain_type(
     name = "toolchain_type",
@@ -23,4 +24,38 @@ py_binary(
     main = "shader_validator.py",
     python_version = "PY3",
     visibility = ["//visibility:public"],
+)
+
+glsl_toolchain(
+    name = "glsl_core",
+    profile = "core",
+    version = "330",
+)
+
+glsl_toolchain(
+    name = "glsl_es",
+    check_version = "310",  # glslang only wants version >= 310 for validation
+    profile = "es",
+    version = "300",
+)
+
+toolchain(
+    name = "glsl_native_toolchain",
+    target_compatible_with = [
+        "//:os_native",
+    ],
+    toolchain = select({
+        "//:use_gles": ":glsl_es",
+        "//conditions:default": ":glsl_core",
+    }),
+    toolchain_type = "//tools/bazel/glsl:toolchain_type",
+)
+
+toolchain(
+    name = "glsl_webgl_toolchain",
+    target_compatible_with = [
+        "@platforms//os:emscripten",
+    ],
+    toolchain = ":glsl_es",
+    toolchain_type = "//tools/bazel/glsl:toolchain_type",
 )

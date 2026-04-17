@@ -11,10 +11,10 @@ cc_library(
     ],
     includes = ["core_33/include"],
     linkopts = select({
-        "//:os_windows": [
+        "@platforms//os:windows": [
             "opengl32.lib",
         ],
-        "//:os_linux": [
+        "@platforms//os:linux": [
             "-lGL",
             "-ldl",
         ],
@@ -33,7 +33,7 @@ cc_library(
     ],
     includes = ["es_30/include"],
     linkopts = select({
-        "//:os_web": [
+        "@platforms//os:emscripten": [
             "-s",
             "USE_WEBGL2=1",
         ],
@@ -54,7 +54,7 @@ cc_library(
     ],
     includes = ["egl_15/include"],
     linkopts = select({
-        "//:os_linux": [
+        "@platforms//os:linux": [
             "-lEGL",
             "-ldl",
         ],

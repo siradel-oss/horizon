@@ -212,63 +212,6 @@ def _cmakelists_aspect_impl(target, ctx):
                 srcs = depset(files),
             ),
         )
-
-        include_prps = ["INTERFACE" if header_only else "PUBLIC"]
-
-        paths = []
-        if is_cc_proto_library:
-            for dep in ctx.rule.attr.deps:
-                if ProtoInfo in dep:
-                    paths += ["__EXEC_ROOT__/" + p for p in dep[ProtoInfo].transitive_proto_path.to_list()]
-        elif has_headers:
-            # [strip_]include_prefix options make Bazel generate a _virtual_includes directory
-            # in the genfiles directory tree. The headers are copied there, with the expected
-            # path prefix, given the rules.
-            # So in order to make includes work, if there are prefix rules, we add this directory
-            # to the include search path.
-            strip_include_prefix = ctx.rule.attr.strip_include_prefix if hasattr(ctx.rule.attr, "strip_include_prefix") else None
-            include_prefix = ctx.rule.attr.include_prefix if hasattr(ctx.rule.attr, "include_prefix") else None
-
-            if strip_include_prefix or include_prefix:
-                path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
-                if target.label.workspace_name:
-                    path += "external/" + target.label.workspace_name + "/"
-
-                if target.label.package:
-                    path += target.label.package + "/"
-
-                path += "_virtual_includes/" + ctx.rule.attr.name
-                paths.append(path)
-            else:
-                path = "__EXEC_ROOT__/"
-                if target.label.workspace_name:
-                    path += "external/" + target.label.workspace_name + "/"
-                paths.append(path)
-
-                if uses_generated_files:
-                    path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
-                    if target.label.workspace_name:
-                        path += "external/" + target.label.workspace_name + "/"
-                    paths.append(path)
-
-        cmake_commands.append(
-            struct(
-                command = "target_include_directories",
-                name = target_name,
-                prps = depset(include_prps),
-                srcs = depset(paths),
-            ),
-        )
-
-        if not header_only and _is_cpp_target(srcs):
-            cmake_commands.append(
-                struct(
-                    command = "set_target_properties",
-                    name = target_name,
-                    prps = depset(["PROPERTIES"]),
-                    srcs = depset(["LINKER_LANGUAGE CXX"]),
-                ),
-            )
     elif ctx.rule.kind == "cc_import":
         if ctx.rule.attr.static_library:
             cmake_commands.append(
@@ -323,6 +266,68 @@ def _cmakelists_aspect_impl(target, ctx):
             )
     else:
         fail("Unhandled rule kind")
+
+    include_prps = ["INTERFACE" if header_only else "PUBLIC"]
+    include_paths = []
+
+    if is_cc_proto_library:
+        for dep in ctx.rule.attr.deps:
+            if ProtoInfo in dep:
+                include_paths += ["__EXEC_ROOT__/" + p for p in dep[ProtoInfo].transitive_proto_path.to_list()]
+    elif has_headers:
+        # [strip_]include_prefix options make Bazel generate a _virtual_includes directory
+        # in the genfiles directory tree. The headers are copied there, with the expected
+        # path prefix, given the rules.
+        # So in order to make includes work, if there are prefix rules, we add this directory
+        # to the include search path.
+        strip_include_prefix = ctx.rule.attr.strip_include_prefix if hasattr(ctx.rule.attr, "strip_include_prefix") else None
+        include_prefix = ctx.rule.attr.include_prefix if hasattr(ctx.rule.attr, "include_prefix") else None
+
+        if strip_include_prefix or include_prefix:
+            path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
+            if target.label.workspace_name:
+                path += "external/" + target.label.workspace_name + "/"
+
+            if target.label.package:
+                path += target.label.package + "/"
+
+            path += "_virtual_includes/" + ctx.rule.attr.name
+            include_paths.append(path)
+        else:
+            path = "__EXEC_ROOT__/"
+            if target.label.workspace_name:
+                path += "external/" + target.label.workspace_name + "/"
+            include_paths.append(path)
+
+            if uses_generated_files:
+                path = "__EXEC_ROOT__/" + ctx.genfiles_dir.path + "/"
+                if target.label.workspace_name:
+                    path += "external/" + target.label.workspace_name + "/"
+                include_paths.append(path)
+
+    include_paths += [
+        "__EXEC_ROOT__/" + ctx.genfiles_dir.path,
+        "__EXEC_ROOT__",
+    ]
+
+    cmake_commands.append(
+        struct(
+            command = "target_include_directories",
+            name = target_name,
+            prps = depset(include_prps),
+            srcs = depset(include_paths),
+        ),
+    )
+
+    if not header_only and _is_cpp_target(srcs):
+        cmake_commands.append(
+            struct(
+                command = "set_target_properties",
+                name = target_name,
+                prps = depset(["PROPERTIES"]),
+                srcs = depset(["LINKER_LANGUAGE CXX"]),
+            ),
+        )
 
     if hasattr(ctx.rule.attr, "deps") and ctx.rule.attr.deps:
         deps = []

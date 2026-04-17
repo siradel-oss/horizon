@@ -9,7 +9,7 @@ cc_binary(
         "-I$(GENDIR)/hrz/xml_desc_generator",
     ],
     linkopts = select({
-        "//:os_linux": ["-pthread"],
+        "@platforms//os:linux": ["-pthread"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],

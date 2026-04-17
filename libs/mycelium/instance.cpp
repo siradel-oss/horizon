@@ -217,7 +217,7 @@ my::GLInstance::GLInstance() : Instance()
 #ifdef MYCELIUM_CORE_33
     _instance_info.has_bc1_bc2_bc3_texture_compression = GLAD_GL_EXT_texture_compression_s3tc;
     _instance_info.has_bc1_bc2_bc3_srgb_texture_compression =
-        GLAD_GL_EXT_texture_compression_s3tc && GLAD_GL_ARB_texture_view;
+        GLAD_GL_EXT_texture_compression_s3tc && GLAD_GL_EXT_texture_sRGB;
     _instance_info.has_bc7_texture_compression = GLAD_GL_ARB_texture_compression_bptc;
     _instance_info.has_bc7_srgb_texture_compression = GLAD_GL_ARB_texture_compression_bptc;
     _instance_info.has_etc1_texture_compression = false;
@@ -233,7 +233,7 @@ my::GLInstance::GLInstance() : Instance()
 #elif MYCELIUM_ES_30
     _instance_info.has_bc1_bc2_bc3_texture_compression = GLAD_GL_EXT_texture_compression_s3tc;
     _instance_info.has_bc1_bc2_bc3_srgb_texture_compression =
-        GLAD_GL_EXT_texture_compression_s3tc && GLAD_GL_ARB_texture_view;
+        GLAD_GL_EXT_texture_compression_s3tc_srgb;
     _instance_info.has_bc7_texture_compression = GLAD_GL_EXT_texture_compression_bptc;
     _instance_info.has_bc7_srgb_texture_compression = GLAD_GL_EXT_texture_compression_bptc;
     _instance_info.has_etc1_texture_compression = GLAD_GL_OES_compressed_ETC1_RGB8_texture;
@@ -291,7 +291,7 @@ my::GLInstance::GLInstance() : Instance()
     GL_ERROR();
     _uniform_buffer_offset_alignment = value;
 
-#ifndef MYCELIUM_WEBGL_2
+#ifdef MYCELIUM_GL_DESKTOP
     glEnable(GL_FRAMEBUFFER_SRGB);
 #endif
 

@@ -2116,7 +2116,7 @@ if __name__ == "__main__":
             + bazel_build_options
         )
         if platform.system() == "Linux" and args.wsi == "headless_egl":
-            viewer_build_command.append("--//:linux_wsi=headless_egl")
+            viewer_build_command.append("--platforms=//:linux_headless_gl_platform")
         build_error = (
             subprocess.run(
                 viewer_build_command, cwd=ROOT, stdout=STDOUT, stderr=STDERR

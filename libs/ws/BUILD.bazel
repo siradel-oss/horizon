@@ -13,15 +13,15 @@ cc_library(
 cc_library(
     name = "ws_server",
     srcs = select({
-        "//:os_native": ["ws_server_native.cpp"],
-        "//conditions:default": [],
+        "@platforms//os:emscripten": [],
+        "//conditions:default": ["ws_server_native.cpp"],
     }),
     hdrs = [
         "ws_server.h",
     ],
     implementation_deps = select({
-        "//:os_native": ["@websocketpp"],
-        "//conditions:default": [],
+        "@platforms//os:emscripten": [],
+        "//conditions:default": ["@websocketpp"],
     }),
     includes = ["."],
     visibility = ["//visibility:public"],
@@ -33,16 +33,15 @@ cc_library(
 cc_library(
     name = "ws_client",
     srcs = select({
-        "//:os_native": ["ws_client_native.cpp"],
-        "//:os_web": ["ws_client_emscripten.cpp"],
-        "//conditions:default": [],
+        "@platforms//os:emscripten": ["ws_client_emscripten.cpp"],
+        "//conditions:default": ["ws_client_native.cpp"],
     }),
     hdrs = [
         "ws_client.h",
     ],
     implementation_deps = select({
-        "//:os_native": ["@websocketpp"],
-        "//conditions:default": [],
+        "@platforms//os:emscripten": [],
+        "//conditions:default": ["@websocketpp"],
     }),
     includes = ["."],
     visibility = ["//visibility:public"],

@@ -6,7 +6,7 @@ cc_binary(
         "main.cpp",
     ],
     linkopts = select({
-        "//:os_linux": ["-pthread"],
+        "@platforms//os:linux": ["-pthread"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],

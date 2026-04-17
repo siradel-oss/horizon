@@ -132,7 +132,7 @@ This should directly generate a `compile_commands.json` file at the root of the 
 Additional arguments can be given to Bazel by putting them after `--`:
 
 ```
-python tools\ide_integration\generate_compilation_database.py -- --//:gl_api=gles
+python tools\ide_integration\generate_compilation_database.py -- --//:gles=True
 ```
 
 There are issues when using `clangd` >= 17.0.0, as some macros defined in the compilation commands seem to be ignored.
@@ -142,13 +142,16 @@ There are issues when using `clangd` >= 17.0.0, as some macros defined in the co
 - To build anything, use `bazel build <target> <options> --config=<config>`
 - To run anything, use `bazel run <target> <option> --config=<config>`
 
-Possible configs are:
-
-- `windows` to build the native Windows version on Windows.
-- `windows_clang` to build clangd's compile_commands.json file on Windows. (See below, not tested for building.)
-- `linux` to build the native Linux version on Linux.
-- `wasm_windows` to build the web version on Windows.
-- `wasm_linux` to build the web version on Linux.
+| Config name      | Target platform | Host platform | Graphics API | Notes                                        |
+| ---------------- | --------------- | ------------- | ------------ | -------------------------------------------- |
+| `windows`        | Windows         | Windows       | OpenGL       |                                              |
+| `windows_gles`   | Windows         | Windows       | OpenGL ES    |                                              |
+| `windows_clang`  | Windows         | Windows       | OpenGL       | Generates `compile_commands.json` with clang |
+| `linux`          | Linux           | Linux         | OpenGL       |                                              |
+| `linux_gles`     | Linux           | Linux         | OpenGL ES    |                                              |
+| `linux_headless` | Linux           | Linux         | OpenGL       | Headless: does not require a display         |
+| `wasm_windows`   | Web (WASM)      | Windows       | WebGL        |                                              |
+| `wasm_linux`     | Web (WASM)      | Linux         | WebGL        |                                              |
 
 There are several bazel targets available the most important ones are:
 

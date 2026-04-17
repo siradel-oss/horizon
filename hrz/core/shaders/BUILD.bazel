@@ -22,11 +22,11 @@ glsl_config(
     name = "config",
     common_files = glob(["glsl/**/*.glsl"]) + ["glsl/defines.glsl"],
     defines = select({
-        "//:os_web": [
+        "@platforms//os:emscripten": [
             "WRITE_SRGB_PREMULTIPLIED_ALPHA_TO_BACKBUFFER",
             "WRITE_SRGB_TO_BACKBUFFER",
         ],
-        "//:linux_wsi_headless_egl": [
+        "//:linux_headless_gl": [
             "WRITE_SRGB_TO_BACKBUFFER",
         ],
         "//conditions:default": [],

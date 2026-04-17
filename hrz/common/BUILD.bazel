@@ -120,7 +120,7 @@ cc_library(
         "@zlib",
         "@zstd",
     ] + select({
-        "//:os_web": ["@harfbuzz//:harfbuzz_tiny"],
+        "@platforms//os:emscripten": ["@harfbuzz//:harfbuzz_tiny"],
         "//conditions:default": ["@harfbuzz"],
     }),
     visibility = ["//visibility:public"],

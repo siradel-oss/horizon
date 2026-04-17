@@ -54,7 +54,7 @@ cc_binary(
     ],
     includes = ["include"],
     linkopts = select({
-        "//:os_linux": [
+        "@platforms//os:linux": [
             "-lGL",
             "-ldl",
             "-lX11",

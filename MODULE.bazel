@@ -153,8 +153,7 @@ emsdk_deps.config(version = "5.0.4")
 #--------------------------------------------------------
 
 register_toolchains(
-    "//:glsl_core_toolchain",
-    "//:glsl_es_toolchain",
+    "//tools/bazel/glsl:all",
 )
 
 make_versions_list = use_repo_rule("//hrz/protocol/history:make_versions_list.bzl", "make_versions_list")
