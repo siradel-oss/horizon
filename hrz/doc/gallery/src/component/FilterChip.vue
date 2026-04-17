@@ -2,9 +2,13 @@
 import Icon from "@/component/Icon.vue";
 import { computed } from "vue";
 
-let props = defineProps<{
+const props = defineProps<{
     selected: boolean;
     disabled: boolean;
+}>();
+
+const emit = defineEmits<{
+    (e: "click", event: MouseEvent): boolean;
 }>();
 
 const styleUnselectedContainer = "px-4 border border-outline text-onSurfaceVariant";

@@ -6,10 +6,14 @@ const props = defineProps<{
     icon: string;
     color: ColorName;
 }>();
+
+const emit = defineEmits<{
+    (e: "click", event: MouseEvent): boolean;
+}>();
 </script>
 
 <template>
-    <button class="relative h-10 w-10 inline-block select-none">
+    <button class="relative h-10 w-10 inline-block select-none" @click="emit('click', $event)">
         <div
             class="absolute w-full h-full inset-0 z-10 rounded-full opacity-0 hover:opacity-(--hover-alpha) active:opacity-(--active-alpha) transition-opacity"
             :class="COLOR_CLASS[props.color].bg"

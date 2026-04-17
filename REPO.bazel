@@ -1,3 +1,4 @@
 ignore_directories([
     "**/node_modules",
+    "tests/repro/**",
 ])

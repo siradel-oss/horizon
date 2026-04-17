@@ -79,7 +79,7 @@ function clearSelectedTags() {
                     :key="tag.name"
                     :selected="tag.selected"
                     :disabled="tag.count == 0"
-                    @click="() => toggleSelected(tag.name, tag.count)"
+                    @click="toggleSelected(tag.name, tag.count)"
                 >
                     {{ tag.name }}<span v-if="!tag.selected"> ({{ tag.count }})</span>
                 </FilterChip>

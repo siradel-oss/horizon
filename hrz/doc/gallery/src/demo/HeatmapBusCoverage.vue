@@ -62,7 +62,7 @@ watch(
 );
 
 function displayPickResult(results: HrzProtocol.IPickResults) {
-    let result = results.results?.at(0)?.vector?.heatmaps?.at(0)?.value;
+    let result = results.results?.[0]?.vector?.heatmaps?.[0]?.value;
     if (typeof result === "number") {
         pickedBusStops.value = result;
     } else {

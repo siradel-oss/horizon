@@ -102,18 +102,13 @@ COMMON_DATA = glob(["src/**/*"]) + [
 vue_tsc_bin.vue_tsc(
     name = "type_check",
     srcs = COMMON_DATA,
-    outs = [
-        "tsmarker.d.ts",
-    ],
     args = [
-        "--emitDeclarationOnly",
-        "-d",
-        "--outFile",
-        "tsmarker.d.ts",
+        "--noEmit",
         "-p",
         "tsconfig.json",
     ],
     chdir = package_name(),
+    stdout = "tsmarker.d.ts",
 )
 
 vite_bin.vite(

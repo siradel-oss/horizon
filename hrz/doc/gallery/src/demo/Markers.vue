@@ -166,7 +166,7 @@ async function schedulePick(x: number, y: number) {
 
             for (const result of results.results || []) {
                 if (eqLong(result.layer?.handle?.opaque, vectorTilesLayer.opaque)) {
-                    let idAttribute = result.vector?.featureId?.attributes?.at(0)?.value;
+                    let idAttribute = result.vector?.featureId?.attributes?.[0]?.value;
                     if (idAttribute !== null && idAttribute !== undefined) {
                         selectedMarkerId.value = HrzProtocolHelper.attributeAsNumber(idAttribute);
                     } else {

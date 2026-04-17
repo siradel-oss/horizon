@@ -1,17 +1,18 @@
 {
     "extends": "../../../tsconfig.json",
     "compilerOptions": {
-        "baseUrl": "../../../bazel-bin/hrz/doc/gallery/node_modules",
-        "experimentalDecorators": true,
-        "lib": ["ES2022", "DOM"],
-        "skipLibCheck": true,
         "paths": {
-            "@/*": ["../../../../../hrz/doc/gallery/src/*"]
+            "@/*": ["./src/*"],
+            "*": ["../../../bazel-bin/hrz/doc/gallery/node_modules/*"],
         },
+        "skipLibCheck": true,
         "strict": false
     },
     "vueCompilerOptions": {
-        "globalTypesPath": "../../../../../hrz/doc/gallery/src/types/global.d.ts",
+        "checkUnknownComponents": true,
+        "checkUnknownEvents": true,
+        "checkUnknownDirectives": true,
+        "checkUnknownProps": true
     },
     "include": ["src/**/*"]
 }

@@ -386,12 +386,12 @@ function displayPickResult(msg: HrzProtocol.IPickResults) {
     pickResult.value.cityName = "";
     selectedIrisId.value = null;
 
-    const result = msg.results?.at(0);
+    const result = msg.results?.[0];
     if (!result || !eqLong(result.layer?.handle?.opaque, vectorTilesLayer?.opaque)) return;
     if (!result.vector || !result.vector.ids || !result.vector.values) return;
 
     let id = HrzProtocolHelper.attributeAsNumber(
-        result.vector.featureId?.attributes?.at(0)?.value || {}
+        result.vector.featureId?.attributes?.[0]?.value || {}
     );
     selectedIrisId.value = id;
 
