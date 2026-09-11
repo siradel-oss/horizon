@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: Copyright 2022 Siradel
+# SPDX-License-Identifier: MIT
+
+filegroup(
+    name = "all",
+    srcs = glob([
+        "*.tpl.h",
+    ]),
+    visibility = ["//visibility:public"],
+)

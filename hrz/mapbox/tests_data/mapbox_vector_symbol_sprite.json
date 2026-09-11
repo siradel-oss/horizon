@@ -1,0 +1,25 @@
+{
+  "version": 8,
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests/sprite",
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "points",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "icon-color": "#ffffff",
+        "icon-opacity": 0.9
+      },
+      "layout": {
+        "icon-offset": ["literal", [8, 8]],
+        "icon-image": "https://redacted.localhost/assets/sprites/sprites_mapbox/tree.png"
+      }
+    }
+  ]
+}

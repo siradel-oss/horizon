@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Copyright 2019 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "lm",
+    hdrs = [
+        "lin_maths.h",
+    ],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+)

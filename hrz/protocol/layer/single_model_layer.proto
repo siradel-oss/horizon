@@ -1,0 +1,81 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/maths/geometry.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/lighting_settings.proto";
+import "hrz/protocol/visibility_constraints.proto";
+import "hrz/protocol/3d_model/material.proto";
+import "hrz/protocol/scene/index.proto";
+
+// Parameters for playing an animation defined in a 3D model.
+// The animation time is `(global_time + phase) * speed`.
+message ModelAnimation {
+    // Speed multiplier applied to the animation.
+    // 1 is normal speed. Negative values play the animation backwards.
+    // When this is 0, the animation is not played.
+    float           speed              = 1;
+
+    // Time offset applied to the animation in seconds.
+    float           phase              = 2;
+
+    // Names of the animations to play. If an animation with the given name is
+    // not found, the name is parsed as a base-10 integer, which gives the index
+    // of the animation (if applicable to the model format). In this last case,
+    // do not include any leading zero (except for "0"), or any other
+    // character. If empty, all animations are played.
+    //
+    // All animations use the same clock.
+    //
+    // Some models expect all their animations to be played together to work.
+    // Other contains conflicting animations and thus only a subset can be
+    // played concurrently.
+    repeated string enabled_animations = 3;
+}
+
+// This is a layer that contains a simple 3D model. It has to be in glTF format.
+// @path_root="single_model_layer"
+export message SingleModelLayer {
+    reserved 15;
+
+    string                        url                       = 1;
+    HttpHeaderList                http_headers              = 7;
+    string                        attribution               = 18;
+    // Pass main URL query parameters when requesting external resources,
+    // such as textures.
+    bool                          preserve_query_parameters = 16;
+    Transform                     transform                 = 2;
+    GeographicPosition            geographic                = 3;
+
+    // Automatically clamps the model to the ground. The altitude of the
+    // geographic position is used as the offset from the ground.
+    bool                          clamp_to_ground           = 13;
+
+    bool                          visible                   = 4;
+    Color                         color                     = 5;
+
+    repeated Material             materials                 = 14;
+    MaterialProperties            material_properties       = 17;
+
+    ModelAnimation                animation                 = 19;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32                         loading_priority          = 6;
+
+    int32                         clip_id                   = 8;
+
+    // Select what views the model will be visible in.
+    SceneViewBitset               scene_views               = 9;
+
+    LayerVisibilityConstraintList visibility_constraints    = 10;
+
+    LightingSettings              lighting                  = 12;
+}

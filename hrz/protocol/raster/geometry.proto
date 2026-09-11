@@ -1,0 +1,26 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/geo/srs.proto";
+import "hrz/protocol/maths/maths.proto";
+
+export message RasterGeometry {
+    reserved 3;
+
+    SpatialReferenceSystem projection        = 1;
+
+    // Bounds of the projection domain, in its own coordinates.
+    // Only needed for global tiling schemes that are not projected in either
+    // web Mercator (EPSG:3857) or WGS84 (EPSG:4326).
+    Bboxd                  projection_bounds = 2;
+
+    // Bounds of the raster in its projection system.
+    // Default bounds cover the entire planet.
+    Bboxd                  bounds            = 4;
+}

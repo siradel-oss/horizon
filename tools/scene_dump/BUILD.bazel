@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+cc_binary(
+    name = "get_dump_version",
+    srcs = [
+        "get_dump_version.cpp",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/scene_dump:utils",
+    ],
+)
+
+cc_binary(
+    name = "set_dump_version",
+    srcs = [
+        "set_dump_version.cpp",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/scene_dump:utils",
+    ],
+)
+
+cc_binary(
+    name = "migrate_dump",
+    srcs = [
+        "migrate_dump.cpp",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/scene_dump:migration",
+        "//hrz/scene_dump:utils",
+    ],
+)
+
+cc_binary(
+    name = "edit_dump",
+    srcs = [
+        "edit_dump.cpp",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/cpp_protocol",
+        "//hrz/scene_dump:migration",
+        "//hrz/scene_dump:utils",
+        "@fmt",
+    ],
+)

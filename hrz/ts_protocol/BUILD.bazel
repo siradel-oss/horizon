@@ -1,0 +1,144 @@
+# SPDX-FileCopyrightText: Copyright 2018 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:protobufjs-cli/package_json.bzl", pbjs_bin = "bin")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
+load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
+load("//tools/bazel:utils.bzl", "merge_dicts")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["package.json"])
+
+npm_link_all_packages(name = "node_modules")
+
+pbjs_bin.pbjs(
+    name = "generate_js",
+    srcs = [
+        "//hrz/protocol:protos",
+    ],
+    outs = [
+        "src/hrz_protocol.js",
+    ],
+    args = [
+        "--es6",
+        "-t",
+        "static-module",
+        "-w",
+        "es6",
+        "$(locations //hrz/protocol:protos)",
+        "-p",
+        ".",
+        "-o",
+        "$@",
+    ],
+    chdir = "../../../",
+    copy_srcs_to_bin = False,
+)
+
+pbjs_bin.pbts(
+    name = "generate_ts",
+    srcs = [
+        "src/hrz_protocol.js",
+    ],
+    outs = [
+        "src/hrz_protocol_unpatched.d.ts",
+    ],
+    args = [
+        "$(location src/hrz_protocol.js)",
+        "-o",
+        "$@",
+    ],
+    chdir = "../../../",
+)
+
+# @Todo(pbts_long_esm) Remove this once this is merged (or equivalent)
+# https://github.com/protobufjs/protobuf.js/pull/1950
+expand_template(
+    name = "fix_import_in_ts",
+    out = "src/hrz_protocol.d.ts",
+    substitutions = {
+        'import Long = require("long");': 'import Long from "long";',
+    },
+    template = "src/hrz_protocol_unpatched.d.ts",
+)
+
+structured_files_copy(
+    name = "src_copies",
+    files = {
+        "": [
+            "src/index.ts",
+            "src/helper.ts",
+        ],
+    },
+    output_dir = "dist",
+)
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        "src/helper.ts",
+        "src/hrz_protocol.d.ts",
+        "src/index.ts",
+    ],
+    declaration = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "declaration": True,
+            },
+        },
+    ),
+    deps = [
+        ":node_modules/long",
+        ":node_modules/protobufjs",
+    ],
+)
+
+package_json(
+    name = "package_json",
+    out = "dist-root/package.json",
+    base = ":package.json",
+    license = PACKAGE_JSON_HRZ_LICENSE,
+    version = PACKAGE_JSON_HRZ_VERSION,
+)
+
+structured_files_copy(
+    name = "pkg_copy",
+    files = {
+        "dist": [
+            ":ts_lib",
+            ":ts_lib_types",
+            "src/hrz_protocol.js",
+            "src/hrz_protocol.d.ts",
+        ],
+        "": [
+            "//:LICENSE",
+            ":package_json",
+        ],
+    },
+    output_dir = "dist_pkg",
+)
+
+npm_package(
+    name = "npm_pkg",
+    srcs = [
+        ":pkg_copy",
+    ],
+    replace_prefixes = {
+        "dist_pkg": "",
+    },
+)
+
+alias(
+    name = "ts_protocol",
+    actual = ":npm_pkg",
+)

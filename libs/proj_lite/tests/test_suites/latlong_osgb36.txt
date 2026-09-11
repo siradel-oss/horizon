@@ -1,0 +1,13 @@
+# osgb36 is only usable in the form we know about in proj_lite around
+# great britain. So we test with a point there...
+
+= +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+< 1 52 1e-7
+> +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+> +proj=longlat +datum=OSGB36 +no_defs
+
+= +proj=longlat +datum=OSGB36 +no_defs
+< 1 52 1e-7
+> +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+> +proj=longlat +datum=OSGB36 +no_defs
+

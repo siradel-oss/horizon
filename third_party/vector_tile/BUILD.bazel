@@ -1,0 +1,36 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+run_binary(
+    name = "generate_proto",
+    srcs = [
+        "vector_tile.proto",
+    ],
+    outs = [
+        "gen/vector_tile.pb.cc",
+        "gen/vector_tile.pb.h",
+    ],
+    args = [
+        "-Ithird_party/vector_tile",
+        "$(location vector_tile.proto)",
+        "--cpp_out=$(@D)/gen",
+    ],
+    tool = "//third_party:protoc",
+)
+
+cc_library(
+    name = "vector_tile",
+    srcs = [
+        "gen/vector_tile.pb.cc",
+    ],
+    hdrs = [
+        "gen/vector_tile.pb.h",
+    ],
+    includes = [
+        "gen",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@protobuf//:protobuf_lite",
+    ],
+)

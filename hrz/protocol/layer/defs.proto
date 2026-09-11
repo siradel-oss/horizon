@@ -1,0 +1,18 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/layer/handle.proto";
+
+export message Layer {
+    LayerHandle handle = 1;
+    LayerType   type   = 2;
+    string      name   = 3;
+}
+
+export message LayerArray { repeated Layer layers = 1; }

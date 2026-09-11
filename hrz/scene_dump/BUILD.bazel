@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "gen",
+    srcs = ["gen.py"],
+    data = [
+        "//hrz/protocol/history:versions_manifest.csv",
+        "//hrz/scene_dump/templates:all",
+    ],
+    deps = [
+        "//hrz/protocol/history:manifest",
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+run_binary(
+    name = "generate_migrations_list",
+    srcs = [
+        "//hrz/protocol/history:versions_manifest.csv",
+    ],
+    outs = [
+        "migrations_list.h",
+    ],
+    args = [
+        "-m",
+        "$(location //hrz/protocol/history:versions_manifest.csv)",
+        "gen-cpp-migrations-list",
+        "$@",
+    ],
+    tool = ":gen",
+)
+
+cc_library(
+    name = "utils",
+    srcs = [
+        "utils.cpp",
+    ],
+    hdrs = [
+        "utils.h",
+    ],
+    implementation_deps = [
+        "@lz4",
+        "@protobuf",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "migration",
+    srcs = [
+        "dynamic_message.h",
+        "migration.cpp",
+        "migrations.cpp",
+        "migrations_list.h",
+    ],
+    hdrs = [
+        "migration.h",
+    ],
+    implementation_deps = [
+        ":utils",
+        "//hrz/protocol/history:descriptor_sets_list",
+        "//hrz/protocol/history:scene_model_version",
+        "@protobuf",
+    ],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/fnd",
+    ],
+)

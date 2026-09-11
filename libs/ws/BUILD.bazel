@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: Copyright 2019 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "ws_common",
+    hdrs = [
+        "ws_common.h",
+    ],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "ws_server",
+    srcs = select({
+        "@platforms//os:emscripten": [],
+        "//conditions:default": ["ws_server_native.cpp"],
+    }),
+    hdrs = [
+        "ws_server.h",
+    ],
+    implementation_deps = select({
+        "@platforms//os:emscripten": [],
+        "//conditions:default": ["@websocketpp"],
+    }),
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ws_common",
+    ],
+)
+
+cc_library(
+    name = "ws_client",
+    srcs = select({
+        "@platforms//os:emscripten": ["ws_client_emscripten.cpp"],
+        "//conditions:default": ["ws_client_native.cpp"],
+    }),
+    hdrs = [
+        "ws_client.h",
+    ],
+    implementation_deps = select({
+        "@platforms//os:emscripten": [],
+        "//conditions:default": ["@websocketpp"],
+    }),
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ws_common",
+    ],
+)
+
+cc_binary(
+    name = "ws_echo_server",
+    srcs = [
+        "ws_echo_server.cpp",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ws_server",
+    ],
+)

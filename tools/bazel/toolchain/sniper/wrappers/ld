@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Use g++ as the linker driver so it handles crtbegin/crtend, libgcc, and
+# libstdc++ automatically in the correct link order.
+#
+# -Wl,--no-as-needed: Bazel places cc_library linkopts before the .a archives
+# that reference them. GNU ld's default --as-needed drops shared libs that have
+# no undefined references at the point they are seen, causing spurious "undefined
+# reference" errors for any library linked via linkopts. --no-as-needed keeps all
+# explicitly-named shared libraries unconditionally.
+
+exec "$(dirname "$0")/proot_run" /usr/lib/gcc-14/bin/g++ -Wl,--no-as-needed "$@"

@@ -1,0 +1,24 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package        HrzProtocol;
+option         optimize_for                  = LITE_RUNTIME;
+option         features.field_presence       = IMPLICIT;
+option         features.enforce_naming_style = STYLE_LEGACY;
+
+export message AssetRequestMessage {
+    uint32 ticket      = 1;
+    string url         = 2;
+    // The range of bytes needed.
+    // A range size of 0 represents an unrestricted size, unlike HTTP range
+    // requests where it would be empty.
+    uint64 range_start = 3;
+    uint64 range_size  = 4;
+}
+
+export message AssetRequestResponse {
+    uint32 ticket    = 1;
+    bytes  data      = 2;
+    string mime_type = 3;
+}

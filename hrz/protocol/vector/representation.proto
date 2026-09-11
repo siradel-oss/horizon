@@ -1,0 +1,44 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/vector/extruded_repr.proto";
+import "hrz/protocol/vector/model_repr.proto";
+import "hrz/protocol/vector/cylinder_repr.proto";
+import "hrz/protocol/vector/flat_overlay_point_repr.proto";
+import "hrz/protocol/vector/flat_overlay_polyline_repr.proto";
+import "hrz/protocol/vector/flat_overlay_polygon_repr.proto";
+import "hrz/protocol/vector/heatmap_repr.proto";
+import "hrz/protocol/vector/symbol_repr.proto";
+
+export message VectorRepr {
+    reserved 1, 102, 104, 106, 107;
+
+    // Optional name for the representation. If this is set,
+    // it is possible to emit a feature with this representation using `emit
+    // "<name>";`.
+    string          name        = 2;
+
+    // Mandatory ID for this representation. This ID should be unique to this
+    // layer. It can be used with the `emit <id>;` instruction.
+    uint32          id          = 4;
+
+    SceneViewBitset scene_views = 3;
+
+    oneof           repr_type {
+        ExtrudedGeometryVectorRepr    extruded_geometry     = 101;
+        ModelVectorRepr               model                 = 103;
+        CylinderVectorRepr            cylinder              = 105;
+        FlatOverlayPointVectorRepr    flat_overlay_point    = 110;
+        FlatOverlayPolylineVectorRepr flat_overlay_polyline = 111;
+        FlatOverlayPolygonVectorRepr  flat_overlay_polygon  = 112;
+        HeatmapVectorRepr             heatmap               = 108;
+        SymbolVectorRepr              symbol                = 109;
+    }
+}

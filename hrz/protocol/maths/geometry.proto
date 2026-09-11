@@ -1,0 +1,76 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/maths/maths.proto";
+
+enum Axis {
+    // @label="+X"
+    POS_X = 0;
+
+    // @label="-X"
+    NEG_X = 1;
+
+    // @label="+Y"
+    POS_Y = 2;
+
+    // @label="-Y"
+    NEG_Y = 3;
+
+    // @label="+Z"
+    POS_Z = 4;
+
+    // @label="-Z"
+    NEG_Z = 5;
+}
+
+enum Handedness {
+    // @label="Left hand"
+    LEFT  = 0;
+
+    // @label="Right hand"
+    RIGHT = 1;
+}
+
+// A coordinates frame describes a 3D coordinates system.
+// The three fields give the direction of the up, front, and side vectors.
+// It is used to match the coordinates systems of other 3D modelling software.
+// By default, Horizon uses up = Z, front = Y, and handedness = right handed.
+//
+// @path_leaf="true"
+export message CoordinatesFrame {
+    Axis       up         = 1;
+    Axis       front      = 2;
+    Handedness handedness = 3;
+}
+
+// The transform is used to tweak the geometric appearance of a model.
+// The transformations are applied in the following order: rotate to the
+// given coordinates frame, rotate by the given quaternion, scale, and finally
+// offset.
+export message Transform {
+    Vec3f            offset   = 1;
+    Vec3f            scale    = 2;
+    Quat             rotation = 3;
+    CoordinatesFrame frame    = 4;
+}
+
+// This describes the order of extrinsic rotations for a rotation expressed
+// using Euler angles.
+// Any triple of extrinsic rotations is equivalent to intrinsic rotations by
+// the same angles but with inverted order of rotations, and vice-versa. For
+// instance, the intrinsic rotations x-y’-z″ by angles α, β, γ are equivalent
+// to the extrinsic rotations z-y-x by angles γ, β, α.
+export enum EulerRotationOrder {
+    EULER_ZYX = 0;
+    EULER_ZXY = 1;
+    EULER_XYZ = 2;
+    EULER_XZY = 3;
+    EULER_YZX = 4;
+    EULER_YXZ = 5;
+}

@@ -1,0 +1,30 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "stb_image",
+    srcs = ["impl.cpp"],
+    defines = [
+        "STBI_WINDOWS_UTF8",
+    ],
+    local_defines = [
+        "STBI_MALLOC=stbi_malloc",
+        "STBI_REALLOC=stbi_realloc",
+        "STBI_FREE=stbi_free",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@stb//:image",
+    ],
+)
+
+cc_library(
+    name = "stb_image_default_malloc",
+    srcs = ["impl.cpp"],
+    defines = [
+        "STBI_WINDOWS_UTF8",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@stb//:image",
+    ],
+)

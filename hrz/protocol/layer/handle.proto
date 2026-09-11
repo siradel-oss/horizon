@@ -1,0 +1,45 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum LayerType {
+    // @label="Invalid"
+    INVALID                 = 0;
+
+    // @label="Single 3D model"
+    SINGLE_MODEL            = 1;
+
+    // @label="DTM raster"
+    DTM_RASTER              = 2;
+
+    // @label="Imagery raster"
+    IMAGERY_RASTER          = 3;
+
+    // @label="Vector data definition"
+    VECTOR_DATA             = 4;
+
+    // @label="Vector tiles"
+    VECTOR_TILES            = 5;
+
+    // @label="3D Tiles"
+    THREE_D_TILES           = 6;
+
+    // @label="Clipping plane"
+    CLIPPING_PLANE          = 7;
+
+    // @label="In-memory vector source"
+    IN_MEMORY_VECTOR_SOURCE = 8;
+
+    // @label="Gizmo"
+    GIZMO                   = 9;
+
+    // @label="Editable shape"
+    EDITABLE_SHAPE          = 10;
+}
+
+export message LayerHandle { uint64 opaque = 1; }

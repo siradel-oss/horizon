@@ -1,0 +1,22 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package        HrzProtocol;
+option         optimize_for                  = LITE_RUNTIME;
+option         features.field_presence       = IMPLICIT;
+option         features.enforce_naming_style = STYLE_LEGACY;
+
+export message LightingSettings {
+    reserved 2;
+
+    // Set to true to enable diffuse lighting and receiving shadows.
+    // When disabled, `receive_shadows` is implicitly disabled.
+    bool enable_lighting = 1;
+
+    // Set to true to cast shadows on other objects and itself.
+    bool cast_shadows    = 3;
+
+    // Set to true to receive shadows from other objects and itself.
+    bool receive_shadows = 4;
+}

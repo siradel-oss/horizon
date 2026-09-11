@@ -1,0 +1,59 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/vector/geometry_type.proto";
+import "hrz/protocol/attributes/transform.proto";
+import "hrz/protocol/attributes/attribute.proto";
+import "hrz/protocol/geo/srs.proto";
+
+message InMemoryVectorFeatureGeometry {
+    VectorGeometryType type             = 1;
+
+    // Points coordinates stored as `[x1, y1, z1, x2, y2, z2, ...]`. For 2D
+    // geometries, z is set to 0. Those coordinates use the layer's projection
+    // system.
+    repeated double    coords           = 2;
+
+    // Number of points for each linestring. Linestrings must not be closed.
+    // For polygons, exterior linestring must be counter-clockwise, and interior
+    // ones must be clockwise. This is used only for polygons and polylines.
+    repeated uint32    linestring_sizes = 3;
+}
+
+message InMemoryAttribute {
+    reserved 2, 3;
+
+    uint32             id            = 1;
+    bool               is_feature_id = 4;
+    AttributeTransform transform     = 5;
+}
+
+message InMemoryVectorFeature {
+    reserved 1, 2, 3;
+
+    InMemoryVectorFeatureGeometry geometry         = 4;
+
+    // Must have one value for each attribute of the layer,
+    // in the correct order and with the correct types.
+    // Invalid or missing values are replaced by the default
+    // value of the type.
+    repeated AttributeValue       attribute_values = 5;
+}
+
+// @path_root="in_memory_vector_source_layer"
+export message InMemoryVectorSourceLayer {
+    reserved 3;
+
+    uint32                         id          = 1;
+    SpatialReferenceSystem         projection  = 2;
+    string                         attribution = 6;
+
+    repeated InMemoryVectorFeature features    = 5;
+    repeated InMemoryAttribute     attributes  = 4;
+}

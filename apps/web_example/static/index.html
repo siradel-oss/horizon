@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Horizon</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+                font-size: 16px;
+                font-family: "Roboto", sans-serif;
+            }
+
+            canvas {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                z-index: 0;
+            }
+
+            .mainButton {
+                color: white;
+                background-color: rgb(0, 0, 0, 0.3);
+                backdrop-filter: blur(8px);
+                border-radius: 4px;
+                border: none;
+                padding: 0.75em 1em;
+                box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.5);
+                display: inline-block;
+                cursor: pointer;
+            }
+
+            .mainButton:hover {
+                background-color: rgb(0, 0, 0, 0.2);
+            }
+
+            #buttons {
+                display: flex;
+                gap: 1.5em;
+                position: absolute;
+                bottom: 1.5em;
+                left: 1.5em;
+                z-index: 10;
+            }
+
+            #attributions {
+                display: none;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 50;
+            }
+
+            #attributionsContent {
+                background: white;
+                color: black;
+                margin: 2em auto;
+                width: 600px;
+                padding: 1.5em;
+                border-radius: 8px;
+                line-height: 1.25em;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div id="buttons">
+                <button class="mainButton" id="resetView">Reset view</button>
+                <button class="mainButton" id="showAttributions">Data attributions</button>
+            </div>
+            <div id="attributions">
+                <div id="attributionsContent">
+                    <p style="float: right;"><button id="closeAttributions">Close</button></p>
+                    <h3>Data attributions</h3>
+                    <p>Institut national de l'information géographique et forestière</p>
+                    <p>
+                        ArcticDEM terrain data DEM(s) were created from DigitalGlobe, Inc., imagery and funded under National Science Foundation awards 1043681, 1559691, and 1542736;<br />
+                        Australia terrain data © Commonwealth of Australia (Geoscience Australia) 2017;<br />
+                        Austria terrain data © offene Daten Österreichs – Digitales Geländemodell (DGM) Österreich;<br />
+                        Canada terrain data contains information licensed under the Open Government Licence – Canada;<br />
+                        Europe terrain data produced using Copernicus data and information funded by the European Union - EU-DEM layers;<br />
+                        Global ETOPO1 terrain data U.S. National Oceanic and Atmospheric Administration Mexico terrain data source: INEGI, Continental relief, 2016;<br />
+                        New Zealand terrain data Copyright 2011 Crown copyright (c) Land Information New Zealand and the New Zealand Government (All rights reserved);<br />
+                        Norway terrain data © Kartverket;<br />
+                        United Kingdom terrain data © Environment Agency copyright and/or database right 2015. All rights reserved;<br />
+                        United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <script src="bundle.js" type="text/javascript"></script>
+    </body>
+</html>

@@ -1,0 +1,109 @@
+// SPDX-FileCopyrightText: Copyright 2020 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/image.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/attributes/feature_id.proto";
+import "hrz/protocol/layer/defs.proto";
+import "hrz/protocol/attributes/attribute.proto";
+
+message RasterPickResult {
+    reserved 1, 102, 103, 104;
+
+    ImageFormat image_format    = 4;
+
+    // Picked position in the original raster projection.
+    Vec2d       raster_position = 2;
+    // Picked pixel at the most resoluted level of details.
+    Vec2d       pixel_position  = 3;
+
+    // True if the result is a nodata value.
+    bool        nodata          = 5;
+
+    // The engine makes its best to return information from cached data. This
+    // allows fast, but potentially inaccurate and/or incomplete, data retrieval
+    // if anything is available. Yet, if nothing is available in cache or if
+    // returned data don't satisfy the users then it is up to them to retrieve
+    // the information from the dataset. If no information could be retrieved
+    // about that layer, then `nothing` is set.
+    oneof       payload {
+        Void   nothing = 101;
+        Color  color   = 105;
+        double number  = 106;
+    }
+}
+
+message HeatmapPickResult {
+    uint64 repr_id = 1;
+    double value   = 2;
+}
+
+message VectorPickResult {
+    reserved 1, 4;
+
+    // Picked feature ID.
+    FeatureId                  feature_id     = 6;
+
+    // Position of the feature's anchors (polygons = centroid, polylines =
+    // middle, points = position). Warning: for features split between multiple
+    // tiles or composed of multiple disjoint parts, the anchor may be different
+    // for each part of the feature.
+    GeographicPosition         feature_anchor = 8;
+
+    // Ids of the feature attributes.
+    // Same comment in [RasterPickResult]($proto) applies for feature
+    // attributes.
+    repeated uint64            ids            = 3;
+    // Values of the feature attributes. The order of values corresponds to the
+    // order of ids. So they have the same length.
+    repeated AttributeValue    values         = 5;
+
+    repeated HeatmapPickResult heatmaps       = 7;
+}
+
+message ThreeDTilesPickResult {
+    reserved 1, 2, 6;
+
+    // Picked feature ID.
+    FeatureId               feature_id         = 9;
+
+    // ECEF position.
+    Vec3d                   position           = 3;
+
+    string                  tile_url           = 4;
+
+    repeated string         names              = 5;
+    repeated AttributeValue values             = 7;
+
+    float                   data_texture_value = 8;
+}
+
+message        SingleModelPickingResult { float data_texture_value = 1; }
+
+export message PickLayerResult {
+    Layer layer = 1;
+
+    oneof payload {
+        RasterPickResult         raster         = 101;
+        VectorPickResult         vector         = 102;
+        SingleModelPickingResult model          = 103;
+        ThreeDTilesPickResult    three_d_tile   = 104;
+        Void                     editable_shape = 105;
+    }
+}
+
+export message PickResults {
+    // The position is set if the planet or a feature was picked.
+    GeographicPosition       position = 1;
+    // List of all the layers that intersected the picked location.
+    repeated PickLayerResult results  = 2;
+}

@@ -1,0 +1,78 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum GraphicsLevel {
+    // Lets the engine guess the best level for the current platform.
+    // @label="Auto"
+    GRAPHICS_LEVEL_AUTO   = 0;
+
+    // Best performance.
+    // @label="Low"
+    GRAPHICS_LEVEL_LOW    = 1;
+
+    // @label="Medium"
+    GRAPHICS_LEVEL_MEDIUM = 2;
+
+    // Best quality.
+    // @label="High"
+    GRAPHICS_LEVEL_HIGH   = 3;
+};
+
+export message GraphicsSettingsOverrides {
+    // Whether the rendering of shadows can be enabled or not.
+    bool   shadows_enabled         = 1 [ features.field_presence = EXPLICIT ];
+
+    // The amount of textures used for the rendering of shadows.
+    uint32 shadows_cascade_count   = 2 [ features.field_presence = EXPLICIT ];
+
+    // Whether the rendering of the simulated atmosphere can be enabled or not.
+    // This controls the simulated sun, sky, and ambient lighting in the
+    // scene view ambient settings.
+    bool   atmosphere_enabled      = 3 [ features.field_presence = EXPLICIT ];
+
+    // The size of the textures used for the rendering of flat overlays.
+    uint32 flat_overlay_resolution = 4 [ features.field_presence = EXPLICIT ];
+
+    // The amount of textures used for the rendering of flat overlays.
+    uint32 flat_overlay_cascade_count = 5
+        [ features.field_presence = EXPLICIT ];
+
+    // Whether transparent UI elements are drawn with increased accuracy.
+    bool ui_elements_depth_peeling_enabled = 6
+        [ features.field_presence = EXPLICIT ];
+
+    // The amount of merge groups used for imagery rasters.
+    uint32 imagery_merge_group_count = 7 [ features.field_presence = EXPLICIT ];
+
+    // The size of the textures used for imagery raster atlases.
+    uint32 raster_atlas_size         = 8 [ features.field_presence = EXPLICIT ];
+
+    // Whether raster atlas textures can be compressed.
+    bool   raster_atlas_texture_compression_enabled = 9
+        [ features.field_presence = EXPLICIT ];
+}
+
+// See [GraphicsSettingsOverrides]($proto) for information about the different
+// fields.
+export message GraphicsSettings {
+    bool   shadows_enabled                          = 1;
+    uint32 shadows_cascade_count                    = 2;
+
+    bool   atmosphere_enabled                       = 3;
+
+    uint32 flat_overlay_resolution                  = 4;
+    uint32 flat_overlay_cascade_count               = 5;
+
+    bool   ui_elements_depth_peeling_enabled        = 6;
+
+    uint32 imagery_merge_group_count                = 7;
+
+    uint32 raster_atlas_size                        = 8;
+    bool   raster_atlas_texture_compression_enabled = 9;
+}

@@ -1,0 +1,51 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "map_anchor",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-color": "#ff0000",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2,
+        "circle-translate": ["literal", [0, -10]],
+        "circle-translate-anchor": "map",
+        "circle-pitch-alignment": "map"
+      }
+    },
+    {
+      "id": "viewport_anchor",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-color": "#00ffff",
+        "circle-radius": 6,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2,
+        "circle-translate": ["literal", [0, -10]],
+        "circle-translate-anchor": "viewport"
+      }
+    },
+    {
+      "id": "default_anchor",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-opacity": 0.0,
+        "circle-translate": ["literal", [0, -1]],
+        "circle-pitch-alignment": "map"
+      }
+    }
+  ]
+}

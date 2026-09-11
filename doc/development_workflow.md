@@ -1,0 +1,138 @@
++++
+title = "Development workflow"
++++
+
+# Development workflow
+
+## Issue lifetime
+
+- Once an issue is well defined, it is switch to the "To Do" state.
+- Someone choses an issue in the "To Do" state, switches it to "In progress" and assigns themselves to it.
+    - If that issue is a mirror of a GitHub issue, assign yourself to the GitHub issue too.
+- All subsequent developments must be done on branch named `usXXXX_short_name` for user stories, or `bfXXXX_short_name` for bugs, where XXXX is the JIRA numerical ID of the issue, and `short_name` is a short descriptive name, written in snake case.
+- Create a partial changelog file in `changelogs/unreleased` with a unique name (for instance your branch name).
+- Update your changelog file as you go to log all important changes, especially deprecated and removed features, upgrade notes, and integration notes.
+    - Each section must start with a line like `# Section name`. The section names are given in the `changelogs/unreleased/CHANGELOG_TEMPLATE.md.tpl` file.
+    - Integration notes should only be a way to highlight something important that is already written somewhere else in the documentation.
+    - Inside each section, write the changelog as a list with the `*` character followed by a whitespace as list marker.
+    - The list can contain multiple levels, which must be indented correctly.
+    - See the [changelog guidelines](guidelines/changelog.md).
+- After development is finished and CI is OK, the issue is switched to the "To review" state. A merge request is created on Gitlab.
+- Someone other that the person who was assigned to the issue assigns themselves as a reviewer on the MR and starts reviewing the merge request.
+- Once the reviewer has finished reviewing the merge request, they approve the issue in GitLab.
+- See the merge request process below.
+- If the changes induced by the merge request are too important, the issue can be switched back to "In progress" and the cycle starts again.
+- Once the merge request in accepted, it must be merged into `main` and the issue branch deleted. The issue can then be switched to "Done".
+
+## Merge request process
+
+- The merge request title must start with the full JIRA ID of the issue in brackets: `[HRZ-XXXX]`.
+- For a merge request to be accepted, all comments must be closed and one or two reviewers must approve it (depending on current staffing).
+- Each comment has to be closed *by the person who opened it* to validate the changes that were made.
+    - Trivial changes like typos can be closed by the submitter instead.
+
+## Version numbers
+
+Version numbers are based on the current year: YY.M.m.
+
+- YY: two-digit year (23 for 2023, we'll need to revisit this in 2100)
+- M: major version (0-based)
+- m: patch number (0-based)
+
+There are no rule for what should increment the major or patch number, but generally, larger releases with new features should be major versions, and smaller releases with mostly fixes should be patches. The patch number is reset to 0 upon releasing a major version.
+
+## Release process
+
+- In this example the current version is `a.b.c` and the next version is `d.e.f`.
+- Start from `main` or a maintenance branch, with a clean local clone.
+- Check the current version: `cat version.bzl`. It should contain:
+    ```
+    HRZ_VERSION = "a.b.c-SNAPSHOT"
+    ```
+- Create a release branch: `git checkout -b release_a.b.c`
+- Change the version number from snapshot to release: `python3 tools/build_info/set_version.py a.b.c`
+- Update the changelog:
+    - Merge all unreleased changelog fragments:
+        - `python3 changelogs/changelog.py merge_into changelogs/a.b.c.md a.b.c changelogs/unreleased/*.md`
+    - Reorder the changelog entries so that their order makes sense. More important changes should be higher in each list.
+    - Changelog entries that refer to the same systems should be grouped together. See the [changelog guidelines](guidelines/changelog.md).
+    - Check that upgrade notes have been filled in the merged file.
+    - Delete all unreleased changelog fragments from `changelogs/unreleased`:
+        - `git rm changelogs/unreleased/*.md`
+- Format everything: `python3 tools/format.py`
+- Check the diff: `git diff`
+    - The only changes should be the version numbers in `version.bzl` and `.gitlab-ci.yml`, as well as the changelogs.
+- Commit: `git commit -am "Release a.b.c"`
+- Push: `git push origin release_a.b.c`
+- Open a new merge request on GitLab, name it “Release a.b.c”. The target branch is either `main`, or for maintenance releases, the corresponding maintenance branch.
+- A new CI pipeline should be created.
+    - Wait until it succeeds.
+- Tag the release in the GitLab interface.
+    - Go to “Code” > “Tags” then click on the “New tag” button.
+    - Set the tag name to `va.b.c`.
+    - Set the tag message to “Release a.b.c”.
+- A new CI pipeline should be created.
+    - This pipeline performs the actual release, by compiling and then uploading the release artifacts to the release binary repositories on the Nexus instance.
+        - Artifacts on these repositories cannot be replaced, making each release actually unique.
+    - Ensure everything went well.
+- Create the release in the GitLab interface.
+    - Go to “Deploy” > “Releases” then click on the “New release” button.
+    - Select the tag `va.b.c`.
+    - Set the release title to “Release a.b.c”.
+    - Set the date to the present day.
+    - In the release notes field, put the relevant section of the `a.b.c.md` changelog file, as well as anything you deem useful. (Don’t include the line with the version number and the date.)
+- Publish the version to the open-source repository.
+    - First publish the `release_a.b.c` branch at the point where it diverged from `main` or `maintenance_a.b` (see [below](#publishing-a-branch-to-the-open-source-repository)).
+    - Create the release tag `va.b.c` in the public repository, see "[Publishing a tag to the open source repository](open_source.md#publishing-a-tag-to-the-open-source-repository)".
+    - Once the tag has been published, the branch `release_a.b.c` on the public repository can be deleted, but keeping it will avoid having a warning message on the release commit about it not belonging to any branch.
+    - Finally, [create the release on the open-source repository](open_source.md#publishing-a-release-to-the-open-source-repository).
+- Back on your local clone, set the version number to the next snapshot:
+    - `python3 tools/build_info/set_version.py d.e.f-SNAPSHOT`
+- Commit:
+    - `git commit -am "Set version to d.e.f-SNAPSHOT"`
+- Push.
+- Merge the release branch into its target branch.
+- Mark the version as released on Jira.
+- Send an email announcing the release to [`redacted@siradel.com`](mailto:redacted@siradel.com) & ['redacted@siradel.com'](mailto:redacted@siradel.com).
+- Pat your colleagues and yourself on the back.
+
+## Maintenance process
+
+If a previously released version needs to be patched, and eventually have patch releases, follow this process:
+
+- Create a branch starting at the revision of the release, which is identified by a tag of the form `va.b.c`. The maintenance branch’s name derives from the version number: it starts with `maintenance_` followed by the original version number, minus the components that will change during the life of the maintenance branch.
+    - For example, if the previously released version is `0.7.0`, and you want to create a branch from which `0.7.1`, `0.7.2`, and so on, will be released, name the branch `maintenance_0.7`.
+    - `git branch maintenance_a.b va.b.c`
+- Update the version number to the new snapshot.
+    - For example, if the previously released version is `0.7.0` and the next one will be `0.7.1`, set the version to `0.7.1-SNAPSHOT`.
+    - `python3 tools/build_info/set_version.py a.b.d-SNAPSHOT`
+- Commit:
+    - `git commit -am "Set version to a.b.c-SNAPSHOT"`
+- Push the branch (you might need to temporarily remove branch protection):
+    - `git push origin maintenance_a.b`
+- Publish the maintenance branch to the open-source repository on the release tag (see [below](#publishing-a-branch-to-the-open-source-repository)).
+    - Because a pipeline might have been triggered when you pushed the branch to the private repo, and before you could publish the branch, this first pipeline might fail at the open-source publish step. If so, that's OK, you can just re-run it later.
+- From then on, create merge requests and make releases in the same fashion as what is done on the `main` branch.
+    - Do not forget to start from the maintenance branch before committing, and target this branch when opening merge requests.
+
+A few notes on working with maintenance branches:
+
+- If the changes you want to include in the maintenance branch are also relevant for `main`, do not forget to add them there as well.
+    - It may be convenient to make a bug fix on `main`, and then an equivalent merge request on the maintenance branch. `git cherry-pick` can be useful here, but be careful and do not take too many changes in.
+- Make releases using the process described above. Make sure to use version numbers that are suitable for the maintenance branch.
+- Update the changelogs on main to reflect the release of the maintenance version.
+    - This should include deleting potentially duplicated changelog files from `changelogs/unreleased`.
+    - Cherry-picking the release commit from the maintenance branch should delete the unreleased files and create the maintenance release changelog. Use `--no-commit` to be safe.
+- Never ever merge the `main` branch in the maintenance branch, or vice-versa! Their commit subtrees should eternally remain separate.
+
+## Publishing a branch to the open-source repository
+
+See [the open-source documentation](open_source.md#publishing-a-branch-to-the-open-source-repository) for a guide on how to prepare a branch to be published.
+
+Once a branch is ready to be published, commits can be copied over using the following command:
+
+```
+bazel run //infra/oss_publish:publish -- --ghapp_pk_pem <private key> my_branch
+```
+
+Generally it is not necessary do to this manually (for the main or maintenance branches), but is required for the release process.

@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("//hrz/protocol:list_proto_files.bzl", "list_proto_files")
+
+filegroup(
+    name = "protos",
+    srcs = list_proto_files("", ".proto"),
+    visibility = ["//visibility:public"],
+)
+
+run_binary(
+    name = "generate_descriptor_set",
+    srcs = list_proto_files("", ".proto"),
+    outs = [
+        "descriptor_set.pbf",
+    ],
+    args = [
+        # We manually list the files so that the order is consistent.
+        # This is important for computing the checksum of the descriptor.
+        "$(execpath %s)" % f
+        for f in list_proto_files("", ".proto")
+    ] + [
+        "--descriptor_set_out=$@",
+    ],
+    tool = "//third_party:protoc",
+    visibility = ["//visibility:public"],
+)

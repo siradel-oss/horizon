@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("//tools/bazel/cc_resources:cc_resources.bzl", "cc_resources")
+
+cc_resources(
+    name = "resources",
+    files = {
+        "//third_party/fonts:Allerta-Regular.ttf": "DefaultFont",
+        "devui_font_atlas.png": "DevUiFontAtlas",
+    },
+    header_name = "resources.h",
+    namespace = "hrz_res",
+    visibility = ["//hrz/core:__subpackages__"],
+)
+
+exports_files(["LICENSE-Allerta.txt"])

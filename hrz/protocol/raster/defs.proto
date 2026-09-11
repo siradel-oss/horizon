@@ -1,0 +1,25 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/raster/sampling.proto";
+import "hrz/protocol/raster/blending.proto";
+import "hrz/protocol/raster/provider.proto";
+
+export message Raster {
+    reserved 1 to 3, 101 to 111;
+
+    RasterProvider   provider         = 8;
+    RasterSampling   sampling         = 5;
+    RasterBlending   blending         = 6;
+    GeographicBounds display_bounds   = 7;
+
+    // Only values between -127 and 127 (inclusive) are valid.
+    int32            loading_priority = 4;
+}

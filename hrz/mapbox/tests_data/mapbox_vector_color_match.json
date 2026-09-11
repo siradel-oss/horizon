@@ -1,0 +1,54 @@
+{
+  "version": 8,
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf"
+    },
+    "maputnik:renderer": "mbgljs"
+  },
+  "center": [-1.67945, 48.11139],
+  "zoom": 17,
+  "pitch": 20,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests",
+  "glyphs": "https://redacted.localhost/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "points",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-radius": 10,
+        "circle-stroke-width": 5,
+        "circle-color": [
+          "match",
+          ["%", ["+", ["get", "x"], ["get", "y"]], 3],
+          2,
+          "rgb(255, 128, 255)",
+          "rgb(128, 192, 192)"
+        ],
+        "circle-opacity": 1.0,
+        "circle-stroke-color": [
+          "match",
+          ["%", ["+", ["get", "x"], ["get", "y"]], 3],
+          2,
+          "rgb(128, 64, 128)",
+          "rgb(64, 96, 96)"
+        ],
+        "circle-stroke-opacity": [
+          "match",
+          ["%", ["+", ["get", "x"], ["get", "y"]], 3],
+          2,
+          1.0,
+          0.4
+        ]
+      }
+    }
+  ],
+  "id": "zmb2hgpsz"
+}

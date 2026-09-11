@@ -1,0 +1,193 @@
+<!--
+    SPDX-FileCopyrightText: Copyright 2024 Siradel
+    SPDX-License-Identifier: MIT
+-->
+
+<script setup lang="ts">
+import SplitView from "@/layout/SplitView.vue";
+import Viewer from "@/component/Viewer.vue";
+import { HrzApi } from "@siradel-oss/horizon-api";
+import { HrzProtocol } from "@siradel-oss/horizon-protocol";
+import {
+    applyScene,
+    findVectorRepresentation,
+    getLayerByName,
+    applyDefaultSymbolicBaseLayer,
+} from "@/utils/scenes";
+import { debounce } from "@/utils/utils";
+import { ref, watch } from "vue";
+import FullscreenSource from "@/component/FullscreenSource.vue";
+import { MessageHandler } from "@/utils/messages";
+import FullscreenSceneModel from "@/component/FullscreenSceneModel.vue";
+
+let heatmapOpacity = ref<number>(0);
+let acceptableRange = ref<number>(0);
+let pickedBusStops = ref<number | null>(null);
+
+let msgHandler: MessageHandler;
+let api: HrzApi.AsyncApi;
+let heatmapLayer: HrzProtocol.LayerHandle;
+let heatmapReprIndex: number;
+let heatmapPalette: HrzProtocol.NumericPalette;
+
+// Updates the opacity of each color of the heatmap palette.
+watch(
+    heatmapOpacity,
+    debounce(async function () {
+        for (let colorStop of heatmapPalette.colorStops || []) {
+            if (colorStop.firstColor) {
+                colorStop.firstColor.a = heatmapOpacity.value;
+            }
+            if (colorStop.secondColor) {
+                colorStop.secondColor.a = heatmapOpacity.value;
+            }
+        }
+        await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
+            .style()
+            .representations(heatmapReprIndex)
+            .heatmap()
+            .numericPalette()
+            .set(api, heatmapPalette);
+    }, 200)
+);
+
+// Updates the disc radius of the heatmap.
+watch(
+    acceptableRange,
+    debounce(async function () {
+        await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
+            .style()
+            .representations(heatmapReprIndex)
+            .heatmap()
+            .discRadius()
+            .defaultValue()
+            .set(api, acceptableRange.value);
+    }, 200)
+);
+
+function displayPickResult(results: HrzProtocol.PickResults.$Shape) {
+    let result = results.results?.[0]?.vector?.heatmaps?.[0]?.value;
+    if (typeof result === "number") {
+        pickedBusStops.value = result;
+    } else {
+        pickedBusStops.value = null;
+    }
+}
+
+async function schedulePick(x: number, y: number) {
+    if (!api) return;
+
+    let request = HrzProtocol.PickRequest.create({
+        coords: { x: x, y: y },
+        includedRasters: [],
+    });
+
+    let requestResult = await api.ViewerService.pickScreen(request);
+    if (requestResult.hasATicket && requestResult.ticket) {
+        msgHandler.awaitPickResult(requestResult.ticket, displayPickResult);
+    }
+}
+
+async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler_: MessageHandler) {
+    api = api_;
+    msgHandler = msgHandler_;
+
+    let retrievedHeatmapLayer = await applyScene(api, "heatmap_bus_coverage").then(() => {
+        return getLayerByName(api, "Bus");
+    });
+    if (!retrievedHeatmapLayer) {
+        throw new Error("Heatmap layer not found");
+    }
+    heatmapLayer = retrievedHeatmapLayer;
+
+    applyDefaultSymbolicBaseLayer(api);
+
+    let retrievedHeatmapReprIndex = await findVectorRepresentation(api, heatmapLayer, "heatmap");
+    if (retrievedHeatmapReprIndex === undefined) {
+        throw new Error("Heatmap representation not found");
+    }
+    heatmapReprIndex = retrievedHeatmapReprIndex;
+
+    let repr = await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer)
+        .style()
+        .representations(heatmapReprIndex)
+        .heatmap()
+        .get(api);
+
+    heatmapPalette = HrzProtocol.NumericPalette.create(repr.numericPalette || {});
+    acceptableRange.value = repr.discRadius?.defaultValue || 0;
+    heatmapOpacity.value = 0.6;
+}
+
+async function retrieveVectorTilesLayerData(): Promise<any> {
+    return (await HrzApi.VectorTilesLayerPathBuilder.create(heatmapLayer).get(api)).toJSON();
+}
+</script>
+<template>
+    <SplitView>
+        <template #left>
+            <div class="typography-normal">
+                <h1>Public transport coverage</h1>
+                <p>
+                    This demo shows the public transport coverage in a city using a heatmap. Each
+                    bus stop is represented by a point with a defined radius (the acceptable range)
+                    and a value of 1 in the heatmap. The radius is defined in meters. The palette is
+                    red where there is no bus stop in the area of influence of each point, and has a
+                    gradient otherwise.
+                </p>
+                <p>
+                    This allows this map to represent areas with no acceptable coverage, and a
+                    gradient to represent the coverage quality otherwise.
+                </p>
+                <p>
+                    Additionally, using picking, it is possible to click on the map and see the
+                    number of bus stops in the acceptable range at any location. This is achieved
+                    thanks to the additive accumulation mode.
+                </p>
+                <div class="my-6">
+                    <label
+                        >Coverage opacity: {{ $filters.formatNumber(heatmapOpacity * 100) }}%</label
+                    ><br />
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="any"
+                        v-model.number="heatmapOpacity"
+                    />
+                </div>
+                <div class="my-6">
+                    <label>Acceptable range: {{ $filters.formatNumber(acceptableRange) }}m</label
+                    ><br />
+                    <input
+                        type="range"
+                        min="0"
+                        max="1000"
+                        step="any"
+                        v-model.number="acceptableRange"
+                    />
+                </div>
+                <p>
+                    <FullscreenSource file="source/HeatmapBusCoverage.vue" />
+                    <FullscreenSceneModel
+                        text="View heatmap layer data"
+                        :retrieveData="retrieveVectorTilesLayerData"
+                    />
+                </p>
+            </div>
+        </template>
+        <template #right>
+            <Viewer @ready="onHorizonReady" @clickAt="schedulePick" />
+            <div
+                class="absolute w-72 left-4 top-4 shadow-lg rounded-xl p-4 text-mBodyMedium bg-surfaceContainerLow text-onSurface"
+            >
+                <span v-if="pickedBusStops !== null"
+                    >Bus stops in the acceptable range: <strong>{{ pickedBusStops }}</strong></span
+                >
+                <span v-else
+                    >Click anywhere to query the number of bus stops in the acceptable range.</span
+                >
+            </div>
+        </template>
+    </SplitView>
+</template>

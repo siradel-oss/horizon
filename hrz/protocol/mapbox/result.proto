@@ -1,0 +1,45 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/layer/defs.proto";
+import "hrz/protocol/mapbox/ticket.proto";
+
+enum MapboxTranslationStatus {
+    // The layers have been created.
+    MAPBOX_TRANSLATION_SUCCESS  = 0;
+    // Canceled the translation because `MapboxService.TranslateScene` has been
+    // called with `destroyExistingLayers` set to true.
+    MAPBOX_TRANSLATION_CANCELED = 1;
+    // Failed to translate the given input.
+    MAPBOX_TRANSLATION_FAILURE  = 2;
+    // Failed to download a required resource, such as the sprite index
+    // document.
+    MAPBOX_DOWNLOAD_FAILURE     = 3;
+}
+
+message MapboxTranslationResult {
+    MapboxTranslationStatus status                      = 1;
+    // Layers successfully created during the translation process.
+    LayerArray              created_layers              = 2;
+    // How many slots have been used when creating the new raster layers.
+    uint32                  raster_slots_used           = 6;
+    // How many IDs have been used when creating the new vector data layers.
+    uint32                  vector_data_layer_ids_used  = 3;
+    // How many z-indices have been used when creating the new flat overlay
+    // representations.
+    uint32                  flat_overlay_z_indices_used = 4;
+    // How many z-indices have been used when creating the new symbol
+    // representations.
+    uint32                  symbol_z_indices_used       = 5;
+}
+
+export message MapboxTranslationMessage {
+    MapboxTranslationTicket ticket = 1;
+    MapboxTranslationResult result = 2;
+}

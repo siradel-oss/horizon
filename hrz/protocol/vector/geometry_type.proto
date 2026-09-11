@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+// @expose_to_style="true"
+export enum VectorGeometryType {
+    POINT_GEOMETRY    = 0;
+    POLYLINE_GEOMETRY = 1;
+    POLYGON_GEOMETRY  = 2;
+}

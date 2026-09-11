@@ -1,0 +1,176 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+module(name = "horizon")
+
+#--------------------------------------------------------
+# Bazel rules
+#--------------------------------------------------------
+
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "bazel_features", version = "1.43.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "bazel_lib", version = "3.3.1")
+bazel_dep(name = "rules_pkg", version = "1.1.0")
+
+# @Todo Once https://github.com/bazelbuild/rules_cc/pull/363 is merged and possibly
+# a new release of rules_cc is made we can stop using our custom patched version.
+bazel_dep(name = "rules_cc", version = "0.2.18.sbr.1")
+bazel_dep(name = "rules_python", version = "2.2.0")
+bazel_dep(name = "aspect_rules_ts", version = "3.9.2")
+bazel_dep(name = "aspect_rules_js", version = "3.2.3")
+bazel_dep(name = "rules_nodejs", version = "6.7.5")  # Only needed to override node version
+
+#--------------------------------------------------------
+# Libraries & tools
+#--------------------------------------------------------
+
+bazel_dep(name = "zlib", version = "1.3.1.bcr.8")
+bazel_dep(name = "curl", version = "8.11.0.sbr.2")
+bazel_dep(name = "protobuf", version = "36.0.bcr.1")
+bazel_dep(name = "abseil-cpp", version = "20250814.1")
+bazel_dep(name = "stb", version = "20251026.hrz.1")
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
+bazel_dep(name = "brotli", version = "1.2.0.hrz.2")
+bazel_dep(name = "fmt", version = "12.1.0")
+bazel_dep(name = "lz4", version = "1.10.0.hrz.1")
+bazel_dep(name = "pugixml", version = "1.15.hrz.1")
+bazel_dep(name = "earcut", version = "3.2.3.sbr.1")
+bazel_dep(name = "libwebp", version = "1.6.0.hrz.1")
+bazel_dep(name = "asio", version = "1.28.2.hrz.1")
+bazel_dep(name = "websocketpp", version = "0.8.2.hrz.1")
+bazel_dep(name = "harfbuzz", version = "12.1.0.sbr.3")
+bazel_dep(name = "zstd", version = "1.60.basisu.hrz.1")
+bazel_dep(name = "basisu", version = "1.60.hrz.1")
+bazel_dep(name = "cdt", version = "1.4.4.hrz.1")
+bazel_dep(name = "delabella", version = "2.0.hrz.1")
+bazel_dep(name = "rapidjson", version = "1.2.1.hrz.1")
+bazel_dep(name = "microui", version = "2.02.hrz.1")
+bazel_dep(name = "sokol", version = "20220629.hrz.1")
+bazel_dep(name = "dear_imgui", version = "20220228.hrz.1")
+bazel_dep(name = "portable_file_dialogs", version = "20220316.hrz.1")
+bazel_dep(name = "msdfgen", version = "1.12.1.hrz.1")
+bazel_dep(name = "pcg_basic", version = "20141018.hrz.1")
+bazel_dep(name = "etcpak", version = "2.0.hrz.1")
+bazel_dep(name = "woff2", version = "20231107.hrz.1")
+bazel_dep(name = "draco", version = "1.5.7.hrz.1")
+bazel_dep(name = "glslang_prebuilt", version = "16.2.0.hrz.1")
+bazel_dep(name = "clang_format_prebuilt", version = "22.1.1.hrz.1")
+bazel_dep(name = "emsdk", version = "6.0.3")
+
+http_download = use_extension("//tools/bazel:http_download_extension.bzl", "http_download")
+http_download.file(
+    name = "buildifier_windows",
+    executable = True,
+    file_name = "buildifier.exe",
+    integrity = "sha256-9Oy5xz3ivDi4RdTuJ2aPYkjEgTpmR9tLSTGnVWBS5OE=",
+    url = "https://github.com/bazelbuild/buildtools/releases/download/v8.5.1/buildifier-windows-amd64.exe",
+)
+http_download.file(
+    name = "buildifier_linux",
+    executable = True,
+    file_name = "buildifier",
+    integrity = "sha256-iHN3/GTSOoUPTRigd7XbBbGZE/S5mycNGT88czS1qac=",
+    url = "https://github.com/bazelbuild/buildtools/releases/download/v8.5.1/buildifier-linux-amd64",
+)
+http_download.file(
+    name = "copybara",
+    file_name = "copybara.jar",
+    integrity = "sha256-/w0h/j8UxP7eHzs6U1BwVO4jdYSGwWCr+o0pY7jrQuY=",
+    url = "https://github.com/google/copybara/releases/download/v20260223/copybara_deploy.jar",
+)
+use_repo(
+    http_download,
+    "buildifier_linux",
+    "buildifier_windows",
+    "copybara",
+)
+
+#--------------------------------------------------------
+# C++ toolchains
+#--------------------------------------------------------
+
+sniper_includes = use_extension("//tools/bazel/toolchain/sniper:sniper_includes_repo.bzl", "sniper_includes_ext")
+use_repo(sniper_includes, "sniper_includes")
+
+register_toolchains("//tools/bazel/toolchain/sniper:sniper_toolchain")
+
+#--------------------------------------------------------
+# Python setup
+#--------------------------------------------------------
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.defaults(python_version = "3.11")
+python.toolchain(python_version = "3.11")
+use_repo(python, "python_3_11")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "horizon_pypi",
+    python_version = "3.11",
+    requirements_lock = "//:requirements.txt",
+)
+pip.default(default_hub = "horizon_pypi")
+use_repo(pip, "pypi")
+
+#--------------------------------------------------------
+# JS, TS, NPM
+#--------------------------------------------------------
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "22.22.0")
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext.deps(ts_version_from = "//:package.json")
+use_repo(rules_ts_ext, "npm_typescript")
+
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+use_repo(pnpm, "pnpm")
+
+pnpm.pnpm(pnpm_version_from = "//:package.json")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    npm_package_target_name = "npm_pkg",
+    npmrc = "//:.npmrc",
+    pnpm_lock = "//:pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
+
+#--------------------------------------------------------
+# Emscripten setup
+#--------------------------------------------------------
+
+emsdk_deps = use_extension("@emsdk//:emscripten_deps.bzl", "emscripten_deps")
+emsdk_deps.config(version = "6.0.3")
+
+#--------------------------------------------------------
+# Non-dependencies stuff
+#--------------------------------------------------------
+
+register_toolchains(
+    "//tools/bazel/glsl:all",
+)
+
+make_versions_list = use_repo_rule("//hrz/protocol/history:make_versions_list.bzl", "make_versions_list")
+
+make_versions_list(
+    name = "model_versions_list",
+    manifest = "//hrz/protocol/history:versions_manifest.csv",
+    var_name = "MODEL_VERSIONS_LIST",
+)
+
+bazel_output_base_util = use_repo_rule("//tools/bazel:bazel_output_base.bzl", "bazel_output_base_util")
+
+bazel_output_base_util(name = "bazel_output_base_util")
+
+tsconfig_util = use_repo_rule("//tools/bazel:tsconfig.bzl", "tsconfig_util")
+
+tsconfig_util(
+    name = "tsconfig_util",
+    tsconfig = "//:tsconfig.json",
+)
+
+proto_files_list = use_extension("//hrz/protocol:list_proto_files_extension.bzl", "proto_files_list")
+use_repo(proto_files_list, "proto_files_list")

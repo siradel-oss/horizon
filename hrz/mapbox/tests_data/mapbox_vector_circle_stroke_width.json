@@ -1,0 +1,27 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "points",
+      "type": "circle",
+      "source": "grid",
+      "paint": {
+        "circle-color": "#ff0000",
+        "circle-radius": ["+", 3, ["get", "y"]],
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": ["get", "x"],
+        "circle-translate": ["literal", [5, 8]],
+        "circle-pitch-alignment": "viewport"
+      }
+    }
+  ]
+}

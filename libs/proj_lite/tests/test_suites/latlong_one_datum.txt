@@ -1,0 +1,15 @@
+= +proj=longlat +ellps=clrk80 +no_defs
+< 10 60 1e-8
+> +proj=longlat +ellps=intl +towgs84=114,-116,-333,0,0,0,0 +no_defs
+
+= +proj=longlat +ellps=clrk80 +towgs84=0,0,0,0,0,0,0 +no_defs
+< 10 60 1e-8
+> +proj=longlat +ellps=intl +no_defs
+
+= +proj=longlat +ellps=intl +towgs84=114,-116,-333,0,0,0,0 +no_defs
+< 10 60 1e-8
+> +proj=longlat +ellps=clrk80 +no_defs
+
+= +proj=longlat +ellps=intl +no_defs
+< 10 60 1e-8
+> +proj=longlat +ellps=clrk80 +towgs84=0,0,0,0,0,0,0 +no_defs

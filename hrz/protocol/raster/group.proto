@@ -1,0 +1,20 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+// Raster groups are used to separate rasters into categories of similar update
+// frequencies. Their draw order is given by their name.
+// When a raster in a group is modified, the entire group must be rebuilt, but
+// other groups are untouched. This means that it is a good idea to group
+// "background" raster like OSM or Bing in a lower group than raster tht are
+// often modified like computation results.
+export enum RasterGroup {
+    BOTTOM_RASTER_GROUP = 0;
+    MIDDLE_RASTER_GROUP = 1;
+    TOP_RASTER_GROUP    = 2;
+}

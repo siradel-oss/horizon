@@ -1,0 +1,39 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/raster/nodata.proto";
+
+enum AlphaChannelUsage {
+    // Opaque image.
+    IGNORE_ALPHA_CHANNEL            = 0;
+
+    // Use the alpha channel.
+    USE_ALPHA_CHANNEL               = 1;
+
+    // Use the alpha channel. Color channels are already pre-multiplied.
+    USE_ALPHA_CHANNEL_PREMULTIPLIED = 2;
+}
+
+enum TextureFiltering {
+    // No interpolation.
+    NEAREST  = 0;
+
+    // Bilinear interpolation.
+    BILINEAR = 1;
+}
+
+// Describes how pixels are interpreted from the source raster.
+export message RasterSampling {
+    reserved 3;
+
+    // Ignored for DTM rasters.
+    AlphaChannelUsage alpha_channel_usage = 1;
+    NodataHandling    nodata_handling     = 2;
+    TextureFiltering  filtering           = 4;
+}

@@ -1,0 +1,10 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "stb_image_write",
+    srcs = ["impl.cpp"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@stb//:image_write",
+    ],
+)

@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+
+run_binary(
+    name = "proto_xml_protocol",
+    srcs = [
+        "//hrz/protocol:protos",
+    ],
+    outs = [
+        "hrz_protocol.xml",
+    ],
+    args = [
+        "$(locations //hrz/protocol:protos)",
+        "--plugin=protoc-gen-xml_desc=$(execpath //hrz/xml_desc_generator:xml_desc_generator)",
+        "--xml_desc_out=$(@D)",
+    ],
+    tool = "//third_party:protoc",
+    tools = [
+        "//hrz/xml_desc_generator",
+    ],
+    visibility = ["//visibility:public"],
+)

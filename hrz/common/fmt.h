@@ -1,0 +1,22 @@
+// SPDX-FileCopyrightText: Copyright 2022 Siradel
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
+#include "hrz/common/tile_coords.h"
+
+#include <fmt/format.h>
+
+// https://fmt.dev/latest/api.html#formatting-user-defined-types
+
+template<>
+struct fmt::formatter<hrz::TileCoords>
+{
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
+
+    auto format(const hrz::TileCoords& coords, const format_context& ctx) const
+        -> decltype(ctx.out())
+    {
+        return format_to(ctx.out(), "{}-{}-{}", coords.lod, coords.x, coords.y);
+    }
+};

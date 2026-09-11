@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: Copyright 2022 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "wsi",
+    srcs = select({
+        "//:linux_windowed": ["wsi_x11.cpp"],
+        "//:linux_headless": ["wsi_headless_egl.cpp"],
+        "@platforms//os:windows": ["wsi_win32.cpp"],
+    }),
+    hdrs = [
+        "wsi.h",
+    ],
+    implementation_deps = select({
+        "//:use_egl": [
+            "//third_party/glad:egl_15",
+        ],
+        "//conditions:default": [],
+    }),
+    includes = ["."],
+    linkopts = select({
+        "@platforms//os:windows": [
+            "User32.lib",
+            "Gdi32.lib",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//:linux_windowed": [
+            "-lX11",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/fnd",
+    ],
+)

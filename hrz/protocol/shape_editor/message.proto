@@ -1,0 +1,21 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/shape_editor/defs.proto";
+
+export message ShapeEditorMessage {
+    reserved 1;
+
+    oneof payload {
+        ShapeEditorMode       mode_switch             = 101;
+        ShapeSelection        shape_selection         = 102;
+        ControlPointSelection control_point_selection = 103;
+        ShapeSelection        shape_geometry_update   = 104;
+    }
+}

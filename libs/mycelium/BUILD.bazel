@@ -1,0 +1,132 @@
+# SPDX-FileCopyrightText: Copyright 2019 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load(":shader_version_info.bzl", "glsl_version_info_header")
+
+glsl_version_info_header(
+    name = "glsl_version_info",
+    header = "internal/glsl_version_info.h",
+    prefix = "MYCELIUM_",
+    visibility = ["//visibility:public"],
+)
+
+SRCS = [
+    "instance.cpp",
+    "internal/log.cpp",
+    "resource_context.cpp",
+    "render_context.cpp",
+    "renderer.cpp",
+    "resource_binder.cpp",
+    "render_graph.cpp",
+    "internal/log.h",
+    "internal/pool.h",
+    "internal/arena.h",
+    "internal/instance.h",
+    "internal/intern_string.h",
+    "internal/conv.h",
+    "internal/conv.cpp",
+    ":glsl_version_info",
+]
+
+HDRS = [
+    "types.h",
+    "log.h",
+    "backend.h",
+    "renderer.h",
+    "render_graph.h",
+    "properties.h",
+]
+
+DEPS = [
+    "//libs/lm",
+    "@abseil-cpp//absl/container:flat_hash_set",
+    "@abseil-cpp//absl/container:flat_hash_map",
+    "@abseil-cpp//absl/container:node_hash_map",
+    "@fmt",
+]
+
+LOCAL_DEFINES = select({
+    "//:release": ["MYCELIUM_DISABLE_UNKNOWN_SAMPLER_WARNINGS"],
+    "//conditions:default": [],
+}) + select({
+    "@platforms//cpu:x86_64": ["MYCELIUM_WITH_SSE"],
+    "//conditions:default": [],
+})
+
+cc_library(
+    name = "mycelium_core_33",
+    srcs = SRCS,
+    hdrs = HDRS,
+    implementation_deps = [
+        "//third_party/glad:core_33",
+    ],
+    local_defines = LOCAL_DEFINES + [
+        "MYCELIUM_CORE_33=1",
+        "MYCELIUM_GL_DESKTOP=1",
+        "MYCELIUM_USE_GLAD=1",
+    ],
+    strip_include_prefix = "/libs",
+    visibility = ["//visibility:public"],
+    deps = DEPS,
+)
+
+cc_library(
+    name = "mycelium_es_30",
+    srcs = SRCS,
+    hdrs = HDRS,
+    implementation_deps = [
+        "//third_party/glad:es_30",
+    ],
+    local_defines = LOCAL_DEFINES + [
+        "MYCELIUM_ES_30=1",
+        "MYCELIUM_GL_ES=1",
+        "MYCELIUM_USE_GLAD=1",
+    ],
+    strip_include_prefix = "/libs",
+    visibility = ["//visibility:public"],
+    deps = DEPS,
+)
+
+cc_library(
+    name = "mycelium_webgl_2",
+    srcs = SRCS,
+    hdrs = HDRS,
+    implementation_deps = [
+        "//libs/mycelium/js",
+    ],
+    local_defines = LOCAL_DEFINES + [
+        "MYCELIUM_WEBGL_2=1",
+        "MYCELIUM_GL_ES=1",
+    ],
+    strip_include_prefix = "/libs",
+    visibility = ["//visibility:public"],
+    deps = DEPS,
+)
+
+cc_test(
+    name = "tests",
+    testonly = False,
+    srcs = [
+        "tests/float16.cpp",
+        "tests/render_graph.cpp",
+    ],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        "mycelium_core_33",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+alias(
+    name = "mycelium",
+    actual = select({
+        "//:use_gles": "//libs/mycelium:mycelium_es_30",
+        "@platforms//os:emscripten": "//libs/mycelium:mycelium_webgl_2",
+        "//conditions:default": "//libs/mycelium:mycelium_core_33",
+    }),
+    visibility = ["//visibility:public"],
+)

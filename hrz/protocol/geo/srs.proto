@@ -1,0 +1,24 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+// Specified the format of the SRS descriptor string
+enum SrsDescriptorType {
+    // A PROJ.4 string, such as "+proj=longlat +datum=WGS84 +no_defs".
+    PROJ4_STRING_DESCRIPTOR = 0;
+
+    // An authority:SRID couple, such as "EPSG:4326", or an OGC CRS
+    // descriptor, such as "urn:ogc:def:crs:EPSG:6.18.3:3857".
+    SRID_DESCRIPTOR         = 1;
+}
+
+// @path_leaf="true"
+export message SpatialReferenceSystem {
+    SrsDescriptorType descriptor_type = 1;
+    string            descriptor      = 2;
+}

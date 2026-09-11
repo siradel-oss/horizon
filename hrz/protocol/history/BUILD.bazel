@@ -1,0 +1,109 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@model_versions_list//:list.bzl", "MODEL_VERSIONS_LIST")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+py_library(
+    name = "manifest",
+    srcs = ["manifest.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "gen",
+    srcs = ["gen.py"],
+    data = [
+        "versions_manifest.csv",
+        "//hrz/protocol/history/templates:all",
+    ],
+    deps = [
+        ":manifest",
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+exports_files(
+    srcs = [
+        "versions_manifest.csv",
+    ] + ["%s.pbf" % id for id in MODEL_VERSIONS_LIST],
+)
+
+[
+    run_binary(
+        name = "compress_descriptor_set_" + id,
+        srcs = [
+            "%s.pbf" % id,
+        ],
+        outs = [
+            "%s.pbf.lz4" % id,
+        ],
+        args = [
+            "$(execpath %s.pbf)" % id,
+            "$@",
+        ],
+        tool = "//tools/compress_file_lz4",
+    )
+    for id in MODEL_VERSIONS_LIST
+]
+
+filegroup(
+    name = "all_compressed_descriptor_sets",
+    srcs = ["%s.pbf.lz4" % id for id in MODEL_VERSIONS_LIST],
+)
+
+run_binary(
+    name = "generate_model_version",
+    srcs = [
+        "versions_manifest.csv",
+    ],
+    outs = [
+        "scene_model_version.h",
+    ],
+    args = [
+        "-m",
+        "$(location :versions_manifest.csv)",
+        "gen-cpp-model-version",
+        "$@",
+    ],
+    tool = ":gen",
+)
+
+cc_library(
+    name = "scene_model_version",
+    hdrs = ["scene_model_version.h"],
+    include_prefix = "hrz/protocol",
+    visibility = ["//visibility:public"],
+)
+
+run_binary(
+    name = "generate_descriptor_sets_list",
+    srcs = [
+        "versions_manifest.csv",
+        ":all_compressed_descriptor_sets",
+    ],
+    outs = [
+        "descriptor_sets_list.cpp",
+        "descriptor_sets_list.h",
+    ],
+    args = [
+        "-m",
+        "$(location :versions_manifest.csv)",
+        "gen-cpp-descriptor-sets-list",
+        "$(location descriptor_sets_list.h)",
+        "$(location descriptor_sets_list.cpp)",
+        "$(locations :all_compressed_descriptor_sets)",
+    ],
+    tool = ":gen",
+)
+
+cc_library(
+    name = "descriptor_sets_list",
+    srcs = ["descriptor_sets_list.cpp"],
+    hdrs = ["descriptor_sets_list.h"],
+    include_prefix = "hrz/protocol",
+    visibility = ["//visibility:public"],
+)

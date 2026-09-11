@@ -1,0 +1,38 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/scene/index.proto";
+
+message RasterSettings {
+    // Set to true to increase the raster LODs on inclined polygons.
+    // This makes the display sharper, but might be a bit noisier.
+    bool  compensate_inclination = 1;
+
+    // Set to true to smooth the raster LOD transitions when moving the camera.
+    bool  mix_lods               = 2;
+
+    // Max factor by which a pixel from the raster layers can be stretch on
+    // screen in logical pixels before the next LOD is loaded. The smaller the
+    // value the sooner raster layers are refined when zooming in. Usually
+    // between 1 and 2. Must be greater than 0.
+    float max_screen_space_error = 3;
+}
+
+// This contains all settings global to the scene.
+// @path_root="scene_settings"
+export message SceneSettings {
+    // Determines which view is used to decide what point of view (and hence
+    // which camera) is used to compute the level of detail of some elements
+    // in the scene, such as the terrain.
+    // Has no effect when only one camera is used.
+    SceneViewIndex  main_view    = 1;
+
+    SceneViewBitset active_views = 2;
+    RasterSettings  raster       = 3;
+}

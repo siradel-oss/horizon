@@ -1,0 +1,19 @@
+<!--
+    SPDX-FileCopyrightText: Copyright 2024 Siradel
+    SPDX-License-Identifier: MIT
+-->
+
+<template>
+    <div class="flex flex-row items-stretch gap-xl">
+        <div class="w-1/4 min-w-[400px] flex-none relative h-full">
+            <div class="absolute inset-0 overflow-auto pe-2">
+                <slot name="left" />
+            </div>
+        </div>
+        <div class="flex-1 relative h-full">
+            <div class="absolute inset-0 rounded-md overflow-clip">
+                <slot name="right" />
+            </div>
+        </div>
+    </div>
+</template>

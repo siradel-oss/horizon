@@ -1,0 +1,21 @@
+{
+    "name": "@siradel-oss/horizon-protocol",
+    "homepage": "https://github.com/siradel-oss/Horizon",
+    "type": "module",
+    "dependencies": {
+        "long": "^5.3.2",
+        "protobufjs": "^8.8.0"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "browser": {
+        "http": false,
+        "https": false,
+        "net": false,
+        "path": false,
+        "stream": false,
+        "tls": false,
+        "fs": false,
+        "crypto": false
+    }
+}

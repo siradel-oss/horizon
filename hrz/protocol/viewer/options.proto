@@ -1,0 +1,173 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/viewer/key_action.proto";
+import "hrz/protocol/viewer/graphics_settings.proto";
+import "hrz/protocol/color/color.proto";
+
+message KeyInteractionBindings {
+    // A key can only be tied to a single action. Any key duplication results in
+    // the last binding set for that key being used.
+    repeated KeyBinding bindings = 1;
+}
+
+export message ViewerOptions {
+    reserved 2, 15, 16, 23;
+
+    // Maximum number of workers created.
+    // Default: defined based on hardware capacities.
+    uint32                    worker_count                        = 1;
+
+    // Run actors on the main thread, this helps with debugging.
+    // Default: false
+    bool                      run_actors_on_main_thread           = 29;
+
+    // Logging system verbosity. The higher the value the more messages will be
+    // filtered-out. Horizon has four severity levels. A value of 0 keeps all
+    // log messages while a maximum value of 3 only keeps error messages.
+    // Default: 0
+    uint32                    log_filter_level                    = 3;
+
+    // [DESKTOP ONLY] User-agent given to cURL.
+    // Default: "Horizon/VERSION_NUMBER"
+    string                    user_agent                          = 5;
+
+    // Sets the graphics level for the application.
+    // Default: Auto
+    GraphicsLevel             graphics_level                      = 17;
+
+    // Overrides the graphics settings dictated by the graphics level.
+    // Default: no setting is overriden.
+    GraphicsSettingsOverrides graphics_settings_overrides         = 25;
+
+    // Redraw every frame explicitly, even when nothing has changed.
+    // Default: false
+    bool                      force_render                        = 7;
+
+    // Redraw the flat overlays every frame, even when nothing has changed.
+    // This also causes the scene to be drawn every frame, like `force_render`.
+    // Default: false
+    bool                      force_flat_overlay_render           = 26;
+
+    // Disables system events captured by the engine. When this is true, use the
+    // ViewerService.SendEvents method to send events to the engine. Otherwise
+    // nothing will be active. Default: false
+    bool                      disable_events_capture              = 8;
+
+    // For internal use only, please ignore.
+    // Enables some basic interactions from the engine itself.
+    // Default: false
+    bool                      internal_integration                = 9;
+
+    // Let the user specify keys that map to specific actions.
+    KeyInteractionBindings    key_bindings                        = 10;
+
+    // Default tile cache size for raster providers, in number of tiles.
+    // A typical value for desktop environments is 150.
+    // A typical value for web environments is 0, as the browser's cache is
+    // present. The value can be overridden for each provider individually, if
+    // desired. Default: 0
+    uint32                    raster_provider_tile_cache_size     = 11;
+
+    // How much memory is used by the internal blob allocator, in bytes.
+    // If the system allocator is used for blobs, a value of 0 means
+    // that no limit is explicitly set.
+    // Default: 300 MiB
+    uint64                    blob_memory_pool_size               = 12;
+
+    // [WEB ONLY] How much memory is allocated for the WASM VM at
+    // maximum, in bytes. Up to 4 GiB, as WASM is a 32-bit architecture.
+    // Default: 800 MiB
+    uint64                    max_wasm_memory_size                = 13;
+
+    // Pass all blob allocations and deallocations to the system memory
+    // allocator. Only set this option to true on systems with virtual memory,
+    // i.e. not on the web.
+    bool                      use_system_allocator_for_blobs      = 14;
+
+    // How much data can be uploaded to the GPU memory at maximum,
+    // in bytes. A value of 0 means that no limit is explicitly set.
+    // Default: 0
+    uint32                    max_video_memory_size               = 22;
+
+    // [DESKTOP ONLY] Size in bytes of the HTTP cache.
+    // Settings this value below 1MB disables caching.
+    // This options only affects the native version as the web version uses the
+    // browser's cache.
+    uint32                    native_http_cache_size              = 18;
+
+    // [DESKTOP ONLY] Value of the `Referer` header of HTTP requests made by the
+    // native version.
+    string                    native_http_referrer                = 24;
+
+    // Disables all systems related to the terrain, including imagery and DTM
+    // rasters, and editable shapes. Default: false
+    bool                      disable_terrain                     = 19;
+
+    // Disables terrain adaptive resolution, which improves terrain geometry at
+    // high elevations.
+    // Turn off if you encounter issues with terrain geometry when a DTM
+    // layer is set up.
+    bool                      disable_terrain_adaptive_resolution = 31;
+
+    // Disables flat overlay representations, whether they are drawn over the
+    // terrain or 3D Tiles. Default: false
+    bool                      disable_flat_overlays               = 28;
+
+    // Shows a loading screen while shaders are being created.
+    // Default: false
+    bool                      show_loading_screen                 = 20;
+
+    // Background color for the loading screen.
+    // Default: (0, 0, 0, 1) (i.e. opaque black)
+    Color                     loading_screen_background_color     = 30;
+
+    // Forces to compile and link all the shaders before the first frame. It
+    // results in longer loading times but has the benefit of avoiding
+    // stuttering due to shader compilation when using the engine afterwards.
+    // Enabling this on desktop may be a good idea. Yet, tests have shown
+    // heterogenous results in browsers. Chrome looks to be a good candidate for
+    // activating this option while Firefox on the other hand isn't. Default:
+    // false
+    bool                      force_shader_compilation            = 21;
+
+    // Web only.
+    // Ratio from physical device pixels to logical pixels.
+    // Web pages are build with an idealised pixel size, that is roughly
+    // constant from one device to another, in order to lessen the differences
+    // between devices and their screens. Traditionally, desktop screens have a
+    // pixel density of about 96 pixel per inch (2.54 cm), i.e. 96 DPI. (The
+    // actual logical pixel size varies from device to device, and is also
+    // affected by other parameters such as the page zoom level.) These screens
+    // have one actual, device pixel for each logical pixel. Some devices have
+    // better screen densities (high DPI values, with smaller pixels) and can
+    // fit more than one device (i.e. screen) pixel in one logical pixel.
+    // However higher values of the ratio require drawing more pixels, which
+    // can affect performance negatively. Hence this setting can be used to
+    // artificially lower the ratio and get some performance back on devices
+    // with high DPI but low-power GPUs, like tablets and mobile phones.
+    float                     device_pixel_ratio                  = 27;
+}
+
+export message ViewerConfiguration {
+    // The memory settings used by the engine, inferred from the values passed
+    // in the viewer options. 0 indicates an unconstrained memory.
+    uint64           blob_memory_pool_size = 1;
+    uint64           max_video_memory_size = 2;
+    uint32           max_wasm_memory_size  = 3;
+
+    // The `GraphicsLevel` that was specified in the viewer options, or computed
+    // by the engine if it was set to `Auto`.
+    GraphicsLevel    graphics_profile      = 4;
+
+    // The graphics settings used by the engine. They are the defaults used by
+    // the associated graphics profile, overriden by the values specified in the
+    // viewer options.
+    GraphicsSettings graphics_settings     = 5;
+}

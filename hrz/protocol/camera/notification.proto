@@ -1,0 +1,35 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/camera/movement_type.proto";
+
+export message CameraNotification {
+    CameraIndex camera_index = 1;
+
+    oneof       kind {
+        Void               animation_started                           = 101;
+        Void               animation_ended                             = 102;
+        Void               animation_interrupted                       = 103;
+
+        CameraMovementType continuous_movement_started                 = 104;
+        CameraMovementType continuous_movement_interrupted_no_resume   = 105;
+        CameraMovementType continuous_movement_interrupted_will_resume = 106;
+        CameraMovementType continuous_movement_resumed                 = 107;
+        CameraMovementType continuous_movement_ended                   = 108;
+
+        // Sent when the camera starts moving after a few frames of inactivity.
+        // Any kind of movement can trigger this event.
+        Void               motion_started                              = 109;
+
+        // Sent after a few frames without any camera motion.
+        Void               motion_ended                                = 110;
+    }
+}

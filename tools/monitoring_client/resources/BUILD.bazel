@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("//tools/bazel/cc_resources:cc_resources.bzl", "cc_resources")
+
+cc_resources(
+    name = "resources",
+    files = {
+        "//third_party/fonts:Roboto-Regular.ttf": "Font",
+        "logo_monitoring_16.png": "Icon16",
+        "logo_monitoring_32.png": "Icon32",
+        "logo_monitoring_96.png": "Icon96",
+    },
+    header_name = "monitoring_client_resources.h",
+    includes = ["."],
+    namespace = "res",
+    visibility = ["//visibility:public"],
+)

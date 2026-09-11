@@ -1,0 +1,19 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/client_data/feature.proto";
+
+export message VectorDataRequestResponse {
+    // The ticket of the request this is a response to.
+    uint32                 ticket      = 1;
+    // If true, the request failed and the `features` field is empty.
+    bool                   error       = 4;
+    repeated ClientFeature features    = 2;
+    string                 attribution = 3;
+}

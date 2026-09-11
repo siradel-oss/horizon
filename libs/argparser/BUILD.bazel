@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright 2019 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "argparser",
+    srcs = [
+        "argparser.cpp",
+    ],
+    hdrs = [
+        "argparser.h",
+    ],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/fnd",
+    ],
+)

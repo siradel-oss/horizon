@@ -1,0 +1,29 @@
+{
+  "version": 8,
+  "layers": [
+    {
+      "id": "background-1",
+      "type": "background",
+      "paint": {
+        "background-color": "#ff0000"
+      }
+    },
+    {
+      "id": "background-2",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "background-3",
+      "type": "background",
+      "paint": {
+        "background-color": "#00ff00"
+      },
+      "layout": {
+        "visibility": "none"
+      }
+    }
+  ]
+}

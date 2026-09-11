@@ -1,0 +1,18 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/attributes/attribute.proto";
+
+export message FeatureId {
+    reserved 1;
+
+    repeated FeatureAttributeValue attributes = 2;
+}
+
+export message FeatureIds { repeated FeatureId feature_ids = 1; }

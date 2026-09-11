@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum CameraIndex {
+    CAMERA_0 = 0;
+    CAMERA_1 = 1;
+}
+
+export message CameraIndexReference { CameraIndex camera = 1; }

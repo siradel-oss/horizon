@@ -1,0 +1,51 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests",
+  "glyphs": "https://redacted.localhost/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf"
+    }
+  },
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "icon-translate": ["literal", [2, 2]],
+        "icon-translate-anchor": "viewport",
+        "text-color": "#ffffff",
+        "text-halo-color": "#000000",
+        "text-halo-width": 1,
+        "text-translate": ["literal", [2, 2]],
+        "text-translate-anchor": "viewport"
+      },
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-image": "circle_0",
+        "icon-optional": true,
+        "icon-size": 1,
+        "text-allow-overlap": true,
+        "text-anchor": "bottom-left",
+        "text-field": ".  .\n_",
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-ignore-placement": true,
+        "text-justify": "auto",
+        "text-line-height": 0.5,
+        "text-optional": true,
+        "text-size": 20
+      }
+    }
+  ]
+}

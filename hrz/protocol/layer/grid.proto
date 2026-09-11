@@ -1,0 +1,30 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/size_unit.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/scene/index.proto";
+
+export message Grid {
+    // Extent of the plane. Unit is set with `extent_unit`.
+    float           extent      = 1;
+    UiSizeUnit      extent_unit = 5;
+
+    // This is the reference size of a grid cell in meters. Every square in the
+    // grid then has a size which is `10^LOD * cell_size` where LOD is
+    // automatically computed.
+    float           cell_size   = 2;
+    // Grid lines are always rendered with full opacity thus only use the RGB
+    // components. The grid background colour uses all the component. Therefore,
+    // the opacity can be set to 0 when only the grid lines need to be
+    // displayed.
+    Color           color       = 3;
+
+    SceneViewBitset scene_views = 4;
+}

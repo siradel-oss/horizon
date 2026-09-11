@@ -1,0 +1,73 @@
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("//tools/licenses:licenses.bzl", "merge_third_party_licenses_md", "merge_third_party_licenses_txt")
+
+package(default_visibility = ["//visibility:public"])
+
+alias(
+    name = "protoc",
+    actual = select({
+        "@platforms//os:windows": "@@protobuf++protoc+prebuilt_protoc.win64//:bin/protoc.exe",
+        "@platforms//os:linux": "@@protobuf++protoc+prebuilt_protoc.linux_x86_64//:bin/protoc",
+    }),
+)
+
+alias(
+    name = "buildifier",
+    actual = select({
+        "@platforms//os:windows": "@buildifier_windows//file:downloaded",
+        "@platforms//os:linux": "@buildifier_linux//file:downloaded",
+    }),
+)
+
+py_console_script_binary(
+    name = "black",
+    pkg = "@pypi//black",
+)
+
+LICENSES_DICT = {
+    "@abseil-cpp//:LICENSE": "abseil",
+    "//third_party/fonts:LICENSE-Allerta.txt": "Allerta",
+    "@asio//:asio/LICENSE_1_0.txt": "Asio",
+    "@basisu//:LICENSE": "Basis Universal",
+    "licenses/BoringSSL.txt": "BoringSSL",
+    "@brotli//:LICENSE": "Brotli",
+    "@cdt//:LICENSE": "CDT",
+    "@dear_imgui//:LICENSE.txt": "Dear ImGui",
+    "@delabella//:LICENSE": "DelaBella",
+    "@draco//:LICENSE": "Draco",
+    "@earcut//:LICENSE": "Earcut",
+    "licenses/emscripten.txt": "Emscripten",
+    "@etcpak//:LICENSE.txt": "etcpak",
+    "@fmt//:LICENSE": "{fmt}",
+    "//third_party/glad:LICENSE.txt": "Glad",
+    "@harfbuzz//:COPYING": "HarfBuzz",
+    "@curl//:COPYING": "libcurl",
+    "@lz4//:LICENSE": "LZ4",
+    "@microui//:LICENSE": "microui",
+    "@msdfgen//:LICENSE.txt": "msdfgen",
+    "@pcg_basic//:LICENSE.txt": "PCG",
+    "@protobuf//:LICENSE": "Protocol Buffers",
+    "@pugixml//:LICENSE.md": "pugixml",
+    "@rapidjson//:license.txt": "RapidJSON",
+    "licenses/ic_sdf.txt": "sdBox, sdStar, sdSegment",
+    "@sokol//:LICENSE": "sokol",
+    "@stb//:LICENSE": "stb",
+    "//third_party/tlsf:LICENSE": "tlsf",
+    "@libwebp//:COPYING": "WebP codec",
+    "@websocketpp//:COPYING": "websocketpp",
+    "@woff2//:LICENSE": "woff2",
+    "@zlib//:LICENSE": "zlib",
+    "@zstd//:LICENSE": "Zstandard",
+}
+
+merge_third_party_licenses_txt(
+    name = "merge_third_party_licenses_txt",
+    licenses = LICENSES_DICT,
+    merged_file = "LICENSE-THIRD-PARTY.txt",
+)
+
+merge_third_party_licenses_md(
+    name = "merge_third_party_licenses_md",
+    licenses = LICENSES_DICT,
+    merged_file = "third_party_licenses.md",
+)

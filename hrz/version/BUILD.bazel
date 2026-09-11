@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: Copyright 2026 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("//:version.bzl", "HRZ_VERSION")
+
+py_binary(
+    name = "gen_version",
+    srcs = ["gen_version.py"],
+    main = "gen_version.py",
+    python_version = "PY3",
+)
+
+run_binary(
+    name = "version_cpp",
+    outs = ["version.cpp"],
+    args = [
+        "$(location version.cpp)",
+        HRZ_VERSION,
+    ],
+    stamp = -1,
+    tags = ["no-cache"],
+    tool = ":gen_version",
+)
+
+cc_library(
+    name = "version",
+    srcs = [":version_cpp"],
+    hdrs = ["version.h"],
+    visibility = ["//visibility:public"],
+)

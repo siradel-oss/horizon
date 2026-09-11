@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "sources": {
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "layer1",
+      "source": "osm",
+      "type": "raster"
+    },
+    {
+      "id": "layer2",
+      "source": "osm",
+      "type": "raster"
+    }
+  ]
+}

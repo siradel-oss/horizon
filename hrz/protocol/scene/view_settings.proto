@@ -1,0 +1,274 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/lighting_settings.proto";
+
+message TerrainSettings {
+    reserved 6;
+
+    // The terrain color applied below the raster.
+    // Alpha is ignored.
+    Color            terrain_color             = 5;
+
+    // The terrain opacity is applied to both the terrain and the rasters.
+    float            terrain_opacity           = 1;
+
+    // Set to true to ignore all DTM layers for this scene view, i.e. force
+    // the ground to be at elevation zero.
+    //
+    // This only affects the terrain itself. Other systems relying on the
+    // DTM layers for elevations are unaffected, such as clamping vector
+    // features.
+    bool             disable_terrain_elevation = 7;
+
+    int32            clip_id                   = 2;
+
+    LightingSettings lighting                  = 4;
+}
+
+enum SunDirectionMode {
+    // The direction is computed from the current date and time.
+    // @label="Relative to the date"
+    SUN_DIRECTION_RELATIVE_TO_DATE             = 0;
+    // The direction is explicitly given using azimuth and altitude angles.
+    // Counter-clockwise rotation, with azimuth 0 being North-aligned.
+    // @label="Relative to the cardinal frame"
+    SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME   = 1;
+    // The direction is explicitly given using azimuth and altitude angles.
+    // Counter-clockwise rotation, with azimuth 0 aligned towards the forward
+    // direction of the camera (or the up direction when it perfectly faces the
+    // Earth).
+    // @label="Relative to the tangential frame"
+    SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME = 2;
+}
+
+message SunDirection {
+    SunDirectionMode mode             = 1;
+
+    // Solar time at the camera position. 0 = midnight, 12 = noon.
+    // Used when `mode` is set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            local_solar_time = 2;
+    // 0 = January 1st.
+    // Used when mode is set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            day_of_year      = 3;
+
+    // Angle in radians within [0; 2π[ with the reference direction.
+    // Counterclockwise.
+    // Used when `mode` is not set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            azimuth          = 4;
+    // Angle in radians within [-π/2; π/2[ with the horizon at 0.
+    // Used when `mode` is not set to SUN_DIRECTION_RELATIVE_TO_DATE.
+    float            altitude         = 5;
+}
+
+enum SunLightingMode {
+    // @label="Simulated"
+    SUN_LIGHTING_SIMULATED = 0;
+    // @label="Static"
+    SUN_LIGHTING_STATIC    = 1;
+}
+
+enum AmbientLightingMode {
+    // @label="Simulated"
+    AMBIENT_LIGHTING_SIMULATED = 0;
+    // @label="Static"
+    AMBIENT_LIGHTING_STATIC    = 1;
+}
+
+enum SkyMode {
+    // @label="Simulated"
+    SKY_SIMULATED = 0;
+    // @label="Static"
+    SKY_STATIC    = 1;
+}
+
+enum StaticSkyColorTransitionUnit {
+    // @label="Metres"
+    STATIC_SKY_COLOR_TRANSITION_UNIT_METERS = 0;
+    // @label="Pixels"
+    STATIC_SKY_COLOR_TRANSITION_UNIT_PIXELS = 1;
+}
+
+message SkySettings {
+    SkyMode                      mode                                   = 1;
+
+    // Attenuates the strength of the impact of the sky on the planet when
+    // `mode` is `SKY_SIMULATED`. 0 is the default, realistic value. The maximum
+    // is 1.
+    float                        attenuation                            = 2;
+
+    // Color of the atmosphere used when `mode` is `SKY_STATIC`.
+    Color                        static_atmosphere_color                = 3;
+
+    // Color of the outer space used when `mode` is `SKY_STATIC`.
+    Color                        static_space_color                     = 4;
+
+    // Distance from the horizon at which the sky color starts transitioning
+    // from the atmosphere color to the space color.
+    // This is used only when `mode` is `SKY_STATIC`.
+    double                       static_color_transition_start_distance = 5;
+
+    // Distance from the horizon at which the sky color finishes transitioning
+    // from the atmosphere color to the space color.
+    // This is used only when `mode` is `SKY_STATIC`.
+    double                       static_color_transition_end_distance   = 6;
+
+    // Unit of the distances for the static sky color transition.
+    // This is used only when `mode` is `SKY_STATIC`.
+    StaticSkyColorTransitionUnit static_color_transition_distance_unit  = 7;
+}
+
+message SunSettings {
+    SunLightingMode mode         = 1;
+    SunDirection    direction    = 2;
+
+    // Only used when `mode` is `SUN_LIGHTING_STATIC`.
+    // Alpha is ignored.
+    Color           static_color = 3;
+}
+
+message AmbientLightingSettings {
+    AmbientLightingMode mode         = 1;
+
+    // Only used when `mode` is `AMBIENT_LIGHTING_STATIC`.
+    // Alpha is ignored.
+    Color               static_color = 2;
+}
+
+message FogSettings {
+    // The color towards which pixels of the scene are blended.
+    Color color          = 1;
+    // The speed at which fog reaches its maximal impact.
+    // The default value is one, at which it takes about a kilometer through
+    // the thickest layer of fog to reach the maximal impact.
+    float density        = 2;
+    // The distance at which the fog starts impacting the scene.
+    // Positions that are closer are completely unaffected by fog.
+    float start_distance = 3;
+    // The altitude at which the fog starts decreasing in in intensity.
+    // The decrease is exponential.
+    float falloff_start  = 4;
+    // The altitude at which the fog's impact becomes negligible.
+    float falloff_end    = 5;
+    // Whether the sky should be obscured by fog.
+    bool  apply_to_sky   = 6;
+}
+
+message AmbientSettings {
+    reserved 1, 2, 3, 4, 5, 6, 7, 8, 9, 12;
+
+    // Global lighting settings applied to the whole scene
+    LightingSettings        lighting            = 11;
+
+    // Controls the balance between sun lighting and ambient lighting.
+    // At 0.0, there is only ambient lighting.
+    // At 0.5, there are equal part sun and ambient lighting.
+    // At 1.0, there is only sun lighting.
+    float                   sun_ambient_balance = 13;
+
+    // Multiplies both sun and ambient lighting applied to the scene.
+    // The default value is 1.0.
+    float                   lighting_strength   = 14;
+
+    // Controls the intensity at which faces that are not fully exposed to the
+    // sun are deprived from its light. At 0, they stop receiving light as soon
+    // as they are perpendicular ot the sun direction. At 1, they stop receiving
+    // light when they face the opposite direction.
+    float                   wrap_lighting       = 15;
+
+    SkySettings             sky                 = 16;
+    SunSettings             sun                 = 17;
+    AmbientLightingSettings ambient_lighting    = 18;
+
+    FogSettings             primary_fog         = 19;
+    FogSettings             secondary_fog       = 20;
+
+    // This color is displayed under the transparent terrain.
+    Color                   underground_color   = 10;
+}
+
+message HighlightSettings {
+    Color selection_color             = 1;
+    float selection_outline_alpha     = 2;
+
+    // in logical pixels.
+    float selection_outline_size      = 3;
+
+    // This controls how much the highlight is attenuated when behind other
+    // objects, between 0 and 1. At 0 the highlight is invisible behind other
+    // objects, and at 1 it's fully visible.
+    float selection_occlusion_alpha   = 4;
+
+    Color mouse_hover_highlight_color = 5;
+}
+
+message ViewportSettings {
+    // Viewport size & location, normalized.
+    // This is the "full extent" of the camera view, combined with the
+    // `fovy` from the camera settings to create the perspective camera.
+    // (0, 0) is top-left corner. (1, 1) is bottom-right corner.
+    //
+    // If multiple viewports overlap, the one for the scene view with the
+    // highest index is drawn on top.
+    Bbox viewport = 1;
+
+    // Portion of the viewport that is visible.
+    // (0, 0) is top-left corner. (1, 1) is bottom-right corner.
+    //
+    // For instance if the viewport is ((0, 0), (1, 1)) and the scissor is
+    // ((0, 0), (0.5, 1)), only the left half of the camera will be visible.
+    //
+    // If the viewport is ((0, 0), (0.5, 1)) and the scissor is
+    // ((0, 0), (1, 1)), the full camera is visible but only on the left half of
+    // the screen.
+    Bbox scissor  = 2;
+}
+
+message ViewshedSettings {
+    bool               enable_viewshed              = 1;
+    // Whether or not display the wireframe representation of the viewshed.
+    bool               enable_wireframe             = 2;
+    // If true, draw the wireframe from the position of the viewshed point of
+    // view instead of the near plane.
+    bool               draw_wireframe_from_position = 12;
+    // Position of the point of view of the viewshed.
+    GeographicPosition position                     = 3;
+    // Horizontal orientation angle of the viewshed in radians.
+    float              bearing                      = 4;
+    // Vertical orientation angle of the viewshed in radians.
+    float              tilt                         = 5;
+    // Horizontal field of view in degrees. Must be < 120 degrees for a better
+    // quality.
+    float              hfov                         = 6;
+    // Ratio between width and height of the viewshed viewport.
+    float              aspect_ratio                 = 7;
+    // Factor applied to max distance to place near plane of the viewshed.
+    // Must be greater than 0 and less or equal to 1.
+    float              start                        = 8;
+    // Max distance of the viewshed in meters.
+    // If quality is not good, consider a higher start factor.
+    float              max_distance                 = 9;
+    Color              visible_color                = 10;
+    Color              hidden_color                 = 11;
+}
+
+// This contains all settings global to a scene view.
+// @path_root="scene_view_settings"
+export message SceneViewSettings {
+    CameraIndex       camera    = 1;
+    TerrainSettings   terrain   = 2;
+    AmbientSettings   ambient   = 3;
+    HighlightSettings highlight = 4;
+    ViewshedSettings  viewshed  = 5;
+    ViewportSettings  viewport  = 6;
+}

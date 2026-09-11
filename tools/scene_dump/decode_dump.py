@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+import argparse
+import sys
+import subprocess
+import platform
+import tempfile
+import shutil
+
+from pathlib import Path
+
+sys.path.append("")
+from hrz.protocol.history.manifest import Manifest, read_manifest
+
+BZL_CONFIG = "--config=" + platform.system().lower()
+
+MANIFEST_PATH = "hrz/protocol/history/versions_manifest.csv"
+MANIFEST: Manifest = None
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--manifest", help="Manifest path", default=MANIFEST_PATH)
+    parser.add_argument(
+        "-v",
+        "--version",
+        help="Model version as 8 hex digits (latest if not specified)",
+        default="latest",
+    )
+    parser.add_argument("dump_bin_file", type=argparse.FileType("rb"))
+    parser.add_argument("output_text_file", type=Path)
+
+    args = parser.parse_args(sys.argv[1:])
+    MANIFEST_PATH = args.manifest
+    MANIFEST = read_manifest(MANIFEST_PATH)
+
+    version = args.version
+    if version == "latest":
+        version = MANIFEST.last_entry().id
+
+    if not MANIFEST.is_id_in(version):
+        print("Version ID not in manifest")
+        sys.exit(1)
+
+    descriptor_path = Path(f"hrz/protocol/history/{version}.pbf").absolute()
+    output_path = args.output_text_file
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp_fp:
+        tmp_path = Path(tmp_fp.name)
+        ret = subprocess.run(
+            [
+                "bazel",
+                "run",
+                "//third_party:protoc",
+                BZL_CONFIG,
+                "--",
+                "--descriptor_set_in=" + str(descriptor_path),
+                "--decode=HrzProtocol.SceneDump",
+            ],
+            stdin=args.dump_bin_file,
+            stdout=tmp_fp,
+            stderr=subprocess.PIPE,
+        )
+
+    if ret.returncode == 0:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(tmp_path, output_path)
+        print("OK")
+    else:
+        tmp_path.unlink(missing_ok=True)
+        print(ret.stderr.decode("utf-8"))
+        sys.exit(ret.returncode)

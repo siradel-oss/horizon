@@ -1,0 +1,76 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/color/color.proto";
+
+message ColorStop {
+    float value        = 1;
+    // Color taken into account for values < this one.
+    Color first_color  = 2;
+    // Color taken into account for values >= this one.
+    Color second_color = 3;
+}
+
+enum ColorInterpolationMode {
+    // Uses the Oklab perceptually uniform color space for color blending.
+    // This creates visibly intuitive results.
+    //
+    // @label="Oklab (perceptual)"
+    OKLAB       = 0;
+
+    // Uses the sRGB color space.
+    // This is similar to Oklab for grayscale, but visually
+    // degrades highly saturated colors when blended together.
+    //
+    // @label="sRGB"
+    SRGB        = 1;
+
+    // Uses colors from the sRGB color space, without gamma correction.
+    // This is similar to Oklab when blending saturated colors.
+    // However blending colors with highly different values is
+    // visually unintuitive.
+    //
+    // @label="Linear sRGB"
+    LINEAR_SRGB = 2;
+
+    // Doesn't interpolate colors. Uses the first one when the
+    // blending factor is < 0.5, and the second one otherwise.
+    //
+    // @label="Threshold"
+    THRESHOLD   = 3;
+}
+
+export message NumericPalette {
+    reserved 3;
+
+    repeated ColorStop     color_stops        = 1;
+    Color                  nan_color          = 2;
+    ColorInterpolationMode interpolation_mode = 4;
+}
+
+message LabelColor {
+    string label = 1;
+    Color  color = 2;
+}
+
+export message LabelPalette {
+    repeated LabelColor labels        = 1;
+    Color               default_color = 2;
+}
+
+export message Palette {
+    reserved 1;
+
+    string name = 2;
+
+    oneof  palette_type {
+        LabelPalette   label   = 101;
+        NumericPalette numeric = 102;
+    }
+}

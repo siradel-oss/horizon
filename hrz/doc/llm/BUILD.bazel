@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: Copyright 2026 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
+
+exports_files(["package.json"])
+
+npm_link_all_packages(name = "node_modules")
+
+py_binary(
+    name = "api_index_generator",
+    srcs = [
+        "generate_api_index.py",
+    ],
+    main = "generate_api_index.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_api_index",
+    srcs = [
+        "//hrz:hrz_protocol.xml",
+    ],
+    outs = [
+        "api_index.md",
+    ],
+    args = [
+        "$(execpath //hrz:hrz_protocol.xml)",
+        "$(RULEDIR)/api_index.md",
+    ],
+    tool = ":api_index_generator",
+)
+
+pkg_files(
+    name = "doc_files",
+    srcs = [
+        "_index.md",
+        "api_index.md",
+        "quickstart.md",
+    ],
+)
+
+pkg_files(
+    name = "pattern_files",
+    srcs = glob(["patterns/*.ts"]),
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+pkg_filegroup(
+    name = "pkg",
+    srcs = [
+        ":doc_files",
+        ":pattern_files",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+ts_project(
+    name = "patterns",
+    srcs = glob(["patterns/*.ts"]),
+    out_dir = "dist_patterns",
+    root_dir = "patterns",
+    tsconfig = TSCONFIG,
+    deps = [
+        ":node_modules/@siradel-oss/horizon-api",
+        ":node_modules/@siradel-oss/horizon-protocol",
+    ],
+)
+
+build_test(
+    name = "patterns_build_test",
+    targets = [":patterns"],
+)

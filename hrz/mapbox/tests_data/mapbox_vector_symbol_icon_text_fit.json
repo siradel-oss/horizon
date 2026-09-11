@@ -1,0 +1,60 @@
+{
+  "version": 8,
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf"
+    },
+    "maputnik:renderer": "mbgljs"
+  },
+  "center": [-1.67945, 48.11139],
+  "zoom": 17,
+  "pitch": 20,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests",
+  "glyphs": "https://redacted.localhost/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "icon-translate": ["literal", [2, 2]],
+        "icon-translate-anchor": "viewport",
+        "text-color": "rgba(255, 84, 84, 1)",
+        "text-opacity": 0.9,
+        "text-halo-color": "rgba(138, 35, 119, 1)",
+        "text-halo-width": 1,
+        "text-translate": ["literal", [2, 2]],
+        "text-translate-anchor": "viewport"
+      },
+      "layout": {
+        "text-field": [
+          "format",
+          "x: ",
+          {},
+          ["to-string", ["get", "x"]],
+          {},
+          "\ny: ",
+          {},
+          ["to-string", ["get", "y"]]
+        ],
+        "text-font": ["literal", ["Roboto Regular"]],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-size": 1,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+        "text-size": 16,
+        "icon-image": "panneau_content_stretch",
+        "icon-text-fit": "both",
+        "icon-text-fit-padding": ["literal", [10, 20, 11, 21]]
+      }
+    }
+  ],
+  "id": "zmb2hgpsz"
+}

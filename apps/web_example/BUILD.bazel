@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: Copyright 2021 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//apps/web_example:webpack-cli/package_json.bzl", webpack_bin = "bin")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
+load("//tools/http_server:http_server.bzl", "http_server")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["package.json"])
+
+npm_link_all_packages(name = "node_modules")
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        "src/main.ts",
+    ],
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = TSCONFIG,
+    deps = [
+        ":node_modules/@siradel-oss/horizon-api",
+        ":node_modules/@siradel-oss/horizon-core",
+        ":node_modules/@siradel-oss/horizon-protocol",
+    ],
+)
+
+webpack_bin.webpack_cli(
+    name = "bundle",
+    srcs = [
+        "webpack.config.js",
+        ":ts_lib",
+    ],
+    outs = [
+        "bundle.js",
+    ],
+    args = [
+        "$(locations :ts_lib)",
+        "--config",
+        "$(location webpack.config.js)",
+        "-o",
+        "$(RULEDIR)",
+    ],
+    chdir = "../../../",
+)
+
+structured_files_copy(
+    name = "server_files",
+    files = {
+        "": [
+            "static/index.html",
+            "bundle.js",
+        ],
+        "wasm": [
+            "//hrz/core:hrz_core.wasm",
+            "//hrz/core:hrz_core.js",
+        ],
+    },
+    output_dir = "www",
+)
+
+http_server(
+    name = "server",
+    data = [
+        ":server_files",
+    ],
+    dir = package_name() + "/www",
+    port = 8080,
+)

@@ -1,0 +1,32 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/maths/maths.proto";
+
+// @path_leaf="true"
+export message ImageSprite {
+    // The name of the sprite is optional. This is the name that can be used to
+    // refer to this sprite during styling.
+    string          name      = 1;
+
+    Vec2i           size      = 2;
+    Vec2i           offset    = 3;
+
+    // This defines the box in which content will be placed. Of course an image
+    // doesn't have content as it is a leaf node in the symbol elements tree.
+    // So this defines the region that we apply the parent's constraints to,
+    // and then whatever is outside that overflows outside.
+    Bboxi           content   = 4;
+
+    // Defines regions on the horizontal axis where the sprite can stretch.
+    repeated Rangei stretch_x = 5;
+
+    // Defines regions on the vertical axis where the sprite can stretch.
+    repeated Rangei stretch_y = 6;
+}

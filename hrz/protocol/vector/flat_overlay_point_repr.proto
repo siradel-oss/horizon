@@ -1,0 +1,38 @@
+// SPDX-FileCopyrightText: Copyright 2026 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/size_unit.proto";
+
+export message FlatOverlayPointVectorRepr {
+    reserved 3, 4;
+
+    ColorProperty   color              = 1;
+    // Unit is determined by `radius_unit`.
+    FloatProperty   radius             = 2;
+    // Indicates whether the disc radius is expressed in meters or in pixels.
+    InWorldSizeUnit radius_unit        = 5;
+
+    ColorProperty   outline_color      = 8;
+    // Unit is determined by `outline_width_unit`.
+    FloatProperty   outline_width      = 9;
+    // Indicates whether the outline width is expressed in meters or in pixels.
+    InWorldSizeUnit outline_width_unit = 10;
+
+    // Used to set the rendering order of the layer, features with a higher
+    // value are drawn on top of features with a lower value. For instance,
+    // features with the z-index value `1` are drawn over (and therefore can
+    // hide) features with the value `0`.
+    uint32          z_index            = 6;
+
+    // Clip the geometry to the borders of the tiles. Useful for hiding margins
+    // often added by vector data tilers.
+    bool            clip_to_tile       = 7;
+}

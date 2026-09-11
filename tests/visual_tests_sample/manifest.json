@@ -1,0 +1,12 @@
+[
+    {
+        "name": "plan_ign",
+        "type": 0,
+        "errorThreshold": 0.005,
+        "timeout": 300,
+        "errorHandling": {
+            "errorStrategy": 1,
+            "errorMessage": ""
+        }
+    }
+]

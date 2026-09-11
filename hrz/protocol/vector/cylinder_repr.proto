@@ -1,0 +1,37 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/lighting_settings.proto";
+import "hrz/protocol/vector/dash.proto";
+
+export message CylinderVectorRepr {
+    reserved 1 to 3, 5, 7 to 12, 14, 15, 19 to 22;
+
+    // Controls the colour of the cylinder.
+    ColorProperty    color                = 16;
+
+    Dashes           dashes               = 23;
+
+    // Controls the radius in meters of the cylinder.
+    FloatProperty    radius               = 17;
+
+    // Controls the offset of the entire polyline form the ground, in meters.
+    FloatProperty    altitude_offset      = 18;
+
+    int32            clip_id              = 4;
+
+    LightingSettings lighting             = 6;
+
+    // Used to make the insides of the cylinders visible. Note that there are
+    // transparency issues when used in conjunction with semi-transparent colors
+    // (any color with an alpha value that is not `0.0` or `1.0`).
+    bool             disable_face_culling = 13;
+}

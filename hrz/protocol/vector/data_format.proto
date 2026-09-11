@@ -1,0 +1,19 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum VectorDataFormat {
+    reserved 2, 3;
+
+    // Read data from GeoJSON files.
+    GEOJSON_VECTOR_DATA = 0;
+    // Read data from Mapbox Vector Tile files.
+    MVT_VECTOR_DATA     = 1;
+    // Read data from Geobuf files.
+    GEOBUF_VECTOR_DATA  = 4;
+}

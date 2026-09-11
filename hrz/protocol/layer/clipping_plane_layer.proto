@@ -1,0 +1,27 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/layer/grid.proto";
+
+// @path_root="clipping_plane_layer"
+export message ClippingPlaneLayer {
+    int32              clip_id          = 1;
+    GeographicPosition origin_position  = 2;
+    Vec3f              normal           = 3;
+    Color              outline_color    = 4;
+    // Distance in pixels from the plane at which the outline should be drawn,
+    // in meters. A value of 0 means no outline.
+    float              outline_distance = 5;
+
+    bool               show_plane       = 6;
+    Grid               grid             = 7;
+}

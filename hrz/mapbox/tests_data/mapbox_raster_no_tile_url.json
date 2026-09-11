@@ -1,0 +1,15 @@
+{
+  "version": 8,
+  "sources": {
+    "osm": {
+      "type": "raster"
+    }
+  },
+  "layers": [
+    {
+      "id": "OSM",
+      "source": "osm",
+      "type": "raster"
+    }
+  ]
+}

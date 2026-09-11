@@ -1,0 +1,71 @@
+{
+  "version": 8,
+  "sources": {
+    "line": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    },
+    "fill": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    },
+    "circle": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    },
+    "fill-extrusion": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    },
+    "fill+circle": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    },
+    "fill-extrusion+circle": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "1",
+      "type": "line",
+      "source": "line"
+    },
+    {
+      "id": "2",
+      "type": "fill",
+      "source": "fill"
+    },
+    {
+      "id": "3",
+      "type": "circle",
+      "source": "circle"
+    },
+    {
+      "id": "4",
+      "type": "fill-extrusion",
+      "source": "fill-extrusion"
+    },
+    {
+      "id": "5-1",
+      "type": "fill",
+      "source": "fill+circle"
+    },
+    {
+      "id": "5-2",
+      "type": "circle",
+      "source": "fill+circle"
+    },
+    {
+      "id": "6-1",
+      "type": "fill-extrusion",
+      "source": "fill-extrusion+circle"
+    },
+    {
+      "id": "6-2",
+      "type": "circle",
+      "source": "fill-extrusion+circle"
+    }
+  ]
+}

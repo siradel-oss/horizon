@@ -1,0 +1,51 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/tree",
+  "glyphs": "https://redacted.localhost/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf"
+    }
+  },
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-halo-color": "rgba(0, 0, 0, 1)",
+        "text-halo-width": 1
+      },
+      "layout": {
+        "text-allow-overlap": true,
+        "text-field": [
+          "case",
+          ["all",
+            ["==", ["get", "x"], 7],
+            ["==", ["get", "y"], 7]
+          ],
+          "77",
+          ["any",
+            ["==", ["get", "x"], 7],
+            ["==", ["get", "y"], 7]
+          ],
+          "7",
+          ""
+        ],
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-justify": "center",
+        "text-size": 20
+      }
+    }
+  ]
+}

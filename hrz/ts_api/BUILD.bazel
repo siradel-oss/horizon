@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: Copyright 2018 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@tsconfig_util//:defs.bzl", "TSCONFIG")
+load("//:version.bzl", "HRZ_VERSION")
+load("//tools/bazel:npm.bzl", "PACKAGE_JSON_HRZ_LICENSE", "PACKAGE_JSON_HRZ_VERSION", "package_json")
+load("//tools/bazel:structured_files_copy.bzl", "structured_files_copy")
+load("//tools/bazel:utils.bzl", "merge_dicts")
+
+package(default_visibility = ["//visibility:public"])
+
+npm_link_all_packages(name = "node_modules")
+
+py_binary(
+    name = "generator",
+    srcs = [
+        "generate.py",
+    ],
+    data = [
+        "templates/api.tpl.ts",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_templates",
+    outs = [
+        "src/hrz_api.ts",
+    ],
+    args = [
+        "$(RULEDIR)/src",
+        HRZ_VERSION,
+    ],
+    tool = ":generator",
+)
+
+ts_project(
+    name = "ts_lib",
+    srcs = [
+        "src/hrz_api.ts",
+        "src/index.ts",
+    ],
+    declaration = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = merge_dicts(
+        TSCONFIG,
+        {
+            "compilerOptions": {
+                "declaration": True,
+            },
+        },
+    ),
+    deps = [
+        ":node_modules/@siradel-oss/horizon-protocol",
+        ":node_modules/long",
+    ],
+)
+
+package_json(
+    name = "package_json",
+    out = "dist-root/package.json",
+    base = ":package.json",
+    license = PACKAGE_JSON_HRZ_LICENSE,
+    version = PACKAGE_JSON_HRZ_VERSION,
+)
+
+structured_files_copy(
+    name = "pkg_copy",
+    files = {
+        "dist": [
+            ":ts_lib",
+            ":ts_lib_types",
+        ],
+        "": [
+            "//:LICENSE",
+            ":package_json",
+        ],
+    },
+    output_dir = "dist_pkg",
+)
+
+npm_package(
+    name = "npm_pkg",
+    srcs = [
+        ":pkg_copy",
+    ],
+    replace_prefixes = {
+        "dist_pkg/": "",
+    },
+)
+
+alias(
+    name = "ts_api",
+    actual = ":npm_pkg",
+)

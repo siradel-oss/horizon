@@ -1,0 +1,25 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/size_unit.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/scene/index.proto";
+
+export message Line {
+    // Extent of the line. Unit is set with `extent_unit`.
+    float           extent      = 1;
+    UiSizeUnit      extent_unit = 5;
+
+    // Width of the line in logical pixels.
+    float           width       = 2;
+    // Color of the line, all components are used.
+    Color           color       = 3;
+
+    SceneViewBitset scene_views = 4;
+}

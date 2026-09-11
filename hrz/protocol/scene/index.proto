@@ -1,0 +1,20 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum SceneViewIndex {
+    SCENE_VIEW_0 = 0;
+    SCENE_VIEW_1 = 1;
+}
+
+export message SceneViewReference { SceneViewIndex scene_view = 1; }
+
+// In a bitset, each bit represents a scene view, starting with the least
+// significant bit.  For instance scene view 0 is 1, scene view 1 is 2, scene
+// view 2 is 4, etc.  It can be used to select a set of scene views.
+export message SceneViewBitset { uint32 bits = 1; }

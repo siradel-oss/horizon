@@ -1,0 +1,51 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/maths/maths.proto";
+
+export message ImpostorParams {
+    // When this is true the representation of 3D models for vector data will
+    // alternate between 3D models and impostors based on the viewing distance
+    // to the tile the feature is in. Using impostors can improve performance at
+    // the cost of small visual quality loss.
+    bool   use_impostor           = 1;
+
+    // This parameter determines the number of shots taken of the model.
+    //
+    // This parameter plays a role on the impostor smoothness. A small
+    // `atlas_size` leads to a very rough impostor with abrupt transitions
+    // between different points of view. At the opposite, large `atlas_size`
+    // values will result in smooth transitions.
+    Vec2ui atlas_size             = 2;
+
+    // Size of a single impostor shot in the atlas (in pixels).
+    //
+    // This parameter plays a direct role on the impostor visual quality. A
+    // small `image_size` leads to a poorly resoluted impostor with low memory
+    // usage. At the opposite, big `image_size` values will give detailed
+    // impostors at the cost of more memory.
+    Vec2ui image_size             = 3;
+
+    // Size in pixels on screen below which impostors start to get rendered. It
+    // can be visualised as the size of the side of a square. If the model fits
+    // inside the square, it is rendered as an impostor, otherwise it is
+    // rendered as a full 3D model. This size is in logical pixels.
+    //
+    // The larger this size is, the closer to the camera the impostors will be
+    // rendered. In this scenario, less realistic 3D models will be rendered,
+    // thus the performance will be better at the cost of a small degradation of
+    // quality. The opposite applies, meaning smaller values will force
+    // impostors to render further from the camera, keeping high visual quality
+    // in the camera surrounding with a bigger impact on performance.
+    //
+    // Note that this threshold is applied per tile using the average scale of
+    // the 3D model instances. This means that in tiles where there is a wide
+    // range of model scales, the threshold won't be ideal for all of them.
+    double max_screen_size_pixels = 5;
+}

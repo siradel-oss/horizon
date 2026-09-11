@@ -1,0 +1,37 @@
+{
+  "version": 8,
+  "id": "test_fill",
+  "center": [114.1833, 22.3067],
+  "zoom": 12,
+  "bearing": -3,
+  "pitch": 58,
+  "sources": {
+    "hk_tilejson": {
+      "type": "vector",
+      "url": "https://redacted.localhost/assets/mvt/HK/tiles.json"
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "https://redacted.localhost/osm/{z}/{x}/{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "OSM",
+      "source": "osm",
+      "type": "raster"
+    },
+    {
+      "id": "hk",
+      "type": "fill",
+      "source": "hk_tilejson",
+      "source-layer": "HK_SAMPLE_3857",
+      "paint": {
+        "fill-color": "#7faf75",
+        "fill-opacity": 0.8
+      }
+    }
+  ]
+}

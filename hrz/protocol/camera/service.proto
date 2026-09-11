@@ -1,0 +1,158 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/camera/viewpoints.proto";
+import "hrz/protocol/camera/movement.proto";
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/camera/animation.proto";
+import "hrz/protocol/camera/transitions.proto";
+import "hrz/protocol/scene/index.proto";
+
+message GeographicPositionInSceneView {
+    SceneViewIndex     scene_view = 1;
+    GeographicPosition pos        = 2;
+}
+
+message ResetNorthParams {
+    reserved 4;
+
+    CameraIndex            camera_index      = 1;
+    bool                   reset_tilt        = 2;
+    CameraAnimationOptions animation_options = 3;
+}
+
+message ViewScaleAltitude {
+    // Approximate size of one meter in logical pixels.
+    // This takes into account the terrain, and guesses that the
+    // focal point of the view is more or less at its center.
+    // Zero if currently unknown.
+    double one_meter_size_in_pixels     = 1;
+
+    // Altitude in meters of the camera relative to the WGS84 ellipsoid.
+    double altitude_absolute            = 2;
+
+    // Altitude in meters of the camera relative to the terrain.
+    double altitude_relative_to_terrain = 3;
+}
+
+// Result from the conversion of geographic coordinates into pixel position.
+message PixelPositionResult {
+    reserved 1;
+
+    // When this is undefined, the position was outside the viewport.
+    // Origin is top-left, Y going down. In logical pixels.
+    Vec2ui pixel         = 2;
+
+    // True if the point is below the horizon. This only takes into account the
+    // WGS84 ellipsoid, not the terrain or any other scene element.
+    bool   below_horizon = 3;
+}
+
+message GeographicViewPolygon {
+    reserved 1 to 8;
+    GeographicPosition          center                 = 10;
+    bool                        encompasses_north_pole = 11;
+    bool                        encompasses_south_pole = 12;
+    bool                        crosses_antimeridian   = 13;
+    repeated GeographicPosition points                 = 9;
+}
+
+// @service_id=0x3b1436d9
+service CameraService {
+    // Moves the camera to a new position and set its mode to fixed target.
+    //
+    // @method_id=0x83c9f8f5
+    rpc SetFixedTarget(FixedTargetCameraTransition) returns (Void);
+
+    // Moves the camera to a new position and set its mode to fixed position.
+    //
+    // @method_id=0x86290280
+    rpc SetFixedPosition(FixedPositionCameraTransition) returns (Void);
+
+    // Moves the camera to a new position and set its mode to orbit.
+    //
+    // @method_id=0x45949e2c
+    rpc SetOrbit(OrbitCameraTransition) returns (Void);
+
+    // Retrieves camera pose (position and orientation).
+    //
+    // @method_id=0x38ae5497
+    rpc GetCameraPose(CameraIndexReference) returns (Pose);
+
+    // Retrieves camera angular viewpoint (target position, angles & distance).
+    //
+    // @method_id=0xc4a07b7f
+    rpc GetCameraAngularViewpoint(CameraIndexReference)
+        returns (AngularViewpoint);
+
+    // Retrieves camera positional viewpoint (camera position + target
+    // position).
+    //
+    // @method_id=0x9c8b0fae
+    rpc GetCameraPositionalViewpoint(CameraIndexReference)
+        returns (PositionalViewpoint);
+
+    // Retrieves view box on the WGS84 ellipsoid for a given scene view.
+    //
+    // @method_id=0x110e3a14
+    rpc GetSceneViewViewBox(SceneViewReference) returns (GeographicBounds);
+
+    // Retrieves view polygon on the WGS84 ellipsoid for a given scene view.
+    //
+    // @method_id=0x110e3a15
+    rpc GetSceneViewViewPolygon(SceneViewReference)
+        returns (GeographicViewPolygon);
+
+    // Retrieves the latest scale and altitude of a specific scene view.
+    // See the returned messages's documentation for more information.
+    //
+    // @method_id=0x36db9edd
+    rpc GetSceneViewScaleAndAltitude(SceneViewReference)
+        returns (ViewScaleAltitude);
+
+    // Retrieves view box on the WGS84 ellipsoid for a given camera.
+    // The viewports of all associated scene views are merged.
+    //
+    // @method_id=0x110e3a16
+    rpc GetCameraViewBox(CameraIndexReference) returns (GeographicBounds);
+
+    // Retrieves view polygon on the WGS84 ellipsoid for a given camera.
+    // The viewports of all associated scene views are merged.
+    //
+    // @method_id=0x110e3a17
+    rpc GetCameraViewPolygon(CameraIndexReference)
+        returns (GeographicViewPolygon);
+
+    // Converts lat/lon/alt coordinates into pixel coordinates.
+    // Performs a basic projection into screen space.
+    // The output coordinates are given in the entire canvas viewport.
+    //
+    // @method_id=0xff9c32a0
+    rpc LatLonAltToPixelCoords(GeographicPositionInSceneView)
+        returns (PixelPositionResult);
+
+    // @method_id=0x0cefee73
+    rpc Move(CameraMovement) returns (Void);
+
+    // @method_id=0xe97e55fd
+    rpc BeginContinuousMovement(CameraMovement) returns (Void);
+
+    // @method_id=0x170dec9e
+    rpc EndContinuousMovement(CameraMovement) returns (Void);
+
+    // Resets the camera bearing so that the north is up. The camera tilt can
+    // also be reset at the same time. This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
+    //
+    // @method_id=0x6ef233dd
+    rpc ResetNorth(ResetNorthParams) returns (Void);
+}

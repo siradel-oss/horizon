@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "make_resource_source",
+    srcs = ["make_resource_source.py"],
+    main = "make_resource_source.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "make_collection",
+    srcs = ["make_collection.py"],
+    data = [
+        "collection.tpl.cpp",
+        "collection.tpl.h",
+    ],
+    main = "make_collection.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)

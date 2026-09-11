@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_python//python:defs.bzl", "py_library")
+
+filegroup(
+    name = "all_released",
+    srcs = glob(["*.md"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "all_unreleased",
+    srcs = glob(
+        ["unreleased/*.md"],
+        allow_empty = True,
+    ),
+    visibility = ["//visibility:public"],
+)
+
+# Always present, regardless of how many unreleased changelog fragments exist. Used as a
+# stable anchor to locate the `changelogs/` directory at runtime via `rlocation`.
+exports_files(["unreleased/CHANGELOG_TEMPLATE.md.tpl"])
+
+py_library(
+    name = "changelog_lib",
+    srcs = ["changelog.py"],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Runs a command inside the Steam Runtime chroot using proot.
+# proot is ptrace-based and requires no special privileges or kernel settings,
+# making it safe to use in Docker CI without --privileged or CAP_SYS_ADMIN.
+
+# The $CI_BUILDS_DIR bind is needed for access to the source code, and Bazel's
+# output base.
+
+# The $HOME bind is needed for access to Bazel's cache.
+
+ROOTFS="/var/chroots/steamrt_sniper_amd64"
+
+EXTRA_BINDS=()
+if [ -n "${CI_BUILDS_DIR:-}" ]; then
+    EXTRA_BINDS+=("--bind=${CI_BUILDS_DIR}:${CI_BUILDS_DIR}")
+fi
+
+exec proot \
+    --rootfs="${ROOTFS}" \
+    --bind=${HOME}:${HOME} \
+    "${EXTRA_BINDS[@]}" \
+    --cwd="$(readlink -f .)" \
+    "$@"

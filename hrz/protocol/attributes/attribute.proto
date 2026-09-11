@@ -1,0 +1,30 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package        HrzProtocol;
+option         optimize_for                  = LITE_RUNTIME;
+option         features.field_presence       = IMPLICIT;
+option         features.enforce_naming_style = STYLE_LEGACY;
+
+// Colors can be encoded as 0xaabbggrr in integer or number fields (preferred),
+// or as "#rgb", "#rrggbb", "#rgba", "#rgba", or html color names in the string
+// field.
+//
+// When no field is set, the value is considered null.
+export message AttributeValue {
+    reserved 1, 12, 13, 16;
+
+    oneof value {
+        bool     boolean_value = 11;
+        sfixed64 int64_value   = 18;
+        fixed64  uint64_value  = 17;
+        double   number_value  = 14;
+        string   string_value  = 15;
+    }
+}
+
+export message FeatureAttributeValue {
+    uint32         id    = 1;
+    AttributeValue value = 2;
+}

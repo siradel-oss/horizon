@@ -1,0 +1,40 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package        HrzProtocol;
+option         optimize_for                  = LITE_RUNTIME;
+option         features.field_presence       = IMPLICIT;
+option         features.enforce_naming_style = STYLE_LEGACY;
+
+// Position in the WGS84 coordinates system in degrees.
+//
+// @path_leaf="true"
+export message GeographicPosition {
+    double latitude  = 1;
+    double longitude = 2;
+    double altitude  = 3;
+}
+
+// Bounds in the WGS84 coordinates system in degrees.
+//
+// @path_leaf="true"
+export message GeographicBounds {
+    double west  = 1;
+    double south = 2;
+    double east  = 3;
+    double north = 4;
+}
+
+// Bounds in the WGS84 coordinates system in degrees.
+// Heights in metres.
+//
+// @path_leaf="true"
+export message GeographicVolumeBounds {
+    double west       = 1;
+    double south      = 2;
+    double east       = 3;
+    double north      = 4;
+    double min_height = 5;
+    double max_height = 6;
+}

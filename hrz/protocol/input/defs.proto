@@ -1,0 +1,87 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+// All keys except letters are layout independent.
+// This must match hrz/core/platform/events.h exactly.
+export enum Key {
+    K_NONE      = 0;
+    K_ESCAPE    = 1;
+    K_F1        = 2;
+    K_F2        = 3;
+    K_F3        = 4;
+    K_F4        = 5;
+    K_F5        = 6;
+    K_F6        = 7;
+    K_F7        = 8;
+    K_F8        = 9;
+    K_F9        = 10;
+    K_F10       = 11;
+    K_F11       = 12;
+    K_F12       = 13;
+    K_0         = 14;
+    K_1         = 15;
+    K_2         = 16;
+    K_3         = 17;
+    K_4         = 18;
+    K_5         = 19;
+    K_6         = 20;
+    K_7         = 21;
+    K_8         = 22;
+    K_9         = 23;
+    K_A         = 24;
+    K_B         = 25;
+    K_C         = 26;
+    K_D         = 27;
+    K_E         = 28;
+    K_F         = 29;
+    K_G         = 30;
+    K_H         = 31;
+    K_I         = 32;
+    K_J         = 33;
+    K_K         = 34;
+    K_L         = 35;
+    K_M         = 36;
+    K_N         = 37;
+    K_O         = 38;
+    K_P         = 39;
+    K_Q         = 40;
+    K_R         = 41;
+    K_S         = 42;
+    K_T         = 43;
+    K_U         = 44;
+    K_V         = 45;
+    K_W         = 46;
+    K_X         = 47;
+    K_Y         = 48;
+    K_Z         = 49;
+    K_TAB       = 50;
+    K_CAPSLOCK  = 51;
+    K_SHIFT     = 52;
+    K_CTRL      = 53;
+    K_ALT       = 54;
+    K_SPACE     = 55;
+    K_BACKSPACE = 56;
+    K_ENTER     = 57;
+    K_UP        = 58;
+    K_DOWN      = 59;
+    K_LEFT      = 60;
+    K_RIGHT     = 61;
+    K_INSERT    = 62;
+    K_DELETE    = 63;
+    K_HOME      = 64;
+    K_END       = 65;
+    K_PAGE_UP   = 66;
+    K_PAGE_DOWN = 67;
+}
+
+export enum MouseButton {
+    MOUSE_BUTTON_LEFT   = 0;
+    MOUSE_BUTTON_MIDDLE = 1;
+    MOUSE_BUTTON_RIGHT  = 2;
+}

@@ -1,0 +1,125 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/vector/data_format.proto";
+
+enum VectorDataSourceAccess {
+    // Features are grouped by tile, using a Web Mercator tile pyramid.
+    ACCESS_BY_TILE       = 0;
+
+    // Features are not grouped, and are instead accessed individually
+    // by feature ID.
+    // Requires that the feature IDs are given by one of the other sources.
+    ACCESS_BY_FEATURE_ID = 1;
+}
+
+// Tiled vector data can only be accessed by tile.
+export message TiledVectorDataProviderParams {
+    // URL pattern of the vector tiles hierarchy with parameters:
+    // {x}, {y} (0 is north), {-y} (0 is south),
+    // {z} (level of detail, 0 is lowest), {quadkey} (see
+    // https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system),
+    // {char-char} subdomains.
+    string           url_pattern  = 1;
+    HttpHeaderList   http_headers = 2;
+    string           attribution  = 5;
+
+    VectorDataFormat format       = 3;
+
+    // Which MVT layer to use.
+    // All layers are combined if no name is set.
+    // Only affects MVT sources.
+    string           layer_name   = 4;
+
+    uint32           min_level    = 6;
+    uint32           max_level    = 7;
+    GeographicBounds bounds       = 8;
+}
+
+export message ClientVectorDataProviderParams {
+    // Determines how to group features whose attribute values are
+    // requested in the request messages.
+    // Cannot be set to `ACCESS_BY_FEATURE_ID` if the source defines geometry.
+    VectorDataSourceAccess access    = 1;
+
+    // Duration in seconds before a data request timeouts.
+    // Upon timeout, a data request is considered failed by the engine.
+    // This can avoid clogging the engine with unanswered requests when
+    // the client is in a situation where it cannot guarantee a timely
+    // response to every request. (For example if it relays the requests
+    // to a third party and keeps no state on its side.)
+    // 0 is no timeout.
+    // Default: 0
+    float                  timeout   = 2;
+
+    uint32                 min_level = 3;
+    uint32                 max_level = 4;
+    GeographicBounds       bounds    = 5;
+}
+
+export message InMemoryVectorDataProviderParams {
+    // ID of the source in-memory layer.
+    uint32 in_memory_layer_id = 1;
+}
+
+export message TileJsonVectorDataProviderParams {
+    string         url                       = 1;
+    HttpHeaderList http_headers              = 2;
+    string         attribution               = 7;
+
+    // Pass main URL query parameters when requesting tiles.
+    bool           preserve_query_parameters = 3;
+
+    // Which MVT layer to use.
+    // All layers are combined if no name is set.
+    string         layer_name                = 4;
+}
+
+export message PmTilesVectorDataProviderParams {
+    string         url          = 1;
+    HttpHeaderList http_headers = 2;
+    string         attribution  = 3;
+
+    // Which MVT layer to use.
+    // All layers are combined if no name is set.
+    string         layer_name   = 5;
+}
+
+// When using an untiled data provider, Horizon will tile the data
+// according to the vector data layer settings.
+export message UntiledVectorDataProviderParams {
+    reserved 5;
+
+    string           url          = 1;
+    HttpHeaderList   http_headers = 2;
+    string           attribution  = 6;
+
+    // Cannot be MVT.
+    VectorDataFormat format       = 3;
+
+    // Simplification tolerance.
+    // 0 uses the default simplification.
+    // Positive values make the geometries more simplified.
+    // Negative values make the geometries more detailed.
+    float            tolerance    = 10;
+
+    // Whether or not to add small margins to the tile boundaries when
+    // clipping features.
+    //
+    // Adding a margin prevents visual artifacts when clipping concave
+    // polygons, but it requires the `clip_to_tile` setting some vector
+    // representations to also be enabled for it to work properly.
+    bool             clip_margin  = 4;
+
+    uint32           min_level    = 7;
+    uint32           max_level    = 8;
+    GeographicBounds bounds       = 9;
+}

@@ -1,0 +1,49 @@
+// SPDX-FileCopyrightText: Copyright 2024 Siradel
+// SPDX-License-Identifier: MIT
+
+#include <google/protobuf/compiler/code_generator.h>
+#include <google/protobuf/compiler/plugin.h>
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/descriptor.pb.h>
+#include <google/protobuf/io/printer.h>
+#include <google/protobuf/io/zero_copy_stream.h>
+
+class Generator : public google::protobuf::compiler::CodeGenerator
+{
+    uint64_t GetSupportedFeatures() const override
+    {
+        return CodeGenerator::Feature::FEATURE_PROTO3_OPTIONAL
+            | CodeGenerator::Feature::FEATURE_SUPPORTS_EDITIONS;
+    }
+
+    google::protobuf::Edition GetMinimumEdition() const override
+    {
+        return google::protobuf::Edition::EDITION_PROTO3;
+    }
+
+    google::protobuf::Edition GetMaximumEdition() const override
+    {
+        return google::protobuf::Edition::EDITION_2026;
+    }
+
+    bool Generate(
+        const google::protobuf::FileDescriptor* file,
+        const std::string& parameter,
+        google::protobuf::compiler::GeneratorContext* generator_context,
+        std::string* error) const override
+    {
+        std::string file_name =
+            std::string(file->name().substr(0, file->name().size() - 6)) + ".pb.h";
+        auto* stream = generator_context->OpenForInsert(file_name, "global_scope");
+        google::protobuf::io::Printer printer(stream, '$');
+        printer.Print("namespace hrz_proto { using namespace ::HrzProtocol; }\n");
+        return true;
+    }
+};
+
+int main(int argc, char* argv[])
+{
+    Generator generator;
+    google::protobuf::compiler::PluginMain(argc, argv, &generator);
+    return 0;
+}

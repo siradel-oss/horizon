@@ -1,0 +1,14 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum CameraMovementType {
+    CAMERA_TRANSLATION = 0;
+    CAMERA_ROTATION    = 1;
+    CAMERA_ZOOM        = 2;
+}

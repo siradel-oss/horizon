@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum AltitudeMode {
+    // Does not take into account any layer.
+    RELATIVE_TO_ELLIPSOID = 0;
+    // Takes into account terrain layers.
+    RELATIVE_TO_TERRAIN   = 1;
+}
+
+// This enum defines easing function used
+// for camera animation.
+enum EasingFunctions {
+    // Slower at the beginning, faster at the end.
+    // @label="Ease-in"
+    EASE_IN    = 0;
+    // Faster at the beginning, slower at the end.
+    // @label="Ease-out"
+    EASE_OUT   = 1;
+    // Slower at the beginning and the end, faster in between.
+    // @label="Ease-in-out"
+    EASE_INOUT = 2;
+}
+
+enum TrajectoryType {
+    // The camera follows a simple interpolated path.
+    INTERPOLATED = 0;
+    // The camera raises and then goes back down, to better show its travel.
+    BALLISTIC    = 1;
+}
+
+export message CameraAnimationOptions {
+    // The duration of the animation in seconds.
+    float           duration        = 1;
+
+    // Easing function to specify animation interpolation.
+    EasingFunctions easing_function = 2;
+
+    // Easing function exponent to specify function curvature.
+    // Only values > 1 are valid. The higher the value, the more pronounced the
+    // easing effect. A value of 1 corresponds to a linear interpolation.
+    float           easing_exponent = 3;
+
+    // The shape of the trajectory of the movement.
+    TrajectoryType  trajectory_type = 4;
+}

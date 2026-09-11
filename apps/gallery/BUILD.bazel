@@ -1,0 +1,246 @@
+# SPDX-FileCopyrightText: Copyright 2024 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//apps/gallery:vite/package_json.bzl", vite_bin = "bin")
+load("@npm//apps/gallery:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//tools/bazel:pkg_copy.bzl", "pkg_copy")
+load("//tools/http_server:http_server.bzl", "http_server")
+
+exports_files(["package.json"])
+
+npm_link_all_packages(name = "node_modules")
+
+DIST_SCENES_PREFIX = "dist_scenes"
+
+SCENES = [
+    "cassini_single_image_raster",
+    "dinan_dtm_lod1",
+    "dynamic_texturing",
+    "hawaii_palettized_terrain",
+    "heatmap_bus_coverage",
+    "heatmap_earthquakes",
+    "ign_scan_1000_wms",
+    "les_arcs",
+    "map_localization",
+    "osm_rennes_tiled_raster",
+    "osm_rennes_tilejson",
+    "osm_rennes_tms",
+    "paris_metro_cylinders",
+    "paris_metro_dashes",
+    "paris_pmtiles",
+    "rennes_3dtiles",
+    "rennes_building_type",
+    "rennes_iris_client_data",
+    "rennes_iris_pop",
+    "rennes_trees",
+    "san_francisco_data_raster",
+    "sea_current_arrows",
+    "three_d_tiles_styling",
+    "velostar",
+    "wind_turbines",
+    "world_street_map_arcgis",
+]
+
+TEMPLATES = [
+    "aws_terrain_tiles",
+    "hrz_basemap_dark_nonames",
+    "ign_bd_ortho",
+    "ign_routes",
+    "ign_srtm_dtm",
+    "initial_viewpoint_france",
+    "initial_viewpoint_france_far",
+    "initial_viewpoint_tour_eiffel",
+    "plan_ign",
+    "rennes_buildings",
+    "rennes_metro",
+    "non_realistic_ambiance",
+    "non_realistic_ambiance_shadows",
+]
+
+ALL_SCENES = [
+    "{}".format(scene)
+    for scene in SCENES
+] + [
+    "template/{}".format(scene)
+    for scene in TEMPLATES
+]
+
+[
+    run_binary(
+        name = "migrate_scene_{}".format(index),
+        srcs = [
+            "scene/{}.hrz_scene.pbf".format(scene),
+        ],
+        outs = [
+            "{}/scene/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene),
+        ],
+        args = [
+            "$<",
+            "$@",
+        ],
+        tool = "//tools/scene_dump:migrate_dump",
+    )
+    for index, scene in enumerate(ALL_SCENES)
+]
+
+filegroup(
+    name = "scenes",
+    srcs = [
+        "{}/scene/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene)
+        for scene in SCENES
+    ],
+)
+
+filegroup(
+    name = "templates",
+    srcs = [
+        "{}/scene/template/{}.hrz_scene.pbf".format(DIST_SCENES_PREFIX, scene)
+        for scene in TEMPLATES
+    ],
+)
+
+COMMON_DATA = glob([
+    "src/**/*",
+    "static/**/*",
+]) + [
+    "package.json",
+    "tsconfig.json",
+    "//:tsconfig",
+    "index.html",
+    "vite.config.ts",
+    ":node_modules",
+]
+
+vue_tsc_bin.vue_tsc(
+    name = "type_check",
+    srcs = COMMON_DATA,
+    args = [
+        "--noEmit",
+        "-p",
+        "tsconfig.json",
+    ],
+    chdir = package_name(),
+    stdout = "tsmarker.d.ts",
+)
+
+vite_bin.vite(
+    name = "build",
+    srcs = COMMON_DATA + [
+        ":type_check",
+    ],
+    outs = [
+        "dist/index.html",
+        "dist/manifest.json",
+    ],
+    args = [
+        "build",
+        "--outDir",
+        "dist",
+    ] + select({
+        "//:debug": [
+            "--mode",
+            "development",
+        ],
+        "//conditions:default": [],
+    }),
+    chdir = package_name(),
+    out_dirs = ["dist/assets/"],
+)
+
+THUMBNAILS = glob(["thumbnails/**/*"])
+
+SOURCES = glob(["src/demo/**/*"])
+
+DEMO_ASSETS = glob(["demo_assets/**/*"])
+
+vite_bin.vite_binary(
+    name = "vite",
+    chdir = package_name(),
+    data = COMMON_DATA + THUMBNAILS + DEMO_ASSETS + [
+        ":scenes",
+        ":templates",
+    ],
+    tags = ["ibazel_notify_changes"],
+)
+
+pkg_files(
+    name = "pkg_source",
+    srcs = SOURCES,
+    prefix = "source",
+)
+
+pkg_files(
+    name = "pkg_demo_assets",
+    srcs = DEMO_ASSETS,
+    prefix = "assets/demo",
+    strip_prefix = strip_prefix.from_pkg("demo_assets/"),
+)
+
+pkg_files(
+    name = "pkg_thumbnails",
+    srcs = THUMBNAILS,
+    prefix = "assets/thumbnails",
+    strip_prefix = strip_prefix.from_pkg("thumbnails/"),
+)
+
+pkg_files(
+    name = "pkg_root",
+    srcs = [
+        "src/galleryDemos.json",
+        ":build",
+    ],
+)
+
+pkg_files(
+    name = "pkg_scenes",
+    srcs = [
+        ":scenes",
+    ],
+    strip_prefix = strip_prefix.from_pkg(DIST_SCENES_PREFIX),
+)
+
+pkg_files(
+    name = "pkg_templates",
+    srcs = [
+        ":templates",
+    ],
+    strip_prefix = strip_prefix.from_pkg(DIST_SCENES_PREFIX),
+)
+
+pkg_filegroup(
+    name = "pkg_all",
+    srcs = [
+        ":pkg_demo_assets",
+        ":pkg_root",
+        ":pkg_scenes",
+        ":pkg_source",
+        ":pkg_templates",
+        ":pkg_thumbnails",
+    ],
+    visibility = ["//apps:__subpackages__"],
+)
+
+pkg_tar(
+    name = "pkg",
+    srcs = [":pkg_all"],
+    extension = "tar.gz",
+)
+
+pkg_copy(
+    name = "copy_pkg_to_www",
+    srcs = [":pkg_all"],
+    out_dir = "www",
+)
+
+http_server(
+    name = "server",
+    data = [
+        ":copy_pkg_to_www",
+    ],
+    dir = package_name() + "/www",
+    port = 8083,
+)

@@ -1,0 +1,82 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/camera/viewpoints.proto";
+import "hrz/protocol/camera/index.proto";
+import "hrz/protocol/camera/animation.proto";
+
+export message FixedTargetCameraTransition {
+    oneof view {
+        AngularViewpoint    angular_viewpoint    = 101;
+        PositionalViewpoint positional_viewpoint = 102;
+    }
+
+    CameraIndex            camera_index    = 7;
+    // Min distance to the target in meters. Must be >= 0.
+    double                 min_distance    = 1;
+    // Max distance to the target in meters. Must be >= min_distance.
+    double                 max_distance    = 2;
+    // In radians, 0 is straight down.
+    float                  min_tilt        = 3;
+    // In radians, 0 is straight down.
+    float                  max_tilt        = 4;
+    CameraAnimationOptions go_to_animation = 5;
+    AltitudeMode           altitude_mode   = 6;
+}
+
+export message FixedPositionCameraTransition {
+    oneof view {
+        // Keep the current view, but change the mode.
+        Void                current              = 101;
+        AngularViewpoint    angular_viewpoint    = 102;
+        PositionalViewpoint positional_viewpoint = 103;
+        Pose                pose                 = 104;
+    }
+
+    CameraIndex            camera_index    = 5;
+
+    // In radians, 0 is straight down.
+    float                  min_tilt        = 1;
+    // In radians, 0 is straight down.
+    float                  max_tilt        = 2;
+    CameraAnimationOptions go_to_animation = 3;
+    AltitudeMode           altitude_mode   = 4;
+}
+
+export message OrbitCameraTransition {
+    oneof view {
+        // Keep the current view, but change the mode.
+        Void                current              = 101;
+        AngularViewpoint    angular_viewpoint    = 102;
+        PositionalViewpoint positional_viewpoint = 103;
+        Pose                pose                 = 104;
+        BoundsView          bounds               = 105;
+    }
+
+    CameraIndex            camera_index         = 9;
+
+    GeographicBounds       limit_bounds         = 1;
+    double                 max_altitude         = 2;
+    // In radians, 0 is straight down.
+    float                  min_tilt             = 3;
+    // In radians, 0 is straight down.
+    float                  max_tilt             = 4;
+    CameraAnimationOptions go_to_animation      = 5;
+    bool                   is_interruptible     = 6;
+    AltitudeMode           altitude_mode        = 7;
+
+    // This is the animation that happens when we correct the position of the
+    // camera to put is back in the limits defined above.
+    // When the duration is 0, the camera is simply limited to the bounds.
+    // When the duration is > 0, the camera can move out of the bounds, but is
+    // corrected after a few idle seconds using this animation.
+    CameraAnimationOptions correction_animation = 8;
+}

@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+cc_binary(
+    name = "compress_file_lz4",
+    srcs = [
+        "compress_file.c",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@lz4//:lz4_hc",
+    ],
+)

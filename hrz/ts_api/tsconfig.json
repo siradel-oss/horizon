@@ -1,0 +1,9 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "*": ["../../bazel-bin/hrz/ts_api/node_modules/*"]
+        },
+        "declaration": true
+    }
+}

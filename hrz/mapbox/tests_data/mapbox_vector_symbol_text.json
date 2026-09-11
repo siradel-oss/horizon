@@ -1,0 +1,51 @@
+{
+  "version": 8,
+  "center": [-1.67945, 48.11139],
+  "pitch": 20,
+  "zoom": 17,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/tree",
+  "glyphs": "https://redacted.localhost/assets/fonts/fonts_mapbox/{fontstack}/{range}.pbf",
+  "metadata": {
+    "hrz:fonts": {
+      "Roboto Regular": "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf"
+    }
+  },
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "paint": {
+        "text-color": "#ff0000",
+        "text-opacity": 0.9,
+        "text-halo-color": "rgba(0, 0, 0, 0.9)",
+        "text-halo-width": 1,
+        "text-translate": ["literal", [2, 2]],
+        "text-translate-anchor": "viewport"
+      },
+      "layout": {
+        "symbol-placement": "point",
+        "text-allow-overlap": true,
+        "text-anchor": "bottom",
+        "text-field": "sample\ntext",
+        "text-font": ["literal", ["Roboto Regular"]],
+        "text-ignore-placement": false,
+        "text-justify": "left",
+        "text-keep-upright": true,
+        "text-line-height": 0.9,
+        "text-offset": [8, 8],
+        "text-padding": 4,
+        "text-pitch-alignment": "map",
+        "text-rotate": 30.0,
+        "text-rotation-alignment": "map",
+        "text-size": 16
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/message_queue/message.proto";
+
+message QueueSize { uint32 message_count = 1; }
+
+message DequeuedMessages {
+    repeated TypedMessage messages   = 1;
+    QueueSize             queue_size = 2;
+}
+
+message DequeueParams {
+    // 0: no limit (empty the queue)
+    uint32 max_message_count = 1;
+}
+
+// @service_id=0xccb301da
+service MessageQueueService {
+    // @method_id=0x8393724a
+    rpc DequeueMessages(DequeueParams) returns (DequeuedMessages);
+
+    // @method_id=0xf40fd80d
+    rpc GetQueueSize(Void) returns (QueueSize);
+}

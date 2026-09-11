@@ -1,0 +1,39 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/layer/handle.proto";
+import "hrz/protocol/attributes/feature_id.proto";
+import "hrz/protocol/types/primitive.proto";
+
+message VectorTilesObjectReference {
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 2;
+}
+
+message ThreeDTilesObjectReference {
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 3;
+}
+
+export message TypedObjectReference {
+    oneof ref {
+        Void                       planet         = 1;
+        LayerHandle                single_model   = 2;
+        VectorTilesObjectReference vector_tiles   = 3;
+        ThreeDTilesObjectReference three_d_tiles  = 4;
+        LayerHandle                editable_shape = 5;
+    }
+}
+
+export message FeatureReference {
+    LayerHandle layer      = 1;
+    FeatureId   feature_id = 2;
+}
+
+export message FeatureReferences { repeated FeatureReference features = 1; }

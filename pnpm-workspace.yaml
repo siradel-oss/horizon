@@ -1,0 +1,18 @@
+allowBuilds: {}
+minimumReleaseAge: 10080 # 7d
+hoist: false
+ignoreScripts: true
+
+overrides:
+  typescript: npm:typescript-native-bridge@6.0.3-bridge.13.tsgo.7.0.2
+
+# This must match the data field of npm_translate_lock in MODULE.bazel
+packages:
+  - apps/gallery
+  - apps/web_example
+  - hrz/ts_protocol
+  - hrz/ts_api
+  - hrz/ts_core
+  - hrz/ts_monitoring_protocol
+  - hrz/ts_scene_dump
+  - hrz/doc/llm

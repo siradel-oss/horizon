@@ -1,0 +1,20 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/identification/object_reference.proto";
+
+export message MouseHoverInfoMessage {
+    // Position is in logical pixels.
+    Vec2i                screen_pos = 1;
+    // The position is set if the mouse hovers the planet or a feature.
+    GeographicPosition   geo_pos    = 2;
+    TypedObjectReference picked     = 3;
+}

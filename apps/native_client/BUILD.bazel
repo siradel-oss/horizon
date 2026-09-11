@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+cc_binary(
+    name = "native_client",
+    srcs = [
+        "main.cpp",
+    ],
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-pthread",
+            "-Wl,-rpath,'$$ORIGIN'",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//:linux_windowed": [
+            "-lX11",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/core:hrz_core",
+        "//hrz/cpp_api",
+        "//hrz/protocol/history:scene_model_version",
+        "//hrz/scene_dump:migration",
+        "//hrz/version",
+        "//libs/argparser",
+        "//libs/ws:ws_server",
+        "//libs/wsi",
+    ],
+)

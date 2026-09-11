@@ -1,0 +1,54 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/vector/dash.proto";
+import "hrz/protocol/size_unit.proto";
+
+enum PolylineSide {
+    // @label="Inside and outside"
+    SIDE_BOTH    = 0;
+
+    // @label="Inside"
+    SIDE_INSIDE  = 1;
+
+    // @label="Outside"
+    SIDE_OUTSIDE = 2;
+}
+
+export message FlatOverlayPolylineVectorRepr {
+    ColorProperty   color        = 1;
+
+    FloatProperty   width        = 2;
+
+    // Indicates whether the line width is expressed in meters or in pixels.
+    InWorldSizeUnit width_unit   = 3;
+
+    Dashes          dashes       = 4;
+
+    // For polylines and outlines, draws the dashes, angle between segments, and
+    // the ends of polylines with a round shape. If disabled, angles that are
+    // not too sharp will be joined together like cylinders.
+    bool            round_tips   = 5;
+
+    // Indicates what sides of a polyline should be displayed. This can be used
+    // to only display one side of a polygon's outline.
+    PolylineSide    side         = 6;
+
+    // Used to set the rendering order of the layer, features with a higher
+    // value are drawn on top of features with a lower value. For instance,
+    // features with the z-index value `1` are drawn over (and therefore can
+    // hide) features with the value `0`.
+    uint32          z_index      = 7;
+
+    // Clip the geometry to the borders of the tiles. Useful for hiding margins
+    // often added by vector data tilers.
+    bool            clip_to_tile = 8;
+}

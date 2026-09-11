@@ -1,0 +1,28 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/visibility_constraints.proto";
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/raster/group.proto";
+import "hrz/protocol/raster/defs.proto";
+
+// Imagery rasters overlaid on the terrain.
+// @path_root="imagery_raster_layer"
+export message ImageryRasterLayer {
+    Raster                        raster                 = 1;
+    RasterGroup                   group                  = 2;
+
+    // This gives the order or raster layers in a group. A raster with a higher
+    // slot will take priority over rasters with a lower slot. Order is
+    // undefined between rasters of equal slot.
+    uint32                        slot                   = 3;
+    bool                          visible                = 4;
+    LayerVisibilityConstraintList visibility_constraints = 5;
+    SceneViewBitset               scene_views            = 6;
+}

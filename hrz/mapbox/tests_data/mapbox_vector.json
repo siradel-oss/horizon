@@ -1,0 +1,26 @@
+{
+  "version": 8,
+  "id": "test_parse_vector",
+  "sources": {
+    "hk_mvt": {
+      "type": "vector",
+      "tiles": ["https://redacted.localhost/assets/mvt/HK/{z}/{x}/{-y}.mvt"],
+      "minzoom": 0,
+      "maxzoom": 14
+    },
+    "hk_tilejson": {
+      "type": "vector",
+      "url": "https://redacted.localhost/assets/mvt/HK/tiles.json"
+    }
+  },
+  "layers": [
+    {
+      "id": "hk",
+      "type": "fill-extrusion",
+      "source": "hk_mvt",
+      "source-layer": "HK_SAMPLE_3857",
+      "minzoom": 1,
+      "maxzoom": 10
+    }
+  ]
+}

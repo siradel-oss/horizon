@@ -1,0 +1,205 @@
+# SPDX-FileCopyrightText: Copyright 2019 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "generator",
+    srcs = [
+        "generate.py",
+    ],
+    data = [
+        "manifest.json",
+        "templates/all_params_responses.tpl.h",
+        "templates/declarations.tpl.cpp",
+        "templates/declarations.tpl.h",
+        "templates/enum_names.tpl.h",
+        "templates/tickets.tpl.cpp",
+        "templates/tickets.tpl.h",
+        "templates/type.tpl.h",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_templates",
+    outs = [
+        "all_params_responses.h",
+        "jobs_declarations.cpp",
+        "jobs_declarations.h",
+        "jobs_enum_names.h",
+        "jobs_tickets.cpp",
+        "jobs_tickets.h",
+        "jobs_type.h",
+    ],
+    args = [
+        "$(RULEDIR)",
+    ],
+    tool = ":generator",
+)
+
+cc_library(
+    name = "jobs",
+    srcs = [
+        "bake_cylinder_geometry.cpp",
+        "bake_extruded_vector_geometry.cpp",
+        "bake_flat_point_geometry.cpp",
+        "bake_flat_polygon_geometry.cpp",
+        "bake_flat_polyline_geometry.cpp",
+        "bake_heatmap_geometry.cpp",
+        "bake_model_geometry.cpp",
+        "bake_symbols.cpp",
+        "build_aabb_tree.cpp",
+        "clipping.cpp",
+        "clipping.h",
+        "compose_raster_tile.cpp",
+        "compress_blob_image.cpp",
+        "context.h",
+        "cull_symbols.cpp",
+        "decode_batch_table.cpp",
+        "decode_blob_image.cpp",
+        "decode_cesium_terrain_tile.cpp",
+        "decode_three_d_tiles_tileset.cpp",
+        "decode_vector_tile.cpp",
+        "decompress_blob.cpp",
+        "decompress_draco_mesh.cpp",
+        "extract_vector_tile.cpp",
+        "feature_clamping.h",
+        "generate_mipmaps.cpp",
+        "jobs_declarations.cpp",
+        "jobs_executor.cpp",
+        "jobs_executor.h",
+        "join_vector_data.cpp",
+        "move_client_vector_data_to_blobs.cpp",
+        "ogc_utils.cpp",
+        "ogc_utils.h",
+        "palettize_image.cpp",
+        "parse_mvt.cpp",
+        "parse_tilemap_resource.cpp",
+        "parse_wms_resource.cpp",
+        "parse_wmts_resource.cpp",
+        "points_query.cpp",
+        "process_feedback.cpp",
+        "rasterizer.h",
+        "reproject_raster_tile.cpp",
+        "styling.cpp",
+        "symbol/anchor.cpp",
+        "symbol/baker.cpp",
+        "symbol/baker.h",
+        "symbol/decorated_shape.cpp",
+        "symbol/image.cpp",
+        "symbol/layout.cpp",
+        "symbol/leader_line.cpp",
+        "symbol/placeholder.cpp",
+        "symbol/text.cpp",
+        "test_jobs.cpp",
+        "vector_repr_common.cpp",
+        "vector_repr_common.h",
+    ],
+    hdrs = [
+        "all_params_responses.h",
+        "compose_raster_tile.h",
+        "decode_cesium_terrain_tile.h",
+        "decompress_blob.h",
+        "decompress_draco_mesh.h",
+        "generate_mipmaps.h",
+        "job_result.h",
+        "jobs_declarations.h",
+        "jobs_enum_names.h",
+        "jobs_executor.h",
+        "jobs_type.h",
+        "palettize_image.h",
+        "parse_tilemap_resource.h",
+        "parse_wms_resource.h",
+        "parse_wmts_resource.h",
+        "points_query_jobs_params.h",
+        "process_feedback.h",
+        "reproject_raster_tile.h",
+        "styling.h",
+        "test_jobs.h",
+        "three_d_tiles_jobs_params.h",
+        "vector_data_jobs_params.h",
+        "vector_tiles_jobs_params.h",
+    ],
+    copts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-pthread",
+        ],
+    }),
+    implementation_deps = [
+        "//libs/proj_lite",
+        "//third_party/geobuf",
+        "//third_party/stb_image",
+        "//third_party/vector_tile",
+        "@basisu",
+        "@cdt",
+        "@delabella",
+        "@draco",
+        "@earcut",
+        "@etcpak",
+        "@libwebp",
+        "@pugixml",
+        "@rapidjson",
+    ] + select({
+        "@platforms//os:emscripten": ["@harfbuzz//:harfbuzz_tiny"],
+        "//conditions:default": ["@harfbuzz"],
+    }),
+    includes = [
+        "include",
+    ],
+    local_defines = [
+        "CDT_DISABLE_EXCEPTIONS",
+    ] + select({
+        "@platforms//os:windows": [
+            "WIN32",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/common",
+        "//hrz/cpp_protocol",
+        "//hrz/fnd",
+        "//libs/lm",
+    ],
+)
+
+filegroup(
+    name = "tickets_srcs",
+    srcs = [
+        "jobs_tickets.cpp",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "tickets_hdrs",
+    srcs = [
+        "jobs_tickets.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "tests",
+    testonly = False,
+    srcs = [
+        "tests/ogc_utils.cpp",
+    ],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jobs",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@pugixml",
+    ],
+)

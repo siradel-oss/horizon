@@ -1,0 +1,112 @@
+{
+  "version": 8,
+  "center": [114.1833, 22.3067],
+  "zoom": 12,
+  "sources": {
+    "hk_tilejson": {
+      "type": "vector",
+      "url": "https://redacted.localhost/assets/mvt/HK/tiles.json"
+    },
+    "points": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "id": 2,
+              "id-string": "two"
+            },
+            "geometry": {
+              "coordinates": [
+                114.18950695197418,
+                22.296522454856756
+              ],
+              "type": "Point"
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "id": 3,
+              "id-string": "three"
+            },
+            "geometry": {
+              "coordinates": [
+                114.19517737042952,
+                22.298889738471246
+              ],
+              "type": "Point"
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "id": 1,
+              "id-string": "one"
+            },
+            "geometry": {
+              "coordinates": [
+                114.18376738207644,
+                22.29383521973338
+              ],
+              "type": "Point"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "buildings",
+      "type": "fill-extrusion",
+      "source": "hk_tilejson",
+      "source-layer": "HK_SAMPLE_3857",
+      "paint": {
+        "fill-extrusion-height": ["get", "ELEVATION"],
+        "fill-extrusion-color": "#efefef"
+      }
+    },
+    {
+      "id": "points",
+      "type": "circle",
+      "source": "points",
+      "paint": {
+        "circle-color": "#ffffff",
+        "circle-radius": 4,
+        "circle-stroke-color": "#000000",
+        "circle-stroke-width": 1
+      }
+    },
+    {
+      "id": "points_text",
+      "type": "symbol",
+      "source": "points",
+      "paint": {
+        "text-color": "#ffffff",
+        "text-halo-color": "rgba(0, 0, 0, 1.0)",
+        "text-halo-width": 1,
+        "text-translate": ["literal", [6, -6]]
+      },
+      "layout": {
+        "text-allow-overlap": true,
+        "text-anchor": "top-left",
+        "text-field": [
+          "format",
+          "id: ",
+          {},
+          ["to-string", ["get", "id"]],
+          {},
+          "\ntext id: ",
+          {},
+          ["to-string", ["get", "id-string"]]
+        ],
+        "text-ignore-placement": true,
+        "text-justify": "left",
+        "text-size": 16
+      }
+    }
+  ]
+}

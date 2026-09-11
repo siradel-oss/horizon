@@ -1,0 +1,285 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/image.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/color/palette.proto";
+import "hrz/protocol/tile.proto";
+import "hrz/protocol/raster/nodata.proto";
+import "hrz/protocol/raster/tiling_scheme.proto";
+import "hrz/protocol/raster/geometry.proto";
+
+message TiledRasterProviderParams {
+    reserved 1;
+
+    RasterGeometry     geometry                 = 10;
+
+    TilingSchemeParams tiling_scheme            = 12;
+
+    // Tile URL with parameters: {x}, {y} (0 is north), {-y} (0 is south),
+    // {z} (level of detail, 0 is lowest), {quadkey} (see
+    // https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system),
+    // {char-char} subdomains (for example, "{a-c}" would expand to "a", "b", or
+    // "c" randomly).
+    string             url_pattern              = 2;
+
+    HttpHeaderList     http_headers             = 5;
+
+    string             attribution              = 9;
+
+    ImageFormat        image_format             = 4;
+
+    string             mime_type_override       = 13;
+
+    RasterNodata       nodata                   = 11;
+
+    MissingTilePolicy  missing_tile_policy      = 6;
+
+    // Override global setting for tile cache size.
+    bool               override_tile_cache_size = 8;
+    // Tile cache size when the global setting is overridden.
+    uint32             tile_cache_size          = 7;
+}
+
+enum BingProviderImageryType {
+    ROAD               = 0;
+    AERIAL             = 1;
+    AERIAL_WITH_LABELS = 2;
+    ROAD_DARK          = 3;
+    ROAD_GRAYSCALE     = 4;
+    ROAD_LIGHT         = 5;
+}
+
+message BingRasterProviderParams {
+    string                  api_key                  = 1;
+    // Term used by Bing to specify a language in which country names, roads,
+    // etc will be written. More at
+    // https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/culture-parameter
+    string                  culture                  = 2;
+    BingProviderImageryType imagery_type             = 3;
+    MissingTilePolicy       missing_tile_policy      = 4;
+    // Override global setting for tile cache size.
+    bool                    override_tile_cache_size = 6;
+    // Tile cache size when the global setting is overridden.
+    uint32                  tile_cache_size          = 5;
+}
+
+message ArcGisRasterProviderParams {
+    string            url                       = 1;
+    repeated int32    layer_ids                 = 2;
+    HttpHeaderList    http_headers              = 3;
+    string            attribution               = 10;
+    // Pass main URL query parameters when requesting tiles.
+    bool              preserve_query_parameters = 9;
+    MissingTilePolicy missing_tile_policy       = 4;
+    // Image format selection override.
+    // If pre-cached tiles are available, but not in the specified format,
+    // they won't be used.
+    // Valid values are: MIXED, JPGPNG, JPEG, JPG, PNG32, PNG24, PNG8, PNG, GIF.
+    // Leave empty to let the system decide on a format automatically.
+    string            source_image_format       = 5;
+    // Some layers have valuable pixel data outside their reported bounds
+    // (typically when there are symbols on point features) or have erroneous
+    // bounds. When this option is true, tiles are fetched for the whole planet.
+    bool              ignore_bounds             = 6;
+    // Override global setting for tile cache size.
+    bool              override_tile_cache_size  = 8;
+    // Tile cache size when the global setting is overridden.
+    uint32            tile_cache_size           = 7;
+}
+
+message TmsRasterProviderParams {
+    // URL of the TileMap resource (tilemapresource.xml).
+    string            url                       = 1;
+    HttpHeaderList    http_headers              = 2;
+    string            attribution               = 8;
+
+    // Pass main URL query parameters when requesting tiles.
+    bool              preserve_query_parameters = 5;
+    MissingTilePolicy missing_tile_policy       = 3;
+    ImageFormat       image_format              = 4;
+    string            mime_type_override        = 10;
+    RasterNodata      nodata                    = 9;
+    // Override global setting for tile cache size.
+    bool              override_tile_cache_size  = 7;
+    // Tile cache size when the global setting is overridden.
+    uint32            tile_cache_size           = 6;
+}
+
+message WmtsRasterProviderParams {
+    // URL of the Capabilities resource.
+    string            url                      = 1;
+    HttpHeaderList    http_headers             = 2;
+    string            attribution              = 10;
+
+    string            layer_identifier         = 3;
+    // The empty string selects the default style of the layer.
+    string            style_identifier         = 4;
+    // Image format selection override (MIME type).
+    // Leave empty to let the system decide on a format automatically.
+    string            source_image_format      = 5;
+    ImageFormat       image_format             = 6;
+    string            mime_type_override       = 12;
+    RasterNodata      nodata                   = 11;
+    MissingTilePolicy missing_tile_policy      = 7;
+    // Override global setting for tile cache size.
+    bool              override_tile_cache_size = 9;
+    // Tile cache size when the global setting is overridden.
+    uint32            tile_cache_size          = 8;
+}
+
+message WmsStyledLayer {
+    string layer_name = 1;
+    // The empty string selects the default style of the layer.
+    string style_name = 2;
+}
+
+message WmsDimension {
+    string name  = 1;
+    string value = 2;
+}
+
+message WmsRasterProviderParams {
+    // URL of the Capabilities resource.
+    string                  url                      = 1;
+    HttpHeaderList          http_headers             = 2;
+    string                  attribution              = 16;
+
+    repeated WmsStyledLayer layers                   = 3;
+    repeated WmsDimension   dimensions               = 4;
+    // Alpha is ignored.
+    Color                   background_color         = 5;
+    bool                    force_opaque             = 6;
+    // Image format selection override (MIME type).
+    // Leave empty to let the system decide on a format automatically.
+    string                  source_image_format      = 7;
+    ImageFormat             image_format             = 8;
+    string                  mime_type_override       = 18;
+    RasterNodata            nodata                   = 17;
+    MissingTilePolicy       missing_tile_policy      = 9;
+    bool                    override_min_level       = 10;
+    uint32                  min_level                = 11;
+    bool                    override_max_level       = 12;
+    uint32                  max_level                = 13;
+    // Override global setting for tile cache size.
+    bool                    override_tile_cache_size = 15;
+    // Tile cache size when the global setting is overridden.
+    uint32                  tile_cache_size          = 14;
+}
+
+message UntiledRasterProviderParams {
+    RasterGeometry    geometry            = 6;
+
+    // URL of the raster.
+    string            url                 = 1;
+
+    HttpHeaderList    http_headers        = 3;
+
+    string            attribution         = 5;
+
+    // The image format inside Horizon. For instance RGBA_U8 for imagery and
+    // R_I32 for DTM.
+    ImageFormat       image_format        = 2;
+
+    string            mime_type_override  = 8;
+
+    RasterNodata      nodata              = 7;
+
+    MissingTilePolicy missing_tile_policy = 4;
+}
+
+message PalettizedRasterProviderParams {
+    reserved 1, 2, 3, 101, 102, 106, 107, 108, 110, 111;
+
+    // Underlying provider
+    RasterProvider provider     = 5;
+
+    NumericPalette palette      = 4;
+
+    // The colour to use for nodata values from the source raster.
+    Color          nodata_color = 6;
+
+    // Optionally declare one colour to be the representation of nodata values.
+    // Usually the same colour as the nodata colour.
+    // Allows toggling between showing and hiding nodata values with the
+    // sampling parameters of the raster layer.
+    RasterNodata   nodata       = 7;
+}
+
+message CesiumTerrainRasterProviderParams {
+    string            url                       = 1;
+    HttpHeaderList    http_headers              = 2;
+    string            attribution               = 7;
+
+    // Pass main URL query parameters when requesting tiles.
+    bool              preserve_query_parameters = 4;
+
+    MissingTilePolicy missing_tile_policy       = 3;
+
+    // Override global setting for tile cache size.
+    bool              override_tile_cache_size  = 6;
+    // Tile cache size when the global setting is overridden.
+    uint32            tile_cache_size           = 5;
+}
+
+message TileJsonRasterProviderParams {
+    string            url                       = 1;
+    HttpHeaderList    http_headers              = 2;
+    string            attribution               = 8;
+
+    // Pass main URL query parameters when requesting tiles.
+    bool              preserve_query_parameters = 3;
+
+    ImageFormat       image_format              = 4;
+    string            mime_type_override        = 10;
+    RasterNodata      nodata                    = 9;
+
+    MissingTilePolicy missing_tile_policy       = 5;
+
+    // Override global setting for tile cache size.
+    bool              override_tile_cache_size  = 6;
+    // Tile cache size when the global setting is overridden.
+    uint32            tile_cache_size           = 7;
+}
+
+message PmTilesRasterProviderParams {
+    string            url                      = 1;
+    HttpHeaderList    http_headers             = 2;
+    string            attribution              = 8;
+
+    ImageFormat       image_format             = 4;
+    string            mime_type_override       = 10;
+    RasterNodata      nodata                   = 9;
+
+    MissingTilePolicy missing_tile_policy      = 5;
+
+    // Override global setting for tile cache size.
+    bool              override_tile_cache_size = 6;
+    // Tile cache size when the global setting is overridden.
+    uint32            tile_cache_size          = 7;
+}
+
+export message RasterProvider {
+    reserved 1;
+
+    oneof provider_type {
+        TiledRasterProviderParams         tiled          = 101;
+        UntiledRasterProviderParams       untiled        = 102;
+        BingRasterProviderParams          bing           = 103;
+        PalettizedRasterProviderParams    palettized     = 104;
+        ArcGisRasterProviderParams        arcgis         = 105;
+        TmsRasterProviderParams           tms            = 106;
+        WmtsRasterProviderParams          wmts           = 107;
+        WmsRasterProviderParams           wms            = 108;
+        CesiumTerrainRasterProviderParams cesium_terrain = 109;
+        TileJsonRasterProviderParams      tilejson       = 110;
+        PmTilesRasterProviderParams       pmtiles        = 111;
+    }
+}

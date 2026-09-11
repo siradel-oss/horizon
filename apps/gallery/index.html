@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Horizon gallery</title>
+    <link rel="icon" type="image/svg+xml" href="./static/favicon.svg" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1b1b1b;
+            color: #fff;
+            font-family: sans-serif;
+        }
+
+        #gallery {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        #gallery h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 1.5rem;
+        }
+
+        #demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .demo-card {
+            display: block;
+            text-decoration: none;
+            color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #252525;
+        }
+
+        .demo-card:hover {
+            outline: 1px solid #555;
+        }
+
+        .demo-card img {
+            width: 100%;
+            aspect-ratio: 320 / 162;
+            object-fit: cover;
+            display: block;
+        }
+
+        .demo-card-label {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.875rem;
+        }
+
+        #app {
+            display: none;
+            position: fixed;
+            inset: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="gallery">
+        <h1>Horizon Gallery</h1>
+        <div id="demo-grid"></div>
+    </div>
+    <div id="app"></div>
+    <script type="module" src="/src/standalone.ts"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum ViewerInitStatus {
+    INIT_SUCCESS                         = 0;
+    FRAMEBUFFER_CREATION_ERROR           = 1;
+    RENDERING_API_MISSING_FEATURE_ERROR  = 2;
+    RENDERING_API_CONTEXT_CREATION_ERROR = 3;
+    GRAPHICS_BACKEND_INIT_ERROR          = 4;
+    ALREADY_INITIALIZED                  = 5;
+    BROWSER_FEATURES_NO_SHARED_MEMORY    = 6;
+    BROWSER_FEATURES_NO_ATOMICS          = 7;
+    NOT_ENOUGH_MEMORY                    = 8;
+}

@@ -1,0 +1,131 @@
+# SPDX-FileCopyrightText: Copyright 2019 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "compress_db",
+    srcs = ["db/compress_db.py"],
+    main = "db/compress_db.py",
+    python_version = "PY3",
+)
+
+run_binary(
+    name = "crs_database.bin",
+    srcs = ["db/epsg_proj.sqlite"],
+    outs = ["db/crs_database.bin"],
+    args = [
+        "$<",
+        "$@",
+    ],
+    tool = "compress_db",
+)
+
+run_binary(
+    name = "crs_db.c",
+    srcs = ["db/crs_database.bin"],
+    outs = ["src/crs_database_data.c"],
+    args = [
+        "crs_db_data",
+        "$<",
+        "c",
+        "$@",
+    ],
+    tool = "//tools/bazel/cc_resources:make_resource_source",
+)
+
+cc_library(
+    name = "proj_lite",
+    srcs = [
+        "src/crs_database.c",
+        "src/crs_database_data.c",
+        "src/database.c",
+        "src/internal/common.h",
+        "src/internal/constants.h",
+        "src/internal/crs_database.h",
+        "src/internal/database.h",
+        "src/internal/projection.h",
+        "src/internal/string_span.h",
+        "src/parse_proj_string.c",
+        "src/projection.c",
+        "src/projections/geocent.c",
+        "src/projections/latlong.c",
+        "src/projections/lcc.c",
+        "src/projections/merc.c",
+        "src/projections/tmerc.c",
+        "src/projections/utm.c",
+        "src/result.c",
+        "src/string_span.c",
+        "src/transform.c",
+    ],
+    hdrs = [
+        "src/proj_lite.h",
+    ],
+    includes = [
+        "src",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "tests",
+    testonly = False,
+    srcs = [
+        "tests/common.h",
+        "tests/crs.cpp",
+        "tests/crs_common.h",
+        "tests/generated.cpp",
+    ] + glob(["tests/crs_generated/*.cpp"]),
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":proj_lite",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "check_crs_support",
+    srcs = [
+        "tools/check_crs_support.cpp",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":proj_lite",
+    ],
+)
+
+py_binary(
+    name = "list_crs_csv",
+    srcs = ["tools/list_crs_csv.py"],
+    main = "tools/list_crs_csv.py",
+    python_version = "PY3",
+)
+
+run_binary(
+    name = "list_all_crs",
+    srcs = ["db/epsg_proj.sqlite"],
+    outs = ["db/all_crs.csv"],
+    args = [
+        "$(location db/epsg_proj.sqlite)",
+        "$(location db/all_crs.csv)",
+    ],
+    tool = ":list_crs_csv",
+)
+
+run_binary(
+    name = "crs_database.csv",
+    srcs = ["db/all_crs.csv"],
+    outs = ["db/crs_database.csv"],
+    args = [
+        "$(location db/all_crs.csv)",
+        "$(location db/crs_database.csv)",
+    ],
+    tool = ":check_crs_support",
+    visibility = ["//visibility:public"],
+)

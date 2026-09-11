@@ -1,0 +1,238 @@
+# SPDX-FileCopyrightText: Copyright 2018 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("//:version.bzl", "HRZ_VERSION")
+
+py_binary(
+    name = "changelog_md_generator",
+    srcs = [
+        "generate_changelog_md.py",
+    ],
+    data = [
+        "//changelogs:all_released",
+        "//changelogs:all_unreleased",
+        "//changelogs:unreleased/CHANGELOG_TEMPLATE.md.tpl",
+    ],
+    main = "generate_changelog_md.py",
+    python_version = "PY3",
+    deps = [
+        "//changelogs:changelog_lib",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+run_binary(
+    name = "generate_changelog_doc_page",
+    outs = [
+        "doc/changelog.md",
+    ],
+    args = [
+        "$(RULEDIR)/doc",
+    ],
+    tool = ":changelog_md_generator",
+)
+
+py_binary(
+    name = "artifacts_md_generator",
+    srcs = [
+        "generate_artifacts_md.py",
+    ],
+    data = [
+        "templates/artifacts.tpl.md",
+        "//:build_date.txt",
+    ],
+    main = "generate_artifacts_md.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+py_binary(
+    name = "crs_database_md_generator",
+    srcs = [
+        "generate_crs_database_md.py",
+    ],
+    data = [
+        "templates/crs_database.tpl.md",
+        "//libs/proj_lite:crs_database.csv",
+    ],
+    main = "generate_crs_database_md.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+py_binary(
+    name = "style_enums_md_generator",
+    srcs = [
+        "generate_style_enums_md.py",
+    ],
+    data = [
+        "templates/style_enums.tpl.md",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate_style_enums_md.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+py_binary(
+    name = "reference_md_generator",
+    srcs = [
+        "generate_reference_md.py",
+    ],
+    data = [
+        "templates/anchor.tpl.md",
+        "templates/enum.tpl.md",
+        "templates/file.tpl.md",
+        "templates/message.tpl.md",
+        "templates/reference.tpl.md",
+        "templates/service.tpl.md",
+        "templates/type_link.tpl.md",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate_reference_md.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+        "@pypi//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+run_binary(
+    name = "generate_artifacts_md",
+    outs = [
+        "doc/artifacts.md",
+    ],
+    args = [
+        "$(RULEDIR)/doc",
+        HRZ_VERSION,
+    ],
+    tool = ":artifacts_md_generator",
+)
+
+run_binary(
+    name = "generate_crs_database_md",
+    outs = [
+        "doc/crs_database.md",
+    ],
+    args = [
+        "$(RULEDIR)/doc",
+    ],
+    tool = ":crs_database_md_generator",
+)
+
+run_binary(
+    name = "generate_reference_md",
+    args = [
+        "$(RULEDIR)",
+    ],
+    out_dirs = [
+        "generated_reference/",
+    ],
+    tool = ":reference_md_generator",
+)
+
+run_binary(
+    name = "generate_style_enums_md",
+    outs = [
+        "doc/style_enums.md",
+    ],
+    args = [
+        "$(RULEDIR)/doc",
+    ],
+    tool = ":style_enums_md_generator",
+)
+
+pkg_files(
+    name = "pkg_doc_content",
+    srcs = glob(["doc/**/*"]) + [
+        ":generate_artifacts_md",
+        ":generate_changelog_doc_page",
+        ":generate_crs_database_md",
+        ":generate_style_enums_md",
+    ],
+    strip_prefix = strip_prefix.from_pkg("doc/"),
+)
+
+expand_template(
+    name = "version_json",
+    out = "version.json",
+    substitutions = {
+        "@@VERSION@@": HRZ_VERSION,
+    },
+    template = "templates/version.tpl.json",
+)
+
+pkg_files(
+    name = "pkg_doc_data",
+    srcs = [
+        ":version_json",
+    ],
+)
+
+pkg_files(
+    name = "pkg_doc_third_party_licenses",
+    srcs = ["//third_party:merge_third_party_licenses_md"],
+)
+
+pkg_files(
+    name = "pkg_ref_content",
+    srcs = [
+        ":generate_reference_md",
+    ],
+    prefix = "reference",
+    strip_prefix = strip_prefix.from_pkg("generated_reference/"),
+)
+
+pkg_filegroup(
+    name = "pkg_dev_guide",
+    srcs = [
+        "//doc:pkg",
+    ],
+    prefix = "dev_guide",
+)
+
+pkg_filegroup(
+    name = "pkg_llm",
+    srcs = [
+        "//hrz/doc/llm:pkg",
+    ],
+    prefix = "llm",
+)
+
+pkg_filegroup(
+    name = "pkg_all",
+    srcs = [
+        ":pkg_dev_guide",
+        ":pkg_doc_content",
+        ":pkg_doc_data",
+        ":pkg_doc_third_party_licenses",
+        ":pkg_llm",
+        ":pkg_ref_content",
+    ],
+)
+
+pkg_tar(
+    name = "pkg",
+    srcs = [
+        ":pkg_all",
+    ],
+    extension = "tar.gz",
+)

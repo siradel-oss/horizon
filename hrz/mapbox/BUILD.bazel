@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_library(
+    name = "mapbox",
+    srcs = [
+        "color.cpp",
+        "common.cpp",
+        "expression.cpp",
+        "translate.cpp",
+    ],
+    hdrs = [
+        "common.h",
+        "expression.h",
+        "translate.h",
+    ],
+    implementation_deps = [
+        "//hrz/cpp_protocol",
+        "//hrz/protocol/history:scene_model_version",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/common",
+        "//hrz/fnd",
+        "//libs/lm",
+        "@rapidjson",
+    ],
+)
+
+cc_test(
+    name = "tests",
+    testonly = False,
+    srcs = [
+        "tests/expression_tests.cpp",
+        "tests/parser_tests.cpp",
+    ],
+    # We can't put the test data in tests/data/ because:
+    # https://github.com/bazelbuild/bazel/issues/12312
+    data = glob(["tests_data/**"]),
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mapbox",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@rules_cc//cc/runfiles",
+    ],
+)

@@ -1,0 +1,63 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/tile.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/lighting_settings.proto";
+import "hrz/protocol/visibility_constraints.proto";
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/vector/style.proto";
+import "hrz/protocol/vector/clamping.proto";
+
+message VectorTilesSource {
+    uint32           vector_data_layer_id = 1;
+
+    // Set to true to override the zoom levels set on the vector data layer.
+    bool             override_levels      = 6;
+    // Minimum level of details of the tiles that are used, when overridden.
+    uint32           min_level            = 2;
+    // Maximum level of details of the tiles that are used, when overridden.
+    uint32           max_level            = 3;
+
+    // Set to true to override the bounds set on the vector data layer.
+    bool             override_bounds      = 5;
+    // Bounds in WGS84 (degrees) of the tiles that are used, when overridden.
+    GeographicBounds bounds               = 4;
+}
+
+message VectorTilesResolution {
+    reserved 1;
+    // Maximum error in logical pixels before refining a tile.
+    // The higher the value the later tiles will be refined.
+    float max_screen_space_error = 2;
+}
+
+// @path_root="vector_tiles_layer"
+export message VectorTilesLayer {
+    reserved 8;
+
+    VectorTilesSource             source                 = 1;
+    MissingTilePolicy             missing_tile_policy    = 12;
+
+    // Enable to make the layer static. The representations of a static vector
+    // tile layer are not updated on data invalidation. In return they use less
+    // resources. Ideal for basemap layers.
+    bool                          static_tiles           = 11;
+
+    VectorTilesStyle              style                  = 2;
+    VectorClamping                clamping               = 3;
+    VectorTilesResolution         resolution             = 4;
+    bool                          visible                = 5;
+    int32                         clip_id                = 6;
+    LayerVisibilityConstraintList visibility_constraints = 7;
+    LightingSettings              lighting               = 9;
+
+    // This visibility bitset is AND-ed with the ones in the representations.
+    SceneViewBitset               scene_views            = 10;
+}

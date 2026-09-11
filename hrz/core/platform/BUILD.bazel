@@ -1,0 +1,97 @@
+# SPDX-FileCopyrightText: Copyright 2024 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_library(
+    name = "platform",
+    srcs = [
+        "detection.cpp",
+        # Header files cannot be in select otherwise they trigger a rebuild of
+        # downstream dependencies when the selected set changes, even though they
+        # are un srcs and thus shouldn't be in the public interface of the target.
+        "windows_context.h",
+        "linux_x11_context.h",
+    ] + select({
+        "//:windows_gl": [
+            "windows.cpp",
+            "windows_wgl.cpp",
+        ],
+        "//:windows_gles": [
+            "native_egl.cpp",
+            "windows.cpp",
+        ],
+        "//:linux_gl": [
+            "linux_glx.cpp",
+            "linux_x11.cpp",
+        ],
+        "//:linux_headless_gl": [
+            "headless_egl.cpp",
+        ],
+        "//:linux_gles": [
+            "linux_x11.cpp",
+            "native_egl.cpp",
+        ],
+        "@platforms//os:emscripten": [
+            "emscripten.cpp",
+        ],
+    }),
+    hdrs = [
+        "detection.h",
+        "events.h",
+        "events_proto.h",
+        "platform.h",
+    ],
+    implementation_deps = select({
+        "@platforms//os:emscripten": [
+            "//hrz/core/js",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//:use_egl": [
+            "//third_party/glad:egl_15",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "@platforms//os:windows": [
+            "User32.lib",
+            "Gdi32.lib",
+            "Ws2_32.lib",
+            "Advapi32.lib",
+            "Wldap32.lib",
+        ],
+        "@platforms//os:linux": [
+            "-lX11",
+            "-lXi",
+        ],
+        "//conditions:default": [],
+    }),
+    local_defines = select({
+        "@platforms//os:windows": [
+            "WIN32",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/common",
+        "//hrz/fnd",
+    ],
+)
+
+cc_test(
+    name = "tests",
+    testonly = False,
+    srcs = [
+        "tests/detection.cpp",
+    ],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":platform",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

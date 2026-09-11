@@ -1,0 +1,8 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "*": ["../../bazel-bin/apps/web_example/node_modules/*"]
+        },
+    }
+}

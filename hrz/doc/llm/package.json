@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "@siradel-oss/horizon-api": "workspace:*",
+        "@siradel-oss/horizon-protocol": "workspace:*"
+    }
+}

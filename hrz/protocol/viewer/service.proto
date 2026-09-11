@@ -1,0 +1,185 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/viewer/options.proto";
+import "hrz/protocol/input/event.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/types/wrappers.proto";
+import "hrz/protocol/layer/handle.proto";
+import "hrz/protocol/identification/picking_ticket.proto";
+import "hrz/protocol/identification/raster_data_fetch_ticket.proto";
+import "hrz/protocol/identification/object_reference.proto";
+
+message PickRequest {
+    // Coordinates have their origin in the top-left corner. Y goes down. In
+    // logical pixels.
+    Vec2ui               coords           = 1;
+    repeated LayerHandle included_rasters = 2;
+}
+
+message PickRequestResult {
+    bool       has_a_ticket = 1;
+    PickTicket ticket       = 2;
+}
+
+message PickAreaRequestResult {
+    bool           has_a_ticket = 1;
+    PickAreaTicket ticket       = 2;
+}
+
+message RasterDataFetchRequest {
+    GeographicPosition   position      = 1;
+    repeated LayerHandle raster_layers = 2;
+}
+
+message RasterDataFetchResult {
+    bool                  has_a_ticket = 1;
+    RasterDataFetchTicket ticket       = 2;
+}
+
+message ElevationRequest { GeographicPosition position = 1; }
+
+message ElevationRequestResult {
+    bool  has_value = 1;
+    float value     = 2;
+}
+
+message MouseHoverConfiguration {
+    bool  enable_highlight  = 1;
+    bool  enable_info       = 2;
+    float highlight_rate_ms = 3;
+    float info_rate_ms      = 4;
+}
+
+// @service_id=0xf50c09c6
+service ViewerService {
+    // Returns the settings configuration used by the engine.
+    //
+    // @method_id=0xf60055ca
+    rpc GetConfiguration(Void) returns (ViewerConfiguration);
+
+    // Schedules a frame to be captured and returned via the message queue.
+    // Calling this multiples times before a capture is returned has the same
+    // effect as calling it once: only one message with be returned.
+    // It is necessary to let the engine run normally after a call to this
+    // method to eventually get a result.
+    //
+    // @method_id=0x68cd3767
+    rpc ScheduleFrameCapture(Void) returns (Void);
+
+    // Picks the scene at the given screen pixel coordinates.
+    // The origin is the top-left corner and Y goes down.
+    // The coordinates must be given in logical pixels.
+    // The picking result will be returned via the message queue.
+    // No information about imagery raster layers is returned by default.
+    // Pass imagery layer handles to include them in the process.
+    //
+    // @method_id=0x619e45ce
+    rpc PickScreen(PickRequest) returns (PickRequestResult);
+
+    // Picks the scene inside a given rectangle on the screen.
+    // The origin is the top-left corner and Y goes down.
+    // The coordinates must be given in logical pixels.
+    // The picking result will be returned via the message queue.
+    //
+    // @method_id=0xfa3d108c
+    rpc PickScreenArea(Bboxi) returns (PickAreaRequestResult);
+
+    // Fetches data from the tiles of the given raster layers at the highest LOD
+    // level. The data will be returned via the message queue once loaded.
+    //
+    // @method_id=0xc7103b53
+    rpc FetchRasterData(RasterDataFetchRequest) returns (RasterDataFetchResult);
+
+    // Returns the terrain elevation at the given geographic coordinates,
+    // using data from DTM layers.
+    // This method only returns what has already been loaded in Horizon for
+    // viewing or raster data fetch proposes. It does not trigger new data
+    // download. This means that the result may be imprecise.
+    // This method relies on the tile cache to provide results.
+    // For more precise values, use `FetchRasterData`.
+    //
+    // @method_id=0xa9f4158d
+    rpc GetTerrainElevation(ElevationRequest) returns (ElevationRequestResult);
+
+    // Configures continuous mouse hover information sent through the
+    // message queue, and/or mouse hover highlighting.
+    // The highlighting color is given in the highlighting section
+    // of each scene view configuration.
+    //
+    // @method_id=0x3c579fed
+    rpc ConfigureMouseHover(MouseHoverConfiguration) returns (Void);
+
+    // Selects features in the scene. Returns the number of features now
+    // selected in the scene.
+    //
+    // @method_id=0x7d24b615
+    rpc SelectFeatures(FeatureReferences) returns (UInt64Value);
+
+    // Deselects features from the scene. Returns the number of features now
+    // selected in the scene.
+    //
+    // @method_id=0x4c8b12db
+    rpc DeselectFeatures(FeatureReferences) returns (UInt64Value);
+
+    // Deselects everything from the scene.
+    // This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
+    //
+    // @method_id=0x52ae4a5f
+    rpc DeselectAllFeatures(Void) returns (Void);
+
+    // Gets the viewer scene working status.
+    //
+    // @method_id=0xbd516a4e
+    rpc IsWorking(Void) returns (BoolValue);
+
+    // Enables or disables the capture of system events related to user
+    // interactions. Events like the resizing or closure of the window will
+    // still be handled by the engine. If the events capture has been disabled
+    // in the viewer options at initialization, this method has no effect, and
+    // user interactions are permanently disabled.
+    //
+    // @method_id=0xe361474e
+    rpc SetUserInteractionsEnabled(BoolValue) returns (Void);
+
+    // Sends events to the viewer.
+    // It is recommended to batch those calls as much as possible.
+    //
+    // @method_id=0x03d05241
+    rpc SendEvents(EventsStream) returns (Void);
+
+    // Toggles the developement UI. Returns `true` if the UI is now open,
+    // `false` otherwise. This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
+    //
+    // @method_id=0xa75bfe3c
+    rpc ToggleDevUi(Void) returns (BoolValue);
+
+    // Moves the developement UI to the cursor position.
+    // This action can be bound to a key. See
+    // `HrzProtocol.KeyInteractionBindings`.
+    //
+    // @method_id=0xb32b6286
+    rpc MoveDevUiToCursor(Void) returns (Void);
+
+    // (Native only)
+    // Clears the embedded HTTP cache.
+    //
+    // @method_id=0x831b3536
+    rpc ClearHttpCache(Void) returns (Void);
+
+    // Enables or disables periodic messages giving the list of attributions
+    // that is necessary to display to properly attribute the scene elements
+    // currently displayed.
+    // @method_id=0xddb91a77
+    rpc SetAttributionEnabled(BoolValue) returns (Void);
+}

@@ -1,0 +1,17 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "tlsf",
+    srcs = [
+        "tlsf.c",
+    ],
+    hdrs = [
+        "tlsf.h",
+    ],
+    include_prefix = "tlsf",
+    includes = ["."],
+)
+
+exports_files(["LICENSE"])

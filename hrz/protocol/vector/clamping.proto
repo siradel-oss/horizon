@@ -1,0 +1,25 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+enum VectorClampMode {
+    // Disables clamping (fastest).
+    NO_CLAMPING = 0;
+    // Computes a clamp value for the anchor of the feature which is then
+    // applied to every point of the feature.
+    ANCHOR      = 1;
+    // Computes a clamp value at every point of the feature (slowest).
+    PER_VERTEX  = 2;
+}
+
+export message VectorClamping {
+    VectorClampMode method = 1;
+    // When enabled, the Z coordinate of each point is added to the clamped
+    // value.
+    bool            use_z  = 2;
+}

@@ -1,0 +1,121 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/types/primitive.proto";
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/http_headers.proto";
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/vector/image_sprite.proto";
+
+// Keep this in sync with hrz/core/shaders/glsl/flat_vectors/pattern_defs.glsl
+enum PolygonPatternSizeUnit {
+    // @label="Size in meters"
+    POLYGON_PATTERN_SIZE_IN_METERS                    = 0;
+
+    // In logical pixels.
+    // @label="Size in pixels"
+    POLYGON_PATTERN_SIZE_IN_PIXELS                    = 1;
+
+    // Scale applied to the size of the sprite, considering that
+    // size to be meters.
+    // @label="Size relative to sprite size, in meters"
+    POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_METERS = 2;
+
+    // Scale applied to the size of the sprite, considering that size to be
+    // logical pixels.
+    // @label="Size relative to sprite size, in pixels"
+    POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_PIXELS = 3;
+}
+
+// Keep this in sync with hrz/core/shaders/glsl/flat_vectors/pattern_defs.glsl
+enum PolygonPatternTilingType {
+    // The pattern instances form a consistent grid, but their size vary
+    // considerably, and becomes very small towards the poles.
+    // @label="Favour pattern grid"
+    POLYGON_PATTERN_FAVOR_GRID = 0;
+
+    // Pattern instances at different latitude can have different scales,
+    // breaking the grid, in order to give them more consistent sizes. A
+    // reference latitude is used to avoid having a scale break at an
+    // inconvenient place.
+    // @label="Favour pattern size"
+    POLYGON_PATTERN_FAVOR_SIZE = 1;
+}
+
+// Keep this in sync with hrz/core/shaders/glsl/flat_vectors/pattern_defs.glsl
+enum PolygonPatternReferenceLatitudeType {
+    // Pattern instances have a size close to the intended one near the given
+    // latitude, and scale breaks are as far as possible from this latitude.
+    // Scale breaks are fixed.
+    // Use this option when the scene has a consistent focus on a small(ish)
+    // area.
+    // @label="Fixed reference latitude"
+    POLYGON_PATTERN_FIXED_REFERENCE_LATITUDE   = 0;
+
+    // Pattern instances have a size close to the intended one near the camera
+    // position, and scale breaks are as far as possible from this latitude.
+    // However the positions of the scale breaks are readjusted dynamically and
+    // this can create temporal scale breaks as the camera moves. Use this
+    // option when the scene encompasses large areas.
+    // @label="Dynamic reference latitude"
+    POLYGON_PATTERN_DYNAMIC_REFERENCE_LATITUDE = 1;
+}
+
+export message PolygonPattern {
+    // URL to the image containing either a single sprite or a sprite sheet, for
+    // patterns.
+    string                              image_url               = 28;
+    HttpHeaderList                      image_http_headers      = 29;
+
+    // Definition of the sprites for patterns.
+    // Stretchable areas are not taken into account, each sprite is used as-is.
+    // If no sprites are defined, the whole pattern image is used.
+    repeated ImageSprite                sprites                 = 30;
+
+    // Index of the sprite to use for polygon pattern.
+    IntProperty                         sprite_index            = 31;
+
+    // Name of the sprite to use for polygon pattern.
+    // If the name is valid, it overrides the sprite index property.
+    StringProperty                      sprite_name             = 32;
+
+    // Size of the polygon pattern instances.
+    Vec2fProperty                       size                    = 33;
+
+    // Unit of the size of polygon pattern instances.
+    PolygonPatternSizeUnit              size_unit               = 34;
+
+    // Rotation in radians, counter-clockwise, of the polygon pattern instances.
+    FloatProperty                       rotation                = 35;
+
+    // Controls how the polygon pattern grid is built, wrt. the curvature of the
+    // planet.
+    PolygonPatternTilingType            tiling_type             = 36;
+
+    // Sets the reference latitude for building the polygon pattern grid to a
+    // static or dynamic value.
+    PolygonPatternReferenceLatitudeType reference_latitude_type = 37;
+
+    // Reference latitude, in WGS84 degrees, used to build the polygon pattern
+    // grid, when it is not dynamic.
+    float                               reference_latitude      = 38;
+
+    // Color applied to the polygon pattern, according to the blend mode and
+    // strength.
+    ColorProperty                       color                   = 39;
+
+    // Controls how the polygon pattern color is blended into the pattern sprite
+    // colors.
+    BlendMode                           color_blend_mode        = 40;
+
+    // Controls the strength of the blending of the polygon pattern color into
+    // the pattern sprite colors. Values are clamped between 0 and 1
+    // (inclusive).
+    FloatProperty                       color_blend_strength    = 41;
+}

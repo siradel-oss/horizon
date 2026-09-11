@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright 2023 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_library(
+    name = "http_cache",
+    srcs = [
+        "http_cache.cpp",
+    ],
+    hdrs = [
+        "http_cache.h",
+    ],
+    implementation_deps = [
+        "@microui",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/fnd",
+    ],
+)
+
+cc_test(
+    name = "tests",
+    testonly = False,
+    srcs = [
+        "tests/http_cache.cpp",
+    ],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":http_cache",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

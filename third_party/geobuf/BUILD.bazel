@@ -1,0 +1,36 @@
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+run_binary(
+    name = "generate_proto",
+    srcs = [
+        "geobuf.proto",
+    ],
+    outs = [
+        "gen/geobuf.pb.cc",
+        "gen/geobuf.pb.h",
+    ],
+    args = [
+        "-Ithird_party/geobuf",
+        "$(location geobuf.proto)",
+        "--cpp_out=$(@D)/gen",
+    ],
+    tool = "//third_party:protoc",
+)
+
+cc_library(
+    name = "geobuf",
+    srcs = [
+        "gen/geobuf.pb.cc",
+    ],
+    hdrs = [
+        "gen/geobuf.pb.h",
+    ],
+    includes = [
+        "gen",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@protobuf//:protobuf_lite",
+    ],
+)

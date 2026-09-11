@@ -1,0 +1,59 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/geo/coords.proto";
+
+enum RelativePositionQualifier {
+    // Qualify the position of an object relative to an altitude threshold.
+
+    ABOVE = 0;
+    BELOW = 1;
+}
+
+enum RelativeBoundsPositionQualifier {
+    // Qualify the position of an object relative to bounds.
+
+    INSIDE  = 0;
+    OUTSIDE = 1;
+}
+
+// @path_leaf="true"
+message AltitudeVisibilityConstraint {
+    RelativePositionQualifier relative_position = 1;
+    // Altitude in meters relative to the ellipsoid.
+    double                    altitude          = 2;
+}
+
+// @path_leaf="true"
+message BoundsVisibilityConstraint {
+    RelativeBoundsPositionQualifier relative_position = 1;
+    // Bounds are in Lat/Lon (degrees).
+    GeographicBounds                bounds            = 2;
+}
+
+// @path_leaf="true"
+message LayerVisibilityConstraint {
+    reserved 1;
+
+    oneof constraint_type {
+        // The layer visibility is determined by the camera altitude being above
+        // or below the specified limit.
+        AltitudeVisibilityConstraint altitude = 100;
+        // The layer visibility is determined by the camera being inside or
+        // outside the specified bounds.
+        BoundsVisibilityConstraint   bounds   = 101;
+    }
+}
+
+export message LayerVisibilityConstraintList {
+    // All the constraints *MUST* be satisfied in order for the layer to be
+    // visible. This is equivalent to having all the constraints AND'ed.
+    // When empty, the layer is always visible.
+    repeated LayerVisibilityConstraint constraints = 1;
+}

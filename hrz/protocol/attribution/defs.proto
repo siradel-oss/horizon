@@ -1,0 +1,17 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package        HrzProtocol;
+option         optimize_for                  = LITE_RUNTIME;
+option         features.field_presence       = IMPLICIT;
+option         features.enforce_naming_style = STYLE_LEGACY;
+
+export message Attribution {
+    // The text might contain HTML tags, such as links.
+    // Anything is allowed, no sanitization is done, so it should be used with
+    // care.
+    string text     = 1;
+
+    string logo_url = 2;
+}

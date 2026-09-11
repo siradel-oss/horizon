@@ -1,0 +1,317 @@
+# SPDX-FileCopyrightText: Copyright 2018 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@bazel_output_base_util//:defs.bzl", "OUTPUT_BASE")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:prettier/package_json.bzl", prettier_bin = "bin")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+load("//tools/ide_integration:cmake.bzl", "cmakelists")
+load("//tools/ide_integration:compilation_database_aspects.bzl", "compilation_database")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["LICENSE"])
+
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements.txt",
+)
+
+npm_link_all_packages(name = "node_modules")
+
+npm_link_package(
+    name = "node_modules/@siradel-oss/horizon-protocol",
+    src = "//hrz/ts_protocol:npm_pkg",
+)
+
+npm_link_package(
+    name = "node_modules/@siradel-oss/horizon-api",
+    src = "//hrz/ts_api:npm_pkg",
+)
+
+npm_link_package(
+    name = "node_modules/@siradel-oss/horizon-core",
+    src = "//hrz/ts_core:npm_pkg",
+)
+
+npm_link_package(
+    name = "node_modules/@siradel-oss/horizon-monitoring-protocol",
+    src = "//hrz/ts_monitoring_protocol:npm_pkg",
+)
+
+npm_link_package(
+    name = "node_modules/@siradel-oss/horizon-scene-dump",
+    src = "//hrz/ts_scene_dump:npm_pkg",
+)
+
+copy_to_bin(
+    name = "tsconfig",
+    srcs = ["tsconfig.json"],
+)
+
+#
+# Build configuration
+#
+
+config_setting(
+    name = "debug",
+    values = {
+        "compilation_mode": "dbg",
+    },
+)
+
+config_setting(
+    name = "fast",
+    values = {
+        "compilation_mode": "fastbuild",
+    },
+)
+
+config_setting(
+    name = "release",
+    values = {
+        "compilation_mode": "opt",
+    },
+)
+
+bool_flag(
+    name = "gles",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "use_gles",
+    flag_values = {
+        "//:gles": "True",
+    },
+)
+
+bool_flag(
+    name = "headless",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "is_headless",
+    flag_values = {
+        "//:headless": "True",
+    },
+)
+
+config_setting(
+    name = "is_windowed",
+    flag_values = {
+        "//:headless": "False",
+    },
+)
+
+selects.config_setting_group(
+    name = "use_egl",
+    match_any = [
+        ":use_gles",
+        ":is_headless",
+    ],
+)
+
+selects.config_setting_group(
+    name = "os_native",
+    match_any = [
+        "@platforms//os:linux",
+        "@platforms//os:windows",
+    ],
+)
+
+config_setting(
+    name = "linux_windowed",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "False",
+    },
+)
+
+config_setting(
+    name = "linux_headless",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "True",
+    },
+)
+
+config_setting(
+    name = "windows_gl",
+    constraint_values = [
+        "@platforms//os:windows",
+    ],
+    flag_values = {
+        ":gles": "False",
+    },
+)
+
+config_setting(
+    name = "windows_gles",
+    constraint_values = [
+        "@platforms//os:windows",
+    ],
+    flag_values = {
+        ":gles": "True",
+    },
+)
+
+config_setting(
+    name = "linux_gl",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "False",
+        ":gles": "False",
+    },
+)
+
+config_setting(
+    name = "linux_headless_gl",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "True",
+        ":gles": "False",
+    },
+)
+
+config_setting(
+    name = "linux_gles",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+    flag_values = {
+        ":headless": "False",
+        ":gles": "True",
+    },
+)
+
+constraint_setting(name = "toolchain_kind")
+
+constraint_value(
+    name = "sniper_constraint",
+    constraint_setting = ":toolchain_kind",
+)
+
+platform(
+    name = "sniper_platform",
+    constraint_values = [
+        "//:sniper_constraint",
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+#
+# CI
+#
+
+run_binary(
+    name = "build_date",
+    srcs = [],
+    outs = ["build_date.txt"],
+    args = ["$@"],
+    tags = ["no-cache"],
+    tool = "//tools/build_info:get_date",
+)
+
+#
+# IDE support
+#
+
+_NATIVE_TESTS = [
+    "//hrz/common:tests",
+    "//hrz/core:tests",
+    "//hrz/core/jobs:tests",
+    "//hrz/core/platform:tests",
+    "//hrz/fnd:tests",
+    "//hrz/http_cache:tests",
+    "//hrz/mapbox:tests",
+    "//hrz/monitoring:tests",
+    "//libs/mycelium:tests",
+    "//libs/proj_lite:tests",
+]
+
+_WEB_TESTS = [
+    "//hrz/doc/llm:patterns_build_test",
+]
+
+_ALL_BINS = [
+    "//apps/native_client",
+    "//tools/monitoring_client",
+    "//libs/ws:ws_echo_server",
+    "//tools/compress_file_lz4",
+    "//tools/scene_dump:get_dump_version",
+    "//tools/scene_dump:set_dump_version",
+    "//tools/scene_dump:migrate_dump",
+    "//tools/scene_dump:edit_dump",
+    "//apps/web_client:generate_scenes_list",
+    "//tools/visual_testing:viewer",
+    "//tools/visual_testing:comparator",
+    "//libs/proj_lite:check_crs_support",
+    "//hrz/xml_desc_generator",
+] + _NATIVE_TESTS + select({
+    "@platforms//os:windows": [
+        "//hrz/core:hrz_core.dll",
+    ],
+    "@platforms//os:linux": [
+        "//hrz/core:hrz_core.so",
+    ],
+    "//conditions:default": [],
+})
+
+compilation_database(
+    name = "compilation_database",
+    output_base = OUTPUT_BASE,
+    targets = _ALL_BINS,
+)
+
+cmakelists(
+    name = "cmakelists",
+    targets = _ALL_BINS,
+)
+
+prettier_bin.prettier_binary(
+    name = "prettier",
+    args = [
+        "--config",
+        "$(location .prettierrc.json)",
+        "--ignore-path",
+        "$(location .prettierignore)",
+        "--ignore-unknown",
+        "--write",
+    ],
+    data = [
+        ".prettierignore",
+        ".prettierrc.json",
+    ],
+    env = {
+        "BAZEL_BINDIR": "$(BINDIR)",
+    },
+)
+
+test_suite(
+    name = "native_tests",
+    testonly = False,
+    tests = _NATIVE_TESTS,
+)
+
+test_suite(
+    name = "web_tests",
+    testonly = False,
+    tests = _WEB_TESTS,
+)

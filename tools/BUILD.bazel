@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: Copyright 2025 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "redact",
+    srcs = ["redact.py"],
+    main = "redact.py",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)

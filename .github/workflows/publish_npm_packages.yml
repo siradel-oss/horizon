@@ -1,0 +1,43 @@
+name: Publish npm packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to publish from (e.g. v25.2.1)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ inputs.version }}" \
+            --repo ${{ github.repository }} \
+            --pattern "*-ts-npm.tgz" \
+            --dir dist
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org/'
+          package-manager-cache: false
+
+      - name: Publish packages
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          VER="${VERSION#v}"
+          npm publish "./dist/horizon-monitoring-protocol-${VER}-ts-npm.tgz" --access public
+          npm publish "./dist/horizon-protocol-${VER}-ts-npm.tgz" --access public
+          npm publish "./dist/horizon-api-${VER}-ts-npm.tgz" --access public
+          npm publish "./dist/horizon-core-${VER}-ts-npm.tgz" --access public
+          npm publish "./dist/horizon-scene-dump-${VER}-ts-npm.tgz" --access public

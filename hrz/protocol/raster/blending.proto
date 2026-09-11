@@ -1,0 +1,14 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package        HrzProtocol;
+option         optimize_for                  = LITE_RUNTIME;
+option         features.field_presence       = IMPLICIT;
+option         features.enforce_naming_style = STYLE_LEGACY;
+
+// Specified how the raster in blended with raster below it.
+export message RasterBlending {
+    // Ignored for DTM rasters. Range 0-1.
+    float opacity = 1;
+}

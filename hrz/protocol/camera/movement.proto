@@ -1,0 +1,94 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/camera/index.proto";
+
+// Defines the axes along which a camera movement is applied.
+enum CameraFrame {
+    // X axis is aligned to east-west axes.
+    // Y axis is aligned to north-south axes.
+    // Z is local "up" (away from the center of the planet).
+    // @label="Cardinal"
+    CAMERA_FRAME_CARDINAL   = 0;
+
+    // X axis is aligned with the left direction of the camera, tangential to
+    // the planet. Y axis is aligned with the forward direction of the camera,
+    // tangential to the planet. Z is always local "up" (away from the center of
+    // the planet).
+    // @label="Tangential"
+    CAMERA_FRAME_TANGENTIAL = 1;
+}
+
+// Despite this movement being a translation, it is really a rotation around
+// the center of the planet, hence why it is parameterized by an angle.
+message CameraTranslate {
+    reserved 1, 2;
+
+    CameraFrame frame          = 3;
+
+    // For a factor of 1, the camera will move horizontally by its altitude
+    // value. Applied per second when using a continuous movement. For cardinal
+    // frame, < 0 = west, > 0 = east. For tangential frame, < 0 = left, > 0 =
+    // right.
+    float       angle_factor_x = 4;
+
+    // For a factor of 1, the camera will move horizontally by its altitude
+    // value. Applied per second when using a continuous movement. For cardinal
+    // frame, < 0 = south, > 0 = north. For tangential frame, < 0 = backward, >
+    // 0 = forward.
+    float       angle_factor_y = 5;
+}
+
+message CameraRotate {
+    // In radians (in rad/s when using continuous movement).
+    // Clockwise: positive values rotate the camera to the right.
+    float bearing = 1;
+
+    // In radians (in rad/s when using continuous movement).
+    // Positive values rotate the camera upwards.
+    float tilt    = 2;
+}
+
+message CameraZoom {
+    // Ratio of 2 means a 2x zoom toward the planet (ratio is applied per
+    // second when using a continuous movement).
+    float ratio = 1;
+}
+
+enum CameraContinuousMovementInterruption {
+    // Continuous movement cannot be interrupted except by a transition or
+    // another continuous movement.
+    // @label="Not interruptible"
+    CONTINUOUS_MOVEMENT_NOT_INTERRUPTIBLE         = 0;
+
+    // Continuous movement can be interrupted by user actions.
+    // @label="Interruptible"
+    CONTINUOUS_MOVEMENT_INTERRUPTIBLE_NO_RESUME   = 1;
+
+    // Continuous movement can be interrupted by user actions, and when said
+    // action is over, the movement resumes.
+    // @label="Interruptible, then resumes"
+    CONTINUOUS_MOVEMENT_INTERRUPTIBLE_THEN_RESUME = 2;
+}
+
+export message CameraMovement {
+    reserved 2, 3;
+
+    CameraIndex                          camera_index                     = 1;
+
+    // For continuous movements only. Sets whether the movement can be
+    // interrupted, and whether it can resume after it has been interrupted.
+    CameraContinuousMovementInterruption continuous_movement_interruption = 4;
+
+    oneof                                movement {
+        CameraTranslate translation = 101;
+        CameraRotate    rotation    = 102;
+        CameraZoom      zoom        = 103;
+    }
+}

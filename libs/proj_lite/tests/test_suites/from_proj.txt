@@ -1,0 +1,39 @@
+= +proj=longlat +datum=WGS84
+< 2 49 0 1e-7
+> +proj=longlat +datum=WGS84
+
+= +proj=longlat +datum=WGS84
+< 182 49 0 1e-7
+> +proj=longlat +datum=WGS84
+
+= +proj=longlat +ellps=WGS84 +towgs84=0,1,0
+< 90 0 10 1e-7
+> +proj=longlat +datum=WGS84
+
+= +proj=longlat +ellps=WGS84 +towgs84=0,1,0,0,0,0,0.5
+< 90 0 10 1e-7
+> +proj=longlat +datum=WGS84
+
+= +proj=longlat +datum=WGS84
+< 90 0 11 1e-7
+> +proj=longlat +ellps=WGS84 +towgs84=0,1,0
+
+= +proj=longlat +datum=WGS84
+< 90 0 14.189073500223458 1e-7
+> +proj=longlat +ellps=WGS84 +towgs84=0,1,0,0,0,0,0.5
+
+= +proj=longlat +datum=WGS84 +axis=neu
+< 49 2 0 1e-7
+> +proj=longlat +datum=WGS84
+
+= +proj=longlat +datum=WGS84 +axis=swd
+< 49 2 -1 1e-7
+> +proj=longlat +datum=WGS84
+
+= +proj=longlat +datum=WGS84
+< 2 49 1 1e-7
+> +proj=longlat +datum=WGS84 +axis=neu
+
+= +proj=longlat +datum=WGS84
+< 2 49 1 1e-7
+> +proj=longlat +datum=WGS84 +axis=swd

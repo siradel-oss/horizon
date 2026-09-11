@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: Copyright 2020 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+filegroup(
+    name = "js_files",
+    srcs = [
+        "lib.js",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "js",
+    hdrs = [
+        "lib.h",
+    ],
+    includes = ["."],
+    strip_include_prefix = "/libs",
+    visibility = ["//visibility:public"],
+)

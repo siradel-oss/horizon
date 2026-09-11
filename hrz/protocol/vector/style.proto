@@ -1,0 +1,50 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/color/palette.proto";
+import "hrz/protocol/vector/representation.proto";
+
+message StylingAttributeRef {
+    // This is the attribute ID defined in the vector data layer.
+    uint32 vector_data_attr_id = 1;
+
+    // This name will be used in the styling script.
+    string styling_name        = 2;
+}
+
+export message VectorTilesStyle {
+    repeated VectorRepr          representations             = 1;
+    string                       styling_script              = 2;
+
+    // Maps an attribute name in the styling script to an attribute ID from a
+    // vector data layer.
+    repeated StylingAttributeRef attributes                  = 3;
+    repeated Palette             palettes                    = 4;
+
+    // This is the name of the attribute in the styling script that will
+    // contain the z component of the anchor of the feature. This is the
+    // coordinate before clamping. Leave this empty if you don't need that. For
+    // polygons this is the centroid. For polylines this is the middle of the
+    // path.
+    string                       anchor_z_attribute_name     = 5;
+
+    // This is the name of the attribute in the styling script that will
+    // contains the type of feature. It is a uint attribute with 0 = points, 1 =
+    // polyline and 2 = polygon. Leave this empty if you don't need that.
+    string                       feature_type_attribute_name = 6;
+
+    // Name of the attribute in the styling script that will contain the angle
+    // at the anchor of the feature. For polygons and points this is always 0.
+    // For polylines, it's the orientation at the middle of the path. This is
+    // in radians. 0 is east, then it is encoded counter-clockwise.
+    string                       anchor_angle_attribute_name = 8;
+
+    // Seed to influence the pseudo-random number generation.
+    uint64                       rng_seed                    = 7;
+}

@@ -1,0 +1,21 @@
+{
+    "name": "@siradel-oss/horizon-scene-dump",
+    "homepage": "https://github.com/siradel-oss/Horizon",
+    "type": "module",
+    "dependencies": {
+        "@siradel-oss/horizon-api": "workspace:*",
+        "@siradel-oss/horizon-protocol": "workspace:*"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "browser": {
+        "http": false,
+        "https": false,
+        "net": false,
+        "path": false,
+        "stream": false,
+        "tls": false,
+        "fs": false,
+        "crypto": false
+    }
+}

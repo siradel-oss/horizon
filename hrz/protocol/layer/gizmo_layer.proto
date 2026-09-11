@@ -1,0 +1,87 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/maths/maths.proto";
+import "hrz/protocol/size_unit.proto";
+import "hrz/protocol/geo/coords.proto";
+import "hrz/protocol/scene/index.proto";
+import "hrz/protocol/layer/grid.proto";
+import "hrz/protocol/layer/line.proto";
+
+enum GizmoReferenceFrame {
+    // Align the transformation on the world axes
+    WORLD_REFERENCE  = 0;
+    // Align the transformation on the object axes
+    OBJECT_REFERENCE = 1;
+}
+
+enum GizmoComponentType {
+    // This component doesn't have any action attached to it. It is a visual
+    // help to know what the gizmo position is.
+    // @label="Origin"
+    GIZMO_ORIGIN                         = 0;
+    // @label="Translation axis X"
+    GIZMO_TRANSLATION_AXIS_X             = 1;
+    // @label="Translation axis Y"
+    GIZMO_TRANSLATION_AXIS_Y             = 2;
+    // @label="Translation axis Z"
+    GIZMO_TRANSLATION_AXIS_Z             = 3;
+    // @label="Translation plane X"
+    GIZMO_TRANSLATION_PLANE_X            = 4;
+    // @label="Translation plane Y"
+    GIZMO_TRANSLATION_PLANE_Y            = 5;
+    // @label="Translation plane Z"
+    GIZMO_TRANSLATION_PLANE_Z            = 6;
+    // @label="Translation plane camera plane"
+    GIZMO_TRANSLATION_PLANE_CAMERA_PLANE = 7;
+    // @label="Rotation ring X"
+    GIZMO_ROTATION_RING_X                = 8;
+    // @label="Rotation ring Y"
+    GIZMO_ROTATION_RING_Y                = 9;
+    // @label="Rotation ring Z"
+    GIZMO_ROTATION_RING_Z                = 10;
+    // @label="Rotation ring camera plane"
+    GIZMO_ROTATION_RING_CAMERA_PLANE     = 11;
+}
+
+message GizmoComponent {
+    GizmoComponentType  type            = 1;
+    GizmoReferenceFrame reference_frame = 2;
+}
+
+// @path_root="gizmo_layer"
+export message GizmoLayer {
+    reserved 5, 6;
+
+    uint32                  id           = 1;
+    // Size of the gizmo. Unit is set with `size_unit`.
+    float                   size         = 2;
+    UiSizeUnit              size_unit    = 12;
+    // This is a padding in pixels added to the bounding box of the gizmo
+    // components allowing to change their logical size. It means that the
+    // interaction surface with components surface will be larger, or smaller,
+    // although the gizmo physical size doesn't change. It is particularly
+    // useful when using gizmos on touch devices. On such device increasing the
+    // overall size of the gizmo as well as the bounding boxes can help the
+    // interactions a lot. A `size` of 200 pixels with a `bbox_padding` of 20
+    // are good default values on touch devices. This is in logical pixels.
+    uint32                  bbox_padding = 10;
+    GeographicPosition      position     = 3;
+    Quat                    rotation     = 4;
+    // List of components to activate.
+    // If a component is present multiple times, the last configuration is used.
+    repeated GizmoComponent components   = 13;
+    // Select what views the gizmo will be visible in.
+    SceneViewBitset         scene_views  = 7;
+    bool                    visible      = 8;
+    // Parameters for the grid displayed when a gizmo is moved on a plane.
+    Grid                    grid         = 9;
+    // Parameters for the line displayed when a gizmo is moved along an axis.
+    Line                    line         = 11;
+}

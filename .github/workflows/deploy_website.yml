@@ -1,0 +1,99 @@
+name: Deploy website
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to build the website from (e.g. v25.2.1)'
+        required: true
+        type: string
+      website_ref:
+        description: 'Branch, tag or SHA of the website repository'
+        required: false
+        default: main
+        type: string
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  WEBSITE_REPOSITORY: siradel-oss/horizon-website
+  HUGO_VERSION: '0.162.1'
+  SITE_BASE_URL: 'https://siradel-oss.github.io/horizon/'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the website repository
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.WEBSITE_REPOSITORY }}
+          ref: ${{ inputs.website_ref }}
+          # Only needed while the website repository is private.
+          token: ${{ secrets.WEBSITE_REPOSITORY_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Download the documentation and gallery packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          VER="${VERSION#v}"
+          gh release download "v${VER}" \
+            --repo ${{ github.repository }} \
+            --pattern "horizon-documentation-${VER}.tar.gz" \
+            --pattern "horizon-gallery-${VER}.tar.gz" \
+            --dir "${RUNNER_TEMP}/packages"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Setup Hugo
+        run: |
+          curl -sL "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin hugo
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch the documentation and gallery content
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          VER="${VERSION#v}"
+          node scripts/fetch_content.js \
+            --doc "${RUNNER_TEMP}/packages/horizon-documentation-${VER}.tar.gz" \
+            --gallery "${RUNNER_TEMP}/packages/horizon-gallery-${VER}.tar.gz"
+
+      - name: Build the website
+        env:
+          HUGO_BASEURL: ${{ env.SITE_BASE_URL }}
+        run: hugo build
+
+      - name: Upload the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

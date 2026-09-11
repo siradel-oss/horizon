@@ -1,0 +1,18 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "resolveJsonModule": true,
+        "paths": {
+            "@/*": ["./src/*"],
+            "*": ["../../bazel-bin/apps/gallery/node_modules/*"]
+        },
+        "skipLibCheck": true
+    },
+    "vueCompilerOptions": {
+        "checkUnknownComponents": true,
+        "checkUnknownEvents": true,
+        "checkUnknownDirectives": true,
+        "checkUnknownProps": true
+    },
+    "include": ["src/**/*", "vite.config.ts"]
+}

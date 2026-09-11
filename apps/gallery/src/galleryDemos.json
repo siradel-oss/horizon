@@ -1,0 +1,257 @@
+{
+    "heatmapEarthquakes": {
+        "title": "Earthquakes",
+        "tags": ["dataviz", "heatmap"],
+        "thumbnailFile": "heatmap_earthquakes.webp"
+    },
+    "loadingIndicator": {
+        "title": "Loading indicator",
+        "tags": ["integration"],
+        "thumbnailFile": "loading_indicator.webp"
+    },
+    "minimap": {
+        "title": "Minimap",
+        "tags": ["camera"],
+        "thumbnailFile": "minimap.webp"
+    },
+    "heatmapBusCoverage": {
+        "title": "Public transport coverage",
+        "tags": ["dataviz", "heatmap"],
+        "thumbnailFile": "heatmap_bus_coverage.webp"
+    },
+    "mapScale": {
+        "title": "Map scale",
+        "tags": ["integration", "camera"],
+        "thumbnailFile": "scale.webp"
+    },
+    "mapbox": {
+        "title": "Loading a Mapbox scene",
+        "tags": ["mapbox", "integration", "vector"],
+        "thumbnailFile": "mapbox.webp"
+    },
+    "ambiance": {
+        "title": "Ambiance",
+        "tags": ["ambiance"],
+        "thumbnailFile": "ambiance.webp"
+    },
+    "untiledRaster": {
+        "title": "Untiled raster",
+        "tags": ["raster"],
+        "thumbnailFile": "untiled_raster.webp"
+    },
+    "tiledImageRaster": {
+        "title": "Tiled raster",
+        "tags": ["raster"],
+        "thumbnailFile": "tiled_image_raster.webp"
+    },
+    "tmsRaster": {
+        "title": "TileMapService raster",
+        "tags": ["raster"],
+        "thumbnailFile": "tms_raster.webp"
+    },
+    "tileJsonRaster": {
+        "title": "TileJSON raster",
+        "tags": ["raster"],
+        "thumbnailFile": "tilejson_raster.webp"
+    },
+    "wmtsRaster": {
+        "title": "WMTS raster",
+        "tags": ["raster"],
+        "thumbnailFile": "wmts_raster.webp"
+    },
+    "wmsRaster": {
+        "title": "WMS raster",
+        "tags": ["raster"],
+        "thumbnailFile": "wms_raster.webp"
+    },
+    "arcGisRaster": {
+        "title": "ArcGIS raster",
+        "tags": ["raster"],
+        "thumbnailFile": "arcgis_raster.webp"
+    },
+    "pmTilesRaster": {
+        "title": "PMTiles raster",
+        "tags": ["raster"],
+        "thumbnailFile": "pmtiles_raster.webp"
+    },
+    "palettizedRaster": {
+        "title": "Raster with palette",
+        "tags": ["raster", "dataviz", "interaction"],
+        "thumbnailFile": "data_raster.webp"
+    },
+    "dtmLod1": {
+        "title": "DTM & LOD 1 buildings",
+        "tags": ["terrain", "dtm", "raster", "vector", "lod1"],
+        "thumbnailFile": "dtm_lod1.webp"
+    },
+    "terrainSettings": {
+        "title": "Terrain settings",
+        "tags": ["raster", "terrain"],
+        "thumbnailFile": "terrain_settings.webp"
+    },
+    "ignSrtm": {
+        "title": "IGN SRTM DTM",
+        "tags": ["raster", "terrain"],
+        "thumbnailFile": "ign_srtm.webp"
+    },
+    "palettizedTerrain": {
+        "title": "Palettised topography and bathymetry",
+        "tags": ["raster", "terrain"],
+        "thumbnailFile": "palettized_terrain.webp"
+    },
+    "nonRealistic": {
+        "title": "Non-realistic rendering",
+        "tags": ["ambiance", "integration"],
+        "thumbnailFile": "non_realistic.webp"
+    },
+    "markers": {
+        "title": "Markers",
+        "tags": ["interaction", "vector", "symbol"],
+        "thumbnailFile": "markers.webp"
+    },
+    "liveData": {
+        "title": "Live data",
+        "tags": ["interaction", "vector", "live"],
+        "thumbnailFile": "live_data.webp"
+    },
+    "csvData": {
+        "title": "CSV data & histogram",
+        "tags": ["vector", "integration", "dataviz", "histogram", "styling"],
+        "thumbnailFile": "csv_data.webp"
+    },
+    "parisMetro": {
+        "title": "Paris metro",
+        "tags": ["vector", "dataviz", "polyline", "timeline", "styling"],
+        "thumbnailFile": "paris_metro.webp"
+    },
+    "labelPalette": {
+        "title": "Label palette",
+        "tags": ["vector", "lod1"],
+        "thumbnailFile": "label_palette.webp"
+    },
+    "rennesTrees": {
+        "title": "Lots of trees",
+        "tags": ["vector", "point", "model"],
+        "thumbnailFile": "rennes_trees.webp"
+    },
+    "localization": {
+        "title": "Map localisation",
+        "tags": ["vector", "symbol", "i18n"],
+        "thumbnailFile": "localization.webp"
+    },
+    "lesArcs": {
+        "title": "Les Arcs",
+        "tags": ["vector", "flat-overlay", "polyline", "terrain", "styling"],
+        "thumbnailFile": "les_arcs.webp"
+    },
+    "polylineAnimation": {
+        "title": "Polyline animation",
+        "tags": ["vector", "polyline", "animation"],
+        "thumbnailFile": "polyline_animation.webp"
+    },
+    "loadingScreen": {
+        "title": "Loading screen",
+        "tags": ["integration"],
+        "thumbnailFile": "loading_screen.webp"
+    },
+    "modelAnimations": {
+        "title": "Model animations",
+        "tags": ["model", "animation"],
+        "thumbnailFile": "model_animations.webp"
+    },
+    "bikeShareSymbols": {
+        "title": "Bike share symbols",
+        "tags": ["vector", "point", "symbol", "styling"],
+        "thumbnailFile": "velostar.webp"
+    },
+    "seaCurrentArrows": {
+        "title": "Sea current vectors",
+        "tags": ["vector", "point", "symbol", "dataviz", "styling"],
+        "thumbnailFile": "sea_current_arrows.webp"
+    },
+    "sceneEditor": {
+        "title": "Scene editor",
+        "tags": ["integration", "interaction", "edition", "model", "gizmo"],
+        "thumbnailFile": "scene_editor.webp"
+    },
+    "threeDTilesStyling": {
+        "title": "3D Tiles styling",
+        "tags": ["3d-tiles", "styling"],
+        "thumbnailFile": "three_d_tiles_styling.webp"
+    },
+    "dynamicMultiTexturing": {
+        "title": "Dynamic multi-texturing",
+        "tags": ["model", "3d-tiles", "dataviz"],
+        "thumbnailFile": "dynamic_multi_texturing.webp"
+    },
+    "threeDTiles": {
+        "title": "3D Tiles",
+        "tags": ["3d-tiles", "model"],
+        "thumbnailFile": "3d_tiles.webp"
+    },
+    "threeDTilesVectorOverlay": {
+        "title": "3D Tiles vector overlay",
+        "tags": ["3d-tiles", "vector", "flat-overlay", "polyline"],
+        "thumbnailFile": "3d_tiles_vector_overlay.webp"
+    },
+    "visibilityConstraints": {
+        "title": "Visibility constraints",
+        "tags": ["interaction", "camera"],
+        "thumbnailFile": "visibility_constraints.webp"
+    },
+    "screenCapture": {
+        "title": "Screen capture",
+        "tags": ["integration"],
+        "thumbnailFile": "screen_capture.webp"
+    },
+    "localAssets": {
+        "title": "Local assets",
+        "tags": ["integration", "model"],
+        "thumbnailFile": "local_assets.webp"
+    },
+    "proceduralTiles": {
+        "title": "Procedural raster tiles",
+        "tags": ["raster", "integration"],
+        "thumbnailFile": "procedural_tiles.webp"
+    },
+    "clippingPlane": {
+        "title": "Clipping plane",
+        "tags": ["interaction", "gizmo", "clipping"],
+        "thumbnailFile": "clipping_plane.webp"
+    },
+    "viewshed": {
+        "title": "Viewshed",
+        "tags": ["interaction", "gizmo", "camera", "viewshed"],
+        "thumbnailFile": "viewshed.webp"
+    },
+    "cameraTransitions": {
+        "title": "Camera transitions",
+        "tags": ["camera", "animation"],
+        "thumbnailFile": "camera_transitions.webp"
+    },
+    "cameraModes": {
+        "title": "Camera modes",
+        "tags": ["camera", "interaction"],
+        "thumbnailFile": "camera_modes.webp"
+    },
+    "cameraMovement": {
+        "title": "Camera movement",
+        "tags": ["camera", "interaction"],
+        "thumbnailFile": "camera_movement.webp"
+    },
+    "multiview": {
+        "title": "Multiview",
+        "tags": ["camera", "multiview"],
+        "thumbnailFile": "multiview.webp"
+    },
+    "rulers": {
+        "title": "Rulers",
+        "tags": ["interaction", "edition"],
+        "thumbnailFile": "rulers.webp"
+    },
+    "vectorEditor": {
+        "title": "Vector editor",
+        "tags": ["interaction", "edition", "vector"],
+        "thumbnailFile": "vector_editor.webp"
+    }
+}

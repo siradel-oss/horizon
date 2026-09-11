@@ -1,0 +1,96 @@
+# SPDX-FileCopyrightText: Copyright 2018 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("//tools/bazel:utils.bzl", "make_dbg")
+
+py_binary(
+    name = "generator",
+    srcs = [
+        "generate.py",
+    ],
+    data = [
+        "templates/api.tpl.cpp",
+        "templates/api.tpl.h",
+        "//hrz:hrz_protocol.xml",
+    ],
+    main = "generate.py",
+    python_version = "PY3",
+    deps = [
+        "//hrz/generator",
+    ],
+)
+
+run_binary(
+    name = "generate_templates",
+    outs = [
+        "api.cpp",
+        "api.h",
+    ],
+    args = [
+        "$(RULEDIR)",
+    ],
+    tool = ":generator",
+)
+
+cc_library(
+    name = "hrz_api",
+    srcs = [
+        "api.cpp",
+    ],
+    hdrs = [
+        "api.h",
+    ],
+    include_prefix = "hrz/api",
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hrz/cpp_protocol",
+        "//hrz/fnd",
+    ],
+)
+
+alias(
+    name = "cpp_api",
+    actual = ":hrz_api",
+    visibility = ["//visibility:public"],
+)
+
+make_dbg(
+    name = "hrz_api_dbg",
+    cc_target = ":hrz_api",
+)
+
+pkg_files(
+    name = "pkg_headers",
+    srcs = [":api.h"],
+    prefix = "include/hrz/api",
+)
+
+pkg_files(
+    name = "pkg_lib_release",
+    srcs = [":hrz_api"],
+    prefix = "lib_release",
+)
+
+pkg_files(
+    name = "pkg_lib_debug",
+    srcs = [":hrz_api_dbg"],
+    prefix = "lib_debug",
+)
+
+pkg_tar(
+    name = "pkg",
+    srcs = [
+        ":pkg_headers",
+        ":pkg_lib_debug",
+        ":pkg_lib_release",
+        "//:LICENSE",
+    ],
+    extension = "tar.gz",
+    visibility = ["//visibility:public"],
+)

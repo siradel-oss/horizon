@@ -1,0 +1,72 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+export enum ImageFormat {
+    // Nonlinear sRGB encoding + linear alpha channel, 8 bits per channel.
+    //
+    // The usual format for images.
+    // @label="sRGB RGBA8"
+    SRGBA_8            = 0;
+
+    // IEEE 754 single precision floating point, little-endian, one 32-bit
+    // channel.
+    // @label="R F32"
+    R_F32              = 1;
+
+    // Legacy float32 encoding used at Siradel, one 32-bit channel.
+    // Same as R_F32, but with the exponent and sign bits swapped.
+    //
+    // `eeeeeeee smmmmmmm mmmmmmmm mmmmmmmm` with `e` = exponent bits, `s` =
+    // sign bit, and `m` = mantissa bits.
+    //
+    // Originally created for WebGL 1, where `uintBitsToFloat()` is not
+    // available in shaders. This bit order allowed for a faster decoding.
+    //
+    // For new data, use `R_F32` instead.
+    //
+    // @label="Siradel legacy F32"
+    SIRADEL_LEGACY_F32 = 2;
+
+    // Signed fixed-point value with 1 sign bit, 23 integer bits, and 8
+    // fractional bits.
+    // @label="Signed fixed 24.8"
+    SIGNED_FIXED_24_8  = 3;
+
+    // Greyscale, linear encoding, 8-bit.
+    // @label="R8"
+    R_8                = 4;
+
+    // 24-bit values in [-32768, 32768] range, with 8 fractional bits.
+    // See [Mapzen's
+    // documentation](https://www.mapzen.com/blog/terrain-tile-service/).
+    // @label="Terrarium"
+    TERRARIUM          = 5;
+
+    // 24-bit values in [-10000, 1667721.5] range, with a 0.1 metre resolution.
+    // See [Mapbox's
+    // documentation](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data/#decode-data).
+    // @label="Terrain-RGB"
+    TERRAIN_RGB        = 6;
+}
+
+export message Image {
+    ImageFormat format = 1;
+
+    // Width in pixels
+    uint32      width  = 2;
+
+    // Height in pixels
+    uint32      height = 3;
+
+    // Raw pixel data, packed.
+    // For example, for an RGBA_U8 image, this array
+    // contains [RGBARGBARGBA...] with each component
+    // being 8 bits (1 byte) wide.
+    bytes       data   = 4;
+}

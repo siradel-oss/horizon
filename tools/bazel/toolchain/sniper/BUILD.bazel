@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: Copyright 2026 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_cc//cc/toolchains:tool.bzl", "cc_tool")
+load("@rules_cc//cc/toolchains:tool_map.bzl", "cc_tool_map")
+load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
+load("@sniper_includes//:includes.bzl", "CHROOT_INCLUDES")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["wrappers/proot_run"])
+
+cc_tool(
+    name = "gcc_tool",
+    src = "wrappers/gcc",
+    allowlist_include_directories = CHROOT_INCLUDES,
+    data = ["wrappers/proot_run"],
+    tags = ["manual"],
+)
+
+cc_tool(
+    name = "gxx_tool",
+    src = "wrappers/g++",
+    allowlist_include_directories = CHROOT_INCLUDES,
+    data = ["wrappers/proot_run"],
+    tags = ["manual"],
+)
+
+cc_tool(
+    name = "ar_tool",
+    src = "wrappers/ar",
+    data = ["wrappers/proot_run"],
+    tags = ["manual"],
+)
+
+cc_tool(
+    name = "ld_tool",
+    src = "wrappers/ld",
+    data = ["wrappers/proot_run"],
+    tags = ["manual"],
+)
+
+cc_tool(
+    name = "objcopy_tool",
+    src = "wrappers/objcopy",
+    data = ["wrappers/proot_run"],
+    tags = ["manual"],
+)
+
+cc_tool(
+    name = "strip_tool",
+    src = "wrappers/strip",
+    data = ["wrappers/proot_run"],
+    tags = ["manual"],
+)
+
+cc_tool_map(
+    name = "all_tools",
+    tags = ["manual"],
+    tools = {
+        "@rules_cc//cc/toolchains/actions:ar_actions": ":ar_tool",
+        "@rules_cc//cc/toolchains/actions:assembly_actions": ":gcc_tool",
+        "@rules_cc//cc/toolchains/actions:c_compile": ":gcc_tool",
+        "@rules_cc//cc/toolchains/actions:cpp_compile_actions": ":gxx_tool",
+        "@rules_cc//cc/toolchains/actions:link_actions": ":ld_tool",
+        "@rules_cc//cc/toolchains/actions:objcopy_embed_data": ":objcopy_tool",
+        "@rules_cc//cc/toolchains/actions:strip": ":strip_tool",
+    },
+)
+
+cc_toolchain(
+    name = "sniper_cc_toolchain",
+    compiler = "gcc",
+    enabled_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
+    known_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
+    tags = ["manual"],
+    tool_map = ":all_tools",
+)
+
+toolchain(
+    name = "sniper_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    target_compatible_with = ["//:sniper_constraint"],
+    toolchain = ":sniper_cc_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)

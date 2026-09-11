@@ -1,0 +1,71 @@
+{
+  "version": 8,
+  "center": [-1.679716, 48.111651],
+  "pitch": 0,
+  "zoom": 18,
+  "sources": {
+    "grid": {
+      "type": "geojson",
+      "data": "https://redacted.localhost/assets/geojson/grid_10x10.geojson"
+    }
+  },
+  "sprite": "https://redacted.localhost/assets/sprites/sprites_mapbox/stretch_tests",
+  "layers": [
+    {
+      "id": "sprites",
+      "type": "symbol",
+      "source": "grid",
+      "filter": [
+        "all",
+        ["<=", ["get", "x"], 2],
+        ["<=", ["get", "y"], 2]
+      ],
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-anchor": [
+          "case",
+          ["all", ["==", ["get", "x"], 0], ["==", ["get", "y"], 0]],
+          "bottom-right",
+          ["all", ["==", ["get", "x"], 1], ["==", ["get", "y"], 0]],
+          "bottom",
+          ["all", ["==", ["get", "x"], 2], ["==", ["get", "y"], 0]],
+          "bottom-left",
+          ["all", ["==", ["get", "x"], 0], ["==", ["get", "y"], 1]],
+          "right",
+          ["all", ["==", ["get", "x"], 1], ["==", ["get", "y"], 1]],
+          "center",
+          ["all", ["==", ["get", "x"], 2], ["==", ["get", "y"], 1]],
+          "left",
+          ["all", ["==", ["get", "x"], 0], ["==", ["get", "y"], 2]],
+          "top-right",
+          ["all", ["==", ["get", "x"], 1], ["==", ["get", "y"], 2]],
+          "top",
+          "top-left"
+        ],
+        "icon-ignore-placement": true,
+        "icon-image": "circle_0",
+        "icon-size": 1
+      }
+    },
+    {
+      "id": "ref",
+      "type": "symbol",
+      "source": "grid",
+      "filter": [
+        "all",
+        ["<=", ["get", "x"], 2],
+        ["<=", ["get", "y"], 2]
+      ],
+      "paint": {
+        "icon-opacity": 0.5
+      },
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-anchor": "center",
+        "icon-ignore-placement": true,
+        "icon-image": "circle_0",
+        "icon-size": 1
+      }
+    }
+  ]
+}

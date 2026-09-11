@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/attributes/transform.proto";
+import "hrz/protocol/vector/provider.proto";
+
+message VectorAttribute {
+    reserved 2;
+
+    // IDs are local to the vector data layer.
+    uint32             id                    = 1;
+
+    string             source_name           = 3;
+
+    // Transformation to apply to attribute values upon loading them.
+    // For in-memory sources, this has no effect. Instead, use the transform
+    // field in InMemoryAttribute.
+    AttributeTransform transform             = 6;
+
+    // Set to true to load the source native feature IDs
+    // to an attribute.
+    bool               is_source_feature_ids = 4;
+
+    // Set to true to make this attribute part of the feature IDs.
+    bool               is_feature_id         = 5;
+}
+
+export message VectorDataSource {
+    reserved 1, 2, 3, 5, 6, 8, 9, 10, 11;
+
+    oneof provider_type {
+        TiledVectorDataProviderParams    tiled_data_provider     = 101;
+        ClientVectorDataProviderParams   client_data_provider    = 102;
+        InMemoryVectorDataProviderParams in_memory_data_provider = 103;
+        TileJsonVectorDataProviderParams tilejson_data_provider  = 104;
+        UntiledVectorDataProviderParams  untiled_data_provider   = 105;
+        PmTilesVectorDataProviderParams  pmtiles_data_provider   = 106;
+    }
+
+    // Indicates whether this source has the feature geometries.
+    // Such a source may also contain attributes.
+    // At most one source can have geometries.
+    bool                     has_geometry = 4;
+
+    repeated VectorAttribute attributes   = 7;
+}

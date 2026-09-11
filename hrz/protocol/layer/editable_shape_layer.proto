@@ -1,0 +1,98 @@
+// SPDX-FileCopyrightText: Copyright 2025 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/color/color.proto";
+import "hrz/protocol/scene/index.proto";
+
+enum EditableShapeGeometryType {
+    // @label="Line"
+    EDITABLE_LINE     = 0;
+    // @label="Polyline"
+    EDITABLE_POLYLINE = 1;
+    // @label="Polygon"
+    EDITABLE_POLYGON  = 2;
+    // @label="Point"
+    EDITABLE_POINT    = 3;
+}
+
+enum EditableShapeLineType {
+    // @label="Geodesics"
+    EDITABLE_SHAPE_LINE_GEODESIC                           = 0;
+    // @label="Rhumb lines"
+    EDITABLE_SHAPE_LINE_RHUMB_LINE                         = 1;
+    // @label="Rhumb lines that do not cross the antimeridian"
+    EDITABLE_SHAPE_LINE_RHUMB_LINE_NOT_ACROSS_ANTIMERIDIAN = 2;
+}
+
+message EditableShapeGeometry {
+    EditableShapeGeometryType type             = 1;
+
+    EditableShapeLineType     line_type        = 4;
+
+    // List of lat-long coordinates of the points of the shape, in degrees.
+    // Encoded as `[lat1, lon1, lat2, lon2, ...]`.
+    repeated double           coords           = 2;
+
+    // Number of points for each linestring. Linestrings must not be closed.
+    // For polygons, exterior linestring must be counter-clockwise, and interior
+    // ones must be clockwise. This is used only for polygons only.
+    repeated uint32           linestring_sizes = 3;
+}
+
+enum EditableShapeModelUpdateFrequency {
+    // Update the model when a point is added, removed, or after it has been
+    // moved.
+    DEFAULT_MODEL_UPDATES = 0;
+    // Also update the model each time the mouse moves when dragging a point.
+    DRAG_MODEL_UPDATES    = 1;
+    // Also update the model each time the mouse moves when appending a new
+    // point.
+    APPEND_MODEL_UPDATES  = 2;
+}
+
+// @path_root="editable_shape_layer"
+export message EditableShapeLayer {
+    EditableShapeGeometry             geometry                     = 1;
+    // Colour of the lines (polyline, or polygon outlines).
+    Color                             stroke_color                 = 2;
+    // Colour of the polygon interior.
+    Color                             fill_color                   = 3;
+    // Width of the lines or radius of the circles, in logical pixels.
+    float                             stroke_width                 = 4;
+    // Colour of the lines, when the shape is selected.
+    Color                             selected_stroke_color        = 9;
+    // Color of the polygon interior, when the shape is selected.
+    Color                             selected_fill_color          = 10;
+    // Width of the lines or radius of the circles, in logical pixels,
+    // when the shape is selected.
+    float                             selected_stroke_width        = 11;
+    // Size of the control points on screen, in logical pixels.
+    float                             control_point_size           = 14;
+    // Colour of the unselected control points at the vertices of the shape.
+    // Alpha is ignored.
+    Color                             control_point_color          = 15;
+    // Colour of the control points at the midpoint of each segment.
+    // Alpha is ignored.
+    Color                             midpoint_control_point_color = 16;
+    // Colour of the control points when selected.
+    // Alpha is ignored.
+    Color                             selected_control_point_color = 17;
+    // Show control points at the midpoint of each segment, that can be
+    // used to insert new points.
+    bool                              show_midpoint_control_points = 12;
+    // Set to true to show control points even when deselected.
+    bool                              always_show_control_points   = 13;
+    // Shapes with a high z-index will be drawn over shapes with a lower
+    // z-index.
+    uint32                            z_index                      = 5;
+    // Select what views the shape will be visible in.
+    SceneViewBitset                   scene_views                  = 6;
+    bool                              visible                      = 7;
+    EditableShapeModelUpdateFrequency model_update_frequency       = 8;
+}
