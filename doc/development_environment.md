@@ -49,7 +49,7 @@ Also consider running Python in a virtual environment. See below.
 
 - Clone the git repository
     - `git@redacted.localhost:horizon/Horizon.git`
-    - `git@github.com:siradel-oss/Horizon.git`
+    - `git@github.com:siradel-oss/horizon.git`
 - Run `tools/git/setup.(sh, bat)`
     - On Linux you may also need to `chmod +x` this file and the ones in `tools/git/hooks` before executing this script.
 

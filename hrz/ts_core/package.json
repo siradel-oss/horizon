@@ -1,6 +1,6 @@
 {
     "name": "@siradel-oss/horizon-core",
-    "homepage": "https://github.com/siradel-oss/Horizon",
+    "homepage": "https://github.com/siradel-oss/horizon",
     "type": "module",
     "dependencies": {
         "@siradel-oss/horizon-protocol": "workspace:*",

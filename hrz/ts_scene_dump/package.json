@@ -1,6 +1,6 @@
 {
     "name": "@siradel-oss/horizon-scene-dump",
-    "homepage": "https://github.com/siradel-oss/Horizon",
+    "homepage": "https://github.com/siradel-oss/horizon",
     "type": "module",
     "dependencies": {
         "@siradel-oss/horizon-api": "workspace:*",

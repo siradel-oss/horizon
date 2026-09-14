@@ -78,7 +78,7 @@ def generate_artifacts_md(
         values["documentation"] = f"{raw_base}documentation-{version}.tar.gz"
         values["gallery"] = f"{raw_base}gallery-{version}.tar.gz"
     else:
-        base = f"https://github.com/siradel-oss/Horizon/releases/download/v{version}/"
+        base = f"https://github.com/siradel-oss/horizon/releases/download/v{version}/"
 
         values["core_windows"] = f"{base}horizon-core-{version}-cpp-windows.tar.gz"
         values["api_windows"] = f"{base}horizon-api-{version}-cpp-windows.tar.gz"

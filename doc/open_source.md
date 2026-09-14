@@ -111,7 +111,7 @@ Since the public and private Git repositories do not share history, pull request
 1. Review the PR carefully on GitHub. When you feel that it can and should be merged, continue.
 2. Import the PR code on your machine. Here is a possible way to do that.
     - Create a branch at the location the public branch diverged from its base branch.
-    - Export the patch from GitHub by adding `.patch` to its URL. For example a PR at https://github.com/siradel-oss/Horizon/pull/4 has its patch as https://github.com/siradel-oss/Horizon/pull/4.patch.
+    - Export the patch from GitHub by adding `.patch` to its URL. For example a PR at https://github.com/siradel-oss/horizon/pull/4 has its patch as https://github.com/siradel-oss/horizon/pull/4.patch.
     - Import the patch on your branch with `git am`.
 3. Locally build, test, clean, check conflicts, etc. The same you would do before opening a MR for your own code. If fixes are needed, choose whether to do them yourself if they are small enough, or circle back to the PR author.
 4. Open an MR on the private repository. Follow the usual MR workflow. Again, you can circle back to the PR author. In the description, include something like "GitHub: Closes #1234" to close the PR on GitHub once the commit is published.
