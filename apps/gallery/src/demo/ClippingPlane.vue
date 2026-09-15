@@ -57,10 +57,10 @@ watch(activeDirection, async (dir) => {
     HrzApi.ClippingPlaneLayerPathBuilder.create(clipHandle).normal().set(api, NORMALS[dir]);
 
     const gizmoPath = HrzApi.GizmoLayerPathBuilder.create(gizmoHandle);
-    const gizmoState = await gizmoPath.clone().get(api);
+    const gizmoState = await gizmoPath.get(api);
     gizmoState.components = buildComponents();
     gizmoState.rotation = GIZMO_ROTATIONS[dir];
-    gizmoPath.clone().set(api, gizmoState);
+    gizmoPath.set(api, gizmoState);
 });
 
 watch(gridVisible, (visible) => {

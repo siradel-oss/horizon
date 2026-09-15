@@ -140,9 +140,9 @@ function buildComponents(): HrzProtocol.GizmoComponent.$Properties[] {
 async function updateGizmoComponents() {
     if (!gizmoLayerHandle) return;
     const path = HrzApi.GizmoLayerPathBuilder.create(gizmoLayerHandle);
-    const model = await path.clone().get(api);
+    const model = await path.get(api);
     model.components = buildComponents();
-    await path.clone().set(api, model);
+    await path.set(api, model);
 }
 
 watch([gizmoTranslate, gizmoRotate, gizmoWorldSpace], () => {
@@ -192,11 +192,11 @@ function handleGizmoUpdate(update: HrzProtocol.GizmoUpdateMessage.$Shape) {
     if (update.geoPos) model.position = update.geoPos;
     if (update.rotation) model.rotation = update.rotation;
     const path = HrzApi.SingleModelLayerPathBuilder.create(model.layerHandle);
-    if (update.geoPos) path.clone().geographic().set(api, update.geoPos);
-    if (update.rotation) path.clone().transform().rotation().set(api, update.rotation);
+    if (update.geoPos) path.geographic().set(api, update.geoPos);
+    if (update.rotation) path.transform().rotation().set(api, update.rotation);
     const gPath = HrzApi.GizmoLayerPathBuilder.create(gizmoLayerHandle);
-    if (update.geoPos) gPath.clone().position().set(api, update.geoPos);
-    if (update.rotation) gPath.clone().rotation().set(api, update.rotation);
+    if (update.geoPos) gPath.position().set(api, update.geoPos);
+    if (update.rotation) gPath.rotation().set(api, update.rotation);
 }
 
 async function addModelAt(

@@ -200,26 +200,31 @@ export namespace HrzApi {
 
     //////// Path builders
 
-    export interface ISceneModelPathBuilder<T, P> {
-        clone(): P;
+    export interface ISceneModelPathBuilder<T> {
         set(api: AsyncApi, value: T): Promise<void>;
         setSync(api: SyncApi, value: T): void;
     }
 
-    export abstract class SceneModelPathBuilder<T, P> implements ISceneModelPathBuilder<T, P> {
+    export abstract class SceneModelPathBuilder<T> implements ISceneModelPathBuilder<T> {
         protected _path: HrzProtocol.Path;
 
         constructor() {
             this._path = HrzProtocol.Path.create();
         }
 
-        abstract clone(): P;
+        protected subPath(...parts: number[]): HrzProtocol.Path {
+            let path = HrzProtocol.Path.create();
+            path.root = this._path.root;
+            path.parts = [...this._path.parts, ...parts];
+            return path;
+        }
+
         abstract set(api: AsyncApi, value: T): Promise<void>;
         abstract setSync(api: SyncApi, value: T): void;
     }
 
     {% for type in path_types %}
-    export class {{ type.full_name|to_short_type_name }}PathBuilder extends SceneModelPathBuilder<{{ type.full_name|to_ts_interface(enum_names) }}, {{ type.full_name|to_short_type_name }}PathBuilder> {
+    export class {{ type.full_name|to_short_type_name }}PathBuilder extends SceneModelPathBuilder<{{ type.full_name|to_ts_interface(enum_names) }}> {
         constructor() {
             super();
         }
@@ -250,14 +255,8 @@ export namespace HrzApi {
         {% endif %}
         {% endif %}
 
-        public clone(): {{ type.full_name|to_short_type_name }}PathBuilder {
-            // ...
-            var path = HrzProtocol.Path.decode(HrzProtocol.Path.encode(this._path).finish());
-            return {{ type.full_name|to_short_type_name }}PathBuilder.createWithPath(path);
-        }
-
         public get(api: AsyncApi): Promise<{{ type.full_name|to_ts_type(enum_names) }}> {
-            let prom = AsyncSceneModelAccessor.get(api, this._path)
+            return AsyncSceneModelAccessor.get(api, this._path)
                 .then((payload) => {
                     let decodedValue =
                         {% if type.is_primitive %}
@@ -269,8 +268,6 @@ export namespace HrzApi {
                         {% endif %}
                     return Promise.resolve(decodedValue);
                 });
-            this._path = HrzProtocol.Path.create();
-            return prom;
         }
 
         public getSync(api: SyncApi): {{ type.full_name|to_ts_type(enum_names) }} {
@@ -283,7 +280,6 @@ export namespace HrzApi {
                 {% else %}
                 {{ type.full_name }}.decode(payload);
                 {% endif %}
-            this._path = HrzProtocol.Path.create();
             return decodedValue;
         }
 
@@ -296,10 +292,8 @@ export namespace HrzApi {
                 {% else %}
                 {{ type.full_name }}.encode(value);
                 {% endif %}
-            let prom = AsyncSceneModelAccessor.set(api, this._path, encodedValue.finish())
+            return AsyncSceneModelAccessor.set(api, this._path, encodedValue.finish())
                 .then((_) => { return Promise.resolve(); });
-            this._path = HrzProtocol.Path.create();
-            return prom;
         }
 
         public setSync(api: SyncApi, value: {{ type.full_name|to_ts_interface(enum_names) }}): void {
@@ -312,7 +306,6 @@ export namespace HrzApi {
                 {{ type.full_name }}.encode(value);
                 {% endif %}
             SyncSceneModelAccessor.set(api, this._path, encodedValue.finish());
-            this._path = HrzProtocol.Path.create();
         }
 
         {% for u in type.unions %}
@@ -322,12 +315,9 @@ export namespace HrzApi {
                 {{ f.id }}: "{{ f.name|snake_to_camel }}",
                 {% endfor %}
             };
-            this._path.parts.push({{ u.fields[0].id }});
-            let prom = AsyncSceneModelAccessor.getOneofCase(api, this._path).then((caseValue) => {
+            return AsyncSceneModelAccessor.getOneofCase(api, this.subPath({{ u.fields[0].id }})).then((caseValue) => {
                 return Promise.resolve(ID_TO_CASE[caseValue as keyof typeof ID_TO_CASE]);
             });
-            this._path = HrzProtocol.Path.create();
-            return prom;
         }
 
         public get{{ u.name|snake_to_pascal }}CaseSync(api: SyncApi): {{ type.full_name|to_ts_interface(enum_names) }}["{{ u.name|snake_to_camel }}"] {
@@ -336,9 +326,7 @@ export namespace HrzApi {
                 {{ f.id }}: "{{ f.name|snake_to_camel }}",
                 {% endfor %}
             };
-            this._path.parts.push({{ u.fields[0].id }});
-            let caseValue = SyncSceneModelAccessor.getOneofCase(api, this._path);
-            this._path = HrzProtocol.Path.create();
+            let caseValue = SyncSceneModelAccessor.getOneofCase(api, this.subPath({{ u.fields[0].id }}));
             return ID_TO_CASE[caseValue as keyof typeof ID_TO_CASE];
         }
         {% endfor %}
@@ -349,48 +337,34 @@ export namespace HrzApi {
 
         {{ f.documentation|to_documentation_block(8) }}
         public {{ f.name|snake_to_camel }}(): {{ f.type|to_short_type_name }}PathBuilder {
-            this._path.parts.push({{ f.id }});
-            let newBuilder = {{ f.type|to_short_type_name }}PathBuilder.createWithPath(this._path);
-            this._path = HrzProtocol.Path.create();
-            return newBuilder;
+            return {{ f.type|to_short_type_name }}PathBuilder.createWithPath(this.subPath({{ f.id }}));
         }
 
         {% else %}
 
         {{ f.documentation|to_documentation_block(8) }}
         public {{ f.name|snake_to_camel }}(index: number): {{ f.type|to_short_type_name }}PathBuilder {
-            this._path.parts.push({{ f.id }});
-            this._path.parts.push(index);
-            let newBuilder = {{ f.type|to_short_type_name }}PathBuilder.createWithPath(this._path);
-            this._path = HrzProtocol.Path.create();
-            return newBuilder;
+            return {{ f.type|to_short_type_name }}PathBuilder.createWithPath(this.subPath({{ f.id }}, index));
         }
 
         /**
          * Returns the number of {{ f.name }}.
          */
         public {{f.name|snake_to_camel }}Count(api: AsyncApi): Promise<number> {
-            this._path.parts.push({{ f.id }});
-            let count = AsyncSceneModelAccessor.count(api, this._path);
-            this._path = HrzProtocol.Path.create();
-            return count;
+            return AsyncSceneModelAccessor.count(api, this.subPath({{ f.id }}));
         }
 
         /**
          * Returns the number of {{ f.name }}.
          */
         public {{f.name|snake_to_camel }}CountSync(api: SyncApi): number {
-            this._path.parts.push({{ f.id }});
-            let count = SyncSceneModelAccessor.count(api, this._path);
-            this._path = HrzProtocol.Path.create();
-            return count;
+            return SyncSceneModelAccessor.count(api, this.subPath({{ f.id }}));
         }
 
         /**
          * Adds an element to {{ f.name }} and returns the new count.
          */
         public add{{f.name|snake_to_pascal }}(api: AsyncApi, val: {{ f.type|to_ts_interface(enum_names) }}): Promise<number> {
-            this._path.parts.push({{ f.id }});
             let encodedValue =
                 {% if f.is_primitive %}
                 HrzProtocol.{{ f.type|to_wrapper }}.encode({value: val});
@@ -399,16 +373,13 @@ export namespace HrzApi {
                 {% else %}
                 {{ f.type }}.encode(val);
                 {% endif %}
-            let count = AsyncSceneModelAccessor.add(api, this._path, encodedValue.finish());
-            this._path = HrzProtocol.Path.create();
-            return count;
+            return AsyncSceneModelAccessor.add(api, this.subPath({{ f.id }}), encodedValue.finish());
         }
 
         /**
          * Adds an element to {{ f.name }} and returns the new count.
          */
         public add{{f.name|snake_to_pascal }}Sync(api: SyncApi, val: {{ f.type|to_ts_interface(enum_names) }}): number {
-            this._path.parts.push({{ f.id }});
             let encodedValue =
                 {% if f.is_primitive %}
                 HrzProtocol.{{ f.type|to_wrapper }}.encode({value: val});
@@ -417,31 +388,21 @@ export namespace HrzApi {
                 {% else %}
                 {{ f.type }}.encode(val);
                 {% endif %}
-            let count = SyncSceneModelAccessor.add(api, this._path, encodedValue.finish());
-            this._path = HrzProtocol.Path.create();
-            return count;
+            return SyncSceneModelAccessor.add(api, this.subPath({{ f.id }}), encodedValue.finish());
         }
 
         /**
          * Removes an element from {{ f.name }} and returns the new count.
          */
         public remove{{f.name|snake_to_pascal }}(api: AsyncApi, index: number): Promise<number> {
-            this._path.parts.push({{ f.id }});
-            this._path.parts.push(index);
-            let count = AsyncSceneModelAccessor.remove(api, this._path);
-            this._path = HrzProtocol.Path.create();
-            return count;
+            return AsyncSceneModelAccessor.remove(api, this.subPath({{ f.id }}, index));
         }
 
         /**
          * Removes an element from {{ f.name }} and returns the new count.
          */
         public remove{{f.name|snake_to_pascal }}Sync(api: SyncApi, index: number): number {
-            this._path.parts.push({{ f.id }});
-            this._path.parts.push(index);
-            let count = SyncSceneModelAccessor.remove(api, this._path);
-            this._path = HrzProtocol.Path.create();
-            return count;
+            return SyncSceneModelAccessor.remove(api, this.subPath({{ f.id }}, index));
         }
 
         {% endif %}

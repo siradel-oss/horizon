@@ -66,9 +66,7 @@ export function setLayerOpacity(
     handle: HrzProtocol.LayerHandle.$Properties,
     opacity: number
 ): void {
-    // Use clone() because paths are consumed after terminal operations.
     HrzApi.ImageryRasterLayerPathBuilder.create(handle)
-        .clone()
         .raster()
         .blending()
         .opacity()

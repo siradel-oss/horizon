@@ -18,22 +18,20 @@ Entry points:
 - Layer roots: `HrzApi.ImageryRasterLayerPathBuilder.create(layerHandle)`, `HrzApi.VectorTilesLayerPathBuilder.create(layerHandle)`, etc.
 - Settings roots: `HrzApi.SceneViewSettingsPathBuilder.create(HrzProtocol.SceneViewIndex.SCENE_VIEW_0)`, `HrzApi.CameraSettingsPathBuilder.create(HrzProtocol.CameraIndex.CAMERA_0)`, etc.
 
-**Paths are consumed after a terminal operation** — call `.clone()` to reuse a path for multiple operations.
-
 Operations on scalar fields:
 ```ts
-path.clone().fieldName().get(api)        // AsyncApi → Promise<T>
-path.clone().fieldName().set(api, value)
-path.clone().fieldName().getSync(api)    // SyncApi
-path.clone().fieldName().setSync(api, value)
+path.fieldName().get(api)        // AsyncApi → Promise<T>
+path.fieldName().set(api, value)
+path.fieldName().getSync(api)    // SyncApi
+path.fieldName().setSync(api, value)
 ```
 
 Operations on repeated fields (arrays) — there is no `get`/`set` on arrays:
 ```ts
-path.clone().myArrayCount(api)           // element count
-path.clone().addMyArray(api, value)      // append, returns new count
-path.clone().removeMyArray(api, index)   // remove by index, returns new count
-path.clone().myArray(n)                  // navigate to element n, then chain further
+path.myArrayCount(api)           // element count
+path.addMyArray(api, value)      // append, returns new count
+path.removeMyArray(api, index)   // remove by index, returns new count
+path.myArray(n)                  // navigate to element n, then chain further
 // Sync variants: myArrayCountSync, addMyArraySync, removeMyArraySync
 ```
 

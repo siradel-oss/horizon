@@ -91,19 +91,10 @@ const offsetPathBuilder: HrzApi.Vec3fPathBuilder = pathBuilder.transform().offse
 
 Because the types reflect the property tree, it is only ever possible to point to valid properties.
 
-Moving deeper into the tree consumes paths. If you need diverging paths, the `clone()` method can be used. Reusing a path builder is illegal and will lead to an error.
-
-```ts
-// Do
-const transform = HrzApi.SingleModelLayerPathBuilder.create(handle).transform();
-const offset = transform.clone().offset(); // A clone is created, `transform` is still valid.
-const scale = transform.scale(); // `transform` is consumed.
-
-// Don't
-const transform = HrzApi.SingleModelLayerPathBuilder.create(handle).transform();
-const offset = transform.offset(); // `transform` is consumed.
-const scale = transform.scale(); // Error: Reuse of `transform`.
-```
+> [!note]
+> In the C++ API, path builders are single-use. Once a method is called on a path builder, it cannot be used again. This is enforced by these methods binding only to rvalue-references. Path builders can be copied using the `clone()` method, which returns a new path builder pointing to the same property. This enables diverging paths, and reusing the same path builder.
+>
+> In the TypeScript API, path builders auto-clone when a method is called on them, so they can be reused.
 
 ## Accessing the scene model
 
@@ -111,7 +102,7 @@ When the user reaches the field they want to work with, they can retrieve or mut
 
 ```ts
 // path points to SingleModelLayer.transform.offset
-const offset = pathBuilder.clone().get(api);
+const offset = pathBuilder.get(api);
 offset.x += 2;
 pathBuilder.set(api, offset);
 ```
@@ -124,29 +115,29 @@ Fields that are repeated (arrays) act differently from other fields:
 - They have an `add<Field>` and a `remove<Field>` method for adding and removing elements that also return the new number of elements.
 
 ```ts
-pathBuilder.clone().myArrayCount(api);         // Let's suppose it returns 0
-pathBuilder.clone().addMyArray(api, obj1);     // Returns 1
-pathBuilder.clone().addMyArray(api, obj2);     // Returns 2
-pathBuilder.clone().myArrayCount(api);         // Returns 2
-pathBuilder.clone().myArray(1).get(api);       // Returns obj2
-pathBuilder.clone().removeMyArray(api, 0);     // Returns 1
-pathBuilder.clone().myArray(0).get(api);       // Returns obj2
-pathBuilder.clone().myArray(0).set(api, obj3); // Sets the first object in myArray to obj3
+pathBuilder.myArrayCount(api);         // Let's suppose it returns 0
+pathBuilder.addMyArray(api, obj1);     // Returns 1
+pathBuilder.addMyArray(api, obj2);     // Returns 2
+pathBuilder.myArrayCount(api);         // Returns 2
+pathBuilder.myArray(1).get(api);       // Returns obj2
+pathBuilder.removeMyArray(api, 0);     // Returns 1
+pathBuilder.myArray(0).get(api);       // Returns obj2
+pathBuilder.myArray(0).set(api, obj3); // Sets the first object in myArray to obj3
 ```
 
 Union (`oneof`) fields are also supported. They have a `get<Descriminant>Case` method that returns the case of the union field, or a null value if the field is not set. Reading the model behind an inactive union variant field will return default values and not activate the variant. Writing the model behind an inactive union variant field will activate the variant and set the value.
 
 ```ts
-pathBuilder.clone().providerTypeCase(api); // Can return something like "tiled"
-pathBuilder.clone().tiled()/* ... */; // Access the tiled provider model
+pathBuilder.providerTypeCase(api); // Can return something like "tiled"
+pathBuilder.tiled()/* ... */; // Access the tiled provider model
 ```
 
 When using the synchronous API in TypeScript, all the terminal methods on paths have `Sync` appended to their names. They become `getSync`, `setSync`, `countSync`, `addSync`, and `removeSync`.
 
 ```ts
-pathBuilder.clone().myArrayCountSync(api);
-pathBuilder.clone().addMyArraySync(api, obj1);
-pathBuilder.clone().myArray(1).getSync(api);
+pathBuilder.myArrayCountSync(api);
+pathBuilder.addMyArraySync(api, obj1);
+pathBuilder.myArray(1).getSync(api);
 ```
 
 > [!note] Batching updates
@@ -154,11 +145,11 @@ pathBuilder.clone().myArray(1).getSync(api);
 
 ```ts
 // Don't
-layerPath.clone().position().lat().set(api, 45);
-layerPath.clone().position().lon().set(api, -1);
+layerPath.position().lat().set(api, 45);
+layerPath.position().lon().set(api, -1);
 
 // Do
-layerPath.clone().position().set(api, { lat: 45, lon: -1 });
+layerPath.position().set(api, { lat: 45, lon: -1 });
 ```
 
 > [!note] Access granularity
@@ -166,12 +157,12 @@ layerPath.clone().position().set(api, { lat: 45, lon: -1 });
 
 ```ts
 // Don't
-let model = layerPath.clone().get(api);
+let model = layerPath.get(api);
 model.color.a = 0.5;
-layerPath.clone().set(api, model); // Bad! Might reload the model.
+layerPath.set(api, model); // Bad! Might reload the model.
 
 // Do
-layerPath.clone().color().a().set(api, 0.5); // Good, the engine knows only the color changed.
+layerPath.color().a().set(api, 0.5); // Good, the engine knows only the color changed.
 ```
 
 ## Dumping and loading a scene
