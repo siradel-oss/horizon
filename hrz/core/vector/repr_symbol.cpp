@@ -587,6 +587,14 @@ public:
         MakeElementPrototypeContext* ctx,
         const hrz_proto::SymbolElement& descriptor)
     {
+        if (descriptor.element_type_case() == hrz_proto::SymbolElement::ELEMENT_TYPE_NOT_SET)
+        {
+            HRZ_LOG_WARNING("Symbol element has no type set. Generating an empty placeholder.");
+            hrz_proto::SymbolElement placeholder;
+            placeholder.mutable_placeholder();
+            return make_element_prototype(config, register_prp, ctx, placeholder);
+        }
+
         std::optional<uint32_t> parent_index = std::nullopt;
         if (!ctx->parent_indices.empty())
         {
