@@ -8,14 +8,11 @@ module(name = "horizon")
 #--------------------------------------------------------
 
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "bazel_features", version = "1.43.0")
+bazel_dep(name = "bazel_features", version = "1.50.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "bazel_lib", version = "3.3.1")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
-
-# @Todo Once https://github.com/bazelbuild/rules_cc/pull/363 is merged and possibly
-# a new release of rules_cc is made we can stop using our custom patched version.
-bazel_dep(name = "rules_cc", version = "0.2.18.sbr.1")
+bazel_dep(name = "rules_cc", version = "0.2.25")
 bazel_dep(name = "rules_python", version = "2.2.0")
 bazel_dep(name = "aspect_rules_ts", version = "3.9.2")
 bazel_dep(name = "aspect_rules_js", version = "3.2.3")
@@ -31,7 +28,7 @@ bazel_dep(name = "protobuf", version = "36.0.bcr.1")
 bazel_dep(name = "abseil-cpp", version = "20250814.1")
 bazel_dep(name = "stb", version = "20251026.hrz.1")
 bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
-bazel_dep(name = "brotli", version = "1.2.0.hrz.2")
+bazel_dep(name = "brotli", version = "1.2.0.bcr.3")
 bazel_dep(name = "fmt", version = "12.1.0")
 bazel_dep(name = "lz4", version = "1.10.0.hrz.1")
 bazel_dep(name = "pugixml", version = "1.15.hrz.1")

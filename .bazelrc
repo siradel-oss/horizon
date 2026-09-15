@@ -14,6 +14,9 @@ common --registry="https://bcr.bazel.build/"
 common --registry="https://raw.githubusercontent.com/siradel-oss/bazel-registry/refs/heads/main/"
 common --downloader_config=bazel_downloader_config.cfg
 
+build --features=-default_c_std
+build --host_features=-default_c_std
+
 build --features=-default_cpp_std
 build --host_features=-default_cpp_std
 
