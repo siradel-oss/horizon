@@ -258,8 +258,11 @@ struct DynamicMessage
     // when the protocol has changed and the message is not at the same location.
     void copy_message(std::string_view field_name, const DynamicMessage& value)
     {
-        (void)msg->GetReflection()
-            ->MutableMessage(msg, _get_field_descriptor(field_name), &factory->factory)
+        auto* reflection = msg->GetReflection();
+        const auto* field = _get_field_descriptor(field_name);
+
+        reflection->ClearField(msg, field);
+        (void)reflection->MutableMessage(msg, field, &factory->factory)
             ->MergeFromString(value.msg->SerializeAsString());
     }
 };

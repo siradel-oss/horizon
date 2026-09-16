@@ -1,7 +1,3 @@
-# Changed
-
-* The value `UNTILED` of [TilingSchemeType]($proto) has been renamed `UNKNOWN`. This value had been deprecated in the past and was already not usable.
-
 # Fixed
 
 * The properties `has_min_level` and `has_max_level` of [LocalTilingSchemeParams]($proto) are now taken into account.

@@ -2797,16 +2797,19 @@ bool migration_37dc6665_to_c8253def(const DynamicMessage& src, DynamicMessage* d
         "vector_tiles", src, dst,
         [&](const DynamicMessage& src, DynamicMessage* dst) -> bool
         {
+            // Outermost types first: each of these migrations copies its whole source
+            // subtree over, so an outer one would undo the work of an inner one.
+            // We could do better by manually walking the tree. But meh...
             return walk_fields_of_type(
                        "HrzProtocol.LayerVisibilityConstraint", src, dst,
                        migrate_layer_visibility_constraint)
                 && walk_fields_of_type("HrzProtocol.Palette", src, dst, migrate_palette)
                 && walk_fields_of_type("HrzProtocol.VectorRepr", src, dst, migrate_vector_repr)
                 && walk_fields_of_type(
-                       "HrzProtocol.TransformSymbolComponent", src, dst,
-                       migrate_transform_symbol_component)
+                       "HrzProtocol.SymbolElement", src, dst, migrate_symbol_element)
                 && walk_fields_of_type(
-                       "HrzProtocol.SymbolElement", src, dst, migrate_symbol_element);
+                       "HrzProtocol.TransformSymbolComponent", src, dst,
+                       migrate_transform_symbol_component);
         });
 }
 

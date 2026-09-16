@@ -23,6 +23,7 @@ run_binary(
         for f in list_proto_files("", ".proto")
     ] + [
         "--descriptor_set_out=$@",
+        "--retain_options",
     ],
     tool = "//third_party:protoc",
     visibility = ["//visibility:public"],
