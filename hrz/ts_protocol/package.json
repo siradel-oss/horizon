@@ -1,6 +1,10 @@
 {
     "name": "@siradel-oss/horizon-protocol",
     "homepage": "https://github.com/siradel-oss/horizon",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/siradel-oss/horizon.git"
+    },
     "type": "module",
     "dependencies": {
         "long": "^5.3.2",
