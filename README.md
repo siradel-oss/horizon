@@ -30,7 +30,7 @@ It is cross-platform, cross-browser, and defines a language-independent API.*
 
 The documentation and prebuilt artifacts for C++ and TypeScript (through npm packages) are available on the "Releases" page on GitHub, but you can also [build them yourself](#building). Some integration examples are given in the [apps folder](apps/).
 
-The documentation provides a [guide on how to get started](hrz/doc/doc/getting_started.md).
+The documentation provides a [guide on how to get started](https://siradel-oss.github.io/horizon/doc/getting_started.html).
 
 The npm packages (published to npm) are:
 * `@siradel-oss/horizon-protocol`: Type definitions.
@@ -42,9 +42,9 @@ The npm packages (published to npm) are:
 
 ## Building
 
-To build Horizon, follow the [development environment documentation](doc/development_environment.md) to setup your environment and learn how to build. Once you have built the artifacts, you are free to work with the engine outside of the Bazel environment if you are developing an application. Artifacts are available in the `bazel-bin` directory.
+To build Horizon, follow the [development environment documentation](https://siradel-oss.github.io/horizon/doc/dev_guide/development_environment.html) to setup your environment and learn how to build. Once you have built the artifacts, you are free to work with the engine outside of the Bazel environment if you are developing an application. Artifacts are available in the `bazel-bin` directory.
 
-The project structure is described in the [technical documentation](doc/project_structure.md).
+The project structure is described in the [technical documentation](https://siradel-oss.github.io/horizon/doc/dev_guide/project_structure.html).
 
 |  | Bazel target |
 |-----------|----------|
@@ -64,7 +64,7 @@ The project structure is described in the [technical documentation](doc/project_
 We welcome contributions to this project. Please read our [Contributor Guide](CONTRIBUTING.md) for information on how to get involved,
 and to review our contributor terms.
 
-Please see the [developer's documentation](doc/) for information regarding development environment and workflow.
+Please see the [developer's documentation](https://siradel-oss.github.io/horizon/doc/dev_guide/index.html) for information regarding development environment and workflow.
 
 ## License
 
