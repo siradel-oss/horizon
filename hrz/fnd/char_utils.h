@@ -38,7 +38,7 @@ constexpr inline bool is_ascii_whitespace(const char c)
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f';
 }
 
-constexpr inline int ascii_to_lower(int c)
+constexpr inline char ascii_to_lower(char c)
 {
     if (c >= 'A' && c <= 'Z') return c + 'a' - 'A';
     return c;

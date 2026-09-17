@@ -6,6 +6,7 @@
 #include "hrz/core/jobs/context.h"
 #include "hrz/core/jobs/job_result.h"
 #include "hrz/core/jobs/three_d_tiles_jobs_params.h"
+#include "hrz/fnd/char_utils.h"
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
 
@@ -20,38 +21,61 @@ namespace
 {
 
 using hrz::three_d_tiles::BoundingVolume;
+using hrz::three_d_tiles::GltfUpAxis;
 
-bool check_json_document(const rapidjson::Document& document)
+// Returns nullopt if the document isn't a supported tileset.
+// Returns the gltfUpAxis if it is.
+std::optional<GltfUpAxis> check_json_document(const rapidjson::Document& document)
 {
     if (document.HasParseError())
     {
         HRZ_LOG_ERROR(
             "Could not parse 3D Tiles tileset JSON: {}",
             rapidjson::GetParseError_En(document.GetParseError()));
-        return false;
+        return std::nullopt;
     }
 
     if (!document.IsObject() || !document.HasMember("asset"))
     {
         HRZ_LOG_ERROR("Invalid 3D Tiles tileset JSON");
-        return false;
+        return std::nullopt;
     }
 
-    if (!document["asset"].HasMember("version") || !document["asset"]["version"].IsString())
+    const auto& asset_node = document["asset"];
+
+    if (!asset_node.HasMember("version") || !asset_node["version"].IsString())
     {
         HRZ_LOG_ERROR("No 3D Tiles tileset version field");
-        return false;
+        return std::nullopt;
     }
 
-    const auto version = document["asset"]["version"].GetString();
+    const auto version = asset_node["version"].GetString();
     if (std::strcmp(version, "1.0") != 0)
     {
         HRZ_LOG_ERROR(
             "Unsupported 3D Tiles tileset version: Expected \"1.0\", got \"{}\"", version);
-        return false;
+        return std::nullopt;
     }
 
-    return true;
+    GltfUpAxis gltf_up_axis = GltfUpAxis::Y;
+    if (asset_node.HasMember("gltfUpAxis"))
+    {
+        const auto& gltf_up_axis_node = asset_node["gltfUpAxis"];
+        if (gltf_up_axis_node.IsString() && gltf_up_axis_node.GetStringLength() == 1)
+        {
+            char gltf_up_axis_char = hrz::ascii_to_lower(gltf_up_axis_node.GetString()[0]);
+            if (gltf_up_axis_char == 'x')
+            {
+                gltf_up_axis = GltfUpAxis::X;
+            }
+            else if (gltf_up_axis_char == 'z')
+            {
+                gltf_up_axis = GltfUpAxis::Z;
+            }
+        }
+    }
+
+    return {gltf_up_axis};
 }
 
 lm::dmat4 parse_transform(const rapidjson::Value& transform_node)
@@ -354,7 +378,11 @@ hrz_jobs::JobResult run(
         auto json_data = params.raw_json.get_data();
         document.Parse((const char*)json_data.data(), json_data.size());
 
-        if (!check_json_document(document))
+        if (auto gltf_up_axis = check_json_document(document); gltf_up_axis.has_value())
+        {
+            response.gltf_up_axis = gltf_up_axis.value();
+        }
+        else
         {
             return hrz_jobs::JobResult::FAILURE;
         }

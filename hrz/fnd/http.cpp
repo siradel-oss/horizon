@@ -21,7 +21,7 @@ void normalize_header_name(const char* begin, const char* end, char* out)
 {
     for (const char* it = begin; it != end; ++it, ++out)
     {
-        *out = (char)hrz::ascii_to_lower(*it);
+        *out = hrz::ascii_to_lower(*it);
     }
 }
 
@@ -199,8 +199,8 @@ namespace
 
 constexpr int parse_triple_character_id(const char* str)
 {
-    return (hrz::ascii_to_lower((int)str[0]) * 128 + hrz::ascii_to_lower((int)str[1])) * 128
-        + hrz::ascii_to_lower((int)str[2]);
+    return ((int)hrz::ascii_to_lower(str[0]) * 128 + (int)hrz::ascii_to_lower(str[1])) * 128
+        + (int)hrz::ascii_to_lower(str[2]);
 }
 
 constexpr int parse_number(std::string_view str)

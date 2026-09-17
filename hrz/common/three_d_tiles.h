@@ -23,6 +23,13 @@ enum class RefinementType
     REPLACE,
 };
 
+enum class GltfUpAxis
+{
+    X,
+    Y,
+    Z,
+};
+
 /**
  * Default volume is a sphere with a negative radius (i.e. no volume).
  */
@@ -129,6 +136,7 @@ struct ThreeDTilesTilesetDescriptor
     std::vector<uint32_t> child_links;
     double geometric_error;
     bool allow_gltf_content;
+    GltfUpAxis gltf_up_axis;
 };
 
 enum class AttributeComponentType

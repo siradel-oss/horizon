@@ -310,13 +310,34 @@ inline uint32_t read_uint32(std::span<const std::byte> span, const size_t offset
     return v;
 }
 
-// Y and Z axes must be switched, see
-// https://github.com/CesiumGS/3d-tiles/tree/master/specification#y-up-to-z-up
-static const lm::dmat4 s_axes_transform = lm::dmat4(
-    lm::dvec4(1, 0, 0, 0),
-    lm::dvec4(0, 0, 1, 0),
-    lm::dvec4(0, -1, 0, 0),
-    lm::dvec4(0, 0, 0, 1));
+inline lm::dmat4 get_axis_swap_transform(hrz::three_d_tiles::GltfUpAxis gltf_up_axis)
+{
+    // Y and Z axes must be swapped, see
+    // https://github.com/CesiumGS/3d-tiles/tree/master/specification#y-up-to-z-up
+    static const lm::dmat4 s_axes_transform_y = lm::dmat4(
+        lm::dvec4(1, 0, 0, 0), lm::dvec4(0, 0, 1, 0), lm::dvec4(0, -1, 0, 0),
+        lm::dvec4(0, 0, 0, 1));
+
+    // But if gltfUpAxis is X, then X and Y axes must be swapped.
+    // The gltfUpAxis property is not part of 3D Tiles 1.0, but unfortunately many
+    // datasets rely on it, and Cesium still supports it, even the newer variants
+    // have added support for it.
+    // So it is de-facto part of the format.
+    // See https://github.com/CesiumGS/cesium-unreal/issues/315
+    static const lm::dmat4 s_axes_transform_x = lm::dmat4(
+        lm::dvec4(0, 0, 1, 0), lm::dvec4(0, 1, 0, 0), lm::dvec4(-1, 0, 0, 0),
+        lm::dvec4(0, 0, 0, 1));
+
+    static const lm::dmat4 s_axes_transform_z = lm::dmat4::identity();
+
+    switch (gltf_up_axis)
+    {
+        case hrz::three_d_tiles::GltfUpAxis::X: return s_axes_transform_x;
+        case hrz::three_d_tiles::GltfUpAxis::Y: return s_axes_transform_y;
+        case hrz::three_d_tiles::GltfUpAxis::Z: return s_axes_transform_z;
+        default: assert(false && "Unhandled case"); return s_axes_transform_y;
+    }
+}
 
 struct TilesetConfig;
 
@@ -684,6 +705,7 @@ struct Tileset
     unsigned int root_tile_index;
     std::vector<unsigned int> child_links;
     bool allow_gltf_content;
+    hrz::three_d_tiles::GltfUpAxis gltf_up_axis;
 
     hrz::flat_hash_set<uint32_t> active_tiles; // Loading, loaded, or renderable
 
@@ -2695,8 +2717,8 @@ struct ThreeDTilesSystem
             gltf_offset);
 
         content.draw_prps = config->inherited_draw_prps;
-        content.draw_prps.transform =
-            tile.base_transform * subtile.rtc_transform * s_axes_transform;
+        content.draw_prps.transform = tile.base_transform * subtile.rtc_transform
+            * get_axis_swap_transform(tileset->gltf_up_axis);
 
         content.prototype = hrz::model::create_from_gltf_blob(
             ba, attributions, gltf_blob, tile.uri, tileset->base_url.derive_base(tile.uri),
@@ -2816,7 +2838,7 @@ struct ThreeDTilesSystem
         }
 
         content.draw_prps = config->inherited_draw_prps;
-        content.draw_prps.transform = s_axes_transform;
+        content.draw_prps.transform = get_axis_swap_transform(tileset->gltf_up_axis);
 
         if (gltf_format == 1) // Embedded glTF
         {
@@ -3023,6 +3045,10 @@ struct ThreeDTilesSystem
         external_tileset->geometric_error =
             _get_lower_geometric_error_in_parent_tiles(tileset, tile_index);
 
+        // Only the value of the gltfUpAxis property of the root tileset is
+        // taken into account.
+        external_tileset->gltf_up_axis = tileset->gltf_up_axis;
+
         external_tileset->base_url = tileset->base_url.derive_base(tile.uri);
 
         external_tileset->vector_data_attribute_request_id = handle;
@@ -3092,8 +3118,8 @@ struct ThreeDTilesSystem
         auto& gltf_blob = tile_data_blob;
 
         content.draw_prps = config->inherited_draw_prps;
-        content.draw_prps.transform =
-            tile.base_transform * subtile.rtc_transform * s_axes_transform;
+        content.draw_prps.transform = tile.base_transform * subtile.rtc_transform
+            * get_axis_swap_transform(tileset->gltf_up_axis);
 
         content.prototype = hrz::model::create_from_gltf_blob(
             ba, attributions, gltf_blob, tile.uri, tileset->base_url.derive_base(tile.uri), 0,
@@ -3616,10 +3642,12 @@ struct ThreeDTilesSystem
                         tileset->child_links = std::move(response.child_links);
                         tileset->allow_gltf_content = response.allow_gltf_content;
 
-                        // If the tileset is external, use the value given by its parent tileset.
+                        // If the tileset is external, some properties take their value
+                        // from its parent tileset. They are set in _load_external_tileset.
                         if (!tileset->is_external)
                         {
                             tileset->geometric_error = response.geometric_error;
+                            tileset->gltf_up_axis = response.gltf_up_axis;
                         }
 
                         if (response.tiles.size() > 0)

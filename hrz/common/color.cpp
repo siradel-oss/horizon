@@ -2090,7 +2090,7 @@ std::optional<uint32_t> parse_html_color_string(std::string_view str)
     char color_lower[kMaxHtmlColorLength];
     for (size_t i = 0; i < str.size(); ++i)
     {
-        color_lower[i] = (char)hrz::ascii_to_lower(str[i]);
+        color_lower[i] = hrz::ascii_to_lower(str[i]);
     }
 
     return html_color_lookup({color_lower, str.size()});
