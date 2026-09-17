@@ -106,6 +106,8 @@ public:
 
     inline void resize(size_t size) { _values.resize(size); }
 
+    std::optional<size_t> size() const { return _values.size(); }
+
     template<typename T>
     void push(T&& value)
     {
@@ -127,6 +129,18 @@ public:
         {
             auto value_transformed = attr_transform<OwnedAttributeValue>(transform, value);
             push_ref(attr_as_ref(value_transformed));
+        }
+    }
+
+    void push_default(hrz_proto::AttributeTransform transform)
+    {
+        if (transform == hrz_proto::AttributeTransform::ATTRIBUTE_TRANSFORM_NONE)
+        {
+            push_null();
+        }
+        else
+        {
+            push_transform(transform, attr_null<RefAttributeValue>());
         }
     }
 

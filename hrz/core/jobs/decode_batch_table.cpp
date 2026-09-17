@@ -205,34 +205,39 @@ std::optional<hrz::vector_data::AttributeValues> _decode_attribute_values_array(
     std::string_view attribute_name,
     uint32_t attribute_id,
     hrz_proto::AttributeTransform transform,
-    const rapidjson::Value& attribute_json_value,
+    const rapidjson::Value::ConstArray& attribute_json_array,
     uint32_t expected_length,
     hrz::BlobAllocator* blob_allocator,
     const hrz::monitoring::ResourceOwner& resource_owner)
 {
     // Values are in the JSON document
-    if (attribute_json_value.Size() != expected_length)
+    if (attribute_json_array.Size() != expected_length)
     {
-        HRZ_LOG_ERROR(
+        HRZ_LOG_WARNING(
             "Wrong array length for attribute \"{}\": {} values for {} features", attribute_name,
-            attribute_json_value.Size(), expected_length);
-        return std::nullopt;
+            attribute_json_array.Size(), expected_length);
     }
 
     hrz::vector_data::PackedAttributeValuesBuilder builder(
         expected_length, blob_allocator, resource_owner);
     bool has_unhandled_types = false;
 
-    for (const auto& entry : attribute_json_value.GetArray())
+    for (size_t i = 0; i < attribute_json_array.Size() && i < expected_length; ++i)
     {
-        has_unhandled_types = !builder.push_json(transform, entry) || has_unhandled_types;
+        has_unhandled_types |= !builder.push_json(transform, attribute_json_array[i]);
+    }
+
+    for (size_t i = attribute_json_array.Size(); i < expected_length; ++i)
+    {
+        builder.push_default(transform);
     }
 
     if (has_unhandled_types)
     {
-        HRZ_LOG_ERROR("Unhandled type for attribute \"{}\"", attribute_name);
-        return std::nullopt;
+        HRZ_LOG_WARNING("Unsupported type for attribute \"{}\"", attribute_name);
     }
+
+    assert(!builder.size().has_value() || builder.size().value() == expected_length);
 
     return std::move(builder).finalize(attribute_id);
 }
@@ -241,7 +246,7 @@ std::optional<AttributeValues> _decode_attribute_values_from_blob(
     std::string_view attribute_name,
     uint32_t attribute_id,
     hrz_proto::AttributeTransform transform,
-    const rapidjson::Value& attribute_json_value,
+    const rapidjson::Value::ConstObject& attribute_json_value,
     std::span<const std::byte> batch_table_bin_data,
     uint32_t expected_length,
     hrz::BlobAllocator* blob_allocator,
@@ -298,14 +303,14 @@ std::optional<AttributeValues> _decode_attribute_values(
     if (attribute_json_value.IsArray())
     {
         return _decode_attribute_values_array(
-            attribute_name, attribute_id, transform, attribute_json_value, expected_length,
-            blob_allocator, resource_owner);
+            attribute_name, attribute_id, transform, attribute_json_value.GetArray(),
+            expected_length, blob_allocator, resource_owner);
     }
     else if (attribute_json_value.IsObject())
     {
         return _decode_attribute_values_from_blob(
-            attribute_name, attribute_id, transform, attribute_json_value, batch_table_bin_data,
-            expected_length, blob_allocator, resource_owner);
+            attribute_name, attribute_id, transform, attribute_json_value.GetObject(),
+            batch_table_bin_data, expected_length, blob_allocator, resource_owner);
     }
     else
     {
