@@ -1,0 +1,25 @@
+{
+  "$schema": "https://shadcn-vue.com/schema.json",
+  "style": "reka-mira",
+  "font": "geist-sans",
+  "typescript": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/assets/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "pointer": false,
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "composables": "@/composables"
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
+}

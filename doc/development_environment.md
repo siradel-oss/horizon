@@ -16,7 +16,7 @@ title = "Development environment"
 
 Optionally:
 
-- Python >= 3.11, <= 3.12 (for non-build-related scripts)
+- Python >= 3.11
 - pnpm 11.x (for managing pnpm dependencies)
     - Use the version that is specified in the root package.json.
     - You can use corepack to automatically use the correct version of pnpm.
@@ -39,7 +39,7 @@ Optionally:
 - pnpm 11.x (for managing pnpm dependencies)
     - Use the version that is specified in the root package.json.
     - You can use corepack to automatically use the correct version of pnpm.
-- Python >= 3.11, <= 3.12 (for non-build-related scripts)
+- Python >= 3.11
 - JDK >= 17 (for OSS publication)
 - TK bindings for Python (package `python3-tk` on Ubuntu) (for visual tests GUI)
 

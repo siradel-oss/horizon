@@ -113,12 +113,12 @@
         <div>
             <h2>Results summary</h2>
             <ul id="summary-list">
-                <li><span class="summary-label">Total tests</span><span class="summary-value">{{ totalTests }}</span></li>
-                <li><span class="summary-label">Successes</span><span class="summary-value">{{ passedTests }} ({{ (100 * passedTests / totalTests)|round|int }}%)</span></li>
-                <li><span class="summary-label">Failures</span><span class="summary-value">{{ failedTests }} ({{ (100 * failedTests / totalTests)|round|int }}%)</span></li>
+                <li><span class="summary-label">Total tests</span><span class="summary-value">{{ total_tests }}</span></li>
+                <li><span class="summary-label">Successes</span><span class="summary-value">{{ passed_tests }} ({{ (100 * passed_tests / total_tests)|round|int }}%)</span></li>
+                <li><span class="summary-label">Failures</span><span class="summary-value">{{ failed_tests }} ({{ (100 * failed_tests / total_tests)|round|int }}%)</span></li>
             </ul>
         </div>
-        {% if results|has_failed_tests %}
+        {% if has_failed_tests %}
             <div>
                 <h2>Failed tests</h2>
                 <ul class="test-link-list">
@@ -130,12 +130,12 @@
                 </ul>
             </div>
         {% endif %}
-        {% if results|has_tests_with_errors %}
+        {% if has_tests_with_errors %}
             <div>
                 <h2>Tests with errors</h2>
                 <ul class="test-link-list">
                     {% for test in results %}
-                        {% if test.success and test.errorRatio and test.errorRatio > 0 %}
+                        {% if test.success and test.error_ratio and test.error_ratio > 0 %}
                             <li><a href="#{{ test.name }}">{{ test.name }}</a></li>
                         {% endif %}
                     {% endfor %}
@@ -152,10 +152,10 @@
                             <ul>
                                 <p><span class="test-details-label">Name</span><span class="test-details-value test-details-name">{{ test.name }}</span></p>
                                 <p><span class="test-details-label">Result</span><span class="test-details-value">{% if test.success %}Success{% else %}Failure{% endif %}</span></p>
-                                <p><span class="test-details-label">Error ratio</span><span class="test-details-value">{{ test.errorRatio|format_error_ratio }}%</span></p>
-                                <p><span class="test-details-label">Error type</span><span class="test-details-value">{{ test.errorType|error_type_to_name }}</span></p>
+                                <p><span class="test-details-label">Error ratio</span><span class="test-details-value">{{ test.error_ratio|format_error_ratio }}%</span></p>
+                                <p><span class="test-details-label">Error type</span><span class="test-details-value">{{ test.error_type.name }}</span></p>
                             </ul>
-                            {% if test.errorRatio and test.errorRatio > 0 %}
+                            {% if test.error_ratio and test.error_ratio > 0 %}
                                 <div class="test-images">
                                     <div>
                                         <p class="image-title">Captured image</p>

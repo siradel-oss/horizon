@@ -16,3 +16,4 @@ packages:
   - hrz/ts_monitoring_protocol
   - hrz/ts_scene_dump
   - hrz/doc/llm
+  - tools/visual_testing/client

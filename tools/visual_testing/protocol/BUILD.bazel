@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: Copyright 2026 Siradel
+# SPDX-License-Identifier: MIT
+
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+py_library(
+    name = "schema",
+    srcs = ["schema.py"],
+    imports = ["."],
+    visibility = ["//tools/visual_testing:__subpackages__"],
+    deps = [
+        "@pypi//pydantic",
+    ],
+)
+
+py_binary(
+    name = "generate_ts_types",
+    srcs = ["generate_ts_types.py"],
+    imports = ["."],
+    visibility = ["//tools/visual_testing:__subpackages__"],
+    deps = [":schema"],
+)

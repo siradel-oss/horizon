@@ -1,0 +1,20 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "resolveJsonModule": true,
+        "paths": {
+            // Second candidate is for LSPs to find generated files, tsc through
+            // Bazel should find everything in src/ given that it copies all files to bazel-bin/.
+            "@/*": ["./src/*", "../../../bazel-bin/tools/visual_testing/client/src/*"],
+            "*": ["../../../bazel-bin/tools/visual_testing/client/node_modules/*"]
+        },
+        "skipLibCheck": true
+    },
+    "vueCompilerOptions": {
+        "checkUnknownComponents": true,
+        "checkUnknownDirectives": true,
+        "checkUnknownEvents": false,
+        "checkUnknownProps": false
+    },
+    "include": ["src/**/*"]
+}
