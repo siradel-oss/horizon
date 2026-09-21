@@ -86,7 +86,7 @@ After the release has been created and the assets uploaded to GitHub:
 
 ## Deploy the website to GitHub Pages
 
-The website is built from the documentation and gallery assets of a release, and deployed to GitHub Pages at https://siradel-oss.github.io/horizon. Its sources live in the [horizon-website](https://github.com/siradel-oss/horizon-website) repository, and are fetched by the workflow.
+The website is built from the documentation and gallery assets of a release, and deployed to GitHub Pages at https://horizon.redacted.localhost. Its sources live in the [horizon-website](https://github.com/siradel-oss/horizon-website) repository, and are fetched by the workflow.
 
 This is not triggered automatically when creating a release, because a release is not necessarily the latest one. Only deploy the website for a version more recent than the one currently deployed. For example, a patch release on an older maintenance branch must not be deployed.
 

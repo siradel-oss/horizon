@@ -20,7 +20,7 @@ concurrency:
 env:
   WEBSITE_REPOSITORY: siradel-oss/horizon-website
   HUGO_VERSION: '0.162.1'
-  SITE_BASE_URL: 'https://siradel-oss.github.io/horizon/'
+  SITE_BASE_URL: 'https://horizon.redacted.localhost/'
 
 jobs:
   build:
