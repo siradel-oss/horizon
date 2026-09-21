@@ -91,7 +91,7 @@ def _render_interface(cls: type[schema.Model]) -> str:
         if field_info.annotation is None:
             continue
         ts_name = to_camel(field_name)
-        (ts_type, is_optional) = _ts_type(field_info.annotation)
+        ts_type, is_optional = _ts_type(field_info.annotation)
         optional = "?" if (is_optional or not field_info.is_required()) else ""
         lines.append(f"    {ts_name}{optional}: {ts_type};")
     lines.append("}")

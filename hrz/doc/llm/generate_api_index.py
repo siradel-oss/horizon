@@ -12,7 +12,6 @@ from pathlib import Path
 from hrz.generator import protocol_parser
 from hrz.generator.protocol_model import HrzProtocol, HrzMessage
 
-
 HRZ_PACKAGE_PREFIX = "HrzProtocol."
 
 
