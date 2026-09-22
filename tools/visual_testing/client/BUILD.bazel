@@ -49,8 +49,6 @@ vite_bin.vite(
     ],
     args = [
         "build",
-        "--outDir",
-        "dist",
     ],
     chdir = package_name(),
     out_dirs = ["dist/assets/"],

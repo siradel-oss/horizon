@@ -5,7 +5,7 @@
         "@siradel-oss/horizon-protocol": "workspace:*"
     },
     "devDependencies": {
-        "webpack": "^5.109.2",
-        "webpack-cli": "^6.0.1"
+        "webpack": "^5.111.0",
+        "webpack-cli": "^7.2.3"
     }
 }

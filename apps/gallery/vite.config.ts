@@ -204,7 +204,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     const isDevelopment = mode === "development";
 
     return {
-        root: fs.realpathSync.native(path.resolve("./")),
+        root: import.meta.dirname,
         base: "",
         plugins: [
             nodeResolve(),
@@ -215,10 +215,12 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
             serveFilesPluginConfig,
         ],
         build: {
-            target: "ES2021",
+            target: "es2021",
             sourcemap: isDevelopment,
             minify: !isDevelopment,
-            rollupOptions: {
+            outDir: path.resolve("./dist"),
+            emptyOutDir: true,
+            rolldownOptions: {
                 input: {
                     app: "index.html",
                     gallery: "src/index.ts",
@@ -228,7 +230,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         },
         resolve: {
             alias: {
-                "@": path.resolve(process.cwd(), "./src"),
+                "@": path.resolve(import.meta.dirname, "./src"),
             },
         },
         server: {

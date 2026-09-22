@@ -138,8 +138,6 @@ vite_bin.vite(
     ],
     args = [
         "build",
-        "--outDir",
-        "dist",
     ] + select({
         "//:debug": [
             "--mode",

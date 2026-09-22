@@ -10,10 +10,11 @@ import tailwindcss from "@tailwindcss/vite";
 const BACKEND_URL = process.env.VISUAL_TESTING_BACKEND ?? "http://127.0.0.1:5000";
 
 export default defineConfig({
+    root: import.meta.dirname,
     plugins: [nodeResolve(), tailwindcss(), vue()],
     resolve: {
         alias: {
-            "@": path.resolve(process.cwd(), "./src"),
+            "@": path.resolve(import.meta.dirname, "./src"),
         },
     },
     server: {
@@ -23,8 +24,9 @@ export default defineConfig({
         },
     },
     build: {
-        target: "ES2021",
+        target: "es2021",
         sourcemap: false,
-        outDir: "dist",
+        outDir: path.resolve("./dist"),
+        emptyOutDir: true,
     },
 });

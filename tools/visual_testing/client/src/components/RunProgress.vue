@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Loader2 } from "lucide-vue-next";
+import { LoaderCircle } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useRun } from "@/composables/useRun";
@@ -93,7 +93,7 @@ async function regenerateReferences() {
             title="Promotes the last run's capture to be the reference. Tests without a capture are re-rendered, which takes longer."
             @click="regenerateReferences"
         >
-            <Loader2 v-if="regenerating" class="animate-spin" />
+            <LoaderCircle v-if="regenerating" class="animate-spin" />
             {{
                 regenerating
                     ? `Updating ${selectedNames.length} reference image(s)…`

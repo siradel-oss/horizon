@@ -10,7 +10,7 @@ import StatusBadge from "@/components/StatusBadge.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ImageLightbox, { type ImageKind } from "@/components/ImageLightbox.vue";
-import { Loader2 } from "lucide-vue-next";
+import { LoaderCircle } from "@lucide/vue";
 import { callRpc } from "@/lib/rpc";
 import { useImages } from "@/composables/useImages";
 import { ErrorType, TestType } from "@/proto/schema";
@@ -216,8 +216,7 @@ function goToNextInQueue() {
                 <TabsContent value="log">
                     <pre
                         class="max-h-64 overflow-auto rounded border bg-muted p-2 font-mono text-xs"
-                        >{{ result.log }}</pre
-                    >
+                        >{{ result.log }}</pre>
                 </TabsContent>
             </Tabs>
 
@@ -228,7 +227,7 @@ function goToNextInQueue() {
                     title="Promotes the last run's capture to be the reference. Without a capture the scene is re-rendered, which takes longer."
                     @click="regenerateReference"
                 >
-                    <Loader2 v-if="regenerating" class="animate-spin" />
+                    <LoaderCircle v-if="regenerating" class="animate-spin" />
                     {{ regenerating ? "Updating…" : "Update reference image" }}
                 </Button>
                 <Button variant="outline" @click="openEdit(testInfo.name)">Edit</Button>
