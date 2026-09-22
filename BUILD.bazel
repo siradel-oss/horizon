@@ -259,7 +259,6 @@ _ALL_BINS = [
     "//tools/scene_dump:set_dump_version",
     "//tools/scene_dump:migrate_dump",
     "//tools/scene_dump:edit_dump",
-    "//apps/web_client:generate_scenes_list",
     "//tools/visual_testing:viewer",
     "//tools/visual_testing:comparator",
     "//libs/proj_lite:check_crs_support",
