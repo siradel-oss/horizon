@@ -43,6 +43,7 @@ class HrzUnion:
     """Represents a union discriminator field within a message."""
 
     name: str
+    documentation: str
     fields: List[HrzUnionField]
 
 

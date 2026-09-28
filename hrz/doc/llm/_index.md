@@ -63,7 +63,39 @@ Vector visualization requires **two layers created as a pair**:
 
 One `VectorDataLayer` can feed multiple `VectorTilesLayer`s with different styles.
 
-## 4. Initialization sequence
+## 4. Visibility: `visible` flag and `sceneViews` bitset
+
+Most visual layers have **two independent visibility controls, and both must be set** for anything to render:
+
+- **`visible`** (bool) — global on/off switch for the layer.
+- **`sceneViews`** (`SceneViewBitset`) — selects which scene views the layer renders in. Bit *n* is scene view *n* (`{ bits: 1 }` = `SCENE_VIEW_0`, `{ bits: 3 }` = views 0 and 1).
+
+Both default to off (`false` / `bits: 0`), so a layer created with only `visible: true` stays invisible.
+
+For `VECTOR_TILES` layers there is a third level: **every `VectorRepr` in `style.representations` also has its own `sceneViews` bitset**, AND-ed with the layer's. A representation with `bits: 0` never renders, even if the styling script emits it.
+
+```ts
+HrzProtocol.VectorTilesLayer.create({
+    visible: true,
+    sceneViews: { bits: 1 },                // layer: scene view 0
+    style: {
+        representations: [
+            {
+                id: 1,
+                name: "polygon",
+                sceneViews: { bits: 1 },    // representation: also required
+                flatOverlayPolygon: { /* ... */ },
+            },
+        ],
+        // ...
+    },
+    // ...
+});
+```
+
+If a layer doesn't show up, first check `visible`, the layer's `sceneViews`, and (for vector tiles) each representation's `sceneViews`.
+
+## 5. Initialization sequence
 
 ```
 HrzCoreBackend.init(canvas, wasmBaseUrl, options, callback)
@@ -76,7 +108,7 @@ HrzCoreBackend.init(canvas, wasmBaseUrl, options, callback)
 
 Commands sent before `ViewerReadyMessage` are silently ignored. The message pump must start before waiting for `ViewerReadyMessage` — not after.
 
-## 5. Styling scripts
+## 6. Styling scripts
 
 Styling scripts are a custom DSL used in the `stylingScript` field of `VectorTilesLayer` and 3D Tiles layers. They run per-feature and control filtering, coloring, and which representations to emit.
 

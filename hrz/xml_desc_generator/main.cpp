@@ -17,6 +17,9 @@
 #include <string>
 #include <vector>
 
+namespace
+{
+
 // This is used to detect id collisions.
 // First index is service id.
 // The set contains method id.
@@ -26,9 +29,30 @@
 // protocol compatibility.
 std::set<uint32_t> service_ids;
 
-std::string parse_attribute(std::string& source, const char* attribute_name)
+template<typename T>
+concept has_source_location = requires(const T* t, google::protobuf::SourceLocation* loc) {
+    { t->GetSourceLocation(loc) } -> std::same_as<bool>;
+};
+
+template<has_source_location T>
+std::string get_documentation(const T* descriptor)
 {
-    int attribute_len = strlen(attribute_name);
+    if (google::protobuf::SourceLocation loc; descriptor->GetSourceLocation(&loc))
+    {
+        std::string documentation;
+        documentation += loc.leading_comments;
+        documentation += "\n";
+        documentation += loc.trailing_comments;
+        return documentation;
+    }
+    else
+    {
+        return "";
+    }
+}
+
+std::string parse_attribute(std::string& source, std::string_view attribute_name)
+{
     std::stringstream ss(source);
     std::string remaining_comment;
     std::string attribute_line;
@@ -52,7 +76,9 @@ std::string parse_attribute(std::string& source, const char* attribute_name)
                 }
             }
 
-            if (strncmp(attribute_name, attribute_line.c_str() + at_location + 1, attribute_len)
+            if (strncmp(
+                    attribute_name.data(), attribute_line.c_str() + at_location + 1,
+                    attribute_name.size())
                 != 0)
             {
                 is_comment = true;
@@ -61,7 +87,7 @@ std::string parse_attribute(std::string& source, const char* attribute_name)
             {
                 // Find the '=', and then start looking for the value after it.
                 const char* value_find_start =
-                    attribute_line.c_str() + at_location + 1 + attribute_len;
+                    attribute_line.c_str() + at_location + 1 + attribute_name.size();
                 const char* value_find_end = attribute_line.c_str() + attribute_line.size();
                 auto eq_pos = std::find(value_find_start, value_find_end, '=');
                 if (eq_pos == value_find_end)
@@ -99,7 +125,10 @@ std::string parse_attribute(std::string& source, const char* attribute_name)
     return attribute_value;
 }
 
-bool parse_attribute_string(std::string& source, const char* attribute_name, std::string* result)
+bool parse_attribute_string(
+    std::string& source,
+    std::string_view attribute_name,
+    std::string* result)
 {
     std::string attribute_value = parse_attribute(source, attribute_name);
     if (attribute_value.size() < 2)
@@ -125,18 +154,12 @@ void print_service(
 
     std::set<uint32_t> method_ids;
 
-    std::string documentation;
-    if (google::protobuf::SourceLocation loc; s->GetSourceLocation(&loc))
-    {
-        documentation += loc.leading_comments;
-        documentation += " ";
-        documentation += loc.trailing_comments;
-    }
+    const auto service_documentation = get_documentation(s);
 
     const auto service_id = static_cast<uint32_t>(hrz::murmur3_x64_64(s->full_name()));
     if (service_ids.contains(service_id))
     {
-        std::cerr << "Service ID duplicated for " << s->full_name() << std::endl;
+        std::cerr << "Service ID duplicated for " << s->full_name() << "\n";
         exit(1);
     }
     service_ids.insert(service_id);
@@ -153,19 +176,10 @@ void print_service(
         printer.Print(
             "            <output>$type$</output>\n", "type", method->output_type()->full_name());
 
-        std::string method_doc;
-        google::protobuf::SourceLocation loc;
-        if (method->GetSourceLocation(&loc))
-        {
-            method_doc += loc.leading_comments;
-            method_doc += " ";
-            method_doc += loc.trailing_comments;
-        }
-
         const auto method_id = static_cast<uint32_t>(hrz::murmur3_x64_64(method->full_name()));
         if (method_ids.contains(method_id))
         {
-            std::cerr << "Method ID duplicated for " << method->full_name() << std::endl;
+            std::cerr << "Method ID duplicated for " << method->full_name() << "\n";
             exit(1);
         }
 
@@ -181,20 +195,15 @@ void print_service(
             printer.Print("            <deprecated>false</deprecated>\n");
         }
 
-        std::string documentation = "";
-        if (method->GetSourceLocation(&loc))
-        {
-            documentation += loc.leading_comments;
-            documentation += " ";
-            documentation += loc.trailing_comments;
-        }
+        const auto method_documentation = get_documentation(method);
         printer.Print(
-            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", method_doc);
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
+            method_documentation);
         printer.Print("        </method>\n");
     }
 
     printer.Print(
-        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
+        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", service_documentation);
     printer.Print("    </service>\n");
 }
 
@@ -203,17 +212,10 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
     printer.Print("    <enum>\n");
     printer.Print("        <full_name>$name$</full_name>\n", "name", e->full_name());
 
-    std::string documentation;
-    google::protobuf::SourceLocation loc;
-    if (e->GetSourceLocation(&loc))
-    {
-        documentation += loc.leading_comments;
-        documentation += " ";
-        documentation += loc.trailing_comments;
-    }
+    auto enum_documentation = get_documentation(e);
 
     if (std::string expose_to_style;
-        parse_attribute_string(documentation, "expose_to_style", &expose_to_style)
+        parse_attribute_string(enum_documentation, "expose_to_style", &expose_to_style)
         && expose_to_style == "true")
     {
         printer.Print("        <expose_to_style>true</expose_to_style>\n");
@@ -227,13 +229,7 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
     {
         auto value = e->value(i);
 
-        std::string value_doc = "";
-        if (value->GetSourceLocation(&loc))
-        {
-            value_doc += loc.leading_comments;
-            value_doc += " ";
-            value_doc += loc.trailing_comments;
-        }
+        auto value_documentation = get_documentation(value);
 
         printer.Print("        <value>\n");
         printer.Print("            <name>$name$</name>\n", "name", value->name());
@@ -249,18 +245,18 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
         }
 
         std::string attribute;
-        if (parse_attribute_string(value_doc, "label", &attribute))
+        if (parse_attribute_string(value_documentation, "label", &attribute))
         {
             printer.Print("            <label>$name$</label>\n", "name", attribute);
         }
 
-        if (parse_attribute_string(value_doc, "params_field_name", &attribute))
+        if (parse_attribute_string(value_documentation, "params_field_name", &attribute))
         {
             printer.Print(
                 "            <params_field_name>$name$</params_field_name>\n", "name", attribute);
         }
 
-        if (parse_attribute_string(value_doc, "response_field_name", &attribute))
+        if (parse_attribute_string(value_documentation, "response_field_name", &attribute))
         {
             printer.Print(
                 "            <response_field_name>$name$</response_field_name>\n", "name",
@@ -268,12 +264,13 @@ void print_enum(google::protobuf::io::Printer& printer, const google::protobuf::
         }
 
         printer.Print(
-            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", value_doc);
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
+            value_documentation);
         printer.Print("        </value>\n");
     }
 
     printer.Print(
-        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
+        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", enum_documentation);
     printer.Print("    </enum>\n");
 }
 
@@ -282,22 +279,17 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
     printer.Print("    <message>\n");
     printer.Print("        <full_name>$name$</full_name>\n", "name", msg->full_name());
 
-    std::string documentation;
-    google::protobuf::SourceLocation loc;
-    if (msg->GetSourceLocation(&loc))
-    {
-        documentation += loc.leading_comments;
-        documentation += " ";
-        documentation += loc.trailing_comments;
-    }
+    auto message_documentation = get_documentation(msg);
 
-    if (std::string path_root; parse_attribute_string(documentation, "path_root", &path_root))
+    if (std::string path_root;
+        parse_attribute_string(message_documentation, "path_root", &path_root))
     {
         printer.Print("        <path_root>$root$</path_root>\n", "root", path_root);
     }
 
     if (std::string is_path_leaf;
-        parse_attribute_string(documentation, "path_leaf", &is_path_leaf) && is_path_leaf == "true")
+        parse_attribute_string(message_documentation, "path_leaf", &is_path_leaf)
+        && is_path_leaf == "true")
     {
         printer.Print("        <path_leaf>true</path_leaf>\n");
     }
@@ -311,6 +303,12 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
         auto oneof = msg->real_oneof_decl(i);
         printer.Print("        <union>\n");
         printer.Print("            <name>$name$</name>\n", "name", oneof->name());
+
+        auto oneof_documentation = get_documentation(oneof);
+        printer.Print(
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
+            oneof_documentation);
+
         for (int j = 0; j < oneof->field_count(); ++j)
         {
             auto field = oneof->field(j);
@@ -384,21 +382,16 @@ void print_message(google::protobuf::io::Printer& printer, const google::protobu
             printer.Print("            <deprecated>false</deprecated>\n");
         }
 
-        std::string documentation = "";
-        if (value->GetSourceLocation(&loc))
-        {
-            documentation += loc.leading_comments;
-            documentation += " ";
-            documentation += loc.trailing_comments;
-        }
+        const auto field_documentation = get_documentation(value);
         printer.Print(
-            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
+            "            <documentation><![CDATA[$doc$]]></documentation>\n", "doc",
+            field_documentation);
 
         printer.Print("        </field>\n");
     }
 
     printer.Print(
-        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", documentation);
+        "        <documentation><![CDATA[$doc$]]></documentation>\n", "doc", message_documentation);
     printer.Print("    </message>\n");
 
     for (int i = 0; i < msg->nested_type_count(); ++i)
@@ -431,19 +424,19 @@ class Generator : public google::protobuf::compiler::CodeGenerator
     }
 
     bool Generate(
-        const google::protobuf::FileDescriptor* file,
-        const std::string& parameter,
-        google::protobuf::compiler::GeneratorContext* generator_context,
-        std::string* error) const override
+        const google::protobuf::FileDescriptor*,
+        const std::string& /* parameter */,
+        google::protobuf::compiler::GeneratorContext*,
+        std::string* /* error */) const override
     {
         return true;
     }
 
     bool GenerateAll(
         const std::vector<const google::protobuf::FileDescriptor*>& files,
-        const std::string& parameter,
+        const std::string& /* parameter */,
         google::protobuf::compiler::GeneratorContext* generator_context,
-        std::string* error) const override
+        std::string* /* error */) const override
     {
         auto stream = generator_context->Open("hrz_protocol.xml");
         google::protobuf::io::Printer printer(stream, '$');
@@ -486,6 +479,8 @@ class Generator : public google::protobuf::compiler::CodeGenerator
         return true;
     }
 };
+
+} // anonymous namespace
 
 int main(int argc, char* argv[])
 {

@@ -29,7 +29,7 @@ message RasterPickResult {
     // True if the result is a nodata value.
     bool        nodata          = 5;
 
-    // The engine makes its best to return information from cached data. This
+    // The engine does its best to return information from cached data. This
     // allows fast, but potentially inaccurate and/or incomplete, data retrieval
     // if anything is available. Yet, if nothing is available in cache or if
     // returned data don't satisfy the users then it is up to them to retrieve

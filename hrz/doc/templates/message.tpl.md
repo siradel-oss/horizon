@@ -1,13 +1,32 @@
 +++
 title = '{{ this.full_name|without_first(".") }}'
-toc_start_level = 5
+toc_start_level = 3
 toc_end_level = 5
 
-{% for field in this.fields %}
 [[custom_toc]]
+    title = 'Fields'
+    anchor = 'fields'
+{% for field in this.fields %}
+{% if not field.union %}
+[[custom_toc.children]]
     title = '{{ field.name }}'
     anchor = 'field-{{ field.name }}'
+{% endif %}
 {% endfor %}
+
+{% for union in this.unions %}
+[[custom_toc]]
+    title = 'Union {{ union.name }}'
+    anchor = 'union-{{ union.name }}'
+{% for field in this.fields %}
+{% if field.union == union.name %}
+[[custom_toc.children]]
+    title = '{{ field.name }}'
+    anchor = 'field-{{ field.name }}'
+{% endif %}
+{% endfor %}
+{% endfor %}
+
 +++
 
 {% from "type_link.tpl.md" import type_link %}
@@ -19,14 +38,33 @@ toc_end_level = 5
 
 {{ this.documentation }}
 
+### Fields
+
 {% for field in this.fields %}
----
+{% if not field.union %}
 
 ##### `{{ field.name }}`: {{ type_link(field.type) }}{% if field.repeated %}`[]`{% endif -%}
-    {%- if not field.union is sameas None %} (Part of union `{{ field.union }}`){% endif -%}
     {%- if field.optional %} *(Optional)*{% endif -%}
     {%- if field.deprecated %} *(DEPRECATED)*{% endif %} {{ anchor("field-" ~ field.name) }}
 
 {{ field.documentation }}
 
+{% endif %}
+{% endfor %}
+
+{% for union in this.unions %}
+
+### Union `{{ union.name }}` {{ anchor("union-" ~ union.name) }}
+{{ union.documentation }}
+
+{% for field in this.fields %}
+{% if field.union == union.name %}
+
+##### `{{ field.name }}`: {{ type_link(field.type) }}{% if field.repeated %}`[]`{% endif -%}
+    {%- if field.deprecated %} *(DEPRECATED)*{% endif %} {{ anchor("field-" ~ field.name) }}
+
+{{ field.documentation }}
+
+{% endif %}
+{% endfor %}
 {% endfor %}

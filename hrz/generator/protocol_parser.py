@@ -156,7 +156,13 @@ def parse(input_file_name) -> HrzProtocol:
                         name=find_text(union_field, "name"),
                     )
                     union_fields.append(field)
-                union = HrzUnion(name=find_text(u, "name"), fields=union_fields)
+                union = HrzUnion(
+                    name=find_text(u, "name"),
+                    documentation=remove_common_leading_spaces(
+                        find_text(u, "documentation")
+                    ),
+                    fields=union_fields,
+                )
                 unions.append(union)
 
             # Handle path root attributes
