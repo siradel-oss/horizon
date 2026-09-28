@@ -35,23 +35,17 @@ message ShapeInformation {
     repeated double polygon_areas    = 8;
 }
 
-// @service_id=0x8b075bd4
 service ShapeEditorService {
-    // @method_id=0xa79971b7
     rpc GetSelectedShape(Void) returns (ShapeSelection);
 
-    // @method_id=0x836d5e15
     rpc SelectShape(ShapeSelection) returns (Void);
 
     // Prevent changing the selected shape through user input.
     // The selection can still be changed through the API.
-    // @method_id=0x1677f34e
     rpc LockShapeSelection(Void) returns (Void);
 
-    // @method_id=0xf815a1f7
     rpc UnlockShapeSelection(Void) returns (Void);
 
-    // @method_id=0x58e943a6
     // Return the index of the currently selected control point,
     // if any.
     // Mid-point control points are included.
@@ -66,22 +60,17 @@ service ShapeEditorService {
     // Mid-point control points are included.
     // To convert from the index of a point to the index of its
     // control point, multiply by 2.
-    // @method_id=0xabfeb73a
     rpc SelectControlPoint(ControlPointSelection) returns (Void);
 
-    // @method_id=0xab715e8a
     rpc GetCurrentMode(Void) returns (ModeSelection);
 
     // Each selection mode can be bound to a key. See
     // `HrzProtocol.KeyInteractionBindings`.
-    // @method_id=0xd659c2cc
     rpc SelectMode(ModeSelection) returns (Void);
 
-    // @method_id=0xd7096384
     rpc GetShapeInformation(LayerHandle) returns (ShapeInformation);
 
     // This action can be bound to a key. See
     // `HrzProtocol.KeyInteractionBindings`.
-    // @method_id=0x5ad43e37
     rpc DeleteSelectedControlPoint(Void) returns (Void);
 }

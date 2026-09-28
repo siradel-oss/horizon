@@ -24,20 +24,14 @@ message LayerRenameInfo {
     string      name   = 2;
 }
 
-// @service_id=0x41c4255b
 service LayerService {
-    // @method_id=0x30ffe3a4
     rpc CreateLayer(LayerCreateInfo) returns (LayerHandle);
 
-    // @method_id=0xf8cadac0
     rpc DestroyLayer(LayerHandle) returns (Void);
 
-    // @method_id=0x044fb58c
     rpc RenameLayer(LayerRenameInfo) returns (Void);
 
-    // @method_id=0xa48c16c5
     rpc GetLayer(LayerHandle) returns (Layer);
 
-    // @method_id=0x9103b6f7
     rpc GetAllLayers(Void) returns (LayerArray);
 }

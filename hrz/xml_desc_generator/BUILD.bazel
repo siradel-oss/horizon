@@ -17,6 +17,7 @@ cc_binary(
     }),
     visibility = ["//visibility:public"],
     deps = [
+        "//hrz/fnd",
         "@protobuf",
         "@protobuf//src/google/protobuf/compiler:plugin",
     ],

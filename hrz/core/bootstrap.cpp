@@ -2739,13 +2739,18 @@ namespace
 class ViewerServiceImpl : public hrz_proto::IViewerService
 {
 public:
-    void get_configuration(const ::hrz_proto::Void& input, ::hrz_proto::ViewerConfiguration& output)
+    void get_info(const ::hrz_proto::Void&, ::hrz_proto::ViewerInfo& output) override
+    {
+        output.set_version(hrz::Version);
+    }
+
+    void get_configuration(const ::hrz_proto::Void&, ::hrz_proto::ViewerConfiguration& output)
         override
     {
         core->fill_in_viewer_configuration_message(output);
     }
 
-    void schedule_frame_capture(const ::hrz_proto::Void& input, ::hrz_proto::Void& output) override
+    void schedule_frame_capture(const ::hrz_proto::Void&, ::hrz_proto::Void&) override
     {
         core->capture_next_frame();
     }
@@ -2779,7 +2784,7 @@ public:
 
     void configure_mouse_hover(
         const ::hrz_proto::MouseHoverConfiguration& input,
-        ::hrz_proto::Void& output) override
+        ::hrz_proto::Void&) override
     {
         core->configure_mouse_hover(input);
     }
@@ -2827,14 +2832,14 @@ public:
         output.set_value(count);
     }
 
-    void deselect_all_features(const ::hrz_proto::Void& input, ::hrz_proto::Void& output) override
+    void deselect_all_features(const ::hrz_proto::Void&, ::hrz_proto::Void&) override
     {
         hrz::scene::deselect_all(core->scene());
     }
 
-    void is_working(const ::hrz_proto::Void& input, ::hrz_proto::BoolValue& output) override
+    void is_working(const ::hrz_proto::Void&, ::hrz_proto::BoolValue& output) override
     {
-        bool is_working = !core->is_viewer_ready() || hrz::scene::is_working(core->scene())
+        const bool is_working = !core->is_viewer_ready() || hrz::scene::is_working(core->scene())
             || hrz::actor_runner::is_working(core->actor_runner())
             || hrz::mapbox::is_working(core->mapbox_translation());
         output.set_value(is_working);
@@ -2846,17 +2851,17 @@ public:
         core->set_user_interactions_enabled(input.value());
     }
 
-    void send_events(const ::hrz_proto::EventsStream& input, ::hrz_proto::Void& output) override
+    void send_events(const ::hrz_proto::EventsStream& input, ::hrz_proto::Void&) override
     {
         core->enqueue_events(input);
     }
 
-    void toggle_dev_ui(const ::hrz_proto::Void& input, ::hrz_proto::BoolValue& output) override
+    void toggle_dev_ui(const ::hrz_proto::Void&, ::hrz_proto::BoolValue& output) override
     {
         output.set_value(core->toggle_dev_ui());
     }
 
-    void move_dev_ui_to_cursor(const ::hrz_proto::Void& input, ::hrz_proto::Void& output) override
+    void move_dev_ui_to_cursor(const ::hrz_proto::Void&, ::hrz_proto::Void&) override
     {
         core->move_dev_ui_to_cursor();
     }
@@ -2999,7 +3004,7 @@ public:
 
     void select_shape(const ::hrz_proto::ShapeSelection& input, ::hrz_proto::Void&) override
     {
-        std::optional<uint64_t> layer =
+        const std::optional<uint64_t> layer =
             input.has_layer() ? std::optional<uint64_t>(input.layer().opaque()) : std::nullopt;
 
         hrz::editor::select_shape(hrz::scene::get_shape_editor(core->scene()), layer);
@@ -3030,7 +3035,7 @@ public:
     void select_control_point(const ::hrz_proto::ControlPointSelection& input, ::hrz_proto::Void&)
         override
     {
-        std::optional<uint32_t> index = input.has_control_point_index()
+        const std::optional<uint32_t> index = input.has_control_point_index()
             ? std::optional<uint32_t>(input.control_point_index().value())
             : std::nullopt;
 
@@ -3056,8 +3061,7 @@ public:
                 hrz::scene::get_shape_editor(core->scene()), input.opaque()));
     }
 
-    void delete_selected_control_point(const ::hrz_proto::Void& input, ::hrz_proto::Void& output)
-        override
+    void delete_selected_control_point(const ::hrz_proto::Void&, ::hrz_proto::Void&) override
     {
         hrz::editor::delete_selected_control_point(hrz::scene::get_shape_editor(core->scene()));
     }
@@ -3092,7 +3096,7 @@ public:
 
     void get_queue_size(const ::hrz_proto::Void&, ::hrz_proto::QueueSize& output) override
     {
-        unsigned int message_count =
+        const unsigned int message_count =
             hrz::client_message_queue::get_queue_size(core->message_queue());
         output.set_message_count(message_count);
     }
@@ -3135,13 +3139,13 @@ public:
         layer_handle.set_opaque(layer_id);
     }
 
-    void destroy_layer(const ::hrz_proto::LayerHandle& input, ::hrz_proto::Void& output) override
+    void destroy_layer(const ::hrz_proto::LayerHandle& input, ::hrz_proto::Void&) override
     {
         auto scene = core->scene();
         hrz::scene::destroy_layer(scene, input.opaque());
     }
 
-    void rename_layer(const ::hrz_proto::LayerRenameInfo& input, ::hrz_proto::Void& output) override
+    void rename_layer(const ::hrz_proto::LayerRenameInfo& input, ::hrz_proto::Void&) override
     {
         auto scene = core->scene();
         hrz::scene::rename_layer(scene, input.handle().opaque(), input.name());
@@ -3153,7 +3157,7 @@ public:
         hrz::scene::retrieve_layer_info(scene, input.opaque(), output);
     }
 
-    void get_all_layers(const ::hrz_proto::Void& _, ::hrz_proto::LayerArray& output) override
+    void get_all_layers(const ::hrz_proto::Void&, ::hrz_proto::LayerArray& output) override
     {
         auto scene = core->scene();
         hrz::scene::retrieve_all_layers(scene, output);
@@ -3168,7 +3172,7 @@ public:
         output.set_value(hrz::scene::get_model(core->scene(), path));
     }
 
-    void set(const ::hrz_proto::SceneModelSet& input, ::hrz_proto::Void& output) override
+    void set(const ::hrz_proto::SceneModelSet& input, ::hrz_proto::Void&) override
     {
         hrz::scene::set_model(core->scene(), input.path(), input.payload());
     }
@@ -3213,16 +3217,14 @@ public:
 class MonitoringServiceImpl : public hrz_proto::IMonitoringService
 {
 public:
-    void set_monitoring_server_address(
-        const ::hrz_proto::StringValue& input,
-        ::hrz_proto::Void& output) override
+    void set_monitoring_server_address(const ::hrz_proto::StringValue& input, ::hrz_proto::Void&)
+        override
     {
         hrz::monitoring::set_monitoring_server_address(core->remote_monitoring(), input.value());
     }
 
-    void connect_to_monitoring_server(
-        const ::hrz_proto::BoolValue& input,
-        ::hrz_proto::Void& output) override
+    void connect_to_monitoring_server(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void&)
+        override
     {
         if (input.value())
         {
@@ -3234,31 +3236,29 @@ public:
         }
     }
 
-    void enable_monitoring_messages(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void& output)
+    void enable_monitoring_messages(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void&)
         override
     {
         hrz::monitoring::set_message_queue_sending_enabled(
             core->remote_monitoring(), input.value());
     }
 
-    void enable_profiling(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void& output) override
+    void enable_profiling(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void&) override
     {
         hrz::profiling::set_profiling_enabled(input.value());
     }
 
-    void enable_metrics(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void& output) override
+    void enable_metrics(const ::hrz_proto::BoolValue& input, ::hrz_proto::Void&) override
     {
         hrz::metrics::set_metrics_registries_enabled(input.value());
     }
 
-    void make_gpu_resources_snapshot(const ::hrz_proto::Void& input, ::hrz_proto::Void& output)
-        override
+    void make_gpu_resources_snapshot(const ::hrz_proto::Void&, ::hrz_proto::Void&) override
     {
         hrz::monitoring::schedule_gpu_snapshot(core->remote_monitoring());
     }
 
-    void make_blob_allocator_snapshot(const ::hrz_proto::Void& input, ::hrz_proto::Void& output)
-        override
+    void make_blob_allocator_snapshot(const ::hrz_proto::Void&, ::hrz_proto::Void&) override
     {
         hrz::monitoring::schedule_blob_allocator_snapshot(core->remote_monitoring());
     }

@@ -22,11 +22,8 @@ message DequeueParams {
     uint32 max_message_count = 1;
 }
 
-// @service_id=0xccb301da
 service MessageQueueService {
-    // @method_id=0x8393724a
     rpc DequeueMessages(DequeueParams) returns (DequeuedMessages);
 
-    // @method_id=0xf40fd80d
     rpc GetQueueSize(Void) returns (QueueSize);
 }

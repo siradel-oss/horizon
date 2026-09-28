@@ -20,7 +20,7 @@ struct MessageFactory
     google::protobuf::DescriptorPool pool;
     google::protobuf::DynamicMessageFactory factory;
 
-    MessageFactory(const google::protobuf::FileDescriptorSet& descriptor_set_) :
+    explicit MessageFactory(const google::protobuf::FileDescriptorSet& descriptor_set_) :
         descriptor_set(descriptor_set_), database(), pool(&database), factory(&pool)
     {
         for (const auto& file : descriptor_set.file())
@@ -69,12 +69,19 @@ struct DynamicMessage
     }
 
     const google::protobuf::EnumValueDescriptor* _get_enum_value_descriptor(
+        const google::protobuf::FieldDescriptor* field,
+        std::string_view enum_value) const
+    {
+        auto* enum_type = field->enum_type();
+        assert(enum_type);
+        return enum_type->FindValueByName(enum_value);
+    }
+
+    const google::protobuf::EnumValueDescriptor* _get_enum_value_descriptor(
         std::string_view field_name,
         std::string_view enum_value) const
     {
-        auto* field_desc = _get_field_descriptor(field_name);
-        assert(field_desc->type() == google::protobuf::FieldDescriptor::TYPE_ENUM);
-        return field_desc->enum_type()->FindValueByName(enum_value);
+        return _get_enum_value_descriptor(_get_field_descriptor(field_name), enum_value);
     }
 
     std::string_view get_type_name() const { return msg->GetTypeName(); }
@@ -144,10 +151,10 @@ struct DynamicMessage
 
     std::string_view get_enum(std::string_view field_name) const
     {
-        const auto* enum_desc =
-            msg->GetReflection()->GetEnum(*msg, _get_field_descriptor(field_name));
-        assert(enum_desc);
-        return enum_desc->name();
+        const auto* field = _get_field_descriptor(field_name);
+        assert(field->enum_type());
+        const auto enum_value = msg->GetReflection()->GetEnumValue(*msg, field);
+        return field->enum_type()->FindValueByNumber(enum_value)->name();
     }
 
     DynamicMessage get_message(std::string_view field_name) const
@@ -168,10 +175,10 @@ struct DynamicMessage
 
     std::string_view get_repeated_enum(std::string_view field_name, int index) const
     {
-        const auto* enum_desc =
-            msg->GetReflection()->GetRepeatedEnum(*msg, _get_field_descriptor(field_name), index);
-        assert(enum_desc);
-        return enum_desc->name();
+        const auto* field = _get_field_descriptor(field_name);
+        assert(field->enum_type());
+        const auto enum_value = msg->GetReflection()->GetRepeatedEnumValue(*msg, field, index);
+        return field->enum_type()->FindValueByNumber(enum_value)->name();
     }
 
     DynamicMessage get_repeated_message(std::string_view field_name, int index) const
@@ -191,8 +198,8 @@ struct DynamicMessage
 
     void set_enum(std::string_view field_name, std::string_view value)
     {
-        msg->GetReflection()->SetEnum(
-            msg, _get_field_descriptor(field_name), _get_enum_value_descriptor(field_name, value));
+        const auto* field = _get_field_descriptor(field_name);
+        msg->GetReflection()->SetEnum(msg, field, _get_enum_value_descriptor(field, value));
     }
 
     void set_message(std::string_view field_name, const DynamicMessage& value)
@@ -213,9 +220,9 @@ struct DynamicMessage
 
     void set_repeated_enum(std::string_view field_name, int index, std::string_view value)
     {
+        const auto* field = _get_field_descriptor(field_name);
         msg->GetReflection()->SetRepeatedEnum(
-            msg, _get_field_descriptor(field_name), index,
-            _get_enum_value_descriptor(field_name, value));
+            msg, field, index, _get_enum_value_descriptor(field, value));
     }
 
     void set_repeated_message(std::string_view field_name, int index, const DynamicMessage& value)
@@ -235,8 +242,8 @@ struct DynamicMessage
 
     void add_repeated_enum(std::string_view field_name, std::string_view value)
     {
-        msg->GetReflection()->AddEnum(
-            msg, _get_field_descriptor(field_name), _get_enum_value_descriptor(field_name, value));
+        const auto* field = _get_field_descriptor(field_name);
+        msg->GetReflection()->AddEnum(msg, field, _get_enum_value_descriptor(field, value));
     }
 
     void add_repeated_message(std::string_view field_name, const DynamicMessage& value)

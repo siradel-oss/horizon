@@ -48,7 +48,6 @@ message MapboxTranslationParams {
     CameraAnimationOptions camera_animation           = 6;
 }
 
-// @service_id=0xfc9c5c03
 service MapboxService {
     // Translates Mapbox layers into Horizon layers and adds them to the current
     // scene.
@@ -62,8 +61,6 @@ service MapboxService {
     // final result may have small differences with the same scene rendered in a
     // Mapbox viewer. Furthermore, not all Mapbox features are supported. Check
     // out the documentation for further information.
-    //
-    // @method_id=0xcc830913
     rpc TranslateScene(MapboxTranslationParams)
         returns (MapboxTranslationTicket);
 }

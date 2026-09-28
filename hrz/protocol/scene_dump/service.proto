@@ -27,14 +27,10 @@ message SceneLoadRequest {
     bool                   clear_layers     = 3;
 }
 
-// @service_id=0x1638c483
 service SceneDumpService {
-    // @method_id=0x06754f11
     rpc DumpScene(SceneDumpRequest) returns (SceneDump);
 
     // Loads a scene dump.
     // Returns the list of newly loaded layers.
-    //
-    // @method_id=0x4a9bda2a
     rpc LoadDump(SceneLoadRequest) returns (LayerArray);
 }

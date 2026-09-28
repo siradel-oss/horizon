@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Copyright 2018 Siradel
 // SPDX-License-Identifier: MIT
 
+#include "hrz/fnd/hash.h"
+
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include <google/protobuf/descriptor.h>
@@ -22,7 +24,7 @@
 // This doesn't use hashes because in case of collision
 // we'd have to change the seed, and thus break
 // protocol compatibility.
-std::set<uint64_t> service_ids;
+std::set<uint32_t> service_ids;
 
 std::string parse_attribute(std::string& source, const char* attribute_name)
 {
@@ -97,38 +99,6 @@ std::string parse_attribute(std::string& source, const char* attribute_name)
     return attribute_value;
 }
 
-bool parse_attribute_hex(std::string& source, const char* attribute_name, uint64_t* result)
-{
-    std::string attribute_value = parse_attribute(source, attribute_name);
-    if (attribute_value.size() < 3)
-    {
-        return false;
-    }
-
-    if (attribute_value[0] != '0' || attribute_value[1] != 'x')
-    {
-        return false;
-    }
-
-    *result = 0;
-
-    for (size_t i = 2; i < attribute_value.size(); ++i)
-    {
-        char c = std::tolower(attribute_value[i]);
-        int value = 0;
-        if (c >= '0' && c <= '9')
-            value = (int)c - '0';
-        else if (c >= 'a' && c <= 'f')
-            value = (int)c - 'a' + 10;
-        else
-            return false;
-
-        *result = *result * 16 + value;
-    }
-
-    return true;
-}
-
 bool parse_attribute_string(std::string& source, const char* attribute_name, std::string* result)
 {
     std::string attribute_value = parse_attribute(source, attribute_name);
@@ -153,7 +123,7 @@ void print_service(
     printer.Print("    <service>\n");
     printer.Print("        <full_name>$name$</full_name>\n", "name", s->full_name());
 
-    std::set<uint64_t> method_ids;
+    std::set<uint32_t> method_ids;
 
     std::string documentation;
     if (google::protobuf::SourceLocation loc; s->GetSourceLocation(&loc))
@@ -163,13 +133,7 @@ void print_service(
         documentation += loc.trailing_comments;
     }
 
-    uint64_t service_id = 0;
-    if (!parse_attribute_hex(documentation, "service_id", &service_id))
-    {
-        std::cerr << "No service ID found for " << s->full_name() << std::endl;
-        exit(1);
-    }
-
+    const auto service_id = static_cast<uint32_t>(hrz::murmur3_x64_64(s->full_name()));
     if (service_ids.contains(service_id))
     {
         std::cerr << "Service ID duplicated for " << s->full_name() << std::endl;
@@ -198,13 +162,7 @@ void print_service(
             method_doc += loc.trailing_comments;
         }
 
-        uint64_t method_id = 0;
-        if (!parse_attribute_hex(method_doc, "method_id", &method_id))
-        {
-            std::cerr << "No method ID for " << method->full_name() << std::endl;
-            exit(1);
-        }
-
+        const auto method_id = static_cast<uint32_t>(hrz::murmur3_x64_64(method->full_name()));
         if (method_ids.contains(method_id))
         {
             std::cerr << "Method ID duplicated for " << method->full_name() << std::endl;
