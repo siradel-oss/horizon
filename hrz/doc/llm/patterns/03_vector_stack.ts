@@ -17,6 +17,11 @@
  *
  * The `id` on VectorDataLayer is a user-assigned integer (local namespace),
  * not the layer handle. VectorTilesLayer references it via `source.vectorDataLayerId`.
+ *
+ * Each layer is created with createLayer(), then configured with get() → modify → set().
+ * set() writes every field, so setting a partial object would reset the omitted
+ * fields (visible, sceneViews, ...) to 0 / false / empty. Starting from get() keeps
+ * the real defaults for everything we don't touch.
  */
 
 import { HrzApi } from "@siradel-oss/horizon-api";
@@ -36,29 +41,30 @@ export async function createTiledVectorStack(
         type: HrzProtocol.LayerType.VECTOR_DATA,
     });
 
-    HrzApi.VectorDataLayerPathBuilder.create(dataLayerHandle).set(api, {
-        id: VECTOR_DATA_LAYER_ID,
-        sources: [
-            {
-                hasGeometry: true,
-                tiledDataProvider: {
-                    urlPattern: mvtUrlPattern,
-                    layerName: "default", // which MVT layer to read; omit to combine all
-                },
-                attributes: [
-                    {
-                        id: 1,
-                        isFeatureId: true,
-                        sourceName: "id",
-                    },
-                    {
-                        id: 2,
-                        sourceName: "population",
-                    },
-                ],
+    const dataPath = HrzApi.VectorDataLayerPathBuilder.create(dataLayerHandle);
+    const dataModel = await dataPath.get(api);
+    dataModel.id = VECTOR_DATA_LAYER_ID;
+    dataModel.sources = [
+        {
+            hasGeometry: true,
+            tiledDataProvider: {
+                urlPattern: mvtUrlPattern,
+                layerName: "default", // which MVT layer to read; omit to combine all
             },
-        ],
-    });
+            attributes: [
+                {
+                    id: 1,
+                    isFeatureId: true,
+                    sourceName: "id",
+                },
+                {
+                    id: 2,
+                    sourceName: "population",
+                },
+            ],
+        },
+    ];
+    dataPath.set(api, dataModel);
 
     // ── Step 2: Vector tiles layer ─────────────────────────────────────────
     // Defines how to render the data. References the data layer by its `id`.
@@ -68,34 +74,37 @@ export async function createTiledVectorStack(
         type: HrzProtocol.LayerType.VECTOR_TILES,
     });
 
-    HrzApi.VectorTilesLayerPathBuilder.create(tilesLayerHandle).set(api, {
-        source: {
-            // Link to the data layer by its user-assigned numeric ID,
-            // NOT by its LayerHandle.
-            vectorDataLayerId: VECTOR_DATA_LAYER_ID,
-        },
-        style: {
-            // Expose data attributes to the styling script by name.
-            attributes: [{ stylingName: "population", vectorDataAttrId: 2 }],
-            // The styling script is a mini-DSL. attr() reads attributes,
-            // prp() reads previously set properties, emit triggers a representation.
-            stylingScript: `
-                set "fill_color" = colorize("populationPalette", attr("population"));
-                emit 0;
-            `,
-            representations: [
-                {
-                    id: 0,
-                    flatOverlayPolygon: {
-                        color: {
-                            // `name` binds a styling script property; omit for a fixed color.
-                            defaultValue: { r: 0.2, g: 0.5, b: 0.9, a: 0.8 },
-                        },
+    const tilesPath = HrzApi.VectorTilesLayerPathBuilder.create(tilesLayerHandle);
+    const tilesModel = await tilesPath.get(api);
+    // Both are required for anything to render (see key concepts, "Visibility").
+    tilesModel.visible = true;
+    tilesModel.sceneViews = { bits: 1 };
+    // Link to the data layer by its user-assigned numeric ID,
+    // NOT by its LayerHandle.
+    tilesModel.source = { vectorDataLayerId: VECTOR_DATA_LAYER_ID };
+    tilesModel.style = {
+        // Expose data attributes to the styling script by name.
+        attributes: [{ stylingName: "population", vectorDataAttrId: 2 }],
+        // The styling script is a mini-DSL. attr() reads attributes,
+        // prp() reads previously set properties, emit triggers a representation.
+        stylingScript: `
+            set "fill_color" = colorize("populationPalette", attr("population"));
+            emit 0;
+        `,
+        representations: [
+            {
+                id: 0,
+                sceneViews: { bits: 1 }, // each representation also needs its own bitset
+                flatOverlayPolygon: {
+                    color: {
+                        // `name` binds a styling script property; omit for a fixed color.
+                        defaultValue: { r: 0.2, g: 0.5, b: 0.9, a: 0.8 },
                     },
                 },
-            ],
-        },
-    });
+            },
+        ],
+    };
+    tilesPath.set(api, tilesModel);
 
     return { dataLayer: dataLayerHandle, tilesLayer: tilesLayerHandle };
 }

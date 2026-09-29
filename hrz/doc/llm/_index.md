@@ -35,6 +35,16 @@ path.myArray(n)                  // navigate to element n, then chain further
 // Sync variants: myArrayCountSync, addMyArraySync, removeMyArraySync
 ```
 
+**`set` resets omitted fields.** Setting a message writes *every* field of it: any field you leave out becomes its protobuf default (`0`, `false`, `""`, empty), even if that default is not a sensible value. When you only want to change some fields of a message, `get` the whole message, modify it, then `set` it back. (Or use more granular updates.) This applies to the layer root too: `createLayer` only allocates a layer of a given type (there is no model argument), so configure it afterwards with `get` → modify → `set` on its path builder, unless you set every field that matters.
+
+```ts
+const path = HrzApi.VectorTilesLayerPathBuilder.create(handle);
+const model = await path.get(api);
+model.visible = true;
+model.sceneViews = { bits: 1 };
+path.set(api, model);
+```
+
 **Granularity guidance** (two rules that sometimes conflict):
 - Touch as little as possible — the engine doesn't diff state; it tracks what path was touched. Touching a high-level path can trigger expensive reloads. For a frequently-changing single value (e.g. opacity), chain all the way down to that field.
 - Batch related fields — when setting several fields together, set their common parent once rather than making N separate calls.

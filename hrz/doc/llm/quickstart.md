@@ -44,6 +44,36 @@ Initialization order matters: backend init → `AsyncApi` instantiation → mess
 start → wait for `ViewerReadyMessage` before issuing any commands. See [key
 concepts](./index.md) for the full sequence and the message-queue polling requirement.
 
+## Creating and configuring a layer
+
+Creating a layer is **always two steps**: `createLayer({ name, type })` only allocates a
+layer (it takes no model) and returns a handle, which you then configure through
+`HrzApi.<Type>LayerPathBuilder.create(handle)`. A new layer holds default values everywhere
+(`visible: false`, `sceneViews.bits: 0`, ...), so it renders nothing until configured.
+
+`set` writes **every** field: omitted ones are reset to the protobuf default (`0`, `false`,
+`""`, empty), often not a sensible value. Set a whole model only when you fill in every
+field that matters; otherwise `get` the full model, modify it, then `set` it back:
+
+```ts
+const handle = await api.LayerService.createLayer({
+    name: "Buildings",
+    type: HrzProtocol.LayerType.VECTOR_TILES,
+});
+const path = HrzApi.VectorTilesLayerPathBuilder.create(handle);
+
+const model = await path.get(api); // full model with its real defaults
+model.visible = true;
+model.sceneViews = { bits: 1 };
+model.source = { vectorDataLayerId: 1 };
+path.set(api, model);
+```
+
+To change one field of an existing layer, chain down to it instead
+(`path.raster().blending().opacity().set(api, 0.5)`). Never `set` a partial model built with
+`HrzProtocol.<Type>Layer.create({...})` or an object literal on a fresh layer unless you mean
+to reset all other fields.
+
 ## Three things that silently break an integration if missed
 
 1. **Secure context required.** The page must be served over HTTPS with COOP and COEP

@@ -12,6 +12,10 @@
  * You can set the whole layer at once (as here) or use granular paths to update
  * individual fields later.
  *
+ * WARNING: set() writes every field; omitted ones are reset to the protobuf
+ * default (0, false, "", ...). The model below fills in all the fields that matter.
+ * If you only want to set some, get() the full model, modify it, then set() it back.
+ *
  * The "union/variant pattern": raster.provider has a `type` field that selects
  * which provider variant is active. Always set `type` AND the matching variant
  * field together (e.g. WMTS_RASTER_PROVIDER + `wmts: {...}`).
