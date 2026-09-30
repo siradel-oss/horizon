@@ -76,7 +76,7 @@ struct GeoPosition3
 /**
  * Geographic bounds, in radians.
  *
- * Can define an area straddling the antimeridian if East > West.
+ * Can define an area straddling the antimeridian if West > East.
  * Empty if South > North.
  * Zero-area bounds are not empty, as they can contain points.
  */
@@ -110,7 +110,7 @@ struct GeoBounds
  * Geographic bounds, in radians.
  * Heights in metres above the ellipsoid.
  *
- * Can define an area straddling the antimeridian if East > West.
+ * Can define an area straddling the antimeridian if West > East.
  * Empty if South > North or if min height > max height.
  * Zero-area bounds are not empty, as they can contain points.
  */

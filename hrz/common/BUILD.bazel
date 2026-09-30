@@ -157,6 +157,7 @@ cc_test(
         "tests/polygon_winding.cpp",
         "tests/quickhull.cpp",
         "tests/reprojection.cpp",
+        "tests/three_d_tiles.cpp",
         "tests/tile_coords.cpp",
         "tests/vector_data.cpp",
     ],
