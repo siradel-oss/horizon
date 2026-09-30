@@ -10,18 +10,26 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useRun } from "@/composables/useRun";
 import { useTests } from "@/composables/useTests";
-import { useReport } from "@/composables/useReport";
+import { needsReview, useReport } from "@/composables/useReport";
+import { useViewedTest } from "@/composables/useViewedTest";
 import { useImages } from "@/composables/useImages";
 import { callRpc } from "@/lib/rpc";
 
-const { filteredTests, selection, refresh: refreshTests } = useTests();
-const { refresh: refreshReport } = useReport();
+const { tests, filteredTests, selection, refresh: refreshTests } = useTests();
+const { refresh: refreshReport, resultFor } = useReport();
+const { viewedTestName } = useViewedTest();
 const { bumpReferenceVersion } = useImages();
-const { status, isRunning, start, cancel } = useRun();
+const { status, isRunning, error: runError, start, cancel } = useRun();
 
 const selectedNames = computed(() =>
     filteredTests.value.filter((t) => selection.has(t.name)).map((t) => t.name)
 );
+
+const runErrorSummary = computed(() => {
+    if (runError.value === null) return null;
+    const lines = runError.value.trimEnd().split("\n");
+    return lines[lines.length - 1]?.trim() || "Unknown error";
+});
 
 const progressPercent = computed(() => {
     if (!status.value || status.value.total === 0) return 0;
@@ -32,9 +40,21 @@ async function onProgress() {
     await Promise.all([refreshTests(), refreshReport()]);
 }
 
+let lastRunNames: Set<string> = new Set();
+
+function goToFirstFailure() {
+    const failure = tests.value.find(
+        (t) => lastRunNames.has(t.name) && needsReview(resultFor(t.name))
+    );
+    if (failure !== undefined) {
+        viewedTestName.value = failure.name;
+    }
+}
+
 async function run(showViewerWindow: boolean) {
     if (selectedNames.value.length === 0) return;
-    await start(selectedNames.value, showViewerWindow, onProgress);
+    lastRunNames = new Set(selectedNames.value);
+    await start(selectedNames.value, showViewerWindow, onProgress, goToFirstFailure);
 }
 
 const regenerating = ref(false);
@@ -100,6 +120,10 @@ async function regenerateReferences() {
                     : "Update reference images"
             }}
         </Button>
+
+        <p v-if="runErrorSummary" class="text-sm text-destructive" :title="runError ?? undefined">
+            Run failed: {{ runErrorSummary }}
+        </p>
 
         <p v-if="regenerateError" class="text-sm text-destructive">{{ regenerateError }}</p>
     </div>

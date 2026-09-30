@@ -7,9 +7,9 @@
 #include <lin_maths.h>
 
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
-#include <type_traits>
 
 namespace hrz
 {
@@ -99,10 +99,9 @@ inline T clamped_lerp(T start, T end, T t)
     return clamp(lerp(start, end, t), start, end);
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 constexpr bool is_power_of_two(T x)
 {
-    static_assert(std::is_unsigned_v<T>, "T must be an unsigned integral type");
     return (x != 0) && (x & (x - 1)) == 0;
 }
 
@@ -155,18 +154,16 @@ inline double round_to_power_of_two(double x)
     return std::pow(2.0, std::round(std::log2(x)));
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 inline T align_up_po2(T x, T align)
 {
-    static_assert(std::is_unsigned_v<T>, "T must be an unsigned integral type");
     assert(is_power_of_two(align));
     return (x + align - 1) & ~(align - 1);
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 inline T align_up_any(T x, T align)
 {
-    static_assert(std::is_unsigned_v<T>, "T must be an unsigned integral type");
     if (T mod = x % align; mod != 0)
     {
         return x + align - mod;

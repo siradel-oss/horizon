@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import threading
+import traceback
 import uuid
 from typing import final
 
@@ -21,6 +22,7 @@ class RunManager:
         self._test_names: list[str] = []
         self._run_ctx: core.TestExecutionContext | None = None
         self._thread: threading.Thread | None = None
+        self._error: str | None = None
 
     def is_running(self) -> bool:
         with self._lock:
@@ -51,6 +53,7 @@ class RunManager:
             self._completed = 0
             self._test_names = list(test_names)
             self._run_ctx = run_ctx
+            self._error = None
 
         self._thread = threading.Thread(
             target=lambda: self._worker(run_id, run_ctx, list(test_names))
@@ -67,6 +70,7 @@ class RunManager:
                 current_test=self._current_test,
                 completed=self._completed,
                 total=len(self._test_names),
+                error=self._error,
             )
 
     def cancel(self, run_id: str) -> bool:
@@ -88,6 +92,31 @@ class RunManager:
         return True
 
     def _worker(
+        self,
+        run_id: str,
+        ctx: core.TestExecutionContext,
+        test_names: list[str],
+    ):
+        error: str | None = None
+        try:
+            self._run_tests(run_id, ctx, test_names)
+        except Exception:
+            error = traceback.format_exc()
+            print(f"ERROR: test run failed:\n{error}")
+
+        with self._lock:
+            if run_id != self._run_id:
+                return
+            if error is not None:
+                self._state = schema.RunState.FAILED
+                self._error = error
+            else:
+                self._state = (
+                    schema.RunState.CANCELLED if ctx.terminate else schema.RunState.DONE
+                )
+            self._current_test = None
+
+    def _run_tests(
         self,
         run_id: str,
         ctx: core.TestExecutionContext,
@@ -122,10 +151,3 @@ class RunManager:
                 self._completed += 1
                 if ctx.terminate:
                     break
-
-        with self._lock:
-            if run_id == self._run_id:
-                self._state = (
-                    schema.RunState.CANCELLED if ctx.terminate else schema.RunState.DONE
-                )
-                self._current_test = None

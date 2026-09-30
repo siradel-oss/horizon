@@ -283,6 +283,9 @@
 
     select,
     input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
     input[type="color"] {
         @apply w-full rounded-md p-2
             outline outline-outline
@@ -300,6 +303,12 @@
 
     input[type="color"] {
         @apply h-10;
+    }
+
+    input[type="date"],
+    input[type="time"],
+    input[type="number"] {
+        @apply [color-scheme:dark];
     }
 
     label {

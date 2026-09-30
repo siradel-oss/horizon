@@ -44,6 +44,7 @@ class RunState(StrEnum):
     RUNNING = "running"
     DONE = "done"
     CANCELLED = "cancelled"
+    FAILED = "failed"
 
 
 class TestDefinition(Model):
@@ -192,6 +193,7 @@ class GetRunStatusResponse(Model):
     current_test: str | None = None
     completed: int
     total: int
+    error: str | None = None
 
 
 class CancelRunRequest(Model):

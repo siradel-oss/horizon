@@ -762,7 +762,7 @@ void add_scene_model_log_line_raw(Scene* scene, std::string_view line)
     auto& logs = scene->scene_model_logs;
 
     const double since_epoch = hrz::clock::CurrentFrameWallTime.s;
-    const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
+    const double millis = std::floor(lm::fract(since_epoch) * 1000.0);
     const int minutes = (int)std::floor(since_epoch / 60.0);
     const int seconds = (int)std::floor(since_epoch) - 60 * minutes;
 
@@ -1305,7 +1305,7 @@ void add_camera_notification_log_line(
     auto& logs = scene->camera_notification_logs;
 
     const double since_epoch = hrz::clock::CurrentFrameWallTime.s;
-    const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
+    const double millis = std::floor(lm::fract(since_epoch) * 1000.0);
     const int minutes = (int)(since_epoch / 60.0);
     const int seconds = (int)since_epoch - 60 * minutes;
 

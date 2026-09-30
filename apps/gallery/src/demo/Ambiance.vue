@@ -11,8 +11,9 @@ import { HrzApi } from "@siradel-oss/horizon-api";
 import { HrzProtocol } from "@siradel-oss/horizon-protocol";
 import { MessageHandler } from "@/utils/messages";
 import { applyDefaultOrthoBaseLayer, applySceneTemplate, getLayerByName } from "@/utils/scenes";
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { deepAssign } from "@/utils/utils";
+import Long from "long";
 import ColorButton from "@/component/ColorButton.vue";
 import ColorInput from "@/component/ColorInput.vue";
 
@@ -65,10 +66,9 @@ let DEFAULT_VALUE: HrzProtocol.AmbientSettings.$Properties = HrzProtocol.Ambient
         },
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_SIMULATED,
-            direction: {
-                mode: HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE,
+            solarDate: {
                 dayOfYear: 171,
-                localSolarTime: 15,
+                solarTime: 15,
             },
             staticColor: {
                 r: 1,
@@ -118,9 +118,8 @@ PRESETS["Realistic, clear day"] = {
         },
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_SIMULATED,
-            direction: {
-                mode: HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE,
-                localSolarTime: 12,
+            solarDate: {
+                solarTime: 12,
                 dayOfYear: 180,
             },
         },
@@ -161,9 +160,9 @@ PRESETS["Simple & readable"] = {
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
             staticColor: { r: 1, g: 1, b: 1, a: 1 },
-            direction: {
-                mode: HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME,
-                azimuth: 2.36,
+            angularDirection: {
+                cameraFrame: HrzProtocol.AngularDirection.Frame.FRAME_CAMERA_HEADING,
+                azimuth: 3.92,
                 altitude: 0.94,
             },
         },
@@ -204,8 +203,8 @@ PRESETS["Spotlight"] = {
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
             staticColor: { r: 1, g: 1, b: 1, a: 1 },
-            direction: {
-                mode: HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME,
+            angularDirection: {
+                cameraFrame: HrzProtocol.AngularDirection.Frame.FRAME_CAMERA_HEADING,
                 azimuth: 3.14,
                 altitude: 0.6,
             },
@@ -253,8 +252,8 @@ PRESETS["Foggy day"] = {
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
             staticColor: { r: 1, g: 1, b: 1, a: 1 },
-            direction: {
-                mode: HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME,
+            angularDirection: {
+                cameraFrame: HrzProtocol.AngularDirection.Frame.FRAME_ENU,
                 azimuth: 0,
                 altitude: 0.6,
             },
@@ -311,9 +310,8 @@ PRESETS["Electric sheep"] = {
         sun: {
             mode: HrzProtocol.SunLightingMode.SUN_LIGHTING_STATIC,
             staticColor: { r: 0.87, g: 0.75, b: 0.51, a: 1 },
-            direction: {
-                mode: HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE,
-                localSolarTime: 17.07,
+            solarDate: {
+                solarTime: 17.07,
                 dayOfYear: 180,
             },
         },
@@ -354,6 +352,141 @@ let buildingsLighting = reactive<HrzProtocol.LightingSettings.$Properties>({
     enableLighting: true,
     receiveShadows: true,
 });
+
+type SunDirection = "solarDate" | "calendarDate" | "unixTimeMs" | "angularDirection";
+
+function sunDirectionOf(sun: HrzProtocol.SunSettings.$Properties | null | undefined): SunDirection {
+    if (sun?.calendarDate) return "calendarDate";
+    if (sun?.unixTimeMs != null) return "unixTimeMs";
+    if (sun?.angularDirection) return "angularDirection";
+    return "solarDate";
+}
+
+function keepOnlySunDirection(sun: HrzProtocol.SunSettings.$Properties, keep: SunDirection) {
+    if (keep !== "solarDate") delete sun.solarDate;
+    if (keep !== "calendarDate") delete sun.calendarDate;
+    if (keep !== "unixTimeMs") delete sun.unixTimeMs;
+    if (keep !== "angularDirection") delete sun.angularDirection;
+}
+
+const sunDirection = computed<SunDirection>({
+    get: () => sunDirectionOf(settings.sun),
+    set: (direction) => {
+        const sun = settings.sun;
+        if (!sun) return;
+
+        keepOnlySunDirection(sun, direction);
+
+        switch (direction) {
+            case "solarDate":
+                sun.solarDate ??= { solarTime: 15, dayOfYear: 171 };
+                break;
+            case "calendarDate":
+                sun.calendarDate ??= { year: 2025, month: 6, day: 21, time: 15, utcOffset: 2 };
+                break;
+            case "unixTimeMs":
+                // 2025-06-21 13:00 UTC, matching the other defaults.
+                sun.unixTimeMs ??= 1750510800000;
+                break;
+            case "angularDirection":
+                sun.angularDirection ??= {
+                    cameraFrame: HrzProtocol.AngularDirection.Frame.FRAME_ENU,
+                    azimuth: 3.14,
+                    altitude: 0.6,
+                };
+                break;
+        }
+    },
+});
+
+// Either a frame attached to the camera, or a geographic position.
+type AngularReference = HrzProtocol.AngularDirection.Frame | "geographicPosition";
+
+function angularReferenceOf(
+    direction: HrzProtocol.AngularDirection.$Properties | null | undefined
+): AngularReference {
+    if (direction?.geographicPosition) return "geographicPosition";
+    return direction?.cameraFrame ?? HrzProtocol.AngularDirection.Frame.FRAME_ENU;
+}
+
+function keepOnlyAngularReference(
+    direction: HrzProtocol.AngularDirection.$Properties,
+    keep: AngularReference
+) {
+    if (keep === "geographicPosition") {
+        delete direction.cameraFrame;
+    } else {
+        delete direction.geographicPosition;
+    }
+}
+
+const angularReference = computed<AngularReference>({
+    get: () => angularReferenceOf(settings.sun?.angularDirection),
+    set: (reference) => {
+        const direction = settings.sun?.angularDirection;
+        if (!direction) return;
+
+        keepOnlyAngularReference(direction, reference);
+
+        if (reference === "geographicPosition") {
+            direction.geographicPosition ??= { latitude: 48.11, longitude: -1.68 };
+        } else {
+            direction.cameraFrame = reference;
+        }
+    },
+});
+
+type TimeOfYear = "solarLongitude" | "dayOfYear";
+type DateWithTimeOfYear = { solarLongitude?: number | null; dayOfYear?: number | null };
+
+function timeOfYearOf(date: DateWithTimeOfYear | null | undefined): TimeOfYear {
+    return date?.solarLongitude != null ? "solarLongitude" : "dayOfYear";
+}
+
+function keepOnlyTimeOfYear(date: DateWithTimeOfYear, keep: TimeOfYear) {
+    if (keep !== "solarLongitude") delete date.solarLongitude;
+    if (keep !== "dayOfYear") delete date.dayOfYear;
+}
+
+function useTimeOfYear<T extends DateWithTimeOfYear>(date: () => T | null | undefined) {
+    return computed<TimeOfYear>({
+        get: () => timeOfYearOf(date()),
+        set: (choice) => {
+            const value = date();
+            if (!value) return;
+
+            keepOnlyTimeOfYear(value, choice);
+
+            if (choice === "solarLongitude") {
+                value.solarLongitude ??= 90;
+            } else {
+                value.dayOfYear ??= 171;
+            }
+        },
+    });
+}
+
+const solarDateTimeOfYear = useTimeOfYear(() => settings.sun?.solarDate);
+
+function formatTimeOfDay(hours: number): string {
+    const totalMinutes = Math.round(hours * 60);
+    const h = Math.floor(totalMinutes / 60) % 24;
+    const m = totalMinutes % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+}
+
+const unixTimeLabel = computed(() => {
+    const value = settings.sun?.unixTimeMs;
+    if (value == null) return "";
+
+    const unixTimeMs = Long.isLong(value) ? value.toNumber() : value;
+
+    // The Date constructor accepts up to 8.64e15 milliseconds either way.
+    if (!Number.isFinite(unixTimeMs) || Math.abs(unixTimeMs) > 8.64e15) return "";
+
+    return new Date(unixTimeMs).toISOString().replace("T", " ").slice(0, 16) + " UTC";
+});
+
 let api: HrzApi.AsyncApi | undefined;
 let buildingsLayer: HrzProtocol.LayerHandle | undefined;
 
@@ -382,9 +515,31 @@ watch(buildingsLighting, async () => {
     }
 });
 
+function applyPreset(name: string) {
+    const preset = PRESETS[name].settings;
+    deepAssign(copySettingsWithDefaultValues(preset), settings);
+
+    // `deepAssign` only ever merges, so the direction of the previous preset, and the
+    // one in DEFAULT_VALUE, would otherwise stay set next to the one the preset asks
+    // for. The nested time of year and angular reference have exactly the same problem.
+    if (settings.sun) {
+        keepOnlySunDirection(settings.sun, sunDirectionOf(preset.sun));
+    }
+    if (settings.sun?.solarDate) {
+        settings.sun.solarDate.atPrimeMeridian = !!preset.sun?.solarDate?.atPrimeMeridian;
+        keepOnlyTimeOfYear(settings.sun.solarDate, timeOfYearOf(preset.sun?.solarDate));
+    }
+    if (settings.sun?.angularDirection) {
+        keepOnlyAngularReference(
+            settings.sun.angularDirection,
+            angularReferenceOf(preset.sun?.angularDirection)
+        );
+    }
+}
+
 watch(selectedPreset, async () => {
     if (selectedPreset.value in PRESETS) {
-        deepAssign(copySettingsWithDefaultValues(PRESETS[selectedPreset.value].settings), settings);
+        applyPreset(selectedPreset.value);
     }
 });
 
@@ -396,7 +551,7 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler: MessageHandler)
 
     buildingsLayer = await getLayerByName(api, "Rennes buildings");
 
-    deepAssign(copySettingsWithDefaultValues(PRESETS[selectedPreset.value].settings), settings);
+    applyPreset(selectedPreset.value);
 }
 </script>
 <template>
@@ -620,118 +775,227 @@ async function onHorizonReady(api_: HrzApi.AsyncApi, msgHandler: MessageHandler)
                     <hr />
                     <h3>Sun direction</h3>
                     <p>
-                        <select
-                            v-if="settings.sun?.direction"
-                            v-model.number="settings.sun.direction.mode"
-                        >
-                            <option
-                                :value="HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE"
-                            >
-                                Relative to date
-                            </option>
-                            <option
-                                :value="
-                                    HrzProtocol.SunDirectionMode
-                                        .SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME
-                                "
-                            >
-                                Relative to tangential frame
-                            </option>
-                            <option
-                                :value="
-                                    HrzProtocol.SunDirectionMode
-                                        .SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME
-                                "
-                            >
-                                Relative to cardinal frame
-                            </option>
+                        <select v-model="sunDirection">
+                            <option value="solarDate">Solar date</option>
+                            <option value="calendarDate">Calendar date</option>
+                            <option value="unixTimeMs">Unix time</option>
+                            <option value="angularDirection">Angular direction</option>
                         </select>
                     </p>
-                    <p
-                        v-if="
-                            settings.sun?.direction?.mode !==
-                            HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE
-                        "
-                    >
-                        <label
-                            >Azimuth ({{
-                                $filters.formatNumber(settings.sun?.direction?.azimuth || 0, 2)
-                            }}
-                            rad)</label
-                        >
-                        <input
-                            type="range"
-                            min="0"
-                            max="6.2831"
-                            step="any"
-                            v-if="settings.sun?.direction"
-                            v-model.number="settings.sun.direction.azimuth"
-                        />
+
+                    <template v-if="settings.sun?.solarDate">
+                        <p>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    v-model="settings.sun.solarDate.atPrimeMeridian"
+                                />
+                                At the prime meridian
+                            </label>
+                        </p>
+                        <p>
+                            <label
+                                >{{
+                                    settings.sun.solarDate.atPrimeMeridian
+                                        ? "Prime meridian"
+                                        : "Local"
+                                }}
+                                solar time ({{
+                                    formatTimeOfDay(settings.sun?.solarDate?.solarTime || 0)
+                                }})</label
+                            >
+                            <input
+                                type="range"
+                                min="0"
+                                max="24"
+                                step="any"
+                                v-model.number="settings.sun.solarDate.solarTime"
+                            />
+                        </p>
+                        <p>
+                            <select v-model="solarDateTimeOfYear">
+                                <option value="dayOfYear">Day of year</option>
+                                <option value="solarLongitude">Solar longitude</option>
+                            </select>
+                        </p>
+                        <p v-if="solarDateTimeOfYear == 'dayOfYear'">
+                            <label
+                                >Day of year ({{
+                                    $filters.formatNumber(
+                                        settings.sun?.solarDate?.dayOfYear || 0,
+                                        2
+                                    )
+                                }})</label
+                            >
+                            <input
+                                type="range"
+                                min="0"
+                                max="365"
+                                step="any"
+                                v-model.number="settings.sun.solarDate.dayOfYear"
+                            />
+                        </p>
+                        <p v-if="solarDateTimeOfYear == 'solarLongitude'">
+                            <label
+                                >Solar longitude ({{
+                                    $filters.formatNumber(
+                                        settings.sun?.solarDate?.solarLongitude || 0,
+                                        2
+                                    )
+                                }}°)</label
+                            >
+                            <input
+                                type="range"
+                                min="0"
+                                max="360"
+                                step="any"
+                                v-model.number="settings.sun.solarDate.solarLongitude"
+                            />
+                        </p>
+                    </template>
+
+                    <template v-if="settings.sun?.calendarDate">
+                        <p>
+                            <label>Year</label>
+                            <input
+                                type="number"
+                                step="1"
+                                v-model.number="settings.sun.calendarDate.year"
+                            />
+                        </p>
+                        <p>
+                            <label>Month (1-12)</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="12"
+                                step="1"
+                                v-model.number="settings.sun.calendarDate.month"
+                            />
+                        </p>
+                        <p>
+                            <label>Day (1-31)</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="31"
+                                step="1"
+                                v-model.number="settings.sun.calendarDate.day"
+                            />
+                        </p>
+                        <p>
+                            <label
+                                >Time ({{
+                                    formatTimeOfDay(settings.sun?.calendarDate?.time || 0)
+                                }})</label
+                            >
+                            <input
+                                type="range"
+                                min="0"
+                                max="24"
+                                step="any"
+                                v-model.number="settings.sun.calendarDate.time"
+                            />
+                        </p>
+                        <p>
+                            <label>UTC offset (hours)</label>
+                            <input
+                                type="number"
+                                min="-12"
+                                max="14"
+                                step="any"
+                                v-model.number="settings.sun.calendarDate.utcOffset"
+                            />
+                        </p>
+                    </template>
+
+                    <p v-if="settings.sun?.unixTimeMs != null">
+                        <label>Unix time in ms ({{ unixTimeLabel }})</label>
+                        <input type="number" step="1" v-model.number="settings.sun.unixTimeMs" />
                     </p>
-                    <p
-                        v-if="
-                            settings.sun?.direction?.mode !==
-                            HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE
-                        "
-                    >
-                        <label
-                            >Altitude ({{
-                                $filters.formatNumber(settings.sun?.direction?.altitude || 0, 2)
-                            }}
-                            rad)</label
-                        >
-                        <input
-                            type="range"
-                            min="-1.5707"
-                            max="1.5707"
-                            step="any"
-                            v-if="settings.sun?.direction"
-                            v-model.number="settings.sun.direction.altitude"
-                        />
-                    </p>
-                    <p
-                        v-if="
-                            settings.sun?.direction?.mode ===
-                            HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE
-                        "
-                    >
-                        <label
-                            >Day of year ({{
-                                $filters.formatNumber(settings.sun?.direction?.dayOfYear || 0, 2)
-                            }})</label
-                        >
-                        <input
-                            type="range"
-                            min="0"
-                            max="365"
-                            step="any"
-                            v-if="settings.sun?.direction"
-                            v-model.number="settings.sun.direction.dayOfYear"
-                        />
-                    </p>
-                    <p
-                        v-if="
-                            settings.sun?.direction?.mode ===
-                            HrzProtocol.SunDirectionMode.SUN_DIRECTION_RELATIVE_TO_DATE
-                        "
-                    >
-                        <label
-                            >Local solar time ({{
-                                $filters.formatNumber(
-                                    settings.sun?.direction?.localSolarTime || 0,
-                                    2
-                                )
-                            }})</label
-                        >
-                        <input
-                            type="range"
-                            min="0"
-                            max="24"
-                            step="any"
-                            v-if="settings.sun?.direction"
-                            v-model.number="settings.sun.direction.localSolarTime"
-                        />
-                    </p>
+
+                    <template v-if="settings.sun?.angularDirection">
+                        <p>
+                            <select v-model="angularReference">
+                                <option :value="HrzProtocol.AngularDirection.Frame.FRAME_ENU">
+                                    Reference: north
+                                </option>
+                                <option
+                                    :value="HrzProtocol.AngularDirection.Frame.FRAME_CAMERA_HEADING"
+                                >
+                                    Reference: camera heading
+                                </option>
+                                <option :value="HrzProtocol.AngularDirection.Frame.FRAME_CAMERA">
+                                    Reference: camera
+                                </option>
+                                <option value="geographicPosition">
+                                    Reference: geographic position
+                                </option>
+                            </select>
+                        </p>
+                        <template v-if="settings.sun.angularDirection.geographicPosition">
+                            <p>
+                                <label>Reference latitude (°)</label>
+                                <input
+                                    type="number"
+                                    min="-90"
+                                    max="90"
+                                    step="any"
+                                    v-model.number="
+                                        settings.sun.angularDirection.geographicPosition.latitude
+                                    "
+                                />
+                            </p>
+                            <p>
+                                <label>Reference longitude (°)</label>
+                                <input
+                                    type="number"
+                                    min="-180"
+                                    max="180"
+                                    step="any"
+                                    v-model.number="
+                                        settings.sun.angularDirection.geographicPosition.longitude
+                                    "
+                                />
+                            </p>
+                        </template>
+                        <p>
+                            <label
+                                >Azimuth ({{
+                                    $filters.formatNumber(
+                                        settings.sun?.angularDirection?.azimuth || 0,
+                                        2
+                                    )
+                                }}
+                                rad)</label
+                            >
+                            <input
+                                type="range"
+                                min="0"
+                                max="6.2831"
+                                step="any"
+                                v-model.number="settings.sun.angularDirection.azimuth"
+                            />
+                        </p>
+                        <p>
+                            <label
+                                >Altitude ({{
+                                    $filters.formatNumber(
+                                        settings.sun?.angularDirection?.altitude || 0,
+                                        2
+                                    )
+                                }}
+                                rad)</label
+                            >
+                            <input
+                                type="range"
+                                min="-1.5707"
+                                max="1.5707"
+                                step="any"
+                                v-model.number="settings.sun.angularDirection.altitude"
+                            />
+                        </p>
+                    </template>
                     <hr />
                     <h3>Sky</h3>
                     <p>

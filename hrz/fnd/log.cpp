@@ -13,6 +13,8 @@
 
 #include "hrz/fnd/time.h"
 
+#include <lin_maths.h>
+
 namespace
 {
 
@@ -125,7 +127,7 @@ void message(Severity severity, std::string_view message, const std::source_loca
     const std::string_view file = location.file_name();
 
     const double since_epoch = hrz::now_ms() / 1000.0;
-    const double millis = std::floor((since_epoch - std::floor(since_epoch)) * 1000.0);
+    const double millis = std::floor(lm::fract(since_epoch) * 1000.0);
     const int minutes = (int)std::floor(since_epoch / 60.0);
     const int seconds = (int)std::floor(since_epoch) - 60 * minutes;
 

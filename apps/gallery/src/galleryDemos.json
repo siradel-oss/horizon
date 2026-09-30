@@ -29,6 +29,11 @@
         "tags": ["mapbox", "integration", "vector"],
         "thumbnailFile": "mapbox.webp"
     },
+    "sunPosition": {
+        "title": "Sun position",
+        "tags": ["ambiance", "animation"],
+        "thumbnailFile": "sun_position.webp"
+    },
     "ambiance": {
         "title": "Ambiance",
         "tags": ["ambiance"],

@@ -14,7 +14,7 @@ import { LoaderCircle } from "@lucide/vue";
 import { callRpc } from "@/lib/rpc";
 import { useImages } from "@/composables/useImages";
 import { ErrorType, TestType } from "@/proto/schema";
-import { testStatus, useReport } from "@/composables/useReport";
+import { needsReview, testStatus, useReport } from "@/composables/useReport";
 import { useTests } from "@/composables/useTests";
 import { useViewedTest } from "@/composables/useViewedTest";
 import { useEditDialog } from "@/composables/useEditDialog";
@@ -92,14 +92,13 @@ function openLightbox(kind: ImageKind) {
     lightboxOpen.value = true;
 }
 
-const reviewQueue = computed(() =>
-    tests.value
+const reviewQueue = computed(() => {
+    const viewedIndex = tests.value.findIndex((t) => t.name === props.testName);
+    return tests.value
+        .slice(viewedIndex + 1)
         .map((t) => t.name)
-        .filter((name) => {
-            const r = resultFor(name);
-            return r && !r.success && r.errorType !== ErrorType.Aborted;
-        })
-);
+        .filter((name) => needsReview(resultFor(name)));
+});
 
 const regenerating = ref(false);
 const regenerateError = ref<string | null>(null);
@@ -120,9 +119,9 @@ async function regenerateReference() {
 }
 
 function goToNextInQueue() {
-    const queue = reviewQueue.value.filter((n) => n !== props.testName);
-    if (queue.length > 0) {
-        viewedTestName.value = queue[0];
+    const next = reviewQueue.value[0];
+    if (next !== undefined) {
+        viewedTestName.value = next;
     }
 }
 </script>
@@ -160,10 +159,6 @@ function goToNextInQueue() {
                 </template>
             </div>
 
-            <p v-if="errorMessageForType" class="text-sm text-destructive">
-                {{ errorMessageForType }}
-            </p>
-
             <div v-if="hasCaptureAndDiff" class="grid grid-cols-2 gap-4">
                 <div
                     class="flex flex-col gap-2 cursor-zoom-in"
@@ -194,12 +189,26 @@ function goToNextInQueue() {
                 </div>
             </div>
             <div v-else class="grid grid-cols-2 gap-4">
-                <img
-                    :src="imageUrl(testInfo.name, 'reference')"
-                    alt="Reference"
-                    class="cursor-zoom-in rounded border object-contain"
-                    @click="openLightbox('reference')"
-                />
+                <div class="flex flex-col gap-2 cursor-zoom-in" @click="openLightbox('reference')">
+                    <img
+                        :src="imageUrl(testInfo.name, 'reference')"
+                        alt="Reference"
+                        class="rounded border object-contain"
+                    />
+                    <p class="text-center text-xs text-muted-foreground">Reference</p>
+                </div>
+                <!-- The error takes the capture's place, so it sits next to the reference
+                     the way the capture and the diff do. -->
+                <div v-if="errorMessageForType" class="flex flex-col gap-2">
+                    <div
+                        class="flex aspect-square items-center justify-center rounded border border-dashed bg-muted/50 p-4"
+                    >
+                        <p class="text-center text-sm text-destructive">
+                            {{ errorMessageForType }}
+                        </p>
+                    </div>
+                    <p class="text-center text-xs text-muted-foreground">Error</p>
+                </div>
             </div>
 
             <ImageLightbox
@@ -231,7 +240,11 @@ function goToNextInQueue() {
                     {{ regenerating ? "Updating…" : "Update reference image" }}
                 </Button>
                 <Button variant="outline" @click="openEdit(testInfo.name)">Edit</Button>
-                <Button variant="ghost" @click="goToNextInQueue">
+                <Button
+                    variant="ghost"
+                    :disabled="reviewQueue.length === 0"
+                    @click="goToNextInQueue"
+                >
                     Review next ({{ reviewQueue.length }})
                 </Button>
             </div>

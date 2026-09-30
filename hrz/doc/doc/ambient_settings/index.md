@@ -14,21 +14,67 @@ The ambient settings are part of the scene view settings. They dictate the globa
 
 For each layer, and globally, lighting and shadows can be enabled or disabled. When those flags are disabled globally (in the [AmbientSettings]($proto) of a [SceneViewSettings]($proto)), they are disabled on all scene elements.
 
-* The lighting flag controls whether a scene element receives any lighting or appears "full bright".
+* The lighting flag controls whether a scene element receives any lighting or appears “fully bright”.
 * The cast shadows flag controls whether a scene element casts shadows on other elements and itself. This can be disabled for small elements that barely contribute to shadows to increase performance.
 * The receive shadows flag controls whether shadows are rendered on a scene element, as part of its lighting process.
 
-In Horizon, lighting is comprised of an ambient component and a sun component. Both have configuration options in [AmbientLightingSettings]($proto) and [SunSettings]($proto).
+In Horizon, lighting comprises an ambient component and a Sun component. Both have configuration options in [AmbientLightingSettings]($proto) and [SunSettings]($proto).
+
+### Ambient lighting
 
 Ambient lighting affects the whole scene, including the parts that are in shadows of the sun light. It can be realistically computed based on the appearance of the sky, or set to a custom static color.
 
-Sun lighting is dependent on the position of the sun, which can be set in one of three ways in [SunDirection]($proto):
+### Sun lighting
 
-* It can be given by a date and a time. The date is the number of the day in the year (0-364, leap years are not handled since a single day offset barely changes anything). The time is the solar time between 0 and 24 at the current camera position: at noon the sun is at its highest.
-* It can be given by an altitude angle and an azimuthal angle relative to North. This makes it easy to create precise and deliberate lighting environment, without being restricted by astronomical rules.
-* It can be given by an altitude angle and an azimuthal angle relative to the direction of the camera. This makes it so that sunlight is applied equally to the elements on screen, no matter where the camera is facing.
+#### Sun direction
 
-Just like ambient lighting, the color of sun lighting can be computed using the simulated sky, or be set to a custom color.
+Sun lighting is dependent on the position of the Sun in the sky, which can be set in a number of ways in the `direction` oneof. It is possible to choose how the Sun is positioned along two main axes:
+
+* Does the Sun follow the camera, or it is fixed relative to the Earth.
+* Is the Sun constrained to a realistic position, or can it be placed at any angle.
+
+|                    | Sun follows camera | Sun is fixed   |
+|:-------------------|:------------------:|:--------------:|
+| Realistic position | `solar_date`       | `solar_date` with `at_prime_meridian`, `calendar_date`, `unix_time_ms` |
+| Free position      | `angular_direction` with `camera_frame` | `angular_direction` with `geographic_position` |
+
+{{< gallery-card "sunPosition" >}}
+
+##### `solar_date`
+
+This mode allows setting the solar time, through a time in the day and a day in a theoretical year (or a position of the Earth along its orbit around the Sun).
+
+By default, the time is the local solar time at the camera. The Sun keeps its position in the sky as the user moves the camera westward or eastward, but it gets higher or lower as the user moves toward or away from the poles.
+
+When `at_prime_meridian` is set, the time is specifically the solar time at longitude 0° (i.e. [UTC](https://en.wikipedia.org/wiki/Coordinated_Universal_Time)). The Sun is then fixed with respect to the Earth and changes position in the sky when the user moves the camera.
+
+##### `calendar_date`
+
+Same as `solar_date` with `at_prime_meridian` set, but the date is a Gregorian calendar date and the time can  offset to the UTC time, usually derived from the time zone.
+
+##### `unix_time_ms`
+
+Same as `solar_date` with `at_prime_meridian` set, but the date and time are expressed through a single integer, in the form of a [Unix time](https://en.wikipedia.org/wiki/Unix_time) value in milliseconds. Because this setting is a single integer, with no discontinuities, it is useful when animating or interpolating time.
+
+##### `angular_direction`
+
+The Sun’s position in the sky is directly set with azimuth and altitude angle values. The `reference` oneof picks the frame in which the two angles are measured.
+
+When it is `camera_frame`, the angles are always relative to the camera’s position, so the Sun appears fixed on the sky as the camera moves. The frame is one of:
+
+* `FRAME_ENU`: the azimuth is measured from the North and the altitude from the local horizontal plane. This is also the frame used when `reference` is not set.
+* `FRAME_CAMERA_HEADING`: the azimuth is measured from the direction the camera looks at, projected onto the local horizontal plane, and the altitude still from that plane. The camera can rotate to change its heading and the Sun follows it, keeping its position on screen, but tilting the camera up or down does not affect the Sun’s position in the sky.
+* `FRAME_CAMERA`: both angles are measured in the camera’s own basis, so the Sun keeps its exact position on screen when the camera moves or rotates.
+
+This makes it easy to create a consistent precise and deliberate lighting environment, without being restricted by astronomical rules, and wherever the camera is located.
+
+When it is `geographic_position`, the azimuth and altitude angles are measured from that location on Earth, so the Sun changes position in the sky when the user moves the camera.
+
+#### Sun colour
+
+Just like ambient lighting, the colour of sun lighting can be computed using the simulated sky, or be set to a custom colour.
+
+### Other lighting settings
 
 The balance between both components can be adjusted in the [AmbientSettings]($proto) using the `sun_ambient_balance`: a balance of `0.5` brings equal ambient and sun lighting, `0.0` disables sun lighting completely, and `1.0` disables ambient lighting. This parameter is useful for adjusting the contrast of a scene.
 

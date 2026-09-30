@@ -7,6 +7,7 @@
 #include "hrz/common/geo.h"
 #include "hrz/common/monitoring_defs.h"
 #include "hrz/common/profiling.h"
+#include "hrz/common/proto_geo.h"
 #include "hrz/core/download_buffer_pool.h"
 #include "hrz/core/global_flags.h"
 #include "hrz/core/render/common_ubos.h"
@@ -16,9 +17,11 @@
 #include "hrz/core/render/timed_render_pass.h"
 #include "hrz/core/shaders/collection.h"
 #include "hrz/fnd/mem.h"
+#include "hrz/fnd/meta.h"
 #include "hrz/protocol/path_builder/scene/view_settings.h"
 
 #include <deque>
+#include <variant>
 
 namespace
 {
@@ -1464,6 +1467,13 @@ namespace hrz
 
 struct SkySystem
 {
+    using SunDirectionParams = std::variant<
+        hrz_proto::SolarDate,
+        hrz_proto::CalendarDate,
+        int64_t,
+        hrz_proto::AngularDirection
+    >;
+
     render::DoubleBufferedUniformBuffer<UboData> ubo;
     lm::dvec3 ecef_sun_direction;
 
@@ -1476,12 +1486,7 @@ struct SkySystem
 
     float atmosphere_attenuation = 0.0F;
     float cloudiness = 0.5F;
-    hrz_proto::SunDirectionMode sun_direction_mode =
-        hrz_proto::SunDirectionMode::SUN_DIRECTION_RELATIVE_TO_DATE;
-    float solar_time = 0.0F;
-    float day = 0.0F;
-    float sun_azimuth = 0.0F;
-    float sun_altitude = 0.0;
+    SunDirectionParams sun_direction_params = hrz_proto::SolarDate();
     float sun_ambient_balance = 0.5F;
     float lighting_strength = 1.0F;
     float wrap_lighting = 0.0F;
@@ -1632,16 +1637,32 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
                             .ambient()
                             .get();
 
-        sky->day = settings.sun().direction().day_of_year();
-        sky->sun_direction_mode = settings.sun().direction().mode();
-        sky->solar_time = settings.sun().direction().local_solar_time();
+        switch (settings.sun().direction_case())
+        {
+            case hrz_proto::SunSettings::DIRECTION_NOT_SET:
+            case hrz_proto::SunSettings::kSolarDate:
+                sky->sun_direction_params = settings.sun().solar_date();
+                break;
+            case hrz_proto::SunSettings::kCalendarDate:
+                sky->sun_direction_params = settings.sun().calendar_date();
+                break;
+            case hrz_proto::SunSettings::kUnixTimeMs:
+                sky->sun_direction_params = settings.sun().unix_time_ms();
+                break;
+            case hrz_proto::SunSettings::kAngularDirection:
+                sky->sun_direction_params = settings.sun().angular_direction();
+                break;
+            default:
+                assert(false && "Unhandled case");
+                sky->sun_direction_params = hrz_proto::SolarDate();
+                break;
+        }
+
         sky->sun_ambient_balance = settings.sun_ambient_balance();
         sky->lighting_strength = settings.lighting_strength();
         sky->wrap_lighting = settings.wrap_lighting();
         sky->sun_color_linear = hrz::srgb_to_linear(
             hrz::convert_proto_color_to_float(settings.sun().static_color()).rgb);
-        sky->sun_azimuth = settings.sun().direction().azimuth();
-        sky->sun_altitude = settings.sun().direction().altitude();
         sky->ambient_color_linear = hrz::srgb_to_linear(
             hrz::convert_proto_color_to_float(settings.ambient_lighting().static_color()).rgb);
         sky->underground_color_linear = hrz::premultiply_alpha(
@@ -1895,106 +1916,322 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         render_request.request_visual_render();
     }
 
-    float new_sun_horizon_angle = 0;
-    float new_sun_azimuth = 0;
+    // In all computations below, we completely ignore axial precession, which is
+    // the rotation of the polar axis in the frame of the solar system.
+    // It happens slowly enough to ignore it for our usecases, and pretend that the
+    // solstices happen at fixed times.
 
-    switch (sky->sun_direction_mode)
+    // IAU 2006 obliquity of the ecliptic at J2000: 84381.406" = 23° 26' 21.406", from the
+    // IERS conventions (2010), technical note 36, chapter 5.
+    //
+    // See https://syrte.obspm.fr/iauWGnfa/NFA_Glossary.html
+    static const double EARTH_AXIAL_TILT = 0.40909260060058288966; // 23.43927944°
+
+    // Eccentricity of the orbit of the Earth around the Sun, and the ecliptic longitude
+    // of the Sun at perihelion (J2000). As with the axial tilt, we ignore the slow
+    // precession of the apsides and treat both as constants.
+    //
+    // Both come from the Keplerian elements of the Earth-Moon barycentre at J2000 listed
+    // by JPL, which give ϖ = 102.93768193° for the perihelion of the Earth, hence 180°
+    // away from the one of the Sun.
+    //
+    // See https://ssd.jpl.nasa.gov/planets/approx_pos.html
+    static const double EARTH_ORBIT_ECCENTRICITY = 0.01671123;
+    static const double SUN_LONGITUDE_AT_PERIHELION = 4.93819412763896448126; // 282.93768°
+
+    // The true ecliptic longitude of the Sun does not advance uniformly over the year,
+    // because the Earth moves faster near perihelion. Mean solar time, on the other hand,
+    // is tied to a fictitious sun that does advance uniformly, i.e. to the mean
+    // longitude. Going from the true to the mean longitude is the easy direction of
+    // Kepler's equation, and needs no iteration:
+    //   ν = λ - ϖ                                            true anomaly
+    //   E = 2 * atan(sqrt((1 - e) / (1 + e)) * tan(ν / 2))   eccentric anomaly
+    //   M = E - e * sin(E)                                   mean anomaly
+    //   L = M + ϖ                                            mean longitude
+    //
+    // The two middle steps are equations 2.3.17c and 9.6.5 of Tatum, Celestial Mechanics,
+    // section 9.5. The first and the last one are the definitions of the true and of the
+    // mean longitude, which are the true and the mean anomaly counted from the equinox
+    // rather than from the perihelion. JPL walks the same chain the other way around, in
+    // steps 2 and 3 of the algorithm at the link given with the constants above.
+    //
+    // See https://phys.libretexts.org/@go/page/6845
+    //     https://en.wikipedia.org/wiki/True_longitude
+    //     https://en.wikipedia.org/wiki/Mean_longitude
+    auto mean_solar_longitude = [](double true_longitude)
     {
-        case hrz_proto::SunDirectionMode::SUN_DIRECTION_RELATIVE_TO_DATE:
+        double true_anomaly = true_longitude - SUN_LONGITUDE_AT_PERIHELION;
+        double eccentric_anomaly = 2.0
+            * std::atan2(std::sqrt(1.0 - EARTH_ORBIT_ECCENTRICITY) * std::sin(true_anomaly / 2.0),
+                         std::sqrt(1.0 + EARTH_ORBIT_ECCENTRICITY) * std::cos(true_anomaly / 2.0));
+
+        return eccentric_anomaly - EARTH_ORBIT_ECCENTRICITY * std::sin(eccentric_anomaly)
+            + SUN_LONGITUDE_AT_PERIHELION;
+    };
+
+    // The other way around. This is the hard direction of Kepler's equation, but the
+    // equation of center series converges quickly at such a small eccentricity, so we
+    // don't need to iterate either. Each order in e is worth about e² = 1 / 3600 of the
+    // previous one, so the fourth order terms we drop cost two hundredths of an arcsecond
+    // at this eccentricity.
+    //
+    // See Moulton, An Introduction to Celestial Mechanics (1914), pages 171 and 172
+    //     https://archive.org/details/anintroductiont04moulgoog
+    //     https://en.wikipedia.org/wiki/Equation_of_the_center
+    auto true_solar_longitude = [](double mean_longitude)
+    {
+        double mean_anomaly = mean_longitude - SUN_LONGITUDE_AT_PERIHELION;
+        double e = EARTH_ORBIT_ECCENTRICITY;
+        double e2 = e * e;
+        double e3 = e2 * e;
+
+        // ν - M, to the third order in e, which leaves less than a twentieth of an
+        // arcsecond of error.
+        double equation_of_center = (2.0 * e - e3 / 4.0) * std::sin(mean_anomaly)
+            + 1.25 * e2 * std::sin(2.0 * mean_anomaly)
+            + (13.0 / 12.0) * e3 * std::sin(3.0 * mean_anomaly);
+
+        return mean_longitude + equation_of_center;
+    };
+
+    // The mean longitude at the March equinox, where λ is zero by definition.
+    static const double MEAN_LONGITUDE_AT_MARCH_EQUINOX = mean_solar_longitude(0.0);
+
+    // Our idealised year lasts exactly one mean tropical year, which is the time it takes
+    // for the true solar longitude to increase by 360°, taken at J2000.
+    static const double DAYS_PER_YEAR = 365.24219;
+
+    // The day of the year at which the March equinox happens in our idealised year: the
+    // 20th of March at midday, counting the 1st of January at midnight as day zero. Both
+    // equinoxes and both solstices then land within an hour of their average date over a
+    // leap cycle.
+    static const double MARCH_EQUINOX_DAY = 78.5;
+
+    // λ at a given day of our idealised year. Days may be fractional.
+    auto solar_longitude_at_day_of_year = [&true_solar_longitude](double day)
+    {
+        return true_solar_longitude(
+            MEAN_LONGITUDE_AT_MARCH_EQUINOX
+            + (day - MARCH_EQUINOX_DAY) / DAYS_PER_YEAR * 2.0 * lm::PI);
+    };
+
+    // Days elapsed since J2000.0, i.e. the 1st of January 2000 at 12:00 UT, for a date on
+    // the proleptic Gregorian calendar and a universal time in hours.
+    //
+    // See https://aa.usno.navy.mil/faq/sun_approx
+    auto days_since_j2000 = [](const hrz_proto::CalendarDate& date, double universal_time)
+    {
+        // Julian day number, through the usual integer arithmetic of Fliegel and van
+        // Flandern, Communications of the ACM 11 (1968), page 657. All the divisions here
+        // are meant to truncate.
+        //
+        // See https://dl.acm.org/doi/10.1145/364096.364097
+        //     https://aa.usno.navy.mil/faq/JD_formula
+        int64_t leap_offset = (14 - date.month()) / 12;
+        int64_t years = date.year() + 4800 - leap_offset;
+        int64_t months = date.month() + 12 * leap_offset - 3;
+        int64_t julian_day = date.day() + (153 * months + 2) / 5 + 365 * years + years / 4
+            - years / 100 + years / 400 - 32045;
+
+        // Julian days start at midday, which is also where J2000.0 sits.
+        return (double)(julian_day - 2451545) + (universal_time - 12.0) / 24.0;
+    };
+
+    // The same, for an instant given as Unix time, i.e. milliseconds elapsed since the
+    // 1st of January 1970 at 00:00 UTC. That epoch is JD 2440587.5, which sits 10957.5
+    // days before J2000.0.
+    //
+    // Unix time counts UTC days of 86400 seconds, so every leap second pushes it one
+    // second further away from atomic time. That gap does not concern us, because what
+    // we need here is universal time, i.e. the rotation of the Earth, and inserting those
+    // leap seconds is precisely what keeps UTC within 0.9 seconds of it. The error is
+    // therefore bounded rather than accumulating, and is worth at most thirteen arc-
+    // seconds of rotation.
+    auto days_since_j2000_for_unix_time = [](int64_t unix_time_ms)
+    { return (double)unix_time_ms / 86400000.0 - 10957.5; };
+
+    // λ at a given number of days since J2000.0.
+    //
+    // Unlike the idealised year above, an actual date has to keep up with the real orbit
+    // over centuries, so both the mean longitude and the mean anomaly are taken from the
+    // low precision solar coordinates of the Astronomical Almanac, which stay within
+    // about an arcminute of the true position for two centuries around 2000.
+    //
+    // See https://aa.usno.navy.mil/faq/sun_approx
+    auto solar_longitude_at_j2000_day = [](double days)
+    {
+        double mean_longitude = lm::radians(280.459 + 0.98564736 * days);
+        double mean_anomaly = lm::radians(357.529 + 0.98560028 * days);
+
+        return mean_longitude + lm::radians(1.915) * std::sin(mean_anomaly)
+            + lm::radians(0.020) * std::sin(2.0 * mean_anomaly);
+    };
+
+    // `solar_longitude` is λ, in radians, and `time` is a time of day, in hours.
+    //
+    // The two describe the same instant from two angles: λ places the Earth on its orbit,
+    // and `time` tells how far it has spun on its axis. A time of day therefore belongs
+    // in both, and callers that derive one from the other must keep them in step rather
+    // than split the day between them.
+    auto compute_sun_from_longitude_and_time =
+        [&, mean_solar_longitude](double solar_longitude, float time, bool time_is_local_solar)
+    {
+        static const lm::dquat identity = lm::dquat();
+
+        // In all computations below, we completely ignore axial precession, which is
+        // the rotation of the polar axis in the frame of the solar system.
+        // It happens slowly enough to ignore it for our usecases, and pretend that the
+        // solstices happen at fixed times.
+
+        double daily_rotation = -(time - 12.0) / 12.0 * lm::PI;
+
+        // We then compute the angle the Earth has made so far in the year around the Sun
+        // by considering that the summer solstice is 0°.
+        double solar_longitude_rotation = solar_longitude - lm::PI / 2.0;
+
+        // The same angle for the mean longitude, which is what the Earth rotation is
+        // referenced to, since the given time is a mean solar time.
+        double mean_longitude_rotation = mean_solar_longitude(solar_longitude) - lm::PI / 2.0;
+
+        // We're going to compute the transformation from the local tangential frame
+        // to the ecliptic space centered at the Earth center. This space has X towards
+        // the sun and XY is the solar system ecliptic plane.
+        // We're pretty lucky because all of this can be modeled with rotations only
+        // since we only care about the direction of the sun. So quaternions galore!
+        // Note that when adjacent rotations use the same axis, we merge them.
+
+        lm::dquat ecef_to_ecliptic = lm::axis_angle({0, 0, 1}, -solar_longitude_rotation)
+            * lm::axis_angle({0, 1, 0}, EARTH_AXIAL_TILT)
+            * lm::axis_angle({0, 0, 1}, mean_longitude_rotation - daily_rotation);
+
+        lm::dquat from_longitude = lm::axis_angle({0, 0, 1}, geo.lon);
+
+        // We know the quaternions are unit, so inverse = conjugate.
+        sky->ecef_sun_direction = (time_is_local_solar ? from_longitude : identity)
+            * lm::conjugate(ecef_to_ecliptic) * lm::dvec3(1, 0, 0);
+    };
+
+    // λ for a solar date, whichever way its time of year is expressed.
+    auto solar_longitude_for_date =
+        [&solar_longitude_at_day_of_year](const hrz_proto::SolarDate& date)
+    {
+        if (date.has_day_of_year())
         {
-            // In all computations below, we completely ignore axial precession, which is
-            // the rotation of the polar axis in the frame of the solar system.
-            // It happens slowly enough to ignore it for our usecases, and pretend that the
-            // solstices happen at fixed times.
-
-            const double daily_rotation = -(sky->solar_time - 12.0) / 12.0 * lm::PI;
-
-            // We offset the day number by the fraction of the day that passed so that
-            // the computations below are time-continuous.
-            const double day = std::floor(sky->day) + sky->solar_time / 24.0;
-
-            // We then compute the angle the earth has made so far in the year around the sun
-            // by considering that the summer solstice is 0°.
-            // Also we pretend the summer solstice happens at noon, which is not always
-            // the case but that's fine.
-            static const double DAYS_PER_YEAR = 365.0;
-            static const double SUMMER_SOLSTICE = 171.5F;
-            const double angle_around_sun = (day - SUMMER_SOLSTICE) / DAYS_PER_YEAR * 2.0 * lm::PI;
-
-            static const double EARTH_AXIAL_TILT = 0.40910517666747085283;
-
-            // We're going to compute the transformation from the local tangential frame
-            // to the ecliptic space centered at the Earth center. This space has X towards
-            // the sun and XY is the solar system ecliptic plane.
-            // We're pretty lucky because all of this can be modeled with rotations only
-            // since we only care about the direction of the sun. So quaternions galore!
-            // Note that when adjacent rotations use the same axis, we merge them.
-            // Also, longitude doesn't appear here because we pretend that the sun is at
-            // its maximum elevation where the camera is at 12, always. If we applied
-            // the longitude, it would mean that our time is UTC.
-
-            lm::dquat ecef_to_ecliptic = lm::axis_angle({0, 0, 1}, -angle_around_sun)
-                * lm::axis_angle({0, 1, 0}, EARTH_AXIAL_TILT)
-                * lm::axis_angle({0, 0, 1}, angle_around_sun - daily_rotation);
-
-            lm::dquat to_longitude = lm::axis_angle({0, 0, 1}, -geo.lon);
-
-            lm::dquat local_to_ecef = lm::axis_angle({0, 1, 0}, -geo.lat + lm::PI / 2)
-                * lm::axis_angle({0, 0, 1}, lm::PI / 2);
-
-            // We know the quaternions are unit, so inverse = conjugate
-            lm::dvec3 sun_dir_local =
-                lm::conjugate(ecef_to_ecliptic * local_to_ecef) * lm::dvec3(1, 0, 0);
-            sky->ecef_sun_direction =
-                lm::conjugate(ecef_to_ecliptic * to_longitude) * lm::dvec3(1, 0, 0);
-
-            new_sun_horizon_angle = lm::PI / 2 - acos(sun_dir_local.z);
-            new_sun_azimuth = -atan2(sun_dir_local.x, sun_dir_local.y);
+            // The time of day is part of the date, so that the Sun keeps moving along its
+            // orbit while the time of day is animated.
+            return solar_longitude_at_day_of_year(date.day_of_year() + date.solar_time() / 24.0);
         }
-        break;
 
-        case hrz_proto::SunDirectionMode::SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME:
-        {
-            new_sun_horizon_angle = sky->sun_altitude;
-            new_sun_azimuth = sky->sun_azimuth;
+        // This also covers the case where the time of year is not set at all, which
+        // leaves the Sun at the March equinox.
+        return lm::radians((double)date.solar_longitude());
+    };
 
-            lm::dmat4 enu_to_ecef = hrz::enu_to_ecef_rotation_matrix_for_geo(geo.latlon());
-            lm::dvec3 sun_direction_enu = lm::axis_angle({0, 0, 1}, new_sun_azimuth)
-                * lm::axis_angle({1, 0, 0}, new_sun_horizon_angle) * lm::dvec3(0, 1, 0);
-            sky->ecef_sun_direction = (enu_to_ecef * lm::dvec4{sun_direction_enu, 1.0}).xyz;
-        }
-        break;
-
-        case hrz_proto::SunDirectionMode::SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME:
-        {
-            new_sun_horizon_angle = sky->sun_altitude;
-
-            lm::dmat4 ecef_to_enu = hrz::ecef_to_enu_rotation_matrix_for_geo(geo.latlon());
-            lm::dvec3 forward_enu = (ecef_to_enu * lm::dvec4{camera.cam.forward(), 1.0}).xyz;
-
-            if (forward_enu.z > 0.999)
+    std::visit(
+        hrz::overload{
+            [&](const hrz_proto::SolarDate& solar_date)
             {
-                // Looking up, use the down camera vector instead
-                forward_enu = (ecef_to_enu * lm::dvec4{-camera.cam.up(), 1.0}).xyz;
-            }
-            else if (forward_enu.z < -0.999)
+                compute_sun_from_longitude_and_time(
+                    solar_longitude_for_date(solar_date), solar_date.solar_time(),
+                    !solar_date.at_prime_meridian());
+            },
+            [&](const hrz_proto::CalendarDate& calendar_date)
             {
-                // Looking down, use the up camera vector instead
-                forward_enu = (ecef_to_enu * lm::dvec4{camera.cam.up(), 1.0}).xyz;
-            }
+                float universal_time = calendar_date.time() - calendar_date.utc_offset();
 
-            double forward_azimuth = atan2(forward_enu.y, forward_enu.x) - lm::PI / 2.0;
-            new_sun_azimuth = sky->sun_azimuth + forward_azimuth;
+                compute_sun_from_longitude_and_time(
+                    solar_longitude_at_j2000_day(days_since_j2000(calendar_date, universal_time)),
+                    universal_time, false);
+            },
+            [&](int64_t unix_time_ms)
+            {
+                double days = days_since_j2000_for_unix_time(unix_time_ms);
 
-            lm::dmat4 enu_to_ecef = hrz::enu_to_ecef_rotation_matrix_for_geo(geo.latlon());
-            lm::dvec3 sun_direction_enu = lm::axis_angle({0, 0, 1}, new_sun_azimuth)
-                * lm::axis_angle({1, 0, 0}, new_sun_horizon_angle) * lm::dvec3(0, 1, 0);
-            sky->ecef_sun_direction = (enu_to_ecef * lm::dvec4{sun_direction_enu, 1.0}).xyz;
-        }
-        break;
+                // Days since J2000.0 are counted from a midday, so half a day of offset is needed
+                // to make the day fraction start at midnight.
+                double day_fraction = lm::fract(days + 0.5);
 
-        default: assert(false && "Unhandled");
-    }
+                compute_sun_from_longitude_and_time(
+                    solar_longitude_at_j2000_day(days), (float)(day_fraction * 24.0), false);
+            },
+            [sky, &geo, &camera](const hrz_proto::AngularDirection& angular_direction)
+            {
+                if (angular_direction.has_geographic_position())
+                {
+                    auto ref_pos =
+                        hrz::from_proto(angular_direction.geographic_position()).latlon();
+
+                    lm::dquat ecef_to_ecliptic =
+                        lm::axis_angle({0, 1, 0}, -angular_direction.altitude() + lm::PI / 2)
+                        * lm::axis_angle({1, 0, 0}, angular_direction.azimuth())
+                        * lm::axis_angle({0, 1, 0}, ref_pos.lat)
+                        * lm::axis_angle({0, 0, 1}, -ref_pos.lon);
+
+                    // We know the quaternions are unit, so inverse = conjugate
+                    sky->ecef_sun_direction = lm::conjugate(ecef_to_ecliptic) * lm::dvec3(1, 0, 0);
+                    return;
+                }
+
+                double altitude = angular_direction.altitude();
+                double azimuth = -angular_direction.azimuth();
+
+                switch (angular_direction.camera_frame())
+                {
+                    case hrz_proto::AngularDirection::FRAME_ENU: break;
+                    case hrz_proto::AngularDirection::FRAME_CAMERA_HEADING:
+                    {
+                        lm::dmat4 ecef_to_enu =
+                            hrz::ecef_to_enu_rotation_matrix_for_geo(geo.latlon());
+                        lm::dvec3 forward_enu =
+                            (ecef_to_enu * lm::dvec4{camera.cam.forward(), 1.0}).xyz;
+
+                        if (forward_enu.z > 0.999)
+                        {
+                            // Looking up, use the down camera vector instead
+                            forward_enu = (ecef_to_enu * lm::dvec4{-camera.cam.up(), 1.0}).xyz;
+                        }
+                        else if (forward_enu.z < -0.999)
+                        {
+                            // Looking down, use the up camera vector instead
+                            forward_enu = (ecef_to_enu * lm::dvec4{camera.cam.up(), 1.0}).xyz;
+                        }
+
+                        double forward_azimuth =
+                            std::atan2(forward_enu.y, forward_enu.x) - lm::PI / 2.0;
+                        azimuth += forward_azimuth;
+                    }
+                    break;
+                    case hrz_proto::AngularDirection::FRAME_CAMERA:
+                    {
+                        sky->ecef_sun_direction =
+                            lm::axis_angle(camera.cam.up(), -(double)angular_direction.azimuth())
+                            * (lm::axis_angle(
+                                   camera.cam.right(), (double)angular_direction.altitude())
+                               * camera.cam.forward());
+                        return;
+                    }
+                    default: assert(false && "Unhandled case"); break;
+                }
+
+                lm::dmat4 enu_to_ecef = hrz::enu_to_ecef_rotation_matrix_for_geo(geo.latlon());
+                lm::dvec3 sun_direction_enu = lm::axis_angle({0, 0, 1}, azimuth)
+                    * lm::axis_angle({1, 0, 0}, altitude) * lm::dvec3(0, 1, 0);
+                sky->ecef_sun_direction = (enu_to_ecef * lm::dvec4{sun_direction_enu, 1.0}).xyz;
+            },
+        },
+        sky->sun_direction_params);
+
+    // The atmosphere is rendered on a sphere centred on the Earth, and not an ellipsoid,
+    // so the angles we need here are slightly different from the ones computed above.
+    // We might not even have computed angles before, depending on the case. So in all
+    // cases new angles are recomputed from the direction.
+    lm::dvec3 z_axis = lm::normalize(camera.cam.pos);
+    lm::dvec3 y_axis = lm::normalize(lm::cross(z_axis, lm::dvec3(0, 0, 1)));
+    lm::dvec3 x_axis = lm::normalize(lm::cross(y_axis, z_axis));
+
+    float new_sun_horizon_angle = (float)std::asin(lm::dot(sky->ecef_sun_direction, z_axis));
+    float new_sun_azimuth = (float)std::atan2(
+        lm::dot(sky->ecef_sun_direction, y_axis), lm::dot(sky->ecef_sun_direction, x_axis));
 
     if (ubo_data.sun_horizon_angle != new_sun_horizon_angle)
     {
@@ -2009,12 +2246,6 @@ RenderRequest update(SkySystem* sky, const CameraViewInfo& camera, SceneModel* m
         sky->precompute_pass->schedule_refresh_transmittance();
         render_request.request_visual_render();
     }
-
-    // Build the matrix that places the skybox at the correct angle.
-    // The skybox is a tangential frame, with the sun always in the XZ plane.
-    lm::dvec3 z_axis = lm::normalize(camera.cam.pos);
-    lm::dvec3 y_axis = lm::normalize(lm::cross(z_axis, lm::dvec3(0, 0, 1)));
-    lm::dvec3 x_axis = lm::normalize(lm::cross(y_axis, z_axis));
 
     // We rotate the skybox along the local vertical axis so that the sun is
     // at the correct azimuth.

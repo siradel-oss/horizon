@@ -38,8 +38,8 @@ void default_scene_view_settings(hrz_proto::SceneViewSettings* settings)
     ambient->mutable_lighting()->set_enable_lighting(true);
     ambient->mutable_lighting()->set_cast_shadows(true);
     ambient->mutable_lighting()->set_receive_shadows(true);
-    ambient->mutable_sun()->mutable_direction()->set_local_solar_time(15.0F);
-    ambient->mutable_sun()->mutable_direction()->set_day_of_year(171.0F);
+    ambient->mutable_sun()->mutable_solar_date()->set_solar_time(15.0F);
+    ambient->mutable_sun()->mutable_solar_date()->set_solar_longitude(90.0F);
     ambient->mutable_sun()->mutable_static_color()->set_r(1.0F);
     ambient->mutable_sun()->mutable_static_color()->set_g(1.0F);
     ambient->mutable_sun()->mutable_static_color()->set_b(1.0F);

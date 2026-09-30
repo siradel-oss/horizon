@@ -2790,17 +2790,17 @@ TranslationResult translate_scene(
         view_settings->mutable_settings()
             ->mutable_ambient()
             ->mutable_sun()
-            ->mutable_direction()
-            ->set_mode(hrz_proto::SunDirectionMode::SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME);
+            ->mutable_angular_direction()
+            ->set_camera_frame(hrz_proto::AngularDirection::FRAME_CAMERA_HEADING);
         view_settings->mutable_settings()
             ->mutable_ambient()
             ->mutable_sun()
-            ->mutable_direction()
-            ->set_azimuth(150.0 * lm::PI / 180.0);
+            ->mutable_angular_direction()
+            ->set_azimuth(-150.0 * lm::PI / 180.0);
         view_settings->mutable_settings()
             ->mutable_ambient()
             ->mutable_sun()
-            ->mutable_direction()
+            ->mutable_angular_direction()
             ->set_altitude(60.0 * lm::PI / 180.0);
 
         // Use the default MapLibre background color as default terrain color

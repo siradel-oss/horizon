@@ -258,7 +258,7 @@ std::optional<TileCoordsAndUv> proj_pos_to_tile_uv(
     double div_x = pos_pixels.x / level_tile_pixel_size;
     uint32_t tile_x = div_x;
     tile_origin_pixels.x = tile_x * level_tile_pixel_size;
-    double u = (div_x - std::floor(div_x)) * tile_to_full_tile_pixel_size_ratio.x;
+    double u = lm::fract(div_x) * tile_to_full_tile_pixel_size_ratio.x;
 
     uint32_t tile_y = 0;
     double v = 0.0;
@@ -267,7 +267,7 @@ std::optional<TileCoordsAndUv> proj_pos_to_tile_uv(
         double div_y = pos_pixels.y / level_tile_pixel_size;
         tile_y = div_y;
         tile_origin_pixels.y = tile_y * level_tile_pixel_size;
-        v = (div_y - std::floor(div_y)) * tile_to_full_tile_pixel_size_ratio.y;
+        v = lm::fract(div_y) * tile_to_full_tile_pixel_size_ratio.y;
     }
     else if (tiling_info.tiling_origin == hrz_proto::TilingOrigin::BOTTOM_ORIGIN)
     {
@@ -283,7 +283,7 @@ std::optional<TileCoordsAndUv> proj_pos_to_tile_uv(
                 / level_tile_pixel_size;
             tile_y = div_y;
             tile_origin_pixels.y = (tile_y - 1) * level_tile_pixel_size + small_tile_pixel_size.y;
-            v = (div_y - std::floor(div_y)) * tile_to_full_tile_pixel_size_ratio.y;
+            v = lm::fract(div_y) * tile_to_full_tile_pixel_size_ratio.y;
         }
     }
     else

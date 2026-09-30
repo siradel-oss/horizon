@@ -7,6 +7,7 @@ import os
 import platform
 import re
 import shutil
+import signal
 import subprocess
 import tempfile
 import time
@@ -302,7 +303,28 @@ class ViewerExitCode(IntEnum):
     InvalidInput = 5
     FailedMigration = 6
     Timeout = 7
-    Unknown = -1
+    Unknown = 127  # Sentinel, never returned by the viewer itself.
+
+    # Map all undefined codes (crashes, signals) to Unknown.
+    @classmethod
+    def _missing_(cls, value: object) -> "ViewerExitCode":
+        return cls.Unknown
+
+
+def describe_exit_code(raw_code: int) -> str:
+    code = ViewerExitCode(raw_code)
+    if code != ViewerExitCode.Unknown:
+        return f"{code.name} ({raw_code})"
+
+    # On POSIX, subprocess reports a process killed by a signal as -signal.
+    if raw_code < 0:
+        try:
+            signal_name = signal.Signals(-raw_code).name
+        except ValueError:
+            signal_name = "unknown signal"
+        return f"Crashed, killed by {signal_name} ({raw_code})"
+
+    return f"Unknown ({raw_code})"
 
 
 IMAGE_SIZE = 512
@@ -442,7 +464,7 @@ def generate_ref_image(viewer: Path, test: Test, output_dir: OutputDirectory) ->
         return True
 
     print(
-        f"ERROR: Couldn't generate reference image for '{test.info.name}', return code: {return_code.name} ({return_code.value})"
+        f"ERROR: Couldn't generate reference image for '{test.info.name}', return code: {describe_exit_code(ret.returncode)}"
     )
     return False
 
@@ -568,17 +590,20 @@ def run_tests_in_context(ctx: TestExecutionContext):
 
             log = "".join(output_lines)
 
-            return_code = ViewerExitCode(return_code)
+            exit_code = ViewerExitCode(return_code)
 
-            if return_code == ViewerExitCode.Timeout:
+            if exit_code == ViewerExitCode.Timeout:
                 error_type = schema.ErrorType.TIMEOUT
-            elif return_code != ViewerExitCode.Ok:
+            elif exit_code != ViewerExitCode.Ok:
                 error_type = schema.ErrorType.VIEWER
 
+                message = (
+                    f"Viewer error, return code: {describe_exit_code(return_code)}"
+                )
+                log += f"\n{message}\n"
+
                 if g_verbose:
-                    print(
-                        f"Viewer error, return code: {return_code.name} ({return_code.value})"
-                    )
+                    print(message)
 
             duration = time.time_ns() / 1_000_000_000 - start_time
             total_duration += duration

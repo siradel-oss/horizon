@@ -70,6 +70,10 @@ export function testStatus(result: Result | undefined): TestStatus {
     return "passed";
 }
 
+export function needsReview(result: Result | undefined): boolean {
+    return testStatus(result) === "failed";
+}
+
 // shadcn's Badge has no success/warning variant, so those two tint the theme tokens the way
 // upstream's `destructive` variant does. cn() runs tailwind-merge, which drops the variant's own
 // bg/text classes.

@@ -186,3 +186,6 @@ registerDemo("rulers", Rulers);
 
 import VectorEditor from "./demo/VectorEditor.vue";
 registerDemo("vectorEditor", VectorEditor);
+
+import SunPosition from "./demo/SunPosition.vue";
+registerDemo("sunPosition", SunPosition);

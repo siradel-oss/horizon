@@ -36,39 +36,137 @@ message TerrainSettings {
     LightingSettings lighting                  = 4;
 }
 
-enum SunDirectionMode {
-    // The direction is computed from the current date and time.
-    // @label="Relative to the date"
-    SUN_DIRECTION_RELATIVE_TO_DATE             = 0;
-    // The direction is explicitly given using azimuth and altitude angles.
-    // Counter-clockwise rotation, with azimuth 0 being North-aligned.
-    // @label="Relative to the cardinal frame"
-    SUN_DIRECTION_RELATIVE_TO_CARDINAL_FRAME   = 1;
-    // The direction is explicitly given using azimuth and altitude angles.
-    // Counter-clockwise rotation, with azimuth 0 aligned towards the forward
-    // direction of the camera (or the up direction when it perfectly faces the
-    // Earth).
-    // @label="Relative to the tangential frame"
-    SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME = 2;
+// Mean solar date and time, within an idealised year.
+message SolarDate {
+    // Mean solar time, hours, [0, 24).
+    // This is clock time rather than sundial time: the Sun crosses the
+    // meridian at 12:00, give or take the equation of time (-14 to +16
+    // minutes over the year).
+    // Where this time applies depends on `at_prime_meridian`.
+    float solar_time        = 1;
+
+    // When false, `solar_time` is the local mean solar time at the camera.
+    // The Sun does not move as the camera travels along a parallel.
+    //
+    // When true, `solar_time` is the mean solar time at the prime meridian.
+    // The Sun is fixed relative to the Earth; moving the camera changes where
+    // it appears in the sky.
+    bool  at_prime_meridian = 2;
+
+    // Where the Earth stands on its orbit, expressed either way.
+    // When neither is set, the Sun is placed as if `solar_longitude` was 0.
+    oneof time_of_year {
+        // λ, the true ecliptic longitude of the Sun, degrees, [0, 360),
+        // 0 = March equinox.
+        // Beware that it does not advance uniformly over the year, since the
+        // Earth moves faster around its perihelion. Use `day_of_year` to let
+        // the engine take care of this.
+        float solar_longitude = 101;
+
+        // Days elapsed since the 1st of January at midnight, so 0 is the 1st
+        // of January. Fractional values are valid, and values outside of
+        // [0, 365.2422) wrap around.
+        //
+        // `solar_time` is taken into account on top of this, so that the Sun
+        // keeps moving along its orbit while the time of day is animated.
+        //
+        // The year is idealised: it lasts exactly one mean tropical year
+        // (365.2422 days) and the March equinox always falls on day 78.5, the
+        // 20th of March at midday. There are no leap years, and precession is
+        // ignored, as everywhere else in the Sun computations. Equinoxes and
+        // solstices therefore land within an hour of their average date over
+        // a leap cycle, and within a few hours of their date in any given
+        // year.
+        float day_of_year     = 102;
+    }
 }
 
-message SunDirection {
-    SunDirectionMode mode             = 1;
+// Date and time in a timezone, on the proleptic Gregorian calendar.
+// The Sun is fixed relative to the Earth; moving the camera changes where
+// it appears in the sky.
+//
+// This is the only way to give the Sun an actual date, as opposed to a
+// position within an idealised year. Leap years are accounted for, and the
+// Sun stays within a hundredth of a degree of its real position between
+// 1950 and 2050.
+message CalendarDate {
+    int32 year       = 1;
 
-    // Solar time at the camera position. 0 = midnight, 12 = noon.
-    // Used when `mode` is set to SUN_DIRECTION_RELATIVE_TO_DATE.
-    float            local_solar_time = 2;
-    // 0 = January 1st.
-    // Used when mode is set to SUN_DIRECTION_RELATIVE_TO_DATE.
-    float            day_of_year      = 3;
+    // [1, 12]
+    int32 month      = 2;
 
-    // Angle in radians within [0; 2π[ with the reference direction.
-    // Counterclockwise.
-    // Used when `mode` is not set to SUN_DIRECTION_RELATIVE_TO_DATE.
-    float            azimuth          = 4;
-    // Angle in radians within [-π/2; π/2[ with the horizon at 0.
-    // Used when `mode` is not set to SUN_DIRECTION_RELATIVE_TO_DATE.
-    float            altitude         = 5;
+    // [1, 31]
+    int32 day        = 3;
+
+    // Time in the timezone, hours, [0, 24).
+    // This is civil clock time, which is a mean solar time, so the Sun
+    // crosses the meridian of `utc_offset` at 12:00 give or take the
+    // equation of time. Leap seconds are ignored.
+    float time       = 4;
+
+    // Offset from UTC, hours, [-12, 14].
+    // Daylight saving time is the caller's business: this is the offset
+    // that applies on that date, not the timezone's standard offset.
+    // Examples:
+    // * GMT: 0
+    // * CET: 1
+    // * CEST: 2
+    // * IST: 5.5
+    // * EST: -5
+    float utc_offset = 5;
+}
+
+// Fixed direction, given as an azimuth and an altitude in a frame.
+// Allows Sun positions that are impossible in the real world.
+message AngularDirection {
+    // Frames attached to the camera.
+    enum Frame {
+        // @label="North"
+        // The East-North-Up frame at the camera position: azimuth is measured
+        // from the direction to the North, altitude from the local horizontal
+        // plane.
+        // The Sun keeps its place in the sky as the camera moves.
+        FRAME_ENU            = 0;
+
+        // @label="Camera heading"
+        // A rotated ENU frame at the camera position: azimuth is measured from
+        // the camera's forward vector projected onto the local horizontal
+        // plane, and altitude from that plane.
+        // Where the projection of the forward vector degenerates (camera
+        // pointing at the zenith or nadir), the camera's up vector projected
+        // onto the same plane is used instead, negated when the camera points
+        // upward.
+        FRAME_CAMERA_HEADING = 1;
+
+        // @label="Camera"
+        // The camera's own basis: azimuth is measured around the camera's up
+        // axis from its forward direction, and altitude from the plane its
+        // forward and right directions span. The Sun therefore keeps its exact
+        // place on screen whatever the camera does.
+        // At an azimuth and an altitude of 0 the Sun sits directly ahead.
+        FRAME_CAMERA         = 2;
+    }
+
+    // The frame both angles below are measured in.
+    // When neither is set, the frame is `FRAME_ENU` at the camera.
+    oneof reference {
+        // A frame attached to the camera.
+        Frame              camera_frame        = 101;
+
+        // The East-North-Up frame at a geographic position: azimuth is
+        // measured from the direction to the North, altitude from the local
+        // horizontal plane.
+        // The Sun is fixed relative to the Earth; moving the camera changes
+        // where it appears in the sky.
+        // The position's altitude is ignored.
+        GeographicPosition geographic_position = 102;
+    }
+
+    // radians, [0, 2π), clockwise from the frame's origin
+    float azimuth  = 1;
+
+    // radians, [-π, π], 0 in the frame's horizontal plane
+    float altitude = 2;
 }
 
 enum SunLightingMode {
@@ -129,12 +227,25 @@ message SkySettings {
 }
 
 message SunSettings {
-    SunLightingMode mode         = 1;
-    SunDirection    direction    = 2;
+    reserved 2;
+
+    SunLightingMode mode = 1;
+
+    oneof           direction {
+        SolarDate        solar_date        = 101;
+        CalendarDate     calendar_date     = 102;
+
+        // Milliseconds elapsed since the 1st of January 1970 at 00:00 UTC.
+        // Use when animating time, as it is a single continuous numerical
+        // variable.
+        int64            unix_time_ms      = 103;
+
+        AngularDirection angular_direction = 104;
+    }
 
     // Only used when `mode` is `SUN_LIGHTING_STATIC`.
     // Alpha is ignored.
-    Color           static_color = 3;
+    Color static_color = 3;
 }
 
 message AmbientLightingSettings {

@@ -34,10 +34,18 @@ concept ConvertibleToWithoutNarrowing = std::convertible_to<From, To> && std::is
     && std::is_scalar_v<To> && requires(From t) { To{t}; };
 
 template<typename T>
+concept Signed = std::is_signed_v<T>;
+
+template<Signed T>
 constexpr T sign(T v)
 {
-    static_assert(std::is_signed_v<T>, "Value type must be signed");
     return (T(0) < v) - (v < T(0));
+}
+
+template<std::floating_point T>
+constexpr T fract(T v)
+{
+    return v - floor(v);
 }
 
 // @@VECTOR_TYPES
@@ -644,6 +652,14 @@ struct SignOp
     constexpr ResultType operator ()(T x) const { return lm::sign(x); }
 };
 
+template<typename T>
+struct FractOp
+{
+    using ResultType = T;
+
+    constexpr ResultType operator ()(T x) const { return lm::fract(x); }
+};
+
 #define IMPL_UNARY_SIMPLE(NAME, FN)                                           \
     template<typename T>                                                      \
     struct NAME                                                               \
@@ -939,6 +955,7 @@ IMPL_VEC_UNARY_OP(AbsOp, abs)
 IMPL_VEC_UNARY_OP(CeilOp, ceil)
 IMPL_VEC_UNARY_OP(FloorOp, floor)
 IMPL_VEC_UNARY_OP(RoundOp, round)
+IMPL_VEC_UNARY_OP(FractOp, fract)
 IMPL_VEC_UNARY_OP(ExpOp, exp)
 IMPL_VEC_UNARY_OP(LogOp, log)
 IMPL_VEC_UNARY_OP(Log10Op, log10)

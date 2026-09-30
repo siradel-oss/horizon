@@ -3,6 +3,7 @@
 
 #include "dynamic_message.h"
 #include "hrz/fnd/function_ref.h"
+#include "hrz/fnd/maths.h"
 #include "hrz/fnd/meta.h"
 #include "hrz/scene_dump/dynamic_message.h"
 
@@ -2810,6 +2811,43 @@ bool migration_37dc6665_to_c8253def(const DynamicMessage& src, DynamicMessage* d
                 && walk_fields_of_type(
                        "HrzProtocol.TransformSymbolComponent", src, dst,
                        migrate_transform_symbol_component);
+        });
+}
+
+bool migration_c8253def_to_76c7bcf2(const DynamicMessage& src, DynamicMessage* dst)
+{
+    return walk_fields_of_type(
+        "HrzProtocol.SunSettings", src, dst,
+        [](const DynamicMessage& src, DynamicMessage* dst) -> bool
+        {
+            auto src_direction = src.get_message("direction");
+            auto src_mode = src_direction.get_enum("mode");
+
+            if (src_mode == "SUN_DIRECTION_RELATIVE_TO_DATE")
+            {
+                auto dst_solar_date = dst->get_message("solar_date");
+                dst_solar_date.set_float("solar_time", src_direction.get_float("local_solar_time"));
+                dst_solar_date.set_float("day_of_year", src_direction.get_float("day_of_year"));
+            }
+            else
+            {
+                auto dst_angular_direction = dst->get_message("angular_direction");
+
+                dst_angular_direction.set_enum(
+                    "camera_frame",
+                    src_mode == "SUN_DIRECTION_RELATIVE_TO_TANGENTIAL_FRAME"
+                        ? "FRAME_CAMERA_HEADING"
+                        : "FRAME_ENU");
+
+                // Flip the azimuth angle sign, as the convention changed.
+                dst_angular_direction.set_float(
+                    "azimuth",
+                    (float)normalize_angle_positive(-(double)src_direction.get_float("azimuth")));
+
+                dst_angular_direction.set_float("altitude", src_direction.get_float("altitude"));
+            }
+
+            return true;
         });
 }
 
