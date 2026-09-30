@@ -16,6 +16,13 @@ namespace
 
 using namespace hrz::three_d_tiles;
 
+double get_longitude_span(const hrz::GeoVolumeBounds& wgs84_bbox)
+{
+    // A region crossing the antimeridian has West > East.
+    double span = wgs84_bbox.east - wgs84_bbox.west;
+    return span < 0.0 ? span + 2.0 * lm::PI : span;
+}
+
 void normalize_box(BoundingVolume::Box& box)
 {
     bool u_is_zero = box.u_half_length < std::numeric_limits<double>::epsilon();
@@ -75,72 +82,55 @@ void normalize_box(BoundingVolume::Box& box)
 
 BoundingVolume::Box make_box_from_region(const hrz::GeoVolumeBounds& wgs84_bbox)
 {
-    lm::dvec3 ecef_corners[] = {
-        hrz::geo_to_ecef(wgs84_bbox.south, wgs84_bbox.west, wgs84_bbox.min_height),
-        hrz::geo_to_ecef(wgs84_bbox.south, wgs84_bbox.east, wgs84_bbox.min_height),
-        hrz::geo_to_ecef(wgs84_bbox.north, wgs84_bbox.west, wgs84_bbox.min_height),
-        hrz::geo_to_ecef(wgs84_bbox.north, wgs84_bbox.east, wgs84_bbox.min_height),
-        hrz::geo_to_ecef(wgs84_bbox.south, wgs84_bbox.west, wgs84_bbox.max_height),
-        hrz::geo_to_ecef(wgs84_bbox.south, wgs84_bbox.east, wgs84_bbox.max_height),
-        hrz::geo_to_ecef(wgs84_bbox.north, wgs84_bbox.west, wgs84_bbox.max_height),
-        hrz::geo_to_ecef(wgs84_bbox.north, wgs84_bbox.east, wgs84_bbox.max_height),
-    };
+    // The box is aligned on the local East-North-up frame at the centre of
+    // the region.
+    //
+    // Given that we restrict this conversion to small regions, coordinate
+    // extremes are reached on the corners and middle of the edges (at the
+    // lowest and highest height). As well as on the equator, if the region
+    // straddles it.
 
-    lm::dvec3 ecef_center = {0, 0, 0};
-    for (const auto& corner : ecef_corners)
+    double mid_lat = (wgs84_bbox.south + wgs84_bbox.north) * 0.5;
+    double mid_lon = wgs84_bbox.west + get_longitude_span(wgs84_bbox) * 0.5;
+
+    lm::dmat3 enu_to_ecef(hrz::enu_to_ecef_rotation_matrix_for_geo(mid_lat, mid_lon));
+    lm::dmat3 ecef_to_enu = lm::transpose(enu_to_ecef);
+
+    lm::dvec3 origin_ecef = hrz::geo_to_ecef(mid_lat, mid_lon, wgs84_bbox.min_height);
+
+    double lats[4] = {wgs84_bbox.south, mid_lat, wgs84_bbox.north, 0.0};
+    size_t lat_count = wgs84_bbox.south < 0.0 && wgs84_bbox.north > 0.0 ? 4 : 3;
+    double lons[3] = {wgs84_bbox.west, mid_lon, wgs84_bbox.east};
+    double heights[2] = {wgs84_bbox.min_height, wgs84_bbox.max_height};
+
+    lm::dvec3 min_enu(std::numeric_limits<double>::max());
+    lm::dvec3 max_enu(std::numeric_limits<double>::lowest());
+    for (size_t lat_index = 0; lat_index < lat_count; ++lat_index)
     {
-        ecef_center += corner / 8.0F;
+        for (double lon : lons)
+        {
+            for (double height : heights)
+            {
+                lm::dvec3 offset_ecef =
+                    hrz::geo_to_ecef(lats[lat_index], lon, height) - origin_ecef;
+                lm::dvec3 offset_enu = ecef_to_enu * offset_ecef;
+                min_enu = lm::min(min_enu, offset_enu);
+                max_enu = lm::max(max_enu, offset_enu);
+            }
+        }
     }
 
-    lm::dvec3 u_axis = ecef_corners[5] - ecef_corners[4];
-    lm::dvec3 v_axis = ecef_corners[6] - ecef_corners[4];
-
-    lm::dvec3 ecef_centers[] = {
-        hrz::geo_to_ecef(
-            (wgs84_bbox.south + wgs84_bbox.north) * 0.5, (wgs84_bbox.west + wgs84_bbox.east) * 0.5,
-            wgs84_bbox.min_height),
-        hrz::geo_to_ecef(
-            (wgs84_bbox.south + wgs84_bbox.north) * 0.5, (wgs84_bbox.west + wgs84_bbox.east) * 0.5,
-            wgs84_bbox.max_height),
-    };
-
-    lm::dvec3 w_axis = ecef_centers[1] - ecef_centers[0];
-
-    // Expand the box by the curvature of the Earth.
-    // See https://earthcurvature.com/
-    double u_ratio = (std::abs(u_axis.x) * 0.5) / hrz::EARTH_RADIUS;
-    double v_ratio = (std::abs(v_axis.y) * 0.5) / hrz::EARTH_RADIUS;
-    double u_drop = hrz::EARTH_RADIUS * (1.0 - std::cos(u_ratio));
-    double v_drop = hrz::EARTH_RADIUS * (1.0 - std::cos(v_ratio));
-    double drop = std::max(u_drop, v_drop);
-
-    if (!std::isfinite(drop)) drop = 0.0;
-
-#define NORMALIZE_BOX_AXIS(x)                                \
-    do                                                       \
-    {                                                        \
-        double length = lm::length(x##_axis);                \
-        if (length > std::numeric_limits<double>::epsilon()) \
-        {                                                    \
-            box.x##_axis = x##_axis / length;                \
-            box.x##_half_length = length * 0.5;              \
-        }                                                    \
-        else                                                 \
-        {                                                    \
-            box.x##_axis = {1.0, 0.0, 0.0};                  \
-            box.x##_half_length = 0;                         \
-        }                                                    \
-    } while (0)
+    lm::dvec3 mid_enu = (min_enu + max_enu) * 0.5;
+    lm::dvec3 half_size = (max_enu - min_enu) * 0.5;
 
     BoundingVolume::Box box;
-    NORMALIZE_BOX_AXIS(u);
-    NORMALIZE_BOX_AXIS(v);
-    NORMALIZE_BOX_AXIS(w);
-    normalize_box(box);
-    box.w_half_length += drop;
-    box.center = ecef_center + box.w_axis * drop * 0.5; // Raise the centre by half the drop.
-
-#undef NORMALIZE_BOX_AXIS
+    box.center = origin_ecef + enu_to_ecef * mid_enu;
+    box.u_axis = enu_to_ecef.col[0];
+    box.u_half_length = half_size.x;
+    box.v_axis = enu_to_ecef.col[1];
+    box.v_half_length = half_size.y;
+    box.w_axis = enu_to_ecef.col[2];
+    box.w_half_length = half_size.z;
 
     return box;
 }
@@ -159,7 +149,7 @@ BoundingVolume::Sphere make_sphere_from_region(const hrz::GeoVolumeBounds& wgs84
     double max_lat = wgs84_bbox.north;
     double min_ele = wgs84_bbox.min_height;
     double max_ele = wgs84_bbox.max_height;
-    double mid_lon = (min_lon + max_lon) / 2.0;
+    double mid_lon = min_lon + get_longitude_span(wgs84_bbox) / 2.0;
     double mid_lat = (min_lat + max_lat) / 2.0;
     lm::dvec3 points[18] = {
         hrz::geo_to_ecef(min_lat, min_lon, min_ele), hrz::geo_to_ecef(min_lat, min_lon, max_ele),
@@ -222,13 +212,12 @@ void optimize(BoundingVolume& volume)
 
         // Regions have shapes that do not lean themselves to easy and
         // fast computations, so we convert them to boxes or spheres.
-        // The conversion to boxes introduces errors that can become
-        // too large if the region is too curvy, so it is only used
-        // for small regions that are not too close to the poles.
+        // Boxes get loose for large regions, as the curvature of the Earth
+        // adds to their thickness, and their computation assumes small
+        // regions, so they are only used for small regions.
 
-        if (std::max(std::abs(wgs84_bbox.south), std::abs(wgs84_bbox.north)) < lm::radians(75.0)
-            && wgs84_bbox.east - wgs84_bbox.west < lm::radians(1.0)
-            && wgs84_bbox.north - wgs84_bbox.south < lm::radians(1.0))
+        if (get_longitude_span(wgs84_bbox) < lm::radians(10.0)
+            && wgs84_bbox.north - wgs84_bbox.south < lm::radians(10.0))
         {
             // Small region, convert to box.
 

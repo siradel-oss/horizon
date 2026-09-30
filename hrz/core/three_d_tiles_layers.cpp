@@ -471,7 +471,6 @@ struct ThreeDTile
         // baked model, geometry, and material in the global cache.
         std::optional<size_t> model_uri_hash;
 
-        lm::dvec3 quantized_volume_offset;
         lm::dvec3 quantized_volume_scale;
         bool use_east_north_up_orientation = false;
 
@@ -2106,6 +2105,31 @@ struct ThreeDTilesSystem
                     "Could not get POSITION data from feature table of tile \"{}\"", tile.uri);
                 return false;
             }
+
+            if (rtc_center == lm::dvec3{})
+            {
+                // Some datasets use large numbers for positions instead of specifying a value for
+                // RTC_CENTER. This does not allow a centimetric precision for where instances are
+                // placed, but does not always prevent having stable (i.e. non-jittering) instances
+                // in the scene, if the tiles are not too large.
+                // The centre-point of all positions is used a substitute for RTC_CENTER, and is
+                // substracted from the positions. This way if the tile is geographically
+                // not too large, instances are stable since large values are not manipulated in
+                // single precision on the GPU.
+                auto position_bbox = lm::dbbox3::invalid();
+                for (const auto& position : content.position_data)
+                {
+                    position_bbox = lm::expand(position_bbox, lm::dvec3(position));
+                }
+                auto center = lm::center(position_bbox);
+
+                for (auto& position : content.position_data)
+                {
+                    position = lm::vec3(lm::dvec3(position) - center);
+                }
+
+                subtile->rtc_transform = lm::translation(center);
+            }
         }
         else if (parser.has_semantic("POSITION_QUANTIZED"))
         {
@@ -2121,7 +2145,10 @@ struct ThreeDTilesSystem
                 return false;
             }
 
-            content.quantized_volume_offset = quantized_volume_offset.value();
+            // The offset is merged with RTC_CENTER rather than being added to the
+            // positions in single precision on the GPU (see the POSITION case above).
+            subtile->rtc_transform = subtile->rtc_transform
+                * lm::translation(lm::dvec3(quantized_volume_offset.value()));
             content.quantized_volume_scale = quantized_volume_scale.value();
 
             if (!parser.copy_data(
@@ -4680,8 +4707,8 @@ struct ThreeDTilesSystem
             {
                 group_data.compressed_positions = content.position_quantized_data;
                 group_data.position_compression.type = hrz::model::DracoCompressionType::Quantized;
-                group_data.position_compression.quantization_mins =
-                    lm::vec3(content.quantized_volume_offset);
+                // The quantized volume offset is already in the group transform.
+                group_data.position_compression.quantization_mins = lm::vec3(0.0F);
                 group_data.position_compression.quantization_scale =
                     lm::vec3(content.quantized_volume_scale) / 65535.0F;
             }
