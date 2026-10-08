@@ -12,7 +12,7 @@ All communications with this backend must always happen on the same thread the e
 
 ## Initialising the viewer (TypeScript)
 
-The Core backend is made available to integrators through the `@siradel-oss/horizon-core` npm package. This package contains some JavaScript and TypeScript definition files, that are used directly by the bundler (such as Webpack), as well as files that must be available to the browser through HTTPS requests at runtime. The latter group of files comprises `hrz_core.js` and `hrz_core.wasm`.
+The Core backend is made available to integrators through the `@siradel-oss/horizon-core` npm package. This package contains some JavaScript and TypeScript definition files, that are used directly by the bundler, as well as files that must be available to the browser through HTTPS requests at runtime. The latter group of files comprises `hrz_core.js` and `hrz_core.wasm`.
 
 A browser supporting [WebGL 2](https://caniuse.com/webgl2), [shared array buffers](https://caniuse.com/sharedarraybuffer), and [atomics](https://caniuse.com/mdn-javascript_builtins_atomics) is required in order to run Horizon.
 
@@ -36,18 +36,11 @@ To embed Horizon in a web page, first you need a canvas.
 </html>
 ```
 
-When the canvas does not have an `id`, a random one will be randomly generated and assigned to it.
+When the canvas does not have an `id`, one will be randomly generated and assigned to it.
 
-The complete URLs for the runtime files is a concatenation of the base URL and the file name. The responses to the queries must comply with the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy), either directly or through [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). WASM files must be served with the `application/wasm` MIME type.
-
-Horizon requires a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) to run. To get one, the HTML file of the page containing the Horizon instance must be served with the [COOP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy) and [COEP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) headers as such:
-
-```
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-```
-
-Two files must be available at runtime: `hrz_core.js` and `hrz_core.wasm`. Here is an example of how to copy them at build-time using Vite.
+Two files must be available at runtime: `hrz_core.js` and `hrz_core.wasm`.
+The complete URLs for the runtime files is a concatenation of the base URL and the file name.
+Here is an example of how to copy them at build-time using Vite.
 
 ```ts
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -59,11 +52,11 @@ export default defineConfig({
         viteStaticCopy({
             targets: [
                 {
-                    src: "node_modules/@siradel-oss/horizon-core/dist/hrz_core.js",
+                    src: "@siradel-oss/horizon-core/dist/hrz_core.js",
                     dest: "<fill this in>",
                 },
                 {
-                    src: "node_modules/@siradel-oss/horizon-core/dist/hrz_core.wasm",
+                    src: "@siradel-oss/horizon-core/dist/hrz_core.wasm",
                     dest: "<fill this in>",
                 },
             ],
@@ -72,9 +65,7 @@ export default defineConfig({
 });
 ```
 
-Alternatively, bundlers can detect references to assets and automatically include them in the build. When used in combination with the runtime file location callback in `HrzCoreBackend.init` (see below), the two files can be handled like any other asset. This includes allowing the bundler to rename the files.
-
-All the files must be served with the HTTPS protocol.
+Alternatively (and preferably), bundlers can detect references to assets and automatically include them in the build. When used in combination with the runtime file location callback in `HrzCoreBackend.init` (see below), the two files can be handled like any other asset. This includes allowing the bundler to rename the files for cache-busting.
 
 The initialisation of the core is performed by calling the `HrzCoreBackend.init()` function, which takes four parameters:
 
@@ -108,9 +99,9 @@ HrzCoreBackend.init(
     (file: HrzCoreRuntimeFile) => {
         switch (file) {
             case "hrz_core.js":
-                return new URL("/node_modules/@siradel-oss/horizon-core/dist/hrz_core.js", import.meta.url).href;
+                return new URL("@siradel-oss/horizon-core/dist/hrz_core.js", import.meta.url).href;
             case "hrz_core.wasm":
-                return new URL("/node_modules/@siradel-oss/horizon-core/dist/hrz_core.wasm", import.meta.url).href;
+                return new URL("@siradel-oss/horizon-core/dist/hrz_core.wasm", import.meta.url).href;
         }
     },
     myOptions,
@@ -119,6 +110,23 @@ HrzCoreBackend.init(
 ```
 
 Once the page is loaded, a WebGL 2 context will then be created by Horizon. Unlike in C++, the user is not responsible for calling `frame`, this is already done by the browser's event loop.
+
+### Serving assets for the web
+
+Horizon requires a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) to run. To get one, the HTML file of the page containing the Horizon instance must be served with the [COOP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy) and [COEP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) headers as such:
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+All files, including runtime assets (such as 3D models, rasters, etc.), must be served with the HTTPS protocol, except when using `localhost`. They must also comply with the [same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy), either directly or through [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). WASM files must be served with the `application/wasm` MIME type. If anything fails to load, check your browser's developer tools for errors.
+
+For example, a file served from a different origin than the page must be served with the following header (or specific to the instance's origin) to allow it to be loaded by Horizon:
+
+```
+Access-Control-Allow-Origin: *
+```
 
 ## Initialising the viewer (C++)
 

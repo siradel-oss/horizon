@@ -193,9 +193,6 @@ const serveFilesPluginConfig = serveFilesPlugin({
         matchDir("/assets/demo", "demo_assets"),
         matchDir("/source", "src/demo"),
         matchDir("/scene", "dist_scenes/scene"),
-        matchBasename("hrz_core.js", "node_modules/@siradel-oss/horizon-core/dist/hrz_core.js"),
-        matchBasename("hrz_core", "node_modules/@siradel-oss/horizon-core/dist/hrz_core.js"),
-        matchBasename("hrz_core.wasm", "node_modules/@siradel-oss/horizon-core/dist/hrz_core.wasm"),
     ],
 });
 

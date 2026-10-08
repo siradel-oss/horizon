@@ -97,12 +97,12 @@ onMounted(() => {
                 switch (file) {
                     case "hrz_core.js":
                         return new URL(
-                            "/node_modules/@siradel-oss/horizon-core/dist/hrz_core.js",
+                            "@siradel-oss/horizon-core/dist/hrz_core.js",
                             import.meta.url
                         ).href;
                     case "hrz_core.wasm":
                         return new URL(
-                            "/node_modules/@siradel-oss/horizon-core/dist/hrz_core.wasm",
+                            "@siradel-oss/horizon-core/dist/hrz_core.wasm",
                             import.meta.url
                         ).href;
                 }
