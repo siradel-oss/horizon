@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <lin_maths.h>
 
+#include <bit>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
@@ -14,28 +15,15 @@
 namespace hrz
 {
 
-inline int clamp(int x, int min, int max)
+template<std::totally_ordered T>
+constexpr T clamp(T x, T min, T max)
 {
     return (x < min ? min : (x > max ? max : x));
 }
 
-inline unsigned int clamp(unsigned int x, unsigned int min, unsigned int max)
-{
-    return (x < min ? min : (x > max ? max : x));
-}
-
-inline float clamp(float x, float min, float max)
-{
-    return (x < min ? min : (x > max ? max : x));
-}
-
-inline double clamp(double x, double min, double max)
-{
-    return (x < min ? min : (x > max ? max : x));
-}
-
-template<typename TFrom, typename TTo>
-inline TTo clamp_cast(TFrom x)
+template<std::totally_ordered TFrom, typename TTo>
+constexpr TTo clamp_cast(TFrom x)
+    requires std::convertible_to<TFrom, TTo>
 {
     TFrom min = (TFrom)std::numeric_limits<TTo>::lowest();
     TFrom max = (TFrom)std::numeric_limits<TTo>::max();
@@ -50,13 +38,13 @@ inline void split_double(double double_value, float& float_low, float& float_hig
 {
     if (double_value >= 0.0)
     {
-        double double_high = std::floor(double_value / SPLIT_F) * SPLIT_F;
+        const double double_high = std::floor(double_value / SPLIT_F) * SPLIT_F;
         float_high = (float)double_high;
         float_low = (float)(double_value - double_high);
     }
     else
     {
-        double double_high = std::floor(-double_value / SPLIT_F) * SPLIT_F;
+        const double double_high = std::floor(-double_value / SPLIT_F) * SPLIT_F;
         float_high = (float)-double_high;
         float_low = (float)(double_value + double_high);
     }
@@ -99,56 +87,6 @@ inline T clamped_lerp(T start, T end, T t)
     return clamp(lerp(start, end, t), start, end);
 }
 
-template<std::unsigned_integral T>
-constexpr bool is_power_of_two(T x)
-{
-    return (x != 0) && (x & (x - 1)) == 0;
-}
-
-inline uint32_t next_power_of_two(uint32_t x)
-{
-    x -= 1;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return x + 1;
-}
-
-inline uint64_t next_power_of_two(uint64_t x)
-{
-    x -= 1;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    x |= x >> 32;
-    return x + 1;
-}
-
-inline uint32_t previous_power_of_two(uint32_t x)
-{
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return x - (x >> 1);
-}
-
-inline uint64_t previous_power_of_two(uint64_t x)
-{
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    x |= x >> 32;
-    return x - (x >> 1);
-}
-
 inline double round_to_power_of_two(double x)
 {
     return std::pow(2.0, std::round(std::log2(x)));
@@ -157,7 +95,7 @@ inline double round_to_power_of_two(double x)
 template<std::unsigned_integral T>
 inline T align_up_po2(T x, T align)
 {
-    assert(is_power_of_two(align));
+    assert(std::has_single_bit(align));
     return (x + align - 1) & ~(align - 1);
 }
 
@@ -174,54 +112,14 @@ inline T align_up_any(T x, T align)
     }
 }
 
-// https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-constexpr uint32_t count_set_bits(uint32_t v)
-{
-    v = v - ((v >> 1) & 0x5555'5555);
-    v = (v & 0x3333'3333) + ((v >> 2) & 0x3333'3333);
-    return (((v + (v >> 4)) & 0x0F0F'0F0F) * 0x0101'0101) >> 24;
-}
-
-constexpr uint64_t count_set_bits(uint64_t v)
-{
-    v = v - ((v >> 1) & 0x5555'5555'5555'5555);
-    v = (v & 0x3333'3333'3333'3333) + ((v >> 2) & 0x3333'3333'3333'3333);
-    return (((v + (v >> 4)) & 0x0F0F'0F0F'0F0F'0F0F) * 0x0101'0101'0101'0101) >> 56;
-}
-
-// Rounded down
-// AKA position of the highest set bit
-inline uint32_t log2(uint32_t x)
-{
-    if (x == 0) return UINT32_MAX;
-    return count_set_bits(previous_power_of_two(x) - 1);
-}
-
-// Rounded down
-// AKA position of the highest set bit
-inline uint32_t log2(uint64_t x)
-{
-    if (x == 0) return UINT32_MAX;
-    return count_set_bits(previous_power_of_two(x) - 1);
-}
-
-#ifdef __EMSCRIPTEN__
-// For some reason emcc can't infer that it should use the u32 implementation here.
-inline size_t next_power_of_two(size_t x)
-{
-    static_assert(sizeof(size_t) == 4);
-    return (size_t)next_power_of_two((uint32_t)x);
-}
-#endif
-
-template<typename T>
+template<std::floating_point T>
 inline bool flt_eq(T a, T b)
 {
     return std::abs(a - b)
         <= std::numeric_limits<T>::epsilon() * std::fmax(std::abs(a), std::abs(b));
 }
 
-template<typename T>
+template<std::floating_point T>
 inline bool flt_near(T a, T b, T eps)
 {
     return std::abs(a - b) <= eps;

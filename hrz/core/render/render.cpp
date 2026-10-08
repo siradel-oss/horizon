@@ -123,8 +123,8 @@ void GpuResourceContext::register_texture_metadata(
         uint32_t levels = layout.levels;
         if (levels == 1 && texture_res->generate_mipmaps)
         {
-            auto max_size = std::max(std::max(layout.width, layout.height), layout.depth);
-            levels = (uint32_t)std::log2((float)hrz::next_power_of_two(max_size)) + 1;
+            const auto max_size = std::max(std::max(layout.width, layout.height), layout.depth);
+            levels = (uint32_t)std::bit_width(max_size);
         }
         monitoring->register_gpu_resource_metadata(handle, "mipmap levels", std::to_string(levels));
     }

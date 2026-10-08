@@ -1708,17 +1708,17 @@ public:
     {
         HRZ_SCOPED_SAMPLE("depth reduction draw");
 
-        uint32_t first_size = std::max(
-            (uint32_t)MinBufferSize,
-            std::min(
-                (uint32_t)InitialBufferSize,
-                hrz::next_power_of_two(std::max(ctx.backbuffer_width, ctx.backbuffer_height))));
+        auto first_size = std::max<uint32_t>(
+            MinBufferSize,
+            std::min<uint32_t>(
+                InitialBufferSize,
+                std::bit_ceil(std::max(ctx.backbuffer_width, ctx.backbuffer_height))));
 
         if (first_size != _last_first_size)
         {
             _last_first_size = first_size;
 
-            DepthReductionUbo data;
+            DepthReductionUbo data{};
             data.size = (float)first_size;
 
             ctx.render->update_buffer(_ubo, 0, sizeof(DepthReductionUbo), &data);

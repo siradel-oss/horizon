@@ -14,7 +14,7 @@ DownloadBuffer DownloadBufferPool::acquire(
     size_t size,
     const monitoring::ResourceOwner& resource_owner)
 {
-    size = hrz::next_power_of_two(size);
+    size = std::bit_ceil(size);
 
     auto it = _buffers.find(size);
     if (it != _buffers.end())

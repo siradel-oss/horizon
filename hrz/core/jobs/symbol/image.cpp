@@ -59,7 +59,7 @@ ElementGeometry SymbolBaker::ImageVisitor::visit_element(
         load_int_property(params.sprite_index_prp, &*sprite_index);
     }
 
-    sprite_index = hrz::clamp(*sprite_index, 0, params.sprites.size() - 1);
+    sprite_index = hrz::clamp<int64_t>(*sprite_index, 0, params.sprites.size() - 1);
     const auto& sprite = params.sprites[*sprite_index];
 
     auto original_content_size = lm::vec2(sprite.content_size_fixed + sprite.content_size_stretch);

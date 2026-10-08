@@ -946,7 +946,7 @@ private:
     {
         static constexpr size_t RASTER_GROUP_COUNT = hrz_proto::TOP_RASTER_GROUP + 1;
 
-        uint32_t scene_views_count = count_set_bits(_scene_views);
+        uint32_t scene_views_count = std::popcount(_scene_views);
 
         // First we build the list of active views.
         StaticVector<hrz_proto::SceneViewIndex, SCENE_VIEW_COUNT> scene_views;

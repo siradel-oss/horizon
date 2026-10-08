@@ -17,6 +17,7 @@
 #include <proj_lite.h>
 #include <rapidjson/document.h>
 
+#include <bit>
 #include <cassert>
 #include <cstdlib>
 #include <limits>
@@ -650,14 +651,15 @@ private:
             if (full_extent.has_value() && full_extent->min.x >= origin.x
                 && full_extent->max.y <= origin.y)
             {
-                uint32_t required_tile_count = std::max(
-                    hrz::next_power_of_two((uint32_t)std::ceil(
+                const uint32_t required_tile_count = std::max(
+                    std::bit_ceil((uint32_t)std::ceil(
                         (full_extent->max.x - origin.x) / (tile_size * min_lod_resolution))),
-                    hrz::next_power_of_two((uint32_t)std::ceil(
+                    std::bit_ceil((uint32_t)std::ceil(
                         (full_extent->max.x - origin.x) / (tile_size * min_lod_resolution))));
                 if (required_tile_count > tile_count_at_min_lod)
                 {
-                    lod_offset_correction = hrz::log2(required_tile_count) - min_lod;
+                    lod_offset_correction =
+                        (uint32_t)std::bit_width(required_tile_count) - 1 - min_lod;
 
                     bounds_max = {
                         origin.x + required_tile_count * tile_size * min_lod_resolution,

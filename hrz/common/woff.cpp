@@ -11,6 +11,8 @@
 #include <woff2/decode.h>
 #include <woff2/output.h>
 
+#include <bit>
+
 static bool is_woff(const std::byte* data, size_t size)
 {
     static constexpr std::byte woff_magic[] = {0x77_b, 0x4F_b, 0x46_b, 0x46_b};
@@ -156,10 +158,9 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
     memset(sfnt_data.data(), 0, sfnt_data.size_bytes());
 
     // Compute some stuff for sfnt header
-    // Doing stuff on 32 bits because I don't want to rewrite those functions for 16 bits.
-    uint16_t search_range = (uint16_t)hrz::previous_power_of_two((uint32_t)num_tables) * 16;
-    uint16_t entry_selector = (uint16_t)hrz::log2((uint32_t)search_range / 16);
-    uint16_t range_shift = num_tables * 16 - search_range;
+    const uint16_t search_range = std::bit_floor(num_tables) * 16;
+    const uint16_t entry_selector = (uint16_t)std::bit_width(num_tables) - 1;
+    const uint16_t range_shift = num_tables * 16 - search_range;
 
     // Write SFNT header
     write_be_uint32(sfnt_data, 0, sfnt_version);

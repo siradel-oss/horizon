@@ -327,7 +327,7 @@ hrz_jobs::JobResult run(
 
     unsigned int byte_count = hrz::image_format_byte_count(format);
     unsigned int image_size = std::max(params.image.width(), params.image.height());
-    unsigned int expanded_image_size = hrz::next_power_of_two(image_size);
+    unsigned int expanded_image_size = std::bit_ceil(image_size);
     unsigned int mipmap_count = (unsigned int)std::ceil(std::log2(expanded_image_size)) + 1;
 
     auto input_image_data = params.image.data();
