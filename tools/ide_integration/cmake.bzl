@@ -77,6 +77,11 @@ def _remove_define_quotes_and_escape(str):
         return key + "=" + value
     return str
 
+# Packages with the `no_copts_tokenization` feature pass copts verbatim to the compiler,
+# so their quotes must be preserved. Only the characters special to CMake are escaped.
+def _escape(str):
+    return str.replace(" ", "\\ ").replace("(", "\\(").replace(")", "\\)")
+
 def _cmakelists_txt(cmake_commands):
     # Return a CMakeLists.txt string for the CMake commands.
 
@@ -322,7 +327,7 @@ def _cmakelists_aspect_impl(target, ctx):
         ),
     )
 
-    if not header_only and _is_cpp_target(srcs):
+    if not header_only and is_cpp:
         cmake_commands.append(
             struct(
                 command = "set_target_properties",
@@ -357,7 +362,7 @@ def _cmakelists_aspect_impl(target, ctx):
         for dep in ctx.rule.attr.implementation_deps:
             deps.append(_bazel_label_to_cmake_target_name(dep))
 
-        prps = ["PRIVATE"]
+        prps = ["INTERFACE" if header_only else "PRIVATE"]
 
         cmake_commands.append(
             struct(
@@ -421,32 +426,38 @@ def _cmakelists_aspect_impl(target, ctx):
             ),
         )
 
-    compile_opts = [struct(str = o, is_cxx = False) for o in ctx.fragments.cpp.copts]
+    # `language` is `None` for options applying to all languages.
+    compile_opts = [struct(str = o, language = None) for o in ctx.fragments.cpp.copts]
     if hasattr(ctx.rule.attr, "copts") and ctx.rule.attr.copts:
-        compile_opts += [struct(str = o, is_cxx = False) for o in ctx.rule.attr.copts]
+        compile_opts += [struct(str = o, language = None) for o in ctx.rule.attr.copts]
 
-    if is_cpp:
-        compile_opts += [struct(str = o, is_cxx = True) for o in ctx.fragments.cpp.cxxopts]
-        if hasattr(ctx.rule.attr, "cxxopts") and ctx.rule.attr.cxxopts:
-            compile_opts += [struct(str = o, is_cxx = True) for o in ctx.rule.attr.cxxopts]
+    compile_opts += [struct(str = o, language = "CXX") for o in ctx.fragments.cpp.cxxopts]
+    if hasattr(ctx.rule.attr, "cxxopts") and ctx.rule.attr.cxxopts:
+        compile_opts += [struct(str = o, language = "CXX") for o in ctx.rule.attr.cxxopts]
+
+    compile_opts += [struct(str = o, language = "C") for o in ctx.fragments.cpp.conlyopts]
+    if hasattr(ctx.rule.attr, "conlyopts") and ctx.rule.attr.conlyopts:
+        compile_opts += [struct(str = o, language = "C") for o in ctx.rule.attr.conlyopts]
 
     if compile_opts:
         prps = ["INTERFACE" if header_only else "PRIVATE"]
+
+        escape = _escape if "no_copts_tokenization" in ctx.features else _remove_define_quotes_and_escape
 
         compile_definitions = []
         compile_options = []
 
         for opt in compile_opts:
             if opt.str.startswith("-D"):
-                value = _remove_define_quotes_and_escape(opt.str[2:])
-                if opt.is_cxx:
-                    compile_definitions.append("$<$<COMPILE_LANGUAGE:CXX>:" + value + ">")
+                value = escape(opt.str[2:])
+                if opt.language:
+                    compile_definitions.append("$<$<COMPILE_LANGUAGE:" + opt.language + ">:" + value + ">")
                 else:
                     compile_definitions.append(value)
-            elif opt.is_cxx:
-                compile_options.append("$<$<COMPILE_LANGUAGE:CXX>:" + _remove_define_quotes_and_escape(opt.str) + ">")
+            elif opt.language:
+                compile_options.append("$<$<COMPILE_LANGUAGE:" + opt.language + ">:" + escape(opt.str) + ">")
             else:
-                compile_options.append(_remove_define_quotes_and_escape(opt.str))
+                compile_options.append(escape(opt.str))
 
         if compile_definitions:
             cmake_commands.append(
@@ -550,7 +561,6 @@ def _cmakelists_impl(ctx):
               "project(__PROJ_NAME__\n" + \
               "    LANGUAGES CXX C ASM\n" + \
               ")\n" + \
-              "set(CMAKE_CXX_STANDARD 20)\n\n" + \
               "#__GLOBAL_OPTIONS__\n\n"
     content += _cmakelists_txt(cmake_commands.to_list())
     content = content.replace("__EXEC_ROOT__", ctx.attr.exec_root)
