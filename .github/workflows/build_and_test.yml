@@ -1,0 +1,72 @@
+name: Build and test
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # The Android SDK is deleted to free disk space; rules_android would otherwise try to use it.
+  ANDROID_HOME: ''
+  ANDROID_SDK_ROOT: ''
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y -q libgl1-mesa-dev libxcursor-dev libxi-dev
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build
+        run: |
+          bazel build -c opt --config=linux \
+            //hrz/cpp_protocol:pkg \
+            //hrz/cpp_api:pkg \
+            //hrz/core:pkg_native \
+            //apps/native_client \
+            //tools/monitoring_client \
+            //tools/visual_testing:kit
+
+      - name: Test
+        run: bazel test -c opt --config=linux //:native_tests
+
+  wasm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build
+        run: |
+          bazel build -c opt --config=wasm_linux \
+            //hrz/ts_protocol:npm_pkg \
+            //hrz/ts_core:npm_pkg \
+            //hrz/ts_api:npm_pkg \
+            //hrz/ts_scene_dump:npm_pkg \
+            //hrz/ts_monitoring_protocol:npm_pkg \
+            //apps/web_example:server \
+            //apps/gallery:pkg \
+            //hrz/doc:pkg
+
+      - name: Test
+        run: bazel test -c opt --config=wasm_linux //:web_tests
