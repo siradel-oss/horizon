@@ -5,9 +5,11 @@
 
 const float PI = 3.14159265359;
 
-// isnan doesn't always work in GLSL/WebGL so here we are...
 bool is_nan(float val)
 {
+    // isnan sometimes get optimized away by shader compilers for some reason.
+    // Or maybe it's the FPU of some GPUs that use emulated floats and don't
+    // support NaN? I don't know. Anyway...
     if (isnan(val)) return true;
-    return (val < 0.0 || 0.0 < val || val == 0.0) ? false : true;
+    return (floatBitsToUint(val) & 0x7fffffffu) > 0x7f800000u;
 }
