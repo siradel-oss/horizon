@@ -1620,15 +1620,21 @@ struct ThreeDTilesSystem
                         {
                             if (reload_subtiles_content(content.tileset_handle, true))
                             {
-                                subtile.load_status = ThreeDTile::Subtile::LoadStatus::LOADING;
-                                tile.subtiles_left_to_load += 1;
+                                if (subtile.load_status != ThreeDTile::Subtile::LoadStatus::LOADING)
+                                {
+                                    subtile.load_status = ThreeDTile::Subtile::LoadStatus::LOADING;
+                                    tile.subtiles_left_to_load += 1;
+                                }
                                 has_subtile_to_load = true;
                             }
                         },
                         [&subtile, &tile, &has_subtile_to_load](ThreeDTile::B3dmContent&)
                         {
-                            subtile.load_status = ThreeDTile::Subtile::LoadStatus::LOADING;
-                            tile.subtiles_left_to_load += 1;
+                            if (subtile.load_status != ThreeDTile::Subtile::LoadStatus::LOADING)
+                            {
+                                subtile.load_status = ThreeDTile::Subtile::LoadStatus::LOADING;
+                                tile.subtiles_left_to_load += 1;
+                            }
                             has_subtile_to_load = true;
                         },
                         [](ThreeDTile::I3dmContent&)
