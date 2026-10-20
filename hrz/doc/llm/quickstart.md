@@ -17,6 +17,15 @@ import { HrzCoreBackend, HrzCoreRuntimeFile } from "@siradel-oss/horizon-core";
 import { HrzApi } from "@siradel-oss/horizon-api";
 import { HrzProtocol } from "@siradel-oss/horizon-protocol";
 
+const options = HrzProtocol.ViewerOptions.create({
+    keyBindings: {
+        bindings: [
+            { key: HrzProtocol.Key.K_CTRL, action: HrzProtocol.KeyAction.MOD_KEY },
+            { key: HrzProtocol.Key.K_R, action: HrzProtocol.KeyAction.RESET_NORTH },
+        ],
+    },
+});
+
 HrzCoreBackend.init(
     myCanvas,
     (file: HrzCoreRuntimeFile) => {
@@ -39,6 +48,13 @@ HrzCoreBackend.init(
 The runtime file location callback lets the bundler detect and handle `hrz_core.js` /
 `hrz_core.wasm` as ordinary assets (see gotcha 3 below) — prefer this over hardcoding a
 `runtimeFilesBaseUrl` string.
+
+**Always bind `MOD_KEY`.** No key is bound by default. `MOD_KEY` is the modifier that turns
+left-click + drag from panning into rotating the camera; without it, users with no middle
+mouse button (laptop touchpads) cannot rotate the camera at all. Bind it to `K_CTRL` unless
+the application needs Ctrl for something else. Key bindings can only be set in the
+`ViewerOptions` at init. See [Platform events](/doc/events_handling.md) for the other
+bindable actions ([`KeyAction`](/doc/reference/HrzProtocol.KeyAction.md)).
 
 Initialization order matters: backend init → `AsyncApi` instantiation → message pump
 start → wait for `ViewerReadyMessage` before issuing any commands. See [key
