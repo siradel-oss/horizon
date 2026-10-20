@@ -23,31 +23,24 @@ glsl_config = rule(
     },
 )
 
-def _declare_glsl_file(ctx, spirv):
-    tokens = spirv.basename.split(".")
-    file_name = ctx.label.name + ".compiled." + tokens[-1]
-    return ctx.actions.declare_file(file_name)
-
-def _declare_tmp_file(ctx, f, name):
-    return ctx.actions.declare_file(
-        f.basename + "." + name,
-        sibling = f,
-    )
-
 def _assemble_shader(ctx, input, stage):
-    output = _declare_glsl_file(ctx, input)
     config = ctx.attr.config[GlslConfigInfo]
     glsl_info = ctx.toolchains["//tools/bazel/glsl:toolchain_type"].glsl_info
     glslang = ctx.toolchains["@glslang_prebuilt//glslang:toolchain_type"].tool
 
+    shader_name = ctx.label.name
+
+    output = ctx.actions.declare_file("{}.compiled.{}".format(shader_name, stage))
+    output_compressed = ctx.actions.declare_file("{}.compiled.{}.lz4".format(shader_name, stage))
+    validation = ctx.actions.declare_file("{}.validation.{}".format(shader_name, stage))
+
     include_dirs = [f.path for i in config.includes for f in i.files.to_list()]
     common_files = [f for c in config.common for f in c.files.to_list()]
 
-    input_check = _declare_tmp_file(ctx, output, "precheck")
-
+    # Compile shader
     args = ctx.actions.args()
     args.add(input)
-    args.add(input_check)
+    args.add(output)
     args.add(glsl_info.check_version)
     args.add(glsl_info.profile)
 
@@ -60,42 +53,61 @@ def _assemble_shader(ctx, input, stage):
         args.add("-D" + d)
 
     ctx.actions.run(
-        outputs = [input_check],
+        mnemonic = "CompileShader",
+        outputs = [output],
         inputs = [input] + common_files,
-        executable = ctx.executable._shader_assembler,
+        executable = ctx.executable._assembler,
         arguments = [args],
     )
 
+    # Compress shader
     args = ctx.actions.args()
-    args.add(input_check)
     args.add(output)
+    args.add(output_compressed)
+    ctx.actions.run(
+        mnemonic = "CompressShader",
+        outputs = [output_compressed],
+        inputs = [output],
+        executable = ctx.executable._compressor,
+        arguments = [args],
+    )
+
+    # Validate shader
+    args = ctx.actions.args()
+    args.add(output)
+    args.add(validation)
     args.add(stage)
     args.add(glsl_info.check_version)
     args.add(glslang)
-    args.add(ctx.executable._compressor)
 
     ctx.actions.run(
-        outputs = [output],
-        inputs = [input_check],
-        executable = ctx.executable._shader_validator,
+        mnemonic = "ValidateShader",
+        outputs = [validation],
+        inputs = [output],
+        executable = ctx.executable._validator,
         arguments = [args],
         tools = [
             glslang,
-            ctx.executable._compressor,
         ],
     )
 
-    return output
+    return output_compressed, validation
 
 def _glsl_program_impl(ctx):
-    vert_compiled = _assemble_shader(ctx, ctx.file.vert, "vert")
-    frag_compiled = _assemble_shader(ctx, ctx.file.frag, "frag")
+    vert_compiled, vert_validation = _assemble_shader(ctx, ctx.file.vert, "vert")
+    frag_compiled, frag_validation = _assemble_shader(ctx, ctx.file.frag, "frag")
 
     return [
         DefaultInfo(
             files = depset([
                 vert_compiled,
                 frag_compiled,
+            ]),
+        ),
+        OutputGroupInfo(
+            _validation = depset([
+                vert_validation,
+                frag_validation,
             ]),
         ),
         GlslProgramInfo(
@@ -123,12 +135,12 @@ glsl_program = rule(
             allow_single_file = True,
         ),
         "defines": attr.string_list(),
-        "_shader_assembler": attr.label(
+        "_assembler": attr.label(
             default = "//tools/bazel/glsl:shader_assembler",
             executable = True,
             cfg = "exec",
         ),
-        "_shader_validator": attr.label(
+        "_validator": attr.label(
             default = "//tools/bazel/glsl:shader_validator",
             executable = True,
             cfg = "exec",

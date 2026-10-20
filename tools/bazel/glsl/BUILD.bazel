@@ -14,8 +14,6 @@ py_binary(
     srcs = [
         "shader_assembler.py",
     ],
-    main = "shader_assembler.py",
-    python_version = "PY3",
     visibility = ["//visibility:public"],
 )
 
@@ -24,8 +22,6 @@ py_binary(
     srcs = [
         "shader_validator.py",
     ],
-    main = "shader_validator.py",
-    python_version = "PY3",
     visibility = ["//visibility:public"],
 )
 

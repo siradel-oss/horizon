@@ -6,6 +6,9 @@ GlslInfo = provider(
         "check_version",
         "version",
         "profile",
+        "assembler",
+        "validator",
+        "compressor",
     ],
 )
 
