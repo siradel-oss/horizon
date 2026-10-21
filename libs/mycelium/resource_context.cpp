@@ -202,6 +202,12 @@ static GLuint create_shader_inner(
     static constexpr const char* VERSION_STRING_LINE =
         "#version " STR(MYCELIUM_GLSL_VERSION) " " STR(MYCELIUM_GLSL_PROFILE) "\n";
 
+    // Strip first version line from the source, since we will prepend our own version line.
+    assert(strncmp(source, "#version", 8) == 0);
+    auto first_newline = strchr(source, '\n');
+    len -= first_newline ? (int)(first_newline - source + 1) : 0;
+    source = first_newline ? first_newline : source;
+
     const GLchar* strings[] = {VERSION_STRING_LINE, global_shader_defines.c_str(), source};
     const GLint lengths[] = {
         (int)strlen(VERSION_STRING_LINE), (int)global_shader_defines.size(), len
