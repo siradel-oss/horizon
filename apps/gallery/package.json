@@ -13,7 +13,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@tsconfig/node20": "^20.1.10",
     "@types/node": "^24.19.0",
-    "@vitejs/plugin-vue": "^6.0.9",
+    "@vitejs/plugin-vue": "^6.0.10",
     "npm-run-all2": "^9.0.3",
     "postcss": "^8.5.28",
     "vite": "^8.3.4",
