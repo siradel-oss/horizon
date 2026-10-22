@@ -10,13 +10,13 @@ module(name = "horizon")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "bazel_features", version = "1.50.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
-bazel_dep(name = "bazel_lib", version = "3.3.1")
+bazel_dep(name = "bazel_lib", version = "3.7.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "rules_cc", version = "0.2.25")
-bazel_dep(name = "rules_python", version = "2.2.0")
-bazel_dep(name = "aspect_rules_ts", version = "3.9.2")
-bazel_dep(name = "aspect_rules_js", version = "3.2.3")
-bazel_dep(name = "rules_nodejs", version = "6.7.5")  # Only needed to override node version
+bazel_dep(name = "rules_cc", version = "0.2.26")
+bazel_dep(name = "rules_python", version = "2.4.3")
+bazel_dep(name = "aspect_rules_ts", version = "3.10.1")
+bazel_dep(name = "aspect_rules_js", version = "3.5.1")
+bazel_dep(name = "rules_nodejs", version = "6.7.7")  # Only needed to override node version
 
 #--------------------------------------------------------
 # Libraries & tools
@@ -115,11 +115,11 @@ use_repo(pip, "pypi")
 #--------------------------------------------------------
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
-node.toolchain(node_version = "22.22.0")
+node.toolchain(node_version = "24.22.1")
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps(ts_version_from = "//:package.json")
-use_repo(rules_ts_ext, "npm_typescript")
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript.deps(ts_version_from = "//:package.json")
+use_repo(typescript, "npm_typescript")
 
 pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
 use_repo(pnpm, "pnpm")
