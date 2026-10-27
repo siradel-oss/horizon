@@ -6,6 +6,7 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
 #include "hrz/common/triangulation.h" // IWYU pragma: keep
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
@@ -15,11 +16,15 @@
 #include "hrz/core/jobs/vector_repr_common.h"
 #include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
+#include "hrz/fnd/meta.h"
+#include "hrz/protocol/vector/geometry_type.pb.h"
 
 #include <earcut.hpp>
 
 #include <limits>
 #include <span>
+#include <variant>
+#include <vector>
 
 namespace hrz_jobs::bake_extruded_vector_geometry
 {
@@ -847,6 +852,227 @@ void generate_wall_geometry(
     }
 }
 
+struct InstanceProperties
+{
+    double altitude_offset;
+    double extrusion;
+    lm::ubvec4 roof_color_srgb;
+    lm::ubvec4 wall_top_color_srgb;
+    lm::ubvec4 wall_bottom_color_srgb;
+};
+
+InstanceProperties get_instance_properties(
+    const hrz_jobs::ExtrudedVectorData& input,
+    uint64_t prp_begin,
+    uint64_t prp_end,
+    std::span<const uint64_t> style_prps,
+    const hrz::vector_data::PackedAttributeValuesReader& style_values)
+{
+    InstanceProperties props{};
+    props.altitude_offset = input.default_altitude_offset;
+    props.extrusion = input.default_extrusion;
+    props.roof_color_srgb = input.default_roof_color_srgb;
+    props.wall_top_color_srgb = input.default_upper_color_srgb;
+    props.wall_bottom_color_srgb = input.default_lower_color_srgb;
+
+    for (uint64_t j = prp_begin; j < prp_end; ++j)
+    {
+        if (style_prps[j] == input.extrusion_prp)
+        {
+            props.extrusion = (float)style_values.as_number(j);
+        }
+        if (style_prps[j] == input.upper_color_prp)
+        {
+            props.wall_top_color_srgb = style_values.as_color(j);
+        }
+        if (style_prps[j] == input.lower_color_prp)
+        {
+            props.wall_bottom_color_srgb = style_values.as_color(j);
+        }
+        if (style_prps[j] == input.roof_color_prp)
+        {
+            props.roof_color_srgb = style_values.as_color(j);
+        }
+        if (style_prps[j] == input.altitude_offset_prp)
+        {
+            props.altitude_offset = style_values.as_number(j);
+        }
+    }
+
+    return props;
+}
+
+struct BakingContext
+{
+    GeometryBuilder builder;
+
+    // Declared here to recycle memory.
+    std::vector<VertexWithBevelInfo> vertices_bevel_info;
+    std::vector<std::pair<size_t, size_t>> linestrings; // Start-size pairs
+
+    bool use_z;
+};
+
+// Clamping and altitude extents over all the extrudable points of a feature,
+// so that all the geometries of a feature share the same roof altitude and tessellation.
+struct FeatureAltitudes
+{
+    double min_clamp = std::numeric_limits<double>::max();
+    double max_clamp = std::numeric_limits<double>::lowest();
+    double min_z = std::numeric_limits<double>::max();
+
+    bool is_empty() const { return min_clamp > max_clamp; }
+};
+
+FeatureAltitudes compute_feature_altitudes(
+    const hrz::vector_data::VectorTileGeometry::Reader& reader,
+    uint32_t feature_index,
+    const hrz::FeatureClampingGenerator& clamps_gen,
+    bool use_z)
+{
+    using hrz::vector_data::VectorTileGeometry;
+
+    FeatureAltitudes altitudes;
+
+    auto accumulate = [&](std::span<const lm::dvec3> points, uint32_t first_point_index)
+    {
+        const hrz::PointClampingGenerator point_clamp_gen =
+            clamps_gen.for_feature(feature_index, first_point_index);
+
+        for (size_t i = 0; i < points.size(); ++i)
+        {
+            const double clamp = point_clamp_gen.get_clamp_for_point(i);
+            altitudes.min_clamp = std::min(altitudes.min_clamp, clamp);
+            altitudes.max_clamp = std::max(altitudes.max_clamp, clamp);
+            altitudes.min_z = std::min(altitudes.min_z, use_z ? points[i].z : 0.0);
+        }
+    };
+
+    const auto visitor = hrz::overload{
+        [&](const VectorTileGeometry::PolygonGeometry& polygon)
+        { accumulate(polygon.points, polygon.first_point_index); },
+        [&](const VectorTileGeometry::PolylineGeometry& polyline)
+        { accumulate(polyline.points, polyline.first_point_index); },
+        [&](const VectorTileGeometry::PointGeometry&) {}
+    };
+
+    reader.iterate_geometries_for_feature(
+        feature_index, [&](const VectorTileGeometry::Geometry& feature_geometry)
+        { std::visit(visitor, feature_geometry); });
+
+    return altitudes;
+}
+
+void generate_extruded_polygon(
+    const hrz::vector_data::VectorTileGeometry::PolygonGeometry& polygon,
+    const hrz::PointClampingGenerator& point_clamp_gen,
+    const InstanceProperties& props,
+    const FeatureAltitudes& altitudes,
+    FeatureInfo info,
+    BakingContext& ctx)
+{
+    ctx.linestrings.clear();
+    ctx.vertices_bevel_info.clear();
+    ctx.vertices_bevel_info.resize(polygon.points.size());
+
+    size_t current_ring_start = 0;
+    for (const uint32_t ring_size : polygon.ring_sizes)
+    {
+        const std::span<const lm::dvec3> ring_points =
+            polygon.points.subspan(current_ring_start, ring_size);
+        const std::span<VertexWithBevelInfo> ring_bevel_verts_info(
+            ctx.vertices_bevel_info.data() + current_ring_start, ring_size);
+
+        // The exterior ring determines the winding order.
+        if (ctx.linestrings.empty())
+        {
+            info.invert_walls_winding = hrz::is_clockwise(ring_points);
+        }
+
+        make_linestring_bevel_info(
+            ring_points, ring_bevel_verts_info, info.bevel_width, true, ctx.use_z,
+            info.invert_walls_winding);
+
+        ctx.linestrings.emplace_back(current_ring_start, ring_size);
+        current_ring_start += ring_size;
+    }
+
+    info.double_sided_walls = false;
+    info.double_sided_roof = altitudes.min_clamp == altitudes.max_clamp && props.extrusion == 0;
+    info.roof_bevel = info.bevel_width > kBevelMinWidth && !info.double_sided_roof
+        && props.extrusion > info.bevel_width * 2.0;
+
+    const double roof_altitude = altitudes.max_clamp + props.altitude_offset + props.extrusion;
+    const double wall_top_offset = info.roof_bevel ? -info.bevel_width * kInvSqrt2 : 0.0;
+
+    generate_roof_geometry(
+        ctx.vertices_bevel_info, ctx.linestrings, ctx.builder, roof_altitude, info);
+
+    if (info.double_sided_roof) return;
+
+    // Generate walls geometry for each ring
+    for (const auto& [ring_start, ring_size] : ctx.linestrings)
+    {
+        const auto bevel_info_span = std::span<const VertexWithBevelInfo>(
+            ctx.vertices_bevel_info.data() + ring_start, ring_size);
+
+        for (size_t p0 = ring_size - 1, p1 = 0; p1 < ring_size; p0 = p1++)
+        {
+            const auto& bi0 = bevel_info_span[p0];
+            const auto& bi1 = bevel_info_span[p1];
+
+            const double floor0 =
+                props.altitude_offset + point_clamp_gen.clamp_point(ring_start + p0, bi0.pos.z);
+            const double floor1 =
+                props.altitude_offset + point_clamp_gen.clamp_point(ring_start + p1, bi1.pos.z);
+
+            const double roof0 = roof_altitude + bi0.pos.z + wall_top_offset;
+            const double roof1 = roof_altitude + bi1.pos.z + wall_top_offset;
+
+            generate_wall_geometry(bi0, bi1, floor0, floor1, roof0, roof1, ctx.builder, info);
+
+            if (info.roof_bevel)
+            {
+                generate_wall_roof_bevel(
+                    bi0, bi1, roof0, roof1, roof_altitude + bi0.pos.z, roof_altitude + bi1.pos.z,
+                    ctx.builder, info);
+            }
+        }
+    }
+}
+
+void generate_extruded_polyline(
+    const hrz::vector_data::VectorTileGeometry::PolylineGeometry& polyline,
+    const hrz::PointClampingGenerator& point_clamp_gen,
+    const InstanceProperties& props,
+    FeatureInfo info,
+    BakingContext& ctx)
+{
+    if (polyline.points.size() < 2) return;
+
+    ctx.vertices_bevel_info.clear();
+    ctx.vertices_bevel_info.resize(polyline.points.size());
+
+    make_linestring_bevel_info(
+        polyline.points, ctx.vertices_bevel_info, info.bevel_width, false, ctx.use_z, false);
+
+    info.double_sided_walls = true;
+
+    const size_t wall_count = ctx.vertices_bevel_info.size() - 1;
+    for (size_t i = 0; i < wall_count; ++i)
+    {
+        const auto& bi0 = ctx.vertices_bevel_info[i];
+        const auto& bi1 = ctx.vertices_bevel_info[i + 1];
+
+        const double floor0 = props.altitude_offset + point_clamp_gen.clamp_point(i, bi0.pos.z);
+        const double floor1 = props.altitude_offset + point_clamp_gen.clamp_point(i + 1, bi1.pos.z);
+
+        generate_wall_geometry(
+            bi0, bi1, floor0, floor1, floor0 + props.extrusion, floor1 + props.extrusion,
+            ctx.builder, info);
+    }
+}
+
 } // anonymous namespace
 
 hrz_jobs::JobResult run(
@@ -856,16 +1082,15 @@ hrz_jobs::JobResult run(
 {
     HRZ_SCOPED_SAMPLE("bake extruded geometry");
 
+    using hrz::vector_data::VectorTileGeometry;
+
+    const auto input_geometry_reader = input.geometry.make_reader();
+    const auto input_feature_ids = input.feature_ids.get_data();
+    const auto input_clamps = input.clamps.get_data();
+
     const auto& style = input.style;
-
-    auto input_features = input.geometry.features.get_data();
-    auto input_points = input.geometry.points.get_data();
-    auto input_sizes = input.geometry.linestring_sizes.get_data();
-    auto input_feature_ids = input.feature_ids.get_data();
-    auto input_clamps = input.clamps.get_data();
-
-    auto style_prps = input.style.prps.get_data();
-    auto style_values = input.style.get_values_reader();
+    const auto style_prps = style.prps.get_data();
+    const auto style_values = style.get_values_reader();
 
     // Compute the transformation to transform the normals
     const hrz::BSphere<double> tile_bsphere =
@@ -878,10 +1103,14 @@ hrz_jobs::JobResult run(
 
     bool has_transparent_geometry = false;
 
-    const bool use_z = input.clamping.use_z();
     const hrz::FeatureClampingGenerator clamps_gen(input_clamps.as_span(), input.clamping);
 
-    GeometryBuilder builder(context.get_blob_allocator());
+    BakingContext ctx{
+        .builder = GeometryBuilder(context.get_blob_allocator()),
+        .vertices_bevel_info = {},
+        .linestrings = {},
+        .use_z = input.clamping.use_z(),
+    };
 
     TileInfo tile_info;
     tile_info.bevel_width = std::max(input.bevel_width, 0.0F);
@@ -895,58 +1124,30 @@ hrz_jobs::JobResult run(
 
     uint32_t max_feature_index = 0;
 
-    std::vector<VertexWithBevelInfo> vertices_bevel_info;
-    std::vector<std::pair<size_t, size_t>> linestrings; // Start-size pairs
-
     for (const auto& instance : style.instances.get_data())
     {
         if (instance.repr_id != input.repr_id) continue;
 
-        FeatureInfo info(tile_info);
-        info.roof_color_srgb = input.default_roof_color_srgb;
-        info.wall_top_color_srgb = input.default_upper_color_srgb;
-        info.wall_bottom_color_srgb = input.default_lower_color_srgb;
-
-        const auto& feature = input_features.at(instance.feature_index);
-        info.feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
-
-        if (feature.type != hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
-            && feature.type != hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
+        const auto* feature = input_geometry_reader.get_feature(instance.feature_index);
+        if (!feature) continue;
+        if (!feature->flags.has_geometry(hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
+            && !feature->flags.has_geometry(hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY))
         {
             continue;
         }
 
+        FeatureInfo info(tile_info);
+        info.feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
+
         max_feature_index = std::max(max_feature_index, info.feature_index);
 
-        const uint64_t prp_begin = instance.first_prp;
-        const uint64_t prp_end = prp_begin + instance.prp_count;
+        const auto instance_prps = get_instance_properties(
+            input, instance.first_prp, instance.first_prp + instance.prp_count,
+            style_prps.as_span(), style_values);
 
-        double altitude_offset = input.default_altitude_offset;
-        double extrusion = input.default_extrusion;
-
-        for (uint64_t j = prp_begin; j < prp_end; ++j)
-        {
-            if (style_prps[j] == input.extrusion_prp)
-            {
-                extrusion = (float)style_values.as_number(j);
-            }
-            if (style_prps[j] == input.upper_color_prp)
-            {
-                info.wall_top_color_srgb = style_values.as_color(j);
-            }
-            if (style_prps[j] == input.lower_color_prp)
-            {
-                info.wall_bottom_color_srgb = style_values.as_color(j);
-            }
-            if (style_prps[j] == input.roof_color_prp)
-            {
-                info.roof_color_srgb = style_values.as_color(j);
-            }
-            if (style_prps[j] == input.altitude_offset_prp)
-            {
-                altitude_offset = style_values.as_number(j);
-            }
-        }
+        info.roof_color_srgb = instance_prps.roof_color_srgb;
+        info.wall_top_color_srgb = instance_prps.wall_top_color_srgb;
+        info.wall_bottom_color_srgb = instance_prps.wall_bottom_color_srgb;
 
         if (info.wall_top_color_srgb.a != 255 || info.wall_bottom_color_srgb.a != 255
             || info.roof_color_srgb.a != 255)
@@ -954,58 +1155,12 @@ hrz_jobs::JobResult run(
             has_transparent_geometry = true;
         }
 
-        auto feature_points =
-            input_points.as_span().subspan(feature.first_point, feature.point_count);
-        auto feature_linestring_sizes =
-            input_sizes.as_span().subspan(feature.first_linestring_size, feature.linestring_count);
+        const FeatureAltitudes altitudes = compute_feature_altitudes(
+            input_geometry_reader, instance.feature_index, clamps_gen, ctx.use_z);
+        if (altitudes.is_empty()) continue;
 
-        const hrz::PointClampingGenerator point_clamp_gen =
-            clamps_gen.for_feature(instance.feature_index, feature.first_point);
-
-        linestrings.clear();
-        vertices_bevel_info.clear();
-        vertices_bevel_info.resize(feature_points.size());
-
-        const bool is_polygon = feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-
-        uint32_t current_linestring_start = 0;
-        for (const uint32_t linestring_size : feature_linestring_sizes)
-        {
-            const std::span<const lm::dvec3> linestring_points =
-                feature_points.subspan(current_linestring_start, linestring_size);
-            const std::span<VertexWithBevelInfo> linestring_bevel_verts_info(
-                vertices_bevel_info.data() + current_linestring_start, linestring_size);
-
-            // The first linestring of a polygon determines the winding order.
-            if (is_polygon && linestrings.empty())
-            {
-                info.invert_walls_winding = hrz::is_clockwise(linestring_points);
-            }
-
-            make_linestring_bevel_info(
-                linestring_points, linestring_bevel_verts_info, info.bevel_width, is_polygon, use_z,
-                info.invert_walls_winding && is_polygon);
-
-            linestrings.emplace_back(current_linestring_start, linestring_size);
-            current_linestring_start += linestring_size;
-        }
-
-        double min_clamp = std::numeric_limits<double>::max();
-        double max_clamp = std::numeric_limits<double>::lowest();
-        for (size_t i = 0; i < feature.point_count; ++i)
-        {
-            const double clamp = point_clamp_gen.get_clamp_for_point(i);
-            min_clamp = std::min(min_clamp, clamp);
-            max_clamp = std::max(max_clamp, clamp);
-        }
-
-        double min_z = std::numeric_limits<double>::max();
-        for (const auto& p : vertices_bevel_info)
-        {
-            min_z = std::min(min_z, p.pos.z);
-        }
-
-        const double min_wall_top_altitude = min_clamp + altitude_offset + extrusion + min_z;
+        const double min_wall_top_altitude = altitudes.min_clamp + instance_prps.altitude_offset
+            + instance_prps.extrusion + altitudes.min_z;
         info.max_angular_distance = max_segment_angular_length_for_altitude(
             min_wall_top_altitude, info.tile_coords, info.geo_data_bounds);
 
@@ -1039,71 +1194,26 @@ hrz_jobs::JobResult run(
             info.bevel_width = 0.0;
         }
 
-        if (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
-        {
-            info.double_sided_walls = false;
-            info.double_sided_roof = min_clamp == max_clamp && extrusion == 0;
-            info.roof_bevel = info.bevel_width > kBevelMinWidth && !info.double_sided_roof
-                && extrusion > info.bevel_width * 2.0;
-
-            const double roof_altitude = max_clamp + altitude_offset + extrusion;
-            const double wall_top_offset = info.roof_bevel ? -info.bevel_width * kInvSqrt2 : 0.0;
-
-            generate_roof_geometry(vertices_bevel_info, linestrings, builder, roof_altitude, info);
-
-            if (!info.double_sided_roof)
+        const auto visitor = hrz::overload{
+            [&](const VectorTileGeometry::PolygonGeometry& polygon)
             {
-                // Generate walls geometry for each linestring
-                for (const auto& [index_ring_start, linestring_size] : linestrings)
-                {
-                    auto bevel_info_span = std::span<VertexWithBevelInfo>(
-                        vertices_bevel_info.data() + index_ring_start, linestring_size);
-
-                    for (size_t p0 = linestring_size - 1, p1 = 0; p1 < linestring_size; p0 = p1++)
-                    {
-                        const auto& bi0 = bevel_info_span[p0];
-                        const auto& bi1 = bevel_info_span[p1];
-
-                        const double floor0 = altitude_offset
-                            + point_clamp_gen.clamp_point(index_ring_start + p0, bi0.pos.z);
-                        const double floor1 = altitude_offset
-                            + point_clamp_gen.clamp_point(index_ring_start + p1, bi1.pos.z);
-
-                        const double roof0 = roof_altitude + bi0.pos.z + wall_top_offset;
-                        const double roof1 = roof_altitude + bi1.pos.z + wall_top_offset;
-
-                        generate_wall_geometry(
-                            bi0, bi1, floor0, floor1, roof0, roof1, builder, info);
-
-                        if (info.roof_bevel)
-                        {
-                            generate_wall_roof_bevel(
-                                bi0, bi1, roof0, roof1, roof_altitude + bi0.pos.z,
-                                roof_altitude + bi1.pos.z, builder, info);
-                        }
-                    }
-                }
-            }
-        }
-        else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
-        {
-            const size_t wall_count = vertices_bevel_info.size() - 1;
-            info.double_sided_walls = true;
-
-            for (size_t i = 0; i < wall_count; ++i)
+                const hrz::PointClampingGenerator point_clamp_gen =
+                    clamps_gen.for_feature(instance.feature_index, polygon.first_point_index);
+                generate_extruded_polygon(
+                    polygon, point_clamp_gen, instance_prps, altitudes, info, ctx);
+            },
+            [&](const VectorTileGeometry::PolylineGeometry& polyline)
             {
-                const auto& bi0 = vertices_bevel_info[i];
-                const auto& bi1 = vertices_bevel_info[i + 1];
+                const hrz::PointClampingGenerator point_clamp_gen =
+                    clamps_gen.for_feature(instance.feature_index, polyline.first_point_index);
+                generate_extruded_polyline(polyline, point_clamp_gen, instance_prps, info, ctx);
+            },
+            [&](const VectorTileGeometry::PointGeometry&) {}
+        };
 
-                const double floor0 = altitude_offset + point_clamp_gen.clamp_point(i, bi0.pos.z);
-                const double floor1 =
-                    altitude_offset + point_clamp_gen.clamp_point(i + 1, bi1.pos.z);
-
-                generate_wall_geometry(
-                    bi0, bi1, floor0, floor1, floor0 + extrusion, floor1 + extrusion, builder,
-                    info);
-            }
-        }
+        input_geometry_reader.iterate_geometries_for_feature(
+            instance.feature_index, [&](const VectorTileGeometry::Geometry& feature_geometry)
+            { std::visit(visitor, feature_geometry); });
     }
 
     auto feature_id_array_size = input_feature_ids.size();
@@ -1114,22 +1224,22 @@ hrz_jobs::JobResult run(
     }
     hrz::BlobVector<hrz::vector_data::FeatureIdHash> feature_ids(
         context.get_blob_allocator(), feature_id_array_size);
-    for (auto feature_id : input_feature_ids)
+    for (const auto feature_id : input_feature_ids.as_span())
     {
         feature_ids.push_back(feature_id);
     }
     feature_ids.resize(feature_id_array_size);
 
-    auto vertex_array_opt = builder.vertices.to_blob_array();
-    auto index_array_opt = builder.indices.to_blob_array();
-    auto positions_data_opt = builder.positions.data();
+    auto vertex_array_opt = ctx.builder.vertices.to_blob_array();
+    auto index_array_opt = ctx.builder.indices.to_blob_array();
+    auto positions_data_opt = ctx.builder.positions.data();
     auto feature_ids_data_opt = feature_ids.to_blob_array();
     if (!vertex_array_opt.has_value() || !index_array_opt.has_value()
         || !positions_data_opt.has_value() || !feature_ids_data_opt.has_value())
     {
         return hrz_jobs::JobResult::FAILURE;
     }
-    auto positions_data = positions_data_opt.value();
+    const auto positions_data = positions_data_opt.value();
 
     // Convert to Geocentric
     pl_transform_in_place_canonical(

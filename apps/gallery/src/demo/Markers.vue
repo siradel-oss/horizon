@@ -52,12 +52,14 @@ interface Marker {
     longitude: number;
 }
 
-function markerToInMemoryFeature(marker: Marker): HrzProtocol.InMemoryVectorFeature {
-    return HrzProtocol.InMemoryVectorFeature.create({
-        geometry: {
-            type: HrzProtocol.VectorGeometryType.POINT_GEOMETRY,
-            coords: [marker.longitude, marker.latitude, 0],
-        },
+function markerToInMemoryFeature(marker: Marker): HrzProtocol.VectorFeature {
+    return HrzProtocol.VectorFeature.create({
+        geometry: [
+            {
+                type: HrzProtocol.VectorGeometryType.POINT_GEOMETRY,
+                coords: [marker.longitude, marker.latitude, 0],
+            },
+        ],
         attributeValues: [
             {
                 numberValue: marker.id,

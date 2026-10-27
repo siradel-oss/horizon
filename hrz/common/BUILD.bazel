@@ -38,6 +38,8 @@ cc_library(
         "vector_data/attributes.cpp",
         "vector_data/feature_ids.cpp",
         "vector_data/geometry_utils.cpp",
+        "vector_data/tile_geometry.cpp",
+        "vector_data/tile_geometry_builder.cpp",
         "woff.cpp",
     ],
     hdrs = [
@@ -106,6 +108,7 @@ cc_library(
         "vector_data/packed_attribute_values_builder.h",
         "vector_data/tile.h",
         "vector_data/tile_geometry.h",
+        "vector_data/tile_geometry_builder.h",
         "vector_tiles/data_texture.h",
         "vector_tiles/picking.h",
         "vector_tiles/symbol_anchor_data.h",

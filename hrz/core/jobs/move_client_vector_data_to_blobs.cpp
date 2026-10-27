@@ -7,10 +7,17 @@
 #include "hrz/common/vector_data/attribute_type_api.h" // IWYU pragma: keep
 #include "hrz/common/vector_data/geometry_utils.h"
 #include "hrz/common/vector_data/packed_attribute_values_builder.h"
+#include "hrz/common/vector_data/tile_geometry.h"
+#include "hrz/common/vector_data/tile_geometry_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/log.h"
+#include "hrz/protocol/services.h"
+#include "hrz/protocol/vector/geometry.pb.h"
+#include "hrz/protocol/vector/geometry_type.pb.h"
+
+#include <span>
 
 // This job takes Protobuf data from a client request response, changes
 // its format to the engines's internal structures for vector data, which
@@ -22,6 +29,146 @@
 
 namespace hrz_jobs::move_client_vector_data_to_blobs
 {
+
+namespace
+{
+
+[[nodiscard]]
+bool move_geometry_to_blobs(
+    const hrz_proto::VectorFeatureGeometry& geometry,
+    hrz::vector_data::VectorTileGeometryBuilder& builder)
+{
+    hrz::vector_data::LinestringSizes linestring_sizes;
+    if (!hrz::vector_data::normalize_linestring_sizes(
+            geometry.type(), (uint32_t)(geometry.coords_size() / 3),
+            std::span<const uint32_t>(
+                geometry.linestring_sizes().data(), (size_t)geometry.linestring_sizes_size()),
+            &linestring_sizes))
+    {
+        HRZ_LOG_WARNING(
+            "Client-provided vector data has fewer points than expected by the linestring "
+            "sizes. ");
+        return builder.add_geometry_collection([&](auto&) { return true; });
+    }
+
+    if (geometry.type() == hrz_proto::POINT_GEOMETRY)
+    {
+        return builder.add_points_feature(
+            [&](hrz::vector_data::VectorTileGeometryBuilder::PointsBuilder& points_builder) -> bool
+            {
+                auto point_count = geometry.coords_size() / 3;
+                for (size_t i = 0; i < point_count; i++)
+                {
+                    lm::dvec3 point = {
+                        geometry.coords(i * 3 + 0), geometry.coords(i * 3 + 1),
+                        geometry.coords(i * 3 + 2)
+                    };
+                    points_builder.add_point(point);
+                }
+                return true;
+            });
+    }
+    else if (geometry.type() == hrz_proto::POLYLINE_GEOMETRY)
+    {
+        return builder.add_polylines_feature(
+            [&](hrz::vector_data::VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder)
+                -> bool
+            {
+                size_t first_linestring_point = 0;
+                for (const auto linestring_size : linestring_sizes)
+                {
+                    for (size_t i = first_linestring_point;
+                         i < first_linestring_point + linestring_size; i++)
+                    {
+                        lm::dvec3 point = {
+                            geometry.coords(i * 3 + 0), geometry.coords(i * 3 + 1),
+                            geometry.coords(i * 3 + 2)
+                        };
+                        polylines_builder.add_point(point);
+                    }
+                    if (!polylines_builder.end_linestring()) return false;
+                    first_linestring_point += linestring_size;
+                }
+                return true;
+            });
+    }
+    else if (geometry.type() == hrz_proto::POLYGON_GEOMETRY)
+    {
+        return builder.add_polygons_feature(
+            [&](hrz::vector_data::VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder)
+                -> bool
+            {
+                size_t first_linestring_point = 0;
+                for (const auto linestring_size : linestring_sizes)
+                {
+                    for (size_t i = first_linestring_point;
+                         i < first_linestring_point + linestring_size; i++)
+                    {
+                        lm::dvec3 point = {
+                            geometry.coords(i * 3 + 0), geometry.coords(i * 3 + 1),
+                            geometry.coords(i * 3 + 2)
+                        };
+                        polygons_builder.add_point(point);
+                    }
+                    if (!polygons_builder.end_ring()) return false;
+                    first_linestring_point += linestring_size;
+                }
+                return polygons_builder.end_polygon();
+            });
+    }
+    else
+    {
+        HRZ_LOG_WARNING(
+            "Client-provided vector data has an unknown geometry type: {}", (int)geometry.type());
+        return builder.add_geometry_collection([&](auto&) { return true; });
+    }
+}
+
+[[nodiscard]]
+bool move_geometry_to_blobs(
+    const hrz_proto::VectorDataRequestResponse& client_response,
+    hrz::vector_data::VectorTileGeometryBuilder& builder)
+{
+    for (const auto& proto_feature : client_response.features())
+    {
+        if (proto_feature.geometry_size() == 0)
+        {
+            if (!builder.add_geometry_collection([&](auto&) { return true; }))
+            {
+                return false;
+            }
+        }
+        else if (proto_feature.geometry_size() == 1)
+        {
+            if (!move_geometry_to_blobs(proto_feature.geometry(0), builder))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (!builder.add_geometry_collection(
+                    [&](hrz::vector_data::VectorTileGeometryBuilder& collection_builder)
+                    {
+                        for (const auto& proto_geometry : proto_feature.geometry())
+                        {
+                            if (!move_geometry_to_blobs(proto_geometry, collection_builder))
+                            {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+} // anonymous namespace
 
 hrz_jobs::JobResult run(
     const hrz_jobs::RawClientVectorData& params,
@@ -36,129 +183,44 @@ hrz_jobs::JobResult run(
     size_t linestring_sizes_capacity = 0;
     size_t feature_capacity = params.expects_geometry ? client_response.features_size() : 0;
 
+    for (const auto& feature : client_response.features())
+    {
+        if (params.expects_geometry)
+        {
+            for (const auto& geometry : feature.geometry())
+            {
+                point_capacity += geometry.coords_size() / 3;
+                linestring_sizes_capacity += geometry.linestring_sizes_size();
+            }
+        }
+        else if (feature.geometry_size() > 0)
+        {
+            HRZ_LOG_WARNING(
+                "Unexpected geometry in client-provided vector data, it will be ignored.");
+            break;
+        }
+    }
+
+    auto builder = hrz::vector_data::VectorTileGeometryBuilder(
+        context.get_blob_allocator(), feature_capacity, point_capacity, linestring_sizes_capacity);
+    builder.register_blobs_owner(context.get_resource_owner());
+
     if (params.expects_geometry)
     {
-        for (const auto& feature : client_response.features())
+        if (!move_geometry_to_blobs(client_response, builder))
         {
-            if (feature.has_geometry())
-            {
-                point_capacity += feature.geometry().coords_size() / 3;
-                linestring_sizes_capacity += feature.geometry().linestring_sizes_size();
-            }
+            HRZ_LOG_ERROR("Failed to move client-provided vector data geometry to blobs.");
+            return hrz_jobs::JobResult::FAILURE;
         }
     }
 
-    auto points = hrz::BlobVector<lm::dvec3>(context.get_blob_allocator(), point_capacity);
-    auto linestring_sizes =
-        hrz::BlobVector<uint32_t>(context.get_blob_allocator(), linestring_sizes_capacity);
-    auto features = hrz::BlobVector<hrz::vector_data::VectorTileGeometry::Feature>(
-        context.get_blob_allocator(), feature_capacity);
-
-    points.register_blob_metadata("contents"_ss, "client vector geometry points"_ss);
-    linestring_sizes.register_blob_metadata(
-        "contents"_ss, "client vector geometry linestring sizes"_ss);
-    features.register_blob_metadata("contents"_ss, "client vector geometry features"_ss);
-
-    points.register_blob_owner(context.get_resource_owner());
-    linestring_sizes.register_blob_owner(context.get_resource_owner());
-    features.register_blob_owner(context.get_resource_owner());
-
-    lm::dbbox2 bounds = {};
-
-    for (const auto& proto_feature : client_response.features())
+    auto tile_geometry_opt = std::move(builder).finalize();
+    if (!tile_geometry_opt.has_value())
     {
-        if (!params.expects_geometry)
-        {
-            if (proto_feature.geometry().coords_size() > 0)
-            {
-                HRZ_LOG_WARNING(
-                    "Unexpected geometry in client-provided vector data, it will be ignored.");
-                break;
-            }
-            continue;
-        }
-
-        hrz::vector_data::VectorTileGeometry::Feature feature{};
-        feature.type = proto_feature.geometry().type();
-
-        feature.first_point = points.size().value();
-        feature.point_count = proto_feature.geometry().coords_size() / 3;
-
-        for (size_t i = 0; i < feature.point_count; i++)
-        {
-            lm::dvec3 point = {
-                proto_feature.geometry().coords(i * 3 + 0),
-                proto_feature.geometry().coords(i * 3 + 1),
-                proto_feature.geometry().coords(i * 3 + 2)
-            };
-            points.push_back(point);
-
-            bounds = lm::expand(bounds, point.xy);
-        }
-
-        feature.first_linestring_size = linestring_sizes.size().value();
-        feature.linestring_count = proto_feature.geometry().linestring_sizes_size();
-
-        for (const auto size : proto_feature.geometry().linestring_sizes())
-        {
-            linestring_sizes.push_back(size);
-        }
-
-        if (feature.linestring_count == 0
-            && (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
-                || feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY))
-        {
-            linestring_sizes.push_back(feature.point_count);
-            feature.linestring_count = 1;
-        }
-
-        feature.anchor = {};
-        feature.anchor_angle = 0;
-
-        auto read_points = points.data();
-        auto read_linestring_sizes = linestring_sizes.data();
-        if (read_points.has_value() && read_linestring_sizes.has_value() && feature.point_count > 0)
-        {
-            if (feature.type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
-            {
-                feature.anchor = (*read_points)[feature.first_point];
-                feature.anchor_angle = 0;
-            }
-            else if (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
-            {
-                uint32_t linestring_size = (*read_linestring_sizes)[feature.first_linestring_size];
-                auto feature_points = read_points->subspan(feature.first_point, linestring_size);
-                feature.anchor = hrz::vector_data::compute_ring_average(feature_points);
-                feature.anchor_angle = 0;
-            }
-            else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
-            {
-                auto linestring_sizes = read_linestring_sizes->subspan(
-                    feature.first_linestring_size, feature.linestring_count);
-                auto feature_points =
-                    read_points->subspan(feature.first_point, feature.point_count);
-                hrz::vector_data::compute_linestring_middle_and_angle(
-                    feature_points, linestring_sizes, &feature.anchor, &feature.anchor_angle);
-            }
-        }
-
-        features.push_back(feature);
-    }
-
-    if (!points.is_valid() || !linestring_sizes.is_valid() || !features.is_valid())
-    {
+        HRZ_LOG_ERROR("Failed to finalize vector tile geometry builder.");
         return hrz_jobs::JobResult::FAILURE;
     }
-
-    auto feature_array_opt = features.to_blob_array();
-    auto point_array_opt = points.to_blob_array();
-    auto linestring_size_array_opt = linestring_sizes.to_blob_array();
-
-    if (!feature_array_opt.has_value() || !point_array_opt.has_value()
-        || !linestring_size_array_opt.has_value())
-    {
-        return hrz_jobs::JobResult::FAILURE;
-    }
+    response.geometry = std::move(tile_geometry_opt.value());
 
     // Get the attributes and feature ids
     uint32_t feature_id_attribute_count = 0;
@@ -170,7 +232,7 @@ hrz_jobs::JobResult run(
     std::vector<hrz::vector_data::PackedAttributeValuesBuilder> attribute_index_to_values;
     std::vector<uint32_t> attribute_id;
 
-    auto emplace_back_attribute_values = [&](uint32_t id)
+    const auto emplace_back_attribute_values = [&](uint32_t id)
     {
         attribute_id_to_index.insert({id, (uint32_t)attribute_index_to_values.size()});
         attribute_index_to_values.emplace_back(
@@ -203,7 +265,7 @@ hrz_jobs::JobResult run(
     {
         const auto& model_attribute = params.attributes[i];
 
-        auto index = attribute_id_to_index.at(model_attribute.id);
+        const auto index = attribute_id_to_index.at(model_attribute.id);
         auto& values = attribute_index_to_values.at(index);
 
         bool has_warned_about_missing_attribute = false;
@@ -250,7 +312,7 @@ hrz_jobs::JobResult run(
         }
     }
 
-    std::span<hrz::vector_data::AttributeValues> values_finalized_span(
+    const std::span<hrz::vector_data::AttributeValues> values_finalized_span(
         attribute_index_to_values_finalized);
 
     hrz::BlobVector<hrz::vector_data::FeatureIdHash> hashes_vector(
@@ -279,14 +341,9 @@ hrz_jobs::JobResult run(
     // We want to return the attribute values in order in which their definition was provided to us.
     for (const auto& attribute_model : params.attributes)
     {
-        auto index = attribute_id_to_index.at(attribute_model.id);
+        const auto index = attribute_id_to_index.at(attribute_model.id);
         response.attributes.push_back(std::move(attribute_index_to_values_finalized.at(index)));
     }
-
-    response.geometry.bounds = bounds;
-    response.geometry.features = feature_array_opt.value();
-    response.geometry.points = point_array_opt.value();
-    response.geometry.linestring_sizes = linestring_size_array_opt.value();
 
     return hrz_jobs::JobResult::SUCCESS;
 }

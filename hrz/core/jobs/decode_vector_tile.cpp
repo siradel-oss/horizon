@@ -7,8 +7,9 @@
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
-#include "hrz/common/vector_data/geometry_utils.h"
 #include "hrz/common/vector_data/packed_attribute_values_builder.h"
+#include "hrz/common/vector_data/tile_geometry.h"
+#include "hrz/common/vector_data/tile_geometry_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/flat_hash_map.h"
@@ -19,7 +20,6 @@
 
 #include <rapidjson/document.h>
 
-#include <limits>
 #include <optional>
 
 // This job decodes the vector data stored in a tile file.
@@ -37,24 +37,18 @@
 // arrays. The feature ID list can therefore have duplicated entries.
 // (It isn't much different from a regular attribute.)
 
+using namespace hrz::vector_data;
+
 namespace hrz_jobs::decode_vector_tile
 {
 namespace
 {
 
-struct MutableVectorGeometry
-{
-    lm::dbbox2 bounds;
-    hrz::BlobVector<hrz::vector_data::VectorTileGeometry::Feature> features;
-    hrz::BlobVector<lm::dvec3> points;
-    hrz::BlobVector<uint32_t> linestring_sizes;
-};
-
 struct MutableVectorTile
 {
     hrz::TileCoords coords;
-    MutableVectorGeometry geometry;
-    std::vector<hrz::vector_data::PackedAttributeValuesBuilder> attributes;
+    VectorTileGeometryBuilder geometry;
+    std::vector<PackedAttributeValuesBuilder> attributes;
 };
 
 static constexpr size_t InitialFeatureCapacity = 1024;
@@ -107,54 +101,34 @@ double polygon_area(std::span<const lm::dvec3> linestring)
 
 template<typename T>
 void append_attribute_value(
-    hrz::vector_data::PackedAttributeValuesBuilder& attribute,
+    PackedAttributeValuesBuilder& attribute,
     hrz_proto::AttributeTransform transform,
-    T&& value,
-    size_t count)
+    T&& value)
 {
     if (transform == hrz_proto::AttributeTransform::ATTRIBUTE_TRANSFORM_NONE)
     {
-        for (size_t i = 0; i < count; ++i)
-        {
-            attribute.push(std::forward<T>(value));
-        }
+        attribute.push(std::forward<T>(value));
     }
     else
     {
-        auto ref_value = hrz::vector_data::attr_from<hrz::vector_data::RefAttributeValue>(
-            std::forward<T>(value));
-        auto new_value = hrz::vector_data::attr_transform<hrz::vector_data::OwnedAttributeValue>(
-            transform, ref_value);
-        for (size_t i = 0; i < count; ++i)
-        {
-            attribute.push_ref(hrz::vector_data::attr_as_ref(new_value));
-        }
+        const auto ref_value = attr_from<RefAttributeValue>(std::forward<T>(value));
+        const auto new_value = attr_transform<OwnedAttributeValue>(transform, ref_value);
+        attribute.push_ref(attr_as_ref(new_value));
     }
 }
 
 // Returns whether the value type was handled. In any case a value is inserted.
-bool append_json_attribute_value(
-    hrz::vector_data::PackedAttributeValuesBuilder& attribute,
+inline bool append_json_attribute_value(
+    PackedAttributeValuesBuilder& attribute,
     hrz_proto::AttributeTransform transform,
-    const rapidjson::Value& value,
-    size_t count)
+    const rapidjson::Value& value)
 {
-    bool ok = true;
-    for (size_t i = 0; i < count; ++i)
-    {
-        ok = attribute.push_json(transform, value) && ok;
-    }
-    return ok;
+    return attribute.push_json(transform, value);
 }
 
-void append_default_attribute_value(
-    hrz::vector_data::PackedAttributeValuesBuilder& attribute,
-    size_t count)
+inline void append_default_attribute_value(PackedAttributeValuesBuilder& attribute)
 {
-    for (size_t i = 0; i < count; ++i)
-    {
-        attribute.push_null();
-    }
+    attribute.push_null();
 }
 
 inline lm::ivec2 mvt_decode_vertex(const vector_tile::Tile_Feature& feature, uint32_t index)
@@ -180,25 +154,15 @@ lm::dvec2 mvt_parameter_to_wmerc(lm::ivec2 cursor, uint32_t extent, const hrz::T
             - hrz::MERCATOR_MAX_LAT_METERS);
 }
 
-void mvt_parse_unknown(
-    MutableVectorTile& tile,
-    const vector_tile::Tile_Feature& feature,
-    uint32_t extent)
+[[nodiscard]]
+bool mvt_parse_unknown(MutableVectorTile& tile, const vector_tile::Tile_Feature&, uint32_t)
 {
     HRZ_SCOPED_SAMPLE_A("mvt vector tiles parse unknown");
-
-    hrz::vector_data::VectorTileGeometry::Feature f;
-    f.type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-    f.first_point = 0;
-    f.point_count = 0;
-    f.first_linestring_size = 0;
-    f.linestring_count = 0;
-    f.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-    f.anchor_angle = 0;
-    tile.geometry.features.push_back(f);
+    return tile.geometry.add_geometry_collection([](VectorTileGeometryBuilder&) { return true; });
 }
 
-void mvt_parse_points(
+[[nodiscard]]
+bool mvt_parse_points(
     MutableVectorTile& tile,
     const vector_tile::Tile_Feature& feature,
     uint32_t extent)
@@ -210,129 +174,83 @@ void mvt_parse_points(
     {
         HRZ_LOG_WARNING(
             "Couldn't parse vector tile ({}/{}/{})", tile.coords.lod, tile.coords.x, tile.coords.y);
-        return;
+        return false;
     }
 
     const Mvt_Command cmd(feature.geometry(0));
     lm::ivec2 cursor(0, 0);
-    for (unsigned int i = 1; i < cmd.parameter_count + 1; i += 2)
-    {
-        cursor = cursor + mvt_decode_vertex(feature, i);
-        const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
 
-        hrz::vector_data::VectorTileGeometry::Feature f;
-        f.type = hrz_proto::VectorGeometryType::POINT_GEOMETRY;
-        f.first_point = tile.geometry.points.size().value_or(0);
-        f.point_count = 1;
-        f.first_linestring_size = 0;
-        f.linestring_count = 0;
-        f.anchor = {wmerc, 0.0};
-        f.anchor_angle = 0;
-        tile.geometry.features.push_back(f);
-
-        tile.geometry.points.push_back({wmerc.x, wmerc.y, 0.0});
-    }
+    return tile.geometry.add_points_feature(
+        [&](VectorTileGeometryBuilder::PointsBuilder& points_builder)
+        {
+            for (unsigned int i = 1; i < cmd.parameter_count + 1; i += 2)
+            {
+                cursor = cursor + mvt_decode_vertex(feature, i);
+                const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
+                points_builder.add_point({wmerc, 0.0});
+            }
+            return true;
+        });
 }
 
-void compute_polyline_anchor(
-    MutableVectorTile& tile,
-    hrz::vector_data::VectorTileGeometry::Feature& f)
-{
-    auto points_data = tile.geometry.points.data();
-    if (!points_data.has_value()) return;
-
-    auto linestring_sizes_data = tile.geometry.linestring_sizes.data();
-    if (!linestring_sizes_data.has_value()) return;
-
-    auto points = points_data->subspan(f.first_point, f.point_count);
-    auto linestring_sizes =
-        linestring_sizes_data->subspan(f.first_linestring_size, f.linestring_count);
-
-    lm::dvec3 anchor;
-    float anchor_angle{};
-    hrz::vector_data::compute_linestring_middle_and_angle(
-        points, linestring_sizes, &anchor, &anchor_angle);
-
-    f.anchor = anchor;
-    f.anchor_angle = anchor_angle;
-}
-
-void mvt_parse_linestrings(
+[[nodiscard]]
+bool mvt_parse_linestrings(
     MutableVectorTile& tile,
     const vector_tile::Tile_Feature& feature,
     uint32_t extent)
 {
     HRZ_SCOPED_SAMPLE_A("mvt vector tiles parse linestrings");
 
-    hrz::vector_data::VectorTileGeometry::Feature f = {};
-    f.type = hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY;
-    f.first_point = tile.geometry.points.size().value_or(0);
-    f.point_count = 0;
-    f.first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-    f.linestring_count = 0;
-    f.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-    f.anchor_angle = 0;
-
     lm::ivec2 cursor(0, 0);
-
     uint32_t current_linestring_point_count = 0;
 
-    auto push_linestring = [&]()
-    {
-        tile.geometry.linestring_sizes.push_back(current_linestring_point_count);
-        f.point_count += current_linestring_point_count;
-        f.linestring_count += 1;
-    };
-
-    for (int i = 0; i < feature.geometry_size();)
-    {
-        const Mvt_Command cmd(feature.geometry(i));
-        i += 1;
-
-        if (cmd.type == Mvt_CommandType::MVT_COMMAND_MOVE_TO)
+    return tile.geometry.add_polylines_feature(
+        [&](VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder)
         {
-            // Start a new linestring
-            cursor = cursor + mvt_decode_vertex(feature, i);
-            i += 2;
-
-            if (current_linestring_point_count > 0)
+            for (int i = 0; i < feature.geometry_size();)
             {
-                push_linestring();
+                const Mvt_Command cmd(feature.geometry(i));
+                i += 1;
+
+                if (cmd.type == Mvt_CommandType::MVT_COMMAND_MOVE_TO)
+                {
+                    // Start a new linestring
+                    cursor = cursor + mvt_decode_vertex(feature, i);
+                    i += 2;
+                    if (!polylines_builder.end_linestring()) return false;
+
+                    current_linestring_point_count = 1;
+
+                    const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
+                    polylines_builder.add_point({wmerc, 0.0});
+                }
+                else if (cmd.type == Mvt_CommandType::MVT_COMMAND_LINE_TO)
+                {
+                    if (current_linestring_point_count == 0)
+                    {
+                        HRZ_LOG_WARNING("Invalid polyline geometry");
+                        return false;
+                    }
+
+                    const int line_end = i + cmd.parameter_count;
+                    for (; i < line_end; i += 2)
+                    {
+                        cursor = cursor + mvt_decode_vertex(feature, i);
+
+                        current_linestring_point_count += 1;
+
+                        const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
+                        polylines_builder.add_point({wmerc, 0.0});
+                    }
+                }
             }
 
-            current_linestring_point_count = 1;
-
-            const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
-            tile.geometry.points.push_back({wmerc.x, wmerc.y, 0.0});
-        }
-        else if (cmd.type == Mvt_CommandType::MVT_COMMAND_LINE_TO)
-        {
-            if (current_linestring_point_count == 0)
-            {
-                HRZ_LOG_WARNING("Invalid polyline geometry");
-                return;
-            }
-
-            const int line_end = i + cmd.parameter_count;
-            for (; i < line_end; i += 2)
-            {
-                cursor = cursor + mvt_decode_vertex(feature, i);
-
-                current_linestring_point_count += 1;
-
-                const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
-                tile.geometry.points.push_back({wmerc.x, wmerc.y, 0.0});
-            }
-        }
-    }
-
-    push_linestring();
-
-    compute_polyline_anchor(tile, f);
-    tile.geometry.features.push_back(f);
+            return true;
+        });
 }
 
-void mvt_parse_polygons(
+[[nodiscard]]
+bool mvt_parse_polygons(
     MutableVectorTile& tile,
     const vector_tile::Tile_Feature& feature,
     uint32_t extent)
@@ -340,97 +258,64 @@ void mvt_parse_polygons(
     HRZ_SCOPED_SAMPLE_A("mvt vector tiles parse polygons");
 
     lm::ivec2 cursor(0, 0);
-    std::optional<hrz::vector_data::VectorTileGeometry::Feature> f = std::nullopt;
-    bool geometry_is_valid = false;
-
-    uint32_t current_ring_first_point = 0;
     uint32_t current_ring_point_count = 0;
 
-    auto push_feature = [&]()
-    {
-        if (geometry_is_valid)
+    return tile.geometry.add_polygons_feature(
+        [&](VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder)
         {
-            assert(f.has_value());
-            tile.geometry.features.push_back(f.value());
-        }
-
-        f = {hrz::vector_data::VectorTileGeometry::Feature()};
-        f->type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-        f->first_point = current_ring_first_point;
-        f->point_count = 0;
-        f->first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-        f->linestring_count = 0;
-        f->anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-        f->anchor_angle = 0;
-
-        geometry_is_valid = false;
-    };
-
-    for (int i = 0; i < feature.geometry_size();)
-    {
-        Mvt_Command cmd(feature.geometry(i));
-        i += 1;
-
-        if (cmd.type == Mvt_CommandType::MVT_COMMAND_MOVE_TO)
-        {
-            // Start a new linestring
-            cursor = cursor + mvt_decode_vertex(feature, i);
-            i += 2;
-
-            current_ring_first_point = tile.geometry.points.size().value_or(0);
-            current_ring_point_count = 1;
-
-            const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
-            tile.geometry.points.push_back({wmerc, 0.0});
-        }
-        else if (cmd.type == Mvt_CommandType::MVT_COMMAND_LINE_TO)
-        {
-            const int line_end = i + cmd.parameter_count;
-            for (; i < line_end; i += 2)
+            for (int i = 0; i < feature.geometry_size();)
             {
-                current_ring_point_count += 1;
-                cursor = cursor + mvt_decode_vertex(feature, i);
+                const Mvt_Command cmd(feature.geometry(i));
+                i += 1;
 
-                const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
-                tile.geometry.points.push_back({wmerc, 0.0});
+                if (cmd.type == Mvt_CommandType::MVT_COMMAND_MOVE_TO)
+                {
+                    if (current_ring_point_count > 0)
+                    {
+                        HRZ_LOG_WARNING("Invalid polygon geometry");
+                        return false;
+                    }
+
+                    // Start a new linestring
+                    cursor = cursor + mvt_decode_vertex(feature, i);
+                    i += 2;
+
+                    current_ring_point_count = 1;
+
+                    const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
+                    polygons_builder.add_point({wmerc, 0.0});
+                }
+                else if (cmd.type == Mvt_CommandType::MVT_COMMAND_LINE_TO)
+                {
+                    const int line_end = i + cmd.parameter_count;
+                    for (; i < line_end; i += 2)
+                    {
+                        current_ring_point_count += 1;
+                        cursor = cursor + mvt_decode_vertex(feature, i);
+
+                        const lm::dvec2 wmerc = mvt_parameter_to_wmerc(cursor, extent, tile.coords);
+                        polygons_builder.add_point({wmerc, 0.0});
+                    }
+                }
+                else if (cmd.type == Mvt_CommandType::MVT_COMMAND_CLOSE_PATH)
+                {
+                    const auto current_ring_points = polygons_builder.current_ring_points();
+
+                    // Exterior linestring => new polygon
+                    if (polygon_area(current_ring_points) >= 0)
+                    {
+                        if (!polygons_builder.end_exterior_ring()) return false;
+                    }
+                    else
+                    {
+                        if (!polygons_builder.end_ring()) return false;
+                    }
+
+                    current_ring_point_count = 0;
+                }
             }
-        }
-        else if (cmd.type == Mvt_CommandType::MVT_COMMAND_CLOSE_PATH)
-        {
-            auto points_data_opt = tile.geometry.points.data();
-            if (!points_data_opt.has_value())
-            {
-                return;
-            }
-
-            auto linestring =
-                points_data_opt->subspan(current_ring_first_point, current_ring_point_count);
-
-            // Exterior linestring => new polygon
-            if (polygon_area(linestring) >= 0)
-            {
-                push_feature();
-
-                lm::dvec3 centroid = hrz::vector_data::compute_ring_average(linestring);
-                f->anchor = centroid;
-                f->anchor_angle = 0;
-            }
-
-            if (!f.has_value())
-            {
-                HRZ_LOG_WARNING("Invalid polygon geometry");
-                return;
-            }
-
-            f->point_count = f->point_count + current_ring_point_count;
-            tile.geometry.linestring_sizes.push_back(current_ring_point_count);
-            f->linestring_count += 1;
-
-            geometry_is_valid = true;
-        }
-    }
-
-    push_feature();
+            return true;
+        });
 }
 
 // Get a numeric value from a MVT value, taking type priority into account.
@@ -461,6 +346,7 @@ void mvt_parse_polygons(
                                                                           \
     static_assert(true, "")
 
+[[nodiscard]]
 bool decode_mvt(
     const hrz_jobs::EncodedVectorTile& encoded_tile,
     MutableVectorTile& decoded_tile,
@@ -479,7 +365,7 @@ bool decode_mvt(
 
     decoded_tile.coords = encoded_tile.coords;
 
-    auto should_decode_layer =
+    const auto should_decode_layer =
         [&](const vector_tile::Tile_Layer& mvt_layer, bool show_version_error)
     {
         if (encoded_tile.layer_name != "" && mvt_layer.name() != encoded_tile.layer_name)
@@ -567,37 +453,51 @@ bool decode_mvt(
 
         for (const auto& mvt_feature : mvt_layer.features())
         {
-            size_t new_features_count = 1;
-
             if (encoded_tile.decode_geometry)
             {
-                auto feature_count_before_opt = decoded_tile.geometry.features.size();
-                if (!feature_count_before_opt.has_value()) return false;
-                size_t feature_count_before = feature_count_before_opt.value();
+                auto feature_count_before =
+                    (uint32_t)decoded_tile.geometry.feature_count().value_or(0);
 
+                bool status = true;
                 switch (mvt_feature.type())
                 {
-                    case vector_tile::Tile_GeomType_UNKNOWN:
-                        mvt_parse_unknown(decoded_tile, mvt_feature, mvt_layer.extent());
-                        break;
                     case vector_tile::Tile_GeomType_POINT:
-                        mvt_parse_points(decoded_tile, mvt_feature, mvt_layer.extent());
+                        status = mvt_parse_points(decoded_tile, mvt_feature, mvt_layer.extent());
                         break;
                     case vector_tile::Tile_GeomType_LINESTRING:
-                        mvt_parse_linestrings(decoded_tile, mvt_feature, mvt_layer.extent());
+                        status =
+                            mvt_parse_linestrings(decoded_tile, mvt_feature, mvt_layer.extent());
                         break;
                     case vector_tile::Tile_GeomType_POLYGON:
-                        mvt_parse_polygons(decoded_tile, mvt_feature, mvt_layer.extent());
+                        status = mvt_parse_polygons(decoded_tile, mvt_feature, mvt_layer.extent());
                         break;
                     default:
                         HRZ_LOG_WARNING(
                             "Unknown vector tile geometry type: {}", (int)mvt_feature.type());
+                        [[fallthrough]];
+                    case vector_tile::Tile_GeomType_UNKNOWN:
+                        status = mvt_parse_unknown(decoded_tile, mvt_feature, mvt_layer.extent());
                         break;
                 }
 
-                auto feature_count_after_opt = decoded_tile.geometry.features.size();
+                if (!status)
+                {
+                    HRZ_LOG_ERROR(
+                        "Failed to parse feature {} in layer \"{}\"", mvt_feature.id(),
+                        mvt_layer.name());
+                    return false;
+                }
+
+                auto feature_count_after_opt = decoded_tile.geometry.feature_count();
                 if (!feature_count_after_opt.has_value()) return false;
-                new_features_count = feature_count_after_opt.value() - feature_count_before;
+                if (feature_count_after_opt.value() < feature_count_before
+                    || feature_count_after_opt.value() != feature_count_before + 1)
+                {
+                    HRZ_LOG_ERROR(
+                        "Invalid feature count after parsing feature {} in layer \"{}\"",
+                        mvt_feature.id(), mvt_layer.name());
+                    return false;
+                }
             }
 
             for (size_t i = 0; i < attributes_with_values.size(); ++i)
@@ -607,59 +507,54 @@ bool decode_mvt(
 
             for (int32_t i = 0; i < mvt_feature.tags_size(); i += 2)
             {
-                uint32_t mvt_attribute_index = mvt_feature.tags(i);
-                uint32_t value_index = mvt_feature.tags(i + 1);
+                const uint32_t mvt_attribute_index = mvt_feature.tags(i);
+                const uint32_t value_index = mvt_feature.tags(i + 1);
 
                 const auto& value = mvt_layer.values().Get(value_index);
 
                 if (mvt_attribute_index < attribute_mappings.size()
                     && attribute_mappings[mvt_attribute_index] != NOT_NEEDED)
                 {
-                    uint32_t attribute_id = attribute_mappings[mvt_attribute_index];
-                    size_t decoded_attribute_index = attribute_ids_to_indices.at(attribute_id);
+                    const uint32_t attribute_id = attribute_mappings[mvt_attribute_index];
+                    const size_t decoded_attribute_index =
+                        attribute_ids_to_indices.at(attribute_id);
                     auto& decoded_attribute = decoded_tile.attributes.at(decoded_attribute_index);
-                    auto transform = encoded_tile.attributes.at(decoded_attribute_index).transform;
+                    const auto transform =
+                        encoded_tile.attributes.at(decoded_attribute_index).transform;
 
                     if (value.has_bool_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.bool_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.bool_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else if (value.has_float_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.float_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.float_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else if (value.has_double_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.double_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.double_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else if (value.has_int_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.int_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.int_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else if (value.has_uint_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.uint_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.uint_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else if (value.has_sint_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.sint_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.sint_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else if (value.has_string_value())
                     {
-                        append_attribute_value(
-                            decoded_attribute, transform, value.string_value(), new_features_count);
+                        append_attribute_value(decoded_attribute, transform, value.string_value());
                         attributes_with_values[decoded_attribute_index] = true;
                     }
                     else
@@ -676,34 +571,22 @@ bool decode_mvt(
                 if (i != encoded_tile.source_feature_id_attribute && !attributes_with_values[i])
                 {
                     auto& decoded_attribute = decoded_tile.attributes.at(i);
-                    append_default_attribute_value(decoded_attribute, new_features_count);
+                    append_default_attribute_value(decoded_attribute);
                 }
             }
 
             if (encoded_tile.source_feature_id_attribute.has_value())
             {
-                auto index = encoded_tile.source_feature_id_attribute.value();
+                const auto index = encoded_tile.source_feature_id_attribute.value();
                 auto& feature_id_attribute = decoded_tile.attributes.at(index);
-                auto transform = encoded_tile.attributes.at(index).transform;
-                append_attribute_value(
-                    feature_id_attribute, transform, mvt_feature.id(), new_features_count);
+                const auto transform = encoded_tile.attributes.at(index).transform;
+                append_attribute_value(feature_id_attribute, transform, mvt_feature.id());
             }
         }
 
         if (encoded_tile.layer_name != "")
         {
             break; // No need to continue, as the layer has been found.
-        }
-    }
-
-    // Compute the bounding box of the points
-    decoded_tile.geometry.bounds = lm::dbbox2::invalid();
-    auto points_data_opt = decoded_tile.geometry.points.data();
-    if (points_data_opt.has_value() && !points_data_opt->empty())
-    {
-        for (const auto& point : points_data_opt.value())
-        {
-            decoded_tile.geometry.bounds = lm::expand(decoded_tile.geometry.bounds, point.xy);
         }
     }
 
@@ -724,7 +607,7 @@ bool decode_mvt(
 }
 
 void reserve_attribute_space(
-    std::vector<hrz::vector_data::PackedAttributeValuesBuilder>& decoded_attributes,
+    std::vector<PackedAttributeValuesBuilder>& decoded_attributes,
     size_t feature_count)
 {
     for (auto& decoded_attribute : decoded_attributes)
@@ -755,255 +638,208 @@ lm::dvec3 decode_geojson_point(const rapidjson::Value& coords)
     return vector;
 }
 
-void decode_geojson_point_geometry(MutableVectorTile& tile, const rapidjson::Value& coords)
+[[nodiscard]]
+bool decode_geojson_point_geometry(
+    VectorTileGeometryBuilder& tile_builder,
+    const rapidjson::Value& coords)
 {
-    hrz::vector_data::VectorTileGeometry::Feature f;
-    f.first_point = tile.geometry.points.size().value_or(0);
-    f.point_count = 1;
-    f.first_linestring_size = 0;
-    f.linestring_count = 0;
-    f.type = hrz_proto::VectorGeometryType::POINT_GEOMETRY;
-    tile.geometry.features.push_back(f);
-
-    tile.geometry.points.push_back(decode_geojson_point(coords));
-}
-
-void decode_geojson_multi_point_geometry(MutableVectorTile& tile, const rapidjson::Value& coords)
-{
-    if (coords.IsArray())
-    {
-        for (const auto& pt : coords.GetArray())
+    return tile_builder.add_points_feature(
+        [&](VectorTileGeometryBuilder::PointsBuilder& builder)
         {
-            decode_geojson_point_geometry(tile, pt);
-        }
-    }
+            builder.add_point(decode_geojson_point(coords));
+            return true;
+        });
 }
 
-void decode_geojson_line_string_geometry(MutableVectorTile& tile, const rapidjson::Value& coords)
+[[nodiscard]]
+bool decode_geojson_multi_point_geometry(
+    VectorTileGeometryBuilder& tile_builder,
+    const rapidjson::Value& coords)
 {
-    if (coords.IsArray())
-    {
-        hrz::vector_data::VectorTileGeometry::Feature f;
-        f.type = hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY;
-        f.first_point = tile.geometry.points.size().value_or(0);
-        f.point_count = 0;
-        f.first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-        f.linestring_count = 1;
-
-        for (const auto& pt : coords.GetArray())
-        {
-            tile.geometry.points.push_back(decode_geojson_point(pt));
-            f.point_count += 1;
-        }
-
-        tile.geometry.linestring_sizes.push_back(f.point_count);
-        tile.geometry.features.push_back(f);
-    }
-}
-
-void decode_geojson_multi_line_string_geometry(
-    MutableVectorTile& tile,
-    const rapidjson::Value& coords_array)
-{
-    if (coords_array.IsArray())
-    {
-        hrz::vector_data::VectorTileGeometry::Feature f;
-        f.type = hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY;
-        f.first_point = tile.geometry.points.size().value_or(0);
-        f.point_count = 0;
-        f.first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-        f.linestring_count = 0;
-
-        uint32_t linestring_size = 0;
-        for (const auto& coords : coords_array.GetArray())
+    return tile_builder.add_points_feature(
+        [&](VectorTileGeometryBuilder::PointsBuilder& builder)
         {
             if (coords.IsArray())
             {
-                linestring_size = 0;
-
-                for (const auto& point : coords.GetArray())
+                for (const auto& pt : coords.GetArray())
                 {
-                    tile.geometry.points.push_back(decode_geojson_point(point));
-                    linestring_size += 1;
+                    builder.add_point(decode_geojson_point(pt));
                 }
-
-                f.point_count += linestring_size;
-                f.linestring_count += 1;
-
-                tile.geometry.linestring_sizes.push_back(linestring_size);
             }
-        }
-
-        tile.geometry.features.push_back(f);
-    }
+            return true;
+        });
 }
 
-void decode_geojson_polygon_geometry(MutableVectorTile& tile, const rapidjson::Value& polygon)
+[[nodiscard]]
+bool decode_geojson_line_string_geometry(
+    VectorTileGeometryBuilder::PolylinesBuilder& builder,
+    const rapidjson::Value& coords)
 {
-    HRZ_SCOPED_SAMPLE_A("decode geojson polygon");
+    if (!coords.IsArray()) return true;
 
-    hrz::vector_data::VectorTileGeometry::Feature f;
-    f.type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-    f.first_point = tile.geometry.points.size().value_or(0);
-    f.point_count = 0;
-    f.first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-    f.linestring_count = 0;
+    for (const auto& pt : coords.GetArray())
+    {
+        builder.add_point(decode_geojson_point(pt));
+    }
+    return builder.end_linestring();
+}
 
-    if (!polygon.IsArray()) return;
+[[nodiscard]]
+bool decode_geojson_line_string_geometry(
+    VectorTileGeometryBuilder& tile_builder,
+    const rapidjson::Value& coords)
+{
+    return tile_builder.add_polylines_feature(
+        [&](VectorTileGeometryBuilder::PolylinesBuilder& builder)
+        { return decode_geojson_line_string_geometry(builder, coords); });
+}
+
+[[nodiscard]]
+bool decode_geojson_multi_line_string_geometry(
+    VectorTileGeometryBuilder& tile_builder,
+    const rapidjson::Value& coords_array)
+{
+    return tile_builder.add_polylines_feature(
+        [&](VectorTileGeometryBuilder::PolylinesBuilder& builder)
+        {
+            if (!coords_array.IsArray()) return true;
+
+            for (const auto& coords : coords_array.GetArray())
+            {
+                if (!decode_geojson_line_string_geometry(builder, coords)) return false;
+            }
+
+            return true;
+        });
+}
+
+[[nodiscard]]
+bool decode_geojson_polygon_geometry(
+    VectorTileGeometryBuilder::PolygonsBuilder& builder,
+    const rapidjson::Value& polygon)
+{
+    if (!polygon.IsArray()) return true;
 
     for (const auto& p_ring : polygon.GetArray())
     {
-        if (!p_ring.IsArray()) return;
-
-        uint32_t ring_point_count = 0;
+        if (!p_ring.IsArray()) continue;
 
         for (size_t i = 0; i < p_ring.Size() - 1; ++i)
         {
             const auto& p_pt = p_ring[i];
-            tile.geometry.points.push_back(decode_geojson_point(p_pt));
-            ring_point_count += 1;
+            builder.add_point(decode_geojson_point(p_pt));
         }
 
-        f.point_count += ring_point_count;
-        tile.geometry.linestring_sizes.push_back(ring_point_count);
-        f.linestring_count += 1;
+        if (!builder.end_ring()) return false;
     }
 
-    tile.geometry.features.push_back(f);
+    return builder.end_polygon();
 }
 
-void decode_geojson_multi_polygon_geometry(
-    MutableVectorTile& tile,
+[[nodiscard]]
+bool decode_geojson_polygon_geometry(
+    VectorTileGeometryBuilder& tile_builder,
+    const rapidjson::Value& polygon)
+{
+    HRZ_SCOPED_SAMPLE_A("decode geojson polygon");
+
+    return tile_builder.add_polygons_feature(
+        [&](VectorTileGeometryBuilder::PolygonsBuilder& builder)
+        { return decode_geojson_polygon_geometry(builder, polygon); });
+}
+
+[[nodiscard]]
+bool decode_geojson_multi_polygon_geometry(
+    VectorTileGeometryBuilder& tile_builder,
     const rapidjson::Value& coords_array)
 {
-    if (coords_array.IsArray())
-    {
-        for (const auto& coords : coords_array.GetArray())
+    return tile_builder.add_polygons_feature(
+        [&](VectorTileGeometryBuilder::PolygonsBuilder& builder)
         {
-            decode_geojson_polygon_geometry(tile, coords);
-        }
-    }
+            if (!coords_array.IsArray()) return true;
+
+            for (const auto& coords : coords_array.GetArray())
+            {
+                if (!decode_geojson_polygon_geometry(builder, coords)) return false;
+            }
+
+            return true;
+        });
 }
 
-bool decode_geojson_geometry(MutableVectorTile& tile, const rapidjson::Value& geometry)
+[[nodiscard]]
+bool decode_geojson_geometry(
+    VectorTileGeometryBuilder& tile_builder,
+    const rapidjson::Value& geometry)
 {
     if (geometry["type"] == "Point")
     {
-        decode_geojson_point_geometry(tile, geometry["coordinates"]);
+        return decode_geojson_point_geometry(tile_builder, geometry["coordinates"]);
     }
     else if (geometry["type"] == "MultiPoint")
     {
-        decode_geojson_multi_point_geometry(tile, geometry["coordinates"]);
+        return decode_geojson_multi_point_geometry(tile_builder, geometry["coordinates"]);
     }
     else if (geometry["type"] == "LineString")
     {
-        decode_geojson_line_string_geometry(tile, geometry["coordinates"]);
+        return decode_geojson_line_string_geometry(tile_builder, geometry["coordinates"]);
     }
     else if (geometry["type"] == "MultiLineString")
     {
-        decode_geojson_multi_line_string_geometry(tile, geometry["coordinates"]);
+        return decode_geojson_multi_line_string_geometry(tile_builder, geometry["coordinates"]);
     }
     else if (geometry["type"] == "Polygon")
     {
-        decode_geojson_polygon_geometry(tile, geometry["coordinates"]);
+        return decode_geojson_polygon_geometry(tile_builder, geometry["coordinates"]);
     }
     else if (geometry["type"] == "MultiPolygon")
     {
-        decode_geojson_multi_polygon_geometry(tile, geometry["coordinates"]);
+        return decode_geojson_multi_polygon_geometry(tile_builder, geometry["coordinates"]);
     }
     else if (geometry["type"] == "GeometryCollection")
     {
-        const auto& geometries = geometry["geometries"];
-        if (!geometries.IsArray()) return false;
+        return tile_builder.add_geometry_collection(
+            [&](VectorTileGeometryBuilder& collection_builder)
+            {
+                const auto& geometries = geometry["geometries"];
+                if (!geometries.IsArray()) return true;
 
-        for (const auto& child_geometry : geometries.GetArray())
-        {
-            decode_geojson_geometry(tile, child_geometry);
-        }
+                for (const auto& child_geometry : geometries.GetArray())
+                {
+                    if (!decode_geojson_geometry(collection_builder, child_geometry)) return false;
+                }
+
+                return true;
+            });
     }
     else
     {
         return false;
     }
-
-    return true;
 };
 
 // For tiles with data from GeoJSON and Geobuf data.
-// * Transform position from long-lat to web Mercator,
-// * Compute bounding boxes,
-// * Compute anchors.
-void finalize_latlon_tile(MutableVectorTile& tile)
+[[nodiscard]] bool finalize_latlon_tile(MutableVectorTile& tile)
 {
-    auto features_data_opt = tile.geometry.features.data();
-    auto points_data_opt = tile.geometry.points.data();
-    auto sizes_data_opt = tile.geometry.linestring_sizes.data();
-    if (!features_data_opt.has_value() || !points_data_opt.has_value()
-        || !sizes_data_opt.has_value())
-    {
-        return;
-    }
-    auto features_data = features_data_opt.value();
-    auto points_data = points_data_opt.value();
-    auto sizes_data = sizes_data_opt.value();
-
-    // Clamp all points to Web Mercator domain
-    for (auto& point : points_data)
-    {
-        point.y = hrz::clamp(point.y, -hrz::MERCATOR_MAX_LAT_DEG, hrz::MERCATOR_MAX_LAT_DEG);
-    }
-
-    // Transform all points to web Mercator metres
-    pl_transform_in_place_canonical(
-        &hrz_proj::lonlat_deg_to_wmerc, points_data.size(), (double*)points_data.data());
-
-    // Compute the bounding box of the points
-    tile.geometry.bounds = lm::dbbox2::invalid();
-    if (!points_data.empty())
-    {
-        for (const auto& point : points_data)
+    return tile.geometry.process_points_in_place(
+        [](std::span<lm::dvec3> points)
         {
-            tile.geometry.bounds = lm::expand(tile.geometry.bounds, point.xy);
-        }
-    }
+            // Clamp all points to Web Mercator domain
+            for (auto& point : points)
+            {
+                point.y =
+                    hrz::clamp(point.y, -hrz::MERCATOR_MAX_LAT_DEG, hrz::MERCATOR_MAX_LAT_DEG);
+            }
 
-    // Compute all anchors
-    for (auto& feature : features_data)
-    {
-        switch (feature.type)
-        {
-            case hrz_proto::VectorGeometryType::POINT_GEOMETRY:
-            {
-                feature.anchor = points_data[feature.first_point];
-                feature.anchor_angle = 0.0F;
-                break;
-            }
-            case hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY:
-            {
-                compute_polyline_anchor(tile, feature);
-                break;
-            }
-            case hrz_proto::VectorGeometryType::POLYGON_GEOMETRY:
-            {
-                if (feature.linestring_count > 0)
-                {
-                    auto linestring = points_data.subspan(
-                        feature.first_point, sizes_data[feature.first_linestring_size]);
-                    feature.anchor = hrz::vector_data::compute_ring_average(linestring);
-                    feature.anchor_angle = 0.0F;
-                }
-                else
-                {
-                    feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-                    feature.anchor_angle = 0.0F;
-                }
-                break;
-            }
-            default: assert(!"Unhandled case");
-        }
-    }
+            // Transform all points to web Mercator metres
+            pl_transform_in_place_canonical(
+                &hrz_proj::lonlat_deg_to_wmerc, (int)points.size(), (double*)points.data());
+
+            return true;
+        });
 }
 
+[[nodiscard]]
 bool decode_geojson(
     const hrz_jobs::EncodedVectorTile& encoded_tile,
     MutableVectorTile& decoded_tile,
@@ -1021,7 +857,7 @@ bool decode_geojson(
     rapidjson::Document doc;
     {
         HRZ_SCOPED_SAMPLE("geojson parsing");
-        auto raw_data = std::get<hrz::blobs::BlobHandle>(encoded_tile.data.data).get_data();
+        const auto raw_data = std::get<hrz::blobs::BlobHandle>(encoded_tile.data.data).get_data();
         doc.Parse((const char*)raw_data.data(), raw_data.size());
     }
 
@@ -1037,46 +873,49 @@ bool decode_geojson(
 
     std::vector<bool> attributes_with_errors(decoded_tile.attributes.size(), false);
 
-    auto decode_feature = [&](const rapidjson::Value& feature)
+    const auto decode_feature = [&](const rapidjson::Value& feature) -> bool
     {
-        if (strcmp(hrz::json::get_str_or(feature, "type", ""), "Feature") != 0) return;
+        if (strcmp(hrz::json::get_str_or(feature, "type", ""), "Feature") != 0) return false;
 
         const auto& geometry = hrz::json::get_member_or_null(feature, "geometry");
         const auto& properties = hrz::json::get_member_or_null(feature, "properties");
 
-        size_t new_features_count = 1;
-
         if (encoded_tile.decode_geometry)
         {
-            if (!geometry.IsObject()) return;
+            if (!geometry.IsObject()) return false;
 
-            auto feature_count_before_opt = decoded_tile.geometry.features.size();
-            if (!feature_count_before_opt.has_value()) return;
-            size_t feature_count_before = feature_count_before_opt.value();
+            const size_t feature_count_before = decoded_tile.geometry.feature_count().value_or(0);
 
-            if (!decode_geojson_geometry(decoded_tile, geometry)) return;
+            if (!decode_geojson_geometry(decoded_tile.geometry, geometry)) return false;
 
-            auto feature_count_after_opt = decoded_tile.geometry.features.size();
-            if (!feature_count_after_opt.has_value()) return;
-            new_features_count = feature_count_after_opt.value() - feature_count_before;
+            auto feature_count_after_opt = decoded_tile.geometry.feature_count();
+            if (!feature_count_after_opt.has_value()) return false;
+
+            if (feature_count_after_opt.value() < feature_count_before
+                || feature_count_after_opt.value() != feature_count_before + 1)
+            {
+                HRZ_LOG_ERROR(
+                    "Invalid feature count after parsing feature in tile {}-{}-{}",
+                    encoded_tile.coords.lod, encoded_tile.coords.x, encoded_tile.coords.y);
+                return false;
+            }
         }
 
         if (encoded_tile.source_feature_id_attribute.has_value())
         {
             auto& feature_id_attribute =
                 decoded_tile.attributes.at(encoded_tile.source_feature_id_attribute.value());
-            auto transform =
+            const auto transform =
                 encoded_tile.attributes.at(encoded_tile.source_feature_id_attribute.value())
                     .transform;
 
             if (feature.HasMember("id"))
             {
-                append_json_attribute_value(
-                    feature_id_attribute, transform, feature["id"], new_features_count);
+                append_json_attribute_value(feature_id_attribute, transform, feature["id"]);
             }
             else
             {
-                append_default_attribute_value(feature_id_attribute, new_features_count);
+                append_default_attribute_value(feature_id_attribute);
             }
         }
 
@@ -1087,11 +926,11 @@ bool decode_geojson(
                 if (i != encoded_tile.source_feature_id_attribute)
                 {
                     auto& decoded_attribute = decoded_tile.attributes.at(i);
-                    append_default_attribute_value(decoded_attribute, new_features_count);
+                    append_default_attribute_value(decoded_attribute);
                 }
             }
 
-            return;
+            return true;
         }
 
         for (size_t i = 0; i < encoded_tile.attributes.size(); ++i)
@@ -1101,21 +940,22 @@ bool decode_geojson(
             auto& encoded_attribute = encoded_tile.attributes.at(i);
             auto& decoded_attribute = decoded_tile.attributes.at(i);
 
-            auto it = properties.FindMember(encoded_attribute.name.c_str());
+            const auto it = properties.FindMember(encoded_attribute.name.c_str());
             if (it != properties.MemberEnd())
             {
                 if (!append_json_attribute_value(
-                        decoded_attribute, encoded_attribute.transform, it->value,
-                        new_features_count))
+                        decoded_attribute, encoded_attribute.transform, it->value))
                 {
                     attributes_with_errors[i] = true;
                 }
             }
             else
             {
-                append_default_attribute_value(decoded_attribute, new_features_count);
+                append_default_attribute_value(decoded_attribute);
             }
         }
+
+        return true;
     };
 
     if (doc["type"] == "FeatureCollection")
@@ -1127,18 +967,25 @@ bool decode_geojson(
 
             for (const auto& feature : features.GetArray())
             {
-                decode_feature(feature);
+                if (!decode_feature(feature)) return false;
             }
         }
     }
     else if (doc["type"] == "Feature")
     {
         reserve_attribute_space(decoded_tile.attributes, 1);
-        decode_feature(doc);
+        if (!decode_feature(doc)) return false;
     }
     else
     {
-        if (!decode_geojson_geometry(decoded_tile, doc)) return false;
+        reserve_attribute_space(decoded_tile.attributes, 1);
+        for (size_t i = 0; i < decoded_tile.attributes.size(); ++i)
+        {
+            auto& decoded_attribute = decoded_tile.attributes.at(i);
+            append_default_attribute_value(decoded_attribute);
+        }
+
+        if (!decode_geojson_geometry(decoded_tile.geometry, doc)) return false;
     }
 
     for (size_t i = 0; i < decoded_tile.attributes.size(); ++i)
@@ -1152,22 +999,16 @@ bool decode_geojson(
         }
     }
 
-    finalize_latlon_tile(decoded_tile);
-
-    return true;
+    return finalize_latlon_tile(decoded_tile);
 }
 
-void decode_geobuf_geometry(
-    MutableVectorTile& tile,
+[[nodiscard]]
+bool decode_geobuf_geometry(
+    VectorTileGeometryBuilder& tile_builder,
     const geobuf::Data::Geometry& geometry,
     bool has_z,
     double coord_factor)
 {
-    if (!tile.geometry.points.is_valid() || !tile.geometry.linestring_sizes.is_valid())
-    {
-        return;
-    }
-
     uint32_t coords_per_position = has_z ? 3 : 2;
     uint32_t position_count = geometry.coords_size() / coords_per_position;
     uint32_t remaining_position_count = position_count;
@@ -1175,11 +1016,11 @@ void decode_geobuf_geometry(
     lm::ilvec3 current_encoded_position = {0, 0, 0};
     int current_position_index = 0;
 
-    auto read_position = [&](bool is_delta)
+    auto read_position = [&](bool is_delta) -> lm::dvec3
     {
-        auto x_index = current_position_index * coords_per_position + 0;
-        auto y_index = x_index + 1;
-        auto z_index = x_index + 2;
+        const auto x_index = current_position_index * coords_per_position + 0;
+        const auto y_index = x_index + 1;
+        const auto z_index = x_index + 2;
 
         lm::ilvec3 encoded_position;
         if (!is_delta)
@@ -1207,35 +1048,12 @@ void decode_geobuf_geometry(
         };
     };
 
-    auto add_position = [&](lm::dvec3 position) { tile.geometry.points.push_back(position); };
-
-    auto add_point = [&]()
+    auto add_polyline = [&](VectorTileGeometryBuilder::PolylinesBuilder& builder, bool read_lengths,
+                            int first_linestring_length_index, int linestring_count) -> bool
     {
-        hrz::vector_data::VectorTileGeometry::Feature feature;
-        feature.first_point = tile.geometry.points.size().value_or(0);
-        feature.point_count = 1;
-        feature.first_linestring_size = 0;
-        feature.linestring_count = 0;
-        feature.type = hrz_proto::VectorGeometryType::POINT_GEOMETRY;
-
-        add_position(read_position(false));
-
-        tile.geometry.features.push_back(feature);
-    };
-
-    auto add_polyline = [&](bool read_lengths, int first_linestring_length_index,
-                            int linestring_count) -> bool
-    {
-        hrz::vector_data::VectorTileGeometry::Feature feature;
-        feature.first_point = tile.geometry.points.size().value_or(0);
-        feature.point_count = 0;
-        feature.first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-        feature.linestring_count = 0;
-        feature.type = hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY;
-
         for (int i = 0; i < linestring_count; ++i)
         {
-            uint32_t linestring_length = read_lengths
+            const uint32_t linestring_length = read_lengths
                 ? geometry.lengths(first_linestring_length_index + i)
                 : remaining_position_count;
 
@@ -1243,12 +1061,10 @@ void decode_geobuf_geometry(
             {
                 for (uint32_t j = 0; j < linestring_length; ++j)
                 {
-                    add_position(read_position(j != 0));
+                    builder.add_point(read_position(j != 0));
                 }
 
-                tile.geometry.linestring_sizes.push_back(linestring_length);
-                feature.linestring_count += 1;
-                feature.point_count += linestring_length;
+                if (!builder.end_linestring()) return false;
             }
             else
             {
@@ -1256,23 +1072,15 @@ void decode_geobuf_geometry(
             }
         }
 
-        tile.geometry.features.push_back(feature);
         return true;
     };
 
-    auto add_polygon = [&](bool read_lengths, int first_linestring_length_index,
-                           int linestring_count) -> bool
+    auto add_polygon = [&](VectorTileGeometryBuilder::PolygonsBuilder& builder, bool read_lengths,
+                           int first_linestring_length_index, int linestring_count) -> bool
     {
-        hrz::vector_data::VectorTileGeometry::Feature feature;
-        feature.first_point = tile.geometry.points.size().value_or(0);
-        feature.point_count = 0;
-        feature.first_linestring_size = tile.geometry.linestring_sizes.size().value_or(0);
-        feature.linestring_count = 0;
-        feature.type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-
         for (int i = 0; i < linestring_count; ++i)
         {
-            uint32_t ring_length = read_lengths
+            const uint32_t ring_length = read_lengths
                 ? geometry.lengths(first_linestring_length_index + i)
                 : remaining_position_count;
 
@@ -1280,12 +1088,10 @@ void decode_geobuf_geometry(
             {
                 for (uint32_t j = 0; j < ring_length; ++j)
                 {
-                    add_position(read_position(j != 0));
+                    builder.add_point(read_position(j != 0));
                 }
 
-                tile.geometry.linestring_sizes.push_back(ring_length);
-                feature.linestring_count += 1;
-                feature.point_count += ring_length;
+                if (!builder.end_ring()) return false;
             }
             else
             {
@@ -1293,99 +1099,140 @@ void decode_geobuf_geometry(
             }
         }
 
-        tile.geometry.features.push_back(feature);
         return true;
     };
 
     if (geometry.type() == geobuf::Data::Geometry::POINT)
     {
-        if (position_count >= 1)
-        {
-            add_point();
-        }
+        return tile_builder.add_points_feature(
+            [&](VectorTileGeometryBuilder::PointsBuilder& points_builder) -> bool
+            {
+                if (position_count >= 1) points_builder.add_point(read_position(false));
+                return true;
+            });
     }
     else if (geometry.type() == geobuf::Data::Geometry::MULTIPOINT)
     {
-        for (uint32_t i = 0; i < position_count; ++i)
-        {
-            add_point();
-        }
+        return tile_builder.add_points_feature(
+            [&](VectorTileGeometryBuilder::PointsBuilder& points_builder) -> bool
+            {
+                for (uint32_t i = 0; i < position_count; ++i)
+                {
+                    points_builder.add_point(read_position(i > 0));
+                }
+                return true;
+            });
     }
     else if (geometry.type() == geobuf::Data::Geometry::LINESTRING)
     {
-        bool has_lengths = geometry.lengths_size() >= 1;
-        add_polyline(has_lengths, 0, 1);
+        return tile_builder.add_polylines_feature(
+            [&](VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder)
+            {
+                const bool has_lengths = geometry.lengths_size() >= 1;
+                return add_polyline(polylines_builder, has_lengths, 0, 1);
+            });
     }
     else if (geometry.type() == geobuf::Data::Geometry::MULTILINESTRING)
     {
-        bool has_lengths = geometry.lengths_size() >= 1;
-        add_polyline(has_lengths, 0, has_lengths ? geometry.lengths_size() : 1);
+        return tile_builder.add_polylines_feature(
+            [&](VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder)
+            {
+                const bool has_lengths = geometry.lengths_size() >= 1;
+                return add_polyline(
+                    polylines_builder, has_lengths, 0, has_lengths ? geometry.lengths_size() : 1);
+            });
     }
     else if (geometry.type() == geobuf::Data::Geometry::POLYGON)
     {
-        bool has_lengths = geometry.lengths_size() >= 1;
-        add_polygon(has_lengths, 0, has_lengths ? geometry.lengths_size() : 1);
+        return tile_builder.add_polygons_feature(
+            [&](VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder)
+            {
+                const bool has_lengths = geometry.lengths_size() >= 1;
+                return add_polygon(
+                    polygons_builder, has_lengths, 0, has_lengths ? geometry.lengths_size() : 1);
+            });
     }
     else if (geometry.type() == geobuf::Data::Geometry::MULTIPOLYGON)
     {
-        if (geometry.lengths_size() >= 1)
-        {
-            int polygon_count = geometry.lengths(0);
-            int length_index = 1;
-
-            for (int i = 0; i < polygon_count; ++i)
+        return tile_builder.add_polygons_feature(
+            [&](VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder)
             {
-                if (geometry.lengths_size() <= length_index + 1) break;
+                if (geometry.lengths_size() >= 1)
+                {
+                    const int polygon_count = geometry.lengths(0);
+                    int length_index = 1;
 
-                int linestring_count = std::min(
-                    (int)geometry.lengths(length_index),
-                    geometry.lengths_size() - (length_index + 1));
+                    for (int i = 0; i < polygon_count; ++i)
+                    {
+                        if (geometry.lengths_size() <= length_index + 1) break;
 
-                if (!add_polygon(true, length_index + 1, linestring_count)) break;
+                        const int linestring_count = std::min(
+                            (int)geometry.lengths(length_index),
+                            geometry.lengths_size() - (length_index + 1));
 
-                length_index += 1 + linestring_count;
-            }
-        }
-        else
-        {
-            add_polygon(false, 0, 1);
-        }
+                        if (!add_polygon(
+                                polygons_builder, true, length_index + 1, linestring_count))
+                            return false;
+
+                        if (!polygons_builder.end_polygon()) return false;
+
+                        length_index += 1 + linestring_count;
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    return add_polygon(polygons_builder, false, 0, 1);
+                }
+            });
     }
     else if (geometry.type() == geobuf::Data::Geometry::GEOMETRYCOLLECTION)
     {
-        for (const auto& child_geometry : geometry.geometries())
-        {
-            decode_geobuf_geometry(tile, child_geometry, has_z, coord_factor);
-        }
+        return tile_builder.add_geometry_collection(
+            [&](VectorTileGeometryBuilder& collection_builder)
+            {
+                for (const auto& child_geometry : geometry.geometries())
+                {
+                    if (!decode_geobuf_geometry(
+                            collection_builder, child_geometry, has_z, coord_factor))
+                        return false;
+                }
+                return true;
+            });
+    }
+    else
+    {
+        HRZ_LOG_ERROR("Unsupported geometry type in Geobuf file: {}", (int)geometry.type());
+        return false;
     }
 }
 
+[[nodiscard]]
 bool decode_geobuf_attribute_value(
-    hrz::vector_data::PackedAttributeValuesBuilder& decoded_attribute,
+    PackedAttributeValuesBuilder& decoded_attribute,
     hrz_proto::AttributeTransform transform,
-    const geobuf::Data::Value& value,
-    size_t feature_count)
+    const geobuf::Data::Value& value)
 {
     if (value.has_string_value())
     {
-        append_attribute_value(decoded_attribute, transform, value.string_value(), feature_count);
+        append_attribute_value(decoded_attribute, transform, value.string_value());
     }
     else if (value.has_double_value())
     {
-        append_attribute_value(decoded_attribute, transform, value.double_value(), feature_count);
+        append_attribute_value(decoded_attribute, transform, value.double_value());
     }
     else if (value.has_pos_int_value())
     {
-        append_attribute_value(decoded_attribute, transform, value.pos_int_value(), feature_count);
+        append_attribute_value(decoded_attribute, transform, value.pos_int_value());
     }
     else if (value.has_neg_int_value())
     {
-        append_attribute_value(
-            decoded_attribute, transform, -(int64_t)value.neg_int_value(), feature_count);
+        append_attribute_value(decoded_attribute, transform, -(int64_t)value.neg_int_value());
     }
     else if (value.has_bool_value())
     {
-        append_attribute_value(decoded_attribute, transform, value.bool_value(), feature_count);
+        append_attribute_value(decoded_attribute, transform, value.bool_value());
     }
     // We don't handle json_value.
     else
@@ -1399,16 +1246,15 @@ bool decode_geobuf_attribute_value(
 void decode_geobuf_attributes(
     const std::vector<hrz_jobs::AttributeModel>& encoded_attributes,
     const std::vector<std::optional<uint32_t>>& key_to_attribute,
-    std::vector<hrz::vector_data::PackedAttributeValuesBuilder>& decoded_attributes,
+    std::vector<PackedAttributeValuesBuilder>& decoded_attributes,
     const geobuf::Data::Feature& feature_data,
-    size_t feature_count,
     std::vector<bool>& attributes_with_values,
     std::vector<bool>& attributes_with_errors)
 {
     for (int i = 0; i + 1 < feature_data.properties_size(); i += 2)
     {
-        uint32_t key_index = feature_data.properties(i + 0);
-        uint32_t value_index = feature_data.properties(i + 1);
+        const uint32_t key_index = feature_data.properties(i + 0);
+        const uint32_t value_index = feature_data.properties(i + 1);
 
         if (value_index >= (uint32_t)feature_data.values_size()) continue;
         if (key_index >= (uint32_t)key_to_attribute.size()) continue;
@@ -1417,9 +1263,9 @@ void decode_geobuf_attributes(
 
         auto& decoded_attribute = decoded_attributes.at(*attribute_index);
         const auto& raw_value = feature_data.values(value_index);
-        auto transform = encoded_attributes.at(*attribute_index).transform;
+        const auto transform = encoded_attributes.at(*attribute_index).transform;
 
-        if (decode_geobuf_attribute_value(decoded_attribute, transform, raw_value, feature_count))
+        if (decode_geobuf_attribute_value(decoded_attribute, transform, raw_value))
         {
             attributes_with_values[*attribute_index] = true;
         }
@@ -1430,6 +1276,7 @@ void decode_geobuf_attributes(
     }
 }
 
+[[nodiscard]]
 bool decode_geobuf(
     const hrz_jobs::EncodedVectorTile& encoded_tile,
     MutableVectorTile& decoded_tile,
@@ -1445,11 +1292,11 @@ bool decode_geobuf(
     }
 
     google::protobuf::Arena arena;
-    auto geobuf = arena.Make<geobuf::Data>();
+    const auto geobuf = arena.Make<geobuf::Data>();
     bool success = false;
     {
         HRZ_SCOPED_SAMPLE("protobuf parsing");
-        auto raw_data = std::get<hrz::blobs::BlobHandle>(encoded_tile.data.data).get_data();
+        const auto raw_data = std::get<hrz::blobs::BlobHandle>(encoded_tile.data.data).get_data();
         success = geobuf->ParseFromArray(raw_data.data(), raw_data.size());
     }
 
@@ -1502,44 +1349,48 @@ bool decode_geobuf(
     // This is not reset for every feature.
     std::vector<bool> attributes_with_errors(encoded_tile.attributes.size(), false);
 
-    auto decode_feature = [&](const geobuf::Data_Feature& feature)
+    const auto decode_feature = [&](const geobuf::Data_Feature& feature) -> bool
     {
-        size_t new_features_count = 1;
-
         if (encoded_tile.decode_geometry)
         {
-            auto feature_count_before_opt = decoded_tile.geometry.features.size();
-            if (!feature_count_before_opt.has_value()) return;
-            size_t feature_count_before = feature_count_before_opt.value();
+            const auto feature_count_before = decoded_tile.geometry.feature_count().value_or(0);
 
-            decode_geobuf_geometry(decoded_tile, feature.geometry(), has_z, coord_factor);
+            if (!decode_geobuf_geometry(
+                    decoded_tile.geometry, feature.geometry(), has_z, coord_factor))
+                return false;
 
-            auto feature_count_after_opt = decoded_tile.geometry.features.size();
-            if (!feature_count_after_opt.has_value()) return;
-            new_features_count = feature_count_after_opt.value() - feature_count_before;
+            const auto feature_count_after_opt = decoded_tile.geometry.feature_count();
+            if (!feature_count_after_opt.has_value()) return false;
+
+            if (feature_count_after_opt.value() < feature_count_before
+                || feature_count_after_opt.value() != feature_count_before + 1)
+            {
+                HRZ_LOG_ERROR(
+                    "Invalid feature count after parsing feature {} in tile {}-{}-{}", feature.id(),
+                    encoded_tile.coords.lod, encoded_tile.coords.x, encoded_tile.coords.y);
+                return false;
+            }
         }
 
         if (encoded_tile.source_feature_id_attribute.has_value())
         {
             auto& feature_id_attribute =
                 decoded_tile.attributes.at(encoded_tile.source_feature_id_attribute.value());
-            auto transform =
+            const auto transform =
                 encoded_tile.attributes.at(encoded_tile.source_feature_id_attribute.value())
                     .transform;
 
             if (feature.has_id())
             {
-                append_attribute_value(
-                    feature_id_attribute, transform, feature.id(), new_features_count);
+                append_attribute_value(feature_id_attribute, transform, feature.id());
             }
             else if (feature.has_int_id())
             {
-                append_attribute_value(
-                    feature_id_attribute, transform, feature.int_id(), new_features_count);
+                append_attribute_value(feature_id_attribute, transform, feature.int_id());
             }
             else
             {
-                append_default_attribute_value(feature_id_attribute, new_features_count);
+                append_default_attribute_value(feature_id_attribute);
             }
         }
 
@@ -1550,17 +1401,18 @@ bool decode_geobuf(
 
         decode_geobuf_attributes(
             encoded_tile.attributes, key_to_attribute, decoded_tile.attributes, feature,
-            new_features_count, attributes_with_values, attributes_with_errors);
+            attributes_with_values, attributes_with_errors);
 
         for (size_t i = 0; i < attributes_with_values.size(); ++i)
         {
             if (i != encoded_tile.source_feature_id_attribute && !attributes_with_values[i])
             {
                 auto& decoded_attribute = decoded_tile.attributes.at(i);
-
-                append_default_attribute_value(decoded_attribute, new_features_count);
+                append_default_attribute_value(decoded_attribute);
             }
         }
+
+        return true;
     };
 
     if (geobuf->has_feature_collection())
@@ -1570,17 +1422,18 @@ bool decode_geobuf(
 
         for (const auto& feature : geobuf->feature_collection().features())
         {
-            decode_feature(feature);
+            if (!decode_feature(feature)) return false;
         }
     }
     else if (geobuf->has_feature())
     {
         reserve_attribute_space(decoded_tile.attributes, 1);
-        decode_feature(geobuf->feature());
+        if (!decode_feature(geobuf->feature())) return false;
     }
     else if (geobuf->has_geometry())
     {
-        decode_geobuf_geometry(decoded_tile, geobuf->geometry(), has_z, coord_factor);
+        if (!decode_geobuf_geometry(decoded_tile.geometry, geobuf->geometry(), has_z, coord_factor))
+            return false;
     }
 
     for (size_t i = 0; i < decoded_tile.attributes.size(); ++i)
@@ -1594,93 +1447,77 @@ bool decode_geobuf(
         }
     }
 
-    finalize_latlon_tile(decoded_tile);
-
-    return true;
+    return finalize_latlon_tile(decoded_tile);
 }
 
 } // anonymous namespace
 
 hrz_jobs::JobResult run(
     const hrz_jobs::EncodedVectorTile& encoded_tile,
-    hrz::vector_data::DecodedVectorTile& decoded_tile,
+    DecodedVectorTile& decoded_tile,
     const JobContext& context)
 {
     HRZ_SCOPED_SAMPLE("vector tiles job decode");
 
     auto blob_allocator = context.get_blob_allocator();
-    auto owner = context.get_resource_owner();
 
-    bool success = false;
+    {
+        const auto owner = context.get_resource_owner();
 
-    MutableVectorTile mutable_tile = {
-        {},
+        MutableVectorTile mutable_tile = {
+            {},
+            VectorTileGeometryBuilder(
+                blob_allocator, InitialFeatureCapacity, InitialPointCapacity,
+                InitialLinestringSizeCapacity),
+            {}
+        };
+
+        mutable_tile.geometry.register_blobs_owner(owner);
+
+        bool success = false;
+        switch (encoded_tile.data.format)
         {
-            lm::dbbox2::invalid(),
-            hrz::BlobVector<hrz::vector_data::VectorTileGeometry::Feature>(
-                blob_allocator, InitialFeatureCapacity),
-            hrz::BlobVector<lm::dvec3>(blob_allocator, InitialPointCapacity),
-            hrz::BlobVector<uint32_t>(blob_allocator, InitialLinestringSizeCapacity),
-        },
-        {}
-    };
-    mutable_tile.geometry.features.register_blob_metadata(
-        "contents"_ss, "vector geometry features"_ss);
-    mutable_tile.geometry.points.register_blob_metadata("contents"_ss, "vector geometry points"_ss);
-    mutable_tile.geometry.linestring_sizes.register_blob_metadata(
-        "contents"_ss, "vector geometry linestring sizes"_ss);
+            case hrz_proto::VectorDataFormat::MVT_VECTOR_DATA:
+                success = decode_mvt(encoded_tile, mutable_tile, blob_allocator, owner);
+                break;
+            case hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA:
+                success = decode_geojson(encoded_tile, mutable_tile, blob_allocator, owner);
+                break;
+            case hrz_proto::VectorDataFormat::GEOBUF_VECTOR_DATA:
+                success = decode_geobuf(encoded_tile, mutable_tile, blob_allocator, owner);
+                break;
+            default: assert(false && "Unhandled case"); break;
+        }
 
-    mutable_tile.geometry.features.register_blob_owner(owner);
-    mutable_tile.geometry.points.register_blob_owner(owner);
-    mutable_tile.geometry.linestring_sizes.register_blob_owner(owner);
-
-    switch (encoded_tile.data.format)
-    {
-        case hrz_proto::VectorDataFormat::MVT_VECTOR_DATA:
-            success = decode_mvt(encoded_tile, mutable_tile, blob_allocator, owner);
-            break;
-        case hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA:
-            success = decode_geojson(encoded_tile, mutable_tile, blob_allocator, owner);
-            break;
-        case hrz_proto::VectorDataFormat::GEOBUF_VECTOR_DATA:
-            success = decode_geobuf(encoded_tile, mutable_tile, blob_allocator, owner);
-            break;
-        default: assert(false && "Unhandled case"); break;
-    }
-
-    if (!success)
-    {
-        return hrz_jobs::JobResult::FAILURE;
-    }
-
-    auto features_opt = mutable_tile.geometry.features.to_blob_array();
-    auto points_opt = mutable_tile.geometry.points.to_blob_array();
-    auto linestring_sizes_opt = mutable_tile.geometry.linestring_sizes.to_blob_array();
-    if (!features_opt.has_value() || !points_opt.has_value() || !linestring_sizes_opt.has_value())
-    {
-        return hrz_jobs::JobResult::FAILURE;
-    }
-
-    decoded_tile.coords = mutable_tile.coords;
-    decoded_tile.geometry.bounds = mutable_tile.geometry.bounds;
-    decoded_tile.geometry.features = std::move(features_opt.value());
-    decoded_tile.geometry.points = std::move(points_opt.value());
-    decoded_tile.geometry.linestring_sizes = std::move(linestring_sizes_opt.value());
-
-    assert(mutable_tile.attributes.size() == encoded_tile.attributes.size());
-    for (size_t i = 0; i < mutable_tile.attributes.size(); ++i)
-    {
-        auto attribute_opt = mutable_tile.attributes[i].finalize(encoded_tile.attributes[i].id);
-        if (!attribute_opt.has_value())
+        if (!success)
         {
             return hrz_jobs::JobResult::FAILURE;
         }
 
-        decoded_tile.attributes.push_back(std::move(attribute_opt.value()));
+        auto finalized_tile = std::move(mutable_tile.geometry).finalize();
+        if (!finalized_tile.has_value())
+        {
+            return hrz_jobs::JobResult::FAILURE;
+        }
+
+        decoded_tile.coords = mutable_tile.coords;
+        decoded_tile.geometry = std::move(finalized_tile).value();
+
+        assert(mutable_tile.attributes.size() == encoded_tile.attributes.size());
+        for (size_t i = 0; i < mutable_tile.attributes.size(); ++i)
+        {
+            auto attribute_opt = mutable_tile.attributes[i].finalize(encoded_tile.attributes[i].id);
+            if (!attribute_opt.has_value())
+            {
+                return hrz_jobs::JobResult::FAILURE;
+            }
+
+            decoded_tile.attributes.push_back(std::move(attribute_opt.value()));
+        }
     }
 
     {
-        hrz::InlinedVector<hrz::vector_data::AttributeValues, 2> feature_id_attribute_values;
+        hrz::InlinedVector<AttributeValues, 2> feature_id_attribute_values;
         for (size_t i = 0; i < encoded_tile.attributes.size(); ++i)
         {
             if (encoded_tile.attributes.at(i).is_feature_id)
@@ -1689,10 +1526,10 @@ hrz_jobs::JobResult run(
             }
         }
 
-        auto feature_count = encoded_tile.decode_geometry
+        const auto feature_count = encoded_tile.decode_geometry
             ? decoded_tile.geometry.features.size()
             : (decoded_tile.attributes.empty() ? 0 : decoded_tile.attributes.front().values.size());
-        hrz::BlobVector<hrz::vector_data::FeatureIdHash> hashes(blob_allocator, feature_count);
+        hrz::BlobVector<FeatureIdHash> hashes(blob_allocator, feature_count);
         hashes.register_blob_metadata("contents"_ss, "feature ID hashes"_ss);
         hashes.register_blob_owner(context.get_resource_owner());
         hashes.resize(feature_count);
@@ -1702,8 +1539,8 @@ hrz_jobs::JobResult run(
             return hrz_jobs::JobResult::FAILURE;
         }
 
-        auto feature_ids = hrz::vector_data::FeatureIds::make(
-            feature_id_attribute_values, std::move(hashes_opt.value()));
+        auto feature_ids =
+            FeatureIds::make(feature_id_attribute_values, std::move(hashes_opt.value()));
         if (feature_ids.has_value())
         {
             decoded_tile.feature_ids = std::move(feature_ids.value());
@@ -1716,7 +1553,7 @@ hrz_jobs::JobResult run(
 
 #ifndef NDEBUG
     {
-        auto feature_count = encoded_tile.decode_geometry
+        const auto feature_count = encoded_tile.decode_geometry
             ? decoded_tile.geometry.features.size()
             : (decoded_tile.attributes.empty() ? 0 : decoded_tile.attributes.front().values.size());
         assert(decoded_tile.feature_ids.size() == feature_count);

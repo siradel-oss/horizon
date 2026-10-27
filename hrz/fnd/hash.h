@@ -4,8 +4,10 @@
 #pragma once
 
 #include "absl/hash/hash.h"
+#include "absl/hash/internal/hash.h"
 #include "hrz/fnd/int128.h"
 
+#include <concepts>
 #include <span>
 #include <stdint.h>
 #include <string_view>
@@ -67,12 +69,14 @@ constexpr T hash_mix(std::span<T> hashes)
     return hashes[0];
 }
 
+// Not deterministic across builds.
 template<typename T>
 constexpr size_t hash_value(const T& value)
 {
     return absl::HashOf(value);
 }
 
+// Not deterministic across builds.
 template<typename... Args>
 constexpr size_t hash_values(const Args&... value)
 {
@@ -83,5 +87,65 @@ constexpr size_t hash_values(const Args&... value)
 // The keys are ordered because we don't want their order to be significant obviously.
 // However duplicate keys with different values has undefined behaviour. So be careful.
 uint64_t hash_kv(std::span<const std::pair<std::string_view, std::string_view>>);
+
+// Very simple hasher that can be used to combine multiple values into a single hash.
+// This is guaranteed to be deterministic across builds and platforms.
+// Very simple though, only handles basic types.
+//
+// @Note I originally wanted to use abseil's hashing framework, but that proved
+// too complex, and it kept inserting random state which made the hash non
+// deterministic. So here we are.
+//      -slerouzic, 2026-10-09
+struct StaticHasher
+{
+    uint64_t state = 0;
+
+    static StaticHasher combine(StaticHasher hasher, std::unsigned_integral auto value)
+    {
+        hasher.state = hrz::hash_mix(hasher.state, hrz::hash_mix<uint64_t>(0, (uint64_t)value));
+        return hasher;
+    }
+
+    static StaticHasher combine(StaticHasher hasher, std::signed_integral auto value)
+    {
+        hasher.state = hrz::hash_mix(hasher.state, hrz::hash_mix<uint64_t>(0, (uint64_t)value));
+        return hasher;
+    }
+
+    static StaticHasher combine(StaticHasher hasher, std::string_view value)
+    {
+        hasher.state = hrz::hash_mix(hasher.state, murmur3_x64_64(value));
+        return hasher;
+    }
+
+    template<typename T1, typename T2, typename... Args>
+    static StaticHasher combine(
+        StaticHasher hasher,
+        const T1& value1,
+        const T2& value2,
+        const Args&... rest)
+    {
+        hasher = StaticHasher::combine(std::move(hasher), value1);
+        hasher = StaticHasher::combine(std::move(hasher), value2);
+        ((hasher = StaticHasher::combine(std::move(hasher), rest)), ...);
+        return hasher;
+    }
+};
+
+template<typename T>
+inline uint64_t hash_value_static(const T& value)
+{
+    StaticHasher state{};
+    state = StaticHasher::combine(std::move(state), value);
+    return state.state;
+}
+
+template<typename... Args>
+inline uint64_t hash_values_static(const Args&... value)
+{
+    StaticHasher state{};
+    state = StaticHasher::combine(std::move(state), value...);
+    return state.state;
+}
 
 } // namespace hrz

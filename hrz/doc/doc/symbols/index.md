@@ -6,6 +6,8 @@ title = "Symbols"
 
 Symbols in Horizon are 2D object that add symbolic information into a scene, placed in a 3D world. Symbols can be complex in appearance but are built from a composition of simple elements. They are a versatile representation that can compose many elements such as text, icons, shapes, to create a wide variety of visual representations. They are also very flexible in their layout, allowing to easily position elements relative to each other and to the feature they represent.
 
+Symbols are always placed at the feature's anchor, no matter its number of geometries, or their type.
+
 A symbol is composed of multiple elements and has layout capabilities to easily place elements of a symbol relative to one another. There are two main types of elements: visual elements and layout elements. A visual element is a visible part of a symbol whereas a layout element isn't visible but participates in placing the different visible parts of the symbol.
 
 All the existing symbol elements are described further down below. But first, in order to fully understand how to create symbols, one needs to understand how the layout system works.

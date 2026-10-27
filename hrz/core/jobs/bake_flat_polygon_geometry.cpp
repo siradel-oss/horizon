@@ -8,6 +8,7 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
 #include "hrz/common/triangulation.h" // IWYU pragma: keep
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
@@ -19,12 +20,16 @@
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/maths.h"
 #include "hrz/fnd/static_vector.h"
+#include "hrz/protocol/vector/geometry_type.pb.h"
 
 #include <CDT.h>
 #include <delabella.h>
 #include <earcut.hpp>
 
 #include <limits>
+#include <span>
+#include <string_view>
+#include <variant>
 
 namespace hrz_jobs::bake_flat_polygon_geometry
 {
@@ -594,6 +599,86 @@ void generate_polygon_geometry(
     }
 }
 
+struct InstanceProperties
+{
+    uint32_t feature_index;
+
+    lm::ubvec4 fill_color_srgb;
+
+    size_t polygon_pattern_sprite_index;
+    std::string_view polygon_pattern_sprite_name;
+    lm::vec2 polygon_pattern_size;
+    float polygon_pattern_rotation;
+    lm::ubvec4 polygon_pattern_color_srgb;
+    float polygon_pattern_blend_strength;
+};
+
+InstanceProperties get_instance_properties(
+    const hrz_jobs::FlatPolygonData& input,
+    uint64_t prp_begin,
+    uint64_t prp_end,
+    std::span<const uint64_t> style_prps,
+    const hrz::vector_data::PackedAttributeValuesReader& style_values)
+{
+    InstanceProperties props{};
+    props.fill_color_srgb = input.default_color_srgb;
+    props.polygon_pattern_sprite_index = input.default_polygon_pattern_sprite_index;
+    props.polygon_pattern_sprite_name = input.default_polygon_pattern_sprite_name;
+    props.polygon_pattern_size = input.default_polygon_pattern_size;
+    props.polygon_pattern_rotation = input.default_polygon_pattern_rotation;
+    props.polygon_pattern_color_srgb = input.default_polygon_pattern_color_srgb;
+    props.polygon_pattern_blend_strength = input.default_polygon_pattern_color_blend_strength;
+
+    for (uint64_t j = prp_begin; j < prp_end; ++j)
+    {
+        if (style_prps[j] == input.color_prp)
+        {
+            props.fill_color_srgb = style_values.as_color(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_sprite_index_prp)
+        {
+            props.polygon_pattern_sprite_index = (size_t)style_values.as_uint64(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_sprite_name_prp)
+        {
+            props.polygon_pattern_sprite_name = style_values.as_string(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_size_prp.x)
+        {
+            props.polygon_pattern_size.x = (float)style_values.as_number(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_size_prp.y)
+        {
+            props.polygon_pattern_size.y = (float)style_values.as_number(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_rotation_prp)
+        {
+            props.polygon_pattern_rotation = (float)style_values.as_number(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_color_prp)
+        {
+            props.polygon_pattern_color_srgb = style_values.as_color(j);
+        }
+        else if (style_prps[j] == input.polygon_pattern_color_blend_strength_prp)
+        {
+            props.polygon_pattern_blend_strength =
+                hrz::clamp((float)style_values.as_number(j), 0.0F, 1.0F);
+        }
+    }
+
+    if (input.has_polygon_pattern)
+    {
+        auto sprite_name_it =
+            input.pattern_sprite_name_to_index.find(props.polygon_pattern_sprite_name);
+        if (sprite_name_it != input.pattern_sprite_name_to_index.end())
+        {
+            props.polygon_pattern_sprite_index = sprite_name_it->second;
+        }
+    }
+
+    return props;
+}
+
 } // anonymous namespace
 
 hrz_jobs::JobResult run(
@@ -603,13 +688,13 @@ hrz_jobs::JobResult run(
 {
     HRZ_SCOPED_SAMPLE("bake flat geometry");
 
-    auto input_features = input.geometry.features.get_data();
-    auto input_points = input.geometry.points.get_data();
-    auto input_linestring_sizes = input.geometry.linestring_sizes.get_data();
-    auto input_feature_ids = input.feature_ids.get_data();
+    using hrz::vector_data::VectorTileGeometry;
 
-    auto style_prps = input.style.prps.get_data();
-    auto style_values = input.style.get_values_reader();
+    const auto input_geometry_reader = input.geometry.make_reader();
+    const auto input_feature_ids = input.feature_ids.get_data();
+
+    const auto style_prps = input.style.prps.get_data();
+    const auto style_values = input.style.get_values_reader();
 
     // Baked positions for later reprojection
     hrz::BlobVector<lm::dvec3> polygon_positions(
@@ -633,84 +718,26 @@ hrz_jobs::JobResult run(
 
     uint32_t max_feature_index = 0;
 
-    // Create triangulation
     for (const auto& instance : style.instances.get_data())
     {
         if (instance.repr_id != input.repr_id) continue;
 
-        const auto& feature = input_features.at(instance.feature_index);
-        if (feature.type != hrz_proto::VectorGeometryType::POLYGON_GEOMETRY) continue;
+        const auto* feature = input_geometry_reader.get_feature(instance.feature_index);
+        if (!feature) continue;
+        if (!feature->flags.has_geometry(hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)) continue;
 
-        auto feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
-        max_feature_index = std::max(max_feature_index, feature_index);
+        auto instance_prps = get_instance_properties(
+            input, instance.first_prp, instance.first_prp + instance.prp_count,
+            style_prps.as_span(), style_values);
+        instance_prps.feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
 
-        const uint64_t prp_begin = instance.first_prp;
-        const uint64_t prp_end = prp_begin + instance.prp_count;
+        max_feature_index = std::max(max_feature_index, instance_prps.feature_index);
 
-        lm::ubvec4 fill_color_srgb = input.default_color_srgb;
+        const bool use_pattern = input.has_polygon_pattern
+            && instance_prps.polygon_pattern_sprite_index < input.pattern_sprites.size();
 
-        size_t polygon_pattern_sprite_index = input.default_polygon_pattern_sprite_index;
-        std::string_view polygon_pattern_sprite_name = input.default_polygon_pattern_sprite_name;
-        lm::vec2 polygon_pattern_size = input.default_polygon_pattern_size;
-        float polygon_pattern_rotation = input.default_polygon_pattern_rotation;
-        lm::ubvec4 polygon_pattern_color_srgb = input.default_polygon_pattern_color_srgb;
-        float polygon_pattern_blend_strength = input.default_polygon_pattern_color_blend_strength;
-
-        for (uint64_t j = prp_begin; j < prp_end; ++j)
-        {
-            if (style_prps[j] == input.color_prp)
-            {
-                fill_color_srgb = style_values.as_color(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_sprite_index_prp)
-            {
-                polygon_pattern_sprite_index = (size_t)style_values.as_uint64(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_sprite_name_prp)
-            {
-                polygon_pattern_sprite_name = style_values.as_string(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_size_prp.x)
-            {
-                polygon_pattern_size.x = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_size_prp.y)
-            {
-                polygon_pattern_size.y = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_rotation_prp)
-            {
-                polygon_pattern_rotation = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_color_prp)
-            {
-                polygon_pattern_color_srgb = style_values.as_color(j);
-            }
-            else if (style_prps[j] == input.polygon_pattern_color_blend_strength_prp)
-            {
-                polygon_pattern_blend_strength =
-                    hrz::clamp((float)style_values.as_number(j), 0.0F, 1.0F);
-            }
-        }
-
-        auto feature_points =
-            input_points.as_span().subspan(feature.first_point, feature.point_count);
-
-        auto feature_linestring_sizes = input_linestring_sizes.as_span().subspan(
-            feature.first_linestring_size, feature.linestring_count);
-
-        if (input.has_polygon_pattern)
-        {
-            auto sprite_name_it =
-                input.pattern_sprite_name_to_index.find(polygon_pattern_sprite_name);
-            if (sprite_name_it != input.pattern_sprite_name_to_index.end())
-            {
-                polygon_pattern_sprite_index = sprite_name_it->second;
-            }
-        }
-
-        if (input.has_polygon_pattern
-            && polygon_pattern_sprite_index < input.pattern_sprites.size())
+        uint32_t pattern_style_index = 0;
+        if (use_pattern)
         {
             // The pattern style configuration can be different for every polygon. It
             // includes the sprite index, size, rotation, colour, etc. Including all
@@ -721,9 +748,10 @@ hrz_jobs::JobResult run(
             // polygon, but only a few styles will be used. To decrease the size of the
             // style texture, styles are first stored in a map and deduplicated.
 
-            auto& pattern_sprite = input.pattern_sprites[polygon_pattern_sprite_index];
+            auto& pattern_sprite =
+                input.pattern_sprites[instance_prps.polygon_pattern_sprite_index];
 
-            auto pattern_size = polygon_pattern_size;
+            auto pattern_size = instance_prps.polygon_pattern_size;
             if (input.polygon_pattern_size_unit
                     == hrz_proto::POLYGON_PATTERN_SIZE_RELATIVE_TO_SPRITE_IN_METERS
                 || input.polygon_pattern_size_unit
@@ -736,7 +764,8 @@ hrz_jobs::JobResult run(
             // In-tile UVs range from 0 to 1 so coordinates must be scaled by the
             // size of the tile.
             auto transform = lm::inverse(
-                lm::rotation(lm::dvec3(0.0, 0.0, 1.0), (double)polygon_pattern_rotation)
+                lm::rotation(
+                    lm::dvec3(0.0, 0.0, 1.0), (double)instance_prps.polygon_pattern_rotation)
                 * lm::scaling(lm::dvec3(pattern_size, 1.0))
                 * lm::scaling(lm::dvec3(1.0 / tile_size.x, 1.0 / tile_size.y, 1.0)));
 
@@ -748,11 +777,11 @@ hrz_jobs::JobResult run(
             pattern_style.polygon_pattern_transform = lm::mat2(
                 lm::vec2(lm::dvec2(transform.x.x, transform.x.y)),
                 lm::vec2(lm::dvec2(transform.y.x, transform.y.y)));
-            pattern_style.background_color_srgb = fill_color_srgb;
-            pattern_style.pattern_color_srgb = polygon_pattern_color_srgb;
-            pattern_style.pattern_color_blend_strength = polygon_pattern_blend_strength;
+            pattern_style.background_color_srgb = instance_prps.fill_color_srgb;
+            pattern_style.pattern_color_srgb = instance_prps.polygon_pattern_color_srgb;
+            pattern_style.pattern_color_blend_strength =
+                instance_prps.polygon_pattern_blend_strength;
 
-            uint32_t pattern_style_index = 0;
             if (auto style_it = polygon_pattern_styles.find(pattern_style);
                 style_it != polygon_pattern_styles.end())
             {
@@ -763,20 +792,34 @@ hrz_jobs::JobResult run(
                 pattern_style_index = (uint32_t)polygon_pattern_styles.size();
                 polygon_pattern_styles.insert({pattern_style, pattern_style_index});
             }
+        }
 
-            generate_polygon_geometry<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>(
-                feature_index, feature_points, feature_linestring_sizes, polygon_positions,
-                pattern_polygon_vertices, pattern_polygon_indices, fill_color_srgb,
-                pattern_style_index, input.coords, tile_bounds, input.clip_to_tile,
-                context.get_blob_allocator());
-        }
-        else
-        {
-            generate_polygon_geometry<hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex>(
-                feature_index, feature_points, feature_linestring_sizes, polygon_positions,
-                solid_color_polygon_vertices, pattern_polygon_indices, fill_color_srgb, 0,
-                input.coords, tile_bounds, input.clip_to_tile, context.get_blob_allocator());
-        }
+        input_geometry_reader.iterate_geometries_for_feature(
+            instance.feature_index,
+            [&](const VectorTileGeometry::Geometry& feature_geometry)
+            {
+                const auto* polygon =
+                    std::get_if<VectorTileGeometry::PolygonGeometry>(&feature_geometry);
+                if (!polygon) return;
+
+                if (use_pattern)
+                {
+                    generate_polygon_geometry<hrz_jobs::FlatPolygonGeometry::PatternPolygonVertex>(
+                        instance_prps.feature_index, polygon->points, polygon->ring_sizes,
+                        polygon_positions, pattern_polygon_vertices, pattern_polygon_indices,
+                        instance_prps.fill_color_srgb, pattern_style_index, input.coords,
+                        tile_bounds, input.clip_to_tile, context.get_blob_allocator());
+                }
+                else
+                {
+                    generate_polygon_geometry<
+                        hrz_jobs::FlatPolygonGeometry::SolidColorPolygonVertex
+                    >(instance_prps.feature_index, polygon->points, polygon->ring_sizes,
+                      polygon_positions, solid_color_polygon_vertices, pattern_polygon_indices,
+                      instance_prps.fill_color_srgb, 0, input.coords, tile_bounds,
+                      input.clip_to_tile, context.get_blob_allocator());
+                }
+            });
     }
 
     auto feature_id_array_size = input_feature_ids.size();
@@ -787,7 +830,7 @@ hrz_jobs::JobResult run(
     }
     hrz::BlobVector<hrz::vector_data::FeatureIdHash> feature_ids(
         context.get_blob_allocator(), feature_id_array_size);
-    for (auto feature_id : input_feature_ids)
+    for (auto feature_id : input_feature_ids.as_span())
     {
         feature_ids.push_back(feature_id);
     }

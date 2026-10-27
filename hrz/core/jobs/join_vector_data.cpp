@@ -40,17 +40,15 @@ namespace hrz_jobs::join_vector_data
 namespace
 {
 
-hrz::vector_data::VectorTileGeometry::Feature make_empty_feature()
+inline hrz::vector_data::VectorTileGeometry::Feature make_empty_feature()
 {
-    hrz::vector_data::VectorTileGeometry::Feature feature;
-    feature.type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-    feature.first_point = 0;
-    feature.point_count = 0;
-    feature.first_linestring_size = 0;
-    feature.linestring_count = 0;
-    feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-    feature.anchor_angle = 0;
-    return feature;
+    return {
+        .first_geometry_part = 0,
+        .geometry_part_count = 0,
+        .anchor = {},
+        .anchor_angle = 0.0F,
+        .flags = hrz::vector_data::VectorTileGeometry::FeatureFlags::make_collection(),
+    };
 }
 
 hrz_jobs::JobResult join_by_feature_ids(

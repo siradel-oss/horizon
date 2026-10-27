@@ -35,8 +35,12 @@ Providers must provide the extents of their data set. This includes the minimum 
 Every feature can be associated to one or more geometry. Geometries are 2D shapes whose vertices are locations on the planet. Geometries can be:
 
 * Points: single positions, to which for example [symbols](symbols.html) can be attached.
+* Multi-points: collections of points.
 * Polylines: linear features made of a list of positions, defining a string of straight segments. They can be visualised among others as a series of tubes with [cylinders](cylinders.html).
+* Multi-polylines: collections of polylines.
 * Polygons: features with surfaces, that can contain holes. They can for instance be turned into volumes by [extruding them](extruded_vectors.html).
+* Multi-polygons: collections of polygons.
+* Geometry collections: collections of geometries of any type, including other geometry collections.
 
 Internally (and in most datasets) the [Web Mercator](https://epsg.io/3857) projection is used to store coordinate. This makes impossible to represent geometries near the poles, namely above 85.06°N and below 85.06°S.
 

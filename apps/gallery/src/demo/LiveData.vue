@@ -31,7 +31,7 @@ async function respondToVectorDataRequest(msg: HrzProtocol.VectorDataRequestMess
 
     for (const featureId of msg.featureIdSelection?.featureIds || []) {
         const id = HrzProtocolHelper.attributeAsNumber((featureId.attributes || [])[0].value || {});
-        const feature: HrzProtocol.ClientFeature.$Shape = {
+        const feature: HrzProtocol.VectorFeature.$Shape = {
             attributeValues: [{ numberValue: Math.sin(time + id / 100) }],
         };
         response.features?.push(feature);

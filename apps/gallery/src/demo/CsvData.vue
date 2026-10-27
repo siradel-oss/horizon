@@ -217,7 +217,7 @@ async function respondToVectorDataRequest(msg: HrzProtocol.VectorDataRequestMess
             (featureId.attributes || [])[0].value || {}
         );
         const irisAttributes = popStats[irisId] || {};
-        const feature = HrzProtocol.ClientFeature.create();
+        const feature = HrzProtocol.VectorFeature.create();
         for (const attrName of expectedAttributes) {
             feature.attributeValues.push({
                 numberValue: irisAttributes[attrName] || NaN,

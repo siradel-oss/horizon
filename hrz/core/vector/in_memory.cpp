@@ -10,12 +10,14 @@
 #include "hrz/common/proj.h"
 #include "hrz/common/vector_data/attribute_type_api.h" // IWYU pragma: keep
 #include "hrz/common/vector_data/attributes_ops.h"
-#include "hrz/common/vector_data/geometry_utils.h"
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/core/channel_group.h"
 #include "hrz/core/scene_path/layer/in_memory_vector_source_layer_paths.h"
+#include "hrz/core/vector/in_memory_geometry.h"
 #include "hrz/fnd/flat_hash_map.h"
 #include "hrz/fnd/flat_hash_set.h"
 #include "hrz/fnd/gen_object_pool.h"
+#include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/node_hash_map.h"
 #include "hrz/fnd/thread.h"
@@ -25,9 +27,9 @@
 
 #include <algorithm>
 #include <cassert>
-#include <functional>
 #include <limits>
 #include <mutex>
+#include <span>
 #include <variant>
 #include <vector>
 
@@ -37,10 +39,6 @@ namespace vector_data::in_memory
 {
 namespace
 {
-
-static constexpr TileCoords ROOT_TILE_COORDS = {
-    std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), 0xff
-};
 
 lm::dbbox2 flatten_bbox(const lm::dbbox3& bbox)
 {
@@ -54,10 +52,7 @@ using LayerPoolH = uint64_t;
 struct Feature
 {
     FeatureId id;
-    hrz_proto::VectorGeometryType type;
-    lm::dbbox3 bbox;
-    lm::dvec3 anchor;
-    float anchor_angle;
+    FeatureGeometry geometry;
     std::vector<OwnedAttributeValue> attribute_values;
     size_t out_of_line_data_size;
     bool geometry_updated;
@@ -72,13 +67,9 @@ struct Tile
     {
         FeatureH handle;
         FeatureId id;
-        hrz_proto::VectorGeometryType type;
-        size_t first_point;
-        size_t point_count;
-        size_t first_linestring_size;
-        size_t linestring_count;
-        lm::dvec3 anchor;
-        float anchor_angle;
+
+        // Indices refer to the tile's geometry arrays.
+        VectorTileGeometry::Feature encoded;
     };
 
     lm::dbbox2 bbox;
@@ -86,8 +77,7 @@ struct Tile
     uint32_t use_count;
     size_t out_of_line_data_size = 0;
     std::vector<Feature> features;
-    std::vector<lm::dvec3> positions; // In web-Mercator metres
-    std::vector<uint32_t> sizes;
+    GeometryArrays geometry;
 };
 
 struct UpdatedAttributeValueIndex
@@ -198,6 +188,7 @@ struct DataTracker
     struct GeometryBlobs
     {
         BlobArrayAllocation<VectorTileGeometry::Feature> features;
+        BlobArrayAllocation<VectorTileGeometry::GeometryPart> geometry_parts;
         BlobArrayAllocation<lm::dvec3> points;
         BlobArrayAllocation<uint32_t> sizes;
     };
@@ -319,11 +310,71 @@ void _project_positions(Layer* layer, std::span<lm::dvec3> positions)
     pl_transform_in_place_canonical(&layer->transform, positions.size(), &positions[0].x);
 }
 
+// Decodes, projects, and encodes all the geometries of a feature.
+void _load_feature_geometry(
+    Layer* layer,
+    const hrz_proto::VectorFeature& feature_proto,
+    Feature* feature)
+{
+    feature->geometry = decode_feature_geometry(
+        feature_proto, [layer](std::span<lm::dvec3> points) { _project_positions(layer, points); });
+}
+
+// Loads the attribute values of a feature, and updates its ID.
+// Missing or extra values are respectively replaced by null values and ignored.
+// Returns true if any attribute value changed.
+bool _load_feature_attributes(
+    Layer* layer,
+    const hrz_proto::VectorFeature& feature_proto,
+    Feature* feature)
+{
+    const auto default_value = attr_null<OwnedAttributeValue>();
+    feature->attribute_values.resize(layer->attributes.size(), default_value);
+
+    const auto attribute_value_count =
+        std::min((size_t)feature_proto.attribute_values_size(), layer->attributes.size());
+
+    bool changed = false;
+
+    for (size_t attr_i = 0; attr_i < layer->attributes.size(); ++attr_i)
+    {
+        auto new_value = attr_i < attribute_value_count
+            ? attr_transform<OwnedAttributeValue>(
+                  layer->attributes[attr_i].transform,
+                  attr_as_ref(feature_proto.attribute_values((int)attr_i)))
+            : default_value;
+        const auto old_value = attr_as_ref(feature->attribute_values[attr_i]);
+
+        if (attr_as_ref(new_value) == old_value) continue;
+
+        feature->out_of_line_data_size -= get_packed_out_of_line_size(old_value);
+        feature->out_of_line_data_size += get_packed_out_of_line_size(attr_as_ref(new_value));
+
+        feature->attribute_values[attr_i] = std::move(new_value);
+        // @Safety old_value is not valid anymore after overwriting attribute_values[attr_i]
+
+        changed = true;
+    }
+
+    _compute_feature_id(layer, feature);
+
+    return changed;
+}
+
+// Resets a feature allocated from the pool, which may contain data from a previous feature.
+void _reset_feature(Feature* feature)
+{
+    feature->id = {};
+    feature->geometry = {};
+    feature->attribute_values.clear();
+    feature->out_of_line_data_size = 0;
+    feature->geometry_updated = false;
+    feature->attribute_values_updated = false;
+}
+
 TileCoords _parent_tile_coords(TileCoords tile_coords)
 {
-    assert(tile_coords != ROOT_TILE_COORDS);
-
-    if (tile_coords.lod == 0) return ROOT_TILE_COORDS;
+    assert(tile_coords.lod > 0);
 
     return {tile_coords.x / 2, tile_coords.y / 2, (uint8_t)(tile_coords.lod - 1)};
 }
@@ -346,7 +397,8 @@ void _update_tile_use_count(
 
     if (tile->use_count == 0)
     {
-        layer->tiles_by_coords.erase(tile_coords);
+        system->tile_pool.release(tile_handle);
+        layer->tiles_by_coords.erase(it);
     }
 
     if (tile_coords.lod == 0) return;
@@ -372,237 +424,42 @@ void _update_tile_use_count(
 
     if (tile->use_count == 0)
     {
-        layer->tiles_by_feature_ids.erase(feature_id_list.hash());
+        system->tile_pool.release(tile_handle);
+        layer->tiles_by_feature_ids.erase(it);
     }
 }
 
-// The root tile is regenerated when features have been created, destroyed,
-// or modified. It contains all the features, extracted from the model.
-// Geographical tiles, as well as "tiles" that are built from a feature
-// ID list or from reference attribute values, are generated as extracts
-// from the root tile.
-void _generate_root_tile(
-    InMemoryVectorDataBase* system,
-    Layer* layer,
-    const hrz_proto::InMemoryVectorSourceLayerPathBuilder<hrz::SceneModelAccessor>& path_builder)
+void _release_all_tiles(InMemoryVectorDataBase* system, Layer* layer)
 {
-    HRZ_SCOPED_SAMPLE_A("generate root tile");
-
-    TileCoords tile_coords = ROOT_TILE_COORDS;
-    uint32_t use_count = 1;
-    auto current_it = layer->tiles_by_coords.find(tile_coords);
-    if (current_it != layer->tiles_by_coords.end())
+    for (const auto& [tile_coords, tile_handle] : layer->tiles_by_coords)
     {
-        TileH current_tile_handle = current_it->second;
-        Tile* current_tile = system->tile_pool.get_object(current_tile_handle);
-        use_count = current_tile->use_count;
-        assert(use_count >= 1);
-        system->tile_pool.release(current_tile_handle);
+        system->tile_pool.release(tile_handle);
     }
+    layer->tiles_by_coords.clear();
 
-    TileH tile_handle = system->tile_pool.alloc();
-    Tile* tile = system->tile_pool.get_object(tile_handle);
-    tile->bbox = hrz::mercator_tile_bbox_meters(tile_coords);
-    tile->data_bbox = lm::dbbox2::invalid();
-    tile->use_count = use_count;
-    tile->out_of_line_data_size = 0;
-
-    assert(layer->features.size() == path_builder.clone().features_count());
-
-    for (unsigned int i = 0; i < layer->features.size(); ++i)
+    for (const auto& [feature_ids_hash, tile_handle] : layer->tiles_by_feature_ids)
     {
-        auto feature_handle = layer->features.at(i);
-        const auto feature = system->feature_pool.get_object(feature_handle);
-
-        Tile::Feature tile_feature;
-        tile_feature.handle = feature_handle;
-        tile_feature.id = feature->id;
-
-        auto feature_geometry = path_builder.clone().features(i).geometry().get();
-
-        unsigned int coord_count = feature_geometry.coords_size();
-
-        if ((feature->type == hrz_proto::VectorGeometryType::POINT_GEOMETRY && coord_count < 3)
-            || (feature->type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY
-                && coord_count < 6)
-            || (feature->type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
-                && coord_count < 9))
-        {
-            // The geometry is invalid.
-            tile_feature.type = hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY;
-            tile_feature.first_point = 0;
-            tile_feature.point_count = 0;
-            tile_feature.first_linestring_size = 0;
-            tile_feature.linestring_count = 0;
-            tile_feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-            tile_feature.anchor_angle = 0;
-            tile->features.push_back(tile_feature);
-            tile->out_of_line_data_size += feature->out_of_line_data_size;
-            continue;
-        }
-
-        tile_feature.type = feature->type;
-
-        if (feature->type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
-        {
-            coord_count = 3;
-        }
-
-        tile_feature.first_point = tile->positions.size();
-        tile_feature.point_count = coord_count / 3;
-
-        for (unsigned int j = 0; j + 2 < coord_count; j += 3)
-        {
-            lm::dvec3 point = {
-                feature_geometry.coords(j + 0), feature_geometry.coords(j + 1),
-                feature_geometry.coords(j + 2)
-            };
-
-            tile->positions.push_back(point);
-        }
-
-        if (feature->type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
-            || feature->type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
-        {
-            tile_feature.first_linestring_size = tile->sizes.size();
-
-            unsigned int linestring_count = feature_geometry.linestring_sizes_size();
-
-            if (linestring_count > 0)
-            {
-                uint32_t current_ring_start = 0;
-                tile_feature.linestring_count = 0;
-
-                for (unsigned int j = 0; j < linestring_count; ++j)
-                {
-                    uint32_t remaining_points = tile_feature.point_count - current_ring_start;
-                    uint32_t linestring_size =
-                        std::min(feature_geometry.linestring_sizes(j), remaining_points);
-
-                    tile->sizes.push_back(linestring_size);
-
-                    current_ring_start += linestring_size;
-                    tile_feature.linestring_count += 1;
-
-                    if (current_ring_start >= tile_feature.point_count) break;
-                }
-            }
-            else
-            {
-                tile->sizes.push_back(tile_feature.point_count);
-                tile_feature.linestring_count = 1;
-            }
-        }
-        else
-        {
-            tile_feature.first_linestring_size = 0;
-            tile_feature.linestring_count = 0;
-        }
-
-        tile->features.push_back(tile_feature);
-        tile->out_of_line_data_size += feature->out_of_line_data_size;
-        tile->data_bbox = lm::merge(tile->data_bbox, flatten_bbox(feature->bbox));
+        system->tile_pool.release(tile_handle);
     }
-
-    _project_positions(layer, tile->positions);
-
-    for (unsigned int i = 0; i < layer->features.size(); ++i)
-    {
-        auto feature_handle = layer->features.at(i);
-        const auto layer_feature = system->feature_pool.get_object(feature_handle);
-
-        auto& feature = tile->features[i];
-
-        if (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
-        {
-            uint32_t count = tile->sizes[feature.first_linestring_size];
-            uint32_t first_point = feature.first_point;
-            feature.anchor = vector_data::compute_ring_average(
-                std::span<const lm::dvec3>(tile->positions).subspan(first_point, count));
-            feature.anchor_angle = 0.0F;
-        }
-        else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
-        {
-            auto points = std::span<const lm::dvec3>(tile->positions)
-                              .subspan(feature.first_point, feature.point_count);
-            auto linestring_sizes =
-                std::span<const uint32_t>(tile->sizes)
-                    .subspan(feature.first_linestring_size, feature.linestring_count);
-            vector_data::compute_linestring_middle_and_angle(
-                points, linestring_sizes, &feature.anchor, &feature.anchor_angle);
-        }
-        else if (feature.type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
-        {
-            feature.anchor = tile->positions[feature.first_point];
-            feature.anchor_angle = 0.0F;
-        }
-        else
-        {
-            assert(!"Unhandled feature type");
-        }
-
-        layer_feature->anchor = feature.anchor;
-        layer_feature->anchor_angle = feature.anchor_angle;
-    }
-
-    layer->tiles_by_coords[tile_coords] = tile_handle;
+    layer->tiles_by_feature_ids.clear();
 }
 
-enum class FeatureInsertionDecision
+void _insert_feature_in_tile(InMemoryVectorDataBase* system, Tile* tile, FeatureH feature_handle)
 {
-    Skip,
-    InsertAndContinue,
-    InsertAndStop,
-};
+    const auto feature = system->feature_pool.get_object(feature_handle);
 
-void _insert_features_from_parent_in_tile(
-    InMemoryVectorDataBase* system,
-    Tile* tile,
-    const Tile* parent_tile,
-    const std::function<FeatureInsertionDecision(const Feature*)>& filter_predicate)
-{
-    for (size_t feature_index = 0; feature_index < parent_tile->features.size(); ++feature_index)
-    {
-        const auto& parent_tile_feature = parent_tile->features.at(feature_index);
-        auto feature_handle = parent_tile_feature.handle;
-        const auto feature = system->feature_pool.get_object(feature_handle);
+    Tile::Feature tile_feature;
+    tile_feature.handle = feature_handle;
+    tile_feature.id = feature->id;
+    tile_feature.encoded = append_feature_geometry(feature->geometry, &tile->geometry);
 
-        auto decision = filter_predicate(feature);
-        if (decision == FeatureInsertionDecision::Skip) continue;
-
-        Tile::Feature tile_feature;
-        tile_feature.handle = feature_handle;
-        tile_feature.id = feature->id;
-        tile_feature.type = feature->type;
-
-        tile_feature.first_point = tile->positions.size();
-        tile_feature.point_count = parent_tile_feature.point_count;
-
-        for (unsigned int i = 0; i < tile_feature.point_count; ++i)
-        {
-            tile->positions.push_back(parent_tile->positions[parent_tile_feature.first_point + i]);
-        }
-
-        tile_feature.first_linestring_size = tile->sizes.size();
-        tile_feature.linestring_count = parent_tile_feature.linestring_count;
-
-        for (unsigned int i = 0; i < tile_feature.linestring_count; ++i)
-        {
-            tile->sizes.push_back(
-                parent_tile->sizes[parent_tile_feature.first_linestring_size + i]);
-        }
-
-        tile_feature.anchor = feature->anchor;
-        tile_feature.anchor_angle = feature->anchor_angle;
-
-        tile->features.push_back(tile_feature);
-        tile->out_of_line_data_size += feature->out_of_line_data_size;
-        tile->data_bbox = lm::merge(tile->data_bbox, flatten_bbox(feature->bbox));
-
-        if (decision == FeatureInsertionDecision::InsertAndStop) return;
-    }
+    tile->features.push_back(tile_feature);
+    tile->out_of_line_data_size += feature->out_of_line_data_size;
+    tile->data_bbox = lm::merge(tile->data_bbox, flatten_bbox(feature->geometry.bbox));
 }
 
+// Geographical tiles are generated from the features of their parent tile, or from all the
+// features of the layer for level 0 tiles. Parent tiles must be generated first.
 void _generate_tile_for_coords(InMemoryVectorDataBase* system, Layer* layer, TileCoords tile_coords)
 {
     HRZ_SCOPED_SAMPLE_A("generate tile for coords");
@@ -624,19 +481,33 @@ void _generate_tile_for_coords(InMemoryVectorDataBase* system, Layer* layer, Til
     tile->data_bbox = lm::dbbox2::invalid();
     tile->use_count = use_count;
 
-    TileCoords parent_tile_coords = _parent_tile_coords(tile_coords);
-    auto parent_it = layer->tiles_by_coords.find(parent_tile_coords);
-    assert(parent_it != layer->tiles_by_coords.end());
-    const auto parent_tile = system->tile_pool.get_object(parent_it->second);
-
-    _insert_features_from_parent_in_tile(
-        system, tile, parent_tile,
-        [&](const Feature* feature)
+    auto insert_if_intersecting = [&](FeatureH feature_handle)
+    {
+        const auto feature = system->feature_pool.get_object(feature_handle);
+        if (lm::intersect(flatten_bbox(feature->geometry.bbox), tile->bbox))
         {
-            return lm::intersect(flatten_bbox(feature->bbox), tile->bbox)
-                ? FeatureInsertionDecision::InsertAndContinue
-                : FeatureInsertionDecision::Skip;
-        });
+            _insert_feature_in_tile(system, tile, feature_handle);
+        }
+    };
+
+    if (tile_coords.lod == 0)
+    {
+        for (const auto feature_handle : layer->features)
+        {
+            insert_if_intersecting(feature_handle);
+        }
+    }
+    else
+    {
+        auto parent_it = layer->tiles_by_coords.find(_parent_tile_coords(tile_coords));
+        assert(parent_it != layer->tiles_by_coords.end());
+        const auto parent_tile = system->tile_pool.get_object(parent_it->second);
+
+        for (const auto& parent_tile_feature : parent_tile->features)
+        {
+            insert_if_intersecting(parent_tile_feature.handle);
+        }
+    }
 
     layer->tiles_by_coords[tile_coords] = tile_handle;
 }
@@ -648,13 +519,12 @@ void _generate_tiles_for_coords(
 {
     HRZ_SCOPED_SAMPLE_A("generate tiles for coords");
 
-    if (tile_coords == ROOT_TILE_COORDS) return;
+    if (layer->tiles_by_coords.contains(tile_coords)) return;
 
-    auto it = layer->tiles_by_coords.find(tile_coords);
-
-    if (it != layer->tiles_by_coords.end()) return;
-
-    _generate_tiles_for_coords(system, layer, _parent_tile_coords(tile_coords));
+    if (tile_coords.lod > 0)
+    {
+        _generate_tiles_for_coords(system, layer, _parent_tile_coords(tile_coords));
+    }
 
     _generate_tile_for_coords(system, layer, tile_coords);
 }
@@ -683,26 +553,20 @@ void _generate_tile_for_features(
     tile->data_bbox = lm::dbbox2::invalid();
     tile->use_count = use_count;
 
-    auto root_it = layer->tiles_by_coords.find(ROOT_TILE_COORDS);
-    assert(root_it != layer->tiles_by_coords.end());
-    const auto root_tile = system->tile_pool.get_object(root_it->second);
-
     for (size_t i = 0; i < feature_id_list.ids().size(); ++i)
     {
         auto feature_id = feature_id_list.ids().at(i);
 
         bool found = false;
-        _insert_features_from_parent_in_tile(
-            system, tile, root_tile,
-            [&](const Feature* feature)
+        for (const auto feature_handle : layer->features)
+        {
+            if (system->feature_pool.get_object(feature_handle)->id == feature_id)
             {
-                if (feature->id == feature_id)
-                {
-                    found = true;
-                    return FeatureInsertionDecision::InsertAndStop;
-                }
-                return FeatureInsertionDecision::Skip;
-            });
+                _insert_feature_in_tile(system, tile, feature_handle);
+                found = true;
+                break;
+            }
+        }
 
         if (!found)
         {
@@ -710,13 +574,7 @@ void _generate_tile_for_features(
             Tile::Feature tile_feature;
             tile_feature.handle = Tile::EMPTY_FEATURE;
             tile_feature.id = feature_id;
-            tile_feature.first_point = 0;
-            tile_feature.point_count = 0;
-            tile_feature.first_linestring_size = 0;
-            tile_feature.linestring_count = 0;
-            tile_feature.type = hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-            tile_feature.anchor = lm::dvec3(std::numeric_limits<double>::quiet_NaN());
-            tile_feature.anchor_angle = 0;
+            tile_feature.encoded = make_empty_feature();
 
             tile->features.push_back(tile_feature);
         }
@@ -729,14 +587,7 @@ void _generate_tiles_for_all_requests(InMemoryVectorDataBase* system, Layer* lay
 {
     HRZ_SCOPED_SAMPLE_A("generate tiles for all requests");
 
-    auto root_tile_handle = layer->tiles_by_coords.at(ROOT_TILE_COORDS);
-    layer->tiles_by_coords.clear();
-    layer->tiles_by_coords.insert({ROOT_TILE_COORDS, root_tile_handle});
-
-    layer->tiles_by_feature_ids.clear();
-
-    auto root_tile = system->tile_pool.get_object(root_tile_handle);
-    root_tile->use_count = 1;
+    _release_all_tiles(system, layer);
 
     for (auto& it : system->request_ids_to_trackers)
     {
@@ -778,6 +629,7 @@ void _clear_tracker_data(DataTracker& tracker, BlobAllocator* ba)
     if (tracker.geometry_blobs.has_value())
     {
         tracker.geometry_blobs->features.cancel(ba);
+        tracker.geometry_blobs->geometry_parts.cancel(ba);
         tracker.geometry_blobs->points.cancel(ba);
         tracker.geometry_blobs->sizes.cancel(ba);
         tracker.geometry_blobs = {};
@@ -889,10 +741,7 @@ void _unregister_layers(InMemoryVectorDataBase* system, SceneModel* model)
             auto layer = system->layer_pool.get_object(layer_pool_handle);
             uint32_t layer_id = layer->id;
 
-            for (auto it : layer->tiles_by_coords)
-            {
-                system->tile_pool.release(it.second);
-            }
+            _release_all_tiles(system, layer);
 
             for (auto feature_handle : layer->features)
             {
@@ -965,12 +814,6 @@ void register_layer(InMemoryVectorDataBase* system, SceneModel* model, uint64_t 
         layer->id_updated = false;
         layer->all_features_updated = false;
         layer->attribute_definitions_updated = false;
-
-        auto root_tile_handle = system->tile_pool.alloc();
-        auto root_tile = system->tile_pool.get_object(root_tile_handle);
-        root_tile->bbox = hrz::mercator_tile_bbox_meters({0, 0, 0});
-        root_tile->use_count = 1; // Prevent the root tile from being deleted.
-        layer->tiles_by_coords.insert({ROOT_TILE_COORDS, root_tile_handle});
 
         system->layer_model_to_pool.insert({layer_model_handle, layer_pool_handle});
 
@@ -1182,11 +1025,7 @@ void notify_update(
             {
                 auto feature_handle = system->feature_pool.alloc();
                 auto feature = system->feature_pool.get_object(feature_handle);
-                feature->id = {};
-                feature->type = hrz_proto::VectorGeometryType::POINT_GEOMETRY;
-                feature->bbox = lm::dbbox3::invalid();
-                feature->anchor = {};
-                feature->anchor_angle = 0;
+                _reset_feature(feature);
                 feature->geometry_updated = true;
                 feature->attribute_values_updated = true;
                 layer->features.push_back(feature_handle);
@@ -1424,52 +1263,14 @@ void work(
 
                 auto feature_handle = system->feature_pool.alloc();
                 auto feature = system->feature_pool.get_object(feature_handle);
-                feature->type = feature_proto.geometry().type();
-                feature->bbox = lm::dbbox3::invalid();
+                _reset_feature(feature);
 
-                feature->attribute_values.clear();
-                feature->out_of_line_data_size = 0;
-
-                auto attribute_value_count = (size_t)feature_proto.attribute_values_size();
-                for (size_t attr_i = 0;
-                     attr_i < attribute_value_count && attr_i < layer->attributes.size(); ++attr_i)
-                {
-                    auto attr = attr_as_ref(feature_proto.attribute_values((int)attr_i));
-                    feature->attribute_values.push_back(
-                        attr_transform<OwnedAttributeValue>(
-                            layer->attributes[attr_i].transform, attr));
-                    feature->out_of_line_data_size += get_packed_out_of_line_size(attr);
-                }
-                feature->attribute_values.resize(
-                    layer->attributes.size(), attr_null<OwnedAttributeValue>());
-
-                _compute_feature_id(layer, feature);
-
-                feature->geometry_updated = false;
-                feature->attribute_values_updated = false;
-
-                auto bbox = lm::dbbox3::invalid();
-
-                unsigned int point_count = feature_proto.geometry().coords_size();
-                for (unsigned int pt_i = 0; pt_i + 2 < point_count; pt_i += 3)
-                {
-                    lm::dvec3 point = {
-                        feature_proto.geometry().coords(pt_i + 0),
-                        feature_proto.geometry().coords(pt_i + 1),
-                        feature_proto.geometry().coords(pt_i + 2)
-                    };
-
-                    _project_positions(layer, {&point, 1});
-
-                    bbox = lm::expand(bbox, point);
-                }
-
-                feature->bbox = bbox;
+                _load_feature_attributes(layer, feature_proto, feature);
+                _load_feature_geometry(layer, feature_proto, feature);
 
                 layer->features.push_back(feature_handle);
             }
 
-            _generate_root_tile(system, layer, builder);
             _generate_tiles_for_all_requests(system, layer);
 
             restart_all_trackers = true;
@@ -1493,105 +1294,40 @@ void work(
 
                 if (feature->geometry_updated)
                 {
-                    // Previous bbox and id.
-                    updated_bboxes.push_back(flatten_bbox(feature->bbox));
+                    // Previous and new bboxes.
+                    updated_bboxes.push_back(flatten_bbox(feature->geometry.bbox));
+                    _load_feature_geometry(layer, feature_proto, feature);
+                    updated_bboxes.push_back(flatten_bbox(feature->geometry.bbox));
 
-                    feature->type = feature_proto.geometry().type();
-
-                    auto new_bbox = lm::dbbox3::invalid();
-
-                    unsigned int coord_count = feature_proto.geometry().coords_size();
-
-                    if (feature->type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
-                    {
-                        coord_count = coord_count > 3 ? 3 : coord_count;
-                    }
-
-                    for (unsigned int i = 0; i + 2 < coord_count; i += 3)
-                    {
-                        lm::dvec3 point = {
-                            feature_proto.geometry().coords(i + 0),
-                            feature_proto.geometry().coords(i + 1),
-                            feature_proto.geometry().coords(i + 2)
-                        };
-
-                        _project_positions(layer, {&point, 1});
-
-                        new_bbox = lm::expand(new_bbox, point);
-                    }
-
-                    updated_bboxes.push_back(flatten_bbox(new_bbox));
                     updated_feature_ids.insert(feature->id);
-
-                    feature->bbox = new_bbox;
                 }
 
                 if (feature->attribute_values_updated)
                 {
-                    auto default_value = attr_null<OwnedAttributeValue>();
-                    feature->attribute_values.resize(layer->attributes.size(), default_value);
-
-                    auto attribute_value_count = (size_t)feature_proto.attribute_values_size();
-                    for (size_t attr_i = 0;
-                         attr_i < attribute_value_count && attr_i < layer->attributes.size();
-                         ++attr_i)
+                    // The feature ID can change if feature ID attributes changed, in which case
+                    // requests for both the previous and the new IDs are affected.
+                    const auto previous_id = feature->id;
+                    if (_load_feature_attributes(layer, feature_proto, feature))
                     {
-                        auto new_value = attr_transform<OwnedAttributeValue>(
-                            layer->attributes[attr_i].transform,
-                            attr_as_ref(feature_proto.attribute_values((int)attr_i)));
-                        auto old_value = attr_as_ref(feature->attribute_values[attr_i]);
-
-                        if (attr_as_ref(new_value) != old_value)
-                        {
-                            feature->out_of_line_data_size -=
-                                get_packed_out_of_line_size(old_value);
-                            feature->out_of_line_data_size +=
-                                get_packed_out_of_line_size(attr_as_ref(new_value));
-
-                            feature->attribute_values[attr_i] = std::move(new_value);
-                            // @Safety old_value is not valid anymore after overwriting
-                            // attribute_values[i]
-
-                            updated_feature_ids.insert(feature->id);
-                        }
+                        updated_feature_ids.insert(previous_id);
+                        updated_feature_ids.insert(feature->id);
                     }
 
-                    for (size_t attr_i = attribute_value_count; attr_i < layer->attributes.size();
-                         ++attr_i)
-                    {
-                        auto old_value = attr_as_ref(feature->attribute_values[attr_i]);
-                        if (attr_as_ref(default_value) != old_value)
-                        {
-                            feature->out_of_line_data_size -=
-                                get_packed_out_of_line_size(old_value);
-                            feature->attribute_values[attr_i] = default_value;
-                            // @Safety old_value is not valid anymore after overwriting
-                            // attribute_values[i]
-                            updated_feature_ids.insert(feature->id);
-                        }
-                    }
-
-                    _compute_feature_id(layer, feature);
-
-                    updated_bboxes.push_back(flatten_bbox(feature->bbox));
+                    updated_bboxes.push_back(flatten_bbox(feature->geometry.bbox));
                 }
+
+                feature->geometry_updated = false;
+                feature->attribute_values_updated = false;
             }
 
             for (auto feature_handle : layer->deleted_features)
             {
                 auto feature = system->feature_pool.get_object(feature_handle);
 
-                updated_bboxes.push_back(flatten_bbox(feature->bbox));
+                updated_bboxes.push_back(flatten_bbox(feature->geometry.bbox));
                 updated_feature_ids.insert(feature->id);
 
                 system->feature_pool.release(feature_handle);
-            }
-
-            // All other tiles are based on the root tile, so it must be
-            // rebuilt any time a change happened.
-            if (!updated_bboxes.empty() || !updated_feature_ids.empty())
-            {
-                _generate_root_tile(system, layer, builder);
             }
 
             // Ordered so that tiles with the lowest LODs come first.
@@ -1615,8 +1351,6 @@ void work(
 
             for (const auto& tile_coords : tiles_to_regenerate_by_coords)
             {
-                assert(tile_coords != ROOT_TILE_COORDS);
-
                 _generate_tile_for_coords(system, layer, tile_coords);
 
                 for (auto& it : system->request_ids_to_trackers)
@@ -1725,14 +1459,18 @@ void work(
             tracker.geometry_blobs = {{
                 BlobArrayAllocation<VectorTileGeometry::Feature>::allocate(
                     ba, tile->features.size()),
-                BlobArrayAllocation<lm::dvec3>::allocate(ba, tile->positions.size()),
-                BlobArrayAllocation<uint32_t>::allocate(ba, tile->sizes.size()),
+                BlobArrayAllocation<VectorTileGeometry::GeometryPart>::allocate(
+                    ba, tile->geometry.parts.size()),
+                BlobArrayAllocation<lm::dvec3>::allocate(ba, tile->geometry.points.size()),
+                BlobArrayAllocation<uint32_t>::allocate(ba, tile->geometry.sizes.size()),
             }};
 
             tracker.feature_id_hash_blob->register_blob_metadata(
                 ba, "contents"_ss, "in-memory vector geometry feature IDs"_ss);
             tracker.geometry_blobs->features.register_blob_metadata(
                 ba, "contents"_ss, "in-memory vector geometry features"_ss);
+            tracker.geometry_blobs->geometry_parts.register_blob_metadata(
+                ba, "contents"_ss, "in-memory vector geometry parts"_ss);
             tracker.geometry_blobs->points.register_blob_metadata(
                 ba, "contents"_ss, "in-memory vector geometry points"_ss);
             tracker.geometry_blobs->sizes.register_blob_metadata(
@@ -1741,6 +1479,8 @@ void work(
             tracker.feature_id_hash_blob->register_blob_owner(
                 ba, {monitoring::systems::InMemoryVectorData, layer->layer_model_handle});
             tracker.geometry_blobs->features.register_blob_owner(
+                ba, {monitoring::systems::InMemoryVectorData, layer->layer_model_handle});
+            tracker.geometry_blobs->geometry_parts.register_blob_owner(
                 ba, {monitoring::systems::InMemoryVectorData, layer->layer_model_handle});
             tracker.geometry_blobs->points.register_blob_owner(
                 ba, {monitoring::systems::InMemoryVectorData, layer->layer_model_handle});
@@ -1796,6 +1536,7 @@ void work(
 
             combine_state(tracker.feature_id_hash_blob->get_state(ba));
             combine_state(tracker.geometry_blobs->features.get_state(ba));
+            combine_state(tracker.geometry_blobs->geometry_parts.get_state(ba));
             combine_state(tracker.geometry_blobs->points.get_state(ba));
             combine_state(tracker.geometry_blobs->sizes.get_state(ba));
             for (const auto& attribute : tracker.attribute_blobs)
@@ -1852,6 +1593,8 @@ void work(
             tracker.feature_id_hash_blob = std::nullopt;
 
             tracker.tile_data.geometry.features = tracker.geometry_blobs->features.to_array(ba);
+            tracker.tile_data.geometry.geometry_parts =
+                tracker.geometry_blobs->geometry_parts.to_array(ba);
             tracker.tile_data.geometry.points = tracker.geometry_blobs->points.to_array(ba);
             tracker.tile_data.geometry.linestring_sizes =
                 tracker.geometry_blobs->sizes.to_array(ba);
@@ -1871,29 +1614,26 @@ void work(
                 {
                     const auto& feature = tile->features.at(i);
 
-                    hrz::vector_data::VectorTileGeometry::Feature tracker_feature;
-                    tracker_feature.first_point = feature.first_point;
-                    tracker_feature.point_count = feature.point_count;
-                    tracker_feature.first_linestring_size = feature.first_linestring_size;
-                    tracker_feature.linestring_count = feature.linestring_count;
-                    tracker_feature.type = feature.type;
-                    tracker_feature.anchor = feature.anchor;
-                    tracker_feature.anchor_angle = feature.anchor_angle;
-
                     feature_id_hashes_data.at(i) = feature.id.hash();
-                    features_data.at(i) = tracker_feature;
+                    features_data.at(i) = feature.encoded;
                 }
 
                 // @Safety the lifetime of the temporary blob array data object is extended until
                 // the end of the copy call.
                 std::ranges::copy(
-                    tile->positions,
+                    tile->geometry.parts,
+                    tracker.tile_data.geometry.geometry_parts.get_mutable_data().unsafe_data());
+
+                // @Safety the lifetime of the temporary blob array data object is extended until
+                // the end of the copy call.
+                std::ranges::copy(
+                    tile->geometry.points,
                     tracker.tile_data.geometry.points.get_mutable_data().unsafe_data());
 
                 // @Safety the lifetime of the temporary blob array data object is extended until
                 // the end of the copy call.
                 std::ranges::copy(
-                    tile->sizes,
+                    tile->geometry.sizes,
                     tracker.tile_data.geometry.linestring_sizes.get_mutable_data().unsafe_data());
             }
 

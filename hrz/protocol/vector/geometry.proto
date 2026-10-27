@@ -1,0 +1,32 @@
+// SPDX-FileCopyrightText: Copyright 2026 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/vector/geometry_type.proto";
+
+export message VectorFeatureGeometry {
+    VectorGeometryType type             = 1;
+
+    // Points coordinates stored as `[x1, y1, z1, x2, y2, z2, ...]`. For 2D
+    // geometries, z is set to 0.
+    //
+    // For `POINT` geometries, defining multiple points defines a multi-point
+    // geometry.
+    repeated double    coords           = 2;
+
+    // Number of points for each linestring. Linestrings must not be closed.
+    // For polygons, exterior linestring must be counter-clockwise, and interior
+    // ones must be clockwise. This is used only for polygons and polylines.
+    //
+    // For `POLYLINE` geometries, defining multple linestring defines a
+    // multi-polyline geometry.
+    //
+    // If empty, the geometry is a single linestring made of all the points in
+    // `coords`. For polygons, this is a single exterior ring without holes.
+    repeated uint32    linestring_sizes = 3;
+}

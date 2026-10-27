@@ -98,7 +98,7 @@ struct EndSampleOnScopeExit
     static uint64_t HRZ_CONCAT(hrz_profiling_sample_hash_, ID) = 0; \
     hrz::profiling::begin_sample(NAME, FLAGS, &HRZ_CONCAT(hrz_profiling_sample_hash_, ID))
 
-#define HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS) HRZ_BEGIN_SAMPLE_EX2(NAME, FLAGS, __COUNTER__)
+#define HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS) HRZ_BEGIN_SAMPLE_EX2(NAME, FLAGS, __LINE__)
 
 #define HRZ_END_SAMPLE() hrz::profiling::end_sample()
 
@@ -112,7 +112,7 @@ struct EndSampleOnScopeExit
 #define HRZ_SCOPED_SAMPLE_EX(NAME, FLAGS)                  \
     HRZ_BEGIN_SAMPLE_EX(NAME, FLAGS);                      \
     const hrz::profiling::EndSampleOnScopeExit HRZ_CONCAT( \
-        hrz_profiling_end_sample_on_scope_exit_, __COUNTER__)
+        hrz_profiling_end_sample_on_scope_exit_, __LINE__)
 
 #define HRZ_SCOPED_SAMPLE(NAME) HRZ_SCOPED_SAMPLE_EX(NAME, hrz::profiling::None)
 #define HRZ_SCOPED_SAMPLE_ROOT(NAME) HRZ_SCOPED_SAMPLE_EX(NAME, hrz::profiling::Root)

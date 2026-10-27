@@ -5,11 +5,16 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/vector_data/geometry_utils.h"
 #include "hrz/common/vector_data/packed_attribute_values_builder.h"
+#include "hrz/common/vector_data/tile_geometry.h"
+#include "hrz/common/vector_data/tile_geometry_builder.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_data_jobs_params.h"
 #include "hrz/fnd/inlined_vector.h"
 
 #include <optional>
+#include <span>
+#include <variant>
+#include <vector>
 
 namespace hrz_jobs::extract_vector_tile
 {
@@ -147,6 +152,14 @@ struct ClippedFeature
     size_t current_linestring_size = 0;
     std::optional<lm::dvec3> previous_point = std::nullopt; // On the current linestring
 
+    void reset()
+    {
+        points.clear();
+        linestring_sizes.clear();
+        current_linestring_size = 0;
+        previous_point = std::nullopt;
+    }
+
     inline void push_point(lm::dvec3 point)
     {
         if (previous_point.has_value()
@@ -197,7 +210,7 @@ void clip_feature(
     uint32_t axis,
     bool polygon)
 {
-    *out = {};
+    out->reset();
 
     // Each linestring of the feature should be clipped individually.
     size_t linestring_first_point = 0;
@@ -275,6 +288,251 @@ void clip_feature(
     }
 }
 
+// Simplifies a linestring and appends it to out as a new linestring.
+// Returns false if the linestring was discarded entirely.
+bool simplify_linestring(
+    std::span<const lm::dvec3> src_points,
+    double tolerance,
+    bool is_polygon,
+    std::vector<double>& deviations,
+    ClippedFeature* out,
+    bool* is_simplified)
+{
+    if (src_points.empty()) return false;
+
+    lm::dbbox2 linestring_bbox = lm::dbbox2::invalid();
+    for (const auto& point : src_points)
+    {
+        linestring_bbox = lm::expand(linestring_bbox, point.xy);
+    }
+    if (lm::area(linestring_bbox) < tolerance)
+    {
+        // The bounding-box is too small, discard the linestring.
+        *is_simplified = true;
+        return false;
+    }
+
+    deviations.clear();
+    deviations.resize(src_points.size());
+    compute_linestring_deviations(src_points, deviations);
+
+    // Don't simplify away the first and last points.
+    out->push_point(src_points.front());
+    for (size_t k = 1; k + 1 < src_points.size(); ++k)
+    {
+        if (deviations[k] >= tolerance)
+        {
+            out->push_point(src_points[k]);
+        }
+        else if (src_points.size() >= 3)
+        {
+            *is_simplified = true;
+        }
+    }
+    out->push_point(src_points.back());
+
+    if (is_polygon && out->current_linestring_size < 3)
+    {
+        out->clear_linestring();
+        *is_simplified = true;
+        return false;
+    }
+
+    out->end_linestring();
+    return true;
+}
+
+// Clips all the linestrings of a feature to the tile bounds.
+// Polylines can be split in multiple linestrings when they leave and re-enter the tile.
+void clip_to_bounds(ClippedFeature* in, const lm::dbbox2& bounds, bool is_polygon)
+{
+    ClippedFeature tmp;
+    clip_feature(*in, &tmp, bounds.min.x, bounds.max.x, 0, is_polygon);
+    in->reset();
+    clip_feature(tmp, in, bounds.min.y, bounds.max.y, 1, is_polygon);
+}
+
+// Simplifies and clips a polyline, then adds the resulting linestrings.
+[[nodiscard]]
+bool add_extracted_polyline(
+    std::span<const lm::dvec3> src_points,
+    const lm::dbbox2& tile_bounds,
+    double tolerance,
+    std::vector<double>& deviations,
+    hrz::vector_data::VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder,
+    bool* is_simplified)
+{
+    ClippedFeature clipped;
+    if (!simplify_linestring(src_points, tolerance, false, deviations, &clipped, is_simplified))
+    {
+        return true;
+    }
+
+    clip_to_bounds(&clipped, tile_bounds, false);
+
+    size_t first_point = 0;
+    for (const size_t linestring_size : clipped.linestring_sizes)
+    {
+        for (size_t k = 0; k < linestring_size; ++k)
+        {
+            polylines_builder.add_point(clipped.points[first_point + k]);
+        }
+        if (!polylines_builder.end_linestring()) return false;
+        first_point += linestring_size;
+    }
+
+    return true;
+}
+
+// Simplifies and clips the rings of a polygon, then adds the resulting polygon.
+// The polygon is discarded if its exterior ring is simplified or clipped away.
+[[nodiscard]]
+bool add_extracted_polygon(
+    std::span<const lm::dvec3> src_points,
+    std::span<const uint32_t> src_ring_sizes,
+    const lm::dbbox2& tile_bounds,
+    double tolerance,
+    std::vector<double>& deviations,
+    hrz::vector_data::VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder,
+    bool* is_simplified)
+{
+    ClippedFeature clipped;
+
+    size_t ring_first_point = 0;
+    for (size_t ring_index = 0; ring_index < src_ring_sizes.size(); ++ring_index)
+    {
+        const uint32_t ring_size = src_ring_sizes[ring_index];
+        const auto ring_points = src_points.subspan(ring_first_point, ring_size);
+        ring_first_point += ring_size;
+
+        clipped.reset();
+        if (!simplify_linestring(ring_points, tolerance, true, deviations, &clipped, is_simplified))
+        {
+            // Without its exterior ring, the polygon's holes are meaningless.
+            if (ring_index == 0) return true;
+            continue;
+        }
+
+        clip_to_bounds(&clipped, tile_bounds, true);
+        if (clipped.linestring_sizes.empty())
+        {
+            if (ring_index == 0) return true;
+            continue;
+        }
+
+        // Clipping a ring with a convex shape always results in a single ring.
+        for (const auto& point : clipped.points)
+        {
+            polygons_builder.add_point(point);
+        }
+        if (!polygons_builder.end_ring()) return false;
+    }
+
+    return polygons_builder.end_polygon();
+}
+
+// Adds the extracted geometries of a source feature to the current feature of the builder.
+// Geometries are grouped by type, so that multi-geometries keep a compact encoding.
+[[nodiscard]]
+bool add_extracted_feature_geometries(
+    const hrz::vector_data::VectorTileGeometry::Reader& src_geometry_reader,
+    uint32_t src_feature_index,
+    const hrz::vector_data::VectorTileGeometry::FeatureFlags& src_flags,
+    const lm::dbbox2& tile_bounds,
+    double tolerance,
+    std::vector<double>& deviations,
+    hrz::vector_data::VectorTileGeometryBuilder& feature_builder,
+    bool* is_simplified)
+{
+    using hrz::vector_data::VectorTileGeometry;
+    using hrz::vector_data::VectorTileGeometryBuilder;
+
+    if (src_flags.has_geometry(hrz_proto::VectorGeometryType::POINT_GEOMETRY))
+    {
+        const bool success = feature_builder.add_points_feature(
+            [&](VectorTileGeometryBuilder::PointsBuilder& points_builder)
+            {
+                src_geometry_reader.iterate_geometries_for_feature(
+                    src_feature_index,
+                    [&](const VectorTileGeometry::Geometry& src_geometry)
+                    {
+                        const auto* point =
+                            std::get_if<VectorTileGeometry::PointGeometry>(&src_geometry);
+                        if (point && lm::contains(tile_bounds, point->point.xy))
+                        {
+                            points_builder.add_point(point->point);
+                        }
+                    });
+                return true;
+            });
+
+        if (!success)
+        {
+            return false;
+        }
+    }
+
+    if (src_flags.has_geometry(hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY))
+    {
+        const bool success = feature_builder.add_polylines_feature(
+            [&](VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder)
+            {
+                bool success = true;
+                src_geometry_reader.iterate_geometries_for_feature(
+                    src_feature_index,
+                    [&](const VectorTileGeometry::Geometry& src_geometry)
+                    {
+                        if (!success) return;
+
+                        const auto* polyline =
+                            std::get_if<VectorTileGeometry::PolylineGeometry>(&src_geometry);
+                        if (polyline)
+                        {
+                            success = add_extracted_polyline(
+                                polyline->points, tile_bounds, tolerance, deviations,
+                                polylines_builder, is_simplified);
+                        }
+                    });
+                return success;
+            });
+        if (!success)
+        {
+            return false;
+        }
+    }
+
+    if (src_flags.has_geometry(hrz_proto::VectorGeometryType::POLYGON_GEOMETRY))
+    {
+        const bool success = feature_builder.add_polygons_feature(
+            [&](VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder)
+            {
+                bool success = true;
+                src_geometry_reader.iterate_geometries_for_feature(
+                    src_feature_index,
+                    [&](const VectorTileGeometry::Geometry& src_geometry)
+                    {
+                        if (!success) return;
+
+                        const auto* polygon =
+                            std::get_if<VectorTileGeometry::PolygonGeometry>(&src_geometry);
+                        if (polygon)
+                        {
+                            success = add_extracted_polygon(
+                                polygon->points, polygon->ring_sizes, tile_bounds, tolerance,
+                                deviations, polygons_builder, is_simplified);
+                        }
+                    });
+                return success;
+            });
+        if (!success)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 } // namespace
 
 hrz_jobs::JobResult run(
@@ -297,25 +555,16 @@ hrz_jobs::JobResult run(
     }
     tile_bounds = lm::intersection(tile_bounds, hrz::geo_to_web_mercator(params.bounds));
 
-    auto src_features = params.source_data.geometry.features.get_cdata();
-    auto src_points = params.source_data.geometry.points.get_cdata();
-    auto src_linestring_sizes = params.source_data.geometry.linestring_sizes.get_cdata();
+    using hrz::vector_data::VectorTileGeometry;
+
+    const auto src_geometry_reader = params.source_data.geometry.make_reader();
     auto aabb_tree = params.aabb_tree.aabb_tree.get_cdata();
 
     auto ba = context.get_blob_allocator();
 
-    auto features =
-        hrz::BlobVector<hrz::vector_data::VectorTileGeometry::Feature>(ba, InitialFeatureCapacity);
-    auto points = hrz::BlobVector<lm::dvec3>(ba, InitialPointCapacity);
-    auto linestring_sizes = hrz::BlobVector<uint32_t>(ba, InitialLinestringSizeCapacity);
-
-    points.register_blob_metadata("contents"_ss, "vector geometry points"_ss);
-    linestring_sizes.register_blob_metadata("contents"_ss, "vector geometry linestring sizes"_ss);
-    features.register_blob_metadata("contents"_ss, "vector geometry features"_ss);
-
-    points.register_blob_owner(context.get_resource_owner());
-    linestring_sizes.register_blob_owner(context.get_resource_owner());
-    features.register_blob_owner(context.get_resource_owner());
+    hrz::vector_data::VectorTileGeometryBuilder builder(
+        ba, InitialFeatureCapacity, InitialPointCapacity, InitialLinestringSizeCapacity);
+    builder.register_blobs_owner(context.get_resource_owner());
 
     std::vector<uint32_t> feature_src_indices;
     std::vector<double> deviations; // Reused between features
@@ -324,11 +573,7 @@ hrz_jobs::JobResult run(
     const auto tolerance = hrz::vector_data::compute_vector_tile_tolerance(params.coords.lod)
         * std::pow(2.0F, params.tolerance);
 
-    uint32_t tile_point_count = 0;
-    uint32_t tile_linestring_size_count = 0;
     bool tile_has_full_detail = true;
-
-    lm::dbbox2 tile_geometry_bounds = lm::dbbox2::invalid();
 
     hrz::InlinedVector<size_t, 32> search_stack;
     if (!aabb_tree.empty())
@@ -352,179 +597,69 @@ hrz_jobs::JobResult run(
         {
             search_stack.push_back(node.child_indices[0]);
             search_stack.push_back(node.child_indices[1]);
+            continue;
         }
-        else
+
+        const auto* src_feature = src_geometry_reader.get_feature(node.feature_index);
+        if (!src_feature) continue;
+
+        bool feature_is_simplified = false;
+
+        const auto feature_count_before_opt = builder.feature_count();
+        if (!feature_count_before_opt.has_value()) return hrz_jobs::JobResult::FAILURE;
+
+        // Each source feature produces at most one feature, and none if all its geometry was
+        // simplified or clipped away.
+        const bool success = builder.add_geometry_collection(
+            [&](hrz::vector_data::VectorTileGeometryBuilder& feature_builder)
+            {
+                return add_extracted_feature_geometries(
+                    src_geometry_reader, node.feature_index, src_feature->flags, tile_bounds,
+                    tolerance, deviations, feature_builder, &feature_is_simplified);
+            },
+            hrz::vector_data::VectorTileGeometryBuilder::EmptyCollection::Discard);
+        if (!success) return hrz_jobs::JobResult::FAILURE;
+
+        if (feature_is_simplified)
         {
-            const auto& src_feature = src_features[node.feature_index];
+            tile_has_full_detail = false;
+        }
 
-            hrz::vector_data::VectorTileGeometry::Feature feature{};
+        const auto feature_count_after_opt = builder.feature_count();
+        if (!feature_count_after_opt.has_value()) return hrz_jobs::JobResult::FAILURE;
 
-            // We don't update the anchor of simplified features, which makes their position remain
-            // the same between LODs.
-            feature.anchor = src_feature.anchor;
-            feature.anchor_angle = src_feature.anchor_angle;
-
-            feature.type = src_feature.type;
-            feature.first_point = tile_point_count;
-            feature.first_linestring_size = tile_linestring_size_count;
-
-            if (feature.type == hrz_proto::VectorGeometryType::POINT_GEOMETRY)
-            {
-                size_t point_count = 0;
-                for (size_t j = 0; j < src_feature.point_count; j++)
-                {
-                    const auto& point = src_points[src_feature.first_point + j];
-                    if (lm::contains(tile_bounds, point.xy))
-                    {
-                        const auto& point = src_points[src_feature.first_point + j];
-                        points.push_back(point);
-                        tile_geometry_bounds = lm::expand(tile_geometry_bounds, point.xy);
-                        point_count++;
-                    }
-                }
-
-                feature.point_count = point_count;
-                feature.linestring_count = 0;
-            }
-            else if (
-                feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY
-                || feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
-            {
-                const bool is_polygon =
-                    feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY;
-                bool feature_is_simplified = false;
-
-                ClippedFeature clip_data;
-
-                // Simplify the linestrings
-                size_t src_linestring_first_point = src_feature.first_point;
-                for (size_t j = 0; j < src_feature.linestring_count; ++j)
-                {
-                    auto src_linestring_size =
-                        src_linestring_sizes[src_feature.first_linestring_size + j];
-
-                    const std::span<const lm::dvec3> src_linestring_points_span =
-                        src_points.as_span().subspan(
-                            src_linestring_first_point, src_linestring_size);
-
-                    src_linestring_first_point += src_linestring_size;
-
-                    lm::dbbox2 linestring_bbox = lm::dbbox2::invalid();
-                    for (const auto& point : src_linestring_points_span)
-                    {
-                        linestring_bbox = lm::expand(linestring_bbox, point.xy);
-                    }
-                    if (lm::area(linestring_bbox) < tolerance)
-                    {
-                        // The bounding-box is too small, discard the linestring.
-                        feature_is_simplified = true;
-                        tile_has_full_detail = false;
-                        continue;
-                    }
-
-                    deviations.clear();
-                    deviations.resize(src_linestring_size);
-                    compute_linestring_deviations(src_linestring_points_span, deviations);
-
-                    // Don't simplify away the first and last points.
-                    clip_data.push_point(src_linestring_points_span[0]);
-                    for (size_t k = 1; k < src_linestring_size - 1; ++k)
-                    {
-                        if (deviations[k] >= tolerance)
-                        {
-                            clip_data.push_point(src_linestring_points_span[k]);
-                        }
-                        else if (src_linestring_size >= 3)
-                        {
-                            feature_is_simplified = true;
-                        }
-                    }
-                    clip_data.push_point(src_linestring_points_span[src_linestring_size - 1]);
-
-                    if (is_polygon && clip_data.current_linestring_size < 3)
-                    {
-                        clip_data.clear_linestring();
-                        tile_has_full_detail = false;
-                    }
-                    else
-                    {
-                        clip_data.end_linestring();
-                    }
-                }
-
-                ClippedFeature clipped;
-
-                clip_feature(
-                    clip_data, &clipped, tile_bounds.min.x, tile_bounds.max.x, 0, is_polygon);
-                std::swap(clip_data, clipped);
-                clip_feature(
-                    clip_data, &clipped, tile_bounds.min.y, tile_bounds.max.y, 1, is_polygon);
-
-                // Data is now ready
-                size_t clipped_linestring_first_point = 0;
-                for (const auto& clipped_linestring_size : clipped.linestring_sizes)
-                {
-                    if (clipped_linestring_size == 0)
-                    {
-                        continue;
-                    }
-
-                    for (size_t k = 0; k < clipped_linestring_size; ++k)
-                    {
-                        const auto& point = clipped.points[clipped_linestring_first_point + k];
-                        points.push_back(point);
-                        tile_geometry_bounds = lm::expand(tile_geometry_bounds, point.xy);
-                    }
-
-                    linestring_sizes.push_back(clipped_linestring_size);
-                    feature.linestring_count++;
-                    feature.point_count += clipped_linestring_size;
-
-                    if (feature_is_simplified)
-                    {
-                        tile_has_full_detail = false;
-                    }
-
-                    clipped_linestring_first_point += clipped_linestring_size;
-                }
-            }
-            else
-            {
-                assert(false && "Unhandled");
-                return hrz_jobs::JobResult::FAILURE;
-            }
-
-            if (feature.point_count > 0)
-            {
-                features.push_back(feature);
-                feature_src_indices.push_back(node.feature_index);
-
-                tile_point_count += feature.point_count;
-                tile_linestring_size_count += feature.linestring_count;
-            }
+        assert(feature_count_after_opt.value() - feature_count_before_opt.value() <= 1);
+        if (feature_count_after_opt.value() > feature_count_before_opt.value())
+        {
+            feature_src_indices.push_back(node.feature_index);
         }
     }
 
     extracted_tile.coords = params.coords;
 
-    auto points_array_opt = points.to_blob_array();
-    auto linestring_sizes_array_opt = linestring_sizes.to_blob_array();
-    auto features_array_opt = features.to_blob_array();
-
-    if (!points_array_opt.has_value() || !linestring_sizes_array_opt.has_value()
-        || !features_array_opt.has_value())
+    auto geometry_opt = std::move(builder).finalize();
+    if (!geometry_opt.has_value())
     {
         return hrz_jobs::JobResult::FAILURE;
     }
 
-    auto points_array = points_array_opt.value();
-    auto linestring_sizes_array = linestring_sizes_array_opt.value();
-    auto features_array = features_array_opt.value();
+    // We don't update the anchor of simplified features, which makes their position remain
+    // the same between LODs.
+    {
+        auto features_data = geometry_opt->features.get_mutable_data();
+        assert(features_data.size() == feature_src_indices.size());
 
-    extracted_tile.geometry.points = std::move(points_array);
-    extracted_tile.geometry.linestring_sizes = std::move(linestring_sizes_array);
-    extracted_tile.geometry.features = std::move(features_array);
-    extracted_tile.geometry.bounds = tile_geometry_bounds;
+        for (size_t i = 0; i < features_data.size(); ++i)
+        {
+            const auto* src_feature = src_geometry_reader.get_feature(feature_src_indices[i]);
+            if (!src_feature) continue;
+
+            features_data[i].anchor = src_feature->anchor;
+            features_data[i].anchor_angle = src_feature->anchor_angle;
+        }
+    }
+
+    extracted_tile.geometry = std::move(geometry_opt.value());
     extracted_tile.geometry.has_full_detail = tile_has_full_detail;
 
     {
@@ -570,7 +705,7 @@ hrz_jobs::JobResult run(
             }
         }
 
-        auto feature_count = features_array.size();
+        auto feature_count = extracted_tile.geometry.features.size();
         hrz::BlobVector<hrz::vector_data::FeatureIdHash> hashes(ba, feature_count);
         hashes.register_blob_metadata("contents"_ss, "feature ID hashes"_ss);
         hashes.register_blob_owner(context.get_resource_owner());

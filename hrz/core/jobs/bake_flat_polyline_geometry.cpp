@@ -8,6 +8,7 @@
 #include "hrz/common/profiling.h"
 #include "hrz/common/proj.h"
 #include "hrz/common/triangulation.h" // IWYU pragma: keep
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/common/vector_tiles/data_texture.h"
 #include "hrz/common/vector_tiles/picking.h"
 #include "hrz/common/vertex_utils.h"
@@ -16,6 +17,11 @@
 #include "hrz/core/jobs/vector_repr_common.h"
 #include "hrz/core/jobs/vector_tiles_jobs_params.h"
 #include "hrz/fnd/maths.h"
+#include "hrz/fnd/meta.h"
+#include "hrz/protocol/vector/geometry_type.pb.h"
+
+#include <span>
+#include <variant>
 
 namespace hrz_jobs::bake_flat_polyline_geometry
 {
@@ -163,127 +169,168 @@ SegmentSubdivisionResult append_segment(
     return res;
 }
 
-void generate_polylines_geometry(
-    uint32_t feature_index,
-    std::span<const lm::dvec3> feature_span,
-    std::span<const hrz::GeoPosition3> feature_geo_span,
-    std::span<const uint32_t> linestring_sizes,
-    hrz::BlobVector<lm::dvec3>& positions,
-    hrz::BlobVector<uint32_t>& polylines_segment_counts,
-    hrz::BlobVector<hrz_jobs::FlatPolylineGeometry::PolylineInstance>& polyline_data,
-    lm::ubvec4 rgba,
-    float line_width,
-    float dash_length,
-    float dash_period,
-    float animation_speed,
-    lm::ubvec4 background_rgba,
-    const hrz::TileCoords& tile_coords,
-    const lm::dbbox2& tile_bounds,
-    bool should_clip,
-    bool should_loop)
+struct InstanceProperties
 {
-    if (!polyline_data.is_valid()) return;
+    uint32_t feature_index;
 
-    uint32_t segment_count = 0;
+    lm::ubvec4 fill_color_oklab;
+    lm::ubvec4 secondary_color_oklab;
+    float line_width;
+    float dash_primary_length;
+    float dash_period;
+    float animation_speed;
+};
 
-    const size_t first_instance_index = polyline_data.size().value();
+InstanceProperties get_instance_properties(
+    const hrz_jobs::FlatPolylineData& input,
+    uint64_t prp_begin,
+    uint64_t prp_end,
+    std::span<const uint64_t> style_prps,
+    const hrz::vector_data::PackedAttributeValuesReader& style_values)
+{
+    InstanceProperties props{};
+    props.line_width = input.default_line_width;
+    props.dash_primary_length = input.dashes.default_primary_length;
+    props.dash_period = input.dashes.default_period;
+    props.animation_speed = input.dashes.default_animation_speed;
 
-    size_t p0 = 0;
-    size_t p1 = 1;
-    double progress = 0;
+    lm::ubvec4 fill_color_srgb = input.default_color_srgb;
+    lm::ubvec4 secondary_color_srgb = input.dashes.default_secondary_color_srgb;
 
-    size_t linestring_first_point = 0;
-    size_t linestring_end = 0;
-
-    SegmentSubdivisionContext ctx{
-        feature_index,   positions,
-        polyline_data,   rgba,
-        line_width,      dash_length,
-        dash_period,     animation_speed,
-        background_rgba, hrz::vector_repr::max_segment_angular_length_for_lod(tile_coords.lod)
-    };
-
-    for (const auto& linestring_size : linestring_sizes)
+    for (uint64_t j = prp_begin; j < prp_end; ++j)
     {
-        if (linestring_size <= 1)
+        if (style_prps[j] == input.line_width_prp)
         {
-            linestring_first_point += linestring_size;
-            continue;
+            props.line_width = (float)style_values.as_number(j);
         }
-
-        linestring_end = linestring_first_point + linestring_size;
-
-        // Create a loop for polygon outlines
-        p0 = (should_loop) ? linestring_end - 1 : linestring_first_point;
-        p1 = (should_loop) ? linestring_first_point : linestring_first_point + 1;
-
-        if (should_clip)
+        else if (style_prps[j] == input.color_prp)
         {
-            while (p1 < linestring_end)
-            {
-                const lm::dvec3 pp0 = feature_span[p0];
-                const lm::dvec3 pp1 = feature_span[p1];
-
-                const hrz::GeoPosition3 geo0 = feature_geo_span[p0];
-                const hrz::GeoPosition3 geo1 = feature_geo_span[p1];
-
-                const double unclamped_distance =
-                    hrz::rhumb_line_distance(geo0.latlon(), geo1.latlon(), false);
-
-                hrz::clip_segment<double>(
-                    pp0.xy, pp1.xy, tile_bounds,
-                    [&](const lm::dvec2& a, const lm::dvec2& b, double ta, double tb)
-                    {
-                        lm::dvec3 clipped[2] = {
-                            lm::dvec3(a, hrz::lerp(pp0.z, pp1.z, ta)),
-                            lm::dvec3(b, hrz::lerp(pp0.z, pp1.z, tb))
-                        };
-
-                        hrz::GeoPosition3 clipped_geo[2];
-                        transform_wmerc_to_geo(2, clipped, clipped_geo);
-
-                        // Skip the distance between the actual start point and the clipped
-                        // start point, so that the progress of polylines split between tiles
-                        // visually matches.
-                        const double clipped_progress = progress
-                            + hrz::rhumb_line_distance(geo0.latlon(), clipped_geo[0].latlon(),
-                                                       false);
-
-                        auto res = append_segment(
-                            clipped[0], clipped[1], clipped_geo[0].latlon(),
-                            clipped_geo[1].latlon(), clipped_progress, ctx);
-                        segment_count += res.segment_count;
-                    });
-
-                p0 = p1;
-                p1 += 1;
-                progress += unclamped_distance;
-            }
+            fill_color_srgb = style_values.as_color(j);
         }
-        else
+        else if (style_prps[j] == input.dashes.primary_length_prp)
         {
-            while (p1 < linestring_end)
-            {
-                const lm::dvec3 pp0 = feature_span[p0];
-                const lm::dvec3 pp1 = feature_span[p1];
-                const hrz::GeoPosition3 geo0 = feature_geo_span[p0];
-                const hrz::GeoPosition3 geo1 = feature_geo_span[p1];
-
-                auto res = append_segment(pp0, pp1, geo0.latlon(), geo1.latlon(), progress, ctx);
-
-                p0 = p1;
-                p1 += 1;
-                progress += res.segment_length;
-                segment_count += res.segment_count;
-            }
+            props.dash_primary_length = (float)style_values.as_number(j);
         }
-
-        linestring_first_point += linestring_size;
+        else if (style_prps[j] == input.dashes.period_prp)
+        {
+            props.dash_period = (float)style_values.as_number(j);
+        }
+        else if (style_prps[j] == input.dashes.animation_speed_prp)
+        {
+            props.animation_speed = (float)style_values.as_number(j);
+        }
+        else if (style_prps[j] == input.dashes.secondary_color_prp)
+        {
+            secondary_color_srgb = style_values.as_color(j);
+        }
     }
 
-    if (!polyline_data.is_valid()) return;
+    // This stores Oklab colours in 8-bit-per-channel vectors. It's not
+    // great, and some precision is lost. (Usually only sRGB colours should
+    // be reduced to 8 bits per channel.) However the colour interpolation
+    // between these two colours in done with floats in the shader, so
+    // the precision loss should be acceptable.
+    props.fill_color_oklab = hrz::convert_rgba_color_to_bytes(
+        hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(fill_color_srgb)));
+    props.secondary_color_oklab = hrz::convert_rgba_color_to_bytes(
+        hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(secondary_color_srgb)));
 
-    // Write the total length of the polyline to the created instances
+    return props;
+}
+
+// Progress is continuous across all the linestrings of a feature, and the total length is
+// that of the whole feature.
+struct FeatureProgress
+{
+    double progress = 0.0;
+    uint32_t segment_count = 0;
+};
+
+void append_linestring(
+    std::span<const lm::dvec3> points,
+    std::span<const hrz::GeoPosition3> points_geo,
+    bool should_loop,
+    const lm::dbbox2& tile_bounds,
+    bool should_clip,
+    SegmentSubdivisionContext& ctx,
+    FeatureProgress& feature_progress)
+{
+    if (points.size() <= 1) return;
+
+    // Create a loop for polygon outlines
+    size_t p0 = should_loop ? points.size() - 1 : 0;
+    size_t p1 = should_loop ? 0 : 1;
+
+    if (should_clip)
+    {
+        while (p1 < points.size())
+        {
+            const lm::dvec3 pp0 = points[p0];
+            const lm::dvec3 pp1 = points[p1];
+
+            const hrz::GeoPosition3 geo0 = points_geo[p0];
+            const hrz::GeoPosition3 geo1 = points_geo[p1];
+
+            const double unclamped_distance =
+                hrz::rhumb_line_distance(geo0.latlon(), geo1.latlon(), false);
+
+            hrz::clip_segment<double>(
+                pp0.xy, pp1.xy, tile_bounds,
+                [&](const lm::dvec2& a, const lm::dvec2& b, double ta, double tb)
+                {
+                    lm::dvec3 clipped[2] = {
+                        lm::dvec3(a, hrz::lerp(pp0.z, pp1.z, ta)),
+                        lm::dvec3(b, hrz::lerp(pp0.z, pp1.z, tb))
+                    };
+
+                    hrz::GeoPosition3 clipped_geo[2];
+                    transform_wmerc_to_geo(2, clipped, clipped_geo);
+
+                    // Skip the distance between the actual start point and the clipped
+                    // start point, so that the progress of polylines split between tiles
+                    // visually matches.
+                    const double clipped_progress = feature_progress.progress
+                        + hrz::rhumb_line_distance(geo0.latlon(), clipped_geo[0].latlon(), false);
+
+                    auto res = append_segment(
+                        clipped[0], clipped[1], clipped_geo[0].latlon(), clipped_geo[1].latlon(),
+                        clipped_progress, ctx);
+                    feature_progress.segment_count += res.segment_count;
+                });
+
+            p0 = p1;
+            p1 += 1;
+            feature_progress.progress += unclamped_distance;
+        }
+    }
+    else
+    {
+        while (p1 < points.size())
+        {
+            const lm::dvec3 pp0 = points[p0];
+            const lm::dvec3 pp1 = points[p1];
+            const hrz::GeoPosition3 geo0 = points_geo[p0];
+            const hrz::GeoPosition3 geo1 = points_geo[p1];
+
+            auto res = append_segment(
+                pp0, pp1, geo0.latlon(), geo1.latlon(), feature_progress.progress, ctx);
+
+            p0 = p1;
+            p1 += 1;
+            feature_progress.progress += res.segment_length;
+            feature_progress.segment_count += res.segment_count;
+        }
+    }
+}
+
+// Writes the total length of the feature to its instances, and records its segment count.
+void finish_feature(
+    uint32_t feature_index,
+    size_t first_instance_index,
+    const FeatureProgress& feature_progress,
+    hrz::BlobVector<hrz_jobs::FlatPolylineGeometry::PolylineInstance>& polyline_data,
+    hrz::BlobVector<uint32_t>& polylines_segment_counts)
+{
     auto polyline_instances_data_opt = polyline_data.data();
     if (!polyline_instances_data_opt.has_value()) return;
     const auto& polyline_instances_data = polyline_instances_data_opt.value();
@@ -293,10 +340,10 @@ void generate_polylines_geometry(
         auto& instance = polyline_instances_data[index];
         assert(instance.feature_index == feature_index);
 
-        instance.line_total_length = (float)progress;
+        instance.line_total_length = (float)feature_progress.progress;
     }
 
-    polylines_segment_counts.push_back(segment_count);
+    polylines_segment_counts.push_back(feature_progress.segment_count);
 }
 
 } // anonymous namespace
@@ -308,13 +355,14 @@ hrz_jobs::JobResult run(
 {
     HRZ_SCOPED_SAMPLE("bake flat polylines geometry");
 
-    auto input_features = input.geometry.features.get_data();
-    auto input_points = input.geometry.points.get_data();
-    auto input_linestring_sizes = input.geometry.linestring_sizes.get_data();
-    auto input_feature_ids = input.feature_ids.get_data();
+    using hrz::vector_data::VectorTileGeometry;
 
-    auto style_prps = input.style.prps.get_data();
-    auto style_values = input.style.get_values_reader();
+    const auto input_geometry_reader = input.geometry.make_reader();
+    auto input_points = input.geometry.points.get_data();
+    const auto input_feature_ids = input.feature_ids.get_data();
+
+    const auto style_prps = input.style.prps.get_data();
+    const auto style_values = input.style.get_values_reader();
 
     auto points_geo_blob_opt = hrz::blobs::allocate_blob_sync(
         context.get_blob_allocator(), input_points.size() * sizeof(hrz::GeoPosition3));
@@ -347,107 +395,87 @@ hrz_jobs::JobResult run(
 
     uint32_t max_feature_index = 0;
 
-    // Create triangulation
+    const double max_segment_angular_length =
+        hrz::vector_repr::max_segment_angular_length_for_lod(input.coords.lod);
+
     for (const auto& instance : style.instances.get_data())
     {
         if (instance.repr_id != input.repr_id) continue;
 
-        const auto& feature = input_features.at(instance.feature_index);
-        if (feature.type != hrz_proto::VectorGeometryType::POLYGON_GEOMETRY
-            && feature.type != hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
+        const auto* feature = input_geometry_reader.get_feature(instance.feature_index);
+        if (!feature) continue;
+        if (!feature->flags.has_geometry(hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
+            && !feature->flags.has_geometry(hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY))
         {
             continue;
         }
 
-        auto feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
-        max_feature_index = std::max(max_feature_index, feature_index);
+        auto instance_prps = get_instance_properties(
+            input, instance.first_prp, instance.first_prp + instance.prp_count,
+            style_prps.as_span(), style_values);
+        instance_prps.feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
 
-        const uint64_t prp_begin = instance.first_prp;
-        const uint64_t prp_end = prp_begin + instance.prp_count;
+        max_feature_index = std::max(max_feature_index, instance_prps.feature_index);
 
-        lm::ubvec4 fill_color_srgb = input.default_color_srgb;
-        lm::ubvec4 secondary_color_srgb = input.dashes.default_secondary_color_srgb;
-
-        float line_width = input.default_line_width;
-        float dash_primary_length = input.dashes.default_primary_length;
-        float dash_period = input.dashes.default_period;
-        float animation_speed = input.dashes.default_animation_speed;
-
-        for (uint64_t j = prp_begin; j < prp_end; ++j)
-        {
-            if (style_prps[j] == input.line_width_prp)
-            {
-                line_width = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.color_prp)
-            {
-                fill_color_srgb = style_values.as_color(j);
-            }
-            else if (style_prps[j] == input.dashes.primary_length_prp)
-            {
-                dash_primary_length = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.dashes.period_prp)
-            {
-                dash_period = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.dashes.animation_speed_prp)
-            {
-                animation_speed = (float)style_values.as_number(j);
-            }
-            else if (style_prps[j] == input.dashes.secondary_color_prp)
-            {
-                secondary_color_srgb = style_values.as_color(j);
-            }
-        }
-
-        // This stores Oklab colours in 8-bit-per-channel vectors. It's not
-        // great, and some precision is lost. (Usually only sRGB colours should
-        // be reduced to 8 bits per channel.) However the colour interpolation
-        // between these two colours in done with floats in the shader, so
-        // the precision loss should be acceptable.
-        const lm::ubvec4 fill_color_oklab = hrz::convert_rgba_color_to_bytes(
-            hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(fill_color_srgb)));
-        const lm::ubvec4 secondary_color_oklab = hrz::convert_rgba_color_to_bytes(
-            hrz::srgb_to_oklab(hrz::convert_byte_color_to_rgba(secondary_color_srgb)));
-
-        if (animation_speed != 0)
+        if (instance_prps.animation_speed != 0)
         {
             geometry.is_animated = true;
         }
 
-        auto feature_points =
-            input_points.as_span().subspan(feature.first_point, feature.point_count);
-        auto feature_points_geo = std::span<const hrz::GeoPosition3>(points_geo)
-                                      .subspan(feature.first_point, feature.point_count);
+        if (!polyline_vertices.is_valid()) continue;
 
-        if (feature.type == hrz_proto::VectorGeometryType::POLYGON_GEOMETRY)
-        {
-            auto feature_linestring_sizes = input_linestring_sizes.as_span().subspan(
-                feature.first_linestring_size, feature.linestring_count);
+        SegmentSubdivisionContext subdivision_ctx{
+            instance_prps.feature_index,
+            polyline_positions,
+            polyline_vertices,
+            instance_prps.fill_color_oklab,
+            instance_prps.line_width,
+            instance_prps.dash_primary_length,
+            instance_prps.dash_period,
+            instance_prps.animation_speed,
+            instance_prps.secondary_color_oklab,
+            max_segment_angular_length,
+        };
 
-            generate_polylines_geometry(
-                feature_index, feature_points, feature_points_geo, feature_linestring_sizes,
-                polyline_positions, polyline_segment_counts, polyline_vertices, fill_color_oklab,
-                line_width, dash_primary_length, dash_period, animation_speed,
-                secondary_color_oklab, input.coords, tile_bounds, input.clip_to_tile, true);
-        }
-        else if (feature.type == hrz_proto::VectorGeometryType::POLYLINE_GEOMETRY)
-        {
-            auto feature_linestring_sizes = input_linestring_sizes.as_span().subspan(
-                feature.first_linestring_size, feature.linestring_count);
+        const size_t first_instance_index = polyline_vertices.size().value_or(0);
+        FeatureProgress feature_progress;
 
-            if (feature_points.size() >= 2)
+        const auto visitor = hrz::overload{
+            [&](const VectorTileGeometry::PolylineGeometry& polyline)
             {
-                generate_polylines_geometry(
-                    feature_index, feature_points, feature_points_geo, feature_linestring_sizes,
-                    polyline_positions, polyline_segment_counts, polyline_vertices,
-                    fill_color_oklab, line_width, dash_primary_length, dash_period, animation_speed,
-                    secondary_color_oklab, input.coords, tile_bounds, input.clip_to_tile, false);
-            }
-        }
-    }
+                append_linestring(
+                    polyline.points,
+                    points_geo.subspan(polyline.first_point_index, polyline.points.size()), false,
+                    tile_bounds, input.clip_to_tile, subdivision_ctx, feature_progress);
+            },
+            [&](const VectorTileGeometry::PolygonGeometry& polygon)
+            {
+                const auto polygon_points_geo =
+                    points_geo.subspan(polygon.first_point_index, polygon.points.size());
 
+                size_t ring_start = 0;
+                for (const uint32_t ring_size : polygon.ring_sizes)
+                {
+                    append_linestring(
+                        polygon.points.subspan(ring_start, ring_size),
+                        polygon_points_geo.subspan(ring_start, ring_size), true, tile_bounds,
+                        input.clip_to_tile, subdivision_ctx, feature_progress);
+                    ring_start += ring_size;
+                }
+            },
+            [&](const VectorTileGeometry::PointGeometry&) {}
+        };
+
+        input_geometry_reader.iterate_geometries_for_feature(
+            instance.feature_index, [&](const VectorTileGeometry::Geometry& feature_geometry)
+            { std::visit(visitor, feature_geometry); });
+
+        if (!polyline_vertices.is_valid()) continue;
+
+        finish_feature(
+            instance_prps.feature_index, first_instance_index, feature_progress, polyline_vertices,
+            polyline_segment_counts);
+    }
     auto feature_id_array_size = input_feature_ids.size();
     if (feature_id_array_size % hrz::vt::DATA_TEXTURE_SIZE != 0)
     {
@@ -456,7 +484,7 @@ hrz_jobs::JobResult run(
     }
     hrz::BlobVector<hrz::vector_data::FeatureIdHash> feature_ids(
         context.get_blob_allocator(), feature_id_array_size);
-    for (auto feature_id : input_feature_ids)
+    for (auto feature_id : input_feature_ids.as_span())
     {
         feature_ids.push_back(feature_id);
     }

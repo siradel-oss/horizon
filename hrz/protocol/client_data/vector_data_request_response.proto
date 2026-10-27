@@ -7,13 +7,16 @@ option  optimize_for                  = LITE_RUNTIME;
 option  features.field_presence       = IMPLICIT;
 option  features.enforce_naming_style = STYLE_LEGACY;
 
-import "hrz/protocol/client_data/feature.proto";
+import "hrz/protocol/vector/feature.proto";
 
 export message VectorDataRequestResponse {
     // The ticket of the request this is a response to.
     uint32                 ticket      = 1;
     // If true, the request failed and the `features` field is empty.
     bool                   error       = 4;
-    repeated ClientFeature features    = 2;
+
+    // Coordinates for the feature must be defined in Web Meractor (EPSG:3857).
+    repeated VectorFeature features    = 2;
+
     string                 attribution = 3;
 }

@@ -11,8 +11,53 @@
 namespace hrz::vector_data
 {
 
+bool normalize_linestring_sizes(
+    hrz_proto::VectorGeometryType type,
+    uint32_t point_count,
+    std::span<const uint32_t> linestring_sizes,
+    LinestringSizes* out_linestring_sizes)
+{
+    out_linestring_sizes->clear();
+
+    if (type == hrz_proto::VectorGeometryType::POINT_GEOMETRY || linestring_sizes.empty())
+    {
+        if (point_count > 0)
+        {
+            out_linestring_sizes->push_back(point_count);
+        }
+        return true;
+    }
+
+    uint64_t total_point_count = 0;
+    for (const uint32_t linestring_size : linestring_sizes)
+    {
+        total_point_count += linestring_size;
+        if (linestring_size > 0)
+        {
+            out_linestring_sizes->push_back(linestring_size);
+        }
+    }
+
+    if (total_point_count > point_count)
+    {
+        out_linestring_sizes->clear();
+        return false;
+    }
+
+    return true;
+}
+
 lm::dvec3 compute_ring_average(std::span<const lm::dvec3> linestring)
 {
+    if (linestring.empty())
+    {
+        return lm::dvec3(std::numeric_limits<double>::quiet_NaN());
+    }
+    else if (linestring.size() == 1)
+    {
+        return linestring[0];
+    }
+
     lm::dvec3 centroid(0.0);
 
     for (const auto& p : linestring)
@@ -22,6 +67,33 @@ lm::dvec3 compute_ring_average(std::span<const lm::dvec3> linestring)
 
     centroid /= (double)linestring.size();
     return centroid;
+}
+
+lm::dvec3 compute_points_center(std::span<const lm::dvec3> points)
+{
+    if (points.empty())
+    {
+        return lm::dvec3(std::numeric_limits<double>::quiet_NaN());
+    }
+    else if (points.size() == 1)
+    {
+        return points[0];
+    }
+
+    lm::dbbox3 bounds = lm::dbbox3::invalid();
+    for (const auto& p : points)
+    {
+        bounds = lm::expand(bounds, p);
+    }
+
+    if (lm::is_valid(bounds))
+    {
+        return lm::center(bounds);
+    }
+    else
+    {
+        return lm::dvec3(std::numeric_limits<double>::quiet_NaN());
+    }
 }
 
 void compute_linestring_middle_and_angle(

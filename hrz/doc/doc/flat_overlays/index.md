@@ -8,11 +8,11 @@ Flat overlays are a set of 2D representations where features are draped onto the
 
 ## [Flat overlay points](reference/HrzProtocol.FlatOverlayPointVectorRepr)
 
-This representation displays point features as discs that can have an outline. The radius of the discs and the width of the outlines can be expressed in either metres or pixels.
+This representation displays each point of point and multi-point features as discs that can have an outline. The radius of the discs and the width of the outlines can be expressed in either metres or pixels.
 
 ## [Flat overlay polylines](reference/HrzProtocol.FlatOverlayPolylineVectorRepr)
 
-This representation displays line features as flat polylines that can be filled, dashed, or have only one of their sides displayed. The width of the polylines can be expressed in either metres or pixels.
+This representation displays polyline and multi-polyine features, and the outline of polygon and multi-polygon features, as flat polylines that can be filled, dashed, or have only one of their sides displayed. The width of the polylines can be expressed in either metres or pixels.
 
 Additionally this representation can also display the outlines of polygons.
 
@@ -21,7 +21,7 @@ Additionally this representation can also display the outlines of polygons.
 
 ## [Flat overlay polygons](reference/HrzProtocol.FlatOverlayPolygonVectorRepr)
 
-This representation displays polygon features filled either with a solid colour or a tiled pattern. The pattern is drawn on top and blended with the base colour. The pattern itself can be coloured with a secondary colour.
+This representation displays polygon and multi-polygon features filled either with a solid colour or a tiled pattern. The pattern is drawn on top and blended with the base colour. The pattern itself can be coloured with a secondary colour.
 
 ### Polygon pattern reference latitude
 

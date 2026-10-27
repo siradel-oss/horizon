@@ -1,0 +1,31 @@
+// SPDX-FileCopyrightText: Copyright 2026 Siradel
+// SPDX-License-Identifier: MIT
+
+edition = "2026";
+package HrzProtocol;
+option  optimize_for                  = LITE_RUNTIME;
+option  features.field_presence       = IMPLICIT;
+option  features.enforce_naming_style = STYLE_LEGACY;
+
+import "hrz/protocol/vector/geometry.proto";
+import "hrz/protocol/attributes/attribute.proto";
+
+export message VectorFeature {
+    reserved 1, 2, 3;
+
+    // Multiple geometries can be used to encode a geometry collection of
+    // heterogeneous types. Multiple polygon geometries encode a multi-polygon.
+    // A single geometry can encode multi-polylines and multi-points, but
+    // multiple of them can do so as well.
+    //
+    // Generally you can do whatever you want here, just know that since a
+    // single geometry can encode multi-polylines and multi-points, it is more
+    // efficient to do that rather than having multiple geometries of the same
+    // type.
+    repeated VectorFeatureGeometry geometry         = 4;
+
+    // Must have one value for each attribute of the layer,
+    // in the correct order. Invalid or missing values are
+    // replaced by the default value of the type.
+    repeated AttributeValue        attribute_values = 5;
+}

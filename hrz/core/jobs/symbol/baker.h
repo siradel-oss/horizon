@@ -4,6 +4,7 @@
 #pragma once
 
 #include "hrz/common/blob_vector.h"
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/core/jobs/context.h"
 #include "hrz/core/jobs/feature_clamping.h"
 #include "hrz/core/jobs/job_result.h"
@@ -577,8 +578,7 @@ private:
     // Input data
     const hrz_jobs::SymbolBakingData& params;
 
-    hrz::BlobArray<hrz::vector_data::VectorTileGeometry::Feature>::Data input_features;
-    hrz::BlobArray<lm::dvec3>::Data input_points;
+    hrz::vector_data::VectorTileGeometry::Reader input_geometry_reader;
     hrz::BlobArray<uint64_t>::Data input_feature_ids;
     hrz::BlobArray<float>::Data input_clamps;
 

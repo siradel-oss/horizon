@@ -52,4 +52,4 @@ struct DeferInitializer
 // Use it like this HRZ_DEFER [...]() { something(); };
 // Be careful about the lifetime of the captured variables.
 // This is why it is kept explicit.
-#define HRZ_DEFER auto HRZ_CONCAT(_finalizer_, __COUNTER__) = hrz::DeferInitializer() <<
+#define HRZ_DEFER const auto HRZ_CONCAT(_finalizer_, __LINE__) = hrz::DeferInitializer() <<

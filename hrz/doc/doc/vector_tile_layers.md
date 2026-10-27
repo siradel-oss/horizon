@@ -16,11 +16,15 @@ Then, styling and representation information can be added to define how the vect
 
 ## Feature anchors
 
-Every feature has an associated geographical position: its anchor. The anchor can be used to attach punctual representations, for clamping, or to use as virtual attributes. Depending on the feature type, the anchor is computed in different ways:
+Every feature has an associated geographical position: its anchor. The anchor can be used to attach point representations, for clamping, or to use as virtual attributes. Depending on the feature type, the anchor is computed in different ways:
 
 - For points, the anchor is the point's position.
+- For multi-points, the anchors is the center of the bounding box of all points.
 - For polylines, the anchor is the middle of the polyline.
+- For multi-polylines, the anchor is the middle of all the polylines as if stitched together.
 - For polygons, the anchor is the centroid of the outside ring.
+- For multi-polygons, the anchor is the centroid of the outside rings of the largest polygon.
+- For geometry collections, the anchor is computed using its first part.
 
 ## Clamping
 
@@ -87,6 +91,10 @@ elif (attr("featureType") == enum("VectorGeometryType", "POLYGON_GEOMETRY")) {
 }
 ```
 
+> [!note] Multi-geometries
+> Multi-points are treated as points, multi-polylines as polylines, and multi-polygons as polygons.
+> Geometry collection that contain geometries of different types have an undefined value for the feature type attribute.
+
 > [!note] Using special attributes
 > Having special attributes (anchor Z, anchor angle, or feature type) enabled incurs a runtime cost. Avoid enabling them when they are not used in the styling script.
 
@@ -113,4 +121,3 @@ value around `4` is a good start.
 
 > [!important]
 > Be careful not to set the parameter too small as it could lead to a lot of tile downloads.
-

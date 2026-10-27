@@ -5,9 +5,11 @@
 #include "hrz/common/profiling.h"
 #include "hrz/core/jobs/jobs_declarations.h"
 #include "hrz/core/jobs/vector_data_jobs_params.h"
+#include "hrz/fnd/meta.h"
 
 #include <lin_maths.h>
 
+#include <cassert>
 #include <vector>
 
 namespace hrz_jobs::build_aabb_tree
@@ -83,24 +85,35 @@ hrz_jobs::JobResult run(
 {
     HRZ_SCOPED_SAMPLE("build aabb job");
 
-    auto features = geometry.features.get_cdata();
-    auto points = geometry.points.get_cdata();
+    const auto reader = geometry.make_reader();
 
     std::vector<Node> nodes;
-
-    for (uint32_t feature_index = 0; feature_index < features.size(); ++feature_index)
+    for (uint32_t feature_index = 0; feature_index < geometry.features.size(); ++feature_index)
     {
-        const auto& feature = features[feature_index];
-
-        uint32_t first_point = feature.first_point;
-        uint32_t last_point = feature.first_point + feature.point_count;
-
         lm::dbbox2 bbox = lm::dbbox2::invalid();
+        const auto bbox_visitor = hrz::overload{
+            [&bbox](const hrz::vector_data::VectorTileGeometry::PointGeometry& point_geometry)
+            { bbox = lm::expand(bbox, point_geometry.point.xy); },
+            [&bbox](const hrz::vector_data::VectorTileGeometry::PolylineGeometry& polyline_geometry)
+            {
+                for (const auto& point : polyline_geometry.points)
+                {
+                    bbox = lm::expand(bbox, point.xy);
+                }
+            },
+            [&bbox](const hrz::vector_data::VectorTileGeometry::PolygonGeometry& polygon_geometry)
+            {
+                for (const auto& point : polygon_geometry.points)
+                {
+                    bbox = lm::expand(bbox, point.xy);
+                }
+            }
+        };
 
-        for (uint32_t i = first_point; i < last_point; ++i)
-        {
-            bbox = lm::expand(bbox, points[i].xy);
-        }
+        reader.iterate_geometries_for_feature(
+            feature_index,
+            [&bbox_visitor](const hrz::vector_data::VectorTileGeometry::Geometry& feature_geometry)
+            { std::visit(bbox_visitor, feature_geometry); });
 
         Node node;
         node.bbox = bbox;

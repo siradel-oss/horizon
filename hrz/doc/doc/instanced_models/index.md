@@ -4,10 +4,7 @@ title = "Instanced 3D models"
 
 # Instanced 3D models
 
-Point features can be represented by 3D models.
-
-> [!note]
-> When used with polygons or polylines, the representation is attached to the [anchor](vector_tile_layers.html#feature-anchors) of the feature.
+Point features can be represented by 3D models. Models are placed at every point of point and multi-point features.
 
 {{< gallery-card "rennesTrees" >}}
 

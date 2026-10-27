@@ -83,7 +83,7 @@ async function onHorizonReady(api: HrzApi.AsyncApi, msgHandler: MessageHandler) 
         ) {
             return;
         }
-        const features: HrzProtocol.ClientFeature.$Shape[] = [];
+        const features: HrzProtocol.VectorFeature.$Shape[] = [];
         for (const featureId of request.featureIdSelection.featureIds || []) {
             const id = HrzProtocolHelper.attributeAsNumber(featureId.attributes![0].value!);
             features.push({

@@ -35,7 +35,7 @@ If the last vertex does not have three coordinates, it is ignored.
 
 #### Points
 
-Point features only use the first vertex of the array. The following vertices, if they exist, are ignored.
+When multiple points are defined, they are treated as a multi-point feature. The `linestring_sizes` array is ignored for point features.
 
 #### Polylines
 
@@ -52,7 +52,7 @@ In this example, each vertex is labeled with its position in the `coords` array.
 
 #### Polygons
 
-Polygons are more complex, as they can be multi-polygon, composed of an outer linestring, and a collection of smaller, inner linestrings that define holes in the outer one. Just like the other geometry types, they only use a single `coords` array, but it is complemented by the `linestring_sizes` array.
+Polygons are more complex, as they can be composed of an outer linestring, and a collection of smaller, inner linestrings that define holes in the outer one. Just like the other geometry types, they only use a single `coords` array, but it is complemented by the `linestring_sizes` array.
 
 Each linestring is a polygon, defined by a list of vertices that form a closed loop. The last vertex is automatically joined to the first one. (So there is no need to repeat any vertex.)
 
@@ -63,6 +63,8 @@ The `linestring_sizes` array indicates how many vertices comprises each linestri
 ![Multipolygon example](multipolygon.svg)
 
 In this example, each vertex is labeled with its position in the `coords` array. The outer linestring has four vertices, the first inner linestring has five, and the last one has three. So in this case the `linestring_sizes` array must contain `[4, 5, 3]`.
+
+Note that it is possible to define multi-polygons by adding multiple geometries to a [VectorFeature]($proto).
 
 ## Client vector data
 
@@ -75,6 +77,8 @@ A [VectorDataSource]($proto) with a `provider_type` of `CLIENT_VECTOR_DATA_PROVI
 It is the client's responsibility to listen for such messages, and respond to those requests with the necessary data using the `ProvideVectorData` method of [ClientDataService]($proto).
 
 Data can be requested either by tile coordinates or feature IDs: this is determined by the `access` field of [ClientVectorDataProviderParams]($proto).
+
+Feature geometries use the same encoding as in-memory vector sources, but the coordinates must be in the Web Mercator ([EPSG:3857](https://epsg.io/3857)) projection.
 
 ### Responding to a vector data request
 
@@ -93,7 +97,7 @@ The `selection` union determines the features that require data:
 
 If the [response](reference/HrzProtocol.VectorDataRequestResponse) has an incorrect number of features, an error is reported in the logs, and the data is not used. If the data is joined to another source, no feature IDs are used, and the order of the feature is incorrect, Horizon will have no way to tell, so the features will not get their intended data.
 
-The [response](reference/HrzProtocol.VectorDataRequestResponse) includes the request ticket for identification purposes, an array of [ClientFeature]($proto)s, and an attribution string. Each feature can include attribute values and/or geometry.
+The [response](reference/HrzProtocol.VectorDataRequestResponse) includes the request ticket for identification purposes, an array of [VectorFeature]($proto)s, and an attribution string. Each feature can include attribute values and/or geometry.
 
 - Each feature must contain as many attribute values as there are IDs in the request's `attribute_ids` field. **The values must be in the same order as the IDs**, including potential duplicates.
 

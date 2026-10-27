@@ -4003,7 +4003,15 @@ struct ThreeDTilesSystem
         bool has_feature_ids = subtile.batches_to_feature_ids.has_any_attribute();
         if (!has_feature_ids)
         {
-            job_data.rng_seed = hrz::hash_values(tile.uri, tile.range, config.rng_seed);
+            if (tile.range)
+            {
+                job_data.rng_seed = hrz::hash_values_static(
+                    tile.uri, tile.range->offset, tile.range->length, config.rng_seed);
+            }
+            else
+            {
+                job_data.rng_seed = hrz::hash_values_static(tile.uri, config.rng_seed);
+            }
         }
         else
         {

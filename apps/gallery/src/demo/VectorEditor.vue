@@ -136,15 +136,17 @@ function coordsFromShape(coords: number[]): number[] {
     return out;
 }
 
-function featureToInMemory(f: FeatureData): HrzProtocol.InMemoryVectorFeature {
+function featureToInMemory(f: FeatureData): HrzProtocol.VectorFeature {
     const coords3d: number[] = [];
     for (let i = 0; i < f.coords.length; i += 2) coords3d.push(f.coords[i], f.coords[i + 1], 0);
 
-    return HrzProtocol.InMemoryVectorFeature.create({
-        geometry: {
-            type: HrzProtocol.VectorGeometryType.POLYGON_GEOMETRY,
-            coords: coords3d,
-        },
+    return HrzProtocol.VectorFeature.create({
+        geometry: [
+            {
+                type: HrzProtocol.VectorGeometryType.POLYGON_GEOMETRY,
+                coords: coords3d,
+            },
+        ],
         attributeValues: [
             { numberValue: f.id },
             { numberValue: f.height },

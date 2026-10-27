@@ -6,6 +6,8 @@ title = "Heatmaps"
 
 The [heatmap representation](reference/HrzProtocol.HeatmapVectorRepr) is a special kind of [flat overlay representation](flat_overlays.html). It is used to draw aggregations of point features onto the ground, which are [colorized using a dedicated palette](numeric_palettes.html). Each point has two properties, its value and radius: in conjunction with the heatmap's palette and blur size, they define the resulting color of the heatmap at the point's location. The blur size is relative to the size of each point.
 
+Heatmaps points are places at every point of point and multi-point features.
+
 > [!important]
 > The number of color stops in the palette is currently limited to 32.
 

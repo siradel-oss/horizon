@@ -10,10 +10,46 @@
 #include "hrz/core/jobs/vector_repr_common.h"
 #include "hrz/fnd/log.h"
 
+#include <optional>
+#include <variant>
+
 namespace hrz_jobs::symbol
 {
 
 static constexpr size_t InitialAnchorCapacity = 256;
+
+namespace
+{
+
+std::optional<uint32_t> get_first_point_index(
+    const hrz::vector_data::VectorTileGeometry::Reader& reader,
+    uint32_t feature_index)
+{
+    using hrz::vector_data::VectorTileGeometry;
+
+    static const auto first_point_visitor = hrz::overload{
+        [](const VectorTileGeometry::PointGeometry& point_geometry)
+        { return point_geometry.point_index; },
+        [](const VectorTileGeometry::PolylineGeometry& polyline_geometry)
+        { return polyline_geometry.first_point_index; },
+        [](const VectorTileGeometry::PolygonGeometry& polygon_geometry)
+        { return polygon_geometry.first_point_index; },
+    };
+
+    std::optional<uint32_t> first_point_index;
+    reader.iterate_geometries_for_feature(
+        feature_index,
+        [&first_point_index](const VectorTileGeometry::Geometry& feature_geometry)
+        {
+            if (first_point_index.has_value()) return;
+
+            first_point_index = std::visit(first_point_visitor, feature_geometry);
+        });
+
+    return first_point_index;
+}
+
+} // anonymous namespace
 
 lm::bbox2 transform_rect_2d_no_rotation(lm::bbox2 rect, const lm::mat4& transform)
 {
@@ -78,8 +114,7 @@ SymbolBaker::SymbolBaker(const hrz_jobs::SymbolBakingData& params, const JobCont
     variant_visitor(this),
     leader_line_visitor(this),
     params(params),
-    input_features(params.geometry.features.get_data()),
-    input_points(params.geometry.points.get_data()),
+    input_geometry_reader(params.geometry.make_reader()),
     input_feature_ids(params.feature_ids.get_data()),
     input_clamps(params.clamps.get_data()),
     style(params.style),
@@ -173,18 +208,19 @@ hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
     {
         if (instance.repr_id != params.repr_id) continue;
 
-        const auto& feature = input_features.at(instance.feature_index);
+        const auto* feature = input_geometry_reader.get_feature(instance.feature_index);
+        if (!feature) continue;
+
+        // Empty features have no anchor.
+        const auto first_point_index_opt =
+            get_first_point_index(input_geometry_reader, instance.feature_index);
+        if (!first_point_index_opt.has_value()) continue;
 
         feature_id = input_feature_ids.at(instance.feature_index);
         feature_index = std::min(instance.feature_index, hrz::vt::MAX_FEATURE_INDEX);
         max_feature_index = std::max(max_feature_index, feature_index);
 
-        auto web_mercator_feature_position = input_points.as_span()[feature.first_point];
-        if (feature.type != hrz_proto::VectorGeometryType::POINT_GEOMETRY)
-        {
-            web_mercator_feature_position.x = feature.anchor.x;
-            web_mercator_feature_position.y = feature.anchor.y;
-        }
+        auto web_mercator_feature_position = feature->anchor;
 
         if (clipping_bbox.has_value()
             && !lm::contains(clipping_bbox.value(), web_mercator_feature_position.xy))
@@ -192,8 +228,10 @@ hrz_jobs::JobResult SymbolBaker::bake(hrz_jobs::BakedSymbols& baked_symbols)
             continue;
         }
 
-        hrz::PointClampingGenerator point_clamps_gen =
-            clamps_gen.for_feature(instance.feature_index, feature.first_point);
+        // Anchors don't have their own per-vertex clamp, so use the clamp of the feature's
+        // first point.
+        const hrz::PointClampingGenerator point_clamps_gen =
+            clamps_gen.for_feature(instance.feature_index, first_point_index_opt.value());
         web_mercator_feature_position.z =
             point_clamps_gen.clamp_point(0, web_mercator_feature_position.z);
 

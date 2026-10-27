@@ -28,7 +28,9 @@
 #include "hrz/fnd/time.h"
 
 #include <array>
+#include <bit>
 #include <cassert>
+#include <limits>
 
 namespace hrz::vt
 {
@@ -2161,9 +2163,11 @@ struct VectorTilesActor : public Actor
                 auto write_ptr = feature_types.data();
                 for (const auto& feature : features)
                 {
+                    const auto type = feature.flags.primitive_geometry_type();
+
                     // @Safety: The enum values are safe integers for packed attribute values.
                     *write_ptr++ = vector_data::PackedAttributeValueTraits<>::from_number(
-                        (double)feature.type);
+                        type.has_value() ? static_cast<int>(type.value()) : -1);
                 }
             }
 
@@ -2212,7 +2216,8 @@ struct VectorTilesActor : public Actor
                 const bool has_feature_ids = content.feature_ids.feature_ids.has_any_attribute();
                 if (!has_feature_ids)
                 {
-                    const size_t tile_coords_hash = hrz::hash_value(content.coords);
+                    const uint64_t tile_coords_hash = hrz::hash_values_static(
+                        content.coords.x, content.coords.y, content.coords.lod);
                     data.rng_seed = hrz::hash_mix<uint64_t>(tile_coords_hash, _rng_seed);
                 }
                 else
