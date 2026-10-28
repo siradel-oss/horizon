@@ -6,6 +6,7 @@
 #include "hrz/fnd/flat_hash_set.h"
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 extern "C"
 {

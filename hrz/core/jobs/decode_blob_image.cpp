@@ -13,8 +13,8 @@
 #include "hrz/fnd/mem.h"
 #include "hrz/fnd/mime.h"
 #include "hrz/fnd/string_utils.h"
+#include "transcoder/basisu_transcoder.h"
 
-#include <basisu_transcoder.h>
 #include <mycelium/backend.h>
 #include <stb_image.h>
 #include <webp/decode.h>
@@ -214,11 +214,12 @@ basist::transcoder_texture_format select_target_compressed_texture_format(
         return basist::transcoder_texture_format::cTFPVRTC2_4_RGBA;
     }
     if (HRZ_HAS_TEXTURE_COMPRESSION(astc)
-        && (has_alpha || source_format == basist::basis_tex_format::cUASTC4x4))
+        && (has_alpha || source_format == basist::basis_tex_format::cUASTC_LDR_4x4))
     {
         return basist::transcoder_texture_format::cTFASTC_4x4_RGBA;
     }
-    if (HRZ_HAS_TEXTURE_COMPRESSION(bc7) && source_format == basist::basis_tex_format::cUASTC4x4)
+    if (HRZ_HAS_TEXTURE_COMPRESSION(bc7)
+        && source_format == basist::basis_tex_format::cUASTC_LDR_4x4)
     {
         return basist::transcoder_texture_format::cTFBC7_RGBA;
     }

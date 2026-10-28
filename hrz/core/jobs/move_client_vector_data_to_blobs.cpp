@@ -56,7 +56,7 @@ bool move_geometry_to_blobs(
         return builder.add_points_feature(
             [&](hrz::vector_data::VectorTileGeometryBuilder::PointsBuilder& points_builder) -> bool
             {
-                auto point_count = geometry.coords_size() / 3;
+                auto point_count = (size_t)geometry.coords_size() / 3;
                 for (size_t i = 0; i < point_count; i++)
                 {
                     lm::dvec3 point = {

@@ -52,8 +52,12 @@
 #include "hrz/protocol/viewer/service.pb.h"
 #include "hrz/version/version.h"
 
-#include <basisu_transcoder.h>
 #include <etcpak/bc7enc.h>
+// Necessary because otherwise this interferes with the Basis Universal transcoder.
+#undef BC7ENC_BLOCK_SIZE
+
+#include "transcoder/basisu_transcoder.h"
+
 #include <mycelium/log.h>
 
 #include <deque>

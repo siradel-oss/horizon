@@ -356,7 +356,7 @@ cc_library(
         "//hrz/version",
         "//libs/proj_lite",
         "//libs/ws:ws_client",
-        "@basisu",
+        "@basis_universal//:basisu_transcoder",
         "@earcut",
         "@etcpak",
         "@pugixml",

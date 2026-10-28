@@ -28,7 +28,7 @@ LICENSES_DICT = {
     "@abseil-cpp//:LICENSE": "abseil",
     "//third_party/fonts:LICENSE-Allerta.txt": "Allerta",
     "@asio//:asio/LICENSE_1_0.txt": "Asio",
-    "@basisu//:LICENSE": "Basis Universal",
+    "@basis_universal//:LICENSE": "Basis Universal",
     "licenses/BoringSSL.txt": "BoringSSL",
     "@brotli//:LICENSE": "Brotli",
     "@cdt//:LICENSE": "CDT",

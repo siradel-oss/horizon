@@ -5,6 +5,7 @@
 
 #include <fmt/core.h>
 
+#include <cstdint>
 #include <optional>
 #include <span>
 #include <string>

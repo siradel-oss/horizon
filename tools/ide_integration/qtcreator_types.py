@@ -510,6 +510,122 @@ def qdump__absl__lts_20250814__InlinedVector(d, value):
         d.putPlainChildren(value)
 
 
+# Abseil 20260817 SwissTable (raw_hash_set) memory layout, as used by
+# flat_hash_map / flat_hash_set:
+#
+#   raw_hash_set::settings_  is a CompressedTuple whose first element is a
+#   CommonFields object, reachable as settings_["value"]. CommonFields holds:
+#     - inline_data_     (HashtableInlineData, a single uint64_t made of two
+#                        bitfields, LSB first):
+#          capacity_internal_ (6 bits)   log2(capacity + 1)
+#          data_ (58 bits), LSB first:   seed (5), has_infoz (1),
+#                                        blocked_element_count (3), size (49)
+#     - heap_or_soo_     (union HeapOrSoo)
+#          .heap.control.p     ctrl_t*  control bytes (occupied when byte >= 0)
+#          .soo_data[8]                 inline storage for the single SOO element
+#
+# The slot array is no longer stored: it starts right after the control bytes,
+# at control + NumControlBytes(capacity), i.e. control + capacity + Group::kWidth
+# for regular tables, and at control itself for small (capacity <= 1) tables.
+# Blocked elements sit at the end of the table and have kSentinel control bytes,
+# so they are skipped like any other non-full slot.
+#
+# The bitfields are decoded from the raw 64-bit word rather than through the
+# debugger, whose bitfield support varies.
+
+_ABSL_20260817_CAPACITY_MASK = 0x3F
+_ABSL_20260817_SIZE_SHIFT = 6 + 5 + 1 + 3
+
+# Log2 capacities above this are sentinels (destroyed, moved-from...).
+_ABSL_20260817_MAX_VALID_CAPACITY_LOG = 64 - 10
+
+# Group::kWidth with SSE2 (x86-64). It is 8 on ARM (NEON) and without SIMD.
+_ABSL_20260817_GROUP_WIDTH = 16
+
+# sizeof(HeapOrSoo) / alignof(HeapOrSoo): SOO storage is one pointer wide.
+_ABSL_20260817_SOO_SLOT_SIZE = 8
+_ABSL_20260817_SOO_SLOT_ALIGN = 8
+
+
+def _absl__lts_20260817_swiss_dump(d, value, element_type, is_map):
+    common = value["settings_"]["value"]
+    inline_data = d.extractUInt64(common["inline_data_"].address())
+    capacity_log = inline_data & _ABSL_20260817_CAPACITY_MASK
+    if capacity_log > _ABSL_20260817_MAX_VALID_CAPACITY_LOG:
+        d.putValue("<invalid (destroyed or moved-from)>")
+        d.putPlainChildren(value)
+        return
+    capacity = (1 << capacity_log) - 1
+    size = inline_data >> _ABSL_20260817_SIZE_SHIFT
+
+    d.putItemCount(size)
+    if not d.isExpanded() or size <= 0:
+        return
+
+    slot_size = element_type.size()
+    heap_or_soo = common["heap_or_soo_"]
+
+    # Small table: at most one element (size is 1 here since size > 0).
+    if capacity <= 1:
+        soo_enabled = (
+            slot_size <= _ABSL_20260817_SOO_SLOT_SIZE
+            and element_type.alignment() <= _ABSL_20260817_SOO_SLOT_ALIGN
+        )
+        if soo_enabled:
+            base = heap_or_soo["soo_data"].address()
+        else:
+            # NumControlBytes() is 0: the control pointer is the slot.
+            base = heap_or_soo["heap"]["control"]["p"].pointer()
+        with Children(d):
+            _absl__lts_20250814_put_slot(d, 0, base, element_type, is_map)
+        return
+
+    # Regular SwissTable: walk the control bytes, emit occupied slots.
+    control = heap_or_soo["heap"]["control"]["p"]
+    slot_base = control.pointer() + capacity + _ABSL_20260817_GROUP_WIDTH
+    with Children(d):
+        item_index = 0
+        i = 0
+        while i < capacity and item_index < size and i < 1000000:
+            if (control[i].integer() & 0xFF) < 0x80:
+                _absl__lts_20250814_put_slot(
+                    d, item_index, slot_base + i * slot_size, element_type, is_map
+                )
+                item_index += 1
+            i += 1
+
+
+def qdump__absl__lts_20260817__flat_hash_set(d, value):
+    try:
+        element_type = value.type.templateArgument(0)
+        _absl__lts_20260817_swiss_dump(d, value, element_type, is_map=False)
+    except Exception as e:
+        d.putValue(f"<flat_hash_set error: {str(e)}>")
+        d.putPlainChildren(value)
+
+
+def qdump__absl__lts_20260817__flat_hash_map(d, value):
+    try:
+        key_type = value.type.templateArgument(0)
+        mapped_type = value.type.templateArgument(1)
+        # See qdump__absl__lts_20250814__flat_hash_map.
+        pair_name = "std::pair<%s, %s>" % (key_type.name, mapped_type.name)
+        element_type = d.lookupType(pair_name)
+        if element_type is None:
+            d.putValue(f"<flat_hash_map: cannot resolve '{pair_name}'>")
+            d.putPlainChildren(value)
+            return
+        _absl__lts_20260817_swiss_dump(d, value, element_type, is_map=True)
+    except Exception as e:
+        d.putValue(f"<flat_hash_map error: {str(e)}>")
+        d.putPlainChildren(value)
+
+
+def qdump__absl__lts_20260817__InlinedVector(d, value):
+    # Same layout as 20250814.
+    qdump__absl__lts_20250814__InlinedVector(d, value)
+
+
 #
 # Horizon
 #

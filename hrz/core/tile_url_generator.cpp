@@ -8,6 +8,7 @@
 #include "hrz/fnd/string_utils.h"
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <string_view>
 

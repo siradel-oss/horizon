@@ -5,7 +5,9 @@
 
 #include "hrz/fnd/string_utils.h"
 
-#include <assert.h>
+#include <cassert>
+#include <cstdint>
+#include <limits>
 
 namespace
 {

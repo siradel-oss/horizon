@@ -27,6 +27,7 @@ output = subprocess.run(
         input_path,
     ],
     stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
     check=False,
 )
 if output.returncode != 0:
