@@ -1306,6 +1306,7 @@ void work(
                 {
                     // The feature ID can change if feature ID attributes changed, in which case
                     // requests for both the previous and the new IDs are affected.
+                    // Hence the intentional copy.
                     const auto previous_id = feature->id;
                     if (_load_feature_attributes(layer, feature_proto, feature))
                     {

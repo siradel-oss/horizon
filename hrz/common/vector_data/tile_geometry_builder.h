@@ -5,7 +5,7 @@
 
 #include "hrz/common/blob_vector.h"
 #include "hrz/common/monitoring_defs.h"
-#include "hrz/common/vector_data//tile_geometry.h"
+#include "hrz/common/vector_data/tile_geometry.h"
 #include "hrz/fnd/class.h"
 #include "hrz/fnd/function_ref.h"
 #include "hrz/protocol/vector/geometry_type.pb.h"
@@ -94,7 +94,7 @@ public:
 
     public:
         HRZ_DELETE_COPY(PointsBuilder);
-        HRZ_DEFAULT_MOVE(PointsBuilder);
+        HRZ_DELETE_MOVE(PointsBuilder);
         ~PointsBuilder();
 
         void add_point(const lm::dvec3&);
@@ -118,7 +118,7 @@ public:
 
     public:
         HRZ_DELETE_COPY(PolylinesBuilder);
-        HRZ_DEFAULT_MOVE(PolylinesBuilder);
+        HRZ_DELETE_MOVE(PolylinesBuilder);
         ~PolylinesBuilder();
 
         void add_point(const lm::dvec3&);
@@ -149,7 +149,7 @@ public:
 
     public:
         HRZ_DELETE_COPY(PolygonsBuilder);
-        HRZ_DEFAULT_MOVE(PolygonsBuilder);
+        HRZ_DELETE_MOVE(PolygonsBuilder);
         ~PolygonsBuilder();
 
         void add_point(const lm::dvec3&);

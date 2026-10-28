@@ -455,8 +455,7 @@ bool decode_mvt(
         {
             if (encoded_tile.decode_geometry)
             {
-                auto feature_count_before =
-                    (uint32_t)decoded_tile.geometry.feature_count().value_or(0);
+                const auto feature_count_before = decoded_tile.geometry.feature_count().value_or(0);
 
                 bool status = true;
                 switch (mvt_feature.type())

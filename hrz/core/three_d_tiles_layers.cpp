@@ -332,9 +332,10 @@ inline lm::dmat4 get_axis_swap_transform(hrz::three_d_tiles::GltfUpAxis gltf_up_
 
     switch (gltf_up_axis)
     {
-        case hrz::three_d_tiles::GltfUpAxis::X: return s_axes_transform_x;
-        case hrz::three_d_tiles::GltfUpAxis::Y: return s_axes_transform_y;
-        case hrz::three_d_tiles::GltfUpAxis::Z: return s_axes_transform_z;
+        using enum hrz::three_d_tiles::GltfUpAxis;
+        case X: return s_axes_transform_x;
+        case Y: return s_axes_transform_y;
+        case Z: return s_axes_transform_z;
         default: assert(false && "Unhandled case"); return s_axes_transform_y;
     }
 }

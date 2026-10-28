@@ -106,11 +106,9 @@ FeatureGeometry decode_feature_geometry(
 
         for (uint32_t i = 0; i < used_point_count; ++i)
         {
-            arrays.points.push_back({
-                geometry.coords((int)(i * 3 + 0)),
-                geometry.coords((int)(i * 3 + 1)),
-                geometry.coords((int)(i * 3 + 2)),
-            });
+            arrays.points.emplace_back(
+                geometry.coords((int)(i * 3 + 0)), geometry.coords((int)(i * 3 + 1)),
+                geometry.coords((int)(i * 3 + 2)));
         }
 
         decoded_linestring_sizes.insert(

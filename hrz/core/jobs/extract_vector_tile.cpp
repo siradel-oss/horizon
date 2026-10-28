@@ -477,23 +477,23 @@ bool add_extracted_feature_geometries(
         const bool success = feature_builder.add_polylines_feature(
             [&](VectorTileGeometryBuilder::PolylinesBuilder& polylines_builder)
             {
-                bool success = true;
+                bool extract_success = true;
                 src_geometry_reader.iterate_geometries_for_feature(
                     src_feature_index,
                     [&](const VectorTileGeometry::Geometry& src_geometry)
                     {
-                        if (!success) return;
+                        if (!extract_success) return;
 
                         const auto* polyline =
                             std::get_if<VectorTileGeometry::PolylineGeometry>(&src_geometry);
                         if (polyline)
                         {
-                            success = add_extracted_polyline(
+                            extract_success = add_extracted_polyline(
                                 polyline->points, tile_bounds, tolerance, deviations,
                                 polylines_builder, is_simplified);
                         }
                     });
-                return success;
+                return extract_success;
             });
         if (!success)
         {
@@ -506,23 +506,23 @@ bool add_extracted_feature_geometries(
         const bool success = feature_builder.add_polygons_feature(
             [&](VectorTileGeometryBuilder::PolygonsBuilder& polygons_builder)
             {
-                bool success = true;
+                bool extract_success = true;
                 src_geometry_reader.iterate_geometries_for_feature(
                     src_feature_index,
                     [&](const VectorTileGeometry::Geometry& src_geometry)
                     {
-                        if (!success) return;
+                        if (!extract_success) return;
 
                         const auto* polygon =
                             std::get_if<VectorTileGeometry::PolygonGeometry>(&src_geometry);
                         if (polygon)
                         {
-                            success = add_extracted_polygon(
+                            extract_success = add_extracted_polygon(
                                 polygon->points, polygon->ring_sizes, tile_bounds, tolerance,
                                 deviations, polygons_builder, is_simplified);
                         }
                     });
-                return success;
+                return extract_success;
             });
         if (!success)
         {
