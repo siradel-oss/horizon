@@ -118,19 +118,25 @@ node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
 node.toolchain(node_version = "24.22.1")
 
 typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
-typescript.deps(ts_version_from = "//:package.json")
+typescript.deps(version_from = "//:package.json")
 use_repo(typescript, "npm_typescript")
 
 pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
-use_repo(pnpm, "pnpm")
 
-pnpm.pnpm(pnpm_version_from = "//:package.json")
+# Dependabot starts its work by copying files that it will need to process dependencies.
+# However our MODULE.bazel here depends on package.json, which is not copied by default.
+# The line below seems to be parsed by Dependabot as if it described required file
+# so Dependabot ends of copying it. There's a lot of finger crossing going on...
+# But it's not like it's a crucial component or anything.
+lock_file = "//:package.json"
+
+pnpm.pnpm(pnpm_version_from = lock_file)
+use_repo(pnpm, "pnpm")
 
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 npm.npm_translate_lock(
     name = "npm",
     npm_package_target_name = "npm_pkg",
-    npmrc = "//:.npmrc",
     pnpm_lock = "//:pnpm-lock.yaml",
 )
 use_repo(npm, "npm")
