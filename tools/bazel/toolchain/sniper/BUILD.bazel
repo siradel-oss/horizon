@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Copyright 2026 Siradel
 # SPDX-License-Identifier: MIT
 
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains:feature.bzl", "cc_feature")
 load("@rules_cc//cc/toolchains:tool.bzl", "cc_tool")
 load("@rules_cc//cc/toolchains:tool_map.bzl", "cc_tool_map")
 load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
@@ -68,11 +70,98 @@ cc_tool_map(
     },
 )
 
+# experimental_replace_legacy_action_config_features only provides the plumbing
+# (includes, defines, outputs, libraries, user copts/linkopts...), and the
+# opt/dbg features from rules_cc are empty placeholders meant to be overridden.
+# The flags below mirror the defaults of rules_cc's unix_cc_configure.bzl so
+# that sniper builds match the normal Linux build.
+
+cc_args(
+    name = "default_compile_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:compile_actions"],
+    args = [
+        "-fstack-protector",
+        "-Wall",
+        "-Wunused-but-set-parameter",
+        "-Wno-free-nonheap-object",
+        "-fno-omit-frame-pointer",
+        "-fno-canonical-system-headers",
+        "-Wno-builtin-macro-redefined",
+        "-D__DATE__=\"redacted\"",
+        "-D__TIMESTAMP__=\"redacted\"",
+        "-D__TIME__=\"redacted\"",
+    ],
+    tags = ["manual"],
+)
+
+cc_args(
+    name = "default_link_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:link_actions"],
+    args = [
+        "-Wl,-z,relro,-z,now",
+        "-pass-exit-codes",
+    ],
+    tags = ["manual"],
+)
+
+cc_args(
+    name = "opt_compile_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:compile_actions"],
+    args = [
+        "-g0",
+        "-O2",
+        "-D_FORTIFY_SOURCE=1",
+        "-DNDEBUG",
+        "-ffunction-sections",
+        "-fdata-sections",
+    ],
+    tags = ["manual"],
+)
+
+cc_args(
+    name = "opt_link_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:link_actions"],
+    args = ["-Wl,--gc-sections"],
+    tags = ["manual"],
+)
+
+cc_feature(
+    name = "opt_feature",
+    args = [
+        ":opt_compile_flags",
+        ":opt_link_flags",
+    ],
+    overrides = "@rules_cc//cc/toolchains/features:opt",
+    tags = ["manual"],
+)
+
+cc_args(
+    name = "dbg_compile_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:compile_actions"],
+    args = ["-g"],
+    tags = ["manual"],
+)
+
+cc_feature(
+    name = "dbg_feature",
+    args = [":dbg_compile_flags"],
+    overrides = "@rules_cc//cc/toolchains/features:dbg",
+    tags = ["manual"],
+)
+
 cc_toolchain(
     name = "sniper_cc_toolchain",
+    args = [
+        ":default_compile_flags",
+        ":default_link_flags",
+    ],
     compiler = "gcc",
     enabled_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
-    known_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
+    known_features = [
+        "@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features",
+        ":dbg_feature",
+        ":opt_feature",
+    ],
     tags = ["manual"],
     tool_map = ":all_tools",
 )
