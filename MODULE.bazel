@@ -121,15 +121,17 @@ typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", 
 typescript.deps(version_from = "//:package.json")
 use_repo(typescript, "npm_typescript")
 
-pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
-
 # Dependabot starts its work by copying files that it will need to process dependencies.
-# However our MODULE.bazel here depends on package.json, which is not copied by default.
-# The line below seems to be parsed by Dependabot as if it described required file
-# so Dependabot ends of copying it. There's a lot of finger crossing going on...
-# But it's not like it's a crucial component or anything.
+# It finds them by matching a few attribute names in MODULE.bazel with regexes, and any
+# assignment whose name ends in `lock_file` is one of them. The JS files below would not
+# be copied otherwise.
 lock_file = "//:package.json"
 
+pnpm_lock_file = "//:pnpm-lock.yaml"
+
+pnpm_workspace_lock_file = "//:pnpm-workspace.yaml"
+
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
 pnpm.pnpm(pnpm_version_from = lock_file)
 use_repo(pnpm, "pnpm")
 
@@ -137,7 +139,7 @@ npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 npm.npm_translate_lock(
     name = "npm",
     npm_package_target_name = "npm_pkg",
-    pnpm_lock = "//:pnpm-lock.yaml",
+    pnpm_lock = pnpm_lock_file,
 )
 use_repo(npm, "npm")
 
