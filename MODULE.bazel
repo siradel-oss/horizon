@@ -53,7 +53,7 @@ bazel_dep(name = "woff2", version = "20260629.sbr.2")
 bazel_dep(name = "draco", version = "1.5.7.hrz.1")
 bazel_dep(name = "glslang_prebuilt", version = "16.6.0.sbr.1")
 bazel_dep(name = "clang_format_prebuilt", version = "22.1.1.hrz.1")
-bazel_dep(name = "emsdk", version = "6.0.3")
+bazel_dep(name = "emsdk", version = "6.0.13")
 
 http_download = use_extension("//tools/bazel:http_download_extension.bzl", "http_download")
 http_download.file(
