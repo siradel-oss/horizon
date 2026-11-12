@@ -180,6 +180,7 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
         {
             auto* pmtiles_provider = raster->mutable_provider()->mutable_pmtiles();
             pmtiles_provider->set_url(url.substr(10));
+            pmtiles_provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
         }
         else
         {
@@ -188,6 +189,7 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
             // (https://github.com/mapbox/mapbox-gl-js/blob/d7aeb4b764d6bbaa98b03d9e8abf1a5d673189ff/src/source/load_tilejson.js#L22).
             auto* tilejson_provider = raster->mutable_provider()->mutable_tilejson();
             tilejson_provider->set_url(url);
+            tilejson_provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
         }
     }
     else
@@ -224,6 +226,7 @@ bool parse_raster_source(ParseContext* ctx, const char* source_name, const rapid
 
         // @Todo(HRZ-980): support multiple endpoints.
         tiled_provider->set_url_pattern(endpoint.value());
+        tiled_provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
     }
 
     ctx->source_names_to_prototypes.insert({source_name, std::move(raster_layer)});
@@ -254,6 +257,7 @@ bool parse_vector_source(ParseContext* ctx, const char* source_name, const rapid
             auto* pmtiles_provider = vector_data_source->mutable_pmtiles_data_provider();
 
             pmtiles_provider->set_url(url.substr(10));
+            pmtiles_provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
         }
         else
         {
@@ -261,6 +265,7 @@ bool parse_vector_source(ParseContext* ctx, const char* source_name, const rapid
             auto* tilejson_provider = vector_data_source->mutable_tilejson_data_provider();
 
             tilejson_provider->set_url(url);
+            tilejson_provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
         }
     }
     else
@@ -275,6 +280,7 @@ bool parse_vector_source(ParseContext* ctx, const char* source_name, const rapid
         }
 
         tiled_provider->set_url_pattern(endpoint.value());
+        tiled_provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
         tiled_provider->set_format(hrz_proto::VectorDataFormat::MVT_VECTOR_DATA);
 
         // @Todo(qdebroise): Maputnik exports "minZoom" and "maxZoom" which isn't spec compliant.
@@ -314,6 +320,7 @@ bool parse_geojson_source(
 
     auto* provider = vector_data_source->mutable_untiled_data_provider();
     provider->set_format(hrz_proto::VectorDataFormat::GEOJSON_VECTOR_DATA);
+    provider->mutable_http_headers()->CopyFrom(ctx->settings->http_headers);
 
     auto min_level_opt = hrz::json::get_int(source, "minzoom");
     if (min_level_opt.has_value())
@@ -1009,6 +1016,7 @@ bool create_fill_repr(
     const rapidjson::Value& layout_node,
     const rapidjson::Value& sprite_index,
     std::string_view sprite_image_url,
+    const hrz_proto::HttpHeaderList& http_headers,
     hrz_proto::FlatOverlayPolygonVectorRepr* flat_overlay,
     std::optional<hrz_proto::FlatOverlayPolylineVectorRepr>* outline_flat_overlay,
     uint32_t* next_flat_overlay_z_index,
@@ -1105,7 +1113,7 @@ bool create_fill_repr(
 
         auto* pattern = flat_overlay->mutable_pattern();
         pattern->set_image_url(sprite_image_url);
-        pattern->mutable_image_http_headers()->CopyFrom(image.http_headers());
+        pattern->mutable_image_http_headers()->CopyFrom(http_headers);
 
         for (const auto& sprite : image.sprites())
         {
@@ -1815,6 +1823,7 @@ bool create_symbol_repr(
     const rapidjson::Value& layout_node,
     const rapidjson::Value& sprite_index,
     std::string_view sprite_image_url,
+    const hrz_proto::HttpHeaderList& http_headers,
     const hrz::flat_hash_map<std::string, std::string>& font_family_urls,
     hrz_proto::SymbolVectorRepr* symbol,
     std::string* anchor_angle_attribute_name,
@@ -2044,6 +2053,7 @@ bool create_symbol_repr(
         image->set_color_blend_mode(hrz_proto::BlendMode::BLEND_MULTIPLY);
         image->set_color_blend_strength(1.0);
         image->set_url(sprite_image_url);
+        image->mutable_http_headers()->CopyFrom(http_headers);
 
         if (sprite_index.IsObject())
         {
@@ -2141,6 +2151,7 @@ bool create_symbol_repr(
                     if (it != font_family_urls.end())
                     {
                         text->set_font_url(it->second);
+                        text->mutable_font_http_headers()->CopyFrom(http_headers);
                         break;
                     }
                 }
@@ -2471,7 +2482,7 @@ bool parse_vector_layer(
                 std::optional<hrz_proto::FlatOverlayPolylineVectorRepr> outline_flat_overlay;
 
                 create_fill_repr(
-                    paint, layout, sprite_index, ctx->sprite_image_url,
+                    paint, layout, sprite_index, ctx->sprite_image_url, ctx->settings->http_headers,
                     repr->mutable_flat_overlay_polygon(), &outline_flat_overlay,
                     &ctx->next_flat_overlay_z_index, expr, property_adder);
 
@@ -2517,9 +2528,9 @@ bool parse_vector_layer(
 
                 std::string anchor_angle_attribute_name;
                 create_symbol_repr(
-                    paint, layout, sprite_index, ctx->sprite_image_url, ctx->font_names_to_urls,
-                    repr->mutable_symbol(), &anchor_angle_attribute_name, &ctx->next_symbol_z_index,
-                    expr, property_adder);
+                    paint, layout, sprite_index, ctx->sprite_image_url, ctx->settings->http_headers,
+                    ctx->font_names_to_urls, repr->mutable_symbol(), &anchor_angle_attribute_name,
+                    &ctx->next_symbol_z_index, expr, property_adder);
                 if (!anchor_angle_attribute_name.empty())
                 {
                     style->set_anchor_angle_attribute_name(std::move(anchor_angle_attribute_name));

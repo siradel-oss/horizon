@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "hrz/protocol/http_headers.pb.h"
 #include "hrz/protocol/raster/group.pb.h"
 
 #include <lin_maths.h>
@@ -28,6 +29,7 @@ struct TranslationSettings
     uint32_t first_vector_data_layer_id = 0;
     uint32_t first_flat_overlay_z_index = 0;
     uint32_t first_symbol_z_index = 0;
+    hrz_proto::HttpHeaderList http_headers;
 };
 
 struct TranslationResult

@@ -160,6 +160,7 @@ void work(
         settings.first_vector_data_layer_id = translation.params.first_vector_data_layer_id();
         settings.first_flat_overlay_z_index = translation.params.first_flat_overlay_z_index();
         settings.first_symbol_z_index = translation.params.first_symbol_z_index();
+        settings.http_headers.CopyFrom(translation.params.http_headers());
 
         hrz::CameraViewInfo view_info = hrz::scene::get_main_camera_view_info(scene);
         settings.camera_fovy = view_info.cam.fovy;

@@ -14,6 +14,14 @@ Horizon provides limited support for Mapbox styles, using the [Mapbox service](r
 
 {{< gallery-card "mapbox" >}}
 
+## HTTP headers
+
+The `http_headers` of [MapboxTranslationParams]($proto) are used for every external resource referenced by the style:
+
+- the sprite index document and the sprite image (used by `symbol` icons and `fill-pattern`),
+- the fonts mapped with [`hrz:fonts`](#hrzfonts),
+- the data of `raster`, `vector` and `geojson` sources (tiles, TileJSON, PMTiles and GeoJSON documents).
+
 ## Special properties
 
 There are situations where the Mapbox style spec doesn't provide all the information required by Horizon to setup a scene. Special Horizon-exclusive properties should be added to the `metadata` property of a Mapbox style to properly handle such situations.

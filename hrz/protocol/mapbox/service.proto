@@ -14,8 +14,9 @@ import "hrz/protocol/raster/group.proto";
 
 message MapboxTranslationParams {
     string                 style_json                 = 1;
-    // The headers to use when requesting external resources such as the sprite
-    // index document.
+    // The headers to use when requesting external resources: the sprite index
+    // document, the sprite image, the fonts, and the data of the translated
+    // `raster`, `vector` and `geojson` sources.
     HttpHeaderList         http_headers               = 2;
     // If true, clears all layers of the current scene before translating the
     // scene, and cancels any pending translation.

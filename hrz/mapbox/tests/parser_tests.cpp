@@ -4,6 +4,7 @@
 #include "hrz/common/color.h"
 #include "hrz/mapbox/common.h"
 #include "hrz/mapbox/translate.h"
+#include "hrz/protocol/http_headers.pb.h"
 #include "hrz/protocol/raster/provider.pb.h"
 #include "hrz/protocol/scene_dump/defs.pb.h"
 #include "rules_cc/cc/runfiles/runfiles.h"
@@ -63,7 +64,8 @@ std::optional<std::vector<std::byte>> read_file(const char* path)
 bool try_convert_mapbox_resource(
     const char* path,
     hrz_proto::SceneDump* scene_dump,
-    const char* sprite_index_path = nullptr)
+    const char* sprite_index_path = nullptr,
+    const hrz_proto::HttpHeaderList& http_headers = {})
 {
     auto raw_json_opt = read_file(path);
     if (!raw_json_opt.has_value())
@@ -96,6 +98,7 @@ bool try_convert_mapbox_resource(
     settings.first_vector_data_layer_id = 1;
     settings.first_flat_overlay_z_index = 1;
     settings.first_symbol_z_index = 1;
+    settings.http_headers = http_headers;
 
     return hrz_mapbox::translate_scene(json, sprite_index_json, settings, scene_dump).success;
 }
@@ -132,9 +135,10 @@ void convert_mapbox_resource(
     const char* path,
     hrz_proto::SceneDump* scene_dump,
     const SceneLayerStats& expected,
-    const char* sprite_index_path = nullptr)
+    const char* sprite_index_path = nullptr,
+    const hrz_proto::HttpHeaderList& http_headers = {})
 {
-    bool success = try_convert_mapbox_resource(path, scene_dump, sprite_index_path);
+    bool success = try_convert_mapbox_resource(path, scene_dump, sprite_index_path, http_headers);
     EXPECT_EQ(success, true);
 
     if (success)
@@ -142,6 +146,22 @@ void convert_mapbox_resource(
         SceneLayerStats stats = get_scene_dump_layer_stats(scene_dump);
         check_expected_layer_stats(stats, expected);
     }
+}
+
+hrz_proto::HttpHeaderList make_test_http_headers()
+{
+    hrz_proto::HttpHeaderList list;
+    auto* header = list.add_headers();
+    header->set_name("Authorization");
+    header->set_value("Bearer token");
+    return list;
+}
+
+void check_test_http_headers(const hrz_proto::HttpHeaderList& list)
+{
+    ASSERT_EQ(list.headers_size(), 1);
+    EXPECT_EQ(list.headers(0).name(), "Authorization");
+    EXPECT_EQ(list.headers(0).value(), "Bearer token");
 }
 
 using rules_cc::cc::runfiles::Runfiles;
@@ -375,9 +395,10 @@ TEST_F(MapboxTranslation, parse_raster)
     hrz_proto::SceneDump scene_dump;
     convert_mapbox_resource(
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_raster.json").c_str(),
-        &scene_dump, expected_layers);
+        &scene_dump, expected_layers, nullptr, make_test_http_headers());
 
     const auto& layer = scene_dump.layers(0);
+    check_test_http_headers(layer.imagery_raster().raster().provider().tiled().http_headers());
 
     RasterSourceConfig raster_source;
     raster_source.bounds.set_west(-100);
@@ -508,7 +529,7 @@ TEST_F(MapboxTranslation, parse_geojson)
     hrz_proto::SceneDump scene_dump;
     convert_mapbox_resource(
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_geojson.json").c_str(),
-        &scene_dump, expected_stats);
+        &scene_dump, expected_stats, nullptr, make_test_http_headers());
 
     for (const auto& layer : scene_dump.layers())
     {
@@ -536,6 +557,7 @@ TEST_F(MapboxTranslation, parse_geojson)
             EXPECT_EQ(provider.bounds().east(), 180.0);
             EXPECT_EQ(provider.bounds().north(), 85.051129);
             EXPECT_EQ(provider.clip_margin(), true);
+            check_test_http_headers(provider.http_headers());
         }
     }
 }
@@ -650,7 +672,7 @@ TEST_F(MapboxTranslation, parse_vector_source)
     hrz_proto::SceneDump scene_dump;
     convert_mapbox_resource(
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_vector.json").c_str(),
-        &scene_dump, expected_stats);
+        &scene_dump, expected_stats, nullptr, make_test_http_headers());
 
     for (const auto& layer : scene_dump.layers())
     {
@@ -675,6 +697,7 @@ TEST_F(MapboxTranslation, parse_vector_source)
             EXPECT_NEAR(src.tiled_data_provider().bounds().south(), -85.051129, 0.001);
             EXPECT_NEAR(src.tiled_data_provider().bounds().east(), 180.0, 0.001);
             EXPECT_NEAR(src.tiled_data_provider().bounds().north(), 85.051129, 0.001);
+            check_test_http_headers(src.tiled_data_provider().http_headers());
         }
         else if (layer.has_vector_tiles())
         {
@@ -1051,7 +1074,7 @@ TEST_F(MapboxTranslation, parse_vector_fill_layer)
     hrz_proto::SceneDump scene_dump;
     convert_mapbox_resource(
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_vector_fill.json").c_str(),
-        &scene_dump, expected_stats);
+        &scene_dump, expected_stats, nullptr, make_test_http_headers());
 
     for (int i = 0; i < scene_dump.layers_size(); i++)
     {
@@ -1091,6 +1114,7 @@ TEST_F(MapboxTranslation, parse_vector_fill_layer)
                 vdl.sources(0).tilejson_data_provider().url(),
                 "https://redacted.localhost/assets/mvt/HK/tiles.json");
             EXPECT_EQ(vdl.sources(0).tilejson_data_provider().layer_name(), "HK_SAMPLE_3857");
+            check_test_http_headers(vdl.sources(0).tilejson_data_provider().http_headers());
         }
     };
 }
@@ -1174,7 +1198,7 @@ TEST_F(MapboxTranslation, parse_vector_fill_pattern)
     convert_mapbox_resource(
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_vector_fill_pattern.json")
             .c_str(),
-        &scene_dump, expected_stats);
+        &scene_dump, expected_stats, nullptr, make_test_http_headers());
 
     for (int i = 0; i < scene_dump.layers_size(); i++)
     {
@@ -1204,6 +1228,7 @@ TEST_F(MapboxTranslation, parse_vector_fill_pattern)
                         background_color);
 
                     EXPECT_EQ(flat_overlay.pattern().sprite_name().default_value(), "SableHumide");
+                    check_test_http_headers(flat_overlay.pattern().image_http_headers());
 
                     const auto& polygon_pattern_color =
                         flat_overlay.pattern().color().default_value();
@@ -1673,7 +1698,8 @@ TEST_F(MapboxTranslation, parse_vector_symbol_icon)
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_vector_symbol_icon.json")
             .c_str(),
         &scene_dump, expected_stats,
-        _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/sprite.json").c_str());
+        _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/sprite.json").c_str(),
+        make_test_http_headers());
 
     for (int i = 0; i < scene_dump.layers_size(); i++)
     {
@@ -1750,6 +1776,7 @@ TEST_F(MapboxTranslation, parse_vector_symbol_icon)
 
             EXPECT_EQ(
                 image.url(), "https://redacted.localhost/assets/sprites/sprites_mapbox/tree.png");
+            check_test_http_headers(image.http_headers());
             EXPECT_FLOAT_EQ(image.scale().default_value(), 0.1);
         }
     };
@@ -1766,7 +1793,8 @@ TEST_F(MapboxTranslation, parse_vector_symbol_text)
         _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/mapbox_vector_symbol_text.json")
             .c_str(),
         &scene_dump, expected_stats,
-        _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/sprite.json").c_str());
+        _runfiles->Rlocation("horizon/hrz/mapbox/tests_data/sprite.json").c_str(),
+        make_test_http_headers());
 
     for (int i = 0; i < scene_dump.layers_size(); i++)
     {
@@ -1853,6 +1881,7 @@ TEST_F(MapboxTranslation, parse_vector_symbol_text)
             EXPECT_EQ(text.text().default_value(), "sample\ntext");
             EXPECT_EQ(
                 text.font_url(), "https://redacted.localhost/assets/fonts/Roboto/Roboto-Regular.ttf");
+            check_test_http_headers(text.font_http_headers());
             EXPECT_FLOAT_EQ(text.font_size().default_value(), 16.0);
             EXPECT_FLOAT_EQ(text.outline_width().default_value(), 1.0);
             EXPECT_EQ(
