@@ -1,14 +1,35 @@
 version: 2
+
 updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      "all-npm-packages":
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      "all-pip-packages":
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
+
   - package-ecosystem: "bazel"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      "all-bazel-modules":
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
