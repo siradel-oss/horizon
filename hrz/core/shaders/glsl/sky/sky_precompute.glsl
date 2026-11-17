@@ -296,6 +296,7 @@ vec4 in_scattering(
 
     vec3 in_scattered = vec3(0.0);
     vec3 optical_depth = vec3(0.0);
+    vec3 prev_density = vec3(0.0);
     const vec2 ref_altitudes_inv = vec2(rayleigh_reference_altitude_inv, mie_reference_altitude_inv);
 
     for (int i = 0; i <= subdivisions; ++i)
@@ -311,9 +312,16 @@ vec4 in_scattering(
 
         // We integrate the optical depth as we go. This avoids the headache of
         // using the transmittance LUT while keeping as much precision as possible...
-        vec2 densities_r_m = density_ratio(current_altitude - EARTH_RADIUS, ref_altitudes_inv);
-        float density_o = density_ratio_ozone(current_altitude - EARTH_RADIUS);
-        optical_depth += vec3(densities_r_m, density_o) * ds * w;
+        vec3 density = vec3(
+            density_ratio(current_altitude - EARTH_RADIUS, ref_altitudes_inv),
+            density_ratio_ozone(current_altitude - EARTH_RADIUS));
+        if (i > 0)
+        {
+            // Average the densities at both ends of the segment, so the
+            // transmittance at this sample covers exactly [from, current_dist].
+            optical_depth += 0.5 * ds * (prev_density + density);
+        }
+        prev_density = density;
 
         // As we move along the view direction, the direction of the sun in the
         // tangential frame will change. As explain above, it will rotate along
