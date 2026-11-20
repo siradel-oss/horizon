@@ -19,7 +19,6 @@ concurrency:
 
 env:
   WEBSITE_REPOSITORY: siradel-oss/horizon-website
-  HUGO_VERSION: '0.162.1'
   SITE_BASE_URL: 'https://horizon.oss.siradel.com/'
 
 jobs:
@@ -59,8 +58,12 @@ jobs:
 
       - name: Setup Hugo
         run: |
-          curl -sL "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" \
+          set -o pipefail
+          # The Hugo version is pinned by the website repository.
+          HUGO_VERSION="$(tr -d '[:space:]' < .hugo-version)"
+          curl -fsSL "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz" \
             | tar -xz -C /usr/local/bin hugo
+          hugo version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
