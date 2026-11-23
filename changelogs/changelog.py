@@ -1,11 +1,16 @@
 # SPDX-FileCopyrightText: Copyright 2021 Siradel
 # SPDX-License-Identifier: MIT
 
-from pathlib import Path
-import sys
 import argparse
+import sys
+import textwrap
+from collections.abc import Iterator
+from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from enum import Enum
+from pathlib import Path
+
+from typing import TextIO
 
 """
 Partial markdown changelogs must conform to the following form:
@@ -77,8 +82,8 @@ class Node:
     """
 
     def __init__(self, content: str):
-        self.content = content
-        self.children = []
+        self.content: str = content
+        self.children: list[Node] = []
 
     def __repr__(self) -> str:
         return self.display(0)
@@ -87,12 +92,20 @@ class Node:
         """
         Generates some Markdown code to display this node and its children.
         """
-        repr = (" " * indent) + "* " + self.content + "\n"
+        content = textwrap.wrap(
+            self.content,
+            width=80,
+            initial_indent=" " * indent + "* ",
+            subsequent_indent=" " * (indent + 2),
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        repr = "\n".join(content) + "\n"
         for child in self.children:
-            repr += child.display(indent + 4)
+            repr += child.display(indent + 2)
         return repr
 
-    def find_child(self, content: str) -> "Node":
+    def find_child(self, content: str) -> "Node | None":
         """
         Finds the child with the given content. Or None.
         """
@@ -101,7 +114,7 @@ class Node:
                 return child
         return None
 
-    def find_or_create_child(self, content) -> "Node":
+    def find_or_create_child(self, content: str) -> "Node":
         """
         Finds the child with the given content, or create it if it does not exist.
         """
@@ -112,7 +125,7 @@ class Node:
         assert child != None
         return child
 
-    def merge(self, other):
+    def merge(self, other: "Node"):
         """
         Merges the contents of another node in this one.
         Children and sub-children are merged based on their content.
@@ -122,12 +135,12 @@ class Node:
             this_child = self.find_or_create_child(other_child.content)
             this_child.merge(other_child)
 
-    def sort_top_level_children(self, sections):
+    def sort_top_level_children(self, sections: list[str]):
         """
         Sorts the children of a node so that they conform to the sections given as input.
         Note that any children that don't match one of the sections will be removed.
         """
-        sorted_children = []
+        sorted_children: list[Node] = []
         for section_name in sections:
             child = self.find_child(section_name)
             if child:
@@ -135,7 +148,59 @@ class Node:
         self.children = sorted_children
 
 
-def parse_changelog_partial(lines: List[str]) -> Node:
+class LogicalLineType(Enum):
+    SECTION = "section"
+    ITEM = "item"
+
+
+@dataclass
+class LogicalLine:
+    type: LogicalLineType
+    indent: int
+    content: str
+
+
+def logical_lines(lines: list[str]) -> Iterator[LogicalLine]:
+    """
+    Iterates over logical lines. Those are lines after we merge multi-lines items.
+    """
+
+    pending_item: LogicalLine | None = None
+
+    def flush() -> Iterator[LogicalLine]:
+        nonlocal pending_item
+        if pending_item is not None:
+            yield pending_item
+            pending_item = None
+
+    for line in lines:
+        line = line.rstrip()
+        if len(line) == 0:
+            continue
+
+        if "\t" in line:
+            raise Exception("Tabs are not allowed in changelog files")
+
+        indent = len(line) - len(line.lstrip())
+        stripped = line[indent:]
+
+        if line.startswith("# "):
+            yield from flush()
+            yield LogicalLine(LogicalLineType.SECTION, indent, line[2:].strip())
+        elif stripped.startswith(("- ", "* ")):
+            yield from flush()
+            pending_item = LogicalLine(
+                LogicalLineType.ITEM, indent, stripped[2:].strip()
+            )
+        elif pending_item is not None and indent == pending_item.indent + 2:
+            pending_item.content += " " + stripped
+        else:
+            raise Exception(f"Invalid line in changelog: {line}")
+
+    yield from flush()
+
+
+def parse_changelog_partial(lines: list[str]) -> Node:
     """
     Creates a nodes hierarchy from a list of lines read from a changelog file.
     This can be used on partial changelogs that don't contain metadata.
@@ -143,41 +208,33 @@ def parse_changelog_partial(lines: List[str]) -> Node:
 
     class NodeStackEntry:
         def __init__(self, node: Node, indent: int):
-            self.node = node
-            self.indent = indent
+            self.node: Node = node
+            self.indent: int = indent
 
     root = Node("ROOT")
     stack = []
 
-    for line in lines:
-        line = line.rstrip()
-        if len(line) == 0:
-            continue
-
-        indentation = len(line) - len(line.lstrip())
-
-        if line.startswith("# "):
-            section_name = line[2:].strip()
+    for line in logical_lines(lines):
+        if line.type == LogicalLineType.SECTION:
+            section_name = line.content
             if section_name not in SECTION_NAMES:
-                print("ERROR: Invalid section name %s" % section_name)
+                print(f"ERROR: Invalid section name {section_name}")
                 sys.exit(1)
             stack = [NodeStackEntry(root.find_or_create_child(section_name), -1)]
 
-        elif line[indentation:].startswith(("- ", "* ")):
-            content = line[indentation + 2 :].strip()
-
+        elif line.type == LogicalLineType.ITEM:
             assert len(stack) > 0
 
-            while stack[len(stack) - 1].indent >= indentation:
+            while stack[len(stack) - 1].indent >= line.indent:
                 stack = stack[:-1]
 
-            new_node = stack[len(stack) - 1].node.find_or_create_child(content)
-            stack.append(NodeStackEntry(new_node, indentation))
+            new_node = stack[len(stack) - 1].node.find_or_create_child(line.content)
+            stack.append(NodeStackEntry(new_node, line.indent))
 
     return root
 
 
-def merge_partial_changelogs(paths) -> Node:
+def merge_partial_changelogs(paths: list[Path]) -> Node:
     """
     Reads and merges all the partial changelogs found at the given paths into a
     single root node, with its top-level children sorted according to `SECTION_NAMES`.
@@ -197,29 +254,29 @@ class Changelog:
     """
 
     def __init__(self, version: str, date: str, root: Node):
-        self.version = version
-        self.date = date
-        self.root = root
+        self.version: str = version
+        self.date: str = date
+        self.root: Node = root
 
-    def write_to(self, fp):
+    def write_to(self, fp: "TextIO"):
         """
         Writes this changelog to a file given as input in a canonical format that
         can be parsed later on.
         """
         print("---", file=fp)
-        print("Version: %s" % self.version, file=fp)
-        print("Date: %s" % self.date, file=fp)
+        print(f"Version: {self.version}", file=fp)
+        print(f"Date: {self.date}", file=fp)
         print("---", file=fp)
 
         for section in self.root.children:
-            print("", file=fp)
-            print("# %s" % section.content, file=fp)
-            print("", file=fp)
+            print(file=fp)
+            print(f"# {section.content}", file=fp)
+            print(file=fp)
             for section_child in section.children:
-                fp.write(section_child.display(0))
+                _ = fp.write(section_child.display(0))
 
 
-def parse_changelog(lines: List[str]) -> Changelog:
+def parse_changelog(lines: list[str]) -> Changelog:
     """
     Parses a changelog file (with metadata) into a changelog object.
     This can be used on canonical changelogs (that contain metadata).
@@ -248,8 +305,8 @@ def parse_changelog(lines: List[str]) -> Changelog:
     return Changelog(version, date, root)
 
 
-def list_input_files(patterns):
-    files = []
+def list_input_files(patterns: list[str]) -> list[Path]:
+    files: list[Path] = []
     for pattern in patterns:
         files += Path(".").glob(pattern)
     return list(set(files))
@@ -266,7 +323,7 @@ def merge_into_cmd(args):
     """
     paths = list_input_files(args.input_file)
     for file_path in paths:
-        print("Parsing changelog %s" % file_path)
+        print(f"Parsing changelog {file_path}")
     merged = merge_partial_changelogs(paths)
 
     version = args.version
