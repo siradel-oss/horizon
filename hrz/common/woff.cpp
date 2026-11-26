@@ -5,13 +5,15 @@
 
 #include "hrz/common/compression.h"
 #include "hrz/fnd/log.h"
-#include "hrz/fnd/maths.h"
 #include "hrz/fnd/mem.h"
 
 #include <woff2/decode.h>
 #include <woff2/output.h>
 
 #include <bit>
+
+namespace
+{
 
 static bool is_woff(const std::byte* data, size_t size)
 {
@@ -25,16 +27,12 @@ static bool is_woff2(const std::byte* data, size_t size)
     return size >= sizeof(woff2_magic) && std::memcmp(data, woff2_magic, sizeof(woff2_magic)) == 0;
 }
 
-bool hrz::is_woff_or_woff2(std::span<const std::byte> data)
-{
-    return is_woff(data.data(), data.size()) || is_woff2(data.data(), data.size());
-}
-
 static std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
     hrz::BlobAllocator* ba,
     std::span<const std::byte> woff_data)
 {
-    auto size = woff2::ComputeWOFF2FinalSize((const uint8_t*)woff_data.data(), woff_data.size());
+    const auto size =
+        woff2::ComputeWOFF2FinalSize((const uint8_t*)woff_data.data(), woff_data.size());
     hrz::blobs::BlobHandle blob{};
 
     if (auto blob_opt = hrz::blobs::allocate_blob_sync(ba, size);
@@ -71,35 +69,9 @@ static std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
     return blob;
 }
 
-static uint32_t read_be_uint32(std::span<const std::byte> data, size_t offset)
-{
-    return (static_cast<uint32_t>(data[offset]) << 24)
-        | (static_cast<uint32_t>(data[offset + 1]) << 16)
-        | (static_cast<uint32_t>(data[offset + 2]) << 8) | static_cast<uint32_t>(data[offset + 3]);
-}
-
-static uint16_t read_be_uint16(std::span<const std::byte> data, size_t offset)
-{
-    return (static_cast<uint16_t>(data[offset]) << 8) | static_cast<uint16_t>(data[offset + 1]);
-}
-
-static void write_be_uint32(std::span<std::byte> data, size_t offset, uint32_t value)
-{
-    data[offset] = static_cast<std::byte>((value >> 24) & 0xFF);
-    data[offset + 1] = static_cast<std::byte>((value >> 16) & 0xFF);
-    data[offset + 2] = static_cast<std::byte>((value >> 8) & 0xFF);
-    data[offset + 3] = static_cast<std::byte>(value & 0xFF);
-}
-
-static void write_be_uint16(std::span<std::byte> data, size_t offset, uint16_t value)
-{
-    data[offset] = static_cast<std::byte>((value >> 8) & 0xFF);
-    data[offset + 1] = static_cast<std::byte>(value & 0xFF);
-}
-
 static uint32_t round_up_4(uint32_t value)
 {
-    return (value + 3) & ~3;
+    return (value + 3) & 0xFFFFFFFC;
 }
 
 static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
@@ -118,8 +90,8 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
         return std::nullopt;
     }
 
-    uint32_t sfnt_version = read_be_uint32(woff_data, 4);
-    uint16_t num_tables = read_be_uint16(woff_data, 12);
+    const auto sfnt_version = hrz::read_be_unsafe<uint32_t>(woff_data, 4);
+    const auto num_tables = hrz::read_be_unsafe<uint16_t>(woff_data, 12);
 
     if (woff_data.size_bytes()
         < kWoffHeaderSize + static_cast<size_t>(num_tables) * kWoffTableEntrySize)
@@ -132,8 +104,8 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
         kWoffHeaderSize + static_cast<size_t>(num_tables) * kWoffTableEntrySize;
     for (size_t i = 0; i < static_cast<size_t>(num_tables); ++i)
     {
-        uint32_t orig_length =
-            read_be_uint32(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 12);
+        const auto orig_length = hrz::read_be_unsafe<uint32_t>(
+            woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 12);
         total_sfnt_size += round_up_4(orig_length);
     }
 
@@ -154,7 +126,7 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
         return std::nullopt;
     }
 
-    std::span<std::byte> sfnt_data{sfnt_data_blob.data(), sfnt_data_blob.size()};
+    const std::span<std::byte> sfnt_data{sfnt_data_blob.data(), sfnt_data_blob.size()};
     memset(sfnt_data.data(), 0, sfnt_data.size_bytes());
 
     // Compute some stuff for sfnt header
@@ -163,24 +135,26 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
     const uint16_t range_shift = num_tables * 16 - search_range;
 
     // Write SFNT header
-    write_be_uint32(sfnt_data, 0, sfnt_version);
-    write_be_uint16(sfnt_data, 4, num_tables);
-    write_be_uint16(sfnt_data, 6, search_range);
-    write_be_uint16(sfnt_data, 8, entry_selector);
-    write_be_uint16(sfnt_data, 10, range_shift);
+    hrz::write_be_unsafe<uint32_t>(sfnt_data, 0, sfnt_version);
+    hrz::write_be_unsafe<uint16_t>(sfnt_data, 4, num_tables);
+    hrz::write_be_unsafe<uint16_t>(sfnt_data, 6, search_range);
+    hrz::write_be_unsafe<uint16_t>(sfnt_data, 8, entry_selector);
+    hrz::write_be_unsafe<uint16_t>(sfnt_data, 10, range_shift);
 
     size_t sfnt_data_offset = kSfntHeaderSize + num_tables * kSfntTableEntrySize;
 
     for (size_t i = 0; i < static_cast<size_t>(num_tables); ++i)
     {
-        uint32_t tag = read_be_uint32(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize);
-        uint32_t offset = read_be_uint32(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 4);
-        uint32_t comp_length =
-            read_be_uint32(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 8);
-        uint32_t orig_length =
-            read_be_uint32(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 12);
-        uint32_t orig_checksum =
-            read_be_uint32(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 16);
+        const auto tag =
+            hrz::read_be_unsafe<uint32_t>(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize);
+        const auto offset =
+            hrz::read_be_unsafe<uint32_t>(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 4);
+        const auto comp_length =
+            hrz::read_be_unsafe<uint32_t>(woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 8);
+        const auto orig_length = hrz::read_be_unsafe<uint32_t>(
+            woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 12);
+        const auto orig_checksum = hrz::read_be_unsafe<uint32_t>(
+            woff_data, kWoffHeaderSize + i * kWoffTableEntrySize + 16);
 
         if (offset + comp_length > woff_data.size_bytes())
         {
@@ -188,7 +162,7 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
             return std::nullopt;
         }
 
-        auto compressed_slice = woff_data.subspan(offset, comp_length);
+        const auto compressed_slice = woff_data.subspan(offset, comp_length);
         auto decompressed_slice = sfnt_data.subspan(sfnt_data_offset, orig_length);
 
         if (compressed_slice.size_bytes() == decompressed_slice.size_bytes())
@@ -202,17 +176,24 @@ static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
             return std::nullopt;
         }
 
-        std::span<std::byte> table_entry =
+        const std::span<std::byte> table_entry =
             sfnt_data.subspan(kSfntHeaderSize + i * kSfntTableEntrySize, kSfntTableEntrySize);
-        write_be_uint32(table_entry, 0, tag);
-        write_be_uint32(table_entry, 4, orig_checksum);
-        write_be_uint32(table_entry, 8, sfnt_data_offset);
-        write_be_uint32(table_entry, 12, decompressed_slice.size_bytes());
+        hrz::write_be_unsafe<uint32_t>(table_entry, 0, tag);
+        hrz::write_be_unsafe<uint32_t>(table_entry, 4, orig_checksum);
+        hrz::write_be_unsafe<uint32_t>(table_entry, 8, sfnt_data_offset);
+        hrz::write_be_unsafe<uint32_t>(table_entry, 12, decompressed_slice.size_bytes());
 
         sfnt_data_offset += round_up_4(decompressed_slice.size());
     }
 
     return blob;
+}
+
+} // anonymous namespace
+
+bool hrz::is_woff_or_woff2(std::span<const std::byte> data)
+{
+    return is_woff(data.data(), data.size()) || is_woff2(data.data(), data.size());
 }
 
 std::optional<hrz::blobs::BlobHandle> hrz::woff_or_woff2_to_ttf(

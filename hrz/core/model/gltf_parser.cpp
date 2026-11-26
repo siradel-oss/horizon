@@ -7,6 +7,7 @@
 #include "hrz/fnd/inlined_vector.h"
 #include "hrz/fnd/json_utils.h"
 #include "hrz/fnd/log.h"
+#include "hrz/fnd/mem.h"
 #include "hrz/fnd/string_utils.h"
 
 #include <mycelium/properties.h>
@@ -129,7 +130,7 @@ void _parse_gltf_node_hierarchy(
         for (const auto& child_json : children_json.GetArray())
         {
             if (!child_json.IsNumber()) continue;
-            auto child_node_id = child_json.GetInt();
+            const auto child_node_id = child_json.GetInt();
             _parse_gltf_node_hierarchy(nodes_json, node_instance_id, child_node_id, descriptor);
         }
     }
@@ -148,7 +149,7 @@ ModelDescriptor::Attribute* _get_primitive_attribute(
     ModelDescriptor::Primitive* prim,
     const char* name)
 {
-    auto get_or_insert_optional_attribute =
+    const auto get_or_insert_optional_attribute =
         [&](std::optional<ModelDescriptor::Attribute>* opt_attr) -> ModelDescriptor::Attribute*
     {
         if (!opt_attr->has_value())
@@ -615,7 +616,7 @@ void _parse_gltf_texture(const rapidjson::Value& texture_json, ModelDescriptor* 
     if (const auto& ktx2_json = _get_gltf_extension(texture_json, KHR_texture_basisu);
         ktx2_json.IsObject())
     {
-        auto ktx2_source = json::get_int(ktx2_json, "source");
+        const auto ktx2_source = json::get_int(ktx2_json, "source");
         if (ktx2_source.has_value())
         {
             texture.source = ktx2_source;
@@ -625,7 +626,7 @@ void _parse_gltf_texture(const rapidjson::Value& texture_json, ModelDescriptor* 
     if (const auto& webp_json = _get_gltf_extension(texture_json, EXT_texture_webp);
         webp_json.IsObject())
     {
-        auto webp_source = json::get_int(webp_json, "source");
+        const auto webp_source = json::get_int(webp_json, "source");
         if (webp_source.has_value())
         {
             texture.source = webp_source;
@@ -835,7 +836,7 @@ bool _parse_gltf_json(
     rapidjson::Document root;
     {
         HRZ_SCOPED_SAMPLE("parse json document");
-        auto json_data = json_blob.get_data();
+        const auto json_data = json_blob.get_data();
         rapidjson::MemoryStream raw_stream((const char*)json_data.data(), json_data.size());
         rapidjson::EncodedInputStream<rapidjson::UTF8<char>, rapidjson::MemoryStream> stream(
             raw_stream);
@@ -865,8 +866,8 @@ bool _parse_gltf_json(
         // reassemble them later, because otherwise there is a lot of duplications. So we do that.
         while (!copyright_str.empty())
         {
-            auto pair = hrz::str::split(copyright_str, ';');
-            auto this_attribution = hrz::str::trim_s(pair.first);
+            const auto pair = hrz::str::split(copyright_str, ';');
+            const auto this_attribution = hrz::str::trim_s(pair.first);
             if (!this_attribution.empty())
             {
                 all_attributions.push_back(
@@ -1078,31 +1079,23 @@ bool _parse_gltf_json(
 namespace hrz::model
 {
 
-uint32_t fetch_glb_declared_size(std::span<const std::byte> gltf_data)
+std::optional<uint32_t> fetch_glb_declared_size(std::span<const std::byte> gltf_data)
 {
-    static_assert(
-        std::endian::native == std::endian::little, "UInt32 reads are little-endian only");
-
     if (gltf_data.size() >= 12) // Enough room for the glb header
     {
         const std::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
         const std::span<const std::byte> magic = gltf_header.first(4);
 
-        uint32_t version = 0;
-        memcpy(&version, gltf_header.data() + 4, 4);
+        const auto version = hrz::read_le_unsafe<uint32_t>(gltf_header, 4);
 
         if (memcmp((const char*)magic.data(), "glTF", 4) == 0 && version == 2)
         {
             // This is a glb.
-
-            uint32_t declared_size = 0;
-            memcpy(&declared_size, gltf_header.data() + 8, 4);
-
-            return declared_size;
+            return hrz::read_le_unsafe<uint32_t>(gltf_header, 8);
         }
     }
 
-    return 0;
+    return std::nullopt;
 }
 
 bool parse_gltf_descriptor(
@@ -1117,30 +1110,18 @@ bool parse_gltf_descriptor(
     uint32_t textures_priority,
     ModelDescriptor* descriptor)
 {
-    static_assert(
-        std::endian::native == std::endian::little, "UInt32 reads are little-endian only");
-
-    auto gltf_size = gltf_blob.data_size();
+    const auto gltf_size = gltf_blob.data_size();
     if (gltf_size < 12) // Enough room for the glb header
     {
         return false;
     }
 
-    auto gltf_data = gltf_blob.get_data();
-    const std::span<const std::byte> gltf_header = gltf_data.subspan(0, 12);
-    const std::span<const std::byte> magic = gltf_header.first(4);
+    const auto gltf_data = gltf_blob.get_data();
+    const auto glb_declared_size_opt = fetch_glb_declared_size(gltf_data);
 
-    uint32_t version = 0;
-    memcpy(&version, gltf_header.data() + 4, 4);
-
-    if (memcmp((const char*)magic.data(), "glTF", 4) == 0 && version == 2)
+    if (glb_declared_size_opt.has_value())
     {
-        // This is a glb.
-
-        uint32_t declared_size = 0;
-        memcpy(&declared_size, gltf_header.data() + 8, 4);
-
-        if (declared_size > gltf_size)
+        if (*glb_declared_size_opt > gltf_size)
         {
             return false;
         }
@@ -1156,7 +1137,7 @@ bool parse_gltf_descriptor(
         {
             if (gltf_size - current_offset >= 8)
             {
-                auto chunk_header = gltf_data.subspan(current_offset, 8);
+                const auto chunk_header = gltf_data.subspan(current_offset, 8);
                 current_offset += 8;
 
                 uint32_t chunk_length = 0;
@@ -1168,7 +1149,7 @@ bool parse_gltf_descriptor(
                     continue;
                 }
 
-                auto chunk_type = chunk_header.subspan(4, 4);
+                const auto chunk_type = chunk_header.subspan(4, 4);
                 if (memcmp((const char*)chunk_type.data(), "JSON", 4) == 0)
                 {
                     // JSON chunk
@@ -1204,7 +1185,7 @@ bool parse_gltf_descriptor(
 
         if (!malformed_file && json_data_length > 0)
         {
-            auto json_data_blob = blobs::make_sub_blob(
+            const auto json_data_blob = blobs::make_sub_blob(
                 hrz::unsafe("Offset and length are checked above"), ba, gltf_blob, json_data_offset,
                 json_data_length);
             return _parse_gltf_json(

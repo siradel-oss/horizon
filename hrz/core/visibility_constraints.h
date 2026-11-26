@@ -22,7 +22,7 @@ bool are_visibility_constraints_satisfied(
 struct MultiviewVisibilityConstraints
 {
     // It's important to know what views are active to properly compare the
-    // "satisfied_in" bitsets.  Otherwise there is no difference between an
+    // "satisfied_in" bitsets. Otherwise there is no difference between an
     // inactive view and a view in which the constraints are not satisfied.
     // Thus comparing this entire struct should be enough to distinguish those
     // cases.

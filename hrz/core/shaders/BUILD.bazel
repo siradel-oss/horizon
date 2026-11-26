@@ -704,13 +704,6 @@ glsl_program(
 )
 
 glsl_program(
-    name = "Three_d_tiles_box",
-    config = ":config",
-    frag = "glsl/three_d_tiles/boxes/box.frag",
-    vert = "glsl/three_d_tiles/boxes/box.vert",
-)
-
-glsl_program(
     name = "ThreeDTilesB3dm",
     config = ":config",
     defines = [
@@ -1149,7 +1142,6 @@ cc_shaders_collection(
         ":Symbol_leader_line",
         ":Symbol_leader_line_picking",
         ":Symbol_leader_line_selection",
-        ":Three_d_tiles_box",
         ":ThreeDTilesB3dm",
         ":ThreeDTilesB3dm_depth",
         ":ThreeDTilesB3dm_picking",

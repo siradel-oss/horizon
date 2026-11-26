@@ -1369,6 +1369,14 @@ void dev_ui(DebugDrawSystem* dd, mu_Context* ctx, const char* window_name)
             {
                 set_flag(Flag::DebugDrawTerrainPatchBboxes, (bool)draw_terrain_patch_bboxes);
             }
+
+            int draw_3d_tiles_bounding_volumes =
+                (int)get_flag(Flag::DebugDraw3DTilesBoundingVolumes);
+            if (mu_checkbox(ctx, "Draw 3D Tiles bounding volumes", &draw_3d_tiles_bounding_volumes))
+            {
+                set_flag(
+                    Flag::DebugDraw3DTilesBoundingVolumes, (bool)draw_3d_tiles_bounding_volumes);
+            }
         }
 
         mu_end_window(ctx);

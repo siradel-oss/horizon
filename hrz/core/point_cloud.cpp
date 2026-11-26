@@ -194,7 +194,7 @@ class PointCloudImpl : public PointCloud
         my::TextureFormat::RGBA8,
         lm::ubvec4,
         lm::ubvec4,
-        false
+        true
     >
         _feature_colors_texture;
 

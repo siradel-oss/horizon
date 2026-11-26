@@ -18,6 +18,7 @@ CompileFlags:
         - "-Wno-unsafe-buffer-usage-in-container"
         - "-Wno-unused-macros"
         - "-Wno-zero-as-null-pointer-constant"
+        - "-Wno-lifetime-safety-suggestions"
 Diagnostics:
     ClangTidy:
         Add:
@@ -46,5 +47,6 @@ Diagnostics:
             - "*-macro-usage"
             - "*-non-private-member-variables-in-classes"
             - "*-no-recursion"
+            - "*-avoid-unchecked-container-access"
         # This is important to enable the misc-const-correctness check
         FastCheckFilter: None

@@ -59,6 +59,16 @@ async function removeTest(name: string) {
     if (viewedTestName.value === name) viewedTestName.value = null;
 }
 
+const typeFilterOptions = [
+    { type: TestType.HrzScene, label: "Horizon scenes" },
+    { type: TestType.MapboxStyle, label: "Mapbox styles" },
+];
+
+function setTypeFiltered(type: TestType, enabled: boolean) {
+    if (enabled) typeFilter.add(type);
+    else typeFilter.delete(type);
+}
+
 function statusFor(name: string): TestStatus {
     return testStatus(resultFor(name));
 }
@@ -87,29 +97,16 @@ function statusFor(name: string): TestStatus {
             <div class="flex flex-row items-center">
                 <label class="text-xs font-semibold w-24">Filter by type</label>
                 <div class="flex gap-4 text-sm">
-                    <label class="flex items-center gap-1">
+                    <label
+                        v-for="{ type, label } in typeFilterOptions"
+                        :key="type"
+                        class="flex items-center gap-1"
+                    >
                         <Checkbox
-                            :model-value="typeFilter.has(TestType.HrzScene)"
-                            @update:model-value="
-                                (v) =>
-                                    v
-                                        ? typeFilter.add(TestType.HrzScene)
-                                        : typeFilter.delete(TestType.HrzScene)
-                            "
+                            :model-value="typeFilter.has(type)"
+                            @update:model-value="(v) => setTypeFiltered(type, v === true)"
                         />
-                        Horizon scenes
-                    </label>
-                    <label class="flex items-center gap-1">
-                        <Checkbox
-                            :model-value="typeFilter.has(TestType.MapboxStyle)"
-                            @update:model-value="
-                                (v) =>
-                                    v
-                                        ? typeFilter.add(TestType.MapboxStyle)
-                                        : typeFilter.delete(TestType.MapboxStyle)
-                            "
-                        />
-                        Mapbox styles
+                        {{ label }}
                     </label>
                 </div>
             </div>

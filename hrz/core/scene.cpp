@@ -47,7 +47,7 @@
 #include "hrz/core/selection.h"
 #include "hrz/core/shape_editor.h"
 #include "hrz/core/single_model_layers.h"
-#include "hrz/core/three_d_tiles_layers.h"
+#include "hrz/core/three_d_tiles/three_d_tiles_layers.h"
 #include "hrz/core/vector/data_loader/data_loader.h"
 #include "hrz/core/vector/flat_overlay.h"
 #include "hrz/core/vector/heatmaps.h"

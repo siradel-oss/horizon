@@ -12,10 +12,10 @@
 #include "hrz/core/jobs/rasterizer.h"
 #include "hrz/fnd/log.h"
 #include "hrz/fnd/maths.h"
+#include "hrz/fnd/mem.h"
 
 #include <lin_maths.h>
 
-#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <span>
@@ -26,9 +26,6 @@ namespace hrz_jobs::rasterize_cesium_terrain_tile
 namespace
 {
 
-static_assert(
-    std::endian::native == std::endian::little,
-    "Cesium terrain tile format is little-endian");
 static_assert(sizeof(double) == 8, "sizeof(double) != 8");
 static_assert(sizeof(float) == 4, "sizeof(float) != 4");
 
@@ -52,15 +49,14 @@ hrz_jobs::JobResult decode_heightmap_tile(
 
     for (size_t i = 0; i < 65 * 65; ++i)
     {
-        uint16_t encoded_elevation = 0;
-        std::memcpy(&encoded_elevation, raw_data.data() + sizeof(uint16_t) * i, sizeof(uint16_t));
-
-        elevation_data[i] = (float)encoded_elevation / 5.0 - 1000.0;
+        const auto encoded_elevation =
+            hrz::read_le_unsafe<uint16_t>(raw_data, sizeof(uint16_t) * i);
+        elevation_data[i] = (float)encoded_elevation / 5.0F - 1000.0F;
     }
 
-    auto elevation_at = [&](size_t x, size_t y) { return elevation_data[x + y * 65]; };
+    const auto elevation_at = [&](size_t x, size_t y) { return elevation_data[x + y * 65]; };
 
-    size_t output_data_size = 64 * 64 * sizeof(float);
+    const size_t output_data_size = 64 * 64 * sizeof(float);
     auto output_blob_opt = hrz::blobs::allocate_blob_sync(blob_allocator, output_data_size);
     if (!output_blob_opt.has_value())
     {
@@ -71,20 +67,22 @@ hrz_jobs::JobResult decode_heightmap_tile(
     hrz::blobs::register_owner(
         context.get_blob_allocator(), output_blob_opt.value(), context.get_resource_owner());
     auto output_blob_data = output_blob_opt->get_mutable_data();
+    const auto output_blob_data_span = output_blob_data.as_span();
 
     // Values in the source array represent the elevations at the edges of the pixels.
     // Here the values are interpolated to make a bitmap where values correspond to the
     // pixel centres.
     for (size_t i = 0; i < 64 * 64; ++i)
     {
-        uint32_t x = i % 64;
-        uint32_t y = i / 64;
+        const uint32_t x = i % 64;
+        const uint32_t y = i / 64;
 
-        float elevation = (elevation_at(x, y) + elevation_at(x + 1, y) + elevation_at(x, y + 1)
-                           + elevation_at(x + 1, y + 1))
-            * 0.25;
+        const float elevation = (elevation_at(x, y) + elevation_at(x + 1, y)
+                                 + elevation_at(x, y + 1) + elevation_at(x + 1, y + 1))
+            / 4;
 
-        std::memcpy(output_blob_data.data() + i * sizeof(float), &elevation, sizeof(float));
+        hrz::write_le_unsafe(
+            output_blob_data_span, i * sizeof(float), std::bit_cast<uint32_t>(elevation));
     }
 
     output_blob_data.release();
@@ -101,7 +99,7 @@ static constexpr size_t QuantizedMeshHeaderSize = sizeof(double) * 10 + sizeof(f
 struct Vertex
 {
     lm::vec2 position;
-    float elevation;
+    float elevation{};
 };
 
 uint16_t zigzag_decode(uint16_t value)
@@ -138,19 +136,17 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
         return hrz_jobs::JobResult::FAILURE;
     }
 
-    float minimum_height = 0.0F;
-    std::memcpy(&minimum_height, raw_data.data() + sizeof(double) * 3, sizeof(float));
-    float maximum_height = 0.0F;
-    std::memcpy(
-        &maximum_height, raw_data.data() + sizeof(double) * 3 + sizeof(float), sizeof(float));
+    const auto minimum_height =
+        std::bit_cast<float>(hrz::read_le_unsafe<uint32_t>(raw_data, sizeof(double) * 3));
+    const auto maximum_height = std::bit_cast<float>(
+        hrz::read_le_unsafe<uint32_t>(raw_data, sizeof(double) * 3 + sizeof(float)));
 
-    auto vertex_data = raw_data.data() + QuantizedMeshHeaderSize;
+    const auto* vertex_data = raw_data.data() + QuantizedMeshHeaderSize;
 
-    uint32_t vertex_count = 0;
-    std::memcpy(&vertex_count, vertex_data, sizeof(uint32_t));
+    const auto vertex_count = hrz::read_le_unsafe<uint32_t>(vertex_data, 0);
 
     {
-        size_t vertex_data_size = sizeof(uint32_t) + sizeof(uint16_t) * 3 * vertex_count;
+        const size_t vertex_data_size = sizeof(uint32_t) + sizeof(uint16_t) * 3 * vertex_count;
         if (raw_data.data() + raw_data.size() < vertex_data + vertex_data_size + sizeof(uint32_t))
         {
             HRZ_LOG_ERROR("Tile data too small");
@@ -158,9 +154,9 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
         }
     }
 
-    auto u_array = vertex_data + sizeof(uint32_t);
-    auto v_array = u_array + sizeof(uint16_t) * vertex_count;
-    auto height_array = v_array + sizeof(uint16_t) * vertex_count;
+    const auto* u_array = vertex_data + sizeof(uint32_t);
+    const auto* v_array = u_array + sizeof(uint16_t) * vertex_count;
+    const auto* height_array = v_array + sizeof(uint16_t) * vertex_count;
 
     std::vector<Vertex> vertices(vertex_count);
 
@@ -169,31 +165,28 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
     uint16_t height = 0;
     for (size_t i = 0; i < vertex_count; ++i)
     {
-        uint16_t zigzag_u = 0;
-        std::memcpy(&zigzag_u, u_array + sizeof(uint16_t) * i, sizeof(uint16_t));
-        uint16_t zigzag_v = 0;
-        std::memcpy(&zigzag_v, v_array + sizeof(uint16_t) * i, sizeof(uint16_t));
-        uint16_t zigzag_height = 0;
-        std::memcpy(&zigzag_height, height_array + sizeof(uint16_t) * i, sizeof(uint16_t));
+        const uint16_t zigzag_u = hrz::read_le_unsafe<uint16_t>(u_array, sizeof(uint16_t) * i);
+        const uint16_t zigzag_v = hrz::read_le_unsafe<uint16_t>(v_array, sizeof(uint16_t) * i);
+        const uint16_t zigzag_height =
+            hrz::read_le_unsafe<uint16_t>(height_array, sizeof(uint16_t) * i);
 
         u += zigzag_decode(zigzag_u);
         v += zigzag_decode(zigzag_v);
         height += zigzag_decode(zigzag_height);
 
-        float x = (float)u / 32767.0F;
-        float y = 1.0F - (float)v / 32767.0F;
-        float elevation = hrz::lerp(minimum_height, maximum_height, (float)height / 32767.0F);
+        const float x = (float)u / 32767.0F;
+        const float y = 1.0F - (float)v / 32767.0F;
+        const float elevation = hrz::lerp(minimum_height, maximum_height, (float)height / 32767.0F);
 
         vertices[i] = {{x, y}, elevation};
     }
 
-    auto index_data = vertex_data + sizeof(uint32_t) + sizeof(uint16_t) * 3 * vertex_count;
+    const auto* index_data = vertex_data + sizeof(uint32_t) + sizeof(uint16_t) * 3 * vertex_count;
 
-    uint32_t triangle_count = 0;
-    std::memcpy(&triangle_count, index_data, sizeof(uint32_t));
+    const uint32_t triangle_count = hrz::read_le_unsafe<uint32_t>(index_data, 0);
 
     {
-        size_t index_data_size = sizeof(uint32_t)
+        const size_t index_data_size = sizeof(uint32_t)
             + (vertex_count <= 65536 ? sizeof(uint16_t) : sizeof(uint32_t)) * 3 * triangle_count;
         if (raw_data.data() + raw_data.size() < index_data + index_data_size)
         {
@@ -202,7 +195,7 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
         }
     }
 
-    auto index_array = index_data + sizeof(uint32_t);
+    const auto* index_array = index_data + sizeof(uint32_t);
 
     std::vector<uint32_t> indices(triangle_count * 3);
 
@@ -211,18 +204,14 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
     {
         if (vertex_count <= 65536)
         {
-            uint16_t code = 0;
-            std::memcpy(&code, index_array + sizeof(uint16_t) * i, sizeof(uint16_t));
-            indices[i] = code;
+            indices[i] = hrz::read_le_unsafe<uint16_t>(index_array, sizeof(uint16_t) * i);
         }
         else
         {
-            uint32_t code = 0;
-            std::memcpy(&code, index_array + sizeof(uint32_t) * i, sizeof(uint32_t));
-            indices[i] = code;
+            indices[i] = hrz::read_le_unsafe<uint32_t>(index_array, sizeof(uint32_t) * i);
         }
 
-        uint32_t code = indices[i];
+        const uint32_t code = indices[i];
         indices[i] = highest_index_code - code;
         if (code == 0)
         {
@@ -230,7 +219,7 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
         }
     }
 
-    size_t output_data_size = 256 * 256 * sizeof(float);
+    const size_t output_data_size = 256 * 256 * sizeof(float);
     auto output_blob_opt = hrz::blobs::allocate_blob_sync(blob_allocator, output_data_size);
     if (!output_blob_opt.has_value())
     {
@@ -248,9 +237,9 @@ hrz_jobs::JobResult decode_quantized_mesh_tile(
 
     for (size_t i = 0; i < triangle_count; ++i)
     {
-        auto v0 = vertices[indices[i * 3 + 0]];
-        auto v1 = vertices[indices[i * 3 + 1]];
-        auto v2 = vertices[indices[i * 3 + 2]];
+        const auto v0 = vertices[indices[i * 3 + 0]];
+        const auto v1 = vertices[indices[i * 3 + 1]];
+        const auto v2 = vertices[indices[i * 3 + 2]];
 
         rasterizer::rasterize_triangle<float>(
             output_image, v0.position, v1.position, v2.position, v0.elevation, v1.elevation,
@@ -273,7 +262,7 @@ hrz_jobs::JobResult run(
     hrz::BlobImage& response,
     const JobContext& context)
 {
-    auto input_data = params.blob.get_data();
+    const auto input_data = params.blob.get_data();
 
     auto result = hrz_jobs::JobResult::FAILURE;
     if (params.format == "heightmap-1.0")
