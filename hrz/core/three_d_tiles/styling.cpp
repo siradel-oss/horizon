@@ -35,13 +35,13 @@ namespace hrz::three_d_tiles
 namespace
 {
 
-static constexpr uint64_t COLOR_PRP = 0;
-static constexpr uint32_t TILE_REPR_ID = 0;
-static constexpr const char* TILE_REPR_NAME = "tile";
+constexpr uint64_t COLOR_PRP = 0;
+constexpr uint32_t TILE_REPR_ID = 0;
+constexpr const char* TILE_REPR_NAME = "tile";
 
 bool needs_attribute_values(const TilesetConfig& config, const ThreeDTile::Subtile& subtile)
 {
-    return config.has_vector_data_layer_attributes && subtile.batches_to_feature_ids.size() > 0;
+    return config.has_vector_data_layer_attributes && !subtile.batches_to_feature_ids.empty();
 }
 
 hrz::RenderRequest apply_default_style(ThreeDTile::Subtile& subtile)
@@ -305,7 +305,7 @@ hrz::RenderRequest ThreeDTilesSystem::start_style_job(
     hrz_jobs::FeaturesStylingData job_data;
 
     job_data.ast = config.style_ast;
-    job_data.representations.push_back({TILE_REPR_ID, TILE_REPR_NAME});
+    job_data.representations.emplace_back(TILE_REPR_ID, TILE_REPR_NAME);
     job_data.attributes.reserve(config.attributes.size());
 
     // Tiles without a batch table are stylable, but they have

@@ -24,7 +24,7 @@
 namespace
 {
 
-static uint64_t make_model_uri_hash(std::string_view uri, const hrz::HttpHeaders& headers)
+uint64_t make_model_uri_hash(std::string_view uri, const hrz::HttpHeaders& headers)
 {
     return hrz::hash_mix(hrz::murmur3_x64_64(uri), headers.hash_content());
 }
@@ -214,6 +214,7 @@ void ModelCache::destroy(
             hrz::model::destroy(proto.parts.prototype, al, js, ba, to_destroy);
         }
     }
+    _model_uris_to_prototypes.clear();
 }
 
 } // namespace hrz::three_d_tiles

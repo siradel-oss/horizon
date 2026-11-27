@@ -866,14 +866,14 @@ bool _parse_gltf_json(
         // reassemble them later, because otherwise there is a lot of duplications. So we do that.
         while (!copyright_str.empty())
         {
-            const auto pair = hrz::str::split(copyright_str, ';');
-            const auto this_attribution = hrz::str::trim_s(pair.first);
+            const auto [first, remaining] = hrz::str::split(copyright_str, ';');
+            const auto this_attribution = hrz::str::trim_s(first);
             if (!this_attribution.empty())
             {
                 all_attributions.push_back(
                     attribution::register_attribution(attributions, {this_attribution, ""}));
             }
-            copyright_str = hrz::str::trim_s(pair.second);
+            copyright_str = hrz::str::trim_s(remaining);
         }
     }
 

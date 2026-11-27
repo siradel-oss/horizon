@@ -723,7 +723,7 @@ void ThreeDTilesSystem::work_loading_tilesets(
                 if (hrz::assets_loader::get_status(al, tileset->load_descriptor_ticket)
                     == hrz::assets_loader::RequestStatus::Loaded)
                 {
-                    const auto descriptor_blob =
+                    auto descriptor_blob =
                         hrz::assets_loader::get_blob(al, ba, tileset->load_descriptor_ticket);
                     tileset->start_decoding_descriptor(std::move(descriptor_blob), js);
                 }

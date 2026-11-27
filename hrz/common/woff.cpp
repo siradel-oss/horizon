@@ -15,19 +15,19 @@
 namespace
 {
 
-static bool is_woff(const std::byte* data, size_t size)
+bool is_woff(const std::byte* data, size_t size)
 {
     static constexpr std::byte woff_magic[] = {0x77_b, 0x4F_b, 0x46_b, 0x46_b};
     return size >= sizeof(woff_magic) && std::memcmp(data, woff_magic, sizeof(woff_magic)) == 0;
 }
 
-static bool is_woff2(const std::byte* data, size_t size)
+bool is_woff2(const std::byte* data, size_t size)
 {
     static constexpr std::byte woff2_magic[] = {0x77_b, 0x4F_b, 0x46_b, 0x32_b};
     return size >= sizeof(woff2_magic) && std::memcmp(data, woff2_magic, sizeof(woff2_magic)) == 0;
 }
 
-static std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
+std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
     hrz::BlobAllocator* ba,
     std::span<const std::byte> woff_data)
 {
@@ -69,12 +69,12 @@ static std::optional<hrz::blobs::BlobHandle> woff2_to_ttf(
     return blob;
 }
 
-static uint32_t round_up_4(uint32_t value)
+uint32_t round_up_4(uint32_t value)
 {
     return (value + 3) & 0xFFFFFFFC;
 }
 
-static std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
+std::optional<hrz::blobs::BlobHandle> woff_to_ttf(
     hrz::BlobAllocator* ba,
     std::span<const std::byte> woff_data)
 {

@@ -54,27 +54,40 @@ void draw_debug_box(const BoundingVolume& volume)
         half_w = {0, 0, sphere.radius};
     };
 
-    if (const auto* region = std::get_if<BoundingVolume::Region>(&volume.volume))
-    {
-        if (region->box.has_value())
-            set_from_box(region->box.value());
-        else if (region->sphere.has_value())
-            set_from_sphere(region->sphere.value());
-        else
-            return;
-    }
-    else if (const auto* box = std::get_if<BoundingVolume::Box>(&volume.volume))
-    {
-        set_from_box(*box);
-    }
-    else if (const auto* sphere = std::get_if<BoundingVolume::Sphere>(&volume.volume))
-    {
-        set_from_sphere(*sphere);
-    }
-    else
-    {
-        return;
-    }
+    const bool draw_box = std::visit(
+        hrz::overload{
+            [&](const BoundingVolume::Region& region)
+            {
+                if (region.box.has_value())
+                {
+                    set_from_box(region.box.value());
+                    return true;
+                }
+                else if (region.sphere.has_value())
+                {
+                    set_from_sphere(region.sphere.value());
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            },
+            [&](const BoundingVolume::Box& box)
+            {
+                set_from_box(box);
+                return true;
+            },
+            [&](const BoundingVolume::Sphere& sphere)
+            {
+                set_from_sphere(sphere);
+                return true;
+            },
+            [&](const auto&) { return false; }
+        },
+        volume.volume);
+
+    if (!draw_box) return;
 
     const auto c = [&](double u, double v, double w)
     { return center + half_u * u + half_v * v + half_w * w; };

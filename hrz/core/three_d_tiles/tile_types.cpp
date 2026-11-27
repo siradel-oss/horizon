@@ -204,22 +204,22 @@ static bool is_allowed_load_status_transition(
 }
 #endif
 
-void Tileset::set_tile_load_status(ThreeDTile& tile, ThreeDTile::LoadStatus status)
+void Tileset::set_tile_load_status(ThreeDTile& tile, ThreeDTile::LoadStatus new_status)
 {
 #if HRZ_DEBUG
-    assert(is_allowed_load_status_transition(tile._load_status, status));
+    assert(is_allowed_load_status_transition(tile._load_status, new_status));
 #endif
 
     const bool was_active = tile.counts_as_active_child();
     const bool was_renderable = tile.counts_as_renderable_child();
 
-    tile._load_status = status;
+    tile._load_status = new_status;
 
-    if (status == ThreeDTile::LoadStatus::RENDERABLE)
+    if (new_status == ThreeDTile::LoadStatus::RENDERABLE)
     {
         tile._was_made_renderable_once = true;
     }
-    else if (status == ThreeDTile::LoadStatus::UNLOADED)
+    else if (new_status == ThreeDTile::LoadStatus::UNLOADED)
     {
         tile._was_made_renderable_once = false;
     }
@@ -260,11 +260,11 @@ void Tileset::check_tile_invariants(const ThreeDTile& tile) const
 #endif
 
 void Tileset::start_decoding_descriptor(
-    const hrz::blobs::BlobHandle& descriptor_blob,
+    hrz::blobs::BlobHandle descriptor_blob,
     hrz::JobScheduler* js)
 {
     hrz_jobs::EncodedThreeDTilesTileset params;
-    params.raw_json = descriptor_blob;
+    params.raw_json = std::move(descriptor_blob);
     params.transform = transform;
     params.root_depth = root_depth;
     decode_descriptor_ticket = hrz_jobs::add_job_decode_three_d_tiles_tileset(

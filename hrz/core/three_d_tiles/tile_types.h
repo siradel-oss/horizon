@@ -844,9 +844,7 @@ struct Tileset
     void check_tile_invariants(const ThreeDTile& tile) const;
 #endif
 
-    void start_decoding_descriptor(
-        const hrz::blobs::BlobHandle& descriptor_blob,
-        hrz::JobScheduler* js);
+    void start_decoding_descriptor(hrz::blobs::BlobHandle descriptor_blob, hrz::JobScheduler* js);
 };
 
 inline hrz::SceneViewBitset ThreeDTile::draw_in(const TilesetConfig& config) const

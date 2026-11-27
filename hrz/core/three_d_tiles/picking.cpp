@@ -135,7 +135,7 @@ std::optional<hrz::vector_data::FeatureId> ThreeDTilesSystem::get_feature_id(
         if (batch_id >= subtile.batch_id_offset
             && batch_id < subtile.batch_id_offset + subtile.batch_length)
         {
-            if (subtile.batches_to_feature_ids.size() == 0)
+            if (subtile.batches_to_feature_ids.empty())
             {
                 return std::nullopt; // No feature ids
             }

@@ -29,7 +29,7 @@ namespace hrz::three_d_tiles
 namespace
 {
 
-static constexpr double REQUEST_PRIORITY_UPDATE_INTERVAL = 500; // ms
+constexpr double REQUEST_PRIORITY_UPDATE_INTERVAL = 500; // ms
 
 /**
  * Compute the screen-space used to determine whether the root tile
@@ -530,10 +530,11 @@ hrz::RenderRequest ThreeDTilesSystem::work_loaded_tileset(
 
     for (auto it = tileset->active_tiles.begin(); it != tileset->active_tiles.end();)
     {
-        const auto result = work_tile_traversal(tileset, *it, &tiles_to_refine, ctx);
-        render_request |= result.first;
+        const auto [traversal_render_request, erase] =
+            work_tile_traversal(tileset, *it, &tiles_to_refine, ctx);
+        render_request |= traversal_render_request;
 
-        if (result.second)
+        if (erase)
         {
             tileset->active_tiles.erase(it++);
         }
